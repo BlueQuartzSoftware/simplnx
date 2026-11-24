@@ -15,13 +15,13 @@ The filter works with two **Image Geometries**:
 - The **Reference** geometry is the grid that is kept. Its cells are the destination.
 - The **Sampling** geometry is the grid that is read from. Its cells are the source of the copied data.
 
-For each cell in the *Reference* geometry, the filter finds the cell in the *Sampling* geometry whose center is physically closest (using the two grids' origins and spacings), and copies all of that sampling cell's attribute arrays onto the reference cell. **No interpolation is performed** — the nearest sampling value is taken as-is. Because the match is by physical position, the two grids may have different spacings, dimensions, or extents; only their overlap in space is meaningful.
+The two grids can have different origins, spacings, and dimensions. The filter finds the center of each *Reference* cell and copies the values of the *Sampling* cell that contains that point. When the center lies on a shared face, the cell with the higher index supplies the values. The sampling grid includes its minimum face and excludes its maximum face on each axis.
 
 The *Sampling* geometry is left unchanged. The *Reference* geometry keeps its own geometry but gains a copy of the sampling geometry's attribute arrays.
 
 ### Parameter Guidance
 
-- **Use Custom Fill Value** — controls what happens to reference cells that fall outside the sampling grid (no nearby sampling cell). When off, copied arrays are filled with *0* there; when on, the user supplies the fill value.
+- **Use Custom Fill Value** applies to reference cells whose centers lie outside the sampling grid. These cells receive *0* by default. Enable this option to choose a different fill value.
 
 ### Required Input Sources
 
@@ -31,7 +31,7 @@ The *Sampling* geometry is left unchanged. The *Reference* geometry keeps its ow
 
 ## Algorithm
 
-The filter maps each reference-grid coordinate to the containing sampling-grid **Cell** without interpolation. For in-memory arrays, the direct implementation preserves the original cell-by-cell traversal. When either a sampled numeric or Boolean **Data Array** or its newly created reference counterpart is out-of-core, the scanline implementation is selected. It calculates the source index for each X, Y, and Z coordinate once, reads only the required sampling row into a bounded buffer, and writes each completed reference row in one bulk operation. Its working memory is proportional to the largest row and the three grid axes, rather than the number of **Cells**. Only numeric and Boolean **Data Arrays** are copied; strings and neighbor lists are skipped.
+The filter copies numeric and Boolean **Data Arrays** without interpolation. For in-memory arrays, it traverses the reference grid cell by cell. When a source or destination array is out-of-core, the filter calculates a source index for each X, Y, and Z coordinate. It reads each required sampling row into a buffer and writes each completed reference row in one operation. The buffers hold one source row, one reference row, and one index per coordinate on each reference axis.
 
 % Auto generated parameter table will be inserted here
 

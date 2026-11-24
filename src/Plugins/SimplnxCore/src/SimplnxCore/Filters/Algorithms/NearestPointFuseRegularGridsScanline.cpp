@@ -1,11 +1,12 @@
 #include "NearestPointFuseRegularGridsScanline.hpp"
 
+#include "NearestPointFuseRegularGridsMapping.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <algorithm>
-#include <limits>
 #include <memory>
 #include <vector>
 
@@ -13,36 +14,23 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize k_InvalidIndex = std::numeric_limits<usize>::max();
+using namespace grid_fusion;
 
 /**
- * @brief Maps each reference coordinate on one axis to its containing sampling-cell index.
+ * @brief Maps each reference cell center on one axis to its containing sampling-cell index.
  * @param referenceDim Specifies reference cells on the axis.
- * @param referenceOrigin Specifies reference origin on the axis.
- * @param referenceSpacing Specifies reference spacing on the axis.
- * @param sampleDim Specifies sampling cells on the axis.
- * @param sampleOrigin Specifies sampling origin on the axis.
- * @param sampleSpacing Specifies sampling spacing on the axis.
+ * @param axis Maps cell centers along this axis.
  * @return Sampling-cell index for each reference coordinate, or an invalid sentinel.
  *
  * Precomputing these O(axis length) maps removes repeated coordinate arithmetic
  * from every array and marks out-of-bounds positions explicitly for fill handling.
  */
-std::vector<usize> ComputeAxisIndices(usize referenceDim, float32 referenceOrigin, float32 referenceSpacing, usize sampleDim, float32 sampleOrigin, float32 sampleSpacing)
+std::vector<usize> ComputeAxisIndices(usize referenceDim, const Axis& axis)
 {
-  std::vector<usize> indices(referenceDim, k_InvalidIndex);
+  std::vector<usize> indices(referenceDim);
   for(usize index = 0; index < referenceDim; index++)
   {
-    const float32 coordinate = index * referenceSpacing + referenceOrigin;
-    if(coordinate - sampleOrigin < 0)
-    {
-      continue;
-    }
-    const usize sampleIndex = static_cast<usize>((coordinate - sampleOrigin) / sampleSpacing);
-    if(sampleIndex < sampleDim)
-    {
-      indices[index] = sampleIndex;
-    }
+    indices[index] = GetSourceIndex(axis, index);
   }
   return indices;
 }
@@ -68,13 +56,9 @@ Result<> CopyArray(const IDataArray& sourceArray, IDataArray& destinationArray, 
   auto& destinationStore = destinationArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
   const auto sampleDims = sampleGeom.getDimensions();
   const auto referenceDims = referenceGeom.getDimensions();
-  const auto sampleOrigin = sampleGeom.getOrigin();
-  const auto referenceOrigin = referenceGeom.getOrigin();
-  const auto sampleSpacing = sampleGeom.getSpacing();
-  const auto referenceSpacing = referenceGeom.getSpacing();
-  const auto xIndices = ComputeAxisIndices(referenceDims[0], referenceOrigin[0], referenceSpacing[0], sampleDims[0], sampleOrigin[0], sampleSpacing[0]);
-  const auto yIndices = ComputeAxisIndices(referenceDims[1], referenceOrigin[1], referenceSpacing[1], sampleDims[1], sampleOrigin[1], sampleSpacing[1]);
-  const auto zIndices = ComputeAxisIndices(referenceDims[2], referenceOrigin[2], referenceSpacing[2], sampleDims[2], sampleOrigin[2], sampleSpacing[2]);
+  const auto xIndices = ComputeAxisIndices(referenceDims[0], MakeAxis(referenceGeom, sampleGeom, 0));
+  const auto yIndices = ComputeAxisIndices(referenceDims[1], MakeAxis(referenceGeom, sampleGeom, 1));
+  const auto zIndices = ComputeAxisIndices(referenceDims[2], MakeAxis(referenceGeom, sampleGeom, 2));
   const usize components = destinationArray.getNumberOfComponents();
   const usize sourceRowValues = sampleDims[0] * components;
   const usize destinationRowValues = referenceDims[0] * components;
