@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/UncertainRegularGridSampleSurfaceMesh.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -118,6 +119,7 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
                                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(filterArgs.value<DataPath>(k_TriangleGeometryPath_Key));
   auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -134,7 +136,8 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
 
   {
-    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, imageDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue);
+    auto createDataGroupAction =
+        std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, imageDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue, triangleGeom.getUnits());
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   DataPath cellAMPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);

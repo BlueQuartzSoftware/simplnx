@@ -51,6 +51,7 @@ DataStructure createTestDataStructure()
   imageGeom->setDimensions(SizeVec3{2, 1, 4}); // X, Y, Z
   REQUIRE(imageGeom->setSpacing(FloatVec3{0.5F, 0.75F, 1.0F}).valid());
   REQUIRE(imageGeom->setOrigin(FloatVec3{1.0F, 2.0F, 3.0F}).valid());
+  imageGeom->setUnits(IGeometry::LengthUnit::Millimeter);
 
   // AttributeMatrix tuple shape is slowest-to-fastest (Z, Y, X)
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, std::vector<usize>{4, 1, 2}, imageGeom->getId());
@@ -212,6 +213,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_OutputGeometryPath));
   const auto& outputGeom = dataStructure.getDataRefAs<ImageGeom>(k_OutputGeometryPath);
+  CHECK(outputGeom.getUnits() == IGeometry::LengthUnit::Millimeter);
 
   // newZDim = (size_t)(10 / 2) = 5; X and Y unchanged.
   const SizeVec3 outDims = outputGeom.getDimensions();

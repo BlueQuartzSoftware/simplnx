@@ -293,7 +293,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     std::string cellDataName = selectedCellData.getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
-    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
+    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName, selectedImageGeom.getUnits()));
 
     // Create the Cell AttributeMatrix in the Destination Geometry
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);

@@ -10,6 +10,8 @@ This **Filter** resamples an **Image Geometry** that has *irregular* spacing alo
 
 The current physical Z position of every original slice boundary is read from a whitespace-delimited text file. The file must contain **(ZPoints + 1)** floating point values, where `ZPoints` is the number of cells (slices) along the Z axis of the selected **Image Geometry**. The first value is the position of the bottom boundary of the first slice, and the last value is the total Z extent of the volume.
 
+The output image retains the input geometry’s length unit.
+
 The **Filter** computes a new number of Z slices as:
 
     newZPoints = floor(totalZExtent / newZSpacing)

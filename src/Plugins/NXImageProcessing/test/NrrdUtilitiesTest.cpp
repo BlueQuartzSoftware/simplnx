@@ -414,7 +414,7 @@ DataStructure BuildNrrdTarget(DataType dataType, const std::array<usize, 3>& des
   const CreateImageGeometryAction::DimensionType dims = {destDims[0], destDims[1], destDims[2]};
   const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
-  auto geomAction = CreateImageGeometryAction(k_GeomPath, dims, origin, spacing, k_CellDataName);
+  auto geomAction = CreateImageGeometryAction(k_GeomPath, dims, origin, spacing, k_CellDataName, IGeometry::LengthUnit::Micrometer);
   REQUIRE(geomAction.apply(ds, IDataAction::Mode::Execute).valid());
 
   const std::vector<usize> tupleDims = {destDims[2], destDims[1], destDims[0]}; // [Z, Y, X]

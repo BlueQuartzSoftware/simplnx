@@ -569,7 +569,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         const std::string cellDataName = selectedCellDataPtr->getName();
         ignorePaths.push_back(srcImagePath.createChildPath(cellDataName)); // This prevents a later copy attempt.
         // Create the new Image Geometry
-        resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, originVec, spacing, cellDataName));
+        resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, originVec, spacing, cellDataName, selectedImageGeom.getUnits()));
 
         // Create a DataPath object that points to the Cell AttributeMatrix in the new ImageGeometry
         const DataPath targetCellAttrMatrix = destImagePath.createChildPath(cellDataName);

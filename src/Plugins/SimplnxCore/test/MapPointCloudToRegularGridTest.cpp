@@ -50,6 +50,9 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(k_VertexGeometryPath);
+  REQUIRE(vertexGeomPtr != nullptr);
+  vertexGeomPtr->setUnits(IGeometry::LengthUnit::Millimeter);
 
   MapPointCloudToRegularGridFilter filter;
   Arguments args;
@@ -74,6 +77,7 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   UnitTest::CompareImageGeometry(dataStructure, k_ManualImageGeomPathExemplar, k_ManualImageGeomPathComputed);
+  CHECK(UnitTest::GetRequiredData<ImageGeom>(dataStructure, k_ManualImageGeomPathComputed).getUnits() == IGeometry::LengthUnit::Millimeter);
   UnitTest::CompareArrays<uint64>(dataStructure, k_VoxelIndicesManualExemplar, k_VoxelIndicesManualComputed);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

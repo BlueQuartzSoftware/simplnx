@@ -62,7 +62,7 @@ class StorageContractTest(unittest.TestCase):
                 self.assertIn(f"Parameter '{parameter}' Z value {value} must be finite", result.errors[0].message)
                 self.assertNotIn(path, data_structure)
 
-            action = nx.CreateImageGeometryAction(path, dims, origin, spacing, "Cells")
+            action = nx.CreateImageGeometryAction(path, dims, origin, spacing, "Cells", nx.IGeometry.LengthUnit.Micrometer)
             for mode in (nx.IDataAction.Mode.Preflight, nx.IDataAction.Mode.Execute):
                 with self.subTest(origin=origin, spacing=spacing, mode=mode):
                     data_structure = nx.DataStructure()

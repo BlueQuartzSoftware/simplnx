@@ -16,6 +16,8 @@ For node-based geometries, the transformation modifies vertex positions only. No
 
 ### Image Geometry
 
+The transformed image retains the input geometry’s length unit.
+
 For Image Geometries, transformation requires re-gridding because cell positions are implicit in the grid spacing and origin. After transformation, a new grid is generated and cell data is interpolated onto it. This is governed by two extra parameters:
 
 - **Interpolation Method** -- how cell data values are sampled from the old grid (see below).

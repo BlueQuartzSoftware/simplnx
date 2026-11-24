@@ -21,7 +21,7 @@ When both are read, two independent outputs are created: the **Cell Data** is pl
 
 ### Spacing, Origin, and Units
 
-The grid dimensions, spacing, and origin are read directly from the `.vtk` file's `DIMENSIONS`, `SPACING`, and `ORIGIN` records. The spacing and origin are plain numbers with no embedded unit, so their length unit is whatever the file's author intended (dimensionless to the reader).
+The grid dimensions, spacing, and origin are read directly from the `.vtk` file's `DIMENSIONS`, `SPACING`, and `ORIGIN` records. These records carry no length unit, so the created point-data and cell-data geometries use **Unspecified**.
 
 Each cell dimension is one less than its point dimension, with a minimum of one. This supports 2D planes, 1D lines, and a single point. For example, `DIMENSIONS 10 10 1` has 81 cells in a `9 9 1` grid. Zero point dimensions return an error during preflight. These behaviors intentionally differ from DREAM3D 6.5.171, which rejects valid cell data on singleton axes and can underflow on zero dimensions.
 

@@ -836,12 +836,14 @@ Result<> ReadVtkStructuredPoints::readFile()
 
   if(m_InputValues->ReadPointData && m_Preflight)
   {
-    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_InputValues->PointGeomPath, pointDims, origin, spacing, m_InputValues->PointAttributeMatrixName);
+    auto createImageGeometryAction =
+        std::make_unique<CreateImageGeometryAction>(m_InputValues->PointGeomPath, pointDims, origin, spacing, m_InputValues->PointAttributeMatrixName, IGeometry::LengthUnit::Unspecified);
     m_OutputActions.value().appendAction(std::move(createImageGeometryAction));
   }
   if(m_InputValues->ReadCellData && m_Preflight)
   {
-    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_InputValues->ImageGeomPath, cellDims, origin, spacing, m_InputValues->CellAttributeMatrixName);
+    auto createImageGeometryAction =
+        std::make_unique<CreateImageGeometryAction>(m_InputValues->ImageGeomPath, cellDims, origin, spacing, m_InputValues->CellAttributeMatrixName, IGeometry::LengthUnit::Unspecified);
     m_OutputActions.value().appendAction(std::move(createImageGeometryAction));
   }
 

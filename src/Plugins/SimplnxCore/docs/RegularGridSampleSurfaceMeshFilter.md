@@ -10,6 +10,8 @@ This **Filter** "samples" a triangulated surface mesh onto a regular grid (Image
 
 The **Origin** and **Spacing** are specified in the same physical length unit as the input **Triangle Geometry** coordinates (e.g., microns, millimeters). **Dimensions** are unitless voxel counts along X, Y, and Z. For an uncertain (noisy) sampling variant, see [Sample Triangle Geometry on Uncertain Regular Grid](UncertainRegularGridSampleSurfaceMeshFilter.md).
 
+A newly created sampling grid inherits the input triangle geometry’s length unit. The **Length Units (For Description Only)** choice controls the preflight description.
+
 ### Use existing geometry
 
 The *Use existing geometry* parameter controls how the target **Image Geometry** is provided:

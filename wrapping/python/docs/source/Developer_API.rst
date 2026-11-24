@@ -2073,7 +2073,7 @@ Creation Actions
 
    .. code-block:: python
 
-      CreateImageGeometryAction(path: nx.DataPath, dims: list[int], origin: list[float], spacing: list[float], cell_attribute_matrix_name: str) -> None
+      CreateImageGeometryAction(path: nx.DataPath, dims: list[int], origin: list[float], spacing: list[float], cell_attribute_matrix_name: str, units: nx.IGeometry.LengthUnit) -> None
 
    Description
    ~~~~~~~~~~~
@@ -2098,6 +2098,9 @@ Creation Actions
    - ``cell_attribute_matrix_name``
       - **Description**: Name for the cell attribute matrix associated with the image geometry.
       - **Type**: str
+   - ``units``
+      - **Description**: Required length unit of the supplied origin and spacing. Use ``nx.IGeometry.LengthUnit.Unspecified`` for pixel coordinates without a physical scale. Scripts that relied on the former micrometer default can supply ``nx.IGeometry.LengthUnit.Micrometer`` explicitly.
+      - **Type**: nx.IGeometry.LengthUnit
 
    Usage
    ~~~~~
@@ -2114,7 +2117,7 @@ Creation Actions
       cell_matrix_name = 'Cell Data'
 
       output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateImageGeometryAction(geom_path, dims, origin, spacing, cell_matrix_name))
+      output_actions.append_action(nx.CreateImageGeometryAction(geom_path, dims, origin, spacing, cell_matrix_name, nx.IGeometry.LengthUnit.Millimeter))
 
 .. _CreateRectGridGeometryAction:
 .. py:class:: CreateRectGridGeometryAction

@@ -195,7 +195,8 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
     tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
 
-    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue);
+    auto createDataGroupAction =
+        std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue, triangleGeom.getUnits());
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
 
     cellAttributeMatrixPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);

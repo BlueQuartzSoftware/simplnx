@@ -6,6 +6,8 @@ Core (IO/Read)
 ## Description
 The `ReadPeregrineHDF5File` filter is designed to read an HDF5 file that is in a format produced by Oak Ridge National Laboratory's Peregrine. The filter handles a multitude of datasets embedded within Peregrine's HDF5 container format, allowing for selective reading based on user input.
 
+The slice and registered image geometries use millimeters. The X and Y spacing come from the physical camera dimensions divided by the corresponding pixel counts. The Z spacing comes from the layer thickness. Enter an override layer thickness in millimeters.
+
 ## Parameters
 
 ### Input Parameters

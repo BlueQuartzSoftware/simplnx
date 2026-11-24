@@ -130,7 +130,7 @@ class ReadPeregrineHDF5File:
     params.insert(nx.Parameters.Separator("Input Parameters"))
     params.insert(nx.FileSystemPathParameter(ReadPeregrineHDF5File.INPUT_FILE_PATH_KEY, 'Input Peregrine HDF5 File', 'The input Peregrine HDF5 file that will be read.', '', {'.hdf5', '.h5'}, nx.FileSystemPathParameter.PathType.InputFile, False))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.OVERRIDE_LAYER_THICKNESS_KEY, 'Override Layer Thickness', 'Specifies whether or not to override the layer thickness found in the input file.', False))
-    params.insert(nx.Float64Parameter(ReadPeregrineHDF5File.LAYER_THICKNESS_KEY, 'Layer Thickness', 'The layer thickness that will be used to override the layer thickness found in the input file.', 0.05))
+    params.insert(nx.Float64Parameter(ReadPeregrineHDF5File.LAYER_THICKNESS_KEY, 'Layer Thickness', 'The layer thickness in millimeters that overrides the value in the input file.', 0.05))
 
     params.insert(nx.Parameters.Separator("Slice Data Parameters"))
     params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SLICE_DATA_KEY, 'Slice Data Geometry', 'The path to the newly created Slice Data image geometry', nx.DataPath(['Slice Data'])))
@@ -433,7 +433,7 @@ class ReadPeregrineHDF5File:
 
     # Create the image geometry if there is data to import
     if dims is not None:
-      actions.append_action(nx.CreateImageGeometryAction(slice_data_image_geom_path, subvolume_dims[::-1] if read_slices_subvolume else dims[::-1], origin, spacing, slice_data_cell_attr_mat_name))
+      actions.append_action(nx.CreateImageGeometryAction(slice_data_image_geom_path, subvolume_dims[::-1] if read_slices_subvolume else dims[::-1], origin, spacing, slice_data_cell_attr_mat_name, nx.IGeometry.LengthUnit.Millimeter))
 
     # Optionally create the segmentation results data arrays
     if read_segmentation_results:
@@ -539,7 +539,7 @@ class ReadPeregrineHDF5File:
                                   registered_data_subvolume_minmax_x[1] - registered_data_subvolume_minmax_x[0] + 1]
 
     if registered_dims is not None:
-      actions.append_action(nx.CreateImageGeometryAction(registered_data_image_geom_path, registered_dims[::-1], origin, spacing, registered_data_cell_attr_mat_name))
+      actions.append_action(nx.CreateImageGeometryAction(registered_data_image_geom_path, registered_dims[::-1], origin, spacing, registered_data_cell_attr_mat_name, nx.IGeometry.LengthUnit.Millimeter))
 
     if read_anomaly_detection:
       anomaly_detection_path: nx.DataPath = registered_data_image_geom_path.create_child_path(registered_data_cell_attr_mat_name).create_child_path(anomaly_detection_array_name)

@@ -577,7 +577,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   if(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue) != PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
   {
-    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pPartitionGridGeomValue, psDims, psOrigin, psSpacing, pPartitionGridCellAMNameValue);
+    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pPartitionGridGeomValue, psDims, psOrigin, psSpacing, pPartitionGridCellAMNameValue, iGeom.getUnits());
     resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
     dap = pPartitionGridGeomValue;

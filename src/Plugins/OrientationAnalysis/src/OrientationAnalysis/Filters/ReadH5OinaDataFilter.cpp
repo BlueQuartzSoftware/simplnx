@@ -323,7 +323,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   {
     CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), pZSpacingValue};
 
-    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
+    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 

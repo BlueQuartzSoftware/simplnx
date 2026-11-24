@@ -218,8 +218,8 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
-    resultOutputActions.value().appendAction(
-        std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, srcOrigin, CreateImageGeometryAction::SpacingType{destSpacing[0], destSpacing[1], destSpacing[2]}, cellDataName));
+    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(
+        destImagePath, geomDims, srcOrigin, CreateImageGeometryAction::SpacingType{destSpacing[0], destSpacing[1], destSpacing[2]}, cellDataName, srcImageGeom.getUnits()));
 
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
     for(const auto& [identifier, object] : *selectedCellData)

@@ -53,6 +53,7 @@ void BuildVerticalQuads(DataStructure& dataStructure, const std::vector<float32>
   REQUIRE(positions.size() == labels.size());
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
   REQUIRE(triangleGeomPtr != nullptr);
+  triangleGeomPtr->setUnits(IGeometry::LengthUnit::Nanometer);
   const usize numQuads = positions.size();
   const auto verticesPath = k_TriGeomPath.createChildPath("Vertices");
   const auto facesPath = k_TriGeomPath.createChildPath("Faces");
@@ -130,6 +131,9 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Geometry description
   CHECK((description->value.find("Millimeter") != std::string::npos) == (choice == 7));
   // The geometry description leaves nonphysical units blank.
   CHECK(description->value.find("Unknown") == std::string::npos);
+  const auto applyResult = result.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  CHECK(UnitTest::GetRequiredData<ImageGeom>(dataStructure, k_GeneratedImageGeomPath).getUnits() == IGeometry::LengthUnit::Nanometer);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive or nonfinite spacing when creating geometry", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")

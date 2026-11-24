@@ -103,7 +103,7 @@ class CalculateHistogramFilter:
       geom_origin = [0, 0, 0]
       geom_spacing = [1, 1, 1]
 
-      output_actions.append_action(nx.CreateImageGeometryAction(histogram_geom_path, geom_dims, geom_origin, geom_spacing, histogram_cellattrmat_name))
+      output_actions.append_action(nx.CreateImageGeometryAction(histogram_geom_path, geom_dims, geom_origin, geom_spacing, histogram_cellattrmat_name, nx.IGeometry.LengthUnit.Unspecified))
       histogram_data_array_path = histogram_geom_path.create_child_path(histogram_cellattrmat_name).create_child_path(histogram_data_array_name)
       output_actions.append_action(nx.CreateArrayAction(nx.DataType.uint8, list(reversed(geom_dims)), [3], histogram_data_array_path))
 

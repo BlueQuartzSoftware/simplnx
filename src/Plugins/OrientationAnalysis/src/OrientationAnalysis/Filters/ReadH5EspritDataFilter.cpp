@@ -148,7 +148,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     {
       value = (value == 0.0f ? 1.0f : value);
     }
-    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
+    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 

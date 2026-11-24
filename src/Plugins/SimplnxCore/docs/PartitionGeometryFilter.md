@@ -12,6 +12,8 @@ If the **Filter** determines that any voxel/node of the original geometry is out
 
 **Starting Feature ID** must be greater than or equal to 0 in every mode. A negative value produces error -3046. The **Partition Attribute Matrix** has *partition count + Starting Feature ID* tuples. The partition count is the product of the partition grid dimensions.
 
+A newly created partition grid inherits the length unit of the geometry being partitioned.
+
 ### Partitioning Mode
 
 The *Partitioning Mode* parameter provides the following choices:

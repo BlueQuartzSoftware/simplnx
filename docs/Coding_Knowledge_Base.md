@@ -512,7 +512,7 @@ defaults and parameter links, with `to_underlying(Enum::Value)`, never with a ra
 of the choices and of the enum values stable: a saved pipeline stores the index. When the enum values are not the
 indices, map the index through a lookup; never `static_cast` a choice index to the enum.
 
-**Example of the broken rule:** `ReadBinaryCTNorthstar`, `ReadImageFilter` and `ImportFijiMontageFilter` cast a
+**Example of the broken rule:** `ReadBinaryCTNorthstar`, `ReadImageFilter` and `ImportFijiMontageFilter` used to cast a
 **Length Unit** choice index straight to `IGeometry::LengthUnit` (issue #1878). `LengthUnit::Unspecified` is 100, but
 it is choice index 27, so the cast gives the wrong unit.
 
@@ -520,8 +520,8 @@ it is choice index 27, so the cast gives the wrong unit.
 
 **What to look for:** `static_cast<SomeEnum>(choiceIndex)`; `== 2` on a choice value.
 
-**Pattern to use:** `to_underlying(...)` in `RemoveFlaggedFeaturesFilter`; an explicit lookup table for the length
-unit.
+**Pattern to use:** `RemoveFlaggedFeaturesFilter` uses `to_underlying(...)` for a dense enum.
+For a length-unit choice, use `IGeometry::GetLengthUnitFromChoiceIndex()`.
 
 ### Match every array's tuple shape to its Attribute Matrix
 
@@ -1070,9 +1070,8 @@ the offset to `RectGridGeom::ValidateBounds()` to check the float32 result befor
 formula. Boundary (corner) coordinates and cell-center coordinates need different formulas; name which one the code
 computes.
 
-**Example of the broken rule:** `ComputeShapes` computed its moments from corner coordinates (PR #1124). `FlyingEdges`
-`getPosCube()`, the boundary coordinates of `WriteVtkRectilinearGrid` and the odd-size sampling of
-`ComputeGBCDPoleFigure` Direct still use a local formula (issue #1878).
+**Example of the broken rule:** `ComputeShapes` computed its moments from corner coordinates (PR #1124).
+Issue #1878 tracked a half-cell shift in Flying Edges contours, exported VTK grid boundaries, and sampling positions for odd-sized GBCD pole figures.
 
 **Why:** a local formula that treats the origin as the center of cell 0, or that omits the half cell, shifts every
 result by half a cell.
@@ -1086,13 +1085,14 @@ that is already a corner; integer half-dimension arithmetic.
 
 **Rule:** a reader that creates a geometry sets its length unit from the file or from its **Length Unit** parameter. A
 geometry whose coordinates are not lengths (orientation-space values, projection values, image pixels without a
-physical scale) uses `IGeometry::LengthUnit::Unspecified`, and the filter documentation says why. Pass the unit to the
-creation action explicitly.
+physical scale) uses `IGeometry::LengthUnit::Unspecified`, and the filter documentation says why.
+`CreateImageGeometryAction` requires an explicit unit in both C++ and Python. When creating a new grid in the
+coordinate system of an existing geometry, pass the source geometry’s unit.
 
 **Example of the broken rule:** the Rodrigues geometry of `ConvertOrientationsToVertexGeometry` reported Meter, and the
 pole-figure images of `WritePoleFigure` and `ComputeGBCDPoleFigure` reported Micrometer (issue #1803, PR #1838). The
-NRRD path of `ReadImage`, `ReadNIfTIFile` and `ReadVolumeGraphicsFile` still drop the unit that the file or the
-parameter gives (issue #1878).
+NRRD path of `ReadImage`, `ReadNIfTIFile` and `ReadVolumeGraphicsFile` dropped the unit supplied by the file or the
+parameter (issue #1878).
 
 **Why:** the coordinates can be correct while their unit metadata is false, and every later measurement inherits the
 wrong unit.

@@ -130,8 +130,9 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
   std::string boxDimensions = ss.str();
 
   // Define a custom class that generates the changes to the DataStructure.
-  auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
-      pImageGeometryPath, CreateImageGeometryAction::DimensionType({pDimensionsValue[0], pDimensionsValue[1], pDimensionsValue[2]}), pOriginValue, pSpacingValue, cellDataName);
+  auto createImageGeometryAction =
+      std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({pDimensionsValue[0], pDimensionsValue[1], pDimensionsValue[2]}), pOriginValue,
+                                                  pSpacingValue, cellDataName, IGeometry::LengthUnit::Micrometer);
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
   nx::core::Result<OutputActions> resultOutputActions;
