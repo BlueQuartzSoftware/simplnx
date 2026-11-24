@@ -59,12 +59,10 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
   return options;
 }
 
-// Builds the ImageGeom + cell DataArray for the NRRD backend (.nrrd/.nhdr). This is the geometry
-// logic of the (now retired) standalone NRRD reader, folded in here so ReadImage produces identical
-// geometry for NRRD volumes: header parse -> dims/origin/spacing -> optional crop delegation -> the create-actions and
-// and the non-axis-aligned ('space directions') warning (code -35750).
+// The NRRD header and geometry overrides determine the grid coordinates. Length Unit labels the full and cropped volumes.
 IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const DataPath& imageGeomPath, const std::string& cellAttrMatName, const std::string& imageDataArrayName,
-                                       const CropGeometryParameter::ValueType& croppingOptions, const ImageIO::GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin)
+                                       IGeometry::LengthUnit lengthUnit, const CropGeometryParameter::ValueType& croppingOptions, const ImageIO::GeometryOverrides& overrides,
+                                       OriginSpacingProcessing processing, bool centerOrigin)
 {
   Result<OutputActions> resultOutputActions;
   std::vector<IFilter::PreflightValue> preflightUpdatedValues;
@@ -89,14 +87,15 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
     return {ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
-  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, lengthUnit)});
 
   if(croppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
   {
     DataStructure tmpDs;
     OutputActions tmpActions;
     {
-      auto tmpGeomAction = std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), cellAttrMatName);
+      auto tmpGeomAction =
+          std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), cellAttrMatName, lengthUnit);
       tmpActions.appendAction(std::move(tmpGeomAction));
     }
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
@@ -134,7 +133,8 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
   }
 
   {
-    auto createGeomAction = std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), cellAttrMatName);
+    auto createGeomAction =
+        std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), cellAttrMatName, lengthUnit);
     resultOutputActions.value().appendAction(std::move(createGeomAction));
   }
 
@@ -146,7 +146,7 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, lengthUnit)});
   preflightUpdatedValues.push_back({"NRRD Header", fmt::format("type: {}  |  components: {}  |  encoding: {}  |  byte-swap: {}", md.typeString, md.componentCount,
                                                                (md.encoding == nrrd::Encoding::Gzip ? "gzip" : "raw"), md.byteSwapRequired ? "yes" : "no")});
 
@@ -282,14 +282,12 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
   auto originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto imageDataTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
-  auto lengthUnitIndex = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
+  const auto lengthUnit = IGeometry::GetLengthUnitFromChoiceIndex(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key));
   auto croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
-  // Dispatch on the file extension: .nrrd/.nhdr use the NRRD backend (geometry built exactly like
-  // the dedicated NRRD reader); everything else is a raster image read below. (.mha is out of scope.)
   if(DetermineReadImageBackend(fileName) == ReadImageBackend::Nrrd)
   {
-    return NrrdPreflight(fileName, imageGeomPath, cellDataName, imageDataArrayName, croppingOptions, overrides, originSpacingProcessing, shouldCenterOrigin);
+    return NrrdPreflight(fileName, imageGeomPath, cellDataName, imageDataArrayName, lengthUnit, croppingOptions, overrides, originSpacingProcessing, shouldCenterOrigin);
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -379,8 +377,6 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
   {
     dataType = ChoiceToImageDataType(imageDataTypeChoice);
   }
-
-  auto lengthUnit = static_cast<IGeometry::LengthUnit>(lengthUnitIndex);
 
   // DataArray dimensions are stored slowest-to-fastest (Z, Y, X); ImageGeometry stores fastest-to-slowest (X, Y, Z).
   std::vector<usize> arrayDims(dims.crbegin(), dims.crend());

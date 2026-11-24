@@ -22,6 +22,8 @@ If the first page is 8-bit RGB and a later page is 8-bit grayscale, the filter f
 
 ### NRRD Volumes
 
+The **Length Unit** parameter labels the output geometry for both a full NRRD volume and a cropped volume.
+
 For a [NRRD](https://teem.sourceforge.net/nrrd/format.html) input (attached single-file `.nrrd`, or detached `.nhdr` + external data file), the geometry is built directly from the NRRD header. Supported header features:
 
 - `encoding: raw` and `encoding: gzip` (only the data segment is compressed).
