@@ -1,5 +1,7 @@
 #include "UnitTestCommon.hpp"
 
+#include "ReaderGeometryTest.hpp"
+
 #include "simplnx/DataStructure/IDataStore.hpp"
 
 #include <zlib.h>
@@ -32,6 +34,17 @@ bool VolumeSupportsPosixRename(const fs::path& directory)
   return (flags & k_SupportsPosixUnlinkRename) != 0;
 }
 #endif
+
+void RequireBadReaderMetadata(const IFilter& filter, const Arguments& args, const std::filesystem::path& file, bool spacing)
+{
+  DataStructure ds;
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  const auto& error = preflight.outputActions.errors().front();
+  CHECK(error.code == (spacing ? ImageGeom::k_InvalidSpacing : ImageGeom::k_InvalidOrigin));
+  CHECK(error.message.starts_with(fmt::format("Input file '{}' has invalid {} values. Error Message: ", file.string(), spacing ? "spacing" : "origin")));
+  CHECK(error.message.ends_with(fmt::format("Enable '{}' to use your own values.", spacing ? "Set Spacing" : "Set Origin")));
+}
 
 void RequireDiskBackedStore(const IDataArray& array)
 {

@@ -103,7 +103,7 @@ public:
    * @param yBounds Array of Y coordinate bounds (nullptr clears the Y bounds)
    * @param zBounds Array of Z coordinate bounds (nullptr clears the Z bounds)
    * @return Success or the first validation error from ValidateBounds().
-   * Error -4006 indicates fewer than two bounds. Error -4048 indicates a component count other than one.
+   * Error -4006 indicates fewer than two bounds on a supplied axis. Error -4048 indicates a component count other than one.
    * Error -4008 indicates nonfinite values. Error -4007 indicates bounds that fail to increase.
    * Store read errors also propagate.
    */
@@ -120,7 +120,7 @@ public:
    * @param zBounds Z coordinate bounds, or nullptr to skip this axis.
    * @param translation Offset to apply in float32 before checking each bounds value.
    * @return Success or the first validation error.
-   * Error -4006 indicates fewer than two bounds. Error -4048 indicates a component count other than one.
+   * Error -4006 indicates fewer than two bounds on a supplied axis. Error -4048 indicates a component count other than one.
    * Error -4008 indicates nonfinite values. Error -4007 indicates bounds that fail to increase.
    * Store read errors also propagate.
    */

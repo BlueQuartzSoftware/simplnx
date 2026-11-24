@@ -639,6 +639,7 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/IImageIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOEnums.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ReaderGeometryOverrides.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageStackCropping.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOFactory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOUtilities.hpp

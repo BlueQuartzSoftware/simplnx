@@ -23,7 +23,6 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIOInternal.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp"
-#include "simplnx/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp"
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
 #include <fmt/format.h>

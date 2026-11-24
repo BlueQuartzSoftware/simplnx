@@ -28,7 +28,7 @@ For a [NRRD](https://teem.sourceforge.net/nrrd/format.html) input (attached sing
 - `endian: little` / `big` (multi-byte types are byte-swapped to host order).
 - Scalar images and interleaved component images (a leading `vector`/`none` axis, e.g. RGB) — the component axis must be the fastest axis (axis 0).
 - Axis-aligned `space directions` (spacing is the magnitude of each direction vector), scalar `spacings`, and `space origin`.
-- An axis with `space directions: none` or a `nan`, `+nan`, or `-nan` entry in `spacings` (any letter case) has unknown spacing and uses 1 for that axis.
+- A leading `none` entry in `space directions` marks the component axis. Once axis 0 is the component axis, a later spatial `none` uses 1 as the spacing on that axis. When `space directions` is absent, a spatial `nan`, `+nan`, or `-nan` entry in `spacings` uses 1 (any letter case).
 - 2D images are loaded with `Z = 1`.
 
 Unsupported NRRD header features produce explicit errors or warnings:

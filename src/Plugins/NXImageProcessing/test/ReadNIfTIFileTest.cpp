@@ -1767,3 +1767,33 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: override invalid stored image
   UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
   UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {4, -3, 8}, {2, 3, 4});
 }
+
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: preserves representable large affine spacing", "[NXImageProcessing][ReadNIfTIFileFilter]")
+{
+  const bool useSform = GENERATE(true, false);
+  const float32 spacing = GENERATE(2.0F, 1.0e20F, 0.0F, std::numeric_limits<float32>::infinity());
+  CAPTURE(useSform, spacing);
+  SyntheticNiftiParams params;
+  if(useSform)
+  {
+    params.sformCode = 1;
+    params.sform = {{{spacing, 0, 0, 0}, {0, 3, 0, 0}, {0, 0, 4, 0}}};
+  }
+  else
+  {
+    params.spacing = {spacing, 3, 4};
+  }
+  const auto file = OutputDir() / "AffineSpacing.nii";
+  WriteNiftiFile(file, MakeHeader(params), {11}, false);
+  const DataPath geometry({"Affine"});
+  const ReadNIfTIFileFilter filter;
+  const auto args = MakeFilterArgs(file, geometry, "Cell Data", "Pixels", true, true);
+  if(spacing == 0.0F || !std::isfinite(spacing))
+  {
+    UnitTest::RequireBadReaderMetadata(filter, args, file, true);
+  }
+  else
+  {
+    UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {0, 0, 0}, {spacing, 3, 4});
+  }
+}

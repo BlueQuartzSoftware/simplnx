@@ -53,7 +53,7 @@ None — this filter reads directly from a `.vtk` file on disk.
 
 ### Geometry Metadata Overrides
 
-**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The replacements apply to both point and cell geometries. On a singleton axis the reader subtracts half the effective spacing from the effective origin.
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The reader uses the replacement even if a stored number in that field is outside the float32 range. The replacements apply to both point and cell geometries. On a singleton axis the reader subtracts half the effective spacing from the effective origin.
 
 % Auto generated parameter table will be inserted here
 

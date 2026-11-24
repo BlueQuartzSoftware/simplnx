@@ -210,7 +210,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
   return {fileBlock};
 }
 
-Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCount)
+Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCount, bool replaceSpacing)
 {
   GeometryBlock block;
   std::string buf;
@@ -246,7 +246,10 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
       auto result = ParseArray<float32, ParseFloatVec3>(tokens, lineCount);
       if(result.invalid())
       {
-        return ConvertResultTo<GeometryBlock>(ConvertResult(std::move(result)), {});
+        if(tokens[0] != k_Resolution || !replaceSpacing || result.errors().front().code != k_VgiParseError)
+        {
+          return ConvertInvalidResult<GeometryBlock>(std::move(result));
+        }
       }
       else if(tokens[0] == k_RelativePosition)
       {
@@ -280,7 +283,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
 }
 
 // -----------------------------------------------------------------------------
-Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const std::string& vgHeaderFilePath)
+Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const std::string& vgHeaderFilePath, bool replaceSpacing)
 {
   std::ifstream vgHeaderFile(vgHeaderFilePath);
   usize lineCount = 0;
@@ -306,7 +309,7 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
 
     else if(buf == k_GeometryBlock)
     {
-      auto result = ParseGeometryBlock(vgHeaderFile, lineCount);
+      auto result = ParseGeometryBlock(vgHeaderFile, lineCount, replaceSpacing);
       if(result.invalid())
       {
         return ConvertResultTo<ReadVolumeGraphicsFileFilter::HeaderMetadata>(ConvertResult(std::move(result)), {});
@@ -436,7 +439,8 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_DensityArrayName_Key);
 
-  Result<HeaderMetadata> metadataResult = ReadHeaderMetaData(pVGHeaderFileValue.string());
+  const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  auto metadataResult = ReadHeaderMetaData(pVGHeaderFileValue.string(), overrides.Spacing.has_value());
   if(metadataResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
@@ -444,7 +448,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
 
   HeaderMetadata metadata = metadataResult.value();
   FloatVec3 origin{0.0F, 0.0F, 0.0F};
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pVGHeaderFileValue, origin, metadata.Spacing); geometryResult.invalid())
+  if(auto geometryResult = overrides.apply(pVGHeaderFileValue, origin, metadata.Spacing); geometryResult.invalid())
   {
     return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }

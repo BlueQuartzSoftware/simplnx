@@ -49,8 +49,10 @@ option to supply that field in X, Y, Z order.
 Readers now reject explicit invalid spacing that some formats previously treated as 1.
 This affects MHA spacing, CTF ``ZStep``, NRRD spacing, TIFF resolution, and NIfTI spacing.
 Enable **Set Spacing** and supply finite, positive values to read a file with invalid spacing.
-An omitted MHA spacing field or CTF ``ZStep`` still uses 1. NRRD ``nan``, ``+nan``, and ``-nan``
-in ``spacings`` and ``none`` in ``space directions`` indicate unknown spacing and use 1 on the affected axis.
+An omitted MHA spacing field or CTF ``ZStep`` still uses 1. In NRRD ``space directions``, a leading
+``none`` marks the component axis. Once axis 0 is the component axis, a later spatial ``none``
+uses 1 as the spacing on that axis. When ``space directions`` is absent, a spatial ``nan``, ``+nan``,
+or ``-nan`` in ``spacings`` uses 1.
 NIfTI uses the magnitude of finite, negative ``pixdim`` values. A zero, NaN, or infinite
 spacing component still requires an override. An explicit zero or negative TIFF resolution
 requires **Set Spacing**.
@@ -73,7 +75,7 @@ Geometry action validation in preflight
 Preflight applies ``CreateImageGeometryAction``, ``UpdateImageGeomAction``, and
 ``CreateRectGridGeometryAction`` with geometry validation. Invalid computed image origin or
 spacing now fails preflight with an error where it previously produced a warning (#1952).
-Rectilinear grid creation requires at least two bounds on each axis. Actions propagate
+Rectilinear grid creation requires at least two bounds per axis (error -4006). Actions propagate
 setter failures to the caller. DREAM.3D writes reject invalid rectilinear bounds.
 
 Remove the fifth constructor argument from existing ``UpdateImageGeomAction`` calls.

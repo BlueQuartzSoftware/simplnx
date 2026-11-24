@@ -324,3 +324,40 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Rejects collapsed translated Rect
   CHECK(moving.getYBounds()->getValue(0) == 0.0F);
   CHECK(moving.getYBounds()->getValue(1) == 0.001F);
 }
+
+TEST_CASE("SimplnxCore::AlignGeometriesFilter: translates shared RectGrid bounds once", "[SimplnxCore][AlignGeometriesFilter]")
+{
+  const bool equalTranslations = GENERATE(true, false);
+  CAPTURE(equalTranslations);
+  DataStructure dataStructure;
+  auto& moving = CreateRectGrid(dataStructure, "Moving Grid", {8388607.0F, 8388608.0F}, {0.0F, 1.0F}, {0.0F, 1.0F});
+  auto* sharedBoundsPtr = moving.getXBounds();
+  REQUIRE(moving.setBounds(sharedBoundsPtr, sharedBoundsPtr, moving.getZBounds()).valid());
+
+  auto* targetPtr = ImageGeom::Create(dataStructure, "Target Image");
+  REQUIRE(targetPtr != nullptr);
+  targetPtr->setDimensions({1, 1, 1});
+  REQUIRE(targetPtr->setOrigin({16777215.0F, equalTranslations ? 16777215.0F : 8388607.0F, 3.0F}).valid());
+
+  AlignGeometriesFilter filter;
+  Arguments args;
+  args.insertOrAssign(AlignGeometriesFilter::k_MovingGeometry_Key, DataPath({"Moving Grid"}));
+  args.insertOrAssign(AlignGeometriesFilter::k_TargetGeometry_Key, DataPath({"Target Image"}));
+  args.insertOrAssign(AlignGeometriesFilter::k_AlignmentType_Key, ChoicesParameter::ValueType{0});
+  const auto result = filter.execute(dataStructure, args);
+  if(equalTranslations)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    CHECK(sharedBoundsPtr->getValue(0) == 16777215.0F);
+    CHECK(sharedBoundsPtr->getValue(1) == 16777216.0F);
+    CHECK(moving.getZBounds()->getValue(0) == 3.0F);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    CHECK(result.result.errors().front().code == -69201);
+    CHECK(sharedBoundsPtr->getValue(0) == 8388607.0F);
+    CHECK(sharedBoundsPtr->getValue(1) == 8388608.0F);
+    CHECK(moving.getZBounds()->getValue(0) == 0.0F);
+  }
+}

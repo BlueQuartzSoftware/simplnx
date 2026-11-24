@@ -123,9 +123,9 @@ Result<> ValidateGridBounds(const RectGridGeom* geometryPtr, const std::filesyst
 
 Result<> RectGridGeomIO::ValidateImportedBounds(const DataStructure& dataStructure, const std::filesystem::path& filePath)
 {
-  for(const auto& [id, object] : dataStructure.getDataMap())
+  for(const auto id : dataStructure.getAllDataObjectIds())
   {
-    if(auto result = ValidateGridBounds(dynamic_cast<const RectGridGeom*>(object.get()), filePath); result.invalid())
+    if(auto result = ValidateGridBounds(dataStructure.getDataAs<RectGridGeom>(id), filePath); result.invalid())
     {
       return result;
     }

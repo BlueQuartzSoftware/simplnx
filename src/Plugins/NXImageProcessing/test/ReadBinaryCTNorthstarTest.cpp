@@ -483,3 +483,45 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: override spacing befo
   // The cropped origin is input origin plus start voxel times spacing.
   UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), {6, 3, 24}, {2, 3, 4});
 }
+
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: overrides out-of-range location coordinates", "[NXImageProcessing][ReadBinaryCTNorthstarFilter]")
+{
+  const bool badMin = GENERATE(false, true);
+  CAPTURE(badMin);
+  WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
+  WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
+  std::string contents;
+  {
+    std::ifstream input(k_NsiHeaderPath);
+    contents.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+  }
+  const auto coordinate = contents.find(badMin ? "<Min>" : "<Max>");
+  REQUIRE(coordinate != std::string::npos);
+  contents.replace(coordinate, contents.find('\n', coordinate) - coordinate, badMin ? "<Min> 0 0 1e40" : "<Max> 5 7 1e40");
+  {
+    std::ofstream output(k_NsiHeaderPath, std::ios::trunc);
+    output << contents;
+    REQUIRE(output.good());
+  }
+
+  const ReadBinaryCTNorthstarFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, k_NsiHeaderPath);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  for(const bool replaceSpacing : {false, true})
+  {
+    if(!badMin && replaceSpacing)
+    {
+      continue;
+    }
+    args.insertOrAssign(ImageIO::k_ChangeOrigin, !replaceSpacing);
+    args.insertOrAssign(ImageIO::k_ChangeSpacing, replaceSpacing);
+    DataStructure ds;
+    const auto strict = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
+    CHECK(strict.outputActions.errors().front().code == -10352);
+  }
+  args.insertOrAssign(ImageIO::k_ChangeOrigin, badMin);
+  args.insertOrAssign(ImageIO::k_ChangeSpacing, true);
+  UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), badMin ? FloatVec3{4, -3, 8} : FloatVec3{0, 0, 0}, {2, 3, 4});
+}

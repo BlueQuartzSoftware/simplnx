@@ -228,9 +228,9 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 def
   }
 }
 
-TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: override missing or zero resolution", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: override missing, zero or out-of-range resolution", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
 {
-  const bool writeResolution = GENERATE(false, true);
+  const std::string_view resolution = GENERATE("", "0 1 1", "1e40 3 4");
   const auto dir = k_VgiDestFile.parent_path();
   const auto header = dir / "OverrideVolume.vgi";
   const auto volume = dir / "OverrideVolume.vol";
@@ -248,9 +248,9 @@ BitsPerElement = 32
 [geometry]
 unit = mm
 )";
-    if(writeResolution)
+    if(!resolution.empty())
     {
-      stream << "resolution = 0 1 1\n";
+      stream << "resolution = " << resolution << '\n';
     }
     REQUIRE(stream.good());
   }
@@ -264,7 +264,19 @@ unit = mm
   const ReadVolumeGraphicsFileFilter filter;
   Arguments args;
   args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, header);
-  UnitTest::RequireBadReaderMetadata(filter, args, header, true);
+  CAPTURE(resolution);
+  if(resolution == "1e40 3 4")
+  {
+    args.insertOrAssign(ImageIO::k_ChangeOrigin, true);
+    DataStructure ds;
+    const auto strict = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
+    CHECK(strict.outputActions.errors().front().code == -91503);
+  }
+  else
+  {
+    UnitTest::RequireBadReaderMetadata(filter, args, header, true);
+  }
   UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
   UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"VolumeGraphics"}), {4, -3, 8}, {2, 3, 4});
 }

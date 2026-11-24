@@ -15,16 +15,7 @@ inline void SetReaderGeometryOverrides(Arguments& args, const FloatVec3& origin,
   args.insertOrAssign(ImageIO::k_Spacing, spacing.toContainer<std::vector<float32>>());
 }
 
-inline void RequireBadReaderMetadata(const IFilter& filter, const Arguments& args, const std::filesystem::path& file, bool spacing)
-{
-  DataStructure ds;
-  const auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-  const auto& error = preflight.outputActions.errors().front();
-  CHECK(error.code == (spacing ? ImageGeom::k_InvalidSpacing : ImageGeom::k_InvalidOrigin));
-  CHECK(error.message.starts_with(fmt::format("Input file '{}' has invalid {} values. Error Message: ", file.string(), spacing ? "spacing" : "origin")));
-  CHECK(error.message.ends_with(fmt::format("Enable '{}' to use your own values.", spacing ? "Set Spacing" : "Set Origin")));
-}
+void RequireBadReaderMetadata(const IFilter& filter, const Arguments& args, const std::filesystem::path& file, bool spacing);
 
 inline void RequireReaderGeometry(const DataStructure& ds, const DataPath& path, const FloatVec3& origin, const FloatVec3& spacing)
 {

@@ -24,6 +24,8 @@ The *Alignment Type* parameter controls how the two geometries are aligned:
 - **Origin [0]**: Aligns geometries by translating the moving geometry so that its minimum coordinate point (origin) matches the minimum coordinate point of the target geometry.
 - **Centroid [1]**: Aligns geometries by translating the moving geometry so that its centroid (center of mass) matches the centroid of the target geometry.
 
+If two or more axes of the moving rectilinear grid share bounds storage, they must use the same translation. The filter applies that translation once. If the axes need different translations, the filter reports an error before changing any coordinates.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

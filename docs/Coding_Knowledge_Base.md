@@ -1024,8 +1024,8 @@ the loop over the groups it counts.
 ### Validate geometry metadata before assigning it
 
 **Rule:** An `ImageGeom` origin must be finite on every axis. Its spacing must be finite and greater than zero on
-every axis. A populated `RectGridGeom` bounds array must contain at least two finite values in strictly increasing
-order, with one component per tuple. The setters enforce these requirements and return `Result<>`. Propagate failures
+every axis. A `RectGridGeom` requires at least two bounds per supplied axis (error -4006). The bounds must be finite
+and strictly increasing, with one component per tuple. The setters enforce these requirements and return `Result<>`. Propagate failures
 from library and filter code. In tests, require success for valid inputs and require the expected error for invalid
 inputs. Validate file metadata with the static geometry validators before creating or modifying a geometry. For image
 readers, offer linked **Set Origin** and **Set Spacing** overrides and validate the effective values. Report invalid

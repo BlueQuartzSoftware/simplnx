@@ -17,6 +17,7 @@
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <array>
 #include <fstream>
 
 using namespace nx::core;
@@ -136,83 +137,44 @@ Result<std::vector<std::pair<fs::path, usize>>> ReadFileList(std::ifstream& inSt
 }
 
 // -----------------------------------------------------------------------------
-Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::ifstream& inStream, const fs::path& headerFilePath, usize& lineCount)
+Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::ifstream& inStream, const fs::path& headerFilePath, usize& lineCount, bool readMin, bool readMax)
 {
-  std::vector<float32> minLocation = {0.0f, 0.0f, 0.0f};
-  std::vector<float32> maxLocation = {0.0f, 0.0f, 0.0f};
-  std::string buffer;
-
-  std::vector<std::string> tokens = ParseNextLine(inStream, ' ', lineCount);
-  while(tokens[0] != "</Location>")
+  using Location = std::pair<std::vector<float32>, std::vector<float32>>;
+  Location location{{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
+  constexpr std::array<usize, 3> k_AxisOrder{1, 2, 0};
+  constexpr std::array<char, 3> k_Axes{'X', 'Y', 'Z'};
+  for(auto tokens = ParseNextLine(inStream, ' ', lineCount);; tokens = ParseNextLine(inStream, ' ', lineCount))
   {
-    if(tokens[0] == "<Min>")
+    if(!tokens.empty() && tokens[0] == "</Location>")
     {
-      Result<float32> result = StringInterpretationUtilities::Convert<float32>(tokens[1]);
-      if(result.invalid())
-      {
-        const Error& err = result.errors()[0];
-        return MakeErrorResult<std::pair<std::vector<float32>, std::vector<float32>>>(
-            err.code, fmt::format("Error reading minimum Y coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", headerFilePath.string(), lineCount, err.message));
-      }
-      minLocation[1] = result.value();
-
-      result = StringInterpretationUtilities::Convert<float32>(tokens[2]);
-      if(result.invalid())
-      {
-        const Error& err = result.errors()[0];
-        return MakeErrorResult<std::pair<std::vector<float32>, std::vector<float32>>>(
-            err.code, fmt::format("Error reading minimum Z coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", headerFilePath.string(), lineCount, err.message));
-      }
-      minLocation[2] = result.value();
-
-      result = StringInterpretationUtilities::Convert<float32>(tokens[3]);
-      if(result.invalid())
-      {
-        const Error& err = result.errors()[0];
-        return MakeErrorResult<std::pair<std::vector<float32>, std::vector<float32>>>(
-            err.code, fmt::format("Error reading minimum X coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", headerFilePath.string(), lineCount, err.message));
-      }
-      minLocation[0] = result.value();
+      return {std::move(location)};
     }
-    else if(tokens[0] == "<Max>")
+    if(tokens.size() < 4 || (tokens[0] != "<Min>" && tokens[0] != "<Max>"))
     {
-      Result<float32> result = StringInterpretationUtilities::Convert<float32>(tokens[1]);
-      if(result.invalid())
-      {
-        const Error& err = result.errors()[0];
-        return MakeErrorResult<std::pair<std::vector<float32>, std::vector<float32>>>(
-            err.code, fmt::format("Error reading maximum Y coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", headerFilePath.string(), lineCount, err.message));
-      }
-      maxLocation[1] = result.value();
-
-      result = StringInterpretationUtilities::Convert<float32>(tokens[2]);
-      if(result.invalid())
-      {
-        const Error& err = result.errors()[0];
-        return MakeErrorResult<std::pair<std::vector<float32>, std::vector<float32>>>(
-            err.code, fmt::format("Error reading maximum Z coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", headerFilePath.string(), lineCount, err.message));
-      }
-      maxLocation[2] = result.value();
-
-      result = StringInterpretationUtilities::Convert<float32>(tokens[3]);
-      if(result.invalid())
-      {
-        const Error& err = result.errors()[0];
-        return MakeErrorResult<std::pair<std::vector<float32>, std::vector<float32>>>(
-            err.code, fmt::format("Error reading maximum X coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", headerFilePath.string(), lineCount, err.message));
-      }
-      maxLocation[0] = result.value();
-    }
-    else
-    {
-      return MakeErrorResult<std::pair<std::vector<float32>, std::vector<float32>>>(
-          -1, fmt::format("Unexpected data at line {} in 'Location' section of Binary CT Northstar file '{}'.  Expecting only 'Min' and 'Max' data fields.", lineCount, headerFilePath.string()));
+      return MakeErrorResult<Location>(-1, fmt::format("Unexpected data at line {} in 'Location' section of Binary CT Northstar file '{}'. Expected '<Min>' or '<Max>' followed by three coordinates.",
+                                                       lineCount, headerFilePath.string()));
     }
 
-    tokens = ParseNextLine(inStream, ' ', lineCount);
+    const bool isMin = tokens[0] == "<Min>";
+    if(isMin ? !readMin : !readMax)
+    {
+      continue;
+    }
+
+    auto& coordinates = isMin ? location.first : location.second;
+    for(usize i = 0; i < k_AxisOrder.size(); ++i)
+    {
+      const usize axis = k_AxisOrder[i];
+      const auto value = StringInterpretationUtilities::Convert<float32>(tokens[i + 1]);
+      if(value.invalid())
+      {
+        const auto& error = value.errors().front();
+        return MakeErrorResult<Location>(error.code, fmt::format("Error reading {} {} coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", isMin ? "minimum" : "maximum",
+                                                                 k_Axes[axis], headerFilePath.string(), lineCount, error.message));
+      }
+      coordinates[axis] = value.value();
+    }
   }
-
-  return {std::make_pair(minLocation, maxLocation)};
 }
 
 // -----------------------------------------------------------------------------
@@ -251,7 +213,8 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
 }
 
 // -----------------------------------------------------------------------------
-Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>> ReadHeaderMetaData(const fs::path& headerFilePath)
+Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>> ReadHeaderMetaData(const fs::path& headerFilePath,
+                                                                                                                              const ImageIO::GeometryOverrides& overrides)
 {
   ReadBinaryCTNorthstarFilter::ImageGeometryInfo imageGeomInfo;
 
@@ -267,6 +230,9 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
   std::ifstream inHeaderStream(headerFilePath.string());
   usize lineCount = 0;
 
+  // The minimum defines both origin and spacing. The maximum affects only spacing.
+  const bool readMax = !overrides.Spacing.has_value();
+  const bool readMin = !overrides.Origin.has_value() || readMax;
   std::vector<std::pair<fs::path, usize>> dataFiles;
   while(!inHeaderStream.eof())
   {
@@ -284,7 +250,7 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
       }
       else if(tokens[i] == "<Location>")
       {
-        auto result = ReadLocation(inHeaderStream, headerFilePath, lineCount);
+        auto result = ReadLocation(inHeaderStream, headerFilePath, lineCount, readMin, readMax);
         if(result.invalid())
         {
           return ConvertResultTo<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(ConvertResult(std::move(result)), {});
@@ -313,7 +279,10 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
       return MakeErrorResult<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(
           k_ZeroVoxelCount, fmt::format("The {} voxel count in '{}' must be greater than zero. Received {}.", k_Axes[i], headerFilePath.string(), voxels[i]));
     }
-    spacing[i] = (maxLocation[i] - minLocation[i]) / static_cast<float32>(voxels[i]);
+    if(readMax)
+    {
+      spacing[i] = (maxLocation[i] - minLocation[i]) / static_cast<float32>(voxels[i]);
+    }
   }
 
   imageGeomInfo.Dimensions = voxels;
@@ -433,7 +402,8 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
     return {MakeErrorResult<OutputActions>(-38701, "The input header file does not exist")};
   }
 
-  Result<std::pair<std::vector<std::pair<fs::path, usize>>, ImageGeometryInfo>> result = ReadHeaderMetaData(pInputHeaderFileValue);
+  const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  auto result = ReadHeaderMetaData(pInputHeaderFileValue, overrides);
   if(result.invalid())
   {
     const Error& err = result.errors()[0];
@@ -441,7 +411,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   }
 
   ImageGeometryInfo geometryInfo = result.value().second;
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputHeaderFileValue, geometryInfo.Origin, geometryInfo.Spacing); geometryResult.invalid())
+  if(auto geometryResult = overrides.apply(pInputHeaderFileValue, geometryInfo.Origin, geometryInfo.Spacing); geometryResult.invalid())
   {
     return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }

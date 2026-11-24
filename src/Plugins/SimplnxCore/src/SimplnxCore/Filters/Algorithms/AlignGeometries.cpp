@@ -9,6 +9,8 @@
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
+#include <array>
+
 using namespace nx::core;
 
 namespace
@@ -287,7 +289,35 @@ Result<> translateGeometry(IGeometry& geometry, const FloatVec3& translation)
   }
   case IGeometry::Type::RectGrid: {
     auto& rectGrid = dynamic_cast<RectGridGeom&>(geometry);
-    auto validation = RectGridGeom::ValidateBounds(rectGrid.getXBounds(), rectGrid.getYBounds(), rectGrid.getZBounds(), translation);
+    std::array<Float32Array*, 3> bounds{rectGrid.getXBounds(), rectGrid.getYBounds(), rectGrid.getZBounds()};
+    std::array<AbstractDataStore<float32>*, 3> stores{};
+    constexpr std::array<char, 3> k_Axes{'X', 'Y', 'Z'};
+    for(usize axis = 0; axis < bounds.size(); ++axis)
+    {
+      auto* storePtr = &bounds[axis]->getDataStoreRef();
+      for(usize earlier = 0; earlier < axis; ++earlier)
+      {
+        if(storePtr != stores[earlier])
+        {
+          continue;
+        }
+        if(translation[axis] != translation[earlier])
+        {
+          return MakeErrorResult(-69201, fmt::format("Cannot translate rectilinear grid geometry '{}': the {} and {} bounds share storage but require different offsets ({} and {}). "
+                                                     "Use separate bounds arrays or an alignment that applies the same offset to the shared axes.",
+                                                     rectGrid.getName(), k_Axes[earlier], k_Axes[axis], translation[earlier], translation[axis]));
+        }
+
+        // The earlier axis already represents these values for validation and writing.
+        bounds[axis] = nullptr;
+        break;
+      }
+      if(bounds[axis] != nullptr)
+      {
+        stores[axis] = storePtr;
+      }
+    }
+    auto validation = RectGridGeom::ValidateBounds(bounds[0], bounds[1], bounds[2], translation);
     if(validation.invalid())
     {
       for(auto& error : validation.errors())
@@ -296,20 +326,17 @@ Result<> translateGeometry(IGeometry& geometry, const FloatVec3& translation)
       }
       return validation;
     }
-    auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
-    auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
-    auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
-    for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
+    for(usize axis = 0; axis < stores.size(); ++axis)
     {
-      xBounds[i] += translation[0];
-    }
-    for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
-    {
-      yBounds[i] += translation[1];
-    }
-    for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
-    {
-      zBounds[i] += translation[2];
+      auto* storePtr = stores[axis];
+      if(storePtr == nullptr)
+      {
+        continue;
+      }
+      for(usize i = 0; i < storePtr->getNumberOfTuples(); ++i)
+      {
+        (*storePtr)[i] += translation[axis];
+      }
     }
     return {};
   }

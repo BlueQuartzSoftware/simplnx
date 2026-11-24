@@ -2730,7 +2730,7 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
 
 namespace
 {
-void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCode)
+void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCode, bool nested = false)
 {
   const usize tupleCount = errorCode == -4006 ? 1 : errorCode == RectGridGeom::k_NonscalarBounds ? 2 : 4;
   const ShapeType tupleShape{tupleCount};
@@ -2772,7 +2772,8 @@ void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCo
 
   DataStructure source;
   REQUIRE(DataGroup::Create(source, "Selected") != nullptr);
-  auto* gridPtr = CreateRectGridGeometry(source, "Malformed Grid", {});
+  const auto parentId = nested ? DataObject::OptionalId{DataGroup::Create(source, "Parent")->getId()} : DataObject::OptionalId{};
+  auto* gridPtr = CreateRectGridGeometry(source, "Malformed Grid", parentId);
   auto* xBoundsPtr = UnitTest::CreateTestDataArray<float32>(source, "Stored X Bounds", {4}, {1}, gridPtr->getId());
   REQUIRE(xBoundsPtr != nullptr);
   for(usize i = 0; i < 4; ++i)
@@ -2785,7 +2786,8 @@ void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCo
   SIMPLNX_RESULT_REQUIRE_VALID(write);
 
   auto hdf = HDF5::FileIO::AppendFile(file);
-  auto gridGroup = hdf.openGroup("DataStructure").openGroup("Malformed Grid");
+  auto rootGroup = hdf.openGroup("DataStructure");
+  auto gridGroup = nested ? rootGroup.openGroup("Parent").openGroup("Malformed Grid") : rootGroup.openGroup("Malformed Grid");
   auto dataset = gridGroup.openDataset("Stored X Bounds");
   const auto datasetId = dataset.getId();
   REQUIRE(datasetId >= 0);
@@ -2870,4 +2872,26 @@ TEST_CASE("SimplnxCore::ImportH5ObjectPathsAction: validates imported grids with
   REQUIRE(importedPtr->getXBounds() != nullptr);
   CHECK(importedPtr->getXBoundsRef()[1] == 1.0F);
   CHECK(existingPtr->getXBoundsRef()[1] == 0.0F);
+}
+
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: strict full reads reject duplicate bounds under HDF5 groups", "[SimplnxCore][ReadDREAM3DFilter][RectGridGeom]")
+{
+  const bool legacy = GENERATE(false, true);
+  CAPTURE(legacy);
+  const auto file = fs::temp_directory_path() / "StrictGroupedRectGridMetadata.dream3d";
+  WriteMalformedRectGridFile(file, legacy, -4007, !legacy);
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  cache.invalidate(file);
+
+  // The legacy reader maps each DataContainers entry to a root DataObject.
+  const auto gridPath = legacy ? DataPath({"Malformed Grid"}) : DataPath({"Parent", "Malformed Grid"});
+  const auto metadata = cache.fetchSelectableMetadata(file);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  CHECK(metadata.value().dataStructure.getDataAs<RectGridGeom>(gridPath) != nullptr);
+
+  const auto strict = DREAM3D::LoadDataStructure(file);
+  SIMPLNX_RESULT_REQUIRE_INVALID(strict);
+  CHECK(strict.errors().front().code == -4007);
+  CHECK(strict.errors().front().message.find("Malformed Grid") != std::string::npos);
+  CHECK(strict.errors().front().message.find(file.string()) != std::string::npos);
 }
