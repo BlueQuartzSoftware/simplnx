@@ -818,12 +818,12 @@ integer result. Intensity Windowing uses `SaturateCastFromDouble` to clamp value
   documentation gives infinity a meaning, such as an unbounded side of a range. A value that the user asks the filter
   to store in a floating-point array (a fill value or a replacement value) may be NaN or infinity.
 - **Values read from a file:** the reader rejects a nonfinite value where the format requires a finite one, with an
-  error that names the file and the field.
+  error that names the file and the field. For image origins, image spacing and rectilinear bounds, see
+  [Validate geometry metadata before assigning it](#validate-geometry-metadata-before-assigning-it).
 - **Floating-point input arrays.** The caller is responsible for supplying data suitable for the filter. Do not add a
   parameter, validation pass, warning or error solely to detect or report NaN or infinity in the user's array.
-  Keep the checks required to compute valid indices and perform safe conversions. When an algorithm needs a finite
-  range, use finite samples in its existing range calculation and handle the case where none are available.
-  Apply the same arithmetic on in-memory and out-of-core paths.
+  Keep the checks required to compute valid indices and perform safe conversions. Apply the same arithmetic on
+  in-memory and out-of-core paths.
 - **Element-wise floating-point results.** Element-wise math can produce an IEEE result such as NaN from the square
   root of a finite negative value. When integer input can produce a fraction or NaN, the output type is floating point.
 - **A computed value written to an integer output:** see
@@ -842,16 +842,14 @@ Histogram** groups values with the same equality test, and the shared statistics
 and `HistogramUtilities.hpp` sort and key floating-point values with `operator<`. `ComputeArrayMinMax` is not NaN-aware
 (issue #1874). **Invert Intensity Image** accepts a NaN **Maximum** and writes 0 to every integer pixel (issue #1873).
 
-**Why:** ordered comparisons with NaN are false. A minimum and maximum seeded with NaN can therefore stay NaN
-even when the rest of the image is finite. Sorting a mixture of NaNs and finite values with ordinary less-than
-comparisons can violate the ordering the sort requires. Converting NaN or infinity to an integer is undefined
-behavior. Guard these operations where they occur.
+**Why:** ordered comparisons with NaN are false. Sorting a mixture of NaNs and finite values with ordinary less-than
+comparisons can violate the ordering the sort requires. Converting NaN or infinity to an integer is undefined behavior.
+Guard these operations where they occur.
 
 **What to look for:**
 
 - `std::sort`, `std::stable_sort`, `std::map`, `std::set` or `std::unique` over floating-point input values;
 - an equivalence written as `!(a < b) && !(b < a)` on floating-point values;
-- a finite range seeded from the first pixel when that pixel can be NaN;
 - a threshold, tolerance or bin index computed from an input value with no finiteness test;
 - a parameter check written as `value < 0` or `value <= 0`, which NaN passes.
 
