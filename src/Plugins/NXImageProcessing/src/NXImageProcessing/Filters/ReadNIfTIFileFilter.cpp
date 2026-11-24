@@ -32,6 +32,21 @@ namespace
 {
 constexpr int32 k_IgnoredAxisDirectionWarning = -34753;
 
+IGeometry::LengthUnit GetSpatialLengthUnit(uint8 spatialUnits)
+{
+  switch(spatialUnits)
+  {
+  case NIFTI_UNITS_METER:
+    return IGeometry::LengthUnit::Meter;
+  case NIFTI_UNITS_MM:
+    return IGeometry::LengthUnit::Millimeter;
+  case NIFTI_UNITS_MICRON:
+    return IGeometry::LengthUnit::Micrometer;
+  default:
+    return IGeometry::LengthUnit::Unspecified;
+  }
+}
+
 ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, const DataPath& outputGeometryPath, const CropGeometryParameter::ValueType& croppingOptions)
 {
   ImageGeometryCropOptions options;
@@ -223,7 +238,8 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
-  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  const auto lengthUnit = GetSpatialLengthUnit(md.spatialUnits);
+  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, lengthUnit)});
 
   // If cropping is enabled, use the shared crop planner on a temporary DataStructure.
   if(pCroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
@@ -231,7 +247,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     DataStructure tmpDs;
     OutputActions tmpActions;
     {
-      auto tmpGeomAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPath, dims, origin, spacing, pCellAttrMatName);
+      auto tmpGeomAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPath, dims, origin, spacing, pCellAttrMatName, lengthUnit);
       tmpActions.appendAction(std::move(tmpGeomAction));
     }
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
@@ -261,7 +277,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   }
 
   {
-    auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPath, dims, origin, spacing, pCellAttrMatName);
+    auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPath, dims, origin, spacing, pCellAttrMatName, lengthUnit);
     resultOutputActions.value().appendAction(std::move(createGeomAction));
   }
 
@@ -282,7 +298,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, lengthUnit)});
 
   std::string scalingSummary =
       md.hasNontrivialScaling ? fmt::format("slope={}, inter={}{}", md.sclSlope, std::isfinite(md.sclInter) ? md.sclInter : 0.0f, (pApplyScaling ? " (applied → float32)" : " (not applied)")) : "none";

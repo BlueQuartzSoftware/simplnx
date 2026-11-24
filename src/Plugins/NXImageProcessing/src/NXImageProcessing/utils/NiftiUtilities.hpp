@@ -206,10 +206,11 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
 
   /** @name Other */
   /** @{ */
-  int16 intentCode{0};    ///< NIFTI_INTENT_* code, if any.
-  std::string intentName; ///< Free-form intent name from the header.
-  std::string descrip;    ///< 80-character description field from the header.
-  std::string filePath;   ///< Path the header was read from; kept for diagnostics.
+  int16 intentCode{0};                      ///< NIFTI_INTENT_* code, if any.
+  std::string intentName;                   ///< Free-form intent name from the header.
+  std::string descrip;                      ///< 80-character description field from the header.
+  std::string filePath;                     ///< Path the header was read from; kept for diagnostics.
+  uint8 spatialUnits = NIFTI_UNITS_UNKNOWN; ///< Spatial unit code from xyzt_units.
   /** @} */
 };
 

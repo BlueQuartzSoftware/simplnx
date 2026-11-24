@@ -50,10 +50,9 @@ the NIfTI `sform` transform (if `sform_code > 0`) or `qform` transform (if
 is set, the filter falls back to `pixdim[1..3]` (the per-axis voxel size
 stored in the header) for spacing and a zero origin.
 
-The spacing units are whatever the source file recorded (most commonly
-millimeters for medical NIfTI data) and are **not** converted by this
-filter. Treat the resulting **Image Geometry** spacing as being in the
-file's native physical units.
+The **Image Geometry** uses the spatial unit recorded in the NIfTI header
+(meters, millimeters, or micrometers). An absent or unrecognized spatial
+unit appears as **Unspecified**. The same unit applies to a cropped volume.
 
 simplnx Image Geometries are axis-aligned; if the stored transform contains a
 non-trivial rotation, only the spacing (column magnitudes) and origin are
