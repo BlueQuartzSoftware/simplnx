@@ -85,6 +85,9 @@ public:
     int32 yPointsHalf = yPoints / 2;
     float32 xRes = 2.0f / float32(xPoints);
     float32 yRes = 2.0f / float32(yPoints);
+    // The middle pixel of an odd grid lies at zero. On an even grid zero lies between pixels.
+    const float32 xCenterOffset = xPoints % 2 == 0 ? xRes * 0.5F : 0.0F;
+    const float32 yCenterOffset = yPoints % 2 == 0 ? yRes * 0.5F : 0.0F;
     bool nhCheck = false;
     int32 hemisphere = 0;
 
@@ -104,8 +107,8 @@ public:
       for(int32 l = xStart; l < xEnd; l++)
       {
         // get (x,y) for stereographic projection pixel
-        float32 x = static_cast<float32>(l - xPointsHalf) * xRes + (xRes / 2.0F);
-        float32 y = static_cast<float32>(k - yPointsHalf) * yRes + (yRes / 2.0F);
+        const float32 x = static_cast<float32>(l - xPointsHalf) * xRes + xCenterOffset;
+        const float32 y = static_cast<float32>(k - yPointsHalf) * yRes + yCenterOffset;
 
         if((x * x + y * y) <= 1.0)
         {
@@ -225,6 +228,13 @@ private:
     {
       adjust = -1.0;
       nhCheck = true;
+    }
+    // The north and south poles map to the center of their respective Lambert squares.
+    if(crystalNormal[0] == 0.0F && crystalNormal[1] == 0.0F)
+    {
+      sqCoord[0] = 0.0F;
+      sqCoord[1] = 0.0F;
+      return nhCheck;
     }
     if(fabsf(crystalNormal[0]) >= fabsf(crystalNormal[1]))
     {

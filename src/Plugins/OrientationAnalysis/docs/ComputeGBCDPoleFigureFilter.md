@@ -30,6 +30,8 @@ For each pixel (x, y) in the output square image, the filter:
 
 Pixels outside the unit circle of the stereographic projection are left at zero intensity.
 
+Each pixel samples the center of its cell. For a three-pixel axis, the sample positions are −2/3, 0, and 2/3.
+
 ### In-Core Path (ComputeGBCDPoleFigureDirect)
 
 When the GBCD array resides in contiguous in-memory storage, the algorithm caches the entire GBCD array (all phases) into a local heap buffer, then uses `ParallelData2DAlgorithm` to compute pixel intensities in parallel across the output image grid. The parallel workers access only the cached raw pointer, so no `DataStore` access occurs in the hot loop.
