@@ -77,7 +77,7 @@ Result<> SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fi
 Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ReadBinaryCTNorthstarInputValues* inputValues)
 {
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputValues->ImageGeometryPath);
-  geom.setUnits(static_cast<IGeometry::LengthUnit>(inputValues->LengthUnit));
+  geom.setUnits(IGeometry::GetLengthUnitFromChoiceIndex(inputValues->LengthUnit));
 
   auto& density = dataStructure.getDataAs<Float32Array>(inputValues->DensityArrayPath)->getDataStoreRef();
   const usize deltaX = inputValues->EndVoxelCoord[0] - inputValues->StartVoxelCoord[0] + 1;

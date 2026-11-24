@@ -138,9 +138,12 @@ void WriteNsiBinaryDataFiles(const fs::path& binaryFilePath1, const fs::path& bi
 }
 } // namespace
 
-TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution", "[NXImageProcessing][ReadBinaryCTNorthstarFilter]")
 {
   UnitTest::LoadPlugins();
+  using Unit = IGeometry::LengthUnit;
+  const auto [choice, expectedUnit] = GENERATE(table<ChoicesParameter::ValueType, Unit>({{0, Unit::Yoctometer}, {27, Unit::Unspecified}, {28, Unit::Unknown}}));
+  CAPTURE(choice);
 
   // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
@@ -152,13 +155,22 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter executio
   Arguments args;
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_LengthUnit_Key, choice);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const DataPath imagePath({"CT Image Geometry"});
+  DataStructure preflightData;
+  const auto applied = preflightResult.outputActions.value().applyAll(preflightData, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(applied);
+  REQUIRE_NOTHROW(preflightData.getDataRefAs<ImageGeom>(imagePath));
+  CHECK(preflightData.getDataRefAs<ImageGeom>(imagePath).getUnits() == expectedUnit);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(imagePath));
+  CHECK(dataStructure.getDataRefAs<ImageGeom>(imagePath).getUnits() == expectedUnit);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(densityArrayPath));
   const Float32Array& densityResult = dataStructure.getDataRefAs<Float32Array>(densityArrayPath);
   REQUIRE(densityResult.getSize() == xDim * yDim * zDim);
