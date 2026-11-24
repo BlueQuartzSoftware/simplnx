@@ -40,6 +40,45 @@ const DataPath k_ExemplarNormals = k_ExemplarContourPath.createChildPath(INodeGe
 const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
 } // namespace ContourTest
 
+TEST_CASE("SimplnxCore::FlyingEdges3D: Contour passes through the physical cell samples", "[SimplnxCore][FlyingEdges3D]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  auto* image = ImageGeom::Create(ds, "Samples");
+  REQUIRE(image != nullptr);
+  image->setDimensions({3, 3, 3});
+  REQUIRE(image->setOrigin({0, 0, 0}).valid());
+  REQUIRE(image->setSpacing({6, 6, 6}).valid());
+  auto* cells = AttributeMatrix::Create(ds, "Cell Data", {3, 3, 3}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  auto* values = UnitTest::CreateTestDataArray<float32>(ds, "X", {3, 3, 3}, {1}, cells->getId());
+  REQUIRE(values != nullptr);
+  for(usize i = 0; i < values->getNumberOfTuples(); ++i)
+  {
+    (*values)[i] = 3.0F + static_cast<float32>(i % 3) * 6.0F;
+  }
+  FlyingEdges3DFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(FlyingEdges3DFilter::k_IsoVal_Key, float64{6.0});
+  args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key, DataPath({"Samples"}));
+  args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key, DataPath({"Samples", "Cell Data", "X"}));
+  const DataPath contourPath({"Contour"});
+  args.insertOrAssign(FlyingEdges3DFilter::k_CreatedTriangleGeometryPath_Key, contourPath);
+  const auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<TriangleGeom>(contourPath));
+  const auto& mesh = ds.getDataRefAs<TriangleGeom>(contourPath);
+  REQUIRE(mesh.getNumberOfFaces() > 0);
+  // The isoplane lies halfway between X samples 3 and 9 and spans the Y and Z sample centers.
+  const auto bounds = mesh.getBoundingBox();
+  CHECK(bounds.getMinPoint() == Point3D<float32>{6, 3, 3});
+  CHECK(bounds.getMaxPoint() == Point3D<float32>{6, 15, 15});
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][FlyingEdges3D]")
 {
   UnitTest::LoadPlugins();
@@ -95,7 +134,14 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
     const auto& kExemplarsVertArray = exemplarContourTriGeom.getVerticesRef();
     algorithmTestScope.requireExpectedStore(kNxVertArray);
 
-    CompareDataArrays<IGeometry::SharedVertexList::value_type>(kExemplarsVertArray, kNxVertArray);
+    REQUIRE(kExemplarsVertArray.getComponentShape() == kNxVertArray.getComponentShape());
+    REQUIRE(kExemplarsVertArray.getTupleShape() == kNxVertArray.getTupleShape());
+    // The archive located samples at cell corners. Its 0.25 spacing places each center 0.125 farther along each axis.
+    for(usize i = 0; i < kExemplarsVertArray.getSize(); ++i)
+    {
+      CAPTURE(i);
+      CHECK(kNxVertArray[i] == Approx(kExemplarsVertArray[i] + 0.125F).epsilon(0.0).margin(UnitTest::EPSILON));
+    }
 
     const auto& kNxTriArray = newContourTriGeom.getFacesRef();
     const auto& kExemplarsTriArray = exemplarContourTriGeom.getFacesRef();
