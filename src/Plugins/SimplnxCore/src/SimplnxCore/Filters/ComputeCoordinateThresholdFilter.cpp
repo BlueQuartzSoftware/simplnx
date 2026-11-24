@@ -161,10 +161,10 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   }
   case ComputeCoordinateThreshold::Sphere: {
     auto pSphereInfo = filterArgs.value<VectorFloat32Parameter::ValueType>(k_SphereInfo_Key);
-
+    // The radius has its own lower limit. The three coordinates may be negative.
     if(pSphereInfo[3] <= 0)
     {
-      return MakePreflightErrorResult(-24713, fmt::format("The spheres radius must be greater than 0. Supplied radius: {}", pSphereInfo[3]));
+      return MakePreflightErrorResult(-24713, fmt::format("The radius in Sphere centroid and Radius (Physical Units) must be greater than 0. The value is {}.", pSphereInfo[3]));
     }
 
     if(geom.getGeomType() == IGeometry::Type::Image)

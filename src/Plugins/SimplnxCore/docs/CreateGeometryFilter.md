@@ -58,9 +58,12 @@ The *Array Handling* parameter controls what happens to the input arrays passed 
 
 The filter validates that the supplied arrays "make sense" for the chosen geometry type (e.g., bounds arrays for a Rectilinear Grid have at least 2 values; no vertex ID in a connectivity list exceeds the vertex count). Checks that require reading actual values run at execute time. By default these checks produce warnings; enable *Treat Geometry Warnings as Errors* to make them fail the pipeline.
 
-### Numeric input constraints
+### Valid Parameter Values
 
-For *Image Geometry*, **Spacing** must contain finite values greater than 0. **Origin** must contain finite values. Other geometry types do not use these values.
+When **Geometry Type** is *Image*, each **Dimensions** value must be a whole number of at least 1 cell.
+The filter checks the total cell count. If the grid is too large, decrease **Dimensions**.
+Each **Spacing** value must be finite and greater than zero. Each **Origin** coordinate must be finite.
+Use **Length Unit** to select the units for **Spacing** and **Origin**.
 
 % Auto generated parameter table will be inserted here
 

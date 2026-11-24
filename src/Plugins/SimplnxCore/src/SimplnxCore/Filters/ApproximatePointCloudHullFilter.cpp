@@ -10,8 +10,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <cmath>
-
 namespace nx::core
 {
 
@@ -51,8 +49,9 @@ Parameters ApproximatePointCloudHullFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_GridResolution_Key, "Grid Resolution", "Geometry resolution", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<UInt64Parameter>(k_MinEmptyNeighbors_Key, "Minimum Number of Empty Neighbors", "Minimum number of empty neighbors", 0));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_GridResolution_Key, "Grid Resolution", "Geometry resolution", std::vector<float32>{1.0F, 1.0F, 1.0F},
+                                                         std::vector<std::string>{"X", "Y", "Z"}, VectorFloat32Parameter::Bounds::Positive()));
+  params.insert(std::make_unique<UInt64Parameter>(k_MinEmptyNeighbors_Key, "Minimum Number of Empty Neighbors", "Minimum number of empty neighbors", 0, UInt64Parameter::Bounds::AtMost(26)));
 
   params.insertSeparator(Parameters::Separator{"Input Vertex Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex geometry", DataPath(),
@@ -79,15 +78,8 @@ IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
 IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto gridResolution = filterArgs.value<std::vector<float32>>(k_GridResolution_Key);
   auto vertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath_Key);
   auto hullVertexGeomPath = filterArgs.value<DataPath>(k_HullVertexGeomPath_Key);
-
-  if(gridResolution[0] <= 0.0f || gridResolution[1] <= 0.0f || gridResolution[2] <= 0.0f)
-  {
-    std::string ss = fmt::format("Grid resolutions must be greater than zero. Current values: X={}, Y={}, Z={}", gridResolution[0], gridResolution[1], gridResolution[2]);
-    return {MakeErrorResult<OutputActions>(-11001, ss)};
-  }
 
   auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
 

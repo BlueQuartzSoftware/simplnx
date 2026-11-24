@@ -52,7 +52,6 @@ using nx::core::ImageProcessing::ObjectMorphOp;
 namespace
 {
 // Fresh error/warning codes for this filter (grep-verified unused across src/: -8530 block).
-constexpr int32 k_NonFiniteValue = -8531;
 constexpr int32 k_ValueOutOfRange = -8532;
 constexpr int32 k_ValueTruncated = -8533;
 
@@ -303,13 +302,13 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
     {
       auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN(), 0.0));
       REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
+      REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
     }
     // Non-finite (Inf) Background Value -> error (Object Value is in-range).
     {
       auto result = filter.preflight(ds, makeArgs(inputPath, 1.0, std::numeric_limits<float64>::infinity()));
       REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
+      REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
     }
     // Both values fractional -> TWO truncation warnings, still valid (warnings from both are accumulated).
     {
@@ -348,7 +347,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
     {
       auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity(), 0.0));
       REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
+      REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
     }
     // Both exactly-representable finite values -> clean (no truncation warning for float types).
     {

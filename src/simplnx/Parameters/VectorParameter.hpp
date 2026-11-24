@@ -2,7 +2,10 @@
 
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 
+#include <concepts>
+#include <utility>
 #include <vector>
 
 namespace nx::core
@@ -34,10 +37,21 @@ class VectorParameter : public VectorParameterBase
 public:
   using ValueType = std::vector<T>;
   using ElementType = typename ValueType::value_type;
+  using Bounds = NumberBounds<T>;
 
   VectorParameter() = delete;
-  VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names);
+  VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names,
+                  std::optional<Bounds> bounds = std::nullopt);
   VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+
+  // Deduce the bounds argument so that a bare {} still selects the named constructor.
+  template <class BoundsArg>
+  requires std::constructible_from<std::optional<Bounds>, BoundsArg>
+  VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, BoundsArg&& bounds)
+  : VectorParameter(name, humanName, helpText, defaultValue, NamesType(defaultValue.size()), std::optional<Bounds>(std::forward<BoundsArg>(bounds)))
+  {
+  }
+
   ~VectorParameter() override = default;
 
   VectorParameter(const VectorParameter&) = delete;
@@ -110,6 +124,11 @@ public:
    */
   Result<> validateVector(const ValueType& value) const;
 
+  /**
+   * @brief Returns the declared limits. Floating-point values must be finite by default.
+   */
+  const std::optional<Bounds>& bounds() const;
+
 protected:
   /**
    * @brief
@@ -126,6 +145,7 @@ protected:
 private:
   ValueType m_DefaultValue = {};
   NamesType m_Names;
+  std::optional<Bounds> m_Bounds;
 };
 
 extern template class VectorParameter<int8>;

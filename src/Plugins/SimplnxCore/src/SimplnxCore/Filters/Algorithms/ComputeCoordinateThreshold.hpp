@@ -79,6 +79,7 @@ public:
   /**
    * @brief Creates the coordinate-threshold mask.
    * @return Success or warning, or an input or output-storage error.
+   * @pre In Sphere mode, Sphere centroid and Radius (Physical Units) has finite center coordinates and a finite positive radius; geometry and mask selections are valid.
    *
    * ImageGeom paths return success when a cancellation checkpoint observes the signal. Data written
    * before that checkpoint remains in the mask. Later cells are not written. Non-image paths do not

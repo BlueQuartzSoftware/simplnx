@@ -17,7 +17,7 @@ The *Interpolation Technique* parameter provides the following choices:
 
 ### Kernel
 
-The user defines the (x, y, z) radii of a kernel in *real space units*. The kernel radii are converted to voxel units based on the spacing of the **Image Geometry**. If the kernel radius in a given dimension is smaller than the voxel spacing, the kernel has a zero extent in that dimension (i.e., each point only affects its own voxel along that axis).
+**Kernel Size** gives the X, Y and Z physical extents in the geometry length units. If an extent is smaller than its cell spacing, its radius is 0. Otherwise, the radius in cells is `ceil((extent / spacing) * 0.5)`. Fractional physical extents are valid.
 
 ### Algorithm
 
@@ -87,7 +87,20 @@ This filter uses flat arrays rather than variable-length lists, so memory usage 
 
 ### Voxel Index Computation
 
-The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the [Map Point Cloud to Regular Grid](MapPointCloudToRegularGridFilter.md) filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
+The filter uses the vertex coordinates and the origin, spacing, and dimensions of **Interpolated Image Geometry** to find each vertex's destination cell.
+The filter skips masked and exterior vertices. It stops if a coordinate that needs a cell index cannot convert to one.
+Check the coordinates in **Vertex Geometry to Interpolate** and the origin and spacing in **Interpolated Image Geometry**.
+
+### Valid Parameter Values
+
+Each **Kernel Size** value must be finite and at least zero in the geometry's length units.
+A zero extent limits the contribution to the center cell along that axis.
+
+When **Interpolation Technique** is *Gaussian*, each **Gaussian Sigmas** value must be from 0.001 to 1000 cells, inclusive.
+
+The filter uses the image spacing to calculate the kernel size in cells. Finite spacing values must be greater than zero.
+If preflight cannot calculate a valid kernel, the filter warns and tries again during the run.
+If the kernel is still too large, decrease **Kernel Size** or use a grid with larger spacing.
 
 % Auto generated parameter table will be inserted here
 

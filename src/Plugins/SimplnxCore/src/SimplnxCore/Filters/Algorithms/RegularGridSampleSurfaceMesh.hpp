@@ -67,6 +67,7 @@ public:
   /**
    * @brief Rasterizes all scheduled Z slices.
    * @return The first input or output store error.
+   * @pre Prepared Image Geometry metadata and face-label selections are valid.
    *
    * Cancellation stops new worker scheduling. Scheduled workers finish unless another worker reports an error.
    */

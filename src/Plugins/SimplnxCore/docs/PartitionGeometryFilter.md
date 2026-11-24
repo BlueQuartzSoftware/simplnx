@@ -10,7 +10,7 @@ This **Filter** overlays a coarse **partition grid** onto an existing geometry a
 
 If the **Filter** determines that any voxel/node of the original geometry is out-of-bounds compared to the generated partition grid, the **Out-Of-Bounds Cell ID** will be used as the partition ID in the output partition IDs array.
 
-**Starting Feature ID** must be greater than or equal to 0 in every mode. A negative value produces error -3046. The **Partition Attribute Matrix** has *partition count + Starting Feature ID* tuples. The partition count is the product of the partition grid dimensions.
+The **Partition Attribute Matrix** has *partition count + Starting Feature ID* tuples. The partition count is the product of the partition grid dimensions.
 
 ### Partitioning Mode
 
@@ -125,9 +125,19 @@ On all partitioning modes, a vertex mask can be used with a vertex-based input g
 
 **Input Geometry Cell Attribute Matrix** must have one tuple per cell of **Input Geometry to Partition**. This requirement applies to Image and Rectilinear Grid geometries in every partitioning mode.
 
-### Numeric input constraints
+### Valid Parameter Values
 
-In *Advanced* mode, each **Cell Length** must be finite and greater than 0 for every geometry type. **Partition Grid Origin** must contain finite values. Other modes do not use these parameters.
+In *Basic*, *Advanced* and *Bounding Box* modes, each **Number Of Cells Per Axis** value must be a whole number of at least 1.
+**Starting Feature ID** must be zero or greater. The largest partition ID can be at most 2,147,483,647.
+If the IDs are too large, decrease **Starting Feature ID** or use fewer partition cells.
+
+In *Advanced* mode, each **Cell Length (Physical Units)** value must be finite and greater than zero.
+Each **Partition Grid Origin** coordinate must be finite. Use the geometry's length units for these values.
+
+In *Existing Partition Grid* mode, the filter checks the selected grid when it runs.
+If the grid has zero cells, the filter assigns **Out-Of-Bounds Feature ID** to every input element.
+Finite partition grid spacing values must be greater than zero. Exterior points receive **Out-Of-Bounds Feature ID**.
+The filter stops when a coordinate that needs a partition index cannot convert to one.
 
 % Auto generated parameter table will be inserted here
 

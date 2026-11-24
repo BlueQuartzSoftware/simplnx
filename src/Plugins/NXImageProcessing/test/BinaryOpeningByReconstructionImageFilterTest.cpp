@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/Filters/BinaryOpeningByReconstructionImageFilter.hpp"
 
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 
@@ -242,7 +243,6 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr int32 k_NonFiniteBinaryValue = -8570;
   constexpr int32 k_BinaryValueOutOfRange = -8571;
   constexpr int32 k_BinaryValueTruncated = -8572;
   constexpr int32 k_ForegroundEqualsBackground = -8579;
@@ -273,7 +273,7 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
   {
     auto result = filter.preflight(ds, makeArgs(std::numeric_limits<float64>::infinity(), 0.0));
     REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteBinaryValue);
+    REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
   }
 
   SECTION("out-of-range fg (negative, invalid for uint8) is rejected")

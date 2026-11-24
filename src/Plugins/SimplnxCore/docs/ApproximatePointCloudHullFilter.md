@@ -28,6 +28,17 @@ Note that the resulting hull geometry does not inherit any **Attribute Arrays** 
 
 - **Vertex Geometry** -- the input 3D point cloud, typically created by an import step or by a filter that produces a **Vertex Geometry**.
 
+### Valid Parameter Values
+
+Each **Grid Resolution** value must be finite and greater than zero in the geometry's length units.
+**Minimum Number of Empty Neighbors** must be a whole number from 0 through 26, inclusive.
+If the resulting grid is too large, increase **Grid Resolution** or use a smaller point cloud.
+
+### Vertex Coordinates
+
+The filter stops if it cannot map a vertex coordinate to a cell in the grid.
+Check the coordinates in **Vertex Geometry** or increase **Grid Resolution**.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

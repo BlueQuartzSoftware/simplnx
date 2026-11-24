@@ -1,11 +1,337 @@
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
+
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
+#ifdef SIMPLNX_ENABLE_MULTICORE
+#include <tbb/global_control.h>
+#endif
+
+#include <algorithm>
+#include <atomic>
 #include <catch2/catch.hpp>
+#include <cmath>
+#include <limits>
 
 using namespace nx::core;
+
+TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx][ImageGeometryResample]")
+{
+  DataStructure ds;
+  auto* source = ImageGeom::Create(ds, "Source");
+  REQUIRE(source != nullptr);
+  source->setDimensions({4, 3, 2});
+  source->setSpacing({2, 3, 4});
+  source->setOrigin({-1, 0, 1});
+  ResampleImageGeomInputValues input{};
+  input.SelectedImageGeometryPath = DataPath({"Source"});
+  int32 expectedCode = 0;
+  SizeVec3 expectedDimensions = {2, 3, 4};
+  FloatVec3 expectedSpacing = {4, 3, 2};
+  std::string context;
+  SECTION("Spacing ordinary")
+  {
+    input.Spacing = {4, 3, 2};
+  }
+  SECTION("Scaling ordinary")
+  {
+    input.ResamplingMode = 1;
+    input.Scaling = {200, 50, 100};
+    expectedDimensions = {8, 1, 2};
+    expectedSpacing = {1, 6, 4};
+  }
+  SECTION("Exact ordinary")
+  {
+    input.ResamplingMode = 2;
+    input.ExactDimensions = {2, 3, 4};
+  }
+  SECTION("Minimum one")
+  {
+    input.Spacing = {16, 18, 16};
+    expectedDimensions = {1, 1, 1};
+    expectedSpacing = {16, 18, 16};
+  }
+  SECTION("Large representable")
+  {
+    source->setDimensions({1, 1, 1});
+    source->setSpacing({1, 1, 1});
+    input.Spacing = {std::ldexp(1.0F, -32), 1, 1};
+    expectedDimensions = {usize{1} << 32, 1, 1};
+    expectedSpacing = {input.Spacing[0], 1, 1};
+  }
+  SECTION("Spacing overflow")
+  {
+    source->setDimensions({2, 1, 1});
+    source->setSpacing({3e38F, 1, 1});
+    input.ResamplingMode = 2;
+    input.ExactDimensions = {1, 1, 1};
+    expectedCode = -86127;
+    context = "calculated cell count on the X axis";
+  }
+  SECTION("Spacing underflow")
+  {
+    source->setDimensions({1, 1, 1});
+    source->setSpacing({std::numeric_limits<float32>::denorm_min(), 1, 1});
+    input.ResamplingMode = 1;
+    input.Scaling = {200, 100, 100};
+    expectedCode = -86126;
+    context = "invalid output spacing on the X axis (0)";
+  }
+  SECTION("Dimension exclusive bound")
+  {
+    source->setDimensions({1, 1, 1});
+    source->setSpacing({1, 1, 1});
+    input.Spacing = {std::ldexp(1.0F, -64), 1, 1};
+    expectedCode = -86127;
+    context = "calculated cell count on the X axis";
+  }
+  SECTION("Tuple product")
+  {
+    source->setDimensions({1, 1, 1});
+    source->setSpacing({1, 1, 1});
+    input.Spacing = {std::ldexp(1.0F, -32), std::ldexp(1.0F, -32), 1};
+    expectedCode = -86128;
+    context = "too many cells";
+  }
+  const auto originalDimensions = source->getDimensions();
+  const auto originalSpacing = source->getSpacing();
+  const auto originalOrigin = source->getOrigin();
+  auto result = ComputeResampledImageLayout(*source, input);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.warnings().empty());
+    CHECK(result.value().Dimensions == expectedDimensions);
+    CHECK(result.value().Spacing == expectedSpacing);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == expectedCode);
+    CHECK(result.errors()[0].message.find(context) != std::string::npos);
+    const auto& message = result.errors()[0].message;
+    CHECK(message.find("Source") != std::string::npos);
+    if(expectedCode == -86127)
+    {
+      CHECK(message.find("output spacing") != std::string::npos);
+      CHECK(message.find("at least 0 and less than") != std::string::npos);
+    }
+    if(expectedCode == -86126)
+    {
+      CHECK(message.find("Scale Factor (percentages)") == std::string::npos);
+      CHECK(message.find("Exact Dimensions (pixels)") == std::string::npos);
+    }
+  }
+  CHECK(source->getDimensions() == originalDimensions);
+  CHECK(source->getSpacing() == originalSpacing);
+  CHECK(source->getOrigin() == originalOrigin);
+}
+
+namespace
+{
+constexpr int32 k_InjectionError = -91014;
+
+class FailingResampleSourceStore : public DataStore<int32>
+{
+public:
+  explicit FailingResampleSourceStore(std::atomic_bool& cancel)
+  : DataStore<int32>({1, 1, 2}, {1}, 0)
+  , m_Cancel(cancel)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
+  {
+    if(!m_Cancel.exchange(true))
+    {
+      return MakeErrorResult(k_InjectionError, "Injected source read failure");
+    }
+    return DataStore<int32>::copyIntoBuffer(offset, buffer);
+  }
+
+private:
+  std::atomic_bool& m_Cancel;
+};
+} // namespace
+
+TEST_CASE("simplnx::ImageGeometryResample: Cancellation preserves a source read error", "[simplnx][ImageGeometryResample]")
+{
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  const tbb::global_control oneThread(tbb::global_control::max_allowed_parallelism, 1);
+#endif
+  std::atomic_bool cancel = false;
+  DataStructure ds;
+  // Leave an array after the first task batch so the scheduler observes cancellation after it joins the failed read.
+  const usize arrayCount = std::max<usize>(1, ParallelTaskAlgorithm{}.getMaxThreads()) + 1;
+  for(const auto& name : {"Source", "Destination"})
+  {
+    auto result = CreateImageGeometryAction(DataPath({name}), {2, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    for(usize index = 0; index < arrayCount; index++)
+    {
+      const DataPath path({name, "Cell Data", std::to_string(index)});
+      result = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, path).apply(ds, IDataAction::Mode::Execute);
+      SIMPLNX_RESULT_REQUIRE_VALID(result);
+      if(std::string_view(name) == "Source")
+      {
+        REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(path));
+        auto& array = ds.getDataRefAs<Int32Array>(path);
+        result = array.setDataStore(std::make_shared<FailingResampleSourceStore>(cancel));
+        SIMPLNX_RESULT_REQUIRE_VALID(result);
+      }
+    }
+  }
+  usize announcements = 0;
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Info)
+    {
+      ++announcements;
+    }
+  }};
+  ResampleImageGeomInputValues input{};
+  input.SelectedImageGeometryPath = DataPath({"Source"});
+  input.CreatedImageGeometryPath = DataPath({"Destination"});
+  auto result = ResampleImageGeom(ds, handler, cancel, &input)();
+  REQUIRE(cancel.load());
+  REQUIRE(announcements < arrayCount);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == k_InjectionError);
+}
+
+TEST_CASE("simplnx::ImageGeometryResample: Prepared metadata stops copy", "[simplnx][ImageGeometryResample]")
+{
+  DataStructure ds;
+  for(const auto& name : {"Source", "Destination"})
+  {
+    auto geometry = CreateImageGeometryAction(DataPath({name}), {2, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(geometry);
+    auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, DataPath({name, "Cell Data", "Marker"})).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(array);
+    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({name, "Cell Data", "Marker"})));
+    auto& values = ds.getDataRefAs<Int32Array>(DataPath({name, "Cell Data", "Marker"}));
+    values[0] = name == std::string("Source") ? 7 : 31;
+    values[1] = name == std::string("Source") ? 9 : 37;
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Destination"})));
+  auto& destination = ds.getDataRefAs<ImageGeom>(DataPath({"Destination"}));
+  int32 expectedCode = -86136;
+  constexpr auto k_Nan = std::numeric_limits<float32>::quiet_NaN();
+  constexpr auto k_Inf = std::numeric_limits<float32>::infinity();
+  SECTION("NaN spacing")
+  {
+    destination.setSpacing({k_Nan, 1, 1});
+    expectedCode = -86137;
+  }
+  SECTION("Finite nonpositive spacing")
+  {
+    destination.setSpacing({0, 1, 1});
+  }
+  SECTION("Infinite destination origin")
+  {
+    destination.setOrigin({k_Inf, 0, 0});
+    expectedCode = 0;
+  }
+  SECTION("Coincident infinite origins")
+  {
+    REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Source"})));
+    ds.getDataRefAs<ImageGeom>(DataPath({"Source"})).setOrigin({k_Inf, 0, 0});
+    destination.setOrigin({k_Inf, 0, 0});
+    expectedCode = -86137;
+  }
+  SECTION("Exterior axis with unsafe axes")
+  {
+    const usize outside = GENERATE(usize{0}, usize{1}, usize{2});
+    CAPTURE(outside);
+    FloatVec3 origin = {k_Nan, k_Nan, k_Nan};
+    origin[outside] = k_Inf;
+    destination.setOrigin(origin);
+    expectedCode = 0;
+  }
+  SECTION("Unsafe origin with interior coordinates")
+  {
+    destination.setOrigin({0, k_Nan, 0});
+    expectedCode = -86137;
+  }
+  SECTION("Unsafe axes with interior coordinates")
+  {
+    const usize inside = GENERATE(usize{0}, usize{1}, usize{2});
+    CAPTURE(inside);
+    FloatVec3 origin = {k_Nan, k_Nan, k_Nan};
+    origin[inside] = 0;
+    destination.setOrigin(origin);
+    expectedCode = -86137;
+  }
+  SECTION("One exterior tuple and one unsafe tuple")
+  {
+    destination.setOrigin({-1, k_Nan, 0});
+    expectedCode = -86137;
+  }
+  SECTION("Cell count")
+  {
+    destination.setDimensions({usize{1} << 63, 2, 1});
+    expectedCode = -86229;
+  }
+  SECTION("Row count")
+  {
+    destination.setDimensions({0, usize{1} << 63, 2});
+    expectedCode = -86230;
+  }
+  SECTION("Rows to copy")
+  {
+    auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, DataPath({"Destination", "Cell Data", "Extra"})).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(array);
+    destination.setDimensions({1, usize{1} << 63, 1});
+    expectedCode = -86231;
+  }
+  SECTION("Array value count")
+  {
+    auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {16}, DataPath({"Destination", "Cell Data", "Extra"})).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(array);
+    const auto* extra = ds.getDataAs<Int32Array>(DataPath({"Destination", "Cell Data", "Extra"}));
+    REQUIRE(extra != nullptr);
+    REQUIRE(extra->getNumberOfComponents() == 16);
+    destination.setDimensions({usize{1} << 60, 1, 1});
+    expectedCode = -86232;
+  }
+  SECTION("Array byte count")
+  {
+    destination.setDimensions({usize{1} << 62, 1, 1});
+    expectedCode = -86233;
+  }
+  SECTION("Axis length")
+  {
+    destination.setDimensions({std::vector<usize>{}.max_size() + 1, 1, 1});
+    expectedCode = -86234;
+  }
+  ResampleImageGeomInputValues input{};
+  input.SelectedImageGeometryPath = DataPath({"Source"});
+  input.CreatedImageGeometryPath = DataPath({"Destination"});
+  const std::atomic_bool cancel = false;
+  const IFilter::MessageHandler handler;
+  auto result = ResampleImageGeom(ds, handler, cancel, &input)();
+  CAPTURE(expectedCode);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == expectedCode);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Destination", "Cell Data", "Marker"})));
+  const auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Destination", "Cell Data", "Marker"}));
+  CHECK(values[0] == (expectedCode == 0 ? 0 : 31));
+  CHECK(values[1] == (expectedCode == 0 ? 0 : 37));
+}
 
 TEST_CASE("simplnx::PreflightImageGeometryResample: the planned geometry keeps the source length unit", "[simplnx][PreflightImageGeometryResample]")
 {

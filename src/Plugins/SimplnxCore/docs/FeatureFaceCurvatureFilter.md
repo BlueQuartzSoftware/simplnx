@@ -36,6 +36,11 @@ Principal curvatures and mean curvature are reported in **1/length** (the recipr
 - **Face Normals** -- computed by [Compute Triangle Normals](TriangleNormalFilter.md).
 - **Face Centroids** -- computed by [Compute Triangle Centroids](TriangleCentroidFilter.md).
 
+### Valid Parameter Values
+
+**Neighborhood Ring Count** must be a whole number of at least 1.
+It sets the number of rings of neighbors for each curvature calculation.
+
 % Auto generated parameter table will be inserted here
 
 ## References

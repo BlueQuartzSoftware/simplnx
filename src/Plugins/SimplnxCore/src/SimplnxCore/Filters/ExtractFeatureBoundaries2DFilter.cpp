@@ -101,8 +101,6 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   auto pInputImageGeometryPathValue = filterArgs.value<DataPath>(k_InputImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pOutputEdgeGeometryPathValue = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
-  auto pZValueChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ZValueChoice_Key);
-  auto pCustomZValue = filterArgs.value<float32>(k_CustomZValue_Key);
   auto pExtractVirtualSampleEdges = filterArgs.value<bool>(k_ExtractVirtualSampleEdges_Key);
 
   if(auto result = ValidateCellTupleCount(dataStructure, pInputImageGeometryPathValue, {pFeatureIdsArrayPathValue}, -1019); result.invalid())

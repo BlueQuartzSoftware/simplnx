@@ -3,12 +3,23 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
+#include <cmath>
+#include <limits>
 
 using namespace nx::core;
 
 namespace
 {
+constexpr nx::core::int32 k_GridAxisTooLarge = -86133;
+constexpr nx::core::int32 k_VoxelBoundsRepresentation = -86132;
+constexpr nx::core::int32 k_GridBorderOutOfRange = -86236;
+constexpr nx::core::int32 k_GridCellCountOverflow = -86238;
+constexpr nx::core::int32 k_GridContainerTooLarge = -86239;
+constexpr nx::core::int32 k_VertexVoxelOutOfRange = -86248;
+
 bool validNeighbor(const SizeVec3& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
 {
   int64 modX = x + neighborhood[3 * index + 0];
@@ -84,21 +95,28 @@ Result<> ApproximatePointCloudHull::operator()()
     }
   }
 
-  int64 bboxMin[3] = {0, 0, 0};
-  int64 bboxMax[3] = {0, 0, 0};
-
-  // Add an empty one-voxel border on each side of the occupied grid.
-  // Both padding and vertex mapping use integer voxel indices so float rounding cannot remove the border.
-  for(usize i = 0; i < 3; i++)
+  std::array<float64, 3> minimumVoxelCoordinates = {};
+  std::array<float64, 3> maximumVoxelCoordinates = {};
+  for(usize axis = 0; axis < 3; ++axis)
   {
-    bboxMin[i] = static_cast<int64>(std::floor(meshMinExtents[i] * inverseResolution[i])) - 1;
-    bboxMax[i] = static_cast<int64>(std::floor(meshMaxExtents[i] * inverseResolution[i])) + 1;
+    minimumVoxelCoordinates[axis] = std::floor(meshMinExtents[axis] * inverseResolution[axis]);
+    maximumVoxelCoordinates[axis] = std::floor(meshMaxExtents[axis] * inverseResolution[axis]);
+  }
+  // The returned dimensions include an empty one-voxel border on each side of the occupied grid.
+  auto gridResult = ValidateGridRepresentation(minimumVoxelCoordinates, maximumVoxelCoordinates);
+  if(gridResult.invalid())
+  {
+    return ConvertResult(std::move(gridResult));
+  }
+  std::array<int64, 3> bboxMin = {};
+
+  // Validation guarantees each lower bound is an integer above the int64 minimum, so the border is subtracted exactly.
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    bboxMin[axis] = static_cast<int64>(minimumVoxelCoordinates[axis]) - 1;
   }
 
-  auto dims1 = static_cast<usize>(bboxMax[0] - bboxMin[0] + 1);
-  auto dims2 = static_cast<usize>(bboxMax[1] - bboxMin[1] + 1);
-  auto dims3 = static_cast<usize>(bboxMax[2] - bboxMin[2] + 1);
-  SizeVec3 dims(std::vector<usize>{dims1, dims2, dims3});
+  const SizeVec3 dims = gridResult.value();
   samplingGrid->setDimensions(dims);
 
   int64 multiplier[3] = {1, static_cast<int64>(samplingGrid->getNumXCells()), static_cast<int64>(samplingGrid->getNumXCells() * samplingGrid->getNumYCells())};
@@ -106,6 +124,7 @@ Result<> ApproximatePointCloudHull::operator()()
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   progressThrottle.reset(numVerts, "Mapping Vertices to Voxels");
+  const std::string inputVertexGeometryPath = m_InputValues->InputVertexGeometryPath.toString();
 
   for(int64 v = 0; v < numVerts; v++)
   {
@@ -120,10 +139,21 @@ Result<> ApproximatePointCloudHull::operator()()
         progressThrottle.updatePercent(v);
       }
     }
-    auto i = static_cast<int64>(std::floor((*verts)[3 * v + 0] * inverseResolution[0])) - bboxMin[0];
-    auto j = static_cast<int64>(std::floor((*verts)[3 * v + 1] * inverseResolution[1])) - bboxMin[1];
-    auto k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2])) - bboxMin[2];
-    int64 index = i * multiplier[0] + j * multiplier[1] + k * multiplier[2];
+    std::array<int64, 3> offset = {};
+    for(usize axis = 0; axis < offset.size(); ++axis)
+    {
+      const float32 coordinate = (*verts)[3 * v + axis];
+      const float64 voxel = std::floor(coordinate * inverseResolution[axis]);
+      // The occupied bounds lie one cell inside the padded grid and fit int64.
+      if(!std::isfinite(voxel) || voxel < minimumVoxelCoordinates[axis] || voxel > maximumVoxelCoordinates[axis])
+      {
+        return MakeErrorResult(k_VertexVoxelOutOfRange,
+                               fmt::format("The {} coordinate ({}) of vertex {} in Vertex Geometry '{}' cannot map to a voxel. Check the coordinates or increase Grid Resolution.", "XYZ"[axis],
+                                           coordinate, v, inputVertexGeometryPath));
+      }
+      offset[axis] = static_cast<int64>(voxel) - bboxMin[axis];
+    }
+    const int64 index = offset[0] * multiplier[0] + offset[1] * multiplier[1] + offset[2] * multiplier[2];
     vertsInVoxels[index].push_back(v);
   }
 
@@ -216,4 +246,58 @@ Result<> ApproximatePointCloudHull::operator()()
   }
 
   return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<SizeVec3> ApproximatePointCloudHull::ValidateGridRepresentation(const std::array<float64, 3>& minimumVoxelCoordinates, const std::array<float64, 3>& maximumVoxelCoordinates)
+{
+  const float64 exclusiveBound = std::ldexp(1.0, 63);
+  const uint64 signedLimit = static_cast<uint64>(std::numeric_limits<int64>::max());
+  SizeVec3 dimensions;
+  usize product = 1;
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    const float64 minimum = minimumVoxelCoordinates[axis];
+    const float64 maximum = maximumVoxelCoordinates[axis];
+    if(!std::isfinite(minimum) || !std::isfinite(maximum) || minimum < -exclusiveBound || maximum < -exclusiveBound || minimum >= exclusiveBound || maximum >= exclusiveBound ||
+       std::floor(minimum) != minimum || std::floor(maximum) != maximum)
+    {
+      return MakeErrorResult<SizeVec3>(
+          k_VoxelBoundsRepresentation,
+          fmt::format("Grid Resolution gives invalid voxel bounds on the {} axis (minimum {}, maximum {}). Increase Grid Resolution or check the input coordinates.", "XYZ"[axis], minimum, maximum));
+    }
+    if(minimum == -exclusiveBound)
+    {
+      return MakeErrorResult<SizeVec3>(k_GridBorderOutOfRange,
+                                       fmt::format("Grid Resolution leaves no room for the empty border below voxel {} on the {} axis. Increase Grid Resolution.", minimum, "XYZ"[axis]));
+    }
+    // The border is added in integer arithmetic so float rounding cannot remove it. The upper bound is below 2^63, so adding 1 cannot overflow.
+    const int64 lower = static_cast<int64>(minimum) - 1;
+    const int64 upper = static_cast<int64>(maximum) + 1;
+    // Unsigned subtraction preserves the exact nonnegative difference across the signed zero boundary.
+    const uint64 difference = static_cast<uint64>(upper) - static_cast<uint64>(lower);
+    if(upper < lower || difference >= signedLimit || difference >= std::numeric_limits<usize>::max())
+    {
+      return MakeErrorResult<SizeVec3>(
+          k_GridAxisTooLarge,
+          fmt::format("Grid Resolution gives too many cells on the {} axis (voxel {} through {}). Increase Grid Resolution or use a smaller point cloud.", "XYZ"[axis], lower, upper));
+    }
+    dimensions[axis] = static_cast<usize>(difference + 1);
+    if(dimensions[axis] > std::numeric_limits<usize>::max() / product)
+    {
+      return MakeErrorResult<SizeVec3>(
+          k_GridCellCountOverflow,
+          fmt::format("Grid Resolution gives a total cell count that is too large ({} cells on the {} axis and {} across the preceding axes). Increase Grid Resolution or use a "
+                      "smaller point cloud.",
+                      dimensions[axis], "XYZ"[axis], product));
+    }
+    product *= dimensions[axis];
+  }
+  if(product > signedLimit || product > std::numeric_limits<usize>::max() / sizeof(std::vector<int64>) || product > std::vector<std::vector<int64>>{}.max_size())
+  {
+    return MakeErrorResult<SizeVec3>(k_GridContainerTooLarge,
+                                     fmt::format("Grid Resolution gives a grid with {} cells ({}), which is too large to store. Increase Grid Resolution or use a smaller point cloud.", product,
+                                                 StringUtilities::formatDimensions3D(dimensions)));
+  }
+  return {dimensions};
 }

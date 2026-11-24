@@ -62,6 +62,10 @@ public:
 
   virtual ~CalculateTriangleGroupCurvatures();
 
+  /**
+   * @brief Fits curvature to the selected triangle group.
+   * @pre The neighborhood ring count is at least 1; triangle and output selections are valid.
+   */
   void operator()() const;
 
   using UniqueFaceIds_t = std::set<int64_t>;
