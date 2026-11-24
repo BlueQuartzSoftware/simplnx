@@ -269,6 +269,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: synthetic 2x2 montage", "
   ImportFijiMontageFilter filter;
   DataStructure dataStructure;
   Arguments args = MakeFijiArgs(cfg, /*parentGroup=*/true, /*changeOrigin=*/false, {0.0f, 0.0f, 0.0f});
+  args.insertOrAssign(ImportFijiMontageFilter::k_LengthUnit_Key, ChoicesParameter::ValueType{28});
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -291,6 +292,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: synthetic 2x2 montage", "
   {
     const DataPath geomPath = groupPath.createChildPath(e.name);
     const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+    CHECK(geom.getUnits() == IGeometry::LengthUnit::Unknown);
     REQUIRE(geom.getDimensions() == SizeVec3{3, 2, 1});
     REQUIRE(geom.getOrigin()[0] == Approx(e.origin[0]));
     REQUIRE(geom.getOrigin()[1] == Approx(e.origin[1]));
