@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`RotateSampleRefFrameFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) in the Sampling plugin. The four isotropic principal-axis fixtures produced identical dimensions and voxel values in simplnx and 6.5.171. D2 verifies the anisotropic three-cycle against an analytical result. See `../comparisons/RotateSampleRefFrameFilter/results.md` for the four A/B fixtures.
+Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) in the Sampling plugin. The four isotropic principal-axis fixtures produced identical dimensions and voxel values in simplnx and 6.5.171. D2 verifies the anisotropic three-cycle against an analytical result. See `../comparisons/RotateSampleRefFrameFilter/results.md` for the four A/B fixtures. D3 covers Feature Attribute Matrix clearing; the cell-data comparison is unchanged.
 
 ---
 
@@ -34,3 +34,23 @@ Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-
 - **Correction:** Use the source axis and column scale found when classifying the grid rotation. For R(x,y,z)=(z,x,y), spacing (2,3,5) becomes (5,2,3).
 - **Evidence:** The inline analytical regression checks dimensions and every voxel in both Direct and Scanline paths. Both paths failed before the fix. No new legacy binary comparison was run.
 - **Recommendation:** Use the corrected output. Affected anisotropic rotations intentionally differ from DREAM3D 6.5.171.
+
+---
+
+## RotateSampleRefFrameFilter-D3
+
+*Added 2026-10-29 for Clear Feature Attribute Matrix.*
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `RotateSampleRefFrameFilter-D3` |
+| **Filter UUID** | `d2451dc1-a5a1-4ac2-a64d-7991669dcffc` |
+| **Status** | active |
+
+**Symptom:** Native DREAM3D-NX pipelines clear the selected Feature Attribute Matrix by default. The output keeps the source tuple shape with no arrays. DREAM3D 6.5.171 copied this matrix unchanged. The rotation does not change the cell Feature Ids, Feature membership, or the real Feature sizes. Clearing removes every stored Feature array, including size arrays such as NumElements.
+
+**Root cause:** Algorithmic choice (Mike Jackson, 2026-10-29). A lossless rotation preserves Feature membership and sizes. Positions and directions in the sample frame, such as Centroids, bounding boxes, and AxisEulerAngles, still describe the old frame. Clearing forces recomputation. No Renumber option is needed because no Feature loses cells or disappears.
+
+**Affected users:** Older native pipelines load with Clear on and need a valid Feature Attribute Matrix selection. A later filter that selects a cleared array fails preflight until it is recomputed. Shipped pipelines explicitly set Clear off to preserve their existing behavior. Converted DREAM.3D 6.x pipelines start with Clear off and still match legacy for Feature data.
+
+**Recommendation:** Trust SIMPLNX. Select the Feature Attribute Matrix and recompute needed Feature data after rotation. If the geometry has no Feature data, or to preserve legacy behavior, turn Clear off. Copied position and direction values still describe the old sample frame.

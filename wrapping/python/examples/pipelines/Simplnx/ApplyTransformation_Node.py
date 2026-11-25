@@ -45,6 +45,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     #cell_attribute_matrix_path: DataPath = ...,
     #computed_transformation_matrix: DataPath = ...,
@@ -79,6 +81,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     interpolation_type_index=2,
     input_image_geometry_path=nx.DataPath("Blade [Translation]"),
@@ -108,6 +112,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     interpolation_type_index=2,
     scale=[0.5, 0.5, 1.0],

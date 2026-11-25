@@ -14,6 +14,17 @@
 namespace nx::core
 {
 /**
+ * @brief Appends a recursive copy action that excludes every placement of the selected object and its descendants.
+ * Matches the excluded object by ID. If the source path passes through that object, the function appends no action.
+ * @param dataStructure Supplies the source objects and their placements.
+ * @param actions Receives the copy action, if one is appended.
+ * @param source Source object to copy.
+ * @param destination Path of the new copy.
+ * @param excludedPath Object to exclude. An empty or unresolved path copies everything.
+ */
+SIMPLNX_EXPORT void AppendCopyDataObjectAction(const DataStructure& dataStructure, OutputActions& actions, const DataPath& source, const DataPath& destination, const DataPath& excludedPath = {});
+
+/**
  * @struct FeatureRenumbering
  * @brief Holds the stable compaction mapping for inactive feature removal.
  *

@@ -39,6 +39,7 @@ nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
+    clear_feature_attribute_matrix=False,
     output_image_geometry_path=nx.DataPath("beans"),
     remove_original_geometry=False,
     rotate_slice_by_slice=True,

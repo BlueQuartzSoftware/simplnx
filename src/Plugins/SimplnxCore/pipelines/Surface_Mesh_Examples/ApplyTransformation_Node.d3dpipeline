@@ -103,7 +103,19 @@
           "value": "",
           "version": 1
         },
+        "clear_feature_attribute_matrix": {
+          "value": false,
+          "version": 1
+        },
         "computed_transformation_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "feature_attribute_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "feature_ids_path": {
           "value": "",
           "version": 1
         },
@@ -148,7 +160,11 @@
           "value": "Transformation Matrix",
           "version": 1
         },
-        "parameters_version": 2,
+        "parameters_version": 3,
+        "renumber_features": {
+          "value": false,
+          "version": 1
+        },
         "rotation": {
           "value": [
             1.0,
@@ -247,7 +263,19 @@
           "value": "",
           "version": 1
         },
+        "clear_feature_attribute_matrix": {
+          "value": false,
+          "version": 1
+        },
         "computed_transformation_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "feature_attribute_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "feature_ids_path": {
           "value": "",
           "version": 1
         },
@@ -292,7 +320,11 @@
           "value": "Transformation Matrix",
           "version": 1
         },
-        "parameters_version": 2,
+        "parameters_version": 3,
+        "renumber_features": {
+          "value": false,
+          "version": 1
+        },
         "rotation": {
           "value": [
             1.0,
@@ -391,7 +423,19 @@
           "value": "",
           "version": 1
         },
+        "clear_feature_attribute_matrix": {
+          "value": false,
+          "version": 1
+        },
         "computed_transformation_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "feature_attribute_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "feature_ids_path": {
           "value": "",
           "version": 1
         },
@@ -436,7 +480,11 @@
           "value": "Transformation Matrix",
           "version": 1
         },
-        "parameters_version": 2,
+        "parameters_version": 3,
+        "renumber_features": {
+          "value": false,
+          "version": 1
+        },
         "rotation": {
           "value": [
             1.0,

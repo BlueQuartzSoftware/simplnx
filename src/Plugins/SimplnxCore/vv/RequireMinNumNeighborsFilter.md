@@ -15,8 +15,8 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes** - the NX port retains the legacy selection, coarsening, and feature-removal while incorporating bug fixes and minor code improvements. |
 | Oracle (confirmed) | **Class 1 analytical + Class 4 invariants** - two mode-specific 4x1x1 inputs and one common 6x6x6 input check exact cell copying, phase selection, iterative coarsening, and feature compaction. |
-| Code paths enumerated | 16 of 18 active paths are assertion-covered; cancellation and defensive error paths are not covered. |
-| Tests today | 14 active test cases: two analytical oracle tests, four execute-error tests, negative-FeatureId reassignment, three preflight errors, two strict/shared-path tests, the Small IN100 regression, and SIMPL 6.4/6.5 conversion; two stale disabled tests are retired. |
+| Code paths enumerated | 17 of 19 active paths are assertion-covered; cancellation and defensive error paths are not covered. |
+| Tests today | 18 active test cases: two analytical oracle tests, four execute-error tests, negative-FeatureId reassignment, three preflight errors, three array-kind validation tests, one Stale Arrays preflight test, two strict/shared-path tests, the Small IN100 regression, and SIMPL 6.4/6.5 conversion; two stale disabled tests are retired. |
 | Exemplar archive | The inline oracle needs no output archive; retained input archive `6_5_test_data_1_v2.tar.gz` has SHA512 `585b51ba...3027d6c` and a provenance sidecar. |
 | Legacy comparison | **Complete (2026-07-31)** - DREAM3D 6.5.171 and SIMPLNX were run on the 4x1x1 and 6x6x6 analytical fixtures in all-phases and single-phase modes; all 22 array comparisons and 2,646 exact values matched the independent expectations. |
 | Bug flags | `RequireMinNumNeighborsFilter-D1`, `RequireMinNumNeighborsFilter-D2`, `RequireMinNumNeighborsFilter-D3` |
@@ -24,7 +24,7 @@
 
 ## Summary
 
-`RequireMinNumNeighborsFilter` removes features below a neighbor-count threshold, fills their cells from dominant valid face neighbors, and compacts feature-level arrays. Verification uses two independently derived analytical tests with Class 4 invariants, focused error tests, a Small IN100 regression, and SIMPL conversion checks. Both analytical fixture families matched DREAM3D 6.5.171 in all-phases and single-phase modes; three legacy bugs affecting negative or out-of-range FeatureIds and stalled coarsening are corrected in SIMPLNX and documented as D1-D3.
+`RequireMinNumNeighborsFilter` removes features below a neighbor-count threshold, fills their cells from dominant valid face neighbors, and compacts feature-level arrays. The 18 active test cases include two independently derived analytical tests with Class 4 invariants, focused error and preflight checks, a Small IN100 regression, and SIMPL conversion checks. Both analytical fixture families matched DREAM3D 6.5.171 in all-phases and single-phase modes; three legacy bugs affecting negative or out-of-range FeatureIds and stalled coarsening are corrected in SIMPLNX and documented as D1-D3.
 
 ## Algorithm Relationship
 
@@ -153,7 +153,7 @@ Because feature 5 owns no cells, both modes have identical final cell arrays eve
 
 ## Code path coverage
 
-16 of 18 active paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
+17 of 19 active paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp`, shared reassignment in `Algorithms/FillBadVoxels.cpp`, and preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
 
@@ -184,6 +184,7 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | 19 | Preflight | FeatureIds tuple count differs from the selected Image Geometry cell count - return `-59571`. | `SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts` |
 | 20 | Preflight | A Cell Arrays to Ignore path is not a direct child of the selected geometry's Cell Attribute Matrix - return `-55573`. Membership uses the parent object's ID, so another path to the same matrix is accepted. | `SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids` - `Ignored array in a second Attribute Matrix`; shared-path acceptance is covered by `SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Selected Feature Matrix`. |
 | 21 | Preflight | The parent of Number of Neighbors is not an Attribute Matrix directly under the selected geometry, or is its Cell Attribute Matrix - return `-55574`. | `SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids` - `Feature array outside the selected geometry`, `Feature array under a plain DataGroup`, and `Feature array in the Cell Attribute Matrix`. |
+| 22 | Preflight | `AppendStaleFeatureArraysPreflightValue` reports a `Stale Arrays` value listing every Data Array in the Feature Attribute Matrix. NeighborLists and StringArrays are excluded. This replaces the generic `Feature Data Modification Warning`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Stale Arrays` - asserts both feature-array paths, NeighborList exclusion, exactly one value, and absence of the old warning. StringArray exclusion follows from the helper's `IDataArray` check; this test has no StringArray. |
 
 ## Test inventory
 
@@ -209,8 +210,12 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | `SimplnxCore::RequireMinNumNeighborsFilter: Phase Array` | retired | Removed from `#if 0`; it used stale parameter keys and could not compile. Current analytical variants cover the all-phase and single-phase selection behavior. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids` | new-for-V&V | Checks valid Cell and Feature Attribute Matrices, shared Cell paths, and read-only phases in another matrix. Rejects misplaced Feature Ids (`-55575`), ignored arrays (`-55573`), and invalid Feature Attribute Matrix locations (`-55574`); checks each error code and affected paths. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Selected Feature Matrix` | new-for-V&V | Alternates geometry and shared-parent paths for Feature Ids and ignored arrays. Checks geometry-based modification paths, reassigned IDs and cell values, unchanged ignored values, selected Feature Attribute Matrix compaction, unchanged external marker values, and inherited tuple dimensions. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array kinds` | kept | Selects a NeighborList or StringArray for each of the three inputs. Asserts one error (`-59574`, `-59575`, or `-59576`), the selected path, type and corrective text, and unchanged paths, next ID and checked values. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Inactive phases skip array-kind validation` | kept | Disables single-phase mode with a StringArray, NeighborList or missing phase path. Asserts valid preflight and unchanged DataStructure paths. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede feature array-kind errors` | kept | Selects an unsupported feature-array kind with mismatched tuple counts. Asserts one error: `-59571` for a cell-count mismatch, otherwise `-252` for a feature-count mismatch. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Stale Arrays` | kept | Added on `topic/correct_feature_am_updates` (`b576b64da`). Asserts valid preflight, exactly one `Stale Arrays` value naming `NumNeighbors` and `Phases` but not the NeighborList, no `Feature Data Modification Warning`, and inherited tuple dimensions. |
 
-There are 14 active `TEST_CASE`s: 3 kept and 11 new for this V&V cycle.
+There are 18 active `TEST_CASE`s: 7 kept and 11 new for this V&V cycle.
 
 ## Exemplar archive
 
@@ -241,3 +246,5 @@ Three user-visible differences occur for negative or out-of-range FeatureIds or 
 - `RequireMinNumNeighborsFilter-D3` - SIMPLNX returns `-55572` when remaining negative cells have no non-negative face neighbor; DREAM3D 6.5.171 continues the coarsening loop indefinitely.
 
 See `vv/deviations/RequireMinNumNeighborsFilter.md` for root cause, affected users, and migration recommendations.
+
+The `Stale Arrays` preflight value changes only the message shown to users. It does not change output data or execution behavior, so it adds no deviation entry.

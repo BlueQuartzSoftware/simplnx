@@ -149,19 +149,6 @@ Result<> PadImageGeometry::operator()()
   {
     return {};
   }
-  if(m_InputValues->PadInX && m_InputValues->XMinMax[0] == 0 && m_InputValues->XMinMax[1] == 0)
-  {
-    return {};
-  }
-  if(m_InputValues->PadInY && m_InputValues->YMinMax[0] == 0 && m_InputValues->YMinMax[1] == 0)
-  {
-    return {};
-  }
-  if(m_InputValues->PadInZ && m_InputValues->ZMinMax[0] == 0 && m_InputValues->ZMinMax[1] == 0)
-  {
-    return {};
-  }
-
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to pad
 
   DataPath destImagePath = m_InputValues->CreatedOutputPath;

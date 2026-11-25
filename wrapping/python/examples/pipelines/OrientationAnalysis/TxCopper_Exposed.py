@@ -30,6 +30,7 @@ nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
+    clear_feature_attribute_matrix=False,
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
@@ -48,6 +49,7 @@ result = nx_filter.execute(
     max_voxel=[460, 399, 0],
     min_voxel=[0, 0, 0],
     remove_original_geometry=True,
+    clear_feature_attribute_matrix=False,
     renumber_features=False,
     input_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     use_physical_bounds=False

@@ -28,6 +28,10 @@
           "value": "DataContainer/Cell Feature Data",
           "version": 1
         },
+        "clear_feature_attribute_matrix": {
+          "value": true,
+          "version": 1
+        },
         "crop_x_dim": {
           "value": true,
           "version": 1
@@ -84,7 +88,7 @@
           "value": "DataContainer",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "remove_original_geometry": {
           "value": true,
           "version": 1
@@ -102,6 +106,108 @@
       "filter": {
         "name": "nx::core::CropImageGeometryFilter",
         "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_features_attribute_matrix_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "feature_phases_array_name": {
+          "value": "Phases",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeFeaturePhasesFilter",
+        "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_euler_angles_array_name": {
+          "value": "AvgEulerAngles",
+          "version": 1
+        },
+        "avg_quats_array_name": {
+          "value": "AvgQuats",
+          "version": 1
+        },
+        "cell_feature_attribute_matrix_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "cell_feature_ids_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "cell_quats_array_path": {
+          "value": "DataContainer/Cell Data/Quats",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_rodrigues_average": {
+          "value": true,
+          "version": 1
+        },
+        "use_vmf_average": {
+          "value": false,
+          "version": 1
+        },
+        "use_watson_average": {
+          "value": false,
+          "version": 1
+        },
+        "vmf_euler_array_name": {
+          "value": "vMF Avg EulerAngles",
+          "version": 1
+        },
+        "vmf_kappa_array_name": {
+          "value": "vMF Kappas",
+          "version": 1
+        },
+        "vmf_quat_array_name": {
+          "value": "vMF Avg Quats",
+          "version": 1
+        },
+        "watson_euler_array_name": {
+          "value": "Watson Avg EulerAngles",
+          "version": 1
+        },
+        "watson_kappa_array_name": {
+          "value": "Watson Kappas",
+          "version": 1
+        },
+        "watson_quat_array_name": {
+          "value": "Watson Avg Quats",
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeAvgOrientationsFilter",
+        "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
       },
       "isDisabled": false
     },

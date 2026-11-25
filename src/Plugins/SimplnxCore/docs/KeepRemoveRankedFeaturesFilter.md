@@ -61,6 +61,12 @@ at the cutoff, ties are broken by ascending **Feature** id, which makes results 
 runs and platforms. A warning is emitted whenever a tie straddles the cutoff, because the choice
 among the tied **Features** is arbitrary. Ties are common in integer arrays such as *NumElements*.
 
+## WARNING: Feature Data Will Become Invalid
+
+This **Filter** changes Feature IDs and compacts the Feature **Attribute Matrix**. Existing feature values can become invalid. Recompute those values after this **Filter**.
+
+Preflight lists each Data Array in the Feature **Attribute Matrix** under *Stale Arrays* so you can see which ones to recompute.
+
 ## Notes
 
 - **Memory:** ranking requires three temporary buffers sized by the **Feature** count — the ranking

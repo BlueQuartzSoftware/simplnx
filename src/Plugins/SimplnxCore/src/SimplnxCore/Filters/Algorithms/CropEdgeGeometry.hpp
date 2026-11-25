@@ -5,6 +5,9 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 
 namespace
 {
@@ -25,6 +28,10 @@ struct SIMPLNXCORE_EXPORT CropEdgeGeometryInputValues
   bool cropYDim;
   bool cropZDim;
   uint64 boundaryIntersectionBehavior;
+  BoolParameter::ValueType clearFeatureAttributeMatrix = false;
+  BoolParameter::ValueType renumberFeatures = false;
+  AttributeMatrixSelectionParameter::ValueType featureAttributeMatrixPath;
+  ArraySelectionParameter::ValueType edgeFeatureIdsPath;
 };
 
 /**

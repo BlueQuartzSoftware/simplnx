@@ -138,11 +138,21 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     }
   }
 
+  const auto cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
   auto featureAttributeMatrixResult =
-      ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, pFlaggedFeaturesArrayPathValue.getParent(), -9895, "Flagged Features", pFlaggedFeaturesArrayPathValue);
+      ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, cellFeatureAttributeMatrixPath, -9895, "Flagged Features", pFlaggedFeaturesArrayPathValue);
   if(featureAttributeMatrixResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+  }
+
+  if(operationType == to_underlying(Functionality::Extract) || operationType == to_underlying(Functionality::ExtractThenRemove))
+  {
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(elementDataResult), {})};
+    }
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -151,14 +161,12 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  DataPath const cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // If we are in any way removing features, inform the user
   if(operationType == to_underlying(Functionality::Remove) || operationType == to_underlying(Functionality::ExtractThenRemove))
   {
-    // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion for Remove/ExtractThenRemove below
-    nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues, false);
+    nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues);
 
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified
