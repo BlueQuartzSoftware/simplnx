@@ -1,5 +1,12 @@
+#include "ImageFilterIntegrationTestUtils.hpp"
+#include "NXImageProcessing/Filters/AcosImageFilter.hpp"
+#include "NXImageProcessing/Filters/AsinImageFilter.hpp"
+#include "NXImageProcessing/Filters/TanImageFilter.hpp"
+#include "ReconstructionFilterTestUtils.hpp"
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
+#include "NXImageProcessing/Filters/Algorithms/WriteImageColorUtilities.hpp"
 #include "NXImageProcessing/Filters/ReadImageFilter.hpp"
 #include "NXImageProcessing/Filters/ReadImageStackFilter.hpp"
 #include "NXImageProcessing/Filters/ReadMhaFileFilter.hpp"
@@ -7,11 +14,21 @@
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 #include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Extent.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/CreateColorMapParameter.hpp"
@@ -19,18 +36,34 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
+#include "simplnx/Utilities/ImageIO/IImageIO.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
+#include <algorithm>
+#include <any>
 #include <array>
 #include <atomic>
+#include <cmath>
+#include <cstring>
 #include <filesystem>
+#include <fmt/format.h>
+#include <fstream>
 #include <iostream>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <numbers>
 #include <random>
+#include <span>
 #include <string>
 #include <system_error>
 #include <type_traits>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -328,6 +361,731 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
 }
 
 } // namespace
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+namespace
+{
+template <typename T, usize Size>
+DataPath createWriteImageNumericInput(DataStructure& dataStructure, const std::array<T, Size>& values, const ShapeType& shape = {1, 1, Size})
+{
+  auto* geometryPtr = ImageGeom::Create(dataStructure, "NumericImage");
+  REQUIRE(geometryPtr != nullptr);
+  geometryPtr->setDimensions({shape.at(2), shape.at(1), shape.at(0)});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "CellData", shape, geometryPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geometryPtr->setCellData(*cellsPtr);
+  auto* arrayPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "Input", shape, {1}, cellsPtr->getId());
+  REQUIRE(arrayPtr != nullptr);
+  REQUIRE(arrayPtr->getDataType() == GetDataType<T>());
+  REQUIRE(arrayPtr->getTupleShape() == shape);
+  REQUIRE(arrayPtr->getNumberOfTuples() == Size);
+  for(usize index = 0; index < Size; ++index)
+  {
+    arrayPtr->getDataStoreRef().setValue(index, values.at(index));
+  }
+  return DataPath({"NumericImage", "CellData", "Input"});
+}
+
+template <typename T, usize Size>
+DataPath createWriteImageNumericMask(DataStructure& dataStructure, const std::array<T, Size>& values)
+{
+  const DataPath cellsPath({"NumericImage", "CellData"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(cellsPath));
+  const auto& cells = dataStructure.getDataRefAs<AttributeMatrix>(cellsPath);
+  auto* maskPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "Mask", cells.getShape(), {1}, cells.getId());
+  REQUIRE(maskPtr != nullptr);
+  REQUIRE(maskPtr->getNumberOfTuples() == Size);
+  for(usize index = 0; index < Size; ++index)
+  {
+    maskPtr->getDataStoreRef().setValue(index, values.at(index));
+  }
+  return cellsPath.createChildPath("Mask");
+}
+
+Arguments writeImageNumericArguments(const fs::path& output, const std::string& preset = "Grayscale", bool useMask = false)
+{
+  const WriteImageFilter filter;
+  Arguments arguments = filter.getDefaultArguments();
+  arguments.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(DataPath({"NumericImage"})));
+  arguments.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(DataPath({"NumericImage", "CellData", "Input"})));
+  arguments.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(output));
+  arguments.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+  arguments.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(preset));
+  arguments.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(useMask));
+  arguments.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"NumericImage", "CellData", "Mask"})));
+  arguments.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{10, 20, 30}));
+  return arguments;
+}
+
+std::vector<uint8> readWriteImageNumericPng(const fs::path& path, usize width, usize height)
+{
+  auto imageIoResult = CreateImageIO(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(imageIoResult);
+  REQUIRE(imageIoResult.value() != nullptr);
+  auto metadata = imageIoResult.value()->readMetadata(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  REQUIRE(metadata.value().width == width);
+  REQUIRE(metadata.value().height == height);
+  REQUIRE(metadata.value().dataType == DataType::uint8);
+  REQUIRE(metadata.value().numComponents == 3);
+  REQUIRE(metadata.value().numPages == 1);
+  std::vector<uint8> bytes(width * height * 3);
+  auto readResult = imageIoResult.value()->readPixelData(path, std::span<uint8>(bytes));
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  return bytes;
+}
+
+template <typename T, usize Size>
+void requireWriteImageGray(UnitTest::AlgorithmTestScope& scope, const std::array<T, Size>& values, const std::array<uint8, Size>& expected)
+{
+  DataStructure dataStructure;
+  const DataPath inputPath = createWriteImageNumericInput(dataStructure, values);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "numeric.png"));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  const auto bytes = readWriteImageNumericPng(output.path() / "numeric.png", Size, 1);
+  for(usize index = 0; index < Size; ++index)
+  {
+    for(usize channel = 0; channel < 3; ++channel)
+    {
+      REQUIRE(bytes.at((index * 3) + channel) == expected.at(index));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+std::vector<char> readWriteImageSentinel(const fs::path& path)
+{
+  std::ifstream input(path, std::ios::binary);
+  REQUIRE(input.is_open());
+  return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+template <typename T>
+class WriteImageReadProbeStore : public ExtentCountingDataStore<T>
+{
+public:
+  WriteImageReadProbeStore(const ShapeType& shape, bool failFlat, bool failExtent)
+  : ExtentCountingDataStore<T>(shape, ShapeType{1}, T{})
+  , m_FailFlat(failFlat)
+  , m_FailExtent(failExtent)
+  {
+  }
+  ~WriteImageReadProbeStore() noexcept override = default;
+  WriteImageReadProbeStore(const WriteImageReadProbeStore&) = delete;
+  WriteImageReadProbeStore(WriteImageReadProbeStore&&) = delete;
+  WriteImageReadProbeStore& operator=(const WriteImageReadProbeStore&) = delete;
+  WriteImageReadProbeStore& operator=(WriteImageReadProbeStore&&) = delete;
+  Result<> copyIntoBuffer(usize offset, nonstd::span<T> values) const override
+  {
+    m_FlatReadCount++;
+    m_MaximumReadBytes = std::max(m_MaximumReadBytes, values.size() * sizeof(T));
+    if(m_FailFlat)
+    {
+      return MakeErrorResult(-27901, "Controlled Write Image page read failure.");
+    }
+    auto result = DataStore<T>::copyIntoBuffer(offset, values);
+    if(result.valid())
+    {
+      result.warnings().push_back({-27903, "Controlled Write Image page read warning."});
+    }
+    return result;
+  }
+  Result<std::vector<T>> readExtent(const Extent& extent) const override
+  {
+    if(m_FailExtent)
+    {
+      return MakeErrorResult<std::vector<T>>(-27902, "Controlled Write Image slice read failure.");
+    }
+    auto result = ExtentCountingDataStore<T>::readExtent(extent);
+    addExtentWarning(extent, result);
+    return result;
+  }
+  Result<> readExtentIntoBuffer(const Extent& extent, nonstd::span<T> values) const override
+  {
+    if(m_FailExtent)
+    {
+      return MakeErrorResult(-27902, "Controlled Write Image slice read failure.");
+    }
+    auto result = ExtentCountingDataStore<T>::readExtentIntoBuffer(extent, values);
+    addExtentWarning(extent, result);
+    return result;
+  }
+  void enableExtentWarnings() noexcept
+  {
+    m_WarnOnExtentRead = true;
+  }
+  usize flatReadCount() const
+  {
+    return m_FlatReadCount;
+  }
+  usize maximumReadBytes() const
+  {
+    return m_MaximumReadBytes;
+  }
+
+private:
+  // The returning read can call the buffer read. Add only one warning for that extent.
+  template <class ValueT>
+  void addExtentWarning(const Extent& extent, Result<ValueT>& result) const
+  {
+    if(m_WarnOnExtentRead && result.valid() && result.warnings().empty())
+    {
+      result.warnings().push_back({-27904, "Controlled Write Image read warning for XY slice " + std::to_string(extent.min.at(0)) + "."});
+    }
+  }
+
+  bool m_FailFlat = false;
+  bool m_FailExtent = false;
+  bool m_WarnOnExtentRead = false;
+  mutable usize m_FlatReadCount = 0;
+  mutable usize m_MaximumReadBytes = 0;
+};
+} // namespace
+
+TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: native endpoints decode to literal RGB", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]", int8, uint8, int16, uint16,
+                   int32, uint32, int64, uint64, float32, float64)
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  requireWriteImageGray(scope, std::array<TestType, 2>{std::numeric_limits<TestType>::lowest(), std::numeric_limits<TestType>::max()}, std::array<uint8, 2>{0, 255});
+}
+
+TEST_CASE("NXImageProcessing::WriteImageFilter: wide and tiny interiors decode without native range collapse", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const std::array<uint8, 3> expected{0, 127, 255};
+  requireWriteImageGray(scope, std::array<float32, 3>{-std::numeric_limits<float32>::max(), 0, std::numeric_limits<float32>::max()}, expected);
+  requireWriteImageGray(scope, std::array<float64, 3>{-std::numeric_limits<float64>::max(), 0, std::numeric_limits<float64>::max()}, expected);
+  constexpr int64 minimum = std::numeric_limits<int64>::min();
+  constexpr int64 maximum = std::numeric_limits<int64>::max();
+  constexpr uint64 unsignedMaximum = std::numeric_limits<uint64>::max();
+  requireWriteImageGray(scope, std::array<int64, 3>{minimum, minimum + 1, minimum + 2}, expected);
+  requireWriteImageGray(scope, std::array<int64, 3>{maximum - 2, maximum - 1, maximum}, expected);
+  requireWriteImageGray(scope, std::array<uint64, 3>{unsignedMaximum - 2, unsignedMaximum - 1, unsignedMaximum}, expected);
+  requireWriteImageGray(scope, std::array<float64, 3>{0, std::numeric_limits<float64>::min(), 2 * std::numeric_limits<float64>::min()}, expected);
+  requireWriteImageGray(scope, std::array<float32, 4>{0, 1, 2, 3}, std::array<uint8, 4>{0, 85, 170, 255});
+
+  // The unscaled width rounds to infinity at the overflow midpoint.
+  INFO("Binary64 width at the overflow midpoint");
+  constexpr float64 high = 0x1.ffffffffffffep+1023;
+  requireWriteImageGray(scope, std::array<float64, 3>{-0x1.8p+971, high * 0.5, high}, expected);
+}
+
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
+TEST_CASE("NXImageProcessing::WriteImageFilter: subnormal double interior has a distinct runtime witness", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const float64 tiny = std::numeric_limits<float64>::denorm_min();
+  const std::array<float64, 3> values{tiny, tiny * 2, tiny * 3};
+  REQUIRE(std::fpclassify(values.at(0)) == FP_SUBNORMAL);
+  REQUIRE(std::fpclassify(values.at(1)) == FP_SUBNORMAL);
+  REQUIRE(std::fpclassify(values.at(2)) == FP_SUBNORMAL);
+  REQUIRE(values.at(0) < values.at(1));
+  REQUIRE(values.at(1) < values.at(2));
+  requireWriteImageGray(scope, values, std::array<uint8, 3>{0, 127, 255});
+}
+// NOLINTEND(bugprone-chained-comparison)
+
+TEST_CASE("NXImageProcessing::WriteImageFilter: mask first nonfinite and finite masked range decode literally", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool booleanMask = GENERATE(false, true);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure,
+                               std::array<float64, 7>{0, 3, 6, 9, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity()});
+  if(booleanMask)
+  {
+    createWriteImageNumericMask(dataStructure, std::array<bool, 7>{false, true, true, true, false, false, false});
+  }
+  else
+  {
+    createWriteImageNumericMask(dataStructure, std::array<uint8, 7>{0, 2, 1, 1, 0, 0, 0});
+  }
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "mask.png", "Grayscale", true));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  const std::vector<uint8> expected{10, 20, 30, 85, 85, 85, 170, 170, 170, 255, 255, 255, 10, 20, 30, 10, 20, 30, 10, 20, 30};
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(readWriteImageNumericPng(output.path() / "mask.png", 7, 1) == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: integer color reads masks only for slices", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const ShapeType shape{2, 1, 2};
+  DataStructure dataStructure;
+  const DataPath cellsPath = createWriteImageNumericInput(dataStructure, std::array<uint8, 4>{0, 3, 6, 9}, shape).getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(cellsPath));
+  const auto& cells = dataStructure.getDataRefAs<AttributeMatrix>(cellsPath);
+  auto maskStore = std::make_shared<WriteImageReadProbeStore<uint8>>(shape, false, false);
+  maskStore->setValue(0, 1);
+  maskStore->setValue(1, 1);
+  maskStore->setValue(2, 1);
+  REQUIRE(UInt8Array::Create(dataStructure, "Mask", maskStore, cells.getId()) != nullptr);
+
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "integer.png", "Grayscale", true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  // The masked 9 still sets the maximum, so 3 and 6 map to one and two thirds of the grayscale range.
+  const std::vector<uint8> firstSlice{0, 0, 0, 85, 85, 85};
+  const std::vector<uint8> secondSlice{170, 170, 170, 10, 20, 30};
+  REQUIRE(readWriteImageNumericPng(output.path() / "integer_000.png", 2, 1) == firstSlice);
+  REQUIRE(readWriteImageNumericPng(output.path() / "integer_001.png", 2, 1) == secondSlice);
+  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  {
+    REQUIRE(maskStore->returnedExtentReadCount() == 2);
+    REQUIRE(maskStore->callerProvidedExtentReadCount() == 0);
+  }
+  else
+  {
+    REQUIRE(maskStore->returnedExtentReadCount() == 0);
+    REQUIRE(maskStore->callerProvidedExtentReadCount() == 2);
+    REQUIRE(maskStore->maxCallerProvidedExtentValues() == 2);
+  }
+  REQUIRE(maskStore->flatReadCount() == 0);
+  REQUIRE(result.result.warnings().empty());
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: nonfinite pixels use the first preset color and the mask takes priority", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool useMask = GENERATE(false, true);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure,
+                               std::array<float64, 5>{std::numeric_limits<float64>::quiet_NaN(), 0, std::numeric_limits<float64>::infinity(), 2, -std::numeric_limits<float64>::infinity()});
+  createWriteImageNumericMask(dataStructure, std::array<uint8, 5>{useMask ? uint8{0} : uint8{1}, 1, 1, 1, 1});
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "colors.png", "X Ray", useMask));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  std::vector<uint8> expected{255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255};
+  if(useMask)
+  {
+    expected.at(0) = 10;
+    expected.at(1) = 20;
+    expected.at(2) = 30;
+  }
+  REQUIRE(readWriteImageNumericPng(output.path() / "colors.png", 5, 1) == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: finite colors survive a leading or later NaN", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric][WriteImageSafeRed]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const float64 nan = std::numeric_limits<float64>::quiet_NaN();
+  requireWriteImageGray(scope, std::array<float64, 5>{nan, 2, 5, 8, 11}, std::array<uint8, 5>{0, 0, 85, 170, 255});
+  requireWriteImageGray(scope, std::array<float64, 5>{2, 5, nan, 8, 11}, std::array<uint8, 5>{0, 85, 0, 170, 255});
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: all nonfinite pixels use the first color or the mask color", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool useMask = GENERATE(false, true);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure, std::array<float64, 3>{std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity()});
+  createWriteImageNumericMask(dataStructure, std::array<bool, 3>{true, false, true});
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "none.png", "X Ray", useMask));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  const std::vector<uint8> expected = useMask ? std::vector<uint8>{255, 255, 255, 10, 20, 30, 255, 255, 255} : std::vector<uint8>(9, 255);
+  REQUIRE(readWriteImageNumericPng(output.path() / "none.png", 3, 1) == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+TEST_CASE("NXImageProcessing::WriteImageFilter: finite constants and all finite masked values stay valid", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool allMasked = GENERATE(false, true);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure, std::array<float64, 3>{5, 5, 5});
+  createWriteImageNumericMask(dataStructure, std::array<bool, 3>{!allMasked, false, !allMasked});
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "constant.png", "X Ray", true));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  const std::vector<uint8> expected = allMasked ? std::vector<uint8>{10, 20, 30, 10, 20, 30, 10, 20, 30} : std::vector<uint8>{255, 255, 255, 10, 20, 30, 255, 255, 255};
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(readWriteImageNumericPng(output.path() / "constant.png", 3, 1) == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::WriteImageFilter: each plane writes distinct rows and slices", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const uint64 plane = GENERATE(uint64{0}, uint64{1}, uint64{2});
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure, std::array<float64, 24>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 32}, {2, 3, 4});
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  auto arguments = writeImageNumericArguments(output.path() / "slice.png");
+  arguments.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(plane));
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, arguments);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  // Each pixel has a unique grayscale byte. The tables list the two XY, three XZ and four YZ slices in file order.
+  constexpr std::array<std::array<uint8, 24>, 3> expected{{{0, 7, 15, 23, 31, 39, 47, 55, 63, 71, 79, 87, 95, 103, 111, 119, 127, 135, 143, 151, 159, 167, 175, 255},
+                                                           {0, 7, 15, 23, 95, 103, 111, 119, 31, 39, 47, 55, 127, 135, 143, 151, 63, 71, 79, 87, 159, 167, 175, 255},
+                                                           {0, 31, 63, 95, 127, 159, 7, 39, 71, 103, 135, 167, 15, 47, 79, 111, 143, 175, 23, 55, 87, 119, 151, 255}}};
+  constexpr std::array<usize, 3> widths{4, 4, 3};
+  constexpr std::array<usize, 3> heights{3, 2, 2};
+  const usize slicePixels = widths.at(plane) * heights.at(plane);
+  for(usize slice = 0; slice < expected.at(plane).size() / slicePixels; ++slice)
+  {
+    const auto bytes = readWriteImageNumericPng(output.path() / fmt::format("slice_{:03}.png", slice), widths.at(plane), heights.at(plane));
+    for(usize pixel = 0; pixel < slicePixels; ++pixel)
+    {
+      for(usize channel = 0; channel < 3; ++channel)
+      {
+        // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+        REQUIRE(bytes.at((pixel * 3) + channel) == expected.at(plane).at((slice * slicePixels) + pixel));
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: raw floating pixels retain NaN and signed infinities with or without a mask",
+                   "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]", float32, float64)
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool useMask = GENERATE(false, true);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const std::array<TestType, 5> values{TestType{-2}, TestType{0}, std::numeric_limits<TestType>::quiet_NaN(), std::numeric_limits<TestType>::infinity(), -std::numeric_limits<TestType>::infinity()};
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure, values);
+  createWriteImageNumericMask(dataStructure, std::array<bool, 5>{false, false, false, false, false});
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const fs::path path = output.path() / (std::is_same_v<TestType, float32> ? "raw.tif" : "raw.mha");
+  auto arguments = writeImageNumericArguments(path, "Grayscale", useMask);
+  arguments.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(false));
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, arguments);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  std::array<TestType, 5> actual{};
+  if constexpr(std::is_same_v<TestType, float32>)
+  {
+    const auto imageIoResult = CreateImageIO(path);
+    SIMPLNX_RESULT_REQUIRE_VALID(imageIoResult);
+    auto metadata = imageIoResult.value()->readMetadata(path);
+    SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+    REQUIRE(metadata.value().dataType == DataType::float32);
+    REQUIRE(metadata.value().numComponents == 1);
+    std::array<uint8, sizeof(TestType) * 5> bytes{};
+    const auto readResult = imageIoResult.value()->readPixelData(path, std::span<uint8>(bytes));
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    std::memcpy(actual.data(), bytes.data(), bytes.size());
+  }
+  else
+  {
+    const ReadMhaFileFilter reader;
+    auto readerArguments = reader.getDefaultArguments();
+    readerArguments.insertOrAssign(ReadMhaFileFilter::k_InputFilePath_Key, std::make_any<fs::path>(path));
+    readerArguments.insertOrAssign(ReadMhaFileFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"RawRead"})));
+    readerArguments.insertOrAssign(ReadMhaFileFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("Cells"));
+    readerArguments.insertOrAssign(ReadMhaFileFilter::k_ImageDataArrayName_Key, std::make_any<std::string>("Pixels"));
+    DataStructure readStructure;
+    const auto readResult = reader.execute(readStructure, readerArguments);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult.result);
+    const DataPath readPath({"RawRead", "Cells", "Pixels"});
+    REQUIRE_NOTHROW(readStructure.getDataRefAs<IDataArray>(readPath));
+    REQUIRE(readStructure.getDataRefAs<IDataArray>(readPath).getDataType() == DataType::float64);
+    REQUIRE_NOTHROW(readStructure.getDataRefAs<Float64Array>(readPath));
+    const auto copyResult = readStructure.getDataRefAs<Float64Array>(readPath).getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(actual.data(), actual.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
+    UnitTest::CheckArraysInheritTupleDims(readStructure);
+  }
+  REQUIRE(actual.at(0) == -2);
+  REQUIRE(actual.at(1) == 0);
+  REQUIRE(std::isnan(actual.at(2)));
+  REQUIRE(std::isinf(actual.at(3)));
+  REQUIRE_FALSE(std::signbit(actual.at(3)));
+  REQUIRE(std::isinf(actual.at(4)));
+  REQUIRE(std::signbit(actual.at(4)));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+TEST_CASE("NXImageProcessing::WriteImageFilter: cancellation during color scan opens no slice", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure, std::array<float64, 3>{0, 1, 2});
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  std::atomic_bool cancel = false;
+  const IFilter::MessageHandler handler{[&cancel](const IFilter::Message& message) {
+    if(message.message.find("Computing color range") != std::string::npos)
+    {
+      cancel = true;
+    }
+  }};
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "cancel.png"), nullptr, handler, cancel);
+  REQUIRE(cancel.load());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(result.result.errors().front().code == -1);
+  REQUIRE(fs::is_empty(output.path()));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: color size and palette guards use actionable results", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  constexpr usize maximum = std::numeric_limits<usize>::max();
+  const auto empty = write_image_color::ValidateSize<float64>({.Width = 0, .Height = 2, .Count = 3}, false);
+  SIMPLNX_RESULT_REQUIRE_INVALID(empty);
+  REQUIRE(empty.errors().front().code == -27030);
+  const auto& emptyMessage = empty.errors().front().message;
+  CHECK(emptyMessage.find("width 0") != std::string::npos);
+  CHECK(emptyMessage.find("height 2") != std::string::npos);
+  CHECK(emptyMessage.find("slice count 3") != std::string::npos);
+  CHECK(emptyMessage.find("index limit " + std::to_string(maximum)) != std::string::npos);
+  CHECK(emptyMessage.find("positive dimensions") != std::string::npos);
+  const auto large = write_image_color::ValidateSize<float64>({.Width = maximum, .Height = 1, .Count = 2}, true);
+  SIMPLNX_RESULT_REQUIRE_INVALID(large);
+  REQUIRE(large.errors().front().code == -27032);
+  const auto& largeMessage = large.errors().front().message;
+  CHECK(largeMessage.find("width " + std::to_string(maximum)) != std::string::npos);
+  CHECK(largeMessage.find("height 1") != std::string::npos);
+  CHECK(largeMessage.find("slice count 2") != std::string::npos);
+  CHECK(largeMessage.find("index limit " + std::to_string(maximum)) != std::string::npos);
+  CHECK(largeMessage.find("Reduce the image dimensions") != std::string::npos);
+  const auto invalidPalette = write_image_color::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {1, 0});
+  SIMPLNX_RESULT_REQUIRE_INVALID(invalidPalette);
+  REQUIRE(invalidPalette.errors().front().code == -27029);
+  const auto validPalette = write_image_color::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {0, 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(validPalette);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: page and slice IO failures preserve diagnostics and warnings", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const usize failure = GENERATE(usize{0}, usize{1}, usize{2});
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  const DataPath inputPath = createWriteImageNumericInput(dataStructure, std::array<float64, 3>{0, std::numeric_limits<float64>::quiet_NaN(), 2});
+  const DataPath maskPath = createWriteImageNumericMask(dataStructure, std::array<uint8, 3>{1, 1, 1});
+  if(failure != 1)
+  {
+    auto store = std::make_shared<WriteImageReadProbeStore<float64>>(ShapeType{1, 1, 3}, failure == 0, failure == 2);
+    store->setValue(0, 0);
+    store->setValue(1, std::numeric_limits<float64>::quiet_NaN());
+    store->setValue(2, 2);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(inputPath));
+    const auto replace = dataStructure.getDataRefAs<Float64Array>(inputPath).setDataStore(store);
+    SIMPLNX_RESULT_REQUIRE_VALID(replace);
+  }
+  else
+  {
+    auto store = std::make_shared<WriteImageReadProbeStore<uint8>>(ShapeType{1, 1, 3}, false, true);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(maskPath));
+    const auto replace = dataStructure.getDataRefAs<UInt8Array>(maskPath).setDataStore(store);
+    SIMPLNX_RESULT_REQUIRE_VALID(replace);
+  }
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "failure.png", "Grayscale", true));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == (failure == 0 ? -27901 : -27902));
+  if(failure == 2)
+  {
+    REQUIRE(result.result.warnings().size() == 1);
+    REQUIRE(result.result.warnings().front().code == -27903);
+  }
+  REQUIRE(fs::is_empty(output.path()));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: range scan reads bounded scalar pages and defers mask reads to the slices", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool useMask = GENERATE(false, true);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  constexpr usize pageByteTarget = usize{1024} * usize{1024};
+  constexpr usize pageValues = pageByteTarget / sizeof(float64);
+  constexpr usize width = 512;
+  constexpr usize height = pageValues / width;
+  const ShapeType shape{2, height, width};
+  DataStructure dataStructure;
+  auto* geometryPtr = ImageGeom::Create(dataStructure, "NumericImage");
+  REQUIRE(geometryPtr != nullptr);
+  geometryPtr->setDimensions({width, height, 2});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "CellData", shape, geometryPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geometryPtr->setCellData(*cellsPtr);
+  auto store = std::make_shared<WriteImageReadProbeStore<float64>>(shape, false, false);
+  store->setValue(pageValues, std::numeric_limits<float64>::quiet_NaN());
+  store->setValue(pageValues + 1, 1);
+  REQUIRE(Float64Array::Create(dataStructure, "Input", store, cellsPtr->getId()) != nullptr);
+  std::shared_ptr<WriteImageReadProbeStore<uint8>> maskStore;
+  if(useMask)
+  {
+    maskStore = std::make_shared<WriteImageReadProbeStore<uint8>>(shape, false, false);
+    for(usize index = 0; index < 2 * pageValues; ++index)
+    {
+      maskStore->setValue(index, 1);
+    }
+    REQUIRE(UInt8Array::Create(dataStructure, "Mask", maskStore, cellsPtr->getId()) != nullptr);
+  }
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "page.png", "Grayscale", useMask));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(store->flatReadCount() == 2);
+  REQUIRE(store->maximumReadBytes() == pageValues * sizeof(float64));
+  if(useMask)
+  {
+    REQUIRE(maskStore->flatReadCount() == 0);
+  }
+  REQUIRE(result.result.warnings().size() == 2);
+  REQUIRE(result.result.warnings().at(0).code == -27903);
+  REQUIRE(result.result.warnings().at(1).code == -27903);
+  const auto bytes = readWriteImageNumericPng(output.path() / "page_001.png", width, height);
+  REQUIRE(bytes.at(0) == 0);
+  REQUIRE(bytes.at(3) == 255);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: raw export retains warnings from each slice", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool failSecondCommit = GENERATE(false, true);
+  CAPTURE(scenario, failSecondCommit);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const ShapeType shape{2, 1, 2};
+  const std::array<uint8, 4> values{7, 11, 13, 17};
+  DataStructure dataStructure;
+  const DataPath inputPath = createWriteImageNumericInput(dataStructure, values, shape);
+  auto store = std::make_shared<WriteImageReadProbeStore<uint8>>(shape, false, false);
+  store->enableExtentWarnings();
+  for(usize index = 0; index < values.size(); ++index)
+  {
+    store->setValue(index, values.at(index));
+  }
+  auto* input = dataStructure.getDataAs<UInt8Array>(inputPath);
+  REQUIRE(input != nullptr);
+  const auto storeResult = input->setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
+
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const fs::path firstSlice = output.path() / "raw_000.png";
+  const fs::path secondSlice = output.path() / "raw_001.png";
+  if(failSecondCommit)
+  {
+    REQUIRE(fs::create_directory(secondSlice));
+    std::ofstream sentinel(secondSlice / "keep.txt", std::ios::binary);
+    REQUIRE(sentinel.is_open());
+    sentinel << "keep";
+  }
+  auto arguments = writeImageNumericArguments(output.path() / "raw.png");
+  arguments.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(false));
+  arguments.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+  arguments.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<int32>(3));
+
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, arguments);
+  if(failSecondCommit)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors().size() == 1);
+    REQUIRE(result.result.errors().front().code == -15782);
+    const auto sentinel = readWriteImageSentinel(secondSlice / "keep.txt");
+    REQUIRE(std::string(sentinel.begin(), sentinel.end()) == "keep");
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    REQUIRE(image_integration::Decode<uint8>(secondSlice, 2, 1, 1) == std::vector<uint8>{13, 17});
+  }
+  const auto& warnings = result.result.warnings();
+  REQUIRE(warnings.size() == 2);
+  REQUIRE(warnings.at(0).code == -27904);
+  REQUIRE(warnings.at(0).message == "Controlled Write Image read warning for XY slice 0.");
+  REQUIRE(warnings.at(1).code == -27904);
+  REQUIRE(warnings.at(1).message == "Controlled Write Image read warning for XY slice 1.");
+  REQUIRE(image_integration::Decode<uint8>(firstSlice, 2, 1, 1) == std::vector<uint8>{7, 11});
+  REQUIRE(std::distance(fs::directory_iterator(output.path()), fs::directory_iterator{}) == 2);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: later color slice commit failure keeps the first slice", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  createWriteImageNumericInput(dataStructure, std::array<float64, 4>{0, std::numeric_limits<float64>::quiet_NaN(), 2, 3}, {2, 1, 2});
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const fs::path blockedTarget = output.path() / "slice_001.png";
+  REQUIRE(fs::create_directory(blockedTarget));
+  {
+    std::ofstream sentinel(blockedTarget / "keep.txt", std::ios::binary);
+    REQUIRE(sentinel.is_open());
+    sentinel << "keep";
+  }
+  const WriteImageFilter filter;
+  const auto arguments = writeImageNumericArguments(output.path() / "slice.png");
+  const auto preflight = filter.preflight(dataStructure, arguments);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = scope.executeFilter(filter, dataStructure, arguments);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == -15782);
+  REQUIRE(result.result.warnings().empty());
+  REQUIRE(fs::is_regular_file(output.path() / "slice_000.png"));
+  const auto first = readWriteImageNumericPng(output.path() / "slice_000.png", 2, 1);
+  REQUIRE(first == std::vector<uint8>{0, 0, 0, 0, 0, 0});
+  const auto sentinel = readWriteImageSentinel(blockedTarget / "keep.txt");
+  REQUIRE(std::string(sentinel.begin(), sentinel.end()) == "keep");
+  REQUIRE(std::distance(fs::directory_iterator(output.path()), fs::directory_iterator{}) == 2);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessing][WriteImageFilter]")
 {
@@ -2139,3 +2897,115 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant sma
     REQUIRE(executeResult.result.errors().front().code == -27026);
   }
 }
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: resident integration principal angles and tangent persist and export ordered fractions",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][WriteImageFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize operation = GENERATE(usize{0}, usize{1}, usize{2});
+  CAPTURE(operation, scenario);
+  const image_integration::Directory output;
+  using InputSamplesType = std::array<int16, 6>;
+  using OutputSamplesType = std::array<float32, 6>;
+  constexpr auto piRadians = std::numbers::pi_v<float32>;
+  constexpr auto halfPi = piRadians / 2.0F;
+  constexpr float32 tangent = 1.5574077246549022305F;
+  constexpr std::array inputSamples{InputSamplesType{1, 0, -1, -1, 0, 1}, InputSamplesType{-1, 0, 1, 1, 0, -1}, InputSamplesType{0, 1, -1, -1, 1, 0}};
+  constexpr std::array outputSamples{OutputSamplesType{0, halfPi, piRadians, piRadians, halfPi, 0}, OutputSamplesType{-halfPi, 0, halfPi, halfPi, 0, -halfPi},
+                                     OutputSamplesType{0, tangent, -tangent, -tangent, tangent, 0}};
+  const auto& inputValues = inputSamples.at(operation);
+  const std::vector<int16> original(inputValues.begin(), inputValues.end());
+  const auto& expected = outputSamples.at(operation);
+  DataStructure source;
+  const auto input = recon_test::BuildImageFromPattern<int16>(source, 3, 1, 2, original);
+  image_integration::SetGeometry(source);
+  REQUIRE(image_integration::Read<int16>(source, input, {2, 1, 3}, scope) == original);
+  const std::string outputName = operation == 2 ? "Tangent" : "Radians";
+  DataPath quantitative;
+  switch(operation)
+  {
+  case 0:
+    quantitative = image_integration::Pointwise<AcosImageFilter>(source, input, outputName);
+    break;
+  case 1:
+    quantitative = image_integration::Pointwise<AsinImageFilter>(source, input, outputName);
+    break;
+  default:
+    quantitative = image_integration::Pointwise<TanImageFilter>(source, input, outputName);
+    break;
+  }
+  const auto values = image_integration::Read<float32>(source, quantitative, {2, 1, 3}, scope);
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CAPTURE(index);
+    if(expected.at(index) == 0)
+    {
+      REQUIRE(values[index] == 0);
+    }
+    else
+    {
+      REQUIRE(values[index] == Approx(expected.at(index)).epsilon(1.0e-6));
+    }
+  }
+  // Inverse-trigonometric outputs are radians; tangent values are dimensionless.
+  // Geometry length units are a separate .dream3d field.
+  const auto save = DREAM3D::WriteFile(output.path() / "quantitative.dream3d", source);
+  SIMPLNX_RESULT_REQUIRE_VALID(save);
+  image_integration::CheckSaved<float32>(output.path() / "quantitative.dream3d", quantitative, {2, 1, 3}, values);
+  auto load = DREAM3D::LoadDataStructure(output.path() / "quantitative.dream3d");
+  SIMPLNX_RESULT_REQUIRE_VALID(load);
+  auto& reloaded = load.value();
+  REQUIRE(image_integration::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
+  image_integration::CheckGeometry(reloaded, {3, 1, 2});
+  const WriteImageFilter writer;
+  image_integration::Execute(writer, reloaded, image_integration::WriteArguments(quantitative, output.path() / "raw.mha"), scope);
+  if(operation == 0)
+  {
+    image_integration::Execute(writer, reloaded, image_integration::WriteArguments(quantitative, output.path() / "raw.tif"), scope);
+    auto displayArgs = image_integration::WriteArguments(quantitative, output.path() / "display.png");
+    displayArgs.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+    displayArgs.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>("Grayscale"));
+    image_integration::Execute(writer, reloaded, displayArgs, scope);
+  }
+  for(usize slice = 0; slice < 2; ++slice)
+  {
+    const std::string suffix = slice == 0 ? "_000" : "_001";
+    auto raw = image_integration::ReadMha(output.path() / (std::string("raw") + suffix + ".mha"));
+    const auto pixels = image_integration::Read<float32>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 3}, scope);
+    const ImageGeom* rawGeometryPtr = nullptr;
+    REQUIRE_NOTHROW(rawGeometryPtr = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+    REQUIRE(rawGeometryPtr->getDimensions() == SizeVec3{3, 1, 1});
+    REQUIRE(rawGeometryPtr->getSpacing() == FloatVec3{1, 2, 1});
+    REQUIRE(rawGeometryPtr->getOrigin() == FloatVec3{4, 5, 0});
+    for(usize column = 0; column < 3; ++column)
+    {
+      REQUIRE(pixels[column] == values[(slice * 3) + column]);
+      REQUIRE(pixels[column] == Approx(expected.at((slice * 3) + column)).margin(1.0e-6));
+    }
+    if(operation == 0)
+    {
+      const auto tiffPath = output.path() / (std::string("raw") + suffix + ".tif");
+      const auto tiff = image_integration::Decode<float32>(tiffPath, 3, 1);
+      REQUIRE(tiff == pixels);
+      const auto imageIO = CreateImageIO(tiffPath);
+      SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
+      const auto metadata = imageIO.value()->readMetadata(tiffPath);
+      SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+      REQUIRE(metadata.value().spacing.has_value());
+      REQUIRE(metadata.value().origin.has_value());
+      REQUIRE(metadata.value().spacing == FloatVec3{1, 2, 1});
+      REQUIRE(metadata.value().origin == FloatVec3{4, 5, 0});
+      const auto display = image_integration::Decode<uint8>(output.path() / (std::string("display") + suffix + ".png"), 3, 1, 3);
+      const std::vector<uint8> expectedDisplay = slice == 0 ? std::vector<uint8>{0, 0, 0, 127, 127, 127, 255, 255, 255} : std::vector<uint8>{255, 255, 255, 127, 127, 127, 0, 0, 0};
+      REQUIRE(display == expectedDisplay);
+    }
+  }
+  REQUIRE(image_integration::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
+  REQUIRE(image_integration::Read<float32>(source, quantitative, {2, 1, 3}, scope) == values);
+  REQUIRE(image_integration::Read<int16>(source, input, {2, 1, 3}, scope) == original);
+  UnitTest::CheckArraysInheritTupleDims(source);
+  UnitTest::CheckArraysInheritTupleDims(reloaded);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

@@ -65,6 +65,9 @@ simplnx_utilities.check_filter_result(nximgproc.SigmoidImageFilter, result)
 # Filter 4: Otsu Multiple Thresholds Image Filter
 result = nximgproc.OtsuMultipleThresholdsImageFilter.execute(
     data_structure=data_structure,
+    mask_array_path=nx.DataPath(''),
+    masked_label=255,
+    use_mask_array=False,
     input_image_data_path=nx.DataPath('Melt Pool Image/Cell Data/Sigmoid Contrast'),
     input_image_geometry_path=nx.DataPath('Melt Pool Image'),
     label_offset=0,
@@ -95,6 +98,7 @@ simplnx_utilities.check_filter_result(nximgproc.DoubleThresholdImageFilter, resu
 # Filter 6: Connected Component Image Filter
 result = nximgproc.ConnectedComponentImageFilter.execute(
     data_structure=data_structure,
+    provisional_label_limit_handling_index=0,
     fully_connected=True,
     input_image_data_path=nx.DataPath('Melt Pool Image/Cell Data/Track Mask'),
     input_image_geometry_path=nx.DataPath('Melt Pool Image'),

@@ -416,6 +416,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IExternalSort.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/ITemporaryRecordStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp
@@ -509,6 +510,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStoreWritePreparation.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IListStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
@@ -606,8 +608,18 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/CacheMemoryBudgetManager.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ColorToGrayScale.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ConnectedComponentEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/HistogramEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryCrop.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryResample.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageTransferResult.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/OtsuImageEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/PointwiseEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/StreamingStatistics.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/SweepTemporaryStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/TerminalImageConversion.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ProgressEstimator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ThrottledMessageHandler.hpp
@@ -768,6 +780,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureGraphViz.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureJson.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureText.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStoreWritePreparation.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.cpp
@@ -1180,6 +1193,7 @@ if(SIMPLNX_ENABLE_PACKAGING)
 endif()
 
 if(SIMPLNX_BUILD_TESTS)
+  target_sources(simplnx PRIVATE "${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ConnectedComponentPolicyObserver.cpp")
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_BUILD_TESTS=1")
   add_subdirectory(test)
 endif()

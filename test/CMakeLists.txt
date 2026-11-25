@@ -69,6 +69,7 @@ set(SIMPLNX_TEST_SRCS
   H5IOTest.cpp
   HistogramUtilitiesTest.cpp
   ImageGeometryResampleTest.cpp
+  ImageNumericContractsTest.cpp
   IntersectionUtilitiesTest.cpp
   StatisticsCalculationsTest.cpp
   RayTest.cpp

@@ -275,10 +275,10 @@
           "value": 0,
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "upper_boundary": {
           "value": 255.0,
-          "version": 1
+          "version": 2
         }
       },
       "comments": "Select an automatic threshold that retains many meaningful layer anomalies.",

@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <set>
+#include <type_traits>
 
 namespace nx::core::ImageProcessing
 {
@@ -22,6 +23,13 @@ inline constexpr int32 k_RecursiveGaussianNonPositiveSigma = -8571;
 // a filtered axis's spacing is < 1e-8 ("suspiciously small"). Without this guard a zero/near-zero spacing yields NaN
 // coefficients and silently NaN output.
 inline constexpr int32 k_RecursiveGaussianNonPositiveSpacing = -8572;
+// Selected Smoothing Recursive Gaussian validation and terminal conversion diagnostics.
+inline constexpr int32 k_SmoothingGaussianInvalidSigma = -23630;
+inline constexpr int32 k_SmoothingGaussianInvalidSpacing = -23631;
+inline constexpr int32 k_SmoothingGaussianInvalidScale = -23632;
+inline constexpr int32 k_SmoothingGaussianInvalidCoefficients = -23633;
+inline constexpr int32 k_SmoothingGaussianNonFiniteIntegerOutput = -23634;
+inline constexpr int32 k_SmoothingGaussianClippedIntegerOutput = -23635;
 // The central-difference gradient magnitude scales each axis derivative by 1/spacing; ITK's GradientMagnitudeImageFilter
 // throws "Image spacing cannot be zero" when UseImageSpacing is on and an axis spacing is exactly zero.
 inline constexpr int32 k_GradientMagnitudeZeroSpacing = -8573;
@@ -29,6 +37,11 @@ inline constexpr int32 k_GradientMagnitudeZeroSpacing = -8573;
 // exceeds the CFL stability bound minSpacing/2^(ImageDimension+1). Shared by the anisotropic-diffusion pair
 // (GradientAnisotropicDiffusion now; CurvatureAnisotropicDiffusion later) via AppendUnstableTimeStepWarning.
 inline constexpr int32 k_AnisotropicDiffusionUnstableTimeStep = -8580;
+// Scoped Curvature Flow validation and final-conversion diagnostics.
+inline constexpr int32 k_CurvatureFlowInvalidTimeStep = -28800;
+inline constexpr int32 k_CurvatureFlowInvalidSpacing = -28801;
+inline constexpr int32 k_CurvatureFlowNonFiniteIntegerOutput = -28802;
+inline constexpr int32 k_CurvatureFlowClippedIntegerOutput = -28803;
 // RelabelComponent's consecutive output-label counter overflows the (possibly narrow, e.g. int8) SameAsInput output
 // type when there are more surviving objects than the type can represent. Mirrors itk::RelabelComponentImageFilter::
 // GenerateData's NumericTraits<OutputPixelType>::max() guard (which itkExceptionMacro-throws in the same situation).
@@ -39,6 +52,13 @@ inline constexpr int32 k_RelabelComponentTooManyObjects = -8590;
  */
 template <class T>
 using SameAsInput = T;
+
+/**
+ * @brief Maps integer input to float32 and retains floating input types.
+ * @tparam T Numeric input type.
+ */
+template <class T>
+using IntegerToFloat32Type = std::conditional_t<std::is_integral_v<T>, float32, T>;
 
 template <class T>
 using AlwaysFloat64 = float64;

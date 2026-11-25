@@ -115,7 +115,7 @@ protected:
    * @param messageHandler Receives slice progress messages.
    * @param shouldCancel Stops output between slices when set.
    * @param executionContext Resolves relative file paths.
-   * @return An error if slice extraction, compression, or file output fails.
+   * @return Warnings and errors from reading image data, encoding slices, or writing files.
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                        const ExecutionContext& executionContext) const override;

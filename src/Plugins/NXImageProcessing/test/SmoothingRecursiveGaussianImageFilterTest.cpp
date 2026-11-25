@@ -1,21 +1,62 @@
+#include "ImageFilterIntegrationTestUtils.hpp"
 #include "ItkGoldenTestUtils.hpp"
+#include "NXImageProcessing/Filters/GradientMagnitudeImageFilter.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/SmoothingRecursiveGaussianImageFilter.hpp"
 
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
+
+#include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
+#include "SimplnxCore/Filters/MapPointCloudToRegularGridFilter.hpp"
+#include "SimplnxCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
+
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
+#include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
+#include <nonstd/span.hpp>
 
+#include <algorithm>
+#include <any>
+#include <array>
+#include <atomic>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -24,6 +65,95 @@ namespace rt = recon_test;
 namespace
 {
 using SmoothFilter = SmoothingRecursiveGaussianImageFilter;
+
+Arguments makeSmoothingArguments(const DataPath& inputPath, const std::vector<float64>& sigma)
+{
+  Arguments args;
+  args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+  args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(sigma));
+  args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+  return args;
+}
+
+void requireSmoothingInput(const DataStructure& dataStructure, const DataPath& inputPath, usize dimZ)
+{
+  const IDataArray* inputArrayPtr = nullptr;
+  REQUIRE_NOTHROW(inputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(inputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(inputArrayPtr->getDataType() == DataType::float32);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(inputArrayPtr->getTupleShape() == ShapeType{dimZ, 4, 4});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(inputArrayPtr->getComponentShape() == ShapeType{1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+struct SmoothingTransferFaults
+{
+  usize ReadAt = 0;
+  usize WriteAt = 0;
+  std::atomic_bool* CancelOnWritePtr = nullptr;
+};
+
+// Resident endpoints with real data and controlled transfer outcomes. These are not disk-storage witnesses.
+template <class T>
+class SmoothingTransferStore : public DataStore<T>
+{
+public:
+  explicit SmoothingTransferStore(usize size, T value, SmoothingTransferFaults faults = {})
+  : DataStore<T>(ShapeType{size}, ShapeType{1}, value)
+  , m_FailReadAt(faults.ReadAt)
+  , m_FailWriteAt(faults.WriteAt)
+  , m_CancelOnWritePtr(faults.CancelOnWritePtr)
+  {
+  }
+  ~SmoothingTransferStore() noexcept override = default;
+  SmoothingTransferStore(const SmoothingTransferStore&) = delete;
+  SmoothingTransferStore(SmoothingTransferStore&&) = delete;
+  SmoothingTransferStore& operator=(const SmoothingTransferStore&) = delete;
+  SmoothingTransferStore& operator=(SmoothingTransferStore&&) = delete;
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<T> values) const override
+  {
+    ++m_ReadCount;
+    if(m_ReadCount == m_FailReadAt)
+    {
+      return MakeErrorResult(-23690, "Injected smoothing read failure.");
+    }
+    Result<> result = DataStore<T>::copyIntoBuffer(offset, values);
+    result.warnings().push_back({.code = -23692, .message = "Injected smoothing read warning."});
+    return result;
+  }
+  Result<> copyFromBuffer(usize offset, nonstd::span<const T> values) override
+  {
+    ++m_WriteCount;
+    if(m_WriteCount == m_FailWriteAt)
+    {
+      return MakeErrorResult(-23691, "Injected smoothing write failure.");
+    }
+    Result<> result = DataStore<T>::copyFromBuffer(offset, values);
+    result.warnings().push_back({.code = -23693, .message = "Injected smoothing write warning."});
+    if(m_CancelOnWritePtr != nullptr)
+    {
+      m_CancelOnWritePtr->store(true);
+    }
+    return result;
+  }
+
+private:
+  usize m_FailReadAt = 0;
+  usize m_FailWriteAt = 0;
+  std::atomic_bool* m_CancelOnWritePtr = nullptr;
+  mutable usize m_ReadCount = 0;
+  usize m_WriteCount = 0;
+};
+
+usize countSmoothingWarning(const Result<>& result, int32 code)
+{
+  return static_cast<usize>(std::count_if(result.warnings().begin(), result.warnings().end(), [code](const auto& warning) { return warning.code == code; }));
+}
 // NOTE: the tests below use analytic oracles and ITK's committed baseline image. No live ITK filter runs here.
 
 // A centrally-symmetric radial blob (for the symmetry-preservation check).
@@ -92,6 +222,687 @@ std::vector<T> ReadArray(const DataStructure& ds, const DataPath& path)
   return out;
 }
 } // namespace
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite X and Y sigma fail preflight", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const usize axis = GENERATE(usize{0}, usize{1});
+  const float64 invalidSigma = GENERATE(std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, dimZ, std::vector<float32>(16 * dimZ, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, dimZ);
+  std::vector<float64> sigma{1.0, 1.0, 1.0};
+  sigma.at(axis) = invalidSigma;
+  const SmoothFilter filter;
+  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
+  // This deliberately stops at preflight. Invalid coefficients must never reach an unchecked output conversion.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  const auto& error = preflight.outputActions.errors().front();
+  // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(error.code == ImageProcessing::k_SmoothingGaussianInvalidSigma);
+  REQUIRE(error.message.find(inputPath.getParent().getParent().toString()) != std::string::npos);
+  REQUIRE(error.message.find(std::string("axis ") + std::string_view{"XYZ"}.at(axis)) != std::string::npos);
+  // NOLINTEND(bugprone-chained-comparison)
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active spacing is rejected during execution", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
+  const usize axis = GENERATE_COPY(from_range(activeAxes));
+  const float32 invalidSpacing = GENERATE(std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, dimZ, std::vector<float32>(16 * dimZ, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, dimZ);
+  const DataPath geometryPath = inputPath.getParent().getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geometryPath));
+  std::array<float32, 3> spacing{1.0F, 1.0F, 1.0F};
+  spacing.at(axis) = invalidSpacing;
+  dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
+  const SmoothFilter filter;
+  const auto result = filter.execute(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, 1.0}));
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == ImageProcessing::k_SmoothingGaussianInvalidSpacing);
+  REQUIRE(result.result.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+  REQUIRE(result.result.errors().front().message.find(std::string("axis ") + std::string_view{"XYZ"}.at(axis)) != std::string::npos);
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid effective active scale is rejected during execution",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
+  const usize axis = GENERATE_COPY(from_range(activeAxes));
+  const bool underflow = GENERATE(false, true);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, dimZ, std::vector<float32>(16 * dimZ, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, dimZ);
+  const DataPath geometryPath = inputPath.getParent().getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geometryPath));
+  std::array<float32, 3> spacing{1.0F, 1.0F, 1.0F};
+  spacing.at(axis) = underflow ? std::numeric_limits<float32>::max() : 0.5F;
+  dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
+  std::vector<float64> sigma{1.0, 1.0, 1.0};
+  sigma.at(axis) = underflow ? std::numeric_limits<float64>::denorm_min() : std::numeric_limits<float64>::max();
+  const SmoothFilter filter;
+  const auto result = filter.execute(dataStructure, makeSmoothingArguments(inputPath, sigma));
+  // Positive finite operands can produce zero or infinity for sigma / abs(spacing). No cutoff on finite scales is imposed.
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == ImageProcessing::k_SmoothingGaussianInvalidScale);
+  REQUIRE(result.result.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+  REQUIRE(result.result.errors().front().message.find(std::string("axis ") + std::string_view{"XYZ"}.at(axis)) != std::string::npos);
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: finite negative spacing and unused Z remain accepted", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const float64 unusedSigma = GENERATE(0.0, -1.0, std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
+  const float32 unusedSpacing = GENERATE(0.0F, -1.0F, std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, 1, std::vector<float32>(16, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, 1);
+  const DataPath geometryPath = inputPath.getParent().getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geometryPath));
+  dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({-1.0F, -2.0F, unusedSpacing});
+  const SmoothFilter filter;
+  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, unusedSigma}));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: each selected validation branch has a diagnostic", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize failure = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
+  const std::array<int32, 5> expectedCodes{ImageProcessing::k_SmoothingGaussianInvalidSigma, ImageProcessing::k_SmoothingGaussianInvalidSpacing, ImageProcessing::k_SmoothingGaussianInvalidScale,
+                                           ImageProcessing::k_SmoothingGaussianInvalidCoefficients, ImageProcessing::k_SmoothingGaussianInvalidCoefficients};
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, 1, std::vector<float32>(16, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, 1);
+  std::vector<float64> sigma{1.0, 1.0, 0.0};
+  if(failure == 0)
+  {
+    sigma.at(0) = 0.0;
+  }
+  if(failure == 1)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()));
+    dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing({1e-9F, 1.0F, 1.0F});
+  }
+  if(failure == 2)
+  {
+    sigma.at(0) = std::numeric_limits<float64>::max();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()));
+    dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing({0.5F, 1.0F, 1.0F});
+  }
+  // At this finite scale exp(L/scale) and cos(W/scale) round to 1, giving 1-4+6-4+1 == 0 in coefficient denominators.
+  if(failure == 3)
+  {
+    sigma.at(0) = 1e20;
+  }
+  // This quotient stays positive, but the trigonometric coefficient arguments overflow.
+  if(failure == 4)
+  {
+    sigma.at(0) = std::numeric_limits<float64>::denorm_min();
+  }
+  const SmoothFilter filter;
+  const auto args = makeSmoothingArguments(inputPath, sigma);
+  const auto preflight = filter.preflight(dataStructure, args);
+  if(failure == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  }
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == expectedCodes.at(failure));
+  REQUIRE(result.result.errors().front().message.find("Image Geometry") != std::string::npos);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: mapped point cloud final depth determines Z sigma validation",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const bool planar = GENERATE(true, false);
+  const float64 invalidZ = GENERATE(std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
+  CAPTURE(planar, invalidZ);
+  const DataPath cloudPath({"Points"});
+  const DataPath gridPath({"Grid"});
+  const DataPath signalPath = gridPath.createChildPath("Cells").createChildPath("Signal");
+  DataStructure dataStructure;
+  const CreateVertexGeometryAction createPoints(cloudPath, 4, "Point Data", "Vertices");
+  const auto created = createPoints.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(created);
+  auto* pointsPtr = dataStructure.getDataAs<VertexGeom>(cloudPath);
+  REQUIRE(pointsPtr != nullptr);
+  pointsPtr->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
+  pointsPtr->setVertexCoordinate(1, {4.0F, 0.0F, 0.0F});
+  pointsPtr->setVertexCoordinate(2, {0.0F, 4.0F, 0.0F});
+  pointsPtr->setVertexCoordinate(3, {4.0F, 4.0F, planar ? 0.0F : 4.0F});
+
+  auto map = std::make_unique<MapPointCloudToRegularGridFilter>();
+  auto mapArgs = map->getDefaultArguments();
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, cloudPath);
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key, gridPath);
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::vector<int32>{4, 4, 4});
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_CellDataName_Key, std::string("Cells"));
+  auto signal = std::make_unique<CreateDataArrayFilter>();
+  auto signalArgs = signal->getDefaultArguments();
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_NumericType_Key, NumericType::float32);
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, signalPath);
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_InitializationValue_Key, std::string("7"));
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, false);
+
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::move(map), mapArgs));
+  REQUIRE(pipeline.push_back(std::move(signal), signalArgs));
+  REQUIRE(pipeline.push_back(std::make_unique<SmoothFilter>(), makeSmoothingArguments(signalPath, {1.0, 1.0, invalidZ})));
+  const std::atomic_bool shouldCancel{false};
+  auto preflightData = dataStructure;
+  REQUIRE(pipeline.preflight(preflightData, shouldCancel));
+  const auto* provisionalGridPtr = preflightData.getDataAs<ImageGeom>(gridPath);
+  REQUIRE(provisionalGridPtr != nullptr);
+  REQUIRE(provisionalGridPtr->getDimensions() == SizeVec3{4, 4, 4});
+
+  const bool executed = pipeline.execute(dataStructure, shouldCancel);
+  const auto* finalGridPtr = dataStructure.getDataAs<ImageGeom>(gridPath);
+  REQUIRE(finalGridPtr != nullptr);
+  if(planar)
+  {
+    REQUIRE(executed);
+    REQUIRE(finalGridPtr->getDimensions() == SizeVec3{5, 5, 1});
+    const auto* outputPtr = dataStructure.getDataAs<Float32Array>(signalPath.replaceName("Output"));
+    REQUIRE(outputPtr != nullptr);
+    REQUIRE(outputPtr->getSize() == 25);
+    for(usize i = 0; i < outputPtr->getSize(); ++i)
+    {
+      REQUIRE((*outputPtr)[i] == Approx(7.0));
+    }
+  }
+  else
+  {
+    REQUIRE_FALSE(executed);
+    REQUIRE(finalGridPtr->getDimensions() == SizeVec3{5, 5, 5});
+    const auto* gaussianNodePtr = dynamic_cast<const PipelineFilter*>(pipeline.at(2));
+    REQUIRE(gaussianNodePtr != nullptr);
+    const auto errors = gaussianNodePtr->getErrors();
+    REQUIRE(errors.size() == 1);
+    REQUIRE(errors.front().code == ImageProcessing::k_SmoothingGaussianInvalidSigma);
+    REQUIRE(errors.front().message.find("axis Z") != std::string::npos);
+    REQUIRE(errors.front().message.find(gridPath.toString()) != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: pipeline validates spacing after resampling", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr float32 largeSpacing = 1.0e20F;
+  constexpr float32 signalValue = 7.0F;
+  const bool usableFinalSpacing = GENERATE(false, true);
+  const float32 finalSpacing = usableFinalSpacing ? largeSpacing : 1.0F;
+  const DataPath rectPath({"Rect Grid"});
+  const DataPath imagePath({"Resampled Image"});
+  const DataPath inputPath = imagePath.createChildPath("Cell Data").createChildPath("Signal");
+  const ShapeType cellShape{1, 4, 4};
+  const SizeVec3 dimensions{4, 4, 1};
+  DataStructure dataStructure;
+
+  auto* rectGridPtr = RectGridGeom::Create(dataStructure, rectPath.getTargetName());
+  REQUIRE(rectGridPtr != nullptr);
+  rectGridPtr->setDimensions(dimensions);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, rectGridPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  rectGridPtr->setCellData(*cellDataPtr);
+  const std::array<std::string, 3> boundNames{"X Bounds", "Y Bounds", "Z Bounds"};
+  std::array<Float32Array*, 3> bounds{};
+  for(usize axis = 0; axis < bounds.size(); ++axis)
+  {
+    bounds.at(axis) = Float32Array::Create(dataStructure, boundNames.at(axis), std::make_unique<DataStore<float32>>(dimensions[axis] + 1, 0.0F), rectGridPtr->getId());
+    REQUIRE(bounds.at(axis) != nullptr);
+    const float32 axisSpacing = axis < 2 ? finalSpacing : 1.0F;
+    for(usize index = 0; index <= dimensions[axis]; ++index)
+    {
+      bounds.at(axis)->setValue(index, static_cast<float32>(index) * axisSpacing);
+    }
+  }
+  const auto boundsResult = rectGridPtr->setBounds(bounds[0], bounds[1], bounds[2]);
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
+  REQUIRE(Float32Array::Create(dataStructure, "Signal", std::make_unique<DataStore<float32>>(cellShape, ShapeType{1}, signalValue), cellDataPtr->getId()) != nullptr);
+
+  using ResampleFilterType = ResampleRectGridToImageGeomFilter;
+  auto resample = std::make_unique<ResampleFilterType>();
+  auto resampleArgs = resample->getDefaultArguments();
+  resampleArgs.insertOrAssign(ResampleFilterType::k_RectilinearGridPath_Key, rectPath);
+  resampleArgs.insertOrAssign(ResampleFilterType::k_ImageGeometryPath_Key, imagePath);
+  resampleArgs.insertOrAssign(ResampleFilterType::k_ImageGeomCellAttributeMatrixName_Key, std::string("Cell Data"));
+  resampleArgs.insertOrAssign(ResampleFilterType::k_Dimensions_Key, std::vector<int32>{4, 4, 1});
+  resampleArgs.insertOrAssign(ResampleFilterType::k_SelectedDataArrayPaths_Key, std::vector<DataPath>{rectPath.createChildPath("Cell Data").createChildPath("Signal")});
+
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::move(resample), resampleArgs));
+  REQUIRE(pipeline.push_back(std::make_unique<SmoothFilter>(), makeSmoothingArguments(inputPath, {largeSpacing, largeSpacing, 1.0})));
+  const std::atomic_bool shouldCancel{false};
+  auto preflightData = dataStructure;
+  REQUIRE(pipeline.preflight(preflightData, shouldCancel));
+  REQUIRE(preflightData.getDataRefAs<ImageGeom>(imagePath).getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F});
+
+  const bool executed = pipeline.execute(dataStructure, shouldCancel);
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(imagePath).getSpacing() == FloatVec3{finalSpacing, finalSpacing, 1.0F});
+  if(usableFinalSpacing)
+  {
+    REQUIRE(executed);
+    const auto& output = dataStructure.getDataRefAs<Float32Array>(inputPath.replaceName("Output"));
+    REQUIRE(output.getSize() == 16);
+    for(usize index = 0; index < output.getSize(); ++index)
+    {
+      REQUIRE(output[index] == Approx(signalValue));
+    }
+  }
+  else
+  {
+    REQUIRE_FALSE(executed);
+    const auto* gaussianNodePtr = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
+    REQUIRE(gaussianNodePtr != nullptr);
+    const auto errors = gaussianNodePtr->getErrors();
+    REQUIRE(errors.size() == 1);
+    REQUIRE(errors.front().code == ImageProcessing::k_SmoothingGaussianInvalidCoefficients);
+  }
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: constants retain type shape and selected endpoint behavior",
+                   "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int8, int16, int32, int64, float32, float64)
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope algorithmScope(scenario);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const usize endpoint = GENERATE(usize{0}, usize{1}, usize{2});
+  TestType value = TestType{0};
+  if constexpr(std::is_integral_v<TestType>)
+  {
+    if(endpoint == 1)
+    {
+      value = std::numeric_limits<TestType>::max();
+    }
+    if(endpoint == 2)
+    {
+      value = std::numeric_limits<TestType>::lowest();
+    }
+  }
+  else
+  {
+    // A normalized Gaussian preserves DC. The double recurrence may exceed FLT_MAX
+    // by a few double ULPs before each float32 materialization.
+    if(endpoint != 0)
+    {
+      value = endpoint == 1 ? std::numeric_limits<float32>::max() : -std::numeric_limits<float32>::max();
+    }
+  }
+  const bool clips = endpoint == 1 && std::is_integral_v<TestType> && sizeof(TestType) >= sizeof(int32);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 4, 4, dimZ, std::vector<TestType>(16 * dimZ, value));
+  const SmoothFilter filter;
+  const Arguments args = makeSmoothingArguments(inputPath, {1.0, 1.0, 1.0});
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.value().actions.size() == 1);
+  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflight.outputActions.value().actions.front().get());
+  REQUIRE(actionPtr != nullptr);
+  REQUIRE(actionPtr->type() == GetDataType<TestType>());
+  REQUIRE(actionPtr->dims() == ShapeType{dimZ, 4, 4});
+  REQUIRE(actionPtr->componentDims() == ShapeType{1});
+  const auto executed = algorithmScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executed.result);
+  REQUIRE(countSmoothingWarning(executed.result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == (clips ? 1 : 0));
+  if(clips)
+  {
+    const auto& message = executed.result.warnings().front().message;
+    REQUIRE(message.find(fmt::format("clipped {} finite values", 16 * dimZ)) != std::string::npos);
+    REQUIRE(message.find(inputPath.replaceName("Output").toString()) != std::string::npos);
+    REQUIRE(message.find(DataTypeToString(GetDataType<TestType>()).view()) != std::string::npos);
+  }
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{dimZ, 4, 4});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& values = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  for(usize index = 0; index < values.getSize(); ++index)
+  {
+    REQUIRE(values.getValue(index) == value);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: float64 output retains float32 interpass precision", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope algorithmScope(scenario);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float64>(dataStructure, 4, 4, 1, std::vector<float64>(16, 16777216.25));
+  const SmoothFilter filter;
+  const auto result = algorithmScope.executeFilter(filter, dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, 0.0}));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float64);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+  const auto& values = dataStructure.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
+  // Unit DC gain preserves the constant until the required Float32 materialization rounds it to 2^24.
+  for(usize index = 0; index < values.getSize(); ++index)
+  {
+    REQUIRE(values.getValue(index) == 16777216.0);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: direct and buffered terminal conversion follow literal expectations",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  const bool buffered = GENERATE(false, true);
+  const std::array<float32, 5> input{93.75F, 127.75F, 128.0F, -128.75F, -129.0F};
+  const std::array<int8, 5> expected{93, 127, 127, -128, -128};
+  const usize fixture = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
+  const DataStore<float32> source(ShapeType{1}, ShapeType{1}, input.at(fixture));
+  DataStore<int8> output(ShapeType{1}, ShapeType{1}, int8{0});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = buffered;
+  options.targetScratchBytes = 5;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<int8>, options);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == (fixture == 2 || fixture == 4 ? 1 : 0));
+  REQUIRE(output.getValue(0) == expected.at(fixture));
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: floating terminal values retain nonfinite behavior",
+                   "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", float32, float64)
+{
+  const bool buffered = GENERATE(false, true);
+  DataStore<float32> source(ShapeType{4}, ShapeType{1}, 93.75F);
+  source.setValue(1, std::numeric_limits<float32>::infinity());
+  source.setValue(2, -std::numeric_limits<float32>::infinity());
+  source.setValue(3, std::numeric_limits<float32>::quiet_NaN());
+  DataStore<TestType> output(ShapeType{4}, ShapeType{1}, TestType{0});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = buffered;
+  options.targetScratchBytes = 5;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<TestType>, options);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(result.warnings().empty());
+  REQUIRE(output.getValue(0) == TestType{93.75});
+  REQUIRE(std::isinf(output.getValue(1)));
+  REQUIRE(output.getValue(1) > TestType{0});
+  REQUIRE(std::isinf(output.getValue(2)));
+  REQUIRE(output.getValue(2) < TestType{0});
+  REQUIRE(std::isnan(output.getValue(3)));
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: terminal nonfinite integer errors and binary64 boundaries",
+                   "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int32, int64)
+{
+  const bool buffered = GENERATE(false, true);
+  const bool nonfinite = GENERATE(false, true);
+  const float32 invalidValue = GENERATE(std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
+  const float32 upper = std::is_same_v<TestType, int32> ? 2147483648.0F : 9223372036854775808.0F;
+  DataStore<float32> source(ShapeType{2}, ShapeType{1}, upper);
+  source.setValue(1, nonfinite ? invalidValue : -upper);
+  DataStore<TestType> output(ShapeType{2}, ShapeType{1}, TestType{0});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = buffered;
+  options.targetScratchBytes = 1;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<TestType>, options);
+  REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == 1);
+  if(nonfinite)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == ImageProcessing::k_SmoothingGaussianNonFiniteIntegerOutput);
+    REQUIRE(result.errors().front().message.find("index 1") != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(output.getValue(0) == std::numeric_limits<TestType>::max());
+    REQUIRE(output.getValue(1) == std::numeric_limits<TestType>::lowest());
+  }
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: resident conversion counts sparse results across worker blocks",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  constexpr usize count = 8192;
+  constexpr int8 sentinel = -77;
+  DataStore<float32> source(ShapeType{count}, ShapeType{1}, 9.0F);
+  for(const usize index : {usize{3}, usize{4100}, usize{8120}})
+  {
+    source.setValue(index, std::numeric_limits<float32>::infinity());
+  }
+  source.setValue(12, 128.0F);
+  source.setValue(6000, -132.0F);
+  DataStore<int8> output(ShapeType{count}, ShapeType{1}, sentinel);
+  const std::atomic_bool shouldCancel{false};
+  const auto result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<int8>);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  REQUIRE(result.errors().front().code == ImageProcessing::k_SmoothingGaussianNonFiniteIntegerOutput);
+  REQUIRE(result.errors().front().message.find("3 nonfinite values") != std::string::npos);
+  REQUIRE(result.errors().front().message.find("index") == std::string::npos);
+  REQUIRE(result.warnings().size() == 1);
+  REQUIRE(result.warnings().front().code == ImageProcessing::k_SmoothingGaussianClippedIntegerOutput);
+  REQUIRE(result.warnings().front().message.find("clipped 2 finite values") != std::string::npos);
+  REQUIRE(output.getValue(3) == sentinel);
+  REQUIRE(output.getValue(4100) == sentinel);
+  REQUIRE(output.getValue(8120) == sentinel);
+  REQUIRE(output.getValue(2000) == 9);
+  REQUIRE(output.getValue(6000) == -128);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: sparse nonfinite outputs skip failed batches and preserve successful writes",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  constexpr usize count = 20;
+  constexpr int8 sentinel = -77;
+  const bool interrupted = GENERATE(false, true);
+  SmoothingTransferStore<float32> source(count, 9.0F, {.ReadAt = interrupted ? usize{5} : usize{0}});
+  source.setValue(4, 129.0F);
+  source.setValue(5, std::numeric_limits<float32>::quiet_NaN());
+  source.setValue(6, std::numeric_limits<float32>::infinity());
+  source.setValue(12, -std::numeric_limits<float32>::infinity());
+  source.setValue(14, -131.0F);
+  SmoothingTransferStore<int8> output(count, sentinel);
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = true;
+  options.targetScratchBytes = 4 * (sizeof(float32) + sizeof(int8));
+  const std::atomic_bool shouldCancel{false};
+  const auto result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<int8>, options);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == (interrupted ? 2 : 1));
+  if(interrupted)
+  {
+    REQUIRE(result.errors().front().code == -23690);
+  }
+  const auto& error = result.errors().back();
+  REQUIRE(error.code == ImageProcessing::k_SmoothingGaussianNonFiniteIntegerOutput);
+  REQUIRE(error.message.find("3 nonfinite values") != std::string::npos);
+  REQUIRE(error.message.find("index") == std::string::npos);
+  REQUIRE((error.message.find("Partial") != std::string::npos) == interrupted);
+  REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == 1);
+  const auto clipped = std::ranges::find(result.warnings(), ImageProcessing::k_SmoothingGaussianClippedIntegerOutput, &Warning::code);
+  REQUIRE(clipped->message.find("clipped 2 finite values") != std::string::npos);
+  REQUIRE((clipped->message.find("Partial") != std::string::npos) == interrupted);
+  REQUIRE(countSmoothingWarning(result, -23693) == (interrupted ? 2 : 3));
+  for(usize index = 0; index < count; ++index)
+  {
+    const usize batch = index / 4;
+    const bool written = batch == 0 || batch == 2 || (batch == 4 && !interrupted);
+    REQUIRE(output.getValue(index) == (written ? 9 : sentinel));
+  }
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: clipping warning survives later transfer failure and cancellation",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  const usize outcome = GENERATE(usize{0}, usize{1}, usize{2});
+  std::atomic_bool shouldCancel{false};
+  const SmoothingTransferStore<float32> source(8, 128.0F, {.ReadAt = outcome == 0 ? usize{2} : usize{0}});
+  SmoothingTransferStore<int8> output(8, int8{0}, {.WriteAt = outcome == 1 ? usize{2} : usize{0}, .CancelOnWritePtr = outcome == 2 ? &shouldCancel : nullptr});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = true;
+  options.targetScratchBytes = 5;
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<int8>, options);
+  REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == 1);
+  REQUIRE(countSmoothingWarning(result, -23692) >= 1);
+  REQUIRE(countSmoothingWarning(result, -23693) >= 1);
+  REQUIRE(output.getValue(0) == 127);
+  for(usize index = 1; index < output.getSize(); ++index)
+  {
+    REQUIRE(output.getValue(index) == 0);
+  }
+  const auto clipped = std::ranges::find(result.warnings(), ImageProcessing::k_SmoothingGaussianClippedIntegerOutput, &Warning::code);
+  REQUIRE(clipped->message.find(outcome == 1 ? "clipped 2 finite values" : "clipped 1 finite value") != std::string::npos);
+  REQUIRE(clipped->message.find("Partial") != std::string::npos);
+  if(outcome < 2)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == (outcome == 0 ? -23690 : -23691));
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(shouldCancel.load());
+  }
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: selected plane sinks retain successful warnings before error or cancellation",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  const SmoothingTransferStore<float32> source(64, 7.0F);
+  DataStore<float32> output(ShapeType{64}, ShapeType{1}, -3.0F);
+  std::atomic_bool shouldCancel{false};
+  const bool cancel = GENERATE(false, true);
+  usize calls = 0;
+  const ImageProcessing::RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.0, .spacing = 1.0, .order = 0, .normalizeAcrossScale = false, .CheckedSmoothing = true};
+  const ImageProcessing::RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 1.0, .spacing = 1.0, .order = 0, .normalizeAcrossScale = false, .CheckedSmoothing = true};
+  const auto sink = [&](usize offset, nonstd::span<float32> values) -> Result<> {
+    ++calls;
+    if(calls == 2)
+    {
+      return MakeErrorResult(-23694, "Injected later smoothing sink failure.");
+    }
+    if(cancel)
+    {
+      shouldCancel.store(true);
+    }
+    return MergeResults(output.copyFromBuffer(offset, nonstd::span<const float32>(values.data(), values.size())), MakeWarningVoidResult(-23695, "Injected smoothing sink warning."));
+  };
+  const Result<> result = ImageProcessing::RecursiveGaussianXYPlaneCascadeToSink<float32>(source, SizeVec3{4, 4, 4}, first, second, shouldCancel, {}, sink);
+  for(usize index = 0; index < output.getSize(); ++index)
+  {
+    REQUIRE(output.getValue(index) == (index < 16 ? 7.0F : -3.0F));
+  }
+  REQUIRE(countSmoothingWarning(result, -23695) == 1);
+  REQUIRE(countSmoothingWarning(result, -23692) >= 1);
+  if(cancel)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(calls == 1);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -23694);
+  }
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: selected tiled transfers keep prior row warnings on failure",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  const bool write = GENERATE(false, true);
+  SmoothingTransferStore<float32> store(8, 0.0F, {.ReadAt = write ? usize{0} : usize{2}, .WriteAt = write ? usize{2} : usize{0}});
+  std::array<float32, 2> values{1.0F, 2.0F};
+  const Result<> result = write ? ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(store, 4, 0, 0, 2, 1, values, true) :
+                                  ImageProcessing::detail::ReadRecursiveGaussian2DBlock<float32>(store, 4, 0, 2, 0, 1, values, true);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == (write ? -23691 : -23690));
+  REQUIRE(countSmoothingWarning(result, write ? -23693 : -23692) == 1);
+  if(write)
+  {
+    REQUIRE(store.getValue(0) == 1.0F);
+    REQUIRE(store.getValue(4) == 0.0F);
+  }
+  else
+  {
+    REQUIRE(values[0] == 0.0F);
+    REQUIRE(values[1] == 2.0F);
+  }
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: checked axis materializations narrow finite overflow explicitly",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  const uint32 axis = GENERATE(uint32{0}, uint32{1}, uint32{2});
+  const bool fast = GENERATE(false, true);
+  const DataStore<float64> source(ShapeType{5, 5, 5}, ShapeType{1}, 2.0 * static_cast<float64>(std::numeric_limits<float32>::max()));
+  DataStore<float32> output(ShapeType{5, 5, 5}, ShapeType{1}, 0.0F);
+  ImageProcessing::RecursiveGaussianPassOptions options;
+  options.CheckedSmoothing = true;
+  options.useInMemoryFastPath = fast;
+  options.stagingByteBudget = 256;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::RecursiveGaussianAxisPass<float64>(source, output, SizeVec3{5, 5, 5}, axis, 1.0, 1.0, 0, false, shouldCancel, {}, options);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  for(usize index = 0; index < output.getSize(); ++index)
+  {
+    REQUIRE(std::isinf(output.getValue(index)));
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+    REQUIRE(output.getValue(index) > 0.0F);
+  }
+}
 
 // -----------------------------------------------------------------------------
 // (1) Smoothing preserves a constant image (all signed types). A normalized (DC-gain-1) Gaussian of a constant is the
@@ -251,9 +1062,10 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSigma);
   }
-  SECTION("degenerate spacing rejected")
+  SECTION("degenerate spacing rejected during execution")
   {
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims/type/sigma; only the X spacing is degenerate
@@ -267,9 +1079,11 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSpacing);
+    const auto result = filter.execute(ds, args);
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+    REQUIRE(result.result.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSpacing);
   }
 }
 
@@ -492,3 +1306,82 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
 
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
+
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: resident integration feeds quantitative gradient",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool step = GENERATE(false, true);
+  CAPTURE(step, scenario);
+  std::vector<float32> original(usize{16} * 4, 4);
+  if(step)
+  {
+    for(usize index = 0; index < original.size(); ++index)
+    {
+      original[index] = index % 16 < 8 ? 0 : 1;
+    }
+  }
+  DataStructure dataStructure;
+  const auto input = recon_test::BuildImageFromPattern<float32>(dataStructure, 16, 4, 1, original);
+  image_integration::SetGeometry(dataStructure);
+  REQUIRE(image_integration::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
+  const SmoothingRecursiveGaussianImageFilter filter;
+  auto args = image_integration::ImageArguments(filter, input, "Smoothed");
+  args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1, 1, 1}));
+  args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+  image_integration::Execute(filter, dataStructure, args, scope);
+  const auto smoothed = input.replaceName("Smoothed");
+  const auto values = image_integration::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope);
+  const GradientMagnitudeImageFilter gradient;
+  args = image_integration::ImageArguments(gradient, smoothed, "Gradient");
+  args.insertOrAssign(GradientMagnitudeImageFilter::k_UseImageSpacing_Key, std::make_any<bool>(true));
+  image_integration::Execute(gradient, dataStructure, args, scope);
+  const auto edges = image_integration::Read<float32>(dataStructure, input.replaceName("Gradient"), {1, 4, 16}, scope);
+  if(step)
+  {
+    // Smoothing spreads the edge into both neighboring columns while keeping the dark side on the left.
+    REQUIRE(values[6] > 1.0e-3F);
+    REQUIRE(values[6] < 0.5F);
+    REQUIRE(values[9] > 0.5F);
+    REQUIRE(values[9] < 1.0F - 1.0e-3F);
+  }
+  for(usize row = 0; row < 4; ++row)
+  {
+    const usize rowOffset = row * 16;
+    for(usize column = 0; column < 16; ++column)
+    {
+      const usize index = rowOffset + column;
+      CAPTURE(column, row);
+      REQUIRE(std::isfinite(values[index]));
+      REQUIRE(std::isfinite(edges[index]));
+      if(!step)
+      {
+        REQUIRE(values[index] == Approx(4).margin(1.0e-6));
+        REQUIRE(std::abs(edges[index]) <= 1.0e-6);
+      }
+      else
+      {
+        // Reflection/complement and row invariance are independent of the recursive implementation.
+        const usize reflectedIndex = rowOffset + 15 - column;
+        REQUIRE(values[index] + values[reflectedIndex] == Approx(1).margin(1.0e-5));
+        REQUIRE(values[index] == Approx(values[column]).margin(1.0e-5));
+        REQUIRE(edges[index] == Approx(edges[reflectedIndex]).margin(1.0e-5));
+        REQUIRE(edges[index] == Approx(edges[column]).margin(1.0e-5));
+        const usize left = rowOffset + (column == 0 ? 0 : column - 1);
+        const usize right = rowOffset + std::min<usize>(15, column + 1);
+        const float64 expectedGradient = 0.5 * std::abs(static_cast<float64>(values[right]) - values[left]);
+        REQUIRE(edges[index] == Approx(expectedGradient).margin(1.0e-5));
+        REQUIRE(edges[index] <= edges[rowOffset + 7] + 1.0e-5F);
+        REQUIRE(edges[rowOffset + 7] > 0);
+        REQUIRE(edges[rowOffset + 7] == Approx(edges[rowOffset + 8]).margin(1.0e-5));
+      }
+    }
+  }
+  REQUIRE(image_integration::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope) == values);
+  REQUIRE(image_integration::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
+  image_integration::CheckGeometry(dataStructure, {16, 4, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison)

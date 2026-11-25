@@ -12,6 +12,11 @@ is normalized and converted to a color based on where the value falls in the spe
 The user can apply an optional data mask and then set the RGB values (0-255) that will be used if the data mask has a FALSE
 value.
 
+For signed 64-bit input, this filter converts values to float64 before subtracting the minimum. Nearby integers
+above `2^53` in magnitude can therefore produce the same color. For example, the three largest int64 values
+all map to black with the *Grayscale* preset. [Write Image](../NXImageProcessing/WriteImageFilter.md) computes
+the integer differences first. For the same values and preset, its inline color table gives black, middle gray and white.
+
 ### Required Input Sources
 
 - A single-component (scalar) **Data Array** to colorize. This can be any scalar array already present in the **DataStructure**, for example a Confidence Index or Image Quality array read by an EBSD reader, a Feature ID array, or any computed scalar metric.

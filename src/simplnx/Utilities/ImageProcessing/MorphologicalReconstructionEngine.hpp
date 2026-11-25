@@ -19,10 +19,12 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -36,14 +38,130 @@ enum class ReconstructionMarkerSource
   MaskWithMaximumInterior
 };
 
+/** @brief A nonnegative marker offset in native integer intensity units. */
+class ExactReconstructionHeight
+{
+public:
+  template <std::same_as<uint64> T>
+  explicit constexpr ExactReconstructionHeight(T units) noexcept
+  : m_Units(units)
+  {
+  }
+
+  constexpr uint64 units() const noexcept
+  {
+    return m_Units;
+  }
+
+private:
+  uint64 m_Units;
+};
+
+using ReconstructionHeight = std::variant<float64, ExactReconstructionHeight>;
+
 struct ReconstructionMarkerOptions
 {
   ReconstructionMarkerSource source = ReconstructionMarkerSource::Provided;
-  float64 height = 0.0;
+  ReconstructionHeight height = 0.0;
 };
 
 namespace detail
 {
+/**
+ * @brief Lowers an integer marker value exactly, saturating at the native type minimum.
+ * @tparam T Integer scalar type.
+ * @param value Native input value.
+ * @param heightUnits Nonnegative integer Height below 2^64.
+ * @return The lowered value, saturated to the native minimum.
+ */
+template <class T>
+T SubtractExactIntegerReconstructionHeight(T value, uint64 heightUnits)
+{
+  static_assert(std::is_integral_v<T>);
+  if constexpr(std::is_signed_v<T>)
+  {
+    if(value < 0)
+    {
+      // For a negative value this distance fits the signed type, including when value is its minimum.
+      const uint64 distanceToMinimum = static_cast<uint64>(value - std::numeric_limits<T>::lowest());
+      return heightUnits >= distanceToMinimum ? std::numeric_limits<T>::lowest() : static_cast<T>(value - static_cast<T>(heightUnits));
+    }
+    const uint64 positiveValue = static_cast<uint64>(+value);
+    if(heightUnits <= positiveValue)
+    {
+      return static_cast<T>(positiveValue - heightUnits);
+    }
+    const uint64 negativeMagnitude = heightUnits - positiveValue;
+    const uint64 minimumMagnitude = static_cast<uint64>(std::numeric_limits<T>::max()) + uint64{1};
+    return negativeMagnitude >= minimumMagnitude ? std::numeric_limits<T>::lowest() : static_cast<T>(-static_cast<T>(negativeMagnitude));
+  }
+  else
+  {
+    const uint64 unsignedValue = static_cast<uint64>(value);
+    return heightUnits >= unsignedValue ? T{0} : static_cast<T>(unsignedValue - heightUnits);
+  }
+}
+
+/**
+ * @brief Raises an integer marker value exactly, saturating at the native type maximum.
+ * @tparam T Integer scalar type.
+ * @param value Native input value.
+ * @param heightUnits Nonnegative integer Height below 2^64.
+ * @return The raised value, saturated to the native maximum.
+ */
+template <class T>
+T AddExactIntegerReconstructionHeight(T value, uint64 heightUnits)
+{
+  static_assert(std::is_integral_v<T>);
+  if constexpr(std::is_signed_v<T>)
+  {
+    if(value >= 0)
+    {
+      const uint64 distanceToMaximum = static_cast<uint64>(std::numeric_limits<T>::max() - value);
+      return heightUnits >= distanceToMaximum ? std::numeric_limits<T>::max() : static_cast<T>(value + static_cast<T>(heightUnits));
+    }
+    // Add one before negating so even a signed minimum has a representable intermediate.
+    const uint64 negativeMagnitude = static_cast<uint64>(-(value + T{1})) + uint64{1};
+    if(heightUnits < negativeMagnitude)
+    {
+      const uint64 remainingMagnitude = negativeMagnitude - heightUnits;
+      const uint64 minimumMagnitude = static_cast<uint64>(std::numeric_limits<T>::max()) + uint64{1};
+      return remainingMagnitude == minimumMagnitude ? std::numeric_limits<T>::lowest() : static_cast<T>(-static_cast<T>(remainingMagnitude));
+    }
+    const uint64 positiveValue = heightUnits - negativeMagnitude;
+    return positiveValue >= static_cast<uint64>(std::numeric_limits<T>::max()) ? std::numeric_limits<T>::max() : static_cast<T>(positiveValue);
+  }
+  else
+  {
+    const uint64 distanceToMaximum = static_cast<uint64>(std::numeric_limits<T>::max() - value);
+    return heightUnits >= distanceToMaximum ? std::numeric_limits<T>::max() : static_cast<T>(static_cast<uint64>(value) + heightUnits);
+  }
+}
+
+/**
+ * @brief Offsets integer marker values exactly, saturating at the native type bounds.
+ * @tparam T Integer scalar type.
+ * @param values Marker buffer to update.
+ * @param height Prepared integer offset in intensity units.
+ * @param lower Selects subtraction when true and addition when false.
+ */
+template <class T>
+void ApplyExactIntegerReconstructionHeight(nonstd::span<T> values, ExactReconstructionHeight height, bool lower)
+{
+  static_assert(std::is_integral_v<T>);
+  const uint64 heightUnits = height.units();
+  // The largest uint64 offset spans the full range of each supported integer pixel type.
+  if(heightUnits == std::numeric_limits<uint64>::max())
+  {
+    std::fill(values.begin(), values.end(), lower ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max());
+    return;
+  }
+  for(T& value : values)
+  {
+    value = lower ? SubtractExactIntegerReconstructionHeight(value, heightUnits) : AddExactIntegerReconstructionHeight(value, heightUnits);
+  }
+}
+
 template <class T>
 T SaturateReconstructionMarkerValue(float64 value)
 {
@@ -72,6 +190,33 @@ T SaturateReconstructionMarkerValue(float64 value)
   }
 }
 
+/**
+ * @brief Applies an offset to the marker buffer and saturates integer results at the native type bounds.
+ * @tparam T Marker pixel type.
+ * @param values Marker buffer to update.
+ * @param height Prepared offset in intensity units. A floating offset uses floating-point arithmetic.
+ * @param lower Selects subtraction when true and addition when false.
+ */
+template <class T>
+void ApplyReconstructionHeight(nonstd::span<T> values, const ReconstructionHeight& height, bool lower)
+{
+  const auto* exactHeight = std::get_if<ExactReconstructionHeight>(&height);
+  if constexpr(std::is_integral_v<T>)
+  {
+    if(exactHeight != nullptr)
+    {
+      ApplyExactIntegerReconstructionHeight(values, *exactHeight, lower);
+      return;
+    }
+  }
+  const float64 offset = exactHeight != nullptr ? static_cast<float64>(exactHeight->units()) : std::get<float64>(height);
+  const float64 signedHeight = lower ? -offset : offset;
+  for(T& value : values)
+  {
+    value = SaturateReconstructionMarkerValue<T>(static_cast<float64>(value) + signedHeight);
+  }
+}
+
 template <class T>
 void ApplyReconstructionMarkerOptions(nonstd::span<T> values, usize start, const SizeVec3& dims, const ReconstructionMarkerOptions& options)
 {
@@ -81,11 +226,7 @@ void ApplyReconstructionMarkerOptions(nonstd::span<T> values, usize start, const
   }
   if(options.source == ReconstructionMarkerSource::MaskMinusHeight || options.source == ReconstructionMarkerSource::MaskPlusHeight)
   {
-    const float64 signedHeight = options.source == ReconstructionMarkerSource::MaskMinusHeight ? -options.height : options.height;
-    for(T& value : values)
-    {
-      value = SaturateReconstructionMarkerValue<T>(static_cast<float64>(value) + signedHeight);
-    }
+    ApplyReconstructionHeight(values, options.height, options.source == ReconstructionMarkerSource::MaskMinusHeight);
     return;
   }
 

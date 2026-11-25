@@ -8,35 +8,48 @@ NXImageProcessing (Segmentation)
 
 ## Description
 
-Labels the objects in the input image: non-zero input voxels are considered foreground, zero-valued voxels are considered background. Each distinct foreground object is assigned a unique label. Objects that are reached earlier by a raster-order (X fastest, then Y, then Z) scan receive a lower label, so labels start at 1 and are consecutive; background voxels are always labeled 0.
+Labels connected foreground objects. Nonzero input voxels are foreground. Input voxels with value 0 are background.
+The input must have one component and can use any signed or unsigned integer type.
 
-The input array must be single-component (scalar) and may be **any integer type** (signed or unsigned). The output is a fixed **uint32** label image regardless of the input element type. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK Connected Component Image Filter, and matches it exactly (byte-identical label values).
+The output uses uint32 labels (4 bytes per voxel). Below the run ID limit, background has label 0 and each object has
+a unique label. The filter assigns labels in scan order, starting at 1 and stepping along X first, then Y, then Z.
+These labels match the legacy ITK filter below the run ID limit.
 
 ### Fully Connected
 
-Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn.
+**Fully Connected** is off by default. The filter joins voxels that share a face. Enable it to also join voxels that
+touch at an edge or vertex.
+
+### Provisional Label Limit Handling
+
+The filter assigns one provisional ID to each uninterrupted foreground run along X. Multiple runs can join to form one
+object. For example, a bridge can connect several stripes. The limit counts runs.
+
+- **Error** (default) accepts provisional ID 4,294,967,295. The filter stops if another run needs an ID.
+- **Warn and Continue (Legacy Behavior)** reports one warning at the first overflow and continues. The first overflowing
+  ID becomes background 0. Later IDs reuse existing labels, starting at 1.
+
+In Warn mode, a wrapped 0 in the previous row can cause scanline processing to label an adjacent object as background.
+Tiled processing skips that previous-row 0, so the two routes can give different labels. In either route, foreground can
+disappear and distinct objects can merge. These changes can affect object counts, sizes, and measurements.
+
+Saved pipelines without this choice use **Error**. Select **Warn and Continue (Legacy Behavior)** only if you need the
+old overflow behavior and can accept its effects. A memory or file error can stop either choice.
 
 ## Algorithm
 
-The filter scans the image in X-fastest order. It encodes each foreground run along X. A union-find table joins runs that have the selected connectivity.
+The filter finds runs along X and joins neighboring runs with an equivalence table. A final pass assigns consecutive
+labels.
 
-After the first pass, the filter maps each provisional label to a consecutive label. The first output label is one. Each table entry represents a run, not a voxel.
+For out-of-core 3D data, the filter keeps as much working data in memory as the available budget allows. If it can
+keep the complete state in memory, it reads the input once. With less memory it can keep provisional labels in memory.
+If the labels also do not fit, it reads the input twice and writes the output once in bounded groups.
 
-For OOC 3D data, the filter first requests memory for the complete working state. A complete grant uses one input read and one output write.
+For 2D data, wide rows can be processed in tiles. Temporary files can hold the previous row's labels. The final pass
+reads input tiles and writes output tiles in bounded groups.
 
-If this request is not complete, the filter requests memory for the uint32 provisional-label volume. A complete second grant keeps that volume in memory.
-
-If the second grant is not complete, the filter uses bounded replay. Pass 1 reads each input plane once. It encodes independent rows in parallel and keeps only adjacent-plane run data.
-
-After union resolution, pass 2 reads adjacent plane groups. It counts and maps independent rows in parallel. The group size uses at most one-twentieth of the complete replay working set, with a one-plane minimum. The shared cache budget can reduce this size.
-
-The bounded 3D route uses two full input reads and one full output write. Grouping changes the number of transfers, not the logical I/O. The route does not store a complete provisional-label volume.
-
-For true 2D data (`Z=1`), a checked scheduler uses at most 64 MiB for blocks. An extremely wide row uses X tiles.
-
-The tiled first pass can use temporary records for previous-row labels. The final pass rereads bounded input tiles and writes bounded output tiles.
-
-All routes create labels at the same raster run starts. They preserve the same union order and consecutive-label order.
+All routes keep equivalence tables in memory. Memory use grows with the number of provisional runs. Three uint32 tables
+at the ID limit need at least 48 GiB, before other working data. A memory allocation can fail before the ID limit is reached.
 
 % Auto generated parameter table will be inserted here
 

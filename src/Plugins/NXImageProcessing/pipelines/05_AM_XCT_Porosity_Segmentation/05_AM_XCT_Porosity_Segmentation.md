@@ -216,6 +216,7 @@ Key parameters:
 - `input_image_data_path`: `"AM XCT/Cell Data/Closed Pore Mask"`
 - `input_image_geometry_path`: `"AM XCT"`
 - `output_array_name`: `"Pore Labels"`
+- `provisional_label_limit_handling_index`: `0`
 
 Resolved inputs:
 

@@ -6,14 +6,12 @@
 #include "simplnx/Utilities/ImageProcessing/BoxNeighborhoodEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ContourEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/FiniteDifferenceEngine.hpp"
-#include "simplnx/Utilities/ImageProcessing/HistogramEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 
 #include <array>
 #include <atomic>
-#include <type_traits>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -134,59 +132,6 @@ struct ContourExecuteFn
   }
 };
 
-template <template <class> class OutTypeMap, class OperationT>
-struct HistogramExecuteFn
-{
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  const OperationT& operation;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
-
-  template <class T>
-  Result<> operator()() const
-  {
-    using U = OutTypeMap<T>; // Otsu uses AlwaysUInt8 (a uint8 label image); generalized like the other façade helpers.
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<U>>(outputArrayPath).getDataStoreRef();
-
-    Result<Histogram> hist = [&]() -> Result<Histogram> {
-      if constexpr(std::is_integral_v<T>)
-      {
-        return ComputeIntegralHistogram<T>(inStore, operation.numBins, shouldCancel);
-      }
-      else
-      {
-        // Only min/max feed the histogram range below, so the parallel min/max reduction replaces the full
-        // (mean/variance-computing) statistics pass.
-        Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(inStore, shouldCancel);
-        if(stats.invalid())
-        {
-          return {nonstd::make_unexpected(std::move(stats.errors()))};
-        }
-        if(shouldCancel)
-        {
-          return {};
-        }
-        return ComputeHistogram<T>(inStore, operation.numBins, static_cast<float64>(stats.value().min), static_cast<float64>(stats.value().max), shouldCancel);
-      }
-    }();
-    if(hist.invalid())
-    {
-      return {nonstd::make_unexpected(std::move(hist.errors()))};
-    }
-    if(shouldCancel)
-    {
-      return {};
-    }
-
-    const std::vector<float64> thresholds = OtsuMultipleThresholds(hist.value(), operation.numThresholds, operation.valleyEmphasis, operation.returnBinMidpoint);
-    auto classifyOp = operation.template makeClassifyOp<T, U>(thresholds);
-    return ApplyPointwise<T, U>(inStore, outStore, classifyOp, shouldCancel, messageHandler);
-  }
-};
-
 template <template <class> class OutTypeMap, class ReduceFn>
 struct AxisProjectionExecuteFn
 {
@@ -218,7 +163,7 @@ struct AxisProjectionExecuteFn
  *        ConductanceParameter, ...) are supplied by the caller; this functor only resolves the T-typed input/output
  *        stores and forwards to the streaming @ref ApplyFiniteDifference driver.
  */
-template <class F>
+template <class F, bool CheckedOutput = false, auto ReportConversion = nullptr>
 struct FiniteDifferenceExecuteFn
 {
   DataStructure& dataStructure;
@@ -237,7 +182,8 @@ struct FiniteDifferenceExecuteFn
   {
     const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
     auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
-    return ApplyFiniteDifference<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
+    return ApplyFiniteDifference<T, F, CheckedOutput, ReportConversion>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, timeStep, numberOfIterations, shouldCancel,
+                                                                        messageHandler);
   }
 };
 
@@ -330,23 +276,6 @@ Result<> ExecuteContourImageFilter(DataStructure& dataStructure, const DataPath&
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
-/// @brief Executes a histogram-driven classification filter such as multi-Otsu thresholding.
-/// @details Integral inputs fuse range and exact-frequency discovery into one bounded scan when their observed span
-/// is at most 65,535. Wider integral ranges use the completed range plus a second histogram scan. Floating-point
-/// inputs retain separate streaming statistics and histogram scans. Derived thresholds feed the pointwise engine.
-/// The same bounded implementation serves in-core and out-of-core stores.
-/// @tparam OutTypeMap Maps each input type to the output type. The default creates a uint8 label image.
-/// @tparam OperationT Exposes the histogram and threshold settings plus a typed classification-operation factory.
-template <class TypeSetPolicy = AllNumeric, template <class> class OutTypeMap = AlwaysUInt8, class OperationT>
-Result<> ExecuteHistogramImageFilter(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const OperationT& operation, const std::atomic_bool& shouldCancel,
-                                     const IFilter::MessageHandler& messageHandler)
-{
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  const DataType inputType = inputArray.getDataType();
-  detail::HistogramExecuteFn<OutTypeMap, OperationT> executeFn{dataStructure, inputArrayPath, outputArrayPath, operation, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
-}
-
 /**
  * @brief Execute for an axis-projection filter. Reads the input dims from the ImageGeom, resolves the
  *        input/output stores, dispatches on the input element type via @p TypeSetPolicy (ProjectionScalar's
@@ -382,8 +311,9 @@ Result<> ExecuteAxisProjectionImageFilter(DataStructure& dataStructure, const Da
  *        (CurvatureFlowFn etc.), which may itself hold extra parameters set by the caller. @p TypeSetPolicy
  *        selects which scalar types the filter accepts (AllNumeric for CurvatureFlow; FloatingScalar for the
  *        other three). The caller's preflight must have enforced a scalar input.
+ *        CheckedOutput selects the checked Curvature Flow path. ReportConversion supplies its diagnostics.
  */
-template <class F, class TypeSetPolicy>
+template <class F, class TypeSetPolicy, bool CheckedOutput = false, auto ReportConversion = nullptr>
 Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, F fn, float64 timeStep,
                                             uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
@@ -392,7 +322,8 @@ Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::FiniteDifferenceExecuteFn<F> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler};
+  const detail::FiniteDifferenceExecuteFn<F, CheckedOutput, ReportConversion> executeFn{dataStructure, inputArrayPath,     outputArrayPath, dims,          spacing, fn,
+                                                                                        timeStep,      numberOfIterations, shouldCancel,    messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
