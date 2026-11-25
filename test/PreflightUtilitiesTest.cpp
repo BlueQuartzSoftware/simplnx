@@ -39,7 +39,8 @@ TEST_CASE("simplnx::AppendUnchangedAttributeMatricesWarning: reports source path
     CHECK(result.warnings().front().message == "These Attribute Matrices are copied to the cropped geometry unchanged:\n"
                                                "Source/Ensemble\n"
                                                "Source/Nested/Other Features\n"
-                                               "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.");
+                                               "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble arrays retain their stored values. "
+                                               "Recompute any Ensemble statistics that depend on the geometry's cells or elements.");
   }
 
   SECTION("Only excluded matrices are present")
