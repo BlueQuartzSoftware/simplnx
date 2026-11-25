@@ -4,7 +4,7 @@
 
 #include "NXImageProcessing/Filters/ReadNIfTIFileFilter.hpp"
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
-#include "NXImageProcessing/utils/nifti1.h"
+#include "nifti/nifti1.h"
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"

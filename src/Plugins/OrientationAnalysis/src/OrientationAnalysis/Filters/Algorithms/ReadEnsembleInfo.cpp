@@ -1,7 +1,7 @@
 #include "ReadEnsembleInfo.hpp"
 
 #include "OrientationAnalysis/utilities/PhaseType.hpp"
-#include "OrientationAnalysis/utilities/inicpp.h"
+#include "inicpp/inicpp.h"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"

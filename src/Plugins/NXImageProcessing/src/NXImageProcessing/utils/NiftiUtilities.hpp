@@ -1,7 +1,7 @@
 #pragma once
 
 #include "NXImageProcessing/NXImageProcessing_export.hpp"
-#include "NXImageProcessing/utils/nifti1.h"
+#include "nifti/nifti1.h"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"

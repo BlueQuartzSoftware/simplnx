@@ -1,6 +1,6 @@
 #include "IterativeClosestPoint.hpp"
 
-#include "SimplnxCore/utils/nanoflann.hpp"
+#include "nanoflann/nanoflann.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
