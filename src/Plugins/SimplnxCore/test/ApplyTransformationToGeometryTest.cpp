@@ -2011,21 +2011,58 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Preflight warns for
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM preflight", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  const bool clear = GENERATE(true, false);
   auto ds = CreateTransformFeatureFixture();
   ApplyTransformationToGeometryFilter filter;
-  auto result = filter.preflight(ds, MakeTransformFeatureArgs(clear, false));
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  const auto it =
-      std::find_if(result.outputValues.begin(), result.outputValues.end(), [clear](const auto& value) { return value.name == (clear ? "Cleared Feature Data" : "Feature Data Not Cleared"); });
-  REQUIRE(it != result.outputValues.end());
-  if(clear)
+
+  SECTION("Feature AM information for replacement geometry")
   {
-    CHECK(it->value.find("Geometry/Feature Data/Values") != std::string::npos);
-    CHECK(it->value.find("Geometry/Feature Data/Names") != std::string::npos);
-    CHECK(it->value.find("Geometry/Feature Data/Neighbors") != std::string::npos);
-    CHECK(it->value.find("Ensemble") == std::string::npos);
+    const bool clear = GENERATE(true, false);
+    auto result = filter.preflight(ds, MakeTransformFeatureArgs(clear, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    const auto it =
+        std::find_if(result.outputValues.begin(), result.outputValues.end(), [clear](const auto& value) { return value.name == (clear ? "Cleared Feature Data" : "Feature Data Not Cleared"); });
+    REQUIRE(it != result.outputValues.end());
+    if(clear)
+    {
+      CHECK(it->value.find("Geometry/Feature Data/Values") != std::string::npos);
+      CHECK(it->value.find("Geometry/Feature Data/Names") != std::string::npos);
+      CHECK(it->value.find("Geometry/Feature Data/Neighbors") != std::string::npos);
+      CHECK(it->value.find("Ensemble") == std::string::npos);
+    }
   }
+
+  SECTION("Modified objects for in-place translation")
+  {
+    const bool renumber = GENERATE(true, false);
+    CAPTURE(renumber);
+    const auto result = filter.preflight(ds, MakeTransformFeatureArgs(true, renumber, 4));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+
+    usize featureIdsModifications = 0;
+    usize featureAmModifications = 0;
+    for(const auto& modification : result.outputActions.value().modifiedActions)
+    {
+      CAPTURE(modification.modifiedPath.toString());
+      CHECK(modification.modifiedPath.getParent() != k_FeatureAMPath);
+      if(modification.modifiedPath == k_TransformFeatureIdsPath)
+      {
+        ++featureIdsModifications;
+        CHECK(modification.dataObjectType == DataObject::Type::DataArray);
+        CHECK(modification.modifiedType == DataObjectModification::ModifiedType::Modified);
+      }
+      else if(modification.modifiedPath == k_FeatureAMPath)
+      {
+        ++featureAmModifications;
+        CHECK(modification.dataObjectType == DataObject::Type::AttributeMatrix);
+        CHECK(modification.modifiedType == DataObjectModification::ModifiedType::Modified);
+      }
+    }
+
+    const usize expectedModifications = renumber ? 1 : 0;
+    CHECK(featureIdsModifications == expectedModifications);
+    CHECK(featureAmModifications == expectedModifications);
+  }
+
   CHECK(filter.parametersVersion() == 3);
   CHECK(filter.getDefaultArguments().value<bool>(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key));
   CHECK_FALSE(filter.getDefaultArguments().value<bool>(ApplyTransformationToGeometryFilter::k_RenumberFeatures_Key));

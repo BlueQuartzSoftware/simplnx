@@ -341,8 +341,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the transformation.";
       if(!replacesImageGeometry)
       {
-        AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureAmPath, {});
-        AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, inputValues.FeatureIdsPath, {});
+        MarkDataPathModified(dataStructure, resultOutputActions, featureAmPath);
+        MarkDataPathModified(dataStructure, resultOutputActions, inputValues.FeatureIdsPath);
       }
     }
     preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
