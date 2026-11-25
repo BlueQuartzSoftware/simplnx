@@ -205,7 +205,8 @@ void AppendUnchangedAttributeMatricesWarning(const DataStructure& dataStructure,
     std::ranges::sort(paths);
     resultOutputActions.warnings().push_back(
         {k_UnchangedAttributeMatricesWarning, fmt::format("These Attribute Matrices are {} the {} unchanged:\n{}\n"
-                                                          "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.",
+                                                          "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble arrays retain their stored values. "
+                                                          "Recompute any Ensemble statistics that depend on the geometry's cells or elements.",
                                                           keptInPlace ? "kept in" : "copied to", outputGeometry, fmt::join(paths, "\n"))});
   }
 }

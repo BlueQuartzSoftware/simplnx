@@ -60,7 +60,7 @@ Turn *Perform In Place* off and set *Created Edge Geometry* to a new path. The s
 
 The preflight value **Cleared Feature Data** lists the full paths of the arrays that will be cleared. Use this list to decide what to recompute after Crop. Recompute neighbor lists if later filters need them. When Clear is off, **Feature Data Not Cleared** explains that copied feature values describe the uncropped geometry.
 
-Warning **-4041** lists the source paths of Attribute Matrices that this filter copies unchanged. The list excludes the registered Vertex and Edge Attribute Matrices and any Feature Attribute Matrix that the filter clears. Recompute Feature values in the listed matrices for the output geometry. Ensemble data is not affected.
+Warning **-4041** lists the source paths of Attribute Matrices that this filter copies unchanged. The list excludes the registered Vertex and Edge Attribute Matrices and any Feature Attribute Matrix that the filter clears. Recompute Feature values in the listed matrices for the output geometry. Ensemble arrays retain their stored values. Recompute any Ensemble statistics that depend on the geometry's cells or elements.
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Edge Geometry*. It must not be the geometry's Edge or Vertex Attribute Matrix.
 

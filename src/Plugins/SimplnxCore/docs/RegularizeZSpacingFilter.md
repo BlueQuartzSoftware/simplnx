@@ -57,7 +57,7 @@ Other Attribute Matrices, including the **Ensemble Attribute Matrix**, are copie
 
 When Clear is off, **Feature Data Not Cleared** explains that copied feature values describe the original geometry.
 
-Warning **-4041** lists the source paths of Attribute Matrices that this filter copies unchanged. The list excludes the registered Cell Attribute Matrix and any Feature Attribute Matrix that the filter clears. Recompute Feature values in the listed matrices for the output geometry. Ensemble data is not affected.
+Warning **-4041** lists the source paths of Attribute Matrices that this filter copies unchanged. The list excludes the registered Cell Attribute Matrix and any Feature Attribute Matrix that the filter clears. Recompute Feature values in the listed matrices for the output geometry. Ensemble arrays retain their stored values. Recompute any Ensemble statistics that depend on the geometry's cells or elements.
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Image Geometry*. It must not be that geometry's Cell Attribute Matrix. These checks apply even when Renumber is off. The Cell Feature Ids location and tuple-count checks apply only when Clear and Renumber are both on.
 

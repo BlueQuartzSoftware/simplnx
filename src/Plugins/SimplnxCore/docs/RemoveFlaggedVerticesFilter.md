@@ -32,7 +32,7 @@ Select an `int32` array with one component for *Vertex Feature Ids*. When Clear 
 
 Preflight lists removed arrays under **Cleared Feature Data**. With clearing off, **Feature Data Not Cleared** explains that copied feature values are invalid for the reduced geometry. **Ensemble** data is always copied unchanged. The source geometry and its Feature Attribute Matrix stay unchanged.
 
-Warning **-4041** lists the source paths of Attribute Matrices that this filter copies unchanged. The list excludes the registered Vertex Attribute Matrix and any Feature Attribute Matrix that the filter clears. Recompute Feature values in the listed matrices for the output geometry. Ensemble data is not affected.
+Warning **-4041** lists the source paths of Attribute Matrices that this filter copies unchanged. The list excludes the registered Vertex Attribute Matrix and any Feature Attribute Matrix that the filter clears. Recompute Feature values in the listed matrices for the output geometry. Ensemble arrays retain their stored values. Recompute any Ensemble statistics that depend on the geometry's cells or elements.
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of the input Vertex Geometry. It must not be the geometry's Vertex Attribute Matrix. Preflight can report these errors:
 

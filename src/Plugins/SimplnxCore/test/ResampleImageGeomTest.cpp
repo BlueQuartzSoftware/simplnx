@@ -230,7 +230,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber OFF prefligh
   CHECK(unchangedWarning.message == "These Attribute Matrices are copied to the resampled geometry unchanged:\n"
                                     "Image/Cell Ensemble Data\n"
                                     "Image/Other Feature Data\n"
-                                    "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.");
+                                    "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble arrays retain their stored values. "
+                                    "Recompute any Ensemble statistics that depend on the geometry's cells or elements.");
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
   REQUIRE(it != result.outputValues.end());
