@@ -262,7 +262,10 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
 
   if(!errors.empty())
   {
-    return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
+    Result<OutputActions> preflightActions;
+    preflightActions.m_Expected = nonstd::make_unexpected(std::move(errors));
+    preflightActions.warnings() = std::move(warnings);
+    return {.outputActions = std::move(preflightActions)};
   }
 
   PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler, shouldCancel, executionContext);
@@ -475,7 +478,9 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
 
   if(!errors.empty())
   {
-    return {nonstd::make_unexpected(std::move(errors))};
+    Result<Arguments> result;
+    result.m_Expected = nonstd::make_unexpected(std::move(errors));
+    return result;
   }
 
   return {std::move(args), std::move(warnings)};

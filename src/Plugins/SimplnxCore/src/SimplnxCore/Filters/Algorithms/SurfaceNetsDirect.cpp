@@ -342,10 +342,10 @@ Result<> SurfaceNetsDirect::operator()()
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
        !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
-      vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
-      vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
-      vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
-      vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
+      vData[0] = {.VertexId = vertexIndices[0], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[1] = {.VertexId = vertexIndices[1], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[2] = {.VertexId = vertexIndices[2], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[3] = {.VertexId = vertexIndices[3], .Position = {0.0f, 0.0f, 0.0f}};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
@@ -402,10 +402,10 @@ Result<> SurfaceNetsDirect::operator()()
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
        !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
-      vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
-      vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
-      vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
-      vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
+      vData[0] = {.VertexId = vertexIndices[0], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[1] = {.VertexId = vertexIndices[1], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[2] = {.VertexId = vertexIndices[2], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[3] = {.VertexId = vertexIndices[3], .Position = {0.0f, 0.0f, 0.0f}};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
@@ -459,10 +459,10 @@ Result<> SurfaceNetsDirect::operator()()
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
        !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
-      vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
-      vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
-      vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
-      vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
+      vData[0] = {.VertexId = vertexIndices[0], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[1] = {.VertexId = vertexIndices[1], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[2] = {.VertexId = vertexIndices[2], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[3] = {.VertexId = vertexIndices[3], .Position = {0.0f, 0.0f, 0.0f}};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)

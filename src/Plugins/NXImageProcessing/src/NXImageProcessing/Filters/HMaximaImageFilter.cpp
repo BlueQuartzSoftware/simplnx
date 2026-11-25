@@ -104,7 +104,7 @@ IFilter::PreflightResult HMaximaImageFilter::preflightImpl(const DataStructure& 
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
-  return {ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+  return {.outputActions = ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                            /*requireScalar=*/true)};
 }
 Result<> HMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
