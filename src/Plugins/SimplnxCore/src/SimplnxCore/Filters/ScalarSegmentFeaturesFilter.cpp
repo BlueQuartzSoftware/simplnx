@@ -16,12 +16,6 @@
 
 using namespace nx::core;
 
-#define CX_DEFAULT_CONSTRUCTORS(className)                                                                                                                                                             \
-  className(const className&) = delete;                                                                                                                                                                \
-  className(className&&) noexcept = delete;                                                                                                                                                            \
-  className& operator=(const className&) = delete;                                                                                                                                                     \
-  className& operator=(className&&) noexcept = delete;
-
 namespace
 {
 } // namespace

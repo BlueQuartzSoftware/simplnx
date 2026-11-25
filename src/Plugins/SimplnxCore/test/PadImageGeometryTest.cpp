@@ -30,8 +30,6 @@ const DataPath k_InputGeometryPath({"ImageGeometry"});
 const DataPath k_OutputGeometryPath({"OutputGeometry"});
 const DataPath k_AttributeMatrixPath = k_InputGeometryPath.createChildPath("Cell Data");
 const std::string k_OutputGeometryPathStr = "Padded Image Geometry";
-#define True true
-#define False false
 } // namespace pad_image_geometry
 
 /* **************************************************************************** */
@@ -40,17 +38,17 @@ Arguments Args_0()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 0"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -60,17 +58,17 @@ Arguments Args_1()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 1"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -80,17 +78,17 @@ Arguments Args_2()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 2"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -100,17 +98,17 @@ Arguments Args_3()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 3"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -120,17 +118,17 @@ Arguments Args_4()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 4"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -140,17 +138,17 @@ Arguments Args_5()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 5"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -160,17 +158,17 @@ Arguments Args_6()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 6"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -180,17 +178,17 @@ Arguments Args_7()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 7"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -200,17 +198,17 @@ Arguments Args_8()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 8"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -220,17 +218,17 @@ Arguments Args_9()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 9"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -240,17 +238,17 @@ Arguments Args_10()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 10"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -260,17 +258,17 @@ Arguments Args_11()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 11"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -280,17 +278,17 @@ Arguments Args_12()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 12"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 0}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -300,17 +298,17 @@ Arguments Args_13()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(False));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 13"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 0}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{0, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -320,17 +318,17 @@ Arguments Args_14()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(False));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(false));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 14"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 
@@ -340,17 +338,17 @@ Arguments Args_15()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(True));
-  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(0));
   args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(pad_image_geometry::k_InputGeometryPath));
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Image Geometry 15"})));
-  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(true));
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
   args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{10, 10}));
-  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(True));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
   return args;
 }
 

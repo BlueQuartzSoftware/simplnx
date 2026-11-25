@@ -23,26 +23,13 @@
 #include <fmt/ranges.h>
 
 #include <atomic>
+#include <cstdio>
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <type_traits>
-
-#if defined(_MSC_VER)
-/**
- * @def FSEEK64
- * @brief Selects the 64-bit file-seek function.
- */
-#define FSEEK64 _fseeki64
-#else
-/**
- * @def FSEEK64
- * @brief Selects the 64-bit file-seek function.
- */
-#define FSEEK64 std::fseek
-#endif
 
 /**
  * @namespace nx::core
@@ -442,6 +429,18 @@ DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& pat
   return *dataArrayPtr;
 }
 
+namespace detail
+{
+inline int FileSeek64(std::FILE* filePtr, int64 offset, int origin)
+{
+#if defined(_MSC_VER)
+  return _fseeki64(filePtr, offset, origin);
+#else
+  return std::fseek(filePtr, static_cast<long>(offset), origin);
+#endif
+}
+} // namespace detail
+
 /**
  * @brief Reads a binary file into a preallocated array in bounded pages.
  *
@@ -466,7 +465,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
 
   if(startByte > 0)
   {
-    int result = FSEEK64(inputFilePtr, static_cast<int64>(startByte), SEEK_SET);
+    int result = detail::FileSeek64(inputFilePtr, static_cast<int64>(startByte), SEEK_SET);
     if(result != 0)
     {
       std::fclose(inputFilePtr);

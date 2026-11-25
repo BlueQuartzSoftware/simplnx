@@ -12,12 +12,6 @@
 
 using namespace nx::core;
 
-#define CX_DEFAULT_CONSTRUCTORS(className)                                                                                                                                                             \
-  className(const className&) = delete;                                                                                                                                                                \
-  className(className&&) noexcept = delete;                                                                                                                                                            \
-  className& operator=(const className&) = delete;                                                                                                                                                     \
-  className& operator=(className&&) noexcept = delete;
-
 namespace
 {
 constexpr int64 k_IncorrectInputArray = -600;
@@ -32,7 +26,10 @@ class TSpecificCompareFunctorBool : public SegmentFeatures::CompareFunctor
 {
 public:
   using DataArrayType = BoolArray;
-  CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctorBool)
+  TSpecificCompareFunctorBool(const TSpecificCompareFunctorBool&) = delete;
+  TSpecificCompareFunctorBool(TSpecificCompareFunctorBool&&) noexcept = delete;
+  TSpecificCompareFunctorBool& operator=(const TSpecificCompareFunctorBool&) = delete;
+  TSpecificCompareFunctorBool& operator=(TSpecificCompareFunctorBool&&) noexcept = delete;
 
   /**
    * @brief Initializes the resident Boolean comparator.
@@ -82,7 +79,10 @@ template <class T>
 class TSpecificCompareFunctor : public SegmentFeatures::CompareFunctor
 {
 public:
-  CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctor)
+  TSpecificCompareFunctor(const TSpecificCompareFunctor&) = delete;
+  TSpecificCompareFunctor(TSpecificCompareFunctor&&) noexcept = delete;
+  TSpecificCompareFunctor& operator=(const TSpecificCompareFunctor&) = delete;
+  TSpecificCompareFunctor& operator=(TSpecificCompareFunctor&&) noexcept = delete;
 
   using DataArrayType = DataArray<T>;
   using DataStoreType = AbstractDataStore<T>;

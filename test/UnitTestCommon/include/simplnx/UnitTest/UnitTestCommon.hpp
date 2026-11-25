@@ -62,9 +62,10 @@ inline constexpr bool IsResult_v = false;
 
 template <class T>
 inline constexpr bool IsResult_v<Result<T>> = true;
-} // namespace nx::core
 
-#define NX_IS_LVALUE_RESULT(value) (IsResult_v<std::remove_cvref_t<decltype(value)>> && std::is_lvalue_reference_v<decltype((value))>)
+template <class T>
+inline constexpr bool k_IsLvalueResult = IsResult_v<std::remove_cvref_t<T>> && std::is_lvalue_reference_v<T>;
+} // namespace nx::core
 
 /**
  * @def SIMPLNX_RESULT_CATCH_PRINT
@@ -96,7 +97,7 @@ inline constexpr bool IsResult_v<Result<T>> = true;
 #define SIMPLNX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    static_assert(NX_IS_LVALUE_RESULT(result), "SIMPLNX_RESULT_REQUIRE_VALID requires an lvalue Result<T>");                                                                                           \
+    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_VALID requires an lvalue Result<T>");                                                                                           \
     auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
     SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
     REQUIRE(simplnxCheckedResult.valid());                                                                                                                                                             \
@@ -110,7 +111,7 @@ inline constexpr bool IsResult_v<Result<T>> = true;
 #define SIMPLNX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    static_assert(NX_IS_LVALUE_RESULT(result), "SIMPLNX_RESULT_REQUIRE_INVALID requires an lvalue Result<T>");                                                                                         \
+    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_INVALID requires an lvalue Result<T>");                                                                                         \
     auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
     SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
     REQUIRE(simplnxCheckedResult.invalid());                                                                                                                                                           \
