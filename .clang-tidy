@@ -1,4 +1,4 @@
-# nxcleanup completed P0
+# nxcleanup completed P1
 # Shared BlueQuartz clang-tidy configuration (simplnx, SimplnxOoc, SimplnxReview, DREAM3DNX).
 # Only HeaderFilterRegex and the macro allowlist differ between repositories.
 #
