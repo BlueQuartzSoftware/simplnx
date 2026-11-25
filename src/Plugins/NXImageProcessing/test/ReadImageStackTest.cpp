@@ -1874,7 +1874,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: postprocessed override rescu
 
   const ReadImageStackFilter filter;
   const auto& fileList = args.value<GeneratedFileListParameter::ValueType>(ReadImageStackFilter::k_InputFileListInfo_Key);
-  UnitTest::RequireBadReaderMetadata(filter, args, fs::path(fileList.inputPath) / "slice_0.tif", true);
+  UnitTest::RequireBadReaderMetadata(filter, args, fileList.generate().front(), true);
   UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
   DataStructure ds;
   const auto result = filter.execute(ds, args);
