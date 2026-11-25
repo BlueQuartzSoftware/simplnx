@@ -270,7 +270,7 @@ RectGridGeom* CreateRectGrid(DataStructure& dataStructure)
     bounds[axisIndex] = Float32Array::Create(dataStructure, names[axisIndex], store, geometryPtr->getId());
     REQUIRE(bounds[axisIndex] != nullptr);
   }
-  geometryPtr->setBounds(bounds[0], bounds[1], bounds[2]);
+  REQUIRE(geometryPtr->setBounds(bounds[0], bounds[1], bounds[2]).valid());
   REQUIRE(geometryPtr->findElementSizes(false).valid());
   REQUIRE(geometryPtr->getElementSizesId().has_value());
   return geometryPtr;

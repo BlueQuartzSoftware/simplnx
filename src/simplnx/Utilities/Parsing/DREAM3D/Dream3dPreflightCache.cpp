@@ -1,5 +1,6 @@
 #include "Dream3dPreflightCache.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/IO/HDF5/RectGridGeomIO.hpp"
 #include <memory>
 #include <utility>
 
@@ -16,6 +17,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIOInternal.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
@@ -106,12 +108,13 @@ Result<NeutralMetadataHandout> ReadFromDisk(const fs::path& filePath, bool neutr
     return MakeErrorResult<NeutralMetadataHandout>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", filePath.string()));
   }
   auto version = GetFileVersion(fileReader);
-  auto result = neutral ? detail::ImportMetadata(fileReader, std::make_shared<InMemoryFormatResolver>()) : ImportDataStructureFromFile(fileReader, true);
+  DeferredImageMetadata deferredImageMetadata;
+  auto result = neutral ? detail::ImportMetadata(fileReader, std::make_shared<InMemoryFormatResolver>(), deferredImageMetadata) : ImportDataStructureFromFile(fileReader, true);
   if(result.invalid())
   {
     return ConvertInvalidResult<NeutralMetadataHandout>(std::move(result));
   }
-  NeutralMetadataHandout handout{std::move(result.value()), std::move(version)};
+  NeutralMetadataHandout handout{std::move(result.value()), std::move(version), std::move(deferredImageMetadata)};
   return ConvertResultTo<NeutralMetadataHandout>(ConvertResult(std::move(result)), std::move(handout));
 }
 
@@ -340,7 +343,55 @@ Result<DataStructure> Dream3dPreflightCache::fetch(const fs::path& filePath)
   return ConvertResultTo<DataStructure>(ConvertResult(std::move(result)), std::move(structure));
 }
 
+Result<> NeutralMetadataHandout::applyImageMetadata(const fs::path& filePath, const std::vector<DataPath>& selectedPaths, bool useDefaultGeometryValues)
+{
+  Result<> result;
+  std::unordered_set<DataObject::IdType> checkedIds;
+  for(const auto& path : selectedPaths)
+  {
+    auto* geometry = dataStructure.getDataAs<ImageGeom>(path);
+    if(geometry == nullptr || !checkedIds.insert(geometry->getId()).second)
+    {
+      continue;
+    }
+    const auto metadata = deferredImageMetadata.find(geometry->getId());
+    if(metadata == deferredImageMetadata.end())
+    {
+      continue;
+    }
+    result = MergeResults(std::move(result), detail::ApplyImportedImageMetadata(*geometry, filePath, metadata->second, useDefaultGeometryValues));
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+  return result;
+}
+
 Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchNeutralMetadata(const fs::path& filePath)
+{
+  auto result = fetchSelectableMetadata(filePath);
+  if(result.invalid())
+  {
+    return result;
+  }
+  auto& handout = result.value();
+  auto validation = HDF5::RectGridGeomIO::ValidateImportedBounds(handout.dataStructure, filePath);
+  if(validation.valid())
+  {
+    validation = handout.applyImageMetadata(filePath, handout.dataStructure.getAllDataPaths(), false);
+  }
+  PrependWarnings(validation, result.warnings());
+  if(validation.invalid())
+  {
+    return ConvertInvalidResult<NeutralMetadataHandout>(std::move(validation));
+  }
+  result.warnings() = std::move(validation.warnings());
+  handout.deferredImageMetadata.clear();
+  return result;
+}
+
+Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchSelectableMetadata(const fs::path& filePath)
 {
   return fetchMetadata(filePath, true);
 }

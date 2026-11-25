@@ -49,8 +49,8 @@ DataStructure createTestDataStructure()
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeometryName);
   imageGeom->setDimensions(SizeVec3{2, 1, 4}); // X, Y, Z
-  imageGeom->setSpacing(FloatVec3{0.5F, 0.75F, 1.0F});
-  imageGeom->setOrigin(FloatVec3{1.0F, 2.0F, 3.0F});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{0.5F, 0.75F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{1.0F, 2.0F, 3.0F}).valid());
 
   // AttributeMatrix tuple shape is slowest-to-fastest (Z, Y, X)
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, std::vector<usize>{4, 1, 2}, imageGeom->getId());
@@ -100,8 +100,8 @@ DataStructure CreateFeatureRegularizeFixture()
   auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({1, 1, 4});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{4, 1, 1}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
@@ -510,8 +510,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     DataStructure geomOnlyDataStructure;
     auto* geomOnly = ImageGeom::Create(geomOnlyDataStructure, k_ImageGeometryName);
     geomOnly->setDimensions(SizeVec3{2, 1, 4});
-    geomOnly->setSpacing(FloatVec3{0.5F, 0.75F, 1.0F});
-    geomOnly->setOrigin(FloatVec3{1.0F, 2.0F, 3.0F});
+    REQUIRE(geomOnly->setSpacing(FloatVec3{0.5F, 0.75F, 1.0F}).valid());
+    REQUIRE(geomOnly->setOrigin(FloatVec3{1.0F, 2.0F, 3.0F}).valid());
 
     const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_noam.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
     Arguments args;

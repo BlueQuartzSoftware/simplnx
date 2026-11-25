@@ -270,8 +270,8 @@ void BuildTypedMaskInputs(DataStructure& ds, usize dim, MaskT nonzeroValue)
   const ShapeType cellShape = {dim, dim, dim};
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({dim, dim, dim});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 

@@ -13,7 +13,9 @@ This **Filter** will align 2 Geometry objects using 1 of the following alignment
 
 The input geometries can be of any type. The *Moving* geometry is translated in space to match the *Target* geometry. When using *Origin* alignment, the moving geometry is translated so that its minimum coordinate point matches the target geometry's minimum coordinate point. When using *Centroid* alignment, the moving geometry is translated so that its centroid matches the target geometry's centroid.
 
-For a Rectilinear Grid, the centroid is the center of its bounds.
+If the moving geometry is an Image Geometry and the translation produces a nonfinite origin, the filter reports an error.
+
+For a Rectilinear Grid, the centroid is the center of its bounds. The translated bounds must remain finite and strictly increasing at float32 precision. If rounding makes two translated bounds equal, the filter returns an error and preserves the original bounds.
 
 ### Alignment Type
 
@@ -21,6 +23,8 @@ The *Alignment Type* parameter controls how the two geometries are aligned:
 
 - **Origin [0]**: Aligns geometries by translating the moving geometry so that its minimum coordinate point (origin) matches the minimum coordinate point of the target geometry.
 - **Centroid [1]**: Aligns geometries by translating the moving geometry so that its centroid (center of mass) matches the centroid of the target geometry.
+
+If two or more axes of the moving rectilinear grid share bounds storage, they must use the same translation. The filter applies that translation once. If the axes need different translations, the filter reports an error before changing any coordinates.
 
 % Auto generated parameter table will be inserted here
 

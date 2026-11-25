@@ -62,8 +62,8 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   imageGeom->setDimensions({dimX, dimY, dimZ});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -817,7 +817,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Geomet
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

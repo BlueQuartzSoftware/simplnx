@@ -1,5 +1,7 @@
 #include "ReadAngData.hpp"
 
+#include "EbsdStepMetadata.hpp"
+
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -27,6 +29,12 @@ Result<> ReadAngData::operator()()
 {
   m_MessageHandler.sendInfoMessage(fmt::format("Reading .ang file '{}'", m_InputValues->InputFile.string()));
   ebsdlib::AngReader reader;
+  if(m_InputValues->SpacingOverride.has_value())
+  {
+    const auto& spacing = *m_InputValues->SpacingOverride;
+    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::XStep, spacing[0]));
+    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::YStep, spacing[1]));
+  }
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();
   if(err < 0)

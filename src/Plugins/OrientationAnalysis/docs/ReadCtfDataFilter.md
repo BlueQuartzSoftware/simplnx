@@ -19,7 +19,7 @@ The user should be aware that simply reading the file and then performing operat
 
 ### Multi-Slice (3D) .ctf Files
 
-If the file header declares more than one slice (`ZCells` > 1), the created **Image Geometry** is sized X × Y × Z and the slice thickness is taken from the header's `ZStep` key (a missing or zero `ZStep` defaults to 1.0). Single-slice (2D) files produce a geometry with a z-extent of 1.
+If the file header declares more than one slice (`ZCells` > 1), the created **Image Geometry** is sized X × Y × Z and the slice thickness is taken from the header's `ZStep` key (an omitted `ZStep` defaults to 1.0). Single-slice (2D) files produce a geometry with a z-extent of 1.
 
 ### Unindexed Points (Phase 0)
 
@@ -65,6 +65,10 @@ None — this filter reads directly from a `.ctf` file on disk.
 |--------|
 | ![Figure showing 30 Degree conversions](Images/Hexagonal_Axis_Alignment.png) |
 | **Figure 1:** showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Instr. is in **Red**. |
+
+### Geometry Metadata Overrides
+
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The default origin is zero. An omitted ZStep uses unit spacing. An explicit zero, negative, or nonfinite step requires **Set Spacing**.
 
 % Auto generated parameter table will be inserted here
 

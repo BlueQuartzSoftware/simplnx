@@ -30,12 +30,12 @@ For grid-type geometries (Image, Rectilinear Grid), the topology is defined enti
 **Image Geometry** is a *regular, rectilinear grid* defined by three vectors of three numbers each: dimensions, spacing, and origin.
 
 - **Dimensions** -- grid extents stored as unsigned 64-bit integers. Dimensions are **0-based**, so a dimension of 10 has extents 0-9. No dimension may be zero or negative.
-- **Spacing** -- physical distance between grid planes along each axis, stored as 32-bit floats. Units match whatever the source data uses (e.g., microns per voxel). Spacing must be positive and non-zero. (Older docs called this *resolution*; *spacing* is preferred because *resolution* is ambiguous.)
-- **Origin** -- physical location of the bottom-left grid point in the geometry's coordinate system. Stored as 32-bit floats. No value restriction.
+- **Spacing** -- physical distance between grid planes along each axis, stored as 32-bit floats. Units match whatever the source data uses (e.g., microns per voxel). Spacing must be finite and greater than zero on every axis. (Older docs called this *resolution*; *spacing* is preferred because *resolution* is ambiguous.)
+- **Origin** -- physical location of the bottom-left grid point in the geometry's coordinate system. Each coordinate is a finite 32-bit float.
 
 All Image Geometries are stored as 3D; a 2D image is represented by setting one dimension to exactly 1, producing a plane. Downstream filters that care (e.g., *Compute Feature Shapes*) detect this automatically.
 
-**Rectilinear Grid Geometry** is similar to an Image Geometry but allows variable spacing along each axis. It is defined by three monotonically-increasing 32-bit float bounds arrays (x, y, z). The spacing between any two adjacent planes is the difference between consecutive entries in the bounds array. No origin is needed -- the bounds arrays explicitly encode position.
+**Rectilinear Grid Geometry** is similar to an Image Geometry but allows variable spacing along each axis. It uses one 32-bit float bounds array per axis. Each array has one component per tuple and contains at least two finite values in strictly increasing order. The spacing between any two adjacent planes is the difference between consecutive entries in the bounds array. No origin is needed -- the bounds arrays explicitly encode position.
 
 ### Unstructured (Mesh) Geometries
 
@@ -56,7 +56,7 @@ The *Array Handling* parameter controls what happens to the input arrays passed 
 
 ### Validation
 
-The filter validates that the supplied arrays "make sense" for the chosen geometry type (e.g., bounds arrays for a Rectilinear Grid have at least 2 values; no vertex ID in a connectivity list exceeds the vertex count). Checks that require reading actual values run at execute time. By default these checks produce warnings; enable *Treat Geometry Warnings as Errors* to make them fail the pipeline.
+Invalid image origin, image spacing, and rectilinear grid bounds produce errors. The filter checks bounds values during preflight when they are available. If an earlier filter produces the values during execution, the filter checks them during execution. Other geometry checks can produce warnings. Enable *Treat Geometry Warnings as Errors* to stop the pipeline when those checks warn.
 
 ### Numeric input constraints
 

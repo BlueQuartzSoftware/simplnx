@@ -1651,8 +1651,8 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image 
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, VerificationConstants::k_ImageName);
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   imageGeom->setDimensions({3, 3, 1});
 
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, ShapeType{1, 3, 3}, imageGeom->getId());
@@ -1719,8 +1719,8 @@ TEMPLATE_TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, VerificationConstants::k_ImageName);
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({3, 3, 5});
-  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, {5, 3, 3}, imageGeomPtr->getId());
   auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, {2}, imageGeomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
@@ -1796,8 +1796,8 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Phase Ind
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, VerificationConstants::k_ImageName);
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   imageGeomPtr->setDimensions({3, 3, 1});
 
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, ShapeType{1, 3, 3}, imageGeomPtr->getId());

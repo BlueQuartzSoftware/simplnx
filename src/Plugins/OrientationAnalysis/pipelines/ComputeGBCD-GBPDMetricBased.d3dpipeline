@@ -55,7 +55,11 @@
           },
           "version": 2
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "use_default_geometry_values": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "The input for this pipeline requires the output dream3d file from the (03) Small IN100 Mesh Statistics bookmarked pipeline.",
       "filter": {

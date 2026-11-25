@@ -434,8 +434,8 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Child names containing the geometry na
   auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({2, 2, 2});
-  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);
@@ -499,8 +499,8 @@ ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 
   auto* geom = ImageGeom::Create(ds, "ValidationImage");
   REQUIRE(geom != nullptr);
   geom->setDimensions(dims);
-  geom->setSpacing(spacing);
-  geom->setOrigin(origin);
+  REQUIRE(geom->setSpacing(spacing).valid());
+  REQUIRE(geom->setOrigin(origin).valid());
   auto* cells = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geom->getId());
   REQUIRE(cells != nullptr);
   geom->setCellData(*cells);
@@ -557,11 +557,25 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Origin result regression", "[SimplnxCo
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
   REQUIRE_FALSE(pre.outputActions.warnings().empty());
   CHECK(pre.outputActions.warnings()[0].code == -86032);
-  CHECK(pre.outputActions.warnings()[0].message.find("X") != std::string::npos);
+  CHECK(pre.outputActions.warnings()[0].message.find("X Min & Max Padding' Min value 1 with origin -3e+38 and spacing 3e+38 produces origin result -inf") != std::string::npos);
+  DataStructure preflightDs = ds;
+  const auto preflightActionResult = pre.outputActions.value().applyRegular(preflightDs, IDataAction::Mode::Preflight);
+  const auto& preflightGeom = preflightDs.getDataRefAs<ImageGeom>(DataPath({"ValidationImage"}));
+  CHECK(preflightGeom.getOrigin() == FloatVec3{-3e38f, 0, 0});
+  CHECK(preflightGeom.getSpacing() == FloatVec3{3e38f, 1, 1});
+  CHECK_FALSE(preflightDs.containsData(DataPath({"Padded"})));
   auto result = filter.execute(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors()[0].code == -86027);
-  CHECK(geom->getOrigin()[0] == -3e38f);
+  for(const auto* failure : std::array<const Result<>*, 2>{&preflightActionResult, &result.result})
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(*failure);
+    REQUIRE(failure->errors().size() == 1);
+    CHECK(failure->errors().front().code == -1557);
+    CHECK(failure->errors().front().message.find("'Padded'") != std::string::npos);
+    CHECK(failure->errors().front().message.find("Origin on the X axis must be finite. Received -inf.") != std::string::npos);
+  }
+  CHECK(geom->getOrigin() == FloatVec3{-3e38f, 0, 0});
+  CHECK(geom->getSpacing() == FloatVec3{3e38f, 1, 1});
+  CHECK_FALSE(ds.containsData(DataPath({"Padded"})));
 }
 
 TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding", "[SimplnxCore][PadImageGeometry]")
@@ -715,8 +729,8 @@ DataStructure CreatePadFeatureFixture(bool addFeatureAm, bool addEnsembleAm)
   auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({2, 2, 2});
-  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(cellAmPtr != nullptr);
   geomPtr->setCellData(*cellAmPtr);
@@ -910,8 +924,8 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Zero padding on enabled axes preserves
   auto* geom = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geom != nullptr);
   geom->setDimensions({2, 2, 1});
-  geom->setOrigin({0.0F, 0.0F, 0.0F});
-  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 2, 2}, geom->getId());
   REQUIRE(cellAm != nullptr);
   geom->setCellData(*cellAm);

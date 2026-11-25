@@ -324,8 +324,8 @@ DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKin
   {
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
     REQUIRE(imageGeomPtr != nullptr);
-    imageGeomPtr->setSpacing({2.0f, 3.0f, 5.0f});
-    imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f});
+    REQUIRE(imageGeomPtr->setSpacing({2.0f, 3.0f, 5.0f}).valid());
+    REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
     imageGeomPtr->setDimensions({3, 2, 1});
     cellShape = {1, 2, 3};
     featureIdsValues = {0, 1, 1, blockFeatureId, finalFeatureId, finalFeatureId};
@@ -334,8 +334,8 @@ DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKin
   {
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
     REQUIRE(imageGeomPtr != nullptr);
-    imageGeomPtr->setSpacing({2.0f, 3.0f, 4.0f});
-    imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f});
+    REQUIRE(imageGeomPtr->setSpacing({2.0f, 3.0f, 4.0f}).valid());
+    REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
     imageGeomPtr->setDimensions({3, 2, 2});
     cellShape = {2, 2, 3};
     featureIdsValues = {0, 1, 1, 2, blockFeatureId, finalFeatureId, 1, 2, 2, blockFeatureId, finalFeatureId, finalFeatureId};
@@ -362,9 +362,8 @@ DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKin
     SIMPLNX_RESULT_REQUIRE_VALID(yBoundsPtrWriteResult);
     auto zBoundsPtrWriteResult = zBoundsPtr->getDataStoreRef().copyFromBuffer(0, k_ZBounds);
     SIMPLNX_RESULT_REQUIRE_VALID(zBoundsPtrWriteResult);
-    rectGridGeomPtr->setXBoundsId(xBoundsPtr->getId());
-    rectGridGeomPtr->setYBoundsId(yBoundsPtr->getId());
-    rectGridGeomPtr->setZBoundsId(zBoundsPtr->getId());
+    const auto boundsResult = rectGridGeomPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr);
+    SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
     featureIdsValues = {0, 1, 1, 2, blockFeatureId, finalFeatureId, 1, 2, 2, blockFeatureId, finalFeatureId, finalFeatureId};
   }
 
@@ -505,8 +504,8 @@ DataStructure Create2DImageDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{20.2f, 0.1f, 1.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{20.2f, 0.1f, 1.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 1}});
 
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 1}, imageGeom->getId());
@@ -572,8 +571,8 @@ DataStructure Create3DImageDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.2f, 0.9f, 2.1f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.2f, 0.9f, 2.1f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 5}});
 
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, imageGeom->getId());
@@ -672,7 +671,6 @@ DataStructure CreateRectGridDataStructure()
   xBoundsArray->setValue(2, 0.9f);
   xBoundsArray->setValue(3, 2.1f);
   xBoundsArray->setValue(4, 13.0f);
-  rectGridGeom->setXBoundsId(xBoundsArray->getId());
 
   // Y bounds are 0.0f, 0.1f, 1.0f, 10.0f, 100.0f.
   Float32Array* yBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
@@ -681,7 +679,6 @@ DataStructure CreateRectGridDataStructure()
   yBoundsArray->setValue(2, 1.0f);
   yBoundsArray->setValue(3, 10.0f);
   yBoundsArray->setValue(4, 100.0f);
-  rectGridGeom->setYBoundsId(yBoundsArray->getId());
 
   // Z bounds are 0.0f, 1.0f, 1.2f, 2.0f, 2.1f.
   Float32Array* zBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
@@ -690,7 +687,8 @@ DataStructure CreateRectGridDataStructure()
   zBoundsArray->setValue(2, 1.2f);
   zBoundsArray->setValue(3, 2.0f);
   zBoundsArray->setValue(4, 2.1f);
-  rectGridGeom->setZBoundsId(zBoundsArray->getId());
+  const auto boundsResult = rectGridGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
 
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{4, 4, 4}, rectGridGeom->getId());
   rectGridGeom->setCellData(*cellData);
@@ -1015,8 +1013,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension
     // The flat-axis spacing is 5 and does not belong in the legacy area product.
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, Test::k_ImageGeomName);
-    imageGeom->setSpacing(spacing);
-    imageGeom->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f});
+    REQUIRE(imageGeom->setSpacing(spacing).valid());
+    REQUIRE(imageGeom->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f}).valid());
     imageGeom->setDimensions(dims);
 
     const ShapeType tupleShape{dims[2], dims[1], dims[0]};

@@ -54,8 +54,8 @@ DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims, bool useC
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_NonSquareImagePath.getTargetName());
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(dims);
 
   const ShapeType imageShape{dims[0], dims[1], dims[2]};
@@ -214,8 +214,8 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and 
   auto* geometry = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geometry != nullptr);
   geometry->setDimensions({k_Width, k_Height, 3});
-  geometry->setSpacing({1.0F, 1.0F, 1.0F});
-  geometry->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(geometry->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(geometry->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {3, k_Height, k_Width}, geometry->getId());
   REQUIRE(cellData != nullptr);
   geometry->setCellData(*cellData);
@@ -353,7 +353,7 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: Geometry cell tuple count", "[Simp
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

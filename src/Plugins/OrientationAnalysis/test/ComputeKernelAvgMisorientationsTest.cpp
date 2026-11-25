@@ -116,8 +116,8 @@ FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numCrystalStructu
   td.totalCells = nX * nY * nZ;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
-  td.geom->setSpacing({1.0f, 1.0f, 1.0f});
-  td.geom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.geom->setDimensions({nX, nY, nZ});
 
   td.cellAM = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());
@@ -180,8 +180,8 @@ AnalyticalFixtures::FixtureData CreateOocFixture(usize nX, usize nY, usize nZ)
   const ShapeType tupleShape = {nZ, nY, nX};
 
   td.geom = ImageGeom::Create(td.ds, AnalyticalFixtures::k_GeomName);
-  td.geom->setSpacing({1.0F, 1.0F, 1.0F});
-  td.geom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(td.geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(td.geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   td.geom->setDimensions({nX, nY, nZ});
 
   td.cellAM = AttributeMatrix::Create(td.ds, "CellData", tupleShape, td.geom->getId());

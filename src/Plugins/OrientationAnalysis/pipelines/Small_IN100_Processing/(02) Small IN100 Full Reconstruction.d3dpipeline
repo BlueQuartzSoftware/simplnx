@@ -13,11 +13,27 @@
           "value": "Cell Ensemble Data",
           "version": 1
         },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
         "output_image_geometry_path": {
           "value": "DataContainer",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "read_h5_ebsd_object": {
           "value": {
             "end_slice": 117,
@@ -36,6 +52,14 @@
             "start_slice": 1,
             "use_recommended_transform": true
           },
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "version": 1
         }
       },

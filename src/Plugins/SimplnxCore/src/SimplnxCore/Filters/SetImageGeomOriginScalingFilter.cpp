@@ -133,7 +133,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     optSpacing = spacingVec;
   }
 
-  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, optSpacing, imageGeomPath, centerOrigin, true);
+  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, optSpacing, imageGeomPath, centerOrigin);
 
   resultOutputActions.value().appendAction(std::move(action));
 

@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "NXImageProcessing/Filters/ReadVolumeGraphicsFileFilter.hpp"
@@ -224,4 +226,63 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 def
   {
     CHECK(density[index] == values[index]);
   }
+}
+
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: override missing, zero or out-of-range resolution", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
+{
+  const std::string_view resolution = GENERATE("", "0 1 1", "1e40 3 4");
+  const auto dir = k_VgiDestFile.parent_path();
+  const auto header = dir / "OverrideVolume.vgi";
+  const auto volume = dir / "OverrideVolume.vol";
+  {
+    std::ofstream stream(header);
+    stream << R"({volume1}
+[representation]
+size = 2 2 1
+[file1]
+Size = 2 2 1
+Name = OverrideVolume.vol
+Datatype = float
+BitsPerElement = 32
+{volumeprimitive1}
+[geometry]
+unit = mm
+)";
+    if(!resolution.empty())
+    {
+      stream << "resolution = " << resolution << '\n';
+    }
+    REQUIRE(stream.good());
+  }
+  {
+    const std::array<float32, 4> values{1, 2, 3, 4};
+    std::ofstream bytes(volume, std::ios::binary);
+    bytes.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
+    REQUIRE(bytes.good());
+  }
+
+  const ReadVolumeGraphicsFileFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, header);
+  CAPTURE(resolution);
+  if(resolution == "1e40 3 4")
+  {
+    args.insertOrAssign(ImageIO::k_ChangeOrigin, true);
+    DataStructure ds;
+    const auto strict = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
+    const auto& diagnostic = strict.outputActions.errors().front();
+    INFO(diagnostic.message);
+    CHECK(diagnostic.code == -91503);
+    CHECK(diagnostic.message.find(header.string()) != std::string::npos);
+    CHECK(diagnostic.message.find("resolution") != std::string::npos);
+    CHECK(diagnostic.message.find("1e40") != std::string::npos);
+    CHECK(diagnostic.message.find("Enable 'Set Spacing' to use your own values.") != std::string::npos);
+  }
+  else
+  {
+    UnitTest::RequireBadReaderMetadata(filter, args, header, true);
+  }
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"VolumeGraphics"}), {4, -3, 8}, {2, 3, 4});
 }

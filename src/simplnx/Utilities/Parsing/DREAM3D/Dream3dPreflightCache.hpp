@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <atomic>
@@ -22,6 +23,17 @@ struct SIMPLNX_EXPORT NeutralMetadataHandout
 {
   DataStructure dataStructure;
   std::string fileVersion;
+  DeferredImageMetadata deferredImageMetadata; /**< Unvalidated metadata retained until the caller selects image geometries. */
+
+  /**
+   * @brief Validates and installs origin and spacing for selected image geometries.
+   * @param filePath Identifies the source file in diagnostics.
+   * @param selectedPaths Lists the paths of objects to import, including selected geometry ancestors.
+   * @param useDefaultGeometryValues Uses 0 for invalid origin components and 1 for invalid spacing components.
+   * @return The first metadata read error, -1556 for invalid spacing, or -1557 for invalid origin.
+   * Successful application can report warning 502693 for each geometry whose values used defaults.
+   */
+  Result<> applyImageMetadata(const std::filesystem::path& filePath, const std::vector<DataPath>& selectedPaths, bool useDefaultGeometryValues);
 };
 
 /**
@@ -82,13 +94,23 @@ public:
   Result<DataStructure> fetch(const std::filesystem::path& filePath);
 
   /**
-   * @brief Gets isolated metadata without consulting process storage policy.
+   * @brief Gets isolated metadata with strict geometry validation and local storage policy.
    * @param filePath Identifies the source DREAM3D file.
-   * @return Metadata, file version, and disk warnings replayed once for this handout.
+   * @return Metadata, file version, and disk warnings replayed once for this handout. Returns -1556 for
+   * invalid image spacing, -1557 for invalid image origin, or the underlying metadata or bounds error.
    *
    * Ordinary and neutral modes have separate masters and share the same capacity.
    */
   Result<NeutralMetadataHandout> fetchNeutralMetadata(const std::filesystem::path& filePath);
+
+  /**
+   * @brief Gets isolated metadata for selecting paths without validating geometry coordinates.
+   * @param filePath Identifies the source DREAM3D file.
+   * @return An isolated handout with placeholder image origins and spacings. Before publication, call
+   * applyImageMetadata() for the selected image geometries and validate bounds on selected rectilinear grids.
+   * Discovery callers can use the object hierarchy without applying the deferred values.
+   */
+  Result<NeutralMetadataHandout> fetchSelectableMetadata(const std::filesystem::path& filePath);
 
   /**
    * @brief Removes all cache modes for one file if present.

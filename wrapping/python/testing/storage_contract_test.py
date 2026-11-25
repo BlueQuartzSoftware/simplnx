@@ -1,4 +1,6 @@
+import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
@@ -24,6 +26,53 @@ class StorageContractTest(unittest.TestCase):
         message = str(context.exception)
         self.assertIn(RESIZE_ERROR_CODE, message)
         return message
+
+    def test_import_h5_object_paths_action_accepts_default_geometry_option(self):
+        image = data_path("Image")
+        source = nx.DataStructure()
+        result = nx.create_image_geometry(source, image, (1, 1, 1), (2.0, 3.0, 4.0), (1.0, 2.0, 3.0))
+        self.assertTrue(result.valid(), result.errors)
+        with tempfile.TemporaryDirectory() as directory:
+            file_path = Path(directory) / "image.dream3d"
+            written = nx.WriteDREAM3DFilter.execute(
+                data_structure=source, export_file_path=file_path, write_xdmf_file=False
+            )
+            self.assertFalse(written.errors)
+            for action in (
+                nx.ImportH5ObjectPathsAction(file_path, [image]),
+                nx.ImportH5ObjectPathsAction(file_path, [image], use_default_geometry_values=True),
+            ):
+                destination = nx.DataStructure()
+                self.apply_action(action, destination)
+                self.assertEqual(destination[image].origin, (2.0, 3.0, 4.0))
+                self.assertEqual(destination[image].spacing, (1.0, 2.0, 3.0))
+
+    def test_create_image_geometry_returns_metadata_errors(self):
+        path = data_path("Image")
+        dims = (2, 2, 1)
+        for origin, spacing, parameter, value, filter_code, action_code in (
+            ((0.0, 0.0, 0.0), (1.0, 1.0, 0.0), "Spacing", "0", -86007, -1556),
+            ((0.0, 0.0, float("nan")), (1.0, 1.0, 1.0), "Origin", "nan", -86008, -1557),
+        ):
+            with self.subTest(origin=origin, spacing=spacing):
+                data_structure = nx.DataStructure()
+                result = nx.create_image_geometry(data_structure, path, dims, origin, spacing)
+                self.assertTrue(result.invalid())
+                self.assertEqual(result.errors[0].code, filter_code)
+                self.assertIn(f"Parameter '{parameter}' Z value {value} must be finite", result.errors[0].message)
+                self.assertNotIn(path, data_structure)
+
+            action = nx.CreateImageGeometryAction(path, dims, origin, spacing, "Cells")
+            for mode in (nx.IDataAction.Mode.Preflight, nx.IDataAction.Mode.Execute):
+                with self.subTest(origin=origin, spacing=spacing, mode=mode):
+                    data_structure = nx.DataStructure()
+                    result = action.apply(data_structure, mode)
+                    self.assertTrue(result.invalid())
+                    self.assertEqual(result.errors[0].code, action_code)
+                    self.assertIn("Geometry at 'Image'", result.errors[0].message)
+                    self.assertIn(f"{parameter} on the Z axis", result.errors[0].message)
+                    self.assertIn(f"Received {value}.", result.errors[0].message)
+                    self.assertNotIn(path, data_structure)
 
     def test_data_store_resize_retains_values_and_reports_allocation_failure(self):
         store = nx.Int32DataStore([2], [1], 7)

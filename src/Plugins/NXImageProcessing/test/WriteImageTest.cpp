@@ -528,8 +528,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scala
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeom->setDimensions({3, 1, 2});
-  imageGeom->setOrigin({10.0f, 20.0f, 40.0f});
-  imageGeom->setSpacing({1.0f, 2.0f, 4.0f});
+  REQUIRE(imageGeom->setOrigin({10.0f, 20.0f, 40.0f}).valid());
+  REQUIRE(imageGeom->setSpacing({1.0f, 2.0f, 4.0f}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {2, 1, 3}, imageGeom->getId());
   imageGeom->setCellData(*cellData);
   auto* imageData = UnitTest::CreateTestDataArray<TestType>(dataStructure, "ImageData", {2, 1, 3}, {1}, cellData->getId());
@@ -593,8 +593,8 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plan
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeom->setDimensions({3, 2, 2});
-  imageGeom->setOrigin({10.0f, 20.0f, 40.0f});
-  imageGeom->setSpacing({1.0f, 2.0f, 4.0f});
+  REQUIRE(imageGeom->setOrigin({10.0f, 20.0f, 40.0f}).valid());
+  REQUIRE(imageGeom->setSpacing({1.0f, 2.0f, 4.0f}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {2, 2, 3}, imageGeom->getId());
   imageGeom->setCellData(*cellData);
   UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 2, 3}, {1}, cellData->getId());
@@ -1456,7 +1456,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar preflight validation",
     DataStructure dataStructure;
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
     imageGeomPtr->setDimensions({200, 100, 1});
-    imageGeomPtr->setSpacing(spacing);
+    REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
     imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 100, 200}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
@@ -1518,12 +1518,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar preflight validation",
     auto result = preflightScaleBar(DataType::uint16, 1, {0.5f, 0.5f, 1.0f}, true);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   }
-
-  SECTION("zero horizontal spacing fails")
-  {
-    auto result = preflightScaleBar(DataType::uint8, 1, {0.0f, 0.5f, 1.0f}, false);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  }
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image with a band", "[NXImageProcessing][WriteImageFilter]")
@@ -1545,7 +1539,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
     DataStructure dataStructure;
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
     imageGeomPtr->setDimensions({dimX, dimY, 1});
-    imageGeomPtr->setSpacing({0.5f, 0.5f, 1.0f});
+    REQUIRE(imageGeomPtr->setSpacing({0.5f, 0.5f, 1.0f}).valid());
     imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, dimY, dimX}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
@@ -1714,7 +1708,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar composes with flip and
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeomPtr->setDimensions({3, 2, 1});
-  imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 2, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
@@ -1789,7 +1783,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices loc
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeomPtr->setDimensions({dimX, dimY, dimZ});
-  imageGeomPtr->setSpacing({0.5f, 1.0f, 1.0f});
+  REQUIRE(imageGeomPtr->setSpacing({0.5f, 1.0f, 1.0f}).valid());
   imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);

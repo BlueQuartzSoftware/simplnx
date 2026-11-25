@@ -36,8 +36,8 @@ DataStructure CreateDataStructure()
   DataGroup* scanData = nx::core::DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, group->getId());
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_SmallIn100ImageGeom, scanData->getId());
-  imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({0.25f, 0.25f, 0.25f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   nx::core::SizeVec3 imageGeomDims = {100, 100, 2};
   imageGeom->setDimensions(imageGeomDims);
 

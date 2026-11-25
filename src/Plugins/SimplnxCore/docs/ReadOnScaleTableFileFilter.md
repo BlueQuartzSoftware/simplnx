@@ -23,7 +23,7 @@ The sections can occur in any order before `matr`. The `matr` section must be la
 
 An axis section can be absent. For an absent axis, the filter creates two bounds from *Fallback Origin* and *Fallback Spacing*: `{origin, origin + spacing}`. The resulting axis dimension is one **Cell**.
 
-A present axis must contain at least two bounds. The filter reports an error if an axis header declares fewer bounds.
+A present axis must contain at least two bounds. The filter reports an error if an axis header declares fewer bounds. Each axis must have finite bounds in strictly increasing order. During execution, an error for an invalid bounds value identifies the input file and the affected axis.
 
 The created geometry uses bounds arrays named `X Bounds`, `Y Bounds`, and `Z Bounds`. The filter sets the geometry units to meters to preserve the DREAM.3D 6.6 default. The file does not store units.
 
@@ -70,6 +70,10 @@ OnScale Volume (Rectilinear Grid Geometry, dimensions 2 x 1 x 1, meters)
 └── Material Data (Attribute Matrix, 2 tuples)
     └── Material Names (StringArray: pzt4t11, pzt4t12)
 ```
+
+### Fallback Coordinate Validation
+
+**Fallback Origin** must be finite on each axis. **Fallback Spacing** must be finite and greater than zero on each axis. The filter rejects invalid fallback values even when the file supplies all three axes.
 
 ### Required Input Sources
 

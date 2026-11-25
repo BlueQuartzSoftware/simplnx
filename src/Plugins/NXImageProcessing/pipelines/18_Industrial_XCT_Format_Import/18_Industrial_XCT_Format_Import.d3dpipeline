@@ -8,6 +8,14 @@
           "value": "Cell Data",
           "version": 1
         },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
         "density_array_name": {
           "value": "Density",
           "version": 1
@@ -36,7 +44,23 @@
           "value": 6,
           "version": 1
         },
-        "parameters_version": 1,
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "parameters_version": 2,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        },
         "start_voxel_coord": {
           "value": [
             0,
@@ -59,15 +83,39 @@
           "value": "Cell Data",
           "version": 1
         },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
         "density_array_name": {
           "value": "Density",
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
           "version": 1
         },
         "output_image_geometry_path": {
           "value": "Volume Graphics XCT",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        },
         "vg_header_file": {
           "value": "Data/ImageProcessing_Examples/io/volume_graphics/VolumeGraphicsTest.vgi",
           "version": 1
@@ -84,6 +132,14 @@
       "args": {
         "cell_attribute_matrix_name": {
           "value": "Cell Data",
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
           "version": 1
         },
         "cropping_options_index": {
@@ -128,11 +184,27 @@
           "value": "Data/ImageProcessing_Examples/io/zeiss/sample.txm",
           "version": 1
         },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
         "output_image_geometry_path": {
           "value": "Zeiss XCT",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
       },
       "comments": "Import a Zeiss TXM XCT volume with its stored geometry metadata.",
       "filter": {

@@ -34,8 +34,8 @@ DataStructure createTestData()
 
   movingGeom->setDimensions(dimensions);
   targetGeom->setDimensions(dimensions);
-  movingGeom->setOrigin(origin1);
-  targetGeom->setOrigin(origin2);
+  REQUIRE(movingGeom->setOrigin(origin1).valid());
+  REQUIRE(targetGeom->setOrigin(origin2).valid());
 
   return dataStructure;
 }
@@ -67,9 +67,8 @@ RectGridGeom& CreateRectGrid(DataStructure& dataStructure, const std::string& na
   {
     zBounds->setValue(boundIdx, zb[boundIdx]);
   }
-  rectGridGeom->setXBoundsId(xBounds->getId());
-  rectGridGeom->setYBoundsId(yBounds->getId());
-  rectGridGeom->setZBoundsId(zBounds->getId());
+  const auto boundsResult = rectGridGeom->setBounds(xBounds, yBounds, zBounds);
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
   return *rectGridGeom;
 }
 } // namespace
@@ -170,11 +169,11 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Centroid Image", "[SimplnxCore][A
   REQUIRE(movingGeom != nullptr);
   REQUIRE(targetGeom != nullptr);
   movingGeom->setDimensions(SizeVec3(2, 4, 6));
-  movingGeom->setSpacing(FloatVec3(0.5f, 1.0f, 2.0f));
-  movingGeom->setOrigin(FloatVec3(-1.0f, -2.0f, -3.0f));
+  REQUIRE(movingGeom->setSpacing(FloatVec3(0.5f, 1.0f, 2.0f)).valid());
+  REQUIRE(movingGeom->setOrigin(FloatVec3(-1.0f, -2.0f, -3.0f)).valid());
   targetGeom->setDimensions(SizeVec3(4, 2, 3));
-  targetGeom->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
-  targetGeom->setOrigin(FloatVec3(10.0f, 20.0f, 30.0f));
+  REQUIRE(targetGeom->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f)).valid());
+  REQUIRE(targetGeom->setOrigin(FloatVec3(10.0f, 20.0f, 30.0f)).valid());
 
   AlignGeometriesFilter filter;
   Arguments args;
@@ -200,8 +199,8 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Centroid RectGrid Target", "[Simp
   auto* movingGeom = ImageGeom::Create(dataStructure, "Moving Geometry");
   REQUIRE(movingGeom != nullptr);
   movingGeom->setDimensions(SizeVec3(2, 4, 6));
-  movingGeom->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
-  movingGeom->setOrigin(FloatVec3(0.0f, 0.0f, 0.0f));
+  REQUIRE(movingGeom->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f)).valid());
+  REQUIRE(movingGeom->setOrigin(FloatVec3(0.0f, 0.0f, 0.0f)).valid());
   CreateRectGrid(dataStructure, "Target Geometry", {10.0f, 11.0f, 13.0f}, {-6.0f, -5.0f, -2.0f}, {4.0f, 8.0f});
 
   AlignGeometriesFilter filter;
@@ -228,8 +227,8 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Origin RectGrid Moving", "[Simpln
   auto* targetGeom = ImageGeom::Create(dataStructure, "Target Geometry");
   REQUIRE(targetGeom != nullptr);
   targetGeom->setDimensions(SizeVec3(1, 1, 1));
-  targetGeom->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
-  targetGeom->setOrigin(FloatVec3(10.0f, -20.0f, 30.5f));
+  REQUIRE(targetGeom->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f)).valid());
+  REQUIRE(targetGeom->setOrigin(FloatVec3(10.0f, -20.0f, 30.5f)).valid());
 
   AlignGeometriesFilter filter;
   Arguments args;
@@ -298,5 +297,67 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: SIMPL Backwards Compatibility", "
       CHECK(args.value<DataPath>(AlignGeometriesFilter::k_MovingGeometry_Key) == DataPath({"MovingGeometry"}));
       CHECK(args.value<DataPath>(AlignGeometriesFilter::k_TargetGeometry_Key) == DataPath({"TargetGeometry"}));
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::AlignGeometriesFilter: Rejects collapsed translated RectGrid bounds", "[SimplnxCore][AlignGeometriesFilter]")
+{
+  DataStructure dataStructure;
+  auto& moving = CreateRectGrid(dataStructure, "Moving Grid", {0.0F, 1.0F}, {0.0F, 0.001F}, {0.0F, 1.0F});
+  auto* target = ImageGeom::Create(dataStructure, "Target Image");
+  REQUIRE(target != nullptr);
+  target->setDimensions({1, 1, 1});
+  const auto origin = target->setOrigin({10.0F, 1000000.0F, 0.0F});
+  SIMPLNX_RESULT_REQUIRE_VALID(origin);
+
+  AlignGeometriesFilter filter;
+  Arguments args;
+  args.insertOrAssign(AlignGeometriesFilter::k_MovingGeometry_Key, DataPath({"Moving Grid"}));
+  args.insertOrAssign(AlignGeometriesFilter::k_TargetGeometry_Key, DataPath({"Target Image"}));
+  args.insertOrAssign(AlignGeometriesFilter::k_AlignmentType_Key, ChoicesParameter::ValueType{0});
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  CHECK(result.result.errors().front().code == -4007);
+  CHECK(result.result.errors().front().message.find("Y bounds") != std::string::npos);
+  CHECK(moving.getXBounds()->getValue(0) == 0.0F);
+  CHECK(moving.getXBounds()->getValue(1) == 1.0F);
+  CHECK(moving.getYBounds()->getValue(0) == 0.0F);
+  CHECK(moving.getYBounds()->getValue(1) == 0.001F);
+}
+
+TEST_CASE("SimplnxCore::AlignGeometriesFilter: translates shared RectGrid bounds once", "[SimplnxCore][AlignGeometriesFilter]")
+{
+  const bool equalTranslations = GENERATE(true, false);
+  CAPTURE(equalTranslations);
+  DataStructure dataStructure;
+  auto& moving = CreateRectGrid(dataStructure, "Moving Grid", {8388607.0F, 8388608.0F}, {0.0F, 1.0F}, {0.0F, 1.0F});
+  auto* sharedBoundsPtr = moving.getXBounds();
+  REQUIRE(moving.setBounds(sharedBoundsPtr, sharedBoundsPtr, moving.getZBounds()).valid());
+
+  auto* targetPtr = ImageGeom::Create(dataStructure, "Target Image");
+  REQUIRE(targetPtr != nullptr);
+  targetPtr->setDimensions({1, 1, 1});
+  REQUIRE(targetPtr->setOrigin({16777215.0F, equalTranslations ? 16777215.0F : 8388607.0F, 3.0F}).valid());
+
+  AlignGeometriesFilter filter;
+  Arguments args;
+  args.insertOrAssign(AlignGeometriesFilter::k_MovingGeometry_Key, DataPath({"Moving Grid"}));
+  args.insertOrAssign(AlignGeometriesFilter::k_TargetGeometry_Key, DataPath({"Target Image"}));
+  args.insertOrAssign(AlignGeometriesFilter::k_AlignmentType_Key, ChoicesParameter::ValueType{0});
+  const auto result = filter.execute(dataStructure, args);
+  if(equalTranslations)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    CHECK(sharedBoundsPtr->getValue(0) == 16777215.0F);
+    CHECK(sharedBoundsPtr->getValue(1) == 16777216.0F);
+    CHECK(moving.getZBounds()->getValue(0) == 3.0F);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    CHECK(result.result.errors().front().code == -69201);
+    CHECK(sharedBoundsPtr->getValue(0) == 8388607.0F);
+    CHECK(sharedBoundsPtr->getValue(1) == 8388608.0F);
+    CHECK(moving.getZBounds()->getValue(0) == 0.0F);
   }
 }

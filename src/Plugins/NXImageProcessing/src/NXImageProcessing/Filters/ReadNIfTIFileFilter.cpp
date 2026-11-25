@@ -1,5 +1,7 @@
 #include "ReadNIfTIFileFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/Filters/Algorithms/ReadNIfTIFile.hpp"
 #include "NXImageProcessing/utils/NiftiUtilities.hpp"
 
@@ -131,6 +133,9 @@ Parameters ReadNIfTIFileFilter::parameters() const
                                                         "rest of the file is discarded on read. Supports both voxel index and physical coordinate bounds.",
                                                         CropGeometryParameter::ValueType{}));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to the created Image Geometry", DataPath({"NIfTI Image"})));
 
@@ -146,7 +151,8 @@ Parameters ReadNIfTIFileFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadNIfTIFileFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -212,6 +218,10 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
   std::vector<float32> origin = {md.origin[0], md.origin[1], md.origin[2]};
   std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
@@ -316,6 +326,7 @@ Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Ar
                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadNIfTIFileInputValues inputValues;
+  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
   inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   inputValues.UseAffineIfPresent = filterArgs.value<bool>(k_UseAffineIfPresent_Key);
   inputValues.ApplyScalingTransform = filterArgs.value<bool>(k_ApplyScalingTransform_Key);

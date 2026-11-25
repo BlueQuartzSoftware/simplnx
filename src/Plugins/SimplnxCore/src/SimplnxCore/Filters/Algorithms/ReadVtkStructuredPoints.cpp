@@ -3,6 +3,7 @@
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -770,25 +771,20 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   CreateImageGeometryAction::SpacingType spacing(3, 0.0f);
-
-  auto convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[1]);
-  if(convertResultF32.invalid())
+  if(!m_InputValues->GeometryOverrides.Spacing.has_value())
   {
-    return ConvertResult(std::move(convertResultF32));
+    for(usize axis = 0; axis < 3; ++axis)
+    {
+      auto value = StringInterpretationUtilities::Convert<float32>(tokens[axis + 1]);
+      if(value.invalid())
+      {
+        const auto& error = value.errors().front();
+        return MakeErrorResult(error.code, ImageIO::FormatReaderValueError(m_InputValues->InputFile, fmt::format("{} spacing", k_AxisNames[axis]),
+                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), ImageIO::k_SetSpacingLabel));
+      }
+      spacing[axis] = value.value();
+    }
   }
-  spacing[0] = convertResultF32.value();
-  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[2]);
-  if(convertResultF32.invalid())
-  {
-    return ConvertResult(std::move(convertResultF32));
-  }
-  spacing[1] = convertResultF32.value();
-  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[3]);
-  if(convertResultF32.invalid())
-  {
-    return ConvertResult(std::move(convertResultF32));
-  }
-  spacing[2] = convertResultF32.value();
 
   std::fill(buf.begin(), buf.end(), '\0');
   result = ReadLine(in, buf.data(), kBufferSize);
@@ -810,24 +806,24 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   CreateImageGeometryAction::OriginType origin(3, 0.0f);
-  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[1]);
-  if(convertResultF32.invalid())
+  if(!m_InputValues->GeometryOverrides.Origin.has_value())
   {
-    return ConvertResult(std::move(convertResultF32));
+    for(usize axis = 0; axis < 3; ++axis)
+    {
+      auto value = StringInterpretationUtilities::Convert<float32>(tokens[axis + 1]);
+      if(value.invalid())
+      {
+        const auto& error = value.errors().front();
+        return MakeErrorResult(error.code, ImageIO::FormatReaderValueError(m_InputValues->InputFile, fmt::format("{} origin", k_AxisNames[axis]),
+                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), ImageIO::k_SetOriginLabel));
+      }
+      origin[axis] = value.value();
+    }
   }
-  origin[0] = convertResultF32.value();
-  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[2]);
-  if(convertResultF32.invalid())
+  if(auto metadataResult = m_InputValues->GeometryOverrides.apply(m_InputValues->InputFile, origin, spacing); metadataResult.invalid())
   {
-    return ConvertResult(std::move(convertResultF32));
+    return metadataResult;
   }
-  origin[1] = convertResultF32.value();
-  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[3]);
-  if(convertResultF32.invalid())
-  {
-    return ConvertResult(std::move(convertResultF32));
-  }
-  origin[2] = convertResultF32.value();
 
   // Center the one-voxel slab on the VTK point along each singleton axis.
   for(usize axis = 0; axis < 3; axis++)

@@ -1,5 +1,8 @@
 #include "ReadAngDataFilter.hpp"
 
+#include "Algorithms/EbsdStepMetadata.hpp"
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/ReadAngData.hpp"
 #include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
@@ -65,6 +68,9 @@ Parameters ReadAngDataFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input .ang file path", fs::path("input.ang"), FileSystemPathParameter::ExtensionsType{".ang"},
                                                           FileSystemPathParameter::PathType::InputFile));
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -80,7 +86,8 @@ Parameters ReadAngDataFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadAngDataFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -102,6 +109,8 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ebsdlib::AngReader reader;
+  const auto xStep = EbsdStepMetadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::XStep);
+  const auto yStep = EbsdStepMetadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::YStep);
   reader.setFileName(pInputFileValue.string());
   int32_t err = reader.readHeaderOnly();
   if(err < 0)
@@ -116,10 +125,14 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), 1.0F};
+  CreateImageGeometryAction::SpacingType spacing = {xStep->storedOr(0.0F), yStep->storedOr(0.0F), 1.0F};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
   EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
 
   // Define a custom class that generates the changes to the DataStructure.
@@ -218,6 +231,7 @@ Result<> ReadAngDataFilter::executeImpl(DataStructure& dataStructure, const Argu
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadAngDataInputValues inputValues;
+  inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;
 
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.DataContainerName = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);

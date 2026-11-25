@@ -290,8 +290,8 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({numCells, 1, 1});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, numCells}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
   imageGeom->setCellData(*cellData);

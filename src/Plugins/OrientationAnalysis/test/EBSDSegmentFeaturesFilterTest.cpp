@@ -107,8 +107,8 @@ void checkExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
   auto* geometryPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName(), groupPtr->getId());
   REQUIRE((geometryPtr != nullptr));
   geometryPtr->setDimensions({5, 1, 1});
-  geometryPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  geometryPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geometryPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geometryPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {1, 1, 5}, geometryPtr->getId());
   auto* externalPtr = AttributeMatrix::Create(dataStructure, externalDataPath.getTargetName(), {1, 1, 5});
   auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, ensemblePath.getTargetName(), {2});

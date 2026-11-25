@@ -71,6 +71,13 @@ private:
 };
 
 /**
+ * @brief Computes the bounding box used for basic partitioning of a node geometry.
+ * @param geometry Supplies the input vertices.
+ * @return Padded bounds, or an invalid box when the input space is unknown.
+ */
+SIMPLNX_EXPORT BoundingBox3Df GetPaddedNodePartitionBounds(const INodeGeometry0D& geometry);
+
+/**
  * @brief Calculates the X,Y,Z partition length for a given geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
  * @param geometry The geometry to be partitioned
  * @param numberOfPartitionsPerAxis The number of partitions in each axis

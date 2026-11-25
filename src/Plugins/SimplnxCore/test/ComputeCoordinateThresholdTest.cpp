@@ -163,8 +163,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bo
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -202,8 +202,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bound
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -347,8 +347,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -448,8 +448,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -548,8 +548,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Chunk Bound
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr std::array<usize, 3> k_Dimensions = {257, 257, 1};
   imageGeom->setDimensions(k_Dimensions);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
 
   const VectorFloat32Parameter::ValueType minCoord = {1.0f, 255.0f, 0.0f};
   const VectorFloat32Parameter::ValueType maxCoord = {2.0f, 256.0f, 1.0f};

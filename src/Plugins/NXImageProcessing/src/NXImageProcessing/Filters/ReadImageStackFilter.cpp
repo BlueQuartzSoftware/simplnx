@@ -110,11 +110,13 @@ Parameters ReadImageStackFilter::parameters() const
       "The cropping options used to crop images.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.",
       CropGeometryParameter::ValueType{}));
 
-  params.insertSeparator(Parameters::Separator{"Origin & Spacing Options"});
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the 3D volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin (Physical Units)", "The origin of the 3D volume", std::vector<float32>{0.0F, 0.0F, 0.0F},
+                                                         std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the 3D volume", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "The spacing of the 3D volume", std::vector<float32>{1.0F, 1.0F, 1.0F},
+                                                         std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_OriginSpacingProcessing_Key, "Origin & Spacing Processing", "Whether the origin & spacing should be preprocessed or postprocessed.", 1,
                                                    ChoicesParameter::Choices{"Preprocessed", "Postprocessed"}));
 

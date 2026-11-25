@@ -2078,7 +2078,7 @@ Creation Actions
    Description
    ~~~~~~~~~~~
 
-   The ``CreateImageGeometryAction`` is used to create a structured grid or image geometry, specifying dimensions, origin, and spacing, with an attribute matrix that can store cell data arrays.
+   The ``CreateImageGeometryAction`` creates an Image Geometry and its Cell Attribute Matrix. Each origin component must be finite. Each spacing component must be finite and greater than zero. Invalid metadata causes an error in preflight and execution.
 
    Inputs
    ~~~~~~
@@ -2130,7 +2130,7 @@ Creation Actions
    Description
    ~~~~~~~~~~~
 
-   The ``CreateRectGridGeometryAction`` is intended to create rectilinear grid geometries either by specifying dimensions and boundary array names or by utilizing existing boundary arrays.
+   The ``CreateRectGridGeometryAction`` creates a Rectilinear Grid Geometry. Create mode requires at least two bounds on each axis. Existing populated bounds arrays must contain at least two finite, strictly increasing values, with one component per tuple. Preflight checks the shape of metadata-only arrays. Execution checks their values once available.
 
    Inputs
    ~~~~~~
@@ -2896,7 +2896,7 @@ Creation Actions
 
    .. code-block:: python
 
-      ImportH5ObjectPathsAction(import_file: os.PathLike, paths: list[DataPath] | None) -> None
+      ImportH5ObjectPathsAction(import_file: os.PathLike, paths: list[DataPath], use_default_geometry_values: bool = False) -> None
 
    Description
    ~~~~~~~~~~~
@@ -2910,8 +2910,11 @@ Creation Actions
       - **Description**: The file path of the HDF5 file from which to import data.
       - **Type**: os.PathLike
    - ``paths``
-      - **Description**: A list of paths specifying which objects to import from the HDF5 file.  If `None`, all objects will be imported.  If list is empty, nothing will be imported.
-      - **Type**: list[nx.DataPath] | None
+      - **Description**: The object paths to import. An empty list imports no objects.
+      - **Type**: list[nx.DataPath]
+   - ``use_default_geometry_values``
+      - **Description**: Use 0 for each invalid stored image origin component and 1 for each invalid stored image spacing component. The action reports warning 502693 for each selected geometry that uses a default.
+      - **Type**: bool
 
    Usage
    ~~~~~
@@ -2924,12 +2927,8 @@ Creation Actions
       # Example of importing specific object paths from an H5 file
       output_actions = nx.OutputActions()
       h5_file_path = os.path.join('path', 'to', 'file.h5')
-      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, ['Data/Object1', 'Data/Object2']))
-
-      # Example of importing all objects from an H5 file
-      output_actions = nx.OutputActions()
-      h5_file_path = os.path.join('path', 'to', 'file.h5')
-      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, None))
+      paths = [nx.DataPath('Data'), nx.DataPath('Data/Object1'), nx.DataPath('Data/Object2')]
+      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, paths))
 
       # Example of importing nothing from an H5 file
       output_actions = nx.OutputActions()
@@ -3145,16 +3144,18 @@ Modification Actions
 
    Description
    ~~~~~~~~~~~
-   The ``UpdateImageGeomAction`` modifies the geometry parameters of an image stored in the data structure. It updates the origin and spacing of the image to better align with spatial or resolution requirements.
+   The ``UpdateImageGeomAction`` updates the origin or spacing of an existing Image Geometry.
+   The effective origin must be finite on each axis, and the effective spacing must be finite and positive on each axis.
+   An invalid update returns an error and preserves the previous metadata in both preflight and execution.
 
    Inputs
    ~~~~~~
    - ``origin``
-      - **Description**: The new origin coordinates of the image. This should be a tuple of floats indicating the starting point of the image in its coordinate space.
-      - **Type**: tuple[float, float, float]
+      - **Description**: The new finite X, Y, Z origin coordinates. Use ``None`` to retain the current origin.
+      - **Type**: tuple[float, float, float] | None
    - ``spacing``
-      - **Description**: The new spacing between the pixels (or voxels) of the image. This should be a tuple of floats representing the distance between elements in each dimension.
-      - **Type**: tuple[float, float, float]
+      - **Description**: The new finite, positive X, Y, Z spacing values. Use ``None`` to retain the current spacing.
+      - **Type**: tuple[float, float, float] | None
    - ``path``
       - **Description**: The path to the image geometry that needs updating.
       - **Type**: nx.DataPath

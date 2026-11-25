@@ -46,7 +46,7 @@ If *Update Origin* is **ON**, the origin moves by minus the minimum-side padding
 
 ### Numeric input constraints
 
-For each enabled axis, **Min & Max Padding** must contain nonnegative cell counts. Disabled axes are ignored. Padded dimensions and their tuple count must fit the supported size type. When **Update Origin** is enabled, the computed origin must be finite. Preflight warns when the current geometry metadata produces an unrepresentable result. Execution checks the final metadata before copying data. Array creation also checks element and byte counts.
+For each enabled axis, **Min & Max Padding** must contain nonnegative cell counts. Disabled axes are ignored. Padded dimensions and their tuple count must fit the supported size type. When **Update Origin** is enabled, the computed origin must be finite. Pipeline preflight and execution reject a nonfinite output origin when creating the padded geometry. Preflight warns when the padded dimensions or their tuple count exceed the supported size. Array creation also checks element and byte counts.
 
 % Auto generated parameter table will be inserted here
 

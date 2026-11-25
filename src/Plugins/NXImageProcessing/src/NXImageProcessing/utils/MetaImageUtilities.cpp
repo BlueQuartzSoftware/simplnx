@@ -554,7 +554,7 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
   md.spacing = {1.0f, 1.0f, 1.0f};
   for(usize i = 0; i < nDims && i < spacingSrc.size(); i++)
   {
-    md.spacing[i] = (spacingSrc[i] != 0.0) ? static_cast<float32>(spacingSrc[i]) : 1.0f;
+    md.spacing[i] = static_cast<float32>(spacingSrc[i]);
   }
 
   // ---- origin (resolved from ImagePosition / Origin / Offset / Position above), default 0 ----

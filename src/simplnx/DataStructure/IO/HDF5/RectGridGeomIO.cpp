@@ -56,12 +56,12 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
 
   geometry->setDimensions(volumeDimensions);
 
-  // Read the bounds array identifiers.
+  // A bounds array may be stored outside this group. Resolve and validate its values after the full map is loaded.
   geometry->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
   geometry->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
   geometry->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
 
-  return {};
+  return result;
 }
 
 Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
@@ -101,8 +101,62 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
   return IGridGeometryIO::FinishImportingGridGeometryData(dataStructure, dataPath, dataStructureGroup);
 }
 
+namespace
+{
+Result<> ValidateGridBounds(const RectGridGeom* geometryPtr, const std::filesystem::path& filePath)
+{
+  if(geometryPtr == nullptr)
+  {
+    return {};
+  }
+  auto result = RectGridGeom::ValidateBounds(geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds());
+  if(result.invalid())
+  {
+    for(auto& error : result.errors())
+    {
+      error.message = fmt::format("Cannot read rectilinear grid geometry '{}' from '{}': {}", geometryPtr->getName(), filePath.string(), error.message);
+    }
+  }
+  return result;
+}
+} // namespace
+
+Result<> RectGridGeomIO::ValidateImportedBounds(const DataStructure& dataStructure, const std::filesystem::path& filePath)
+{
+  for(const auto id : dataStructure.getAllDataObjectIds())
+  {
+    if(auto result = ValidateGridBounds(dataStructure.getDataAs<RectGridGeom>(id), filePath); result.invalid())
+    {
+      return result;
+    }
+  }
+  return {};
+}
+
+Result<> RectGridGeomIO::ValidateImportedBounds(const DataStructure& dataStructure, const std::filesystem::path& filePath, const std::vector<DataPath>& selectedPaths)
+{
+  for(const auto& path : selectedPaths)
+  {
+    if(auto result = ValidateGridBounds(dataStructure.getDataAs<RectGridGeom>(path), filePath); result.invalid())
+    {
+      return result;
+    }
+  }
+  return {};
+}
+
 Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, const RectGridGeom& geometry, group_writer_type& parentGroup, bool importable) const
 {
+  auto validation = RectGridGeom::ValidateBounds(geometry.getXBounds(), geometry.getYBounds(), geometry.getZBounds());
+  if(validation.invalid())
+  {
+    for(auto& error : validation.errors())
+    {
+      error.message = fmt::format("Cannot write rectilinear grid geometry '{}' to '{}': {}", geometry.getName(), parentGroup.getFilePath().string(), error.message);
+    }
+    return validation;
+  }
+
   Result<> result = IGridGeometryIO::WriteGridGeometryData(dataStructureWriter, geometry, parentGroup, importable);
   if(result.invalid())
   {

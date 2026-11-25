@@ -81,8 +81,8 @@ DataStructure createTestDataStructure(const std::vector<uint64>& voxelIndices, c
   // Image Geometry: 4x4x1
   auto* imageGeom = ImageGeom::Create(ds, "ImageGeom");
   imageGeom->setDimensions({4, 4, 1});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   // Cell data attribute matrix (required for getCellDataPath())
   auto* cellAM = AttributeMatrix::Create(ds, k_InterpolatedGroupName, {1, 4, 4}, imageGeom->getId());

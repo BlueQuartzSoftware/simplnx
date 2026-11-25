@@ -323,38 +323,6 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid E
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Invalid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
-  const CreateImageGeometryAction::OriginType refOrigin = {0.0f, 0.0f, 0.0f};
-  const CreateImageGeometryAction::SpacingType refSpacing = {1.0f, 1.0f, 1.0f};
-
-  // Configure the filter arguments.
-  NearestPointFuseRegularGridsFilter filter;
-  DataStructure dataStructure(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing));
-
-  dataStructure.getDataAs<ImageGeom>(sampleImageGeomPath)->setSpacing(0, 0, 0);
-
-  Arguments args;
-
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_UseFill_Key, std::make_any<bool>(true));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_FillValue_Key, std::make_any<float64>(9.8));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(sampleImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(sampleCellDataPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(refImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(refCellDataPath));
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(!executeResult.result.valid());
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][NearestPointFuseRegularGridsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
@@ -406,8 +374,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Geometry cell tuple 
   REQUIRE(referenceGeomPtr != nullptr);
   samplingGeomPtr->setDimensions({2, 3, 2});
   referenceGeomPtr->setDimensions({2, 5, 2});
-  samplingGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
-  referenceGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(samplingGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(referenceGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* samplingCellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, samplingGeomPtr->getId());
   auto* referenceCellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{20}, referenceGeomPtr->getId());
   REQUIRE(samplingCellAMPtr != nullptr);

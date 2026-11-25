@@ -45,8 +45,8 @@ void CreateBenchmarkDataStructure(DataStructure& dataStructure)
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkImageGeometry);
   imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  imageGeom->setOrigin({-10.0f, 5.0f, 20.0f});
-  imageGeom->setSpacing({0.5f, 1.25f, 2.0f});
+  REQUIRE(imageGeom->setOrigin({-10.0f, 5.0f, 20.0f}).valid());
+  REQUIRE(imageGeom->setSpacing({0.5f, 1.25f, 2.0f}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
@@ -92,8 +92,8 @@ DataStructure CreateValidTestDataStructure()
 {
   DataStructure ds;
   auto* imageGeom = ImageGeom::Create(ds, k_ImageGeometry);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({.25, .25, .25});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({.25, .25, .25}).valid());
   std::vector<usize> dims = {6, 6, 6};
   imageGeom->setDimensions(dims);
 
@@ -332,8 +332,8 @@ DataStructure CreateInvalidTestDataStructure(bool geomIs3d)
 {
   DataStructure ds;
   auto* imageGeom = ImageGeom::Create(ds, k_ImageGeometry);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({.25, .25, .25});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({.25, .25, .25}).valid());
   std::vector<usize> dims = {6, 6, 1};
   if(geomIs3d)
   {
@@ -405,7 +405,7 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Feature Ids in anothe
   auto* imageGeom = ImageGeom::Create(ds, imageGeomPath.getTargetName());
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({3, 4, 5});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   auto* cellAm = AttributeMatrix::Create(ds, "Cell Data", {5, 4, 3}, imageGeom->getId());
   REQUIRE(cellAm != nullptr);
   if(assignCellData)

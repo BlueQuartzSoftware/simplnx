@@ -536,8 +536,8 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: Boundary-free se
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, dims[0], dims[1], dims[2], input);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
   auto& geometry = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"}));
-  geometry.setSpacing({2, 3, 5});
-  geometry.setOrigin({10, 20, 30});
+  REQUIRE(geometry.setSpacing({2, 3, 5}).valid());
+  REQUIRE(geometry.setOrigin({10, 20, 30}).valid());
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
   MaurerFilter filter;

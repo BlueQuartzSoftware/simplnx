@@ -22,6 +22,14 @@ The selected objects are added into the pipeline's current **DataStructure** at 
 
 This filter can also read **legacy** `.dream3d` files — those written by the older DREAM3D 6.x / SIMPL-era applications. Such files use an earlier internal layout, and this filter converts them to the current **DataStructure** format on import.
 
+### Use Default Origin/Spacing for Invalid Values
+
+Stored image origin components must be finite. Stored spacing components must be finite and greater than zero. By default, the filter rejects invalid values in image geometries selected for import.
+
+Enable **Use Default Origin/Spacing for Invalid Values** to use 0 for each invalid origin component and 1 for each invalid spacing component in the loaded image geometry. These defaults use the same length unit as the stored values. The file is not changed. The filter reports warning `502693` for each imported image geometry that uses a default. The warning lists the file, geometry path, stored values, and defaults used.
+
+The filter checks bounds on each Rectilinear Grid Geometry selected for import. Each bounds array must have one component per tuple, with at least two finite values in strictly increasing order. The default-values option applies only to Image Geometry metadata.
+
 ### Required Input Sources
 
 None — this filter reads directly from a `.dream3d` file on disk.

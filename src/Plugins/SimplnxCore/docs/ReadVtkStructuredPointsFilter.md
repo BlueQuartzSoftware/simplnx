@@ -51,6 +51,12 @@ On each axis with one point, both output geometries use the file origin minus ha
 
 None — this filter reads directly from a `.vtk` file on disk.
 
+### Geometry Metadata Overrides
+
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero.
+
+If a stored value cannot be converted to float32, the error gives the file path, field, axis, and value. It directs you to enable **Set Origin** or **Set Spacing** for that field. The replacements apply to both point and cell geometries. On a singleton axis the reader subtracts half the effective spacing from the effective origin.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

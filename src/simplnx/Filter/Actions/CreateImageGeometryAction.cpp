@@ -34,6 +34,30 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
   {
     return MakeErrorResult(-5702, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
   }
+  const auto addGeometryPath = [&](Result<> result) {
+    for(auto& error : result.errors())
+    {
+      error.message = fmt::format("{}Geometry at '{}': {}", prefix, getCreatedPath().toString(), error.message);
+    }
+    return result;
+  };
+  if(m_Origin.size() < 3 || m_Spacing.size() < 3)
+  {
+    constexpr int32 k_MissingMetadataComponents = -5707;
+    return MakeErrorResult(k_MissingMetadataComponents, fmt::format("Image geometry at '{}' requires three origin and spacing components. Received {} origin and {} spacing components.",
+                                                                    getCreatedPath().toString(), m_Origin.size(), m_Spacing.size()));
+  }
+  const FloatVec3 origin = m_Origin;
+  const FloatVec3 spacing = m_Spacing;
+  if(auto result = ImageGeom::ValidateOrigin(origin); result.invalid())
+  {
+    return addGeometryPath(std::move(result));
+  }
+  if(auto result = ImageGeom::ValidateSpacing(spacing); result.invalid())
+  {
+    return addGeometryPath(std::move(result));
+  }
+
   DataPath parentPath = getCreatedPath().getParent();
   if(!parentPath.empty())
   {
@@ -56,8 +80,14 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
     return MakeErrorResult(-5705, fmt::format("{}Failed to create ImageGeometry:'{}'", prefix, getCreatedPath().toString()));
   }
   imageGeom->setDimensions(m_Dims);
-  imageGeom->setOrigin(m_Origin);
-  imageGeom->setSpacing(m_Spacing);
+  if(auto result = imageGeom->setOrigin(origin); result.invalid())
+  {
+    return addGeometryPath(std::move(result));
+  }
+  if(auto result = imageGeom->setSpacing(spacing); result.invalid())
+  {
+    return addGeometryPath(std::move(result));
+  }
   imageGeom->setUnits(m_Units);
 
   const DimensionType reversedDims(m_Dims.rbegin(), m_Dims.rend());

@@ -66,8 +66,8 @@ DataStructure CreateSingleVoxelDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 1}});
 
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{1, 1, 1}, imageGeom->getId());
@@ -168,8 +168,8 @@ DataStructure Create1DZDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 2.2f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 2.2f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 7}});
 
   Fill1DImage(dataStructure, ShapeType{1, 1, 7});
@@ -185,8 +185,8 @@ DataStructure Create1DYDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 7, 1}});
 
   Fill1DImage(dataStructure, ShapeType{1, 7, 1});
@@ -202,8 +202,8 @@ DataStructure Create1DXDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{7, 1, 1}});
 
   Fill1DImage(dataStructure, ShapeType{7, 1, 1});
@@ -307,8 +307,8 @@ DataStructure Create2DEmptyZDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.2f, 1.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.2f, 1.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 1}});
 
   Fill2DImage(dataStructure, ShapeType{5, 5, 1});
@@ -324,8 +324,8 @@ DataStructure Create2DEmptyYDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.2f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.2f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 1, 5}});
 
   Fill2DImage(dataStructure, ShapeType{5, 1, 5});
@@ -341,8 +341,8 @@ DataStructure Create2DEmptyXDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.2f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.2f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 5, 5}});
 
   Fill2DImage(dataStructure, ShapeType{1, 5, 5});
@@ -418,8 +418,8 @@ DataStructure Create2DNonSquareEmptyZDataStructure()
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
   // The correct row stride is dimension 0 with length 3, not dimension 1 with length 2.
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 3.0f, 1.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 3.0f, 1.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 2, 1}});
   // A Y-normal boundary face has area `spacing[0] * spacing[2]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{3, 2, 1}, 2.0f);
@@ -434,8 +434,8 @@ DataStructure Create2DNonSquareEmptyYDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 1.0f, 3.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 1.0f, 3.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 1, 2}});
   // A Z-normal boundary face has area `spacing[0] * spacing[1]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{3, 1, 2}, 2.0f);
@@ -450,8 +450,8 @@ DataStructure Create2DNonSquareEmptyXDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.0f, 3.0f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.0f, 3.0f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 3, 2}});
   // A Z-normal boundary face has area `spacing[0] * spacing[1]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{1, 3, 2}, 2.0f);
@@ -466,8 +466,8 @@ DataStructure Create3DDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.8f, 2.2f, 1.2f}});
-  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.8f, 2.2f, 1.2f}}).valid());
+  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 5}});
 
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, imageGeom->getId());
@@ -1277,7 +1277,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Geometry cell tuple count
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 3, 2}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

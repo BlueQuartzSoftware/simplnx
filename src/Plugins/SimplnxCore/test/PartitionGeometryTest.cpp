@@ -22,12 +22,14 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -38,6 +40,7 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include "SimplnxCore/Filters/ExtractTripleLinesFilter.hpp"
 #include "SimplnxCore/Filters/PartitionGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -91,8 +94,8 @@ void BuildPartitionGeometryBenchmarkInput(DataStructure& dataStructure)
   const ShapeType cellTupleShape = {k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim};
   auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
   imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
@@ -263,9 +266,8 @@ void createCellTupleValidationInput(DataStructure& dataStructure, bool rectiline
       (*yBoundsPtr)[index] = static_cast<float32>(index);
       (*zBoundsPtr)[index] = static_cast<float32>(index);
     }
-    rectGridPtr->setXBoundsId(xBoundsPtr->getId());
-    rectGridPtr->setYBoundsId(yBoundsPtr->getId());
-    rectGridPtr->setZBoundsId(zBoundsPtr->getId());
+    const auto boundsResult = rectGridPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr);
+    SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
     geometryPtr = rectGridPtr;
   }
   else
@@ -273,8 +275,8 @@ void createCellTupleValidationInput(DataStructure& dataStructure, bool rectiline
     auto* imagePtr = ImageGeom::Create(dataStructure, "Geometry", storedGeometryGroupPtr->getId());
     REQUIRE(imagePtr != nullptr);
     imagePtr->setDimensions({2, 2, 2});
-    imagePtr->setSpacing({1.0F, 1.0F, 1.0F});
-    imagePtr->setOrigin({0.0F, 0.0F, 0.0F});
+    REQUIRE(imagePtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+    REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
     geometryPtr = imagePtr;
   }
   auto* geometryCellDataPtr = AttributeMatrix::Create(dataStructure, "GeometryCellData", {2, 2, 2}, geometryPtr->getId());
@@ -357,8 +359,8 @@ void createVertexTupleValidationInput(DataStructure& dataStructure, usize tupleC
   auto* existingGridPtr = ImageGeom::Create(dataStructure, k_ExistingTuplePartitionGridPath.getTargetName());
   REQUIRE(existingGridPtr != nullptr);
   existingGridPtr->setDimensions({2, 2, 2});
-  existingGridPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  existingGridPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(existingGridPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(existingGridPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
 }
 
 /**
@@ -391,8 +393,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count"
   const auto featurePath = geomPath.createChildPath("Partitions");
   auto* image = ImageGeom::Create(dataStructure, "Image");
   image->setDimensions({2, 2, 1});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
-  image->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(image->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", {1, 2, 2}, image->getId());
   image->setCellData(*cells);
 
@@ -407,8 +409,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count"
   {
     auto* grid = ImageGeom::Create(dataStructure, "ExistingGrid");
     grid->setDimensions({2, 2, 1});
-    grid->setOrigin({0.0F, 0.0F, 0.0F});
-    grid->setSpacing({1.0F, 1.0F, 1.0F});
+    REQUIRE(grid->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+    REQUIRE(grid->setSpacing({1.0F, 1.0F, 1.0F}).valid());
     args.insertOrAssign(PartitionGeometryFilter::k_ExistingPartitionGridPath_Key, DataPath({"ExistingGrid"}));
     // Existing mode must use the existing grid dimensions, not these inactive counts.
     args.insertOrAssign(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{7, 8, 9});
@@ -1305,14 +1307,14 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry cell tuple count", "[P
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);
   auto* partitionGridPtr = ImageGeom::Create(dataStructure, "Existing Grid");
   REQUIRE(partitionGridPtr != nullptr);
   partitionGridPtr->setDimensions({1, 1, 1});
-  partitionGridPtr->setSpacing({2.0F, 3.0F, 2.0F});
+  REQUIRE(partitionGridPtr->setSpacing({2.0F, 3.0F, 2.0F}).valid());
 
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
@@ -1434,4 +1436,42 @@ TEST_CASE("SimplnxCore::PartitionGeometry: Inactive advanced parameters and exis
     SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
     CHECK(pre.outputActions.errors()[0].code == (row == 1 ? -3003 : -1));
   }
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic preflight accepts Extract Triple Lines placeholder geometry", "[SimplnxCore][PartitionGeometryFilter]")
+{
+  DataStructure dataStructure;
+  const DataPath meshPath({"Triangle Mesh"});
+  const CreateTriangleGeometryAction createMesh(meshPath, 1, 3, "Vertex Data", "Face Data", "Vertices", "Faces");
+  const auto meshResult = createMesh.apply(dataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(meshResult);
+  const auto faceLabelsPath = meshPath.createChildPath("Face Data").createChildPath("Labels");
+  const auto& faceData = dataStructure.getDataRefAs<AttributeMatrix>(faceLabelsPath.getParent());
+  REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Labels", ShapeType{1}, ShapeType{2}, faceData.getId()) != nullptr);
+
+  const DataPath tripleLinePath({"Triple Lines"});
+  const ExtractTripleLinesFilter extract;
+  Arguments extractArgs = extract.getDefaultArguments();
+  extractArgs.insertOrAssign(ExtractTripleLinesFilter::k_TriangleGeometryPath_Key, meshPath);
+  extractArgs.insertOrAssign(ExtractTripleLinesFilter::k_FaceLabelsArrayPath_Key, faceLabelsPath);
+  extractArgs.insertOrAssign(ExtractTripleLinesFilter::k_CopyNodeTypes_Key, false);
+  extractArgs.insertOrAssign(ExtractTripleLinesFilter::k_CreatedTripleLineGeometryPath_Key, tripleLinePath);
+  const auto extractPreflight = extract.preflight(dataStructure, extractArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(extractPreflight.outputActions);
+  const auto extractResult = extractPreflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(extractResult);
+  CHECK(dataStructure.getDataRefAs<EdgeGeom>(tripleLinePath).getNumberOfVertices() == 0);
+
+  const auto vertexMatrix = tripleLinePath.createChildPath(extractArgs.value<std::string>(ExtractTripleLinesFilter::k_VertexDataGroupName_Key));
+  auto partitionArgs = createBasicPartitionGeometryArguments(tripleLinePath, vertexMatrix, "Partition Ids", {2, 3, 4}, std::nullopt);
+  const DataPath gridPath({"Partition Grid"});
+  partitionArgs.insertOrAssign(PartitionGeometryFilter::k_PartitionGridGeometry_Key, gridPath);
+  const PartitionGeometryFilter partition;
+  const auto partitionPreflight = partition.preflight(dataStructure, partitionArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(partitionPreflight.outputActions);
+  const auto partitionResult = partitionPreflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(partitionResult);
+  const auto& partitionGrid = dataStructure.getDataRefAs<ImageGeom>(gridPath);
+  CHECK(partitionGrid.getDimensions() == SizeVec3{2, 3, 4});
+  CHECK(partitionGrid.getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F});
 }

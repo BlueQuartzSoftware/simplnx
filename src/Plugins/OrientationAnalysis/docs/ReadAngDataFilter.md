@@ -71,6 +71,10 @@ SEM Signal
 Fit of Solution
 ```
 
+### Geometry Metadata Overrides
+
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The default origin is zero and the default Z spacing is one.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -14,6 +14,23 @@ public:
   using data_type = RectGridGeom;
 
   /**
+   * @brief Validates available rectilinear grid bounds after their arrays have been imported.
+   * @param dataStructure Contains the imported geometry objects and their bounds arrays.
+   * @param filePath Identifies the source file.
+   * @return The first bounds validation error, with its geometry name and file path.
+   */
+  [[nodiscard]] static Result<> ValidateImportedBounds(const DataStructure& dataStructure, const std::filesystem::path& filePath);
+
+  /**
+   * @brief Validates available rectilinear grid bounds for the geometries at the specified paths.
+   * @param dataStructure Contains the geometry objects and their bounds arrays.
+   * @param filePath Identifies the source file.
+   * @param selectedPaths Identifies just the objects being imported.
+   * @return The first bounds validation error, with its geometry name and file path.
+   */
+  [[nodiscard]] static Result<> ValidateImportedBounds(const DataStructure& dataStructure, const std::filesystem::path& filePath, const std::vector<DataPath>& selectedPaths);
+
+  /**
    * @brief Default constructor.
    */
   RectGridGeomIO();

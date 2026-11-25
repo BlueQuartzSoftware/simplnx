@@ -150,6 +150,7 @@ GroupIO GroupIO::openGroup(const std::string& name) const
   const hid_t selfId = getId();
   // Prepare metadata before acquisition so allocation failure cannot leave an unowned group identifier.
   GroupIO group(selfId, name, H5I_INVALID_HID);
+  group.setFilePath(getFilePath());
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     group.setId(H5Gopen(selfId, name.c_str(), H5P_DEFAULT));
@@ -291,6 +292,7 @@ GroupIO GroupIO::createGroup(const std::string& childName)
   const hid_t selfId = getId();
   // Prepare metadata before acquisition so construction cannot fail after HDF5 creates the link.
   GroupIO group(selfId, childName, H5I_INVALID_HID);
+  group.setFilePath(getFilePath());
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     if(childIsGroup)

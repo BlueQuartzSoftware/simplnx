@@ -19,7 +19,7 @@ The above algorithm is significantly faster than other geometric approaches for 
 
 ### Parameter Guidance
 
-- **Grid Resolution** -- the X, Y, and Z edge lengths of the sampling grid voxels, expressed in the same coordinate units as the input point cloud's vertex coordinates.
+- **Grid Resolution** -- the X, Y, and Z edge lengths of the sampling grid voxels, expressed in the same coordinate units as the input point cloud's vertex coordinates. The filter reports an error if a value is nonfinite or less than or equal to zero.
 - **Minimum Number of Empty Neighbors** -- a dimensionless count in the range 0 to 26 (a voxel has 26 neighbors in a 3D grid). A voxel is flagged as a surface voxel when its number of empty neighbors exceeds this value. Larger values flag fewer voxels (only those more exposed on the surface).
 
 Note that the resulting hull geometry does not inherit any **Attribute Arrays** from the original point cloud.

@@ -236,8 +236,14 @@ Result<> BuildInput(DataStructure& dataStructure, DataStorageMode storageMode)
     return MakeErrorResult(-9310, fmt::format("Could not create benchmark Image Geometry '{}'.", k_ImageGeomPath.toString()));
   }
   imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  imageGeom->setSpacing({0.25F, 0.5F, 0.75F});
-  imageGeom->setOrigin({1.0F, 2.0F, 3.0F});
+  if(auto result = imageGeom->setSpacing({0.25F, 0.5F, 0.75F}); result.invalid())
+  {
+    return result;
+  }
+  if(auto result = imageGeom->setOrigin({1.0F, 2.0F, 3.0F}); result.invalid())
+  {
+    return result;
+  }
 
   auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), {k_DimZ, k_DimY, k_DimX}, imageGeom->getId());
   if(cellData == nullptr)

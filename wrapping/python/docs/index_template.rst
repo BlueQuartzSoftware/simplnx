@@ -102,6 +102,7 @@ How to use SIMPLNX from Python
    :maxdepth: 1
    :caption: Release Notes
 
+   release_notes/ReleaseNotes_Unreleased
    release_notes/ReleaseNotes_251027
    release_notes/ReleaseNotes_250928
    release_notes/ReleaseNotes_250723

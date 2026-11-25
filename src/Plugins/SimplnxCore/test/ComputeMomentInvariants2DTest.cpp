@@ -48,8 +48,8 @@ DataStructure CreateInvalidTestData()
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeometry);
   constexpr size_t dimsIn[3] = {5, 5, 5};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 5;
   dims[1] = 5;
@@ -99,8 +99,8 @@ DataStructure CreateTestData()
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeometry);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
@@ -156,8 +156,8 @@ DataStructure CreateUnusedFeatureTestData(int32 liveId)
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
   REQUIRE((imageGeomPtr != nullptr));
   imageGeomPtr->setDimensions({5, 5, 1});
-  imageGeomPtr->setOrigin({0, 0, 0});
-  imageGeomPtr->setSpacing({1, 1, 1});
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
   imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, k_CellData, ShapeType{1, 5, 5}, imageGeomPtr->getId());
   REQUIRE((cellAMPtr != nullptr));

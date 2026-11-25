@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -20,6 +21,7 @@
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -239,8 +241,8 @@ DataStructure CreateDataStructure()
 
   // Create an Image Geometry grid for the Scan Data
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, "Small IN100 Grid", scanData->getId());
-  imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({0.25f, 0.25f, 0.25f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   SizeVec3 imageGeomDims = {100, 100, 100};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
@@ -1939,4 +1941,106 @@ TEST_CASE("DataStructureWriter: an edge geometry reports a failed base write", "
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == -5);
   CHECK(result.errors()[0].message == "Could not find IO factory for datatype: DynamicListArray");
+}
+
+TEST_CASE("ImageGeomIO rejects stored invalid spacing", "[simplnx][HDF5][ImageGeom]")
+{
+  const fs::path filePath = GetDataDir() / "ImageGeomInvalidSpacing.dream3d";
+  {
+    DataStructure ds;
+    const CreateImageGeometryAction action(DataPath({"Stored Image"}), {2, 3, 1}, {0.0f, 0.0f, 0.0f}, {0.5f, 2.0f, 1.0f}, "Cell Data");
+    const auto createResult = action.apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(createResult);
+    auto file = HDF5::FileIO::WriteFile(filePath);
+    REQUIRE(file.isValid());
+    const auto writeResult = HDF5::DataStructureWriter::WriteFile(ds, file);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+    auto group = file.openGroup(nx::core::Constants::k_DataStructureTag).openGroup("Stored Image");
+    REQUIRE(group.isValid());
+    const auto removeResult = group.removeAttribute(IOConstants::k_H5_SPACING);
+    SIMPLNX_RESULT_REQUIRE_VALID(removeResult);
+    const auto spacingResult = group.writeVectorAttribute(IOConstants::k_H5_SPACING, std::vector<float32>{0.5f, 2.0f, 0.0f});
+    SIMPLNX_RESULT_REQUIRE_VALID(spacingResult);
+  }
+
+  const bool metadataOnly = GENERATE(false, true);
+  const auto result = HDF5::DataStructureReader::ReadFile(filePath, metadataOnly);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == ImageGeom::k_InvalidSpacing);
+  CHECK(result.errors().front().message.find("Stored Image") != std::string::npos);
+  CHECK(result.errors().front().message.find(filePath.filename().string()) != std::string::npos);
+  CHECK(result.errors().front().message.find("Z") != std::string::npos);
+}
+
+TEST_CASE("RectGridGeomIO rejects invalid external bounds on full and selective reads", "[simplnx][HDF5][RectGridGeom]")
+{
+  const fs::path filePath = GetDataDir() / "RectGridInvalidBounds.dream3d";
+  const DataPath geometryPath({"Stored Grid"});
+  const DataPath boundsPath({"Z Bound Coordinates"});
+  {
+    DataStructure ds;
+    auto* geom = RectGridGeom::Create(ds, geometryPath.getTargetName());
+    REQUIRE(geom != nullptr);
+    geom->setDimensions({1, 1, 1});
+    // This array lives outside the geometry's HDF5 group and is visited after it.
+    auto* bounds = Float32Array::CreateWithStore<DataStore<float32>>(ds, boundsPath.getTargetName(), ShapeType{2}, ShapeType{1});
+    REQUIRE(bounds != nullptr);
+    bounds->setValue(0, 0.0f);
+    bounds->setValue(1, 1.0f);
+    const auto boundResult = geom->setBounds(nullptr, nullptr, bounds);
+    SIMPLNX_RESULT_REQUIRE_VALID(boundResult);
+    const auto writeResult = DREAM3D::WriteFile(filePath, ds);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+    // Modify the stored dataset directly to model an invalid file from an older producer.
+    auto file = HDF5::FileIO::AppendFile(filePath);
+    auto dataGroup = file.openGroup(nx::core::Constants::k_DataStructureTag);
+    auto dataset = dataGroup.openDataset(boundsPath.getTargetName());
+    REQUIRE(dataset.getId() > 0);
+    const std::array<float32, 2> duplicateBounds{0.0F, 0.0F};
+    const auto editResult = dataset.writeSpan<float32>(dataset.getDimensions(), duplicateBounds);
+    SIMPLNX_RESULT_REQUIRE_VALID(editResult);
+  }
+
+  const auto metadata = HDF5::DataStructureReader::ReadFile(filePath, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  const auto fullResult = HDF5::DataStructureReader::ReadFile(filePath);
+  SIMPLNX_RESULT_REQUIRE_INVALID(fullResult);
+  CHECK(fullResult.errors().front().code == -4007);
+  CHECK(fullResult.errors().front().message.find("Stored Grid") != std::string::npos);
+  CHECK(fullResult.errors().front().message.find(filePath.filename().string()) != std::string::npos);
+
+  DataStructure selected;
+  const ImportH5ObjectPathsAction action(filePath, {geometryPath, boundsPath});
+  const auto selectiveResult = action.apply(selected, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_INVALID(selectiveResult);
+  CHECK(selectiveResult.errors().front().code == -4007);
+  CHECK(selectiveResult.errors().front().message.find("Stored Grid") != std::string::npos);
+  CHECK_FALSE(selected.containsData(geometryPath));
+}
+
+TEST_CASE("RectGridGeomIO rejects invalid bounds on write across a validation block boundary", "[simplnx][HDF5][RectGridGeom]")
+{
+  DataStructure dataStructure;
+  auto* grid = RectGridGeom::Create(dataStructure, "Grid");
+  REQUIRE(grid != nullptr);
+  constexpr usize k_Count = 4097;
+  auto* bounds = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Y Bounds", ShapeType{k_Count}, ShapeType{1});
+  REQUIRE(bounds != nullptr);
+  for(usize i = 0; i < k_Count; ++i)
+  {
+    bounds->setValue(i, static_cast<float32>(i));
+  }
+  grid->setDimensions({1, k_Count - 1, 1});
+  const auto setResult = grid->setBounds(nullptr, bounds, nullptr);
+  SIMPLNX_RESULT_REQUIRE_VALID(setResult);
+  bounds->setValue(k_Count - 1, static_cast<float32>(k_Count - 2));
+
+  const fs::path filePath = GetDataDir() / "RectGridInvalidWrite.dream3d";
+  const auto writeResult = DREAM3D::WriteFile(filePath, dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
+  CHECK(writeResult.errors().front().code == -4007);
+  CHECK(writeResult.errors().front().message.find("Y bounds array is not strictly monotonically increasing at index 4096") != std::string::npos);
+  CHECK(writeResult.errors().front().message.find(filePath.filename().string()) != std::string::npos);
 }

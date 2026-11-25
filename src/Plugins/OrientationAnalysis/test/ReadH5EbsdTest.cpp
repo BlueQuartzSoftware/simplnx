@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include "OrientationAnalysis/Filters/ReadH5EbsdFilter.hpp"
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -565,4 +567,22 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Automatic and explicit transformatio
   CompareImportedArrays(automatic, manual);
   UnitTest::CheckArraysInheritTupleDims(automatic);
   UnitTest::CheckArraysInheritTupleDims(manual);
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5EbsdFilter: override origin and spacing", "[OrientationAnalysis][ReadH5Ebsd]")
+{
+  const UnitTest::TestFileSentinel archive(unit_test::k_TestFilesDir, "Small_IN100_h5ebsd.tar.gz", "Small_IN100.h5ebsd");
+  ReadH5EbsdFileParameter::ValueType input;
+  input.inputFilePath = fmt::format("{}/Small_IN100.h5ebsd", unit_test::k_TestFilesDir);
+  input.startSlice = 1;
+  input.endSlice = 2;
+  input.eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
+  input.selectedArrayNames = {Constants::k_EulerAngles, Constants::k_Phases};
+  input.useRecommendedTransform = false;
+  Arguments args;
+  const DataPath geometry({"Override H5EBSD"});
+  args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, input);
+  args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, geometry);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  UnitTest::RequireReaderGeometryExecution(ReadH5EbsdFilter{}, args, geometry, {4, -3, 8}, {2, 3, 4});
 }

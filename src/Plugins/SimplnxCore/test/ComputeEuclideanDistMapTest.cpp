@@ -53,8 +53,8 @@ void BuildLargeTestData(DataStructure& dataStructure, bool includeBlockedCells =
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_LargeGeomPath.getTargetName());
   imageGeom->setDimensions({k_LargeDimX, k_LargeDimY, k_LargeDimZ});
-  imageGeom->setSpacing({0.5F, 0.75F, 1.25F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({0.5F, 0.75F, 1.25F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
@@ -235,8 +235,8 @@ void BuildComparisonTestData(DataStructure& dataStructure, bool includeBlockedCe
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_LargeGeomPath.getTargetName());
   imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  imageGeom->setSpacing({0.5F, 0.75F, 1.25F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({0.5F, 0.75F, 1.25F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
@@ -547,7 +547,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMapFilter: Geometry cell tuple count
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 3, 2}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

@@ -47,7 +47,7 @@ inline std::vector<nx::core::usize> BuildSparseFeatureSurfaceData(nx::core::Data
   auto* geomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({cellShape[2], cellShape[1], cellShape[0]});
-  geomPtr->setSpacing({2.0f, 3.0f, 5.0f});
+  REQUIRE(geomPtr->setSpacing({2.0f, 3.0f, 5.0f}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), cellShape, geomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   geomPtr->setCellData(*cellAMPtr);
@@ -208,8 +208,8 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions(dimensions);
-  imageGeomPtr->setSpacing(spacing);
-  imageGeomPtr->setOrigin(origin);
+  REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+  REQUIRE(imageGeomPtr->setOrigin(origin).valid());
   auto* cellAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   REQUIRE(cellAttributeMatrixPtr != nullptr);
   imageGeomPtr->setCellData(*cellAttributeMatrixPtr);
@@ -428,8 +428,8 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions(dimensions);
-  imageGeomPtr->setSpacing(spacing);
-  imageGeomPtr->setOrigin(origin);
+  REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+  REQUIRE(imageGeomPtr->setOrigin(origin).valid());
   auto* cellAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   REQUIRE(cellAttributeMatrixPtr != nullptr);
   imageGeomPtr->setCellData(*cellAttributeMatrixPtr);

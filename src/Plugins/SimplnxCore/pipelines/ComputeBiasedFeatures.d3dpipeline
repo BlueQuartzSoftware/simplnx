@@ -46,7 +46,11 @@
           },
           "version": 2
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "use_default_geometry_values": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {

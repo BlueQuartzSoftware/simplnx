@@ -1,5 +1,7 @@
 #include "ReadMhaFileFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/Filters/Algorithms/ReadMhaFile.hpp"
 #include "NXImageProcessing/utils/MetaImageUtilities.hpp"
 
@@ -229,6 +231,9 @@ Parameters ReadMhaFileFilter::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_TransformationMatrixPath_Key, "Transformation Matrix", "The path to the created transformation matrix data array (float32, 1x16).",
                                                          DataPath({"MHA Image", "TransformationMatrix"})));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to the created Image Geometry", DataPath({"MHA Image"})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -245,7 +250,8 @@ Parameters ReadMhaFileFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadMhaFileFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -287,6 +293,10 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
   std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
   std::vector<float32> origin = {md.origin[0], md.origin[1], md.origin[2]};
   std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
@@ -423,6 +433,7 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   // 1) Stream the voxel data (pixels only) via the ReadMhaFile algorithm.
   {
     ReadMhaFileInputValues inputValues;
+    inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
     inputValues.InputFilePath = pInputFilePath;
     inputValues.CroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
     inputValues.ImageGeometryPath = pImageGeomPath;

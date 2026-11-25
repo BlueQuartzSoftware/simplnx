@@ -164,10 +164,10 @@ DataStructure CreateCropProbeData(const std::shared_ptr<CropProbeStore<T>>& sour
   REQUIRE(destinationGeom != nullptr);
   sourceGeom->setDimensions(sourceDimensions);
   destinationGeom->setDimensions(cropDimensions);
-  sourceGeom->setOrigin({0.0F, 0.0F, 0.0F});
-  destinationGeom->setOrigin({0.0F, 0.0F, 0.0F});
-  sourceGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  destinationGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(sourceGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(destinationGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(sourceGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(destinationGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
 
   auto* sourceCellData = AttributeMatrix::Create(dataStructure, "Cell Data", sourceStore->getTupleShape(), sourceGeom->getId());
   auto* destinationCellData = AttributeMatrix::Create(dataStructure, "Cell Data", destinationStore->getTupleShape(), destinationGeom->getId());
@@ -250,8 +250,8 @@ DataStructure CreateDataStructure()
   DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, scanData->getId());
-  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
-  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
+  REQUIRE(imageGeom->setSpacing({0.25f, 0.55f, 1.86}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 20.0f, 66.0f}).valid());
   SizeVec3 imageGeomDims = {40, 60, 80};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
@@ -276,8 +276,8 @@ DataStructure CreateFeatureCropFixture()
   auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({4, 4, 1});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 4, 4}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
@@ -2362,8 +2362,8 @@ TEST_CASE("SimplnxCore::CropImageGeometry: Child names containing the geometry n
   auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({2, 2, 2});
-  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);

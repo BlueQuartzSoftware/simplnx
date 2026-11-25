@@ -79,8 +79,8 @@ FixtureData CreateScaffold(usize numFeatures, usize numCrystalStructures)
 {
   FixtureData td;
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
-  td.geom->setSpacing({1.0f, 1.0f, 1.0f});
-  td.geom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.geom->setDimensions({1, 1, 1}); // unused at the cell level; only present so the geom container has shape
 
   td.featureAM = AttributeMatrix::Create(td.ds, "FeatureData", ShapeType{numFeatures}, td.geom->getId());

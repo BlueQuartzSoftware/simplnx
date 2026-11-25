@@ -96,6 +96,12 @@ Physical Z cropping includes the final slice when its maximum equals the upper s
 
 The user can select to flip the images about the X or Y axis during import.
 
+### Geometry Metadata Overrides
+
+Each origin coordinate must be finite. Each spacing value must be finite and greater than zero. If a slice has an invalid file value, the filter reports an error that names the file, axis, and value. Enable **Set Origin** or **Set Spacing** for the field named in the error and enter valid values. With **Postprocessed** selected, the filter uses the replacement during slice cropping if the stored value is invalid.
+
+A TIFF resolution tag with a zero or negative value requires **Set Spacing**. When a resolution tag is absent, the reader uses its default spacing.
+
 ## Required Input Sources
 
 None — this filter reads from a file list of image files on disk.

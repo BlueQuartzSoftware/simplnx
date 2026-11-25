@@ -59,14 +59,24 @@ void GeometryUtilities::FindUniqueIdsImpl::operator()(const Range& range) const
   convert(range.min(), range.max());
 }
 
+BoundingBox3Df GeometryUtilities::GetPaddedNodePartitionBounds(const INodeGeometry0D& geometry)
+{
+  const auto bounds = geometry.getBoundingBox();
+  if(!bounds.isValid())
+  {
+    return bounds;
+  }
+  return {bounds.getMinPoint() - k_Padding, bounds.getMaxPoint() + k_Padding};
+}
+
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
-  BoundingBox3Df boundingBox = geometry.getBoundingBox();
+  const auto boundingBox = GetPaddedNodePartitionBounds(geometry);
   if(!boundingBox.isValid())
   {
     return {};
   }
-  return GeometryUtilities::CalculatePartitionLengthsOfBoundingBox({(boundingBox.getMinPoint() - k_Padding), (boundingBox.getMaxPoint() + k_Padding)}, numberOfPartitionsPerAxis);
+  return GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(boundingBox, numberOfPartitionsPerAxis);
 }
 
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
@@ -134,12 +144,12 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(c
 
 Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
 {
-  BoundingBox3Df boundingBox = geometry.getBoundingBox();
+  const auto boundingBox = GetPaddedNodePartitionBounds(geometry);
   if(!boundingBox.isValid())
   {
     return {};
   }
-  return Result<FloatVec3>{FloatVec3(boundingBox.getMinPoint() - k_Padding)};
+  return Result<FloatVec3>{FloatVec3(boundingBox.getMinPoint())};
 }
 
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)

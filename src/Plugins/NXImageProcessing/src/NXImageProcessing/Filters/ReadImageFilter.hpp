@@ -4,6 +4,7 @@
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
 
 namespace nx::core
 {
@@ -31,12 +32,12 @@ public:
 
   static constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
 
-  static constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
+  static constexpr StringLiteral k_ChangeOrigin_Key = ImageIO::k_ChangeOrigin;
   static constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
-  static constexpr StringLiteral k_Origin_Key = "origin";
+  static constexpr StringLiteral k_Origin_Key = ImageIO::k_Origin;
 
-  static constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
+  static constexpr StringLiteral k_ChangeSpacing_Key = ImageIO::k_ChangeSpacing;
+  static constexpr StringLiteral k_Spacing_Key = ImageIO::k_Spacing;
   static constexpr StringLiteral k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
 
   static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";

@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/ReadChannel5Data.hpp"
 #include "OrientationAnalysis/Filters/ReadChannel5DataFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -163,7 +165,8 @@ uint64 SumRepeatingModulo(usize count, usize period)
   return fullCycles * periodSum + partialSum;
 }
 
-bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPath, usize xCells, usize yCells, float32 (*phi2ValuePtr)(usize) = ExpectedPhi2, bool includeHexagonalLow = false)
+bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPath, usize xCells, usize yCells, float32 (*phi2ValuePtr)(usize) = ExpectedPhi2, bool includeHexagonalLow = false,
+                                 float32 xStep = 0.25F)
 {
   {
     std::ofstream cprFile(cprPath, std::ios::out | std::ios::trunc);
@@ -182,8 +185,9 @@ bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPat
                "kV=20\n"
                "TiltAngle=70\n"
                "TiltAxis=0\n"
-               "GridDistX=0.25\n"
-               "GridDistY=0.5\n"
+               "GridDistX="
+            << xStep << "\n"
+            << "GridDistY=0.5\n"
                "xCells="
             << xCells << "\n"
             << "yCells=" << yCells << "\n\n"
@@ -759,4 +763,17 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ReadChannel5DataFilter: override invalid stored spacing", "[OrientationAnalysis][ReadChannel5DataFilter]")
+{
+  const fs::path dir = fs::path(unit_test::k_BinaryTestOutputDir.view());
+  const auto cpr = dir / "BadChannelSpacing.cpr";
+  const auto crc = dir / "BadChannelSpacing.crc";
+  REQUIRE(WriteSyntheticChannel5Files(cpr, crc, 4, 1, ExpectedPhi2, false, 0.0F));
+  const ReadChannel5DataFilter filter;
+  auto args = SyntheticChannel5Arguments(cpr, true);
+  UnitTest::RequireBadReaderMetadata(filter, args, cpr, true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  UnitTest::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {2, 3, 4});
 }

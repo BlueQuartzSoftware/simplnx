@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
+#include "simplnx/DataStructure/IO/HDF5/RectGridGeomIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
@@ -16,8 +17,9 @@
 
 namespace nx::core::HDF5
 {
-DataStructureReader::DataStructureReader(DataIOManager* factoryManager)
+DataStructureReader::DataStructureReader(DataIOManager* factoryManager, DREAM3D::DeferredImageMetadata* deferredImageMetadata)
 : m_IOManager(factoryManager)
+, m_DeferredImageMetadata(deferredImageMetadata)
 {
 }
 DataStructureReader::~DataStructureReader() noexcept = default;
@@ -32,9 +34,10 @@ Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO
   return ReadFile(fileReader, useEmptyDataStores, {});
 }
 
-Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver)
+Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver,
+                                                    DREAM3D::DeferredImageMetadata* deferredImageMetadata)
 {
-  DataStructureReader dataStructureReader;
+  DataStructureReader dataStructureReader(nullptr, deferredImageMetadata);
   auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
   // readGroup imports every array -- including geometry connectivity such as vertex/face/edge lists,
   // derived connectivity, and rectilinear-grid bounds -- as an EmptyDataStore carrying only shape and
@@ -57,6 +60,10 @@ Result<std::shared_ptr<DataObject>> DataStructureReader::ReadObject(const nx::co
   }
 
   const DataStructure& dataStructure = dataStructureReader.getDataStructure();
+  if(auto result = RectGridGeomIO::ValidateImportedBounds(dataStructure, fileReader.getFilePath()); result.invalid())
+  {
+    return ConvertInvalidResult<std::shared_ptr<DataObject>>(std::move(result));
+  }
   const DataMap& dataMap = dataStructure.getDataMap();
   if(dataMap.getSize() == 0)
   {
@@ -135,6 +142,14 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::Group
   m_CurrentStructure.setFormatResolver(std::move(resolver));
   m_CurrentStructure.setNextId(objectId);
   Result<> result = HDF5::ReadDataMap(*this, m_CurrentStructure.getRootGroup(), groupReader, {}, useEmptyDataStores);
+  if(result.invalid())
+  {
+    return ConvertInvalidResult<DataStructure>(std::move(result));
+  }
+  if(m_DeferredImageMetadata == nullptr)
+  {
+    result = MergeResults(std::move(result), RectGridGeomIO::ValidateImportedBounds(m_CurrentStructure, groupReader.getFilePath()));
+  }
   if(result.invalid())
   {
     return ConvertInvalidResult<DataStructure>(std::move(result));
@@ -246,6 +261,11 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
   {
     return factory->readData(*this, parentGroup, objectName, objectId, parentId, useEmptyDataStores);
   }
+}
+
+DREAM3D::DeferredImageMetadata* DataStructureReader::deferredImageMetadata() const
+{
+  return m_DeferredImageMetadata;
 }
 
 DataStructure& DataStructureReader::getDataStructure()

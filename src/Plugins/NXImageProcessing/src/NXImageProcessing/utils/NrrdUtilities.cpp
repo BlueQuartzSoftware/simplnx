@@ -399,7 +399,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
   std::vector<std::string> kinds;
   std::vector<std::string> spaceDirTokens;
   std::vector<float64> spaceOrigin;
-  std::vector<float64> spacings;
+  std::vector<std::optional<float64>> spacings;
 
   bool headerTerminated = false;
   while(std::getline(in, line))
@@ -484,10 +484,18 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     {
       for(const auto& tok : SplitWhitespace(value))
       {
+        const auto token = ToLower(tok);
+        if(token == "nan" || token == "+nan" || token == "-nan")
+        {
+          spacings.push_back(std::nullopt);
+          continue;
+        }
         try
         {
-          spacings.push_back(std::stod(tok));
-        } catch(...)
+          usize parsed = 0;
+          const auto spacing = std::stod(tok, &parsed);
+          spacings.push_back(parsed == tok.size() ? spacing : std::nan(""));
+        } catch(const std::logic_error&)
         {
           spacings.push_back(std::nan(""));
         }
@@ -641,7 +649,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
         sumSq += c * c;
       }
       const float64 mag = std::sqrt(sumSq);
-      md.spacing[s] = (mag > 0.0) ? static_cast<float32>(mag) : 1.0f;
+      md.spacing[s] = static_cast<float32>(mag);
       // Axis-aligned means vec has one non-zero component, at index s.
       for(usize c = 0; c < vec.size(); c++)
       {
@@ -665,8 +673,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
       {
         break;
       }
-      const float64 sp = spacings[axis];
-      md.spacing[s] = (std::isnan(sp) || sp == 0.0) ? 1.0f : static_cast<float32>(sp);
+      md.spacing[s] = static_cast<float32>(spacings[axis].value_or(1.0));
     }
   }
 

@@ -6,9 +6,16 @@
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <array>
+#include <cmath>
 #include <stdexcept>
 
 using namespace nx::core;
+
+namespace
+{
+constexpr std::array<char, 3> k_Axes = {'X', 'Y', 'Z'};
+} // namespace
 
 ImageGeom::ImageGeom(DataStructure& dataStructure, std::string name)
 : IGridGeometry(dataStructure, std::move(name))
@@ -70,8 +77,9 @@ std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
   auto& dataStruct = getDataStructureRef();
   // The non-import constructor generates an identifier for the copied geometry.
   auto copy = std::shared_ptr<ImageGeom>(new ImageGeom(dataStruct, copyPath.getTargetName()));
-  copy->setOrigin(m_Origin);
-  copy->setSpacing(m_Spacing);
+  // The source geometry already enforces the metadata invariant.
+  copy->m_Origin = m_Origin;
+  copy->m_Spacing = m_Spacing;
   copy->setDimensions(m_Dimensions);
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
@@ -88,14 +96,36 @@ FloatVec3 ImageGeom::getSpacing() const
   return m_Spacing;
 }
 
-void ImageGeom::setSpacing(const FloatVec3& spacing)
+Result<> ImageGeom::ValidateSpacing(const FloatVec3& spacing)
 {
-  m_Spacing = spacing;
+  for(usize axis = 0; axis < k_Axes.size(); ++axis)
+  {
+    const float32 value = spacing[axis];
+    if(!std::isfinite(value) || !(value > 0.0f))
+    {
+      return MakeErrorResult(k_InvalidSpacing, fmt::format("Spacing on the {} axis must be finite and greater than zero. Received {}.", k_Axes[axis], value));
+    }
+  }
+  return {};
 }
 
-void ImageGeom::setSpacing(float32 x, float32 y, float32 z)
+Result<> ImageGeom::setSpacing(const FloatVec3& spacing)
 {
-  m_Spacing = {x, y, z};
+  auto result = ValidateSpacing(spacing);
+  if(result.valid())
+  {
+    m_Spacing = spacing;
+  }
+  else
+  {
+    result.errors().front().message = fmt::format("Image geometry '{}': {}", getName(), result.errors().front().message);
+  }
+  return result;
+}
+
+Result<> ImageGeom::setSpacing(float32 x, float32 y, float32 z)
+{
+  return setSpacing(FloatVec3{x, y, z});
 }
 
 FloatVec3 ImageGeom::getOrigin() const
@@ -103,14 +133,36 @@ FloatVec3 ImageGeom::getOrigin() const
   return m_Origin;
 }
 
-void ImageGeom::setOrigin(const FloatVec3& origin)
+Result<> ImageGeom::ValidateOrigin(const FloatVec3& origin)
 {
-  m_Origin = origin;
+  for(usize axis = 0; axis < k_Axes.size(); ++axis)
+  {
+    const float32 value = origin[axis];
+    if(!std::isfinite(value))
+    {
+      return MakeErrorResult(k_InvalidOrigin, fmt::format("Origin on the {} axis must be finite. Received {}.", k_Axes[axis], value));
+    }
+  }
+  return {};
 }
 
-void ImageGeom::setOrigin(float32 x, float32 y, float32 z)
+Result<> ImageGeom::setOrigin(const FloatVec3& origin)
 {
-  m_Origin = {x, y, z};
+  auto result = ValidateOrigin(origin);
+  if(result.valid())
+  {
+    m_Origin = origin;
+  }
+  else
+  {
+    result.errors().front().message = fmt::format("Image geometry '{}': {}", getName(), result.errors().front().message);
+  }
+  return result;
+}
+
+Result<> ImageGeom::setOrigin(float32 x, float32 y, float32 z)
+{
+  return setOrigin(FloatVec3{x, y, z});
 }
 
 BoundingBox<float32> ImageGeom::getBoundingBoxf() const
@@ -138,12 +190,6 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   if(voxelSizes != nullptr && !recalculate)
   {
     return {};
-  }
-
-  if(m_Spacing[0] <= 0.0f || m_Spacing[1] <= 0.0f || m_Spacing[2] <= 0.0f)
-  {
-    m_ElementSizesId.reset();
-    return MakeErrorResult(-1530, fmt::format("ImageGeom Error: Invalid spacing detected. X-Spacing: {}, Y-Spacing: {}, Z-Spacing: {}", m_Spacing[0], m_Spacing[1], m_Spacing[2]));
   }
 
   // The product retains supplied empty-axis thickness for one- and two-dimensional grids.

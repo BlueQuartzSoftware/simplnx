@@ -595,8 +595,8 @@ FixtureData CreateScaffold(usize dimX, usize dimY, usize dimZ, usize numEnsemble
   const usize numCells = dimX * dimY * dimZ;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
-  td.geom->setSpacing({1.0f, 1.0f, 1.0f});
-  td.geom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.geom->setDimensions({dimX, dimY, dimZ});
 
   // ShapeType uses Z, Y, X order.

@@ -186,8 +186,8 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
   DataStructure ds;
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({D, D, D});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   const ShapeType cellShape = {D, D, D};
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);

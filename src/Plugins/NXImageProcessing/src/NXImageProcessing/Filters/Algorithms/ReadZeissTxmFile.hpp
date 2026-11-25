@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -36,6 +38,7 @@ struct NXIMAGEPROCESSING_EXPORT ReadZeissTxmFileInputValues
   std::string DensityArrayName;
   std::filesystem::path TxmDataFile;
   CropGeometryParameter::ValueType CroppingOptions;
+  ImageIO::GeometryOverrides GeometryOverrides;
 };
 
 /**

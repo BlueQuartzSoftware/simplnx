@@ -39,8 +39,8 @@ DataStructure CreateIntegrationTypeTestDataStructure()
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_TestImageGeometryPath.getTargetName());
   imageGeom->setDimensions({1, 1, 1});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
 
   const ShapeType cellShape = {1, 1, 1};
   auto* cellData = AttributeMatrix::Create(dataStructure, k_TestCellDataPath.getTargetName(), cellShape, imageGeom->getId());
@@ -574,7 +574,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Tiny Spacing", "[SimplnxCor
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_TestImageGeometryPath));
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_TestImageGeometryPath);
-  imageGeom.setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F});
+  REQUIRE(imageGeom.setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F}).valid());
   auto result = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   std::ifstream nodes(outputPath / "Limits_nodes.inp");
@@ -657,7 +657,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Geometry cell tuple count",
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

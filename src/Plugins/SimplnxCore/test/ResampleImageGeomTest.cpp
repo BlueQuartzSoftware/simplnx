@@ -60,8 +60,8 @@ DataStructure CreateFeatureResampleFixture()
   auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({4, 4, 1});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 4, 4}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
@@ -1120,8 +1120,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
   auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({2, 2, 2});
-  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);

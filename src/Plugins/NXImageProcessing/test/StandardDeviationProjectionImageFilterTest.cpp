@@ -64,8 +64,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: l
   DataStructure ds;
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions(dims);
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
@@ -182,8 +182,8 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: single-sam
   DataStructure ds;
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({D, D, 1});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   const ShapeType cellShape = {1, D, D}; // tuple shape is ZYX
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);

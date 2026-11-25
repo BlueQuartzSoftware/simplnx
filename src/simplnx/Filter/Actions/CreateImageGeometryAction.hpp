@@ -39,11 +39,13 @@ public:
   CreateImageGeometryAction& operator=(CreateImageGeometryAction&&) noexcept = delete;
 
   /**
-   * @brief Applies this action's change to the given DataStructure in the given mode.
-   * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
+   * @brief Validates image metadata in preflight and execute before creating the geometry.
+   * A metadata error leaves the data structure unchanged. A later creation error can leave a partial result.
    * @param dataStructure The DataStructure to modify
    * @param mode The mode (Preflight or Execute)
-   * @return Result<> Result with any errors or warnings
+   * @return Success or a metadata error. Error -5707 indicates fewer than three origin or spacing components.
+   * Error -1557 indicates a nonfinite origin. Error -1556 indicates nonfinite or nonpositive spacing.
+   * Path and creation errors use -5701 through -5706.
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 

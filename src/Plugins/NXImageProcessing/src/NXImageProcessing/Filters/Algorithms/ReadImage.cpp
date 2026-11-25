@@ -1,5 +1,7 @@
 #include "ReadImage.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/Filters/Algorithms/ReadNrrdFile.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
@@ -167,6 +169,9 @@ Result<> ReadNrrdBackend(DataStructure& dataStructure, const ReadImageInputValue
   nrrdInputs.CellAttributeMatrixName = inputValues.cellDataName;
   nrrdInputs.ImageDataArrayName = inputValues.imageDataArrayPath.getTargetName();
   nrrdInputs.CroppingOptions = inputValues.croppingOptions;
+  nrrdInputs.GeometryOverrides = {inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt, inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
+  nrrdInputs.Processing = inputValues.originSpacingProcessing;
+  nrrdInputs.CenterOrigin = inputValues.centerOrigin;
 
   return ReadNrrdFile(dataStructure, messageHandler, shouldCancel, &nrrdInputs)();
 }
@@ -233,28 +238,14 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     }
     else // PhysicalSubvolume
     {
-      // Convert physical coordinates to source voxel indices using the file's native origin/spacing.
-      // The ImageGeom's origin/spacing may have been overridden in preflight, but cropping bounds are
-      // interpreted against whatever origin/spacing was active when the crop filter ran. In the
-      // Preprocessed case, overrides were applied before cropping, so we mirror them here.
-      FloatVec3 srcOrigin = metadata.origin.value_or(FloatVec3{0.0f, 0.0f, 0.0f});
-      FloatVec3 srcSpacing = metadata.spacing.value_or(FloatVec3{1.0f, 1.0f, 1.0f});
-      if(inputValues.originSpacingProcessing == OriginSpacingProcessing::Preprocessed)
+      FloatVec3 srcOrigin = metadata.origin.value_or(FloatVec3{0.0F, 0.0F, 0.0F});
+      FloatVec3 srcSpacing = metadata.spacing.value_or(FloatVec3{1.0F, 1.0F, 1.0F});
+      const ImageIO::GeometryOverrides overrides{inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt,
+                                                 inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
+      const SizeVec3 srcDims{metadata.width, metadata.height, inputValues.readSinglePageOnly ? usize{1} : metadata.numPages};
+      if(auto result = ImageIO::ResolveCropGeometry(inputFilePath, overrides, inputValues.originSpacingProcessing, inputValues.centerOrigin, srcDims, srcOrigin, srcSpacing); result.invalid())
       {
-        if(inputValues.changeSpacing)
-        {
-          srcSpacing = inputValues.spacing;
-        }
-        if(inputValues.changeOrigin)
-        {
-          srcOrigin = inputValues.origin;
-          if(inputValues.centerOrigin)
-          {
-            srcOrigin[0] = -0.5f * srcSpacing[0] * static_cast<float32>(metadata.width);
-            srcOrigin[1] = -0.5f * srcSpacing[1] * static_cast<float32>(metadata.height);
-            srcOrigin[2] = -0.5f * srcSpacing[2] * static_cast<float32>(metadata.numPages);
-          }
-        }
+        return result;
       }
       if(croppingOptions.cropX)
       {

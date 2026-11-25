@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "OrientationAnalysis/utilities/GrainMapper3DUtilities.hpp"
 
 #include "simplnx/Filter/IFilter.hpp"
@@ -236,12 +238,12 @@ struct ReaderTraits<ebsdlib::H5CtfVolumeReader>
 };
 
 template <typename ReaderType>
-void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
+void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::PreflightValue>& preflightUpdatedValues, const std::optional<FloatVec3>& spacing = {})
 {
   auto colCount = ReaderTraits<ReaderType>::getCols()(reader);
   auto rowCount = ReaderTraits<ReaderType>::getRows()(reader);
-  auto xStep = ReaderTraits<ReaderType>::getXSpacing()(reader);
-  auto yStep = ReaderTraits<ReaderType>::getYSpacing()(reader);
+  const auto xStep = spacing ? (*spacing)[0] : ReaderTraits<ReaderType>::getXSpacing()(reader);
+  const auto yStep = spacing ? (*spacing)[1] : ReaderTraits<ReaderType>::getYSpacing()(reader);
 
   std::stringstream ss;
 
@@ -268,7 +270,7 @@ void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::P
   {
     if(reader.getZCells() > 1)
     {
-      ss << "Num Slices (Z): " << reader.getZCells() << "    Z Step: " << (reader.getZStep() > 0.0F ? reader.getZStep() : 1.0F) << "\n";
+      ss << "Num Slices (Z): " << reader.getZCells() << "    Z Step: " << (spacing ? (*spacing)[2] : reader.getZStep()) << "\n";
     }
   }
 

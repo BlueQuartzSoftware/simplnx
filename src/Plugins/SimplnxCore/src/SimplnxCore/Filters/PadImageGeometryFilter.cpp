@@ -192,7 +192,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   auto dimensions = ValidatePaddingParameters(srcImageGeom, validationInput);
   SizeVec3 destGeomDims = srcDims;
   FloatVec3 targetOrigin = srcOrigin;
-  bool usePlaceholders = false;
+  bool useSourceOrigin = false;
   if(dimensions.invalid())
   {
     // Parameter diagnostics precede the shared dimension-overflow diagnostics.
@@ -202,7 +202,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
       return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     resultOutputActions.warnings().push_back({k_PaddedDimensionsWarning, error.message + " Execution checks final dimensions; preflight uses source dimensions and origin."});
-    usePlaceholders = true;
+    useSourceOrigin = true;
   }
   else
   {
@@ -222,17 +222,16 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
       targetOrigin[axis] -= minimum * srcSpacing[axis];
       if(!std::isfinite(targetOrigin[axis]))
       {
-        resultOutputActions.warnings().push_back({k_PaddedOriginWarning, fmt::format("Parameter '{} Min & Max Padding' Min value {} with origin {} and spacing {} produces origin result {}. Execution "
-                                                                                     "checks the final result; preflight uses source dimensions and origin.",
-                                                                                     "XYZ"[axis], minimum, srcOrigin[axis], srcSpacing[axis], targetOrigin[axis])});
-        usePlaceholders = true;
+        resultOutputActions.warnings().push_back(
+            {k_PaddedOriginWarning, fmt::format("Parameter '{} Min & Max Padding' Min value {} with origin {} and spacing {} produces origin result {}. The output origin must be finite.", "XYZ"[axis],
+                                                minimum, srcOrigin[axis], srcSpacing[axis], targetOrigin[axis])});
+        useSourceOrigin = false;
         break;
       }
     }
   }
-  if(usePlaceholders)
+  if(useSourceOrigin)
   {
-    destGeomDims = srcDims;
     targetOrigin = srcOrigin;
   }
 

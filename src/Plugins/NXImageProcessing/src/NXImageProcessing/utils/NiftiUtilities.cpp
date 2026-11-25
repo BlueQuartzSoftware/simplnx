@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits>
 
 namespace nx::core::nifti
 {
@@ -192,15 +193,8 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   }
   md.dimensions = {static_cast<usize>(hdr.dim[1]), static_cast<usize>(hdr.dim[2]), static_cast<usize>(hdr.dim[3])};
 
-  // Default spacing from pixdim, fallback to 1.0 for zero values
+  // Use the spacing magnitude. Keep the signed pixdim values for orientation diagnostics.
   md.spacing = {std::fabs(hdr.pixdim[1]), std::fabs(hdr.pixdim[2]), std::fabs(hdr.pixdim[3])};
-  for(auto& s : md.spacing)
-  {
-    if(s == 0.0f)
-    {
-      s = 1.0f;
-    }
-  }
 
   md.niftiDatatype = hdr.datatype;
   md.bitpix = typeInfo->bitpix;
@@ -239,22 +233,19 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
     md.origin = {hdr.srow_x[3], hdr.srow_y[3], hdr.srow_z[3]};
     for(int col = 0; col < 3; col++)
     {
-      const float32 cx = hdr.srow_x[col];
-      const float32 cy = hdr.srow_y[col];
-      const float32 cz = hdr.srow_z[col];
-      const float32 mag = std::sqrt(cx * cx + cy * cy + cz * cz);
-      if(mag > 0.0f)
-      {
-        md.spacing[col] = mag;
-      }
+      const float64 cx = hdr.srow_x[col];
+      const float64 cy = hdr.srow_y[col];
+      const float64 cz = hdr.srow_z[col];
+      const float64 mag = std::sqrt(cx * cx + cy * cy + cz * cz);
+      md.spacing[col] = mag > std::numeric_limits<float32>::max() ? std::numeric_limits<float32>::infinity() : static_cast<float32>(mag);
       for(int row = 0; row < 3; row++)
       {
         if(row == col)
         {
           continue;
         }
-        const float32 comp = (row == 0) ? cx : (row == 1) ? cy : cz;
-        if(std::fabs(comp) > rotEps * std::max(mag, 1.0e-6f))
+        const float64 comp = (row == 0) ? cx : (row == 1) ? cy : cz;
+        if(std::fabs(comp) > rotEps * std::max(mag, 1.0e-6))
         {
           md.affineHasRotation = true;
         }

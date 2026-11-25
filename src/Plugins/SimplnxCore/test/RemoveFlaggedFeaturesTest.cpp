@@ -108,8 +108,8 @@ void BuildFixture(DataStructure& dataStructure, const FixtureSpec& spec)
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_DataContainer);
   imageGeom->setDimensions(spec.dims);
-  imageGeom->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f});
-  imageGeom->setSpacing(FloatVec3{1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeom->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeom->setSpacing(FloatVec3{1.0f, 1.0f, 1.0f}).valid());
 
   const std::vector<usize> tupleDims = TupleDims(spec.dims);
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeom->getId());
@@ -279,8 +279,8 @@ void FillDataStructure(DataStructure& dataStructure)
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_DataContainer);
   std::vector<size_t> dims = {4, 4, 1};
   imageGeom->setDimensions(dims);
-  imageGeom->setOrigin(std::vector<float>{0, 0, 0});
-  imageGeom->setSpacing(std::vector<float>{1, 1, 1});
+  REQUIRE(imageGeom->setOrigin(std::vector<float>{0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing(std::vector<float>{1, 1, 1}).valid());
 
   std::vector<size_t> tupleDims(dims.rbegin(), dims.rend());
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeom->getId());

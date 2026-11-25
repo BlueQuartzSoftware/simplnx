@@ -68,8 +68,8 @@ DataStructure CreateImageDataStructure(const SizeVec3& dimensions, const std::ve
   auto* imageGeom = ImageGeom::Create(dataStructure, k_GeometryPath.getTargetName());
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions(dimensions);
-  imageGeom->setSpacing(spacing);
-  imageGeom->setOrigin(origin);
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
+  REQUIRE(imageGeom->setOrigin(origin).valid());
 
   const ShapeType cellShape = {dimensions[2], dimensions[1], dimensions[0]};
   auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), cellShape, imageGeom->getId());
@@ -105,9 +105,8 @@ DataStructure CreateRectGridDataStructure(const SizeVec3& dimensions, const std:
     REQUIRE(boundsArrays[axis] != nullptr);
     std::copy(bounds[axis].cbegin(), bounds[axis].cend(), boundsArrays[axis]->begin());
   }
-  rectGrid->setXBoundsId(boundsArrays[0]->getId());
-  rectGrid->setYBoundsId(boundsArrays[1]->getId());
-  rectGrid->setZBoundsId(boundsArrays[2]->getId());
+  const auto boundsResult = rectGrid->setBounds(boundsArrays[0], boundsArrays[1], boundsArrays[2]);
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
 
   const ShapeType cellShape = {dimensions[2], dimensions[1], dimensions[0]};
   auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), cellShape, rectGrid->getId());

@@ -24,7 +24,7 @@ Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructur
 
   geometry.setCellData(cellDataId);
 
-  return {};
+  return result;
 }
 
 Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)

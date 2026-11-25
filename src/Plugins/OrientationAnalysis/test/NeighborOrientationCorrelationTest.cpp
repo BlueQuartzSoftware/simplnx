@@ -701,8 +701,8 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   imageGeom->setDimensions({dimX, dimY, dimZ});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);

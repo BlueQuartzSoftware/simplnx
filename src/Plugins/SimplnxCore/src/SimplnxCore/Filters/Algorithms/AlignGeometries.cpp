@@ -9,6 +9,8 @@
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
+#include <array>
+
 using namespace nx::core;
 
 namespace
@@ -273,7 +275,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   return centroid;
 }
 
-void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
+Result<> translateGeometry(IGeometry& geometry, const FloatVec3& translation)
 {
   switch(geometry.getGeomType())
   {
@@ -283,27 +285,60 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
     origin[0] += translation[0];
     origin[1] += translation[1];
     origin[2] += translation[2];
-    image.setOrigin(origin);
-    return;
+    return image.setOrigin(origin);
   }
   case IGeometry::Type::RectGrid: {
     auto& rectGrid = dynamic_cast<RectGridGeom&>(geometry);
-    auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
-    auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
-    auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
-    for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
+    std::array<Float32Array*, 3> bounds{rectGrid.getXBounds(), rectGrid.getYBounds(), rectGrid.getZBounds()};
+    std::array<AbstractDataStore<float32>*, 3> stores{};
+    constexpr std::array<char, 3> k_Axes{'X', 'Y', 'Z'};
+    for(usize axis = 0; axis < bounds.size(); ++axis)
     {
-      xBounds[i] += translation[0];
+      auto* storePtr = &bounds[axis]->getDataStoreRef();
+      for(usize earlier = 0; earlier < axis; ++earlier)
+      {
+        if(storePtr != stores[earlier])
+        {
+          continue;
+        }
+        if(translation[axis] != translation[earlier])
+        {
+          return MakeErrorResult(-69201, fmt::format("Cannot translate rectilinear grid geometry '{}': the {} and {} bounds share storage but require different offsets ({} and {}). "
+                                                     "Use separate bounds arrays or an alignment that applies the same offset to the shared axes.",
+                                                     rectGrid.getName(), k_Axes[earlier], k_Axes[axis], translation[earlier], translation[axis]));
+        }
+
+        // The earlier axis already represents these values for validation and writing.
+        bounds[axis] = nullptr;
+        break;
+      }
+      if(bounds[axis] != nullptr)
+      {
+        stores[axis] = storePtr;
+      }
     }
-    for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
+    auto validation = RectGridGeom::ValidateBounds(bounds[0], bounds[1], bounds[2], translation);
+    if(validation.invalid())
     {
-      yBounds[i] += translation[1];
+      for(auto& error : validation.errors())
+      {
+        error.message = fmt::format("Cannot translate rectilinear grid geometry '{}': {}", rectGrid.getName(), error.message);
+      }
+      return validation;
     }
-    for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
+    for(usize axis = 0; axis < stores.size(); ++axis)
     {
-      zBounds[i] += translation[2];
+      auto* storePtr = stores[axis];
+      if(storePtr == nullptr)
+      {
+        continue;
+      }
+      for(usize i = 0; i < storePtr->getNumberOfTuples(); ++i)
+      {
+        (*storePtr)[i] += translation[axis];
+      }
     }
-    return;
+    return {};
   }
   case IGeometry::Type::Vertex: {
     auto& vertex = dynamic_cast<VertexGeom&>(geometry);
@@ -314,7 +349,7 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
       vertices[3 * i + 1] += translation[1];
       vertices[3 * i + 2] += translation[2];
     }
-    return;
+    return {};
   }
   case IGeometry::Type::Edge: {
     auto& edge = dynamic_cast<EdgeGeom&>(geometry);
@@ -325,7 +360,7 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
       vertices[3 * i + 1] += translation[1];
       vertices[3 * i + 2] += translation[2];
     }
-    return;
+    return {};
   }
     // 2D Geometries
   case IGeometry::Type::Quad:
@@ -339,7 +374,7 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
       vertices[3 * i + 1] += translation[1];
       vertices[3 * i + 2] += translation[2];
     }
-    return;
+    return {};
   }
     // 3D Geometries
   case IGeometry::Type::Hexahedral:
@@ -353,9 +388,10 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
       vertices[3 * i + 1] += translation[1];
       vertices[3 * i + 2] += translation[2];
     }
-    return;
+    return {};
   }
   }
+  return {};
 }
 
 } // namespace
@@ -397,9 +433,9 @@ Result<> AlignGeometries::operator()()
     }
 
     float translation[3] = {targetOrigin[0] - movingOrigin[0], targetOrigin[1] - movingOrigin[1], targetOrigin[2] - movingOrigin[2]};
-    translateGeometry(moving, translation);
+    return translateGeometry(moving, translation);
   }
-  else if(alignmentType == 1)
+  if(alignmentType == 1)
   {
     FloatVec3 movingCentroid = extractCentroid(moving);
     if(m_ShouldCancel)
@@ -413,13 +449,7 @@ Result<> AlignGeometries::operator()()
     }
 
     float translation[3] = {targetCentroid[0] - movingCentroid[0], targetCentroid[1] - movingCentroid[1], targetCentroid[2] - movingCentroid[2]};
-    translateGeometry(moving, translation);
+    return translateGeometry(moving, translation);
   }
-  else
-  {
-    std::string ss = fmt::format("Invalid selection for alignment type");
-    return {MakeErrorResult<>(-13423, ss)};
-  }
-
-  return {};
+  return MakeErrorResult(-13423, "Invalid selection for alignment type");
 }

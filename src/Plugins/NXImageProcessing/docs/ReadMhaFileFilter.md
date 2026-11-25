@@ -52,20 +52,9 @@ Transformation is enabled.
   (ASCII pixel data), unrecognized `ElementType`, and `ElementDataFile`
   `LIST` / `%d` / multi-file forms.
 
-## Parameters
+### Geometry Metadata Overrides
 
-| Name | Type | Description |
-|------|------|-------------|
-| Input MHA/MetaImage File | Path | `.mha` or `.mhd` file to read |
-| Cropping Options | Enum + bounds | Optional voxel/physical sub-volume streamed on read |
-| Apply Image Transformation To Geometry | bool | Apply the header matrix to the geometry |
-| Interpolation Type | Enum | 0 = Nearest Neighbor, 1 = Linear |
-| Transpose Stored Transformation Matrix | bool | Transpose before use (pure rotation only) |
-| Save Image Transformation As Array | bool | Save the 4x4 as a `float32[16]` array |
-| Transformation Matrix | DataPath | Path of the saved matrix array |
-| Image Geometry | DataPath | Created Image Geometry |
-| Cell Attribute Matrix Name | String | Attribute matrix for the voxel data |
-| Image Data Array Name | String | Array that holds the voxel values |
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The filter uses these values before it computes the crop. An omitted spacing field keeps the unit-spacing default.
 
 ## Required Geometry
 
@@ -81,3 +70,9 @@ Not Applicable (this Filter creates a geometry).
 ## References
 
 - MetaIO / MetaImage documentation: <https://itk.org/Wiki/ITK/MetaIO/Documentation>
+
+% Auto generated parameter table will be inserted here
+
+## Example Pipelines
+
++ 17_Scientific_Volume_Interoperability.d3dpipeline

@@ -51,8 +51,8 @@ DataStructure BuildTestData()
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_DataContainer);
   const std::vector<usize> dims = {5, 2, 1};
   imageGeomPtr->setDimensions(dims);
-  imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f});
-  imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
 
   const std::vector<usize> cellTupleDims(dims.rbegin(), dims.rend());
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, cellTupleDims, imageGeomPtr->getId());
@@ -141,8 +141,8 @@ DataStructure BuildFiveFeatureData()
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_DataContainer);
   const std::vector<usize> dims = {6, 2, 1};
   imageGeomPtr->setDimensions(dims);
-  imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f});
-  imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
 
   const std::vector<usize> cellTupleDims(dims.rbegin(), dims.rend());
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, cellTupleDims, imageGeomPtr->getId());

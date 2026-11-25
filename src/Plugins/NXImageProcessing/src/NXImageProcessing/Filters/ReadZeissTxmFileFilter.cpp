@@ -1,5 +1,7 @@
 #include "ReadZeissTxmFileFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/Filters/Algorithms/ReadZeissTxmFile.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -105,6 +107,9 @@ Parameters ReadZeissTxmFileFilter::parameters() const
       "The cropping options used to crop the incoming data.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.",
       CropGeometryParameter::ValueType{}));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"Zeiss CT"})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -124,7 +129,8 @@ IFilter::UniquePointer ReadZeissTxmFileFilter::clone() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadZeissTxmFileFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -170,6 +176,10 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
     cached.inputFile = pInputFilePathValue.string();
     cached.timeStamp = currentTimeStamp;
     cached.metaData = metadata;
+  }
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePathValue, metadata.Origin, metadata.Spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(metadata.Dimensions, metadata.Spacing, metadata.Origin, metadata.Units)});
 
@@ -264,6 +274,7 @@ Result<> ReadZeissTxmFileFilter::executeImpl(DataStructure& dataStructure, const
                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadZeissTxmFileInputValues inputValues;
+  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
 
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);

@@ -22,13 +22,10 @@ public:
   /**
    * @brief Constructs the action
    * @param importFile The file to import data from
-   * @param paths The vector of paths to import.
-   *
-   * <b>IMPORTANT NOTE</b>. If the std::optional<> paths argument does NOT have a value then
-   * then entire file will be imported. If it has a value, but the std::vector<> has a size of
-   * zero (0), then NOTHING will be imported.
+   * @param paths The paths to import. An empty list imports no objects.
+   * @param useDefaultGeometryValues Use 0 for invalid stored image origin components and 1 for invalid spacing components.
    */
-  ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths);
+  ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths, bool useDefaultGeometryValues = false);
 
   ~ImportH5ObjectPathsAction() noexcept override;
 
@@ -39,9 +36,13 @@ public:
 
   /**
    * @brief Plans selected metadata, materializes requested values, and publishes completed objects.
+   * Metadata validation errors leave the destination unchanged.
    * @param dataStructure The DataStructure to modify
    * @param mode The mode (Preflight or Execute)
-   * @return Import diagnostics, including retained paths when exact rollback cannot complete.
+   * @return Success, with warning 502693 for each selected image geometry that uses default values.
+   * With defaults disabled, invalid stored image values return -1557 for origin or -1556 for spacing.
+   * Invalid rectilinear bounds propagate errors -4006, -4048, -4008, or -4007. Store read errors also propagate.
+   * Publication errors identify retained paths when exact rollback cannot complete.
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
@@ -85,6 +86,7 @@ private:
   struct TestState;
   std::filesystem::path m_H5FilePath;
   PathsType m_Paths;
+  bool m_UseDefaultGeometryValues = false;
   mutable std::shared_ptr<TestState> m_TestState;
 };
 } // namespace nx::core

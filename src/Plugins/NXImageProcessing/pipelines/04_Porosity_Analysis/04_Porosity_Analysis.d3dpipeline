@@ -116,7 +116,7 @@
           "value": "RoboMet.3D Image Stack",
           "version": 1
         },
-        "parameters_version": 2,
+        "parameters_version": 1,
         "resample_images_index": {
           "value": 0,
           "version": 1

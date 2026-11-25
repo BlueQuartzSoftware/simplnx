@@ -54,8 +54,8 @@ void CheckAsciiOutput(ScopeT& scope, const std::string& expectedFormat)
   auto* imageGeom = ImageGeom::Create(dataStructure, "ASCII ImageGeom");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({2, 2, 1});
-  imageGeom->setOrigin({-1.0F, 2.0F, 3.0F});
-  imageGeom->setSpacing({0.5F, 1.5F, 2.0F});
+  REQUIRE(imageGeom->setOrigin({-1.0F, 2.0F, 3.0F}).valid());
+  REQUIRE(imageGeom->setSpacing({0.5F, 1.5F, 2.0F}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
   REQUIRE(cellData != nullptr);
   imageGeom->setCellData(*cellData);

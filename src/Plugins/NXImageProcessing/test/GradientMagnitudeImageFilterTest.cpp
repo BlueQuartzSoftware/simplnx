@@ -101,31 +101,14 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
   }
-  SECTION("zero spacing rejected when UseImageSpacing is on")
+  SECTION("non-unit spacing is accepted when UseImageSpacing is off")
   {
     DataStructure ds;
     const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 6);
     const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 6, field);
-    ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{0.0f, 1.0f, 1.0f});
+    REQUIRE(ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
     GradMagFilter filter;
-    const DataPath geomPath = inputPath.getParent().getParent();
-    Arguments args;
-    args.insertOrAssign(GradMagFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(GradMagFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradMagFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradMagFilter::k_UseImageSpacing_Key, std::make_any<bool>(true));
-    const auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_GradientMagnitudeZeroSpacing);
-  }
-  SECTION("zero spacing accepted when UseImageSpacing is off (spacing ignored)")
-  {
-    DataStructure ds;
-    const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 6);
-    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 6, field);
-    ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{0.0f, 1.0f, 1.0f});
-    GradMagFilter filter;
-    RunGradMag(filter, ds, inputPath, /*useImageSpacing=*/false); // spacing ignored -> the degenerate spacing is harmless
+    RunGradMag(filter, ds, inputPath, /*useImageSpacing=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
   }

@@ -55,8 +55,8 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
   imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  imageGeom->setOrigin({-10.0f, 2.0f, 5.0f});
-  imageGeom->setSpacing({0.5f, 1.5f, 2.0f});
+  REQUIRE(imageGeom->setOrigin({-10.0f, 2.0f, 5.0f}).valid());
+  REQUIRE(imageGeom->setSpacing({0.5f, 1.5f, 2.0f}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
@@ -99,8 +99,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Keeps All Boxes An
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({4, 3, 2});
-  imageGeom->setOrigin({1, 2, 3});
-  imageGeom->setSpacing({0.5f, 1, 2});
+  REQUIRE(imageGeom->setOrigin({1, 2, 3}).valid());
+  REQUIRE(imageGeom->setSpacing({0.5f, 1, 2}).valid());
   auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 3, 4}, imageGeom->getId());
   REQUIRE(cellAm != nullptr);
   imageGeom->setCellData(*cellAm);
@@ -234,8 +234,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Reject Multi Component Featu
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({1, 1, 1});
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 1}, imageGeom->getId());
   REQUIRE(cellAm != nullptr);
   imageGeom->setCellData(*cellAm);
@@ -271,8 +271,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
@@ -383,8 +383,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
@@ -456,8 +456,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;

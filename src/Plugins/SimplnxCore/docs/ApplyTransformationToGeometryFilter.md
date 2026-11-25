@@ -145,7 +145,7 @@ Error **-67456** rejects a transform-matrix output whose parent is the Feature A
 
 ### Numeric input constraints
 
-For *Translation*, each **Translation** component must be finite. For *Scale*, each **Scale** component must be finite. Image Geometry scale factors must also be greater than 0. Node geometries permit zero and negative scale factors, including reflections. For *Rotation*, **Rotation** must contain a finite nonzero XYZ axis and a finite angle in degrees. Large and small finite axes are normalized safely. Inactive transformation vectors are ignored. Image translation and scale results must have finite origins and positive finite spacing where assigned. Preflight warns about unrepresentable results with the current geometry metadata. Execution checks the final results before changing the geometry.
+For *Translation*, each **Translation** component must be finite. For *Scale*, each **Scale** component must be finite. Image Geometry scale factors must also be greater than 0. Node geometries permit zero and negative scale factors, including reflections. For *Rotation*, **Rotation** must contain a finite nonzero XYZ axis and a finite angle in degrees. Large and small finite axes are normalized safely. Inactive transformation vectors are ignored. Image translation and scale results must have finite origins and positive finite spacing where assigned. Pipeline preflight rejects invalid results computed from its current geometry metadata. This can include metadata from a stand-in geometry for an upstream filter. Execution checks the results again before changing the geometry.
 
 % Auto generated parameter table will be inserted here
 

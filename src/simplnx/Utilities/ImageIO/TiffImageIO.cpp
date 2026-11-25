@@ -354,21 +354,14 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   // X and Y resolution tags supply optional spacing metadata.
   float xRes = 0.0f;
   float yRes = 0.0f;
-  bool hasSpacing = false;
-  if(TIFFGetField(tiff, TIFFTAG_XRESOLUTION, &xRes) != 0 && xRes > 0.0f)
+  const bool hasXResolution = TIFFGetField(tiff, TIFFTAG_XRESOLUTION, &xRes) != 0;
+  const bool hasYResolution = TIFFGetField(tiff, TIFFTAG_YRESOLUTION, &yRes) != 0;
+  if(hasXResolution || hasYResolution)
   {
-    hasSpacing = true;
-  }
-  if(TIFFGetField(tiff, TIFFTAG_YRESOLUTION, &yRes) != 0 && yRes > 0.0f)
-  {
-    hasSpacing = true;
-  }
-  if(hasSpacing)
-  {
-    // Resolution is pixels per unit. Spacing is its inverse.
-    float32 xSpacing = (xRes > 0.0f) ? (1.0f / xRes) : 1.0f;
-    float32 ySpacing = (yRes > 0.0f) ? (1.0f / yRes) : 1.0f;
-    metadata.spacing = FloatVec3(xSpacing, ySpacing, 1.0f);
+    // A missing resolution uses unit spacing. Preserve a stored zero for validation.
+    const float32 xSpacing = hasXResolution ? (xRes == 0.0F ? 0.0F : 1.0F / xRes) : 1.0F;
+    const float32 ySpacing = hasYResolution ? (yRes == 0.0F ? 0.0F : 1.0F / yRes) : 1.0F;
+    metadata.spacing = FloatVec3(xSpacing, ySpacing, 1.0F);
   }
 
   return {std::move(metadata)};

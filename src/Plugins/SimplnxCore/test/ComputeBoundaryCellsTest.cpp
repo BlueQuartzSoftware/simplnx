@@ -33,8 +33,8 @@ void BuildOctantFeatureIds(DataStructure& ds)
 
   auto* imageGeom = ImageGeom::Create(ds, k_GeomName);
   imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -109,8 +109,8 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry);
   imageGeom->setDimensions({250, 250, 250});
-  imageGeom->setSpacing({1, 1, 1});
-  imageGeom->setOrigin({0, 0, 0});
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
 
   const DataPath k_WrongGeometryPath({Constants::k_ImageGeometry});
 

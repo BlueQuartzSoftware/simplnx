@@ -81,8 +81,8 @@ CoordinationLiteralFixture CreateCoordinationLiteralFixture(const usize dimX, co
   auto* imageGeomPtr = ImageGeom::Create(fixture.dataStructure, fixture.geometryPath.getTargetName());
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({dimX, dimY, dimZ});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellDataPtr = AttributeMatrix::Create(fixture.dataStructure, cellDataPath.getTargetName(), cellTupleShape, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
@@ -384,8 +384,8 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   imageGeom->setDimensions({dimX, dimY, dimZ});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);

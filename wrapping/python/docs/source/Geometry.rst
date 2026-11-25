@@ -27,6 +27,7 @@ are **ALWAYS** given in "C" order, or slowest to fastest order. The spacing valu
 the real units value of the distance that each voxel along that axis will span. The origin is also specified
 using 3 real length unit values that will locate the first voxel of the grid. The data is rastered from slowest dimension
 Z to the fastest moving dimension X in a positive direction.
+Each origin coordinate must be finite. Spacing must be finite and greater than zero on every axis.
 
 The dimensionality of images is defined exclusively by the dimensions array. If a "1" appears in the dimensions array that
 dimension is considered empty. Thus the general case of a 2D image is represented by a "1" and 2 numbers greater than "1" in
@@ -80,6 +81,7 @@ RectilinearGrid Geometry (Semi-Regular Grid)
 An *rectilinear grid*; this :ref:`Geometry<Geometry Descriptions>` is composed of *pixels* (in 2D) or *voxels* 
 (in 3D) with variable spacing along each axis. RectilinearGrid represents a geometric structure 
 that is topologically regular with variable spacing in the three coordinate directions x-y-z.
+Each axis has at least two finite bounds in strictly increasing order.
 To define a RectilinearGrid, you must specify the dimensions of the 3 axis and provide 
 three arrays of values specifying the coordinates along the x-y-z axes. The coordinate arrays are 
 specified using three DataArray objects (one for X, one for Y, one for Z).

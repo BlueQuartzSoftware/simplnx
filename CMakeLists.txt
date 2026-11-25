@@ -639,6 +639,7 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/IImageIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOEnums.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ReaderGeometryOverrides.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageStackCropping.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOFactory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOUtilities.hpp
@@ -658,6 +659,7 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp

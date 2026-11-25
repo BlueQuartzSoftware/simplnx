@@ -177,8 +177,8 @@ DataStructure CreateFixture(ChoicesParameter::ValueType plane, usize fixedCount 
   auto* image = ImageGeom::Create(dataStructure, k_ImagePath.getTargetName());
   REQUIRE(image != nullptr);
   image->setDimensions(dimensions);
-  image->setSpacing({1.0F, 1.0F, 1.0F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", tupleShape, image->getId());
   REQUIRE(cellData != nullptr);
   image->setCellData(*cellData);

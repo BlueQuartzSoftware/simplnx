@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp"
+
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -26,7 +28,7 @@ namespace DREAM3D::detail
  * metadata factory runs.
  * @return Metadata and original disk-import diagnostics.
  */
-SIMPLNX_EXPORT Result<DataStructure> ImportMetadata(const HDF5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver);
+SIMPLNX_EXPORT Result<DataStructure> ImportMetadata(const HDF5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadata& deferredImageMetadata);
 
 /**
  * @brief Materializes exact imported leaf paths from one open DREAM3D file.

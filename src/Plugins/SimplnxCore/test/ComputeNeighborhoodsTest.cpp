@@ -44,8 +44,8 @@ SyntheticFeatureData BuildSyntheticFeatures(usize numFeatures, const std::vector
 
   auto* imageGeom = ImageGeom::Create(out.dataStructure, out.imageGeomPath.getTargetName());
   imageGeom->setDimensions(dims);
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
-  imageGeom->setSpacing(spacing);
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
 
   auto* featureAM = AttributeMatrix::Create(out.dataStructure, out.featureAMPath.getTargetName(), std::vector<usize>{numFeatures}, imageGeom->getId());
 

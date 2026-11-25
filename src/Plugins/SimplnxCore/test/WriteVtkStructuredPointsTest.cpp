@@ -71,8 +71,8 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Binary correctness", "[S
   auto* imageGeom = ImageGeom::Create(dataStructure, geomName);
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  imageGeom->setOrigin({-1.0F, 2.0F, 3.0F});
-  imageGeom->setSpacing({0.5F, 1.5F, 2.0F});
+  REQUIRE(imageGeom->setOrigin({-1.0F, 2.0F, 3.0F}).valid());
+  REQUIRE(imageGeom->setSpacing({0.5F, 1.5F, 2.0F}).valid());
 
   const ShapeType tupleShape = {k_DimZ, k_DimY, k_DimX};
   auto* cellData = AttributeMatrix::Create(dataStructure, cellDataName, tupleShape, imageGeom->getId());

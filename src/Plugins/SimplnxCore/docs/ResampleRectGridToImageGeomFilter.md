@@ -24,8 +24,10 @@ If a single Image Geometry cell covers multiple Rectilinear Grid cells, the filt
 
 The user selects:
 
-- The target Image Geometry's dimensions, origin, and spacing.
+- The target Image Geometry's dimensions in voxels. Use a positive count on each axis.
 - Which cell-level Attribute Arrays from the rectilinear grid should be copied onto the new geometry.
+
+The filter takes the output origin from the first bound on each axis. It divides the span of that axis by the requested voxel count to get the spacing. Execution reports an error if the spacing is nonfinite or less than or equal to zero.
 
 ### Required Input Sources
 

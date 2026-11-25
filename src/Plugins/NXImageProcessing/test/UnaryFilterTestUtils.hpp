@@ -36,8 +36,8 @@ inline DataPath BuildRampImage(DataStructure& ds, usize dim, double startValue =
   const ShapeType cellShape = {dim, dim, dim};
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({dim, dim, dim});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -80,8 +80,8 @@ inline DataPath BuildScalarValuesImage(DataStructure& ds, const std::vector<T>& 
   const ShapeType cellShape = {1, 1, n};
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({n, 1, 1});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);

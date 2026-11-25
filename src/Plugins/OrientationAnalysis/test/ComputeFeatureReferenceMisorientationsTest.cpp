@@ -85,8 +85,8 @@ inline FixtureData CreateScaffold(const usize dimX, const usize dimY, const usiz
 {
   FixtureData td;
   td.imageGeom = ImageGeom::Create(td.ds, k_GeomName);
-  td.imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  td.imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(td.imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.imageGeom->setDimensions({dimX, dimY, dimZ});
   const ShapeType cellTupleShape{dimZ, dimY, dimX};
   const usize totalVoxels = dimX * dimY * dimZ;

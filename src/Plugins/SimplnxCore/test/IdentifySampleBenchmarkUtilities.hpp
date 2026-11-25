@@ -189,8 +189,8 @@ DataStructure CreateBenchmarkFixture()
   auto* image = ImageGeom::Create(data, IdentifySampleBatchTest::k_ImagePath.getTargetName());
   REQUIRE(image != nullptr);
   image->setDimensions({k_Dimension, k_Dimension, k_Dimension});
-  image->setSpacing({1.0F, 1.0F, 1.0F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cells = AttributeMatrix::Create(data, "CellData", {k_Dimension, k_Dimension, k_Dimension}, image->getId());
   REQUIRE(cells != nullptr);
   image->setCellData(*cells);

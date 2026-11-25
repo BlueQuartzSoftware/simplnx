@@ -1,5 +1,6 @@
 #include "Dream3dIO.hpp"
 #include "Dream3dIOInternal.hpp"
+#include "ImageMetadataImport.hpp"
 #include "simplnx/Common/Result.hpp"
 #include <fmt/format.h>
 
@@ -31,6 +32,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/NeighborListIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/RectGridGeomIO.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
@@ -1941,7 +1943,7 @@ Result<DataObject*> readLegacyTetrahedralGeom(DataStructure& dataStructure, cons
   return result;
 }
 
-Result<DataObject*> readLegacyRectGridGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight)
+Result<DataObject*> readLegacyRectGridGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight, bool deferBoundsValidation)
 {
   auto geom = RectGridGeom::Create(dataStructure, name);
   if(geom == nullptr)
@@ -1981,19 +1983,22 @@ Result<DataObject*> readLegacyRectGridGeom(DataStructure& dataStructure, const n
   }
   PrependWarnings(zBoundsArray, warnings);
 
-  // Use ID setters directly: the function returns DataObject* so errors cannot be propagated,
-  // and legacy files may predate the monotonicity requirement.
-  if(xBoundsArray.value() != nullptr)
+  if(deferBoundsValidation)
   {
-    geom->setXBoundsId(xBoundsArray.value()->getId());
+    // Discovery keeps the references so the selected geometry can be checked before publication.
+    const auto boundsId = [](const Float32Array* boundsPtr) -> DataObject::OptionalId { return boundsPtr == nullptr ? DataObject::OptionalId{} : boundsPtr->getId(); };
+    geom->setXBoundsId(boundsId(xBoundsArray.value()));
+    geom->setYBoundsId(boundsId(yBoundsArray.value()));
+    geom->setZBoundsId(boundsId(zBoundsArray.value()));
   }
-  if(yBoundsArray.value() != nullptr)
+  else if(auto boundsResult = geom->setBounds(xBoundsArray.value(), yBoundsArray.value(), zBoundsArray.value()); boundsResult.invalid())
   {
-    geom->setYBoundsId(yBoundsArray.value()->getId());
-  }
-  if(zBoundsArray.value() != nullptr)
-  {
-    geom->setZBoundsId(zBoundsArray.value()->getId());
+    for(auto& error : boundsResult.errors())
+    {
+      error.message = fmt::format("Cannot read legacy rectilinear grid geometry '{}' from '{}': {}", name, geomGroup.getFilePath().string(), error.message);
+    }
+    PrependWarnings(boundsResult, zBoundsArray.warnings());
+    return ConvertInvalidResult<DataObject*>(std::move(boundsResult));
   }
 
   Result<DataObject*> result{geom};
@@ -2094,14 +2099,13 @@ Result<DataObject*> readLegacyEdgeGeom(DataStructure& dataStructure, const nx::c
   return result;
 }
 
-Result<DataObject*> readLegacyImageGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name)
+Result<DataObject*> readLegacyImageGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, DREAM3D::DeferredImageMetadata* deferredImageMetadata)
 {
   auto geom = ImageGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502687, fmt::format("Failed to create legacy Image Geometry '{}'.", name));
   }
-  auto image = dynamic_cast<ImageGeom*>(geom);
 
   readGenericGeomDims(geom, geomGroup);
 
@@ -2109,28 +2113,41 @@ Result<DataObject*> readLegacyImageGeom(DataStructure& dataStructure, const nx::
   {
     auto dimsDataset = geomGroup.openDataset("DIMENSIONS");
     auto dims = dimsDataset.readAsVector<int64>();
-    image->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
+    if(dims.size() != 3)
+    {
+      constexpr int32 k_InvalidDimensionsCount = -502690;
+      return MakeErrorResult<DataObject*>(k_InvalidDimensionsCount,
+                                          fmt::format("Legacy image geometry '{}' in '{}' requires three dimensions values. Found {}.", name, geomGroup.getFilePath().string(), dims.size()));
+    }
+    geom->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
   }
 
-  // ORIGIN array
-  {
-    auto originDataset = geomGroup.openDataset("ORIGIN");
-    auto origin = originDataset.readAsVector<float32>();
-    image->setOrigin(FloatVec3(origin[0], origin[1], origin[2]));
-  }
+  const auto readMetadata = [&]() -> Result<DREAM3D::ImageGeometryMetadata> {
+    const auto origin = geomGroup.openDataset("ORIGIN").readAsVector<float32>();
+    if(origin.size() != 3)
+    {
+      constexpr int32 k_InvalidOriginCount = -502691;
+      return MakeErrorResult<DREAM3D::ImageGeometryMetadata>(
+          k_InvalidOriginCount, fmt::format("Legacy image geometry '{}' in '{}' requires three origin values. Found {}.", name, geomGroup.getFilePath().string(), origin.size()));
+    }
 
-  // SPACING array
-  {
-    auto spacingDataset = geomGroup.openDataset("SPACING");
-    auto spacing = spacingDataset.readAsVector<float32>();
-    image->setSpacing(FloatVec3(spacing[0], spacing[1], spacing[2]));
-  }
+    const auto spacing = geomGroup.openDataset("SPACING").readAsVector<float32>();
+    if(spacing.size() != 3)
+    {
+      constexpr int32 k_InvalidSpacingCount = -502692;
+      return MakeErrorResult<DREAM3D::ImageGeometryMetadata>(
+          k_InvalidSpacingCount, fmt::format("Legacy image geometry '{}' in '{}' requires three spacing values. Found {}.", name, geomGroup.getFilePath().string(), spacing.size()));
+    }
 
-  return {image};
+    return {DREAM3D::ImageGeometryMetadata{FloatVec3(origin), FloatVec3(spacing)}};
+  };
+  auto metadata = DREAM3D::detail::ImportImageMetadata(*geom, geomGroup.getFilePath(), readMetadata(), deferredImageMetadata);
+  return ConvertResultTo<DataObject*>(std::move(metadata), geom);
 }
 // End legacy Geometry importing
 
-Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& dcGroup, bool preflight = false, bool importChildren = true)
+Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& dcGroup, bool preflight = false, bool importChildren = true,
+                                 DREAM3D::DeferredImageMetadata* deferredImageMetadata = nullptr)
 {
   DataObject* container = nullptr;
   Result<DataObject*> containerResult;
@@ -2151,7 +2168,7 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
     geomName = std::move(geomNameResult.value());
     if(geomName == Legacy::Type::ImageGeom)
     {
-      containerResult = readLegacyImageGeom(dataStructure, geomGroup, dcName);
+      containerResult = readLegacyImageGeom(dataStructure, geomGroup, dcName, deferredImageMetadata);
     }
     else if(geomName == Legacy::Type::EdgeGeom)
     {
@@ -2167,7 +2184,7 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
     }
     else if(geomName == Legacy::Type::RectGridGeom)
     {
-      containerResult = readLegacyRectGridGeom(dataStructure, geomGroup, dcName, preflight);
+      containerResult = readLegacyRectGridGeom(dataStructure, geomGroup, dcName, preflight, deferredImageMetadata != nullptr);
     }
     else if(geomName == Legacy::Type::TetrahedralGeom)
     {
@@ -2478,7 +2495,8 @@ Result<> FinishImportingLegacyDataObject(DataStructure& dataStructure, const nx:
   }
 }
 
-Result<DataStructure> ImportLegacyDataStructure(const nx::core::HDF5::FileIO& fileReader, bool preflight, std::shared_ptr<const IDataStoreFormatResolver> resolver)
+Result<DataStructure> ImportLegacyDataStructure(const nx::core::HDF5::FileIO& fileReader, bool preflight, std::shared_ptr<const IDataStoreFormatResolver> resolver,
+                                                DREAM3D::DeferredImageMetadata* deferredImageMetadata = nullptr)
 {
   DataStructure dataStructure;
   dataStructure.setFormatResolver(std::move(resolver));
@@ -2491,7 +2509,7 @@ Result<DataStructure> ImportLegacyDataStructure(const nx::core::HDF5::FileIO& fi
   for(const auto& dcName : dcNames)
   {
     auto dcGroup = dcaGroup.openGroup(dcName);
-    importResults.push_back(readLegacyDataContainer(dataStructure, dcGroup, preflight));
+    importResults.push_back(readLegacyDataContainer(dataStructure, dcGroup, preflight, true, deferredImageMetadata));
   }
 
   auto result = nx::core::MergeResults(importResults);
@@ -2503,16 +2521,16 @@ Result<DataStructure> ImportLegacyDataStructure(const nx::core::HDF5::FileIO& fi
   return ImportLegacyDataStructure(fileReader, preflight, {});
 }
 
-Result<DataStructure> DREAM3D::detail::ImportMetadata(const nx::core::HDF5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver)
+Result<DataStructure> DREAM3D::detail::ImportMetadata(const nx::core::HDF5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadata& deferredImageMetadata)
 {
   const auto version = GetFileVersion(fileReader);
   if(version == k_CurrentFileVersion)
   {
-    return HDF5::DataStructureReader::ReadFile(fileReader, true, std::move(resolver));
+    return HDF5::DataStructureReader::ReadFile(fileReader, true, std::move(resolver), &deferredImageMetadata);
   }
   if(version == k_LegacyFileVersion)
   {
-    return ImportLegacyDataStructure(fileReader, true, std::move(resolver));
+    return ImportLegacyDataStructure(fileReader, true, std::move(resolver), &deferredImageMetadata);
   }
   return MakeErrorResult<DataStructure>(k_InvalidDataStructureVersion, fmt::format("Cannot import metadata from '{}': file version '{}' is not supported. Expected '{}' or '{}'.",
                                                                                    fileReader.getFilePath().string(), version, k_CurrentFileVersion, k_LegacyFileVersion));
@@ -3387,6 +3405,11 @@ Result<DataStructure> LoadDataStructureWithHandler(const fs::path& filePath, con
     }
   }
 
+  result = MergeResults(std::move(result), HDF5::RectGridGeomIO::ValidateImportedBounds(dataStructure, filePath));
+  if(result.invalid())
+  {
+    return ConvertInvalidResult<DataStructure>(std::move(result));
+  }
   return ConvertResultTo<DataStructure>(std::move(result), std::move(dataStructure));
 }
 } // namespace

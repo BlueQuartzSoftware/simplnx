@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -24,6 +26,7 @@ struct NXIMAGEPROCESSING_EXPORT ReadMhaFileInputValues
   std::string CellAttributeMatrixName;
   std::string ImageDataArrayName;
   CropGeometryParameter::ValueType CroppingOptions;
+  ImageIO::GeometryOverrides GeometryOverrides;
 };
 
 /**

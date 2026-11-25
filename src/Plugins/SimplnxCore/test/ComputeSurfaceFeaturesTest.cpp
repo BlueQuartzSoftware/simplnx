@@ -137,8 +137,8 @@ void BuildBlockFeatureIds(DataStructure& ds)
 
   auto* imageGeom = ImageGeom::Create(ds, k_BenchGeomName);
   imageGeom->setDimensions({k_BenchDim, k_BenchDim, k_BenchDim});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
