@@ -271,7 +271,13 @@ unit = mm
     DataStructure ds;
     const auto strict = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-    CHECK(strict.outputActions.errors().front().code == -91503);
+    const auto& diagnostic = strict.outputActions.errors().front();
+    INFO(diagnostic.message);
+    CHECK(diagnostic.code == -91503);
+    CHECK(diagnostic.message.find(header.string()) != std::string::npos);
+    CHECK(diagnostic.message.find("resolution") != std::string::npos);
+    CHECK(diagnostic.message.find("1e40") != std::string::npos);
+    CHECK(diagnostic.message.find("Enable 'Set Spacing' to use your own values.") != std::string::npos);
   }
   else
   {

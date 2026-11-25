@@ -729,8 +729,8 @@ DataStructure CreatePadFeatureFixture(bool addFeatureAm, bool addEnsembleAm)
   auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({2, 2, 2});
-  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(cellAmPtr != nullptr);
   geomPtr->setCellData(*cellAmPtr);
@@ -924,8 +924,8 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Zero padding on enabled axes preserves
   auto* geom = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geom != nullptr);
   geom->setDimensions({2, 2, 1});
-  geom->setOrigin({0.0F, 0.0F, 0.0F});
-  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 2, 2}, geom->getId());
   REQUIRE(cellAm != nullptr);
   geom->setCellData(*cellAm);

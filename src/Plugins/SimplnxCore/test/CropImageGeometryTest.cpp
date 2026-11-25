@@ -276,8 +276,8 @@ DataStructure CreateFeatureCropFixture()
   auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({4, 4, 1});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 4, 4}, imageGeom->getId());
   REQUIRE(cellData != nullptr);

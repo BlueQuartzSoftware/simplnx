@@ -1792,8 +1792,8 @@ DataStructure CreateTransformFeatureFixture(bool node = false)
     auto* image = ImageGeom::Create(ds, "Geometry");
     REQUIRE(image != nullptr);
     image->setDimensions({3, 1, 1});
-    image->setOrigin({0, 0, 0});
-    image->setSpacing({1, 1, 1});
+    REQUIRE(image->setOrigin({0, 0, 0}).valid());
+    REQUIRE(image->setSpacing({1, 1, 1}).valid());
     geom = image;
   }
   auto* elements = AttributeMatrix::Create(ds, "Element Data", node ? ShapeType{3} : ShapeType{1, 1, 3}, geom->getId());

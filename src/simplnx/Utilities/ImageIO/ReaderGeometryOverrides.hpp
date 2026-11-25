@@ -11,6 +11,8 @@
 
 #include <filesystem>
 #include <optional>
+#include <string>
+#include <string_view>
 
 namespace nx::core::ImageIO
 {
@@ -18,6 +20,24 @@ inline constexpr StringLiteral k_ChangeOrigin = "change_origin";
 inline constexpr StringLiteral k_Origin = "origin";
 inline constexpr StringLiteral k_ChangeSpacing = "change_spacing";
 inline constexpr StringLiteral k_Spacing = "spacing";
+inline constexpr StringLiteral k_SetOriginLabel = "Set Origin";
+inline constexpr StringLiteral k_SetSpacingLabel = "Set Spacing";
+
+/**
+ * @brief Formats a stored geometry value error with the settings that replace it.
+ * @param filePath Path to the input file.
+ * @param field Header field or geometry value that failed validation.
+ * @param detail Diagnostic with the offending value.
+ * @param setting Label of the setting that replaces the value.
+ * @param additionalSetting Label of a second setting if it also uses the value.
+ * @return A diagnostic that names the input file and the settings to enable.
+ */
+[[nodiscard]] inline std::string FormatReaderValueError(const std::filesystem::path& filePath, std::string_view field, std::string_view detail, std::string_view setting,
+                                                        std::string_view additionalSetting = {})
+{
+  const auto settings = additionalSetting.empty() ? fmt::format("'{}'", setting) : fmt::format("'{}' and '{}'", setting, additionalSetting);
+  return fmt::format("Input file '{}' has invalid {} values. Error Message: {} Enable {} to use your own values.", filePath.string(), field, detail, settings);
+}
 
 /**
  * @brief Adds the linked Set Origin and Set Spacing parameters.
@@ -27,9 +47,9 @@ inline void InsertGeometryOverrideParameters(Parameters& params)
 {
   using V = VectorFloat32Parameter::ValueType;
   using Names = VectorFloat32Parameter::NamesType;
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin, "Set Origin", "Use the supplied origin for the imported image.", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin, k_SetOriginLabel, "Use the supplied origin for the imported image.", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin, "Origin (Physical Units)", "Origin coordinates in X, Y, Z order.", V{0.0F, 0.0F, 0.0F}, Names{"X", "Y", "Z"}));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing, "Set Spacing", "Use the supplied spacing for the imported image.", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing, k_SetSpacingLabel, "Use the supplied spacing for the imported image.", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing, "Spacing (Physical Units)", "Positive spacing in X, Y, Z order.", V{1.0F, 1.0F, 1.0F}, Names{"X", "Y", "Z"}));
   params.linkParameters(k_ChangeOrigin, k_Origin, true);
   params.linkParameters(k_ChangeSpacing, k_Spacing, true);
@@ -49,15 +69,14 @@ inline void InsertGeometryOverrideParameters(Parameters& params)
   if(result.invalid())
   {
     auto& error = result.errors().front();
-    const auto label = isSpacing ? "Set Spacing" : "Set Origin";
+    const auto label = isSpacing ? k_SetSpacingLabel : k_SetOriginLabel;
     if(overridden)
     {
-      error.message = fmt::format("'{}' has invalid values for input file '{}'. Error Message: {}", label, filePath.string(), error.message);
+      error.message = fmt::format("'{}' has invalid values for input file '{}'. Error Message: {}", label.view(), filePath.string(), error.message);
     }
     else
     {
-      error.message =
-          fmt::format("Input file '{}' has invalid {} values. Error Message: {} Enable '{}' to use your own values.", filePath.string(), isSpacing ? "spacing" : "origin", error.message, label);
+      error.message = FormatReaderValueError(filePath, isSpacing ? "spacing" : "origin", error.message, label);
     }
   }
   return result;

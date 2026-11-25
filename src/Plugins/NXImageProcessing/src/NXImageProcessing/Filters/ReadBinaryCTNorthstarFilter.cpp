@@ -1,7 +1,5 @@
 #include "ReadBinaryCTNorthstarFilter.hpp"
 
-#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
-
 #include "NXImageProcessing/Filters/Algorithms/ReadBinaryCTNorthstar.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
@@ -13,12 +11,15 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <array>
+#include <cmath>
 #include <fstream>
+#include <limits>
 
 using namespace nx::core;
 
@@ -35,6 +36,7 @@ struct ReadBinaryCTNorthstarFilterCache
 
 std::atomic_int32_t s_InstanceId = 0;
 std::map<int32, ReadBinaryCTNorthstarFilterCache> s_HeaderCache;
+constexpr std::array<char, 3> k_Axes = {'X', 'Y', 'Z'};
 
 // -----------------------------------------------------------------------------
 std::string GetNextLine(std::ifstream& inStream, usize& lineCount)
@@ -60,12 +62,13 @@ std::string GenerateGeometryInfoString(const ReadBinaryCTNorthstarFilter::ImageG
   FloatVec3 origin = info.Origin;
   FloatVec3 spacing = info.Spacing;
   std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnit);
-  std::string desc = fmt::format("X Range: {} to {} (Delta: {} {}) 0-{} Voxels\n", origin[0], origin[0] + (static_cast<float32>(dims[0]) * spacing[0]), static_cast<float32>(dims[0]) * spacing[0],
-                                 lengthUnitStr, dims[0] - 1);
-  desc.append(fmt::format("Y Range: {} to {} (Delta: {} {}) 0-{} Voxels\n", origin[1], origin[1] + (static_cast<float32>(dims[1]) * spacing[1]), static_cast<float32>(dims[1]) * spacing[1],
-                          lengthUnitStr, dims[1] - 1));
-  desc.append(fmt::format("Z Range: {} to {} (Delta: {} {}) 0-{} Voxels\n", origin[2], origin[2] + (static_cast<float32>(dims[2]) * spacing[2]), static_cast<float32>(dims[2]) * spacing[2],
-                          lengthUnitStr, dims[2] - 1));
+  std::string desc;
+  for(usize axis = 0; axis < k_Axes.size(); ++axis)
+  {
+    const float64 extent = static_cast<float64>(dims[axis]) * spacing[axis];
+    const float64 end = static_cast<float64>(origin[axis]) + extent;
+    desc.append(fmt::format("{} Range: {} to {:.9g} (Delta: {:.9g} {}) 0-{} Voxels\n", k_Axes[axis], origin[axis], end, extent, lengthUnitStr, dims[axis] - 1));
+  }
   return desc;
 }
 
@@ -142,7 +145,6 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
   using Location = std::pair<std::vector<float32>, std::vector<float32>>;
   Location location{{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
   constexpr std::array<usize, 3> k_AxisOrder{1, 2, 0};
-  constexpr std::array<char, 3> k_Axes{'X', 'Y', 'Z'};
   for(auto tokens = ParseNextLine(inStream, ' ', lineCount);; tokens = ParseNextLine(inStream, ' ', lineCount))
   {
     if(!tokens.empty() && tokens[0] == "</Location>")
@@ -169,8 +171,11 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
       if(value.invalid())
       {
         const auto& error = value.errors().front();
-        return MakeErrorResult<Location>(error.code, fmt::format("Error reading {} {} coordinate in 'Location' section of Binary CT Northstar file '{}' at line {}: {}", isMin ? "minimum" : "maximum",
-                                                                 k_Axes[axis], headerFilePath.string(), lineCount, error.message));
+        const auto field = fmt::format("{} {} coordinate", isMin ? "minimum" : "maximum", k_Axes[axis]);
+        const auto detail = fmt::format("Value '{}' at line {} in the 'Location' section could not be converted to float32.", tokens[i + 1], lineCount);
+        const auto message = isMin ? ImageIO::FormatReaderValueError(headerFilePath, field, detail, ImageIO::k_SetOriginLabel, ImageIO::k_SetSpacingLabel) :
+                                     ImageIO::FormatReaderValueError(headerFilePath, field, detail, ImageIO::k_SetSpacingLabel);
+        return MakeErrorResult<Location>(error.code, message);
       }
       coordinates[axis] = value.value();
     }
@@ -275,13 +280,20 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
     if(voxels[i] == 0)
     {
       constexpr int32 k_ZeroVoxelCount = -38741;
-      constexpr std::array<char, 3> k_Axes = {'X', 'Y', 'Z'};
       return MakeErrorResult<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(
           k_ZeroVoxelCount, fmt::format("The {} voxel count in '{}' must be greater than zero. Received {}.", k_Axes[i], headerFilePath.string(), voxels[i]));
     }
     if(readMax)
     {
-      spacing[i] = (maxLocation[i] - minLocation[i]) / static_cast<float32>(voxels[i]);
+      const float64 extent = static_cast<float64>(maxLocation[i]) - static_cast<float64>(minLocation[i]);
+      const float64 spacingValue = extent / static_cast<float64>(voxels[i]);
+      if(std::isfinite(spacingValue) && (spacingValue < std::numeric_limits<float32>::lowest() || spacingValue > std::numeric_limits<float32>::max()))
+      {
+        return MakeErrorResult<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(
+            ImageGeom::k_InvalidSpacing,
+            ImageIO::FormatReaderValueError(headerFilePath, "spacing", fmt::format("Computed {} spacing ({}) is outside the float32 range.", k_Axes[i], spacingValue), ImageIO::k_SetSpacingLabel));
+      }
+      spacing[i] = static_cast<float32>(spacingValue);
     }
   }
 
@@ -406,8 +418,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   auto result = ReadHeaderMetaData(pInputHeaderFileValue, overrides);
   if(result.invalid())
   {
-    const Error& err = result.errors()[0];
-    return {MakeErrorResult<OutputActions>(err.code, fmt::format("Error reading input header file '{}': {}", pInputHeaderFileValue.string(), err.message))};
+    return {ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   ImageGeometryInfo geometryInfo = result.value().second;

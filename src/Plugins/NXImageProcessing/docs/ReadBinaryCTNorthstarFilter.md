@@ -24,7 +24,11 @@ None — this filter reads directly from a `.nsihdr`/`.nsidat` file set on disk.
 
 ### Geometry Metadata Overrides
 
-**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The header minimum defines the origin. The minimum and maximum together define the spacing. If a maximum coordinate cannot be converted to float32, enable **Set Spacing**. If a minimum coordinate cannot be converted, enable both **Set Origin** and **Set Spacing**. The filter applies the overrides before it calculates a cropped volume origin. Each voxel count must be greater than zero.
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero.
+
+The header minimum defines the origin. The filter divides the range from the minimum to the maximum on each axis by that axis's voxel count to get the spacing. Each voxel count must be greater than zero.
+
+If a coordinate cannot be converted to float32, the error gives the header path, coordinate, value, and settings to enable. Enable **Set Spacing** if the maximum coordinate cannot be converted or the calculated spacing is outside the float32 range. Enable both **Set Origin** and **Set Spacing** if the minimum coordinate cannot be converted. The filter applies the overrides before it calculates a cropped volume origin.
 
 % Auto generated parameter table will be inserted here
 

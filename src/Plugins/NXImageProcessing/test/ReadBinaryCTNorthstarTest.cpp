@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <string_view>
 
 #include <nonstd/span.hpp>
 
@@ -50,18 +51,18 @@ const std::string k_BenchmarkDataName = "ReadBinaryCTNorthstarOocBenchmark.nsida
 const fs::path k_BenchmarkHeaderPath = k_TestDirPath / k_BenchmarkHeaderName;
 const fs::path k_BenchmarkDataPath = k_TestDirPath / k_BenchmarkDataName;
 
-void WriteNsiHeaderFile(const fs::path& nsiHeaderPath, const std::string& file1Name, const std::string& file2Name)
+void WriteNsiHeaderFile(const fs::path& nsiHeaderPath, const std::string& file1Name, const std::string& file2Name, usize voxelXDim = xDim, std::string_view minX = "0", std::string_view maxX = {})
 {
   std::ofstream nsiHeaderStream(nsiHeaderPath.string());
   REQUIRE(nsiHeaderStream.good() == true);
 
   nsiHeaderStream << "<North Star Imaging Volume Header>\n";
-  nsiHeaderStream << fmt::format("  <Voxels> {} {} {}\n", yDim, zDim, xDim);
+  nsiHeaderStream << fmt::format("  <Voxels> {} {} {}\n", yDim, zDim, voxelXDim);
   nsiHeaderStream << "  <Location>\n";
-  nsiHeaderStream << "    <Min> 0 0 0\n";
-  nsiHeaderStream << fmt::format("    <Max> {} {} {}\n", yDim, zDim, xDim);
+  nsiHeaderStream << fmt::format("    <Min> 0 0 {}\n", minX);
+  nsiHeaderStream << fmt::format("    <Max> {} {} {}\n", yDim, zDim, maxX.empty() ? std::to_string(voxelXDim) : std::string(maxX));
   nsiHeaderStream << "  </Location>\n";
-  nsiHeaderStream << fmt::format("  <DataRange> 0 {}\n", (xDim * yDim * zDim) - 1);
+  nsiHeaderStream << fmt::format("  <DataRange> 0 {}\n", (voxelXDim * yDim * zDim) - 1);
   nsiHeaderStream << "  <Files>\n";
   nsiHeaderStream << fmt::format("    <Name>{}\n", file1Name);
   nsiHeaderStream << fmt::format("    <NbSlices> {}\n", file1ZCount);
@@ -484,6 +485,41 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: override spacing befo
   UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), {6, 3, 24}, {2, 3, 4});
 }
 
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: spacing for a wide location range", "[NXImageProcessing][ReadBinaryCTNorthstarFilter]")
+{
+  const ReadBinaryCTNorthstarFilter filter;
+  DataStructure ds;
+  Arguments args;
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, k_NsiHeaderPath);
+  const DataPath geometryPath({"CT Image Geometry"});
+
+  SECTION("Four voxels have representable spacing")
+  {
+    WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2, 4, "-2e38", "2e38");
+    WriteNsiBinaryDataFiles<4, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
+    const auto preflight = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const auto volumeInfo = std::ranges::find(preflight.outputValues, "Original Volume", &IFilter::PreflightValue::name);
+    REQUIRE(volumeInfo != preflight.outputValues.end());
+    CHECK(volumeInfo->value.find("inf") == std::string::npos);
+    const auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    // A span of 4e38 over four X voxels gives 1e38 per voxel.
+    UnitTest::RequireReaderGeometry(ds, geometryPath, {-2e38F, 0, 0}, {1e38F, 1, 1});
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+
+  SECTION("One voxel needs a spacing override")
+  {
+    WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2, 1, "-2e38", "2e38");
+    WriteNsiBinaryDataFiles<1, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
+    UnitTest::RequireBadReaderMetadata(filter, args, k_NsiHeaderPath, true);
+    args.insertOrAssign(ImageIO::k_ChangeSpacing, true);
+    args.insertOrAssign(ImageIO::k_Spacing, std::vector<float32>{2, 3, 4});
+    UnitTest::RequireReaderGeometryExecution(filter, args, geometryPath, {-2e38F, 0, 0}, {2, 3, 4});
+  }
+}
+
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: overrides out-of-range location coordinates", "[NXImageProcessing][ReadBinaryCTNorthstarFilter]")
 {
   const bool badMin = GENERATE(false, true);
@@ -519,7 +555,13 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: overrides out-of-rang
     DataStructure ds;
     const auto strict = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-    CHECK(strict.outputActions.errors().front().code == -10352);
+    const auto& diagnostic = strict.outputActions.errors().front();
+    INFO(diagnostic.message);
+    CHECK(diagnostic.code == -10352);
+    CHECK(diagnostic.message.find(k_NsiHeaderPath.string()) != std::string::npos);
+    CHECK(diagnostic.message.find(badMin ? "minimum X coordinate" : "maximum X coordinate") != std::string::npos);
+    CHECK(diagnostic.message.find("1e40") != std::string::npos);
+    CHECK(diagnostic.message.find(badMin ? "Enable 'Set Origin' and 'Set Spacing' to use your own values." : "Enable 'Set Spacing' to use your own values.") != std::string::npos);
   }
   args.insertOrAssign(ImageIO::k_ChangeOrigin, badMin);
   args.insertOrAssign(ImageIO::k_ChangeSpacing, true);

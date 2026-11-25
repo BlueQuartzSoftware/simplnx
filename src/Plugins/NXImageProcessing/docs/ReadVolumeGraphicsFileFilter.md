@@ -31,7 +31,9 @@ None — this filter reads directly from a `.vgi`/`.vol` file pair on disk.
 
 ### Geometry Metadata Overrides
 
-**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The default origin is zero. Use **Set Spacing** when the resolution is missing, invalid, or outside the float32 range.
+**Set Origin** replaces the default origin of (0, 0, 0) with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero.
+
+If the reader cannot convert a resolution value to float32, the error gives the header path, field name, and value. It directs you to enable **Set Spacing**. Use this setting when the resolution is missing, invalid, or outside the float32 range.
 
 % Auto generated parameter table will be inserted here
 

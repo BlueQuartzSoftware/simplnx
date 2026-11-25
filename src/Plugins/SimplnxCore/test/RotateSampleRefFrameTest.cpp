@@ -938,8 +938,8 @@ DataStructure CreateFeatureRotateFixture()
   auto* geom = ImageGeom::Create(ds, "Input");
   REQUIRE(geom != nullptr);
   geom->setDimensions({2, 2, 1});
-  geom->setSpacing({1.0F, 1.0F, 1.0F});
-  geom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cells = AttributeMatrix::Create(ds, k_CellDataName, {1, 2, 2}, geom->getId());
   REQUIRE(cells != nullptr);
   geom->setCellData(*cells);

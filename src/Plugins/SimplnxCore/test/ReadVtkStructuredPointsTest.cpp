@@ -587,7 +587,13 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: overrides out-of-range st
   DataStructure ds;
   const auto strict = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-  CHECK(strict.outputActions.errors().front().code == -10352);
+  const auto& diagnostic = strict.outputActions.errors().front();
+  INFO(diagnostic.message);
+  CHECK(diagnostic.code == -10352);
+  CHECK(diagnostic.message.find(file.string()) != std::string::npos);
+  CHECK(diagnostic.message.find(badSpacing ? "X spacing" : "X origin") != std::string::npos);
+  CHECK(diagnostic.message.find("1e40") != std::string::npos);
+  CHECK(diagnostic.message.find(badSpacing ? "Enable 'Set Spacing' to use your own values." : "Enable 'Set Origin' to use your own values.") != std::string::npos);
 
   args.insertOrAssign(key, true);
   args.insertOrAssign(badSpacing ? ImageIO::k_ChangeOrigin : ImageIO::k_ChangeSpacing, false);

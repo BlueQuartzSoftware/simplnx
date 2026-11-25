@@ -3,6 +3,7 @@
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -777,7 +778,9 @@ Result<> ReadVtkStructuredPoints::readFile()
       auto value = StringInterpretationUtilities::Convert<float32>(tokens[axis + 1]);
       if(value.invalid())
       {
-        return ConvertResult(std::move(value));
+        const auto& error = value.errors().front();
+        return MakeErrorResult(error.code, ImageIO::FormatReaderValueError(m_InputValues->InputFile, fmt::format("{} spacing", k_AxisNames[axis]),
+                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), ImageIO::k_SetSpacingLabel));
       }
       spacing[axis] = value.value();
     }
@@ -810,7 +813,9 @@ Result<> ReadVtkStructuredPoints::readFile()
       auto value = StringInterpretationUtilities::Convert<float32>(tokens[axis + 1]);
       if(value.invalid())
       {
-        return ConvertResult(std::move(value));
+        const auto& error = value.errors().front();
+        return MakeErrorResult(error.code, ImageIO::FormatReaderValueError(m_InputValues->InputFile, fmt::format("{} origin", k_AxisNames[axis]),
+                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), ImageIO::k_SetOriginLabel));
       }
       origin[axis] = value.value();
     }

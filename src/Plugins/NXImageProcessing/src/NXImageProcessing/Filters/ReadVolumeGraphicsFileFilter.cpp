@@ -1,7 +1,5 @@
 #include "ReadVolumeGraphicsFileFilter.hpp"
 
-#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
-
 #include "NXImageProcessing/Filters/Algorithms/ReadVolumeGraphicsFile.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -10,6 +8,7 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -210,7 +209,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
   return {fileBlock};
 }
 
-Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCount, bool replaceSpacing)
+Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, const fs::path& headerPath, usize& lineCount, bool replaceSpacing)
 {
   GeometryBlock block;
   std::string buf;
@@ -246,7 +245,13 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
       auto result = ParseArray<float32, ParseFloatVec3>(tokens, lineCount);
       if(result.invalid())
       {
-        if(tokens[0] != k_Resolution || !replaceSpacing || result.errors().front().code != k_VgiParseError)
+        auto& error = result.errors().front();
+        const bool isResolutionConversionError = tokens[0] == k_Resolution && error.code == k_VgiParseError;
+        if(isResolutionConversionError && !replaceSpacing)
+        {
+          error.message = ImageIO::FormatReaderValueError(headerPath, k_Resolution, error.message, ImageIO::k_SetSpacingLabel);
+        }
+        if(!isResolutionConversionError || !replaceSpacing)
         {
           return ConvertInvalidResult<GeometryBlock>(std::move(result));
         }
@@ -283,7 +288,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
 }
 
 // -----------------------------------------------------------------------------
-Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const std::string& vgHeaderFilePath, bool replaceSpacing)
+Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const fs::path& vgHeaderFilePath, bool replaceSpacing)
 {
   std::ifstream vgHeaderFile(vgHeaderFilePath);
   usize lineCount = 0;
@@ -309,7 +314,7 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
 
     else if(buf == k_GeometryBlock)
     {
-      auto result = ParseGeometryBlock(vgHeaderFile, lineCount, replaceSpacing);
+      auto result = ParseGeometryBlock(vgHeaderFile, vgHeaderFilePath, lineCount, replaceSpacing);
       if(result.invalid())
       {
         return ConvertResultTo<ReadVolumeGraphicsFileFilter::HeaderMetadata>(ConvertResult(std::move(result)), {});
@@ -320,9 +325,9 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
 
   if(fileBlock.Datatype != "float" || fileBlock.BitsPerElement != 32)
   {
-    return MakeErrorResult<ReadVolumeGraphicsFileFilter::HeaderMetadata>(
-        k_UnsupportedDataType,
-        fmt::format("Unsupported Volume Graphics Datatype '{}' with BitsPerElement {} in '{}'. Only 32-bit float data is supported.", fileBlock.Datatype, fileBlock.BitsPerElement, vgHeaderFilePath));
+    return MakeErrorResult<ReadVolumeGraphicsFileFilter::HeaderMetadata>(k_UnsupportedDataType,
+                                                                         fmt::format("Unsupported Volume Graphics Datatype '{}' with BitsPerElement {} in '{}'. Only 32-bit float data is supported.",
+                                                                                     fileBlock.Datatype, fileBlock.BitsPerElement, vgHeaderFilePath.string()));
   }
 
   vgHeaderFile.clear();
@@ -336,8 +341,7 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
     metadata.Units = IGeometry::LengthUnit::Millimeter;
   }
 
-  const fs::path fiHdr = fs::path(vgHeaderFilePath);
-  metadata.DataFilePath = (fs::absolute(fiHdr.parent_path()) / fileBlock.Name).string();
+  metadata.DataFilePath = (fs::absolute(vgHeaderFilePath.parent_path()) / fileBlock.Name).string();
   return {metadata};
 }
 
@@ -440,7 +444,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_DensityArrayName_Key);
 
   const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
-  auto metadataResult = ReadHeaderMetaData(pVGHeaderFileValue.string(), overrides.Spacing.has_value());
+  auto metadataResult = ReadHeaderMetaData(pVGHeaderFileValue, overrides.Spacing.has_value());
   if(metadataResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
