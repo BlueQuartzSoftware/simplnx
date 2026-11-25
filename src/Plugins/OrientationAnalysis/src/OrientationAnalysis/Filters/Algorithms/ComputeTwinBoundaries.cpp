@@ -63,7 +63,9 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
       real = ax[3];
 
       real = real * 180.0f / nx::core::Constants::k_PiD;
-      axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
+      // Rounding can put the cosine of a unit axis parallel to <111> just above 1; clamp it so acos() is not NaN.
+      axisdiff111 = std::acos(std::clamp((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>),
+                                         static_cast<T>(-1.0), static_cast<T>(1.0)));
       angdiff60 = std::abs(real - 60.0f);
       if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
       {
@@ -121,14 +123,18 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
       real = ax[3];
 
       real = real * 180.0f / nx::core::Constants::k_PiD;
-      axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
+      // Rounding can put the cosine of a unit axis parallel to <111> just above 1; clamp it so acos() is not NaN.
+      axisdiff111 = std::acos(std::clamp((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>),
+                                         static_cast<T>(-1.0), static_cast<T>(1.0)));
       angdiff60 = std::abs(real - 60.0f);
       if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
       {
         const Eigen::Vector3d axVec{xVal, yVal, zVal};
         const Eigen::Vector3d s_xstl_norm = j_sym_q.conjugate()._transformVector(xstl_norm);
 
-        T incoherence = 180.0 * std::acos(GeometryMath::CosThetaBetweenVectors(axVec, s_xstl_norm)) / nx::core::Constants::k_PiD;
+        // A face normal parallel to the twin axis can give a cosine of 1 + 1 ulp; clamp it so acos() is not NaN.
+        const T cosTheta = std::clamp(static_cast<T>(GeometryMath::CosThetaBetweenVectors(axVec, s_xstl_norm)), static_cast<T>(-1.0), static_cast<T>(1.0));
+        T incoherence = 180.0 * std::acos(cosTheta) / nx::core::Constants::k_PiD;
         if(incoherence > 90.0)
         {
           incoherence = 180.0 - incoherence;

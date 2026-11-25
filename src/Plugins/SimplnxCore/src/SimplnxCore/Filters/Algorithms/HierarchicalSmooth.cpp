@@ -4,7 +4,10 @@
 
 #include "HierarchicalSmooth.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
@@ -23,6 +26,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_InvalidReferenceLength = -19460;
+
 // ============================================================================
 // Type aliases matching the original HierarchicalSmooth types
 // ============================================================================
@@ -591,7 +596,8 @@ struct VolumeSolverData
   OrderedEdgeDict<std::vector<int>> boundaryDict;
 };
 
-void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& surfaceNodes, facelabel&& fLabels, nodetype&& nodeType, int nIterations, double errorThreshold)
+Result<> initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& surfaceNodes, facelabel&& fLabels, nodetype&& nodeType, int nIterations, double errorThreshold,
+                          const DataPath& geometryPath)
 {
   vs.mesh = std::move(volumeMesh);
   vs.node = std::move(surfaceNodes);
@@ -600,6 +606,27 @@ void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& sur
   vs.maxIterations = nIterations;
   vs.errorThreshold = errorThreshold;
 
+  // Compute minimum edge length for error threshold
+  vs.error = (vs.node.col(vs.mesh(0, 0)).array() - vs.node.col(vs.mesh(0, 1)).array()).matrix().norm();
+  vs.error = std::min(vs.error, (vs.node.col(vs.mesh(0, 1)).array() - vs.node.col(vs.mesh(0, 2)).array()).matrix().norm());
+  vs.error = std::sqrt(3.0 * vs.error * vs.error);
+
+  if(!std::isfinite(vs.error) || vs.error <= 0.0)
+  {
+    const auto node0 = vs.mesh(0, 0);
+    const auto node1 = vs.mesh(0, 1);
+    const auto node2 = vs.mesh(0, 2);
+    return MakeErrorResult(k_InvalidReferenceLength, fmt::format("The reference length computed from the first triangle (face 0, nodes {}, {}, {}) in geometry '{}' is {}. "
+                                                                 "Hierarchical Smoothing uses sqrt(3) times the shorter of edges (node {}, node {}) and (node {}, node {}) as its length scale. "
+                                                                 "The reference length must be finite and greater than zero. "
+                                                                 "Node {}: ({}, {}, {}); Node {}: ({}, {}, {}); Node {}: ({}, {}, {}). "
+                                                                 "Repair these coordinates or remove degenerate triangles from the mesh before smoothing.",
+                                                                 node0, node1, node2, geometryPath.toString(), vs.error, node0, node1, node1, node2, node0, static_cast<float32>(vs.node(0, node0)),
+                                                                 static_cast<float32>(vs.node(1, node0)), static_cast<float32>(vs.node(2, node0)), node1, static_cast<float32>(vs.node(0, node1)),
+                                                                 static_cast<float32>(vs.node(1, node1)), static_cast<float32>(vs.node(2, node1)), node2, static_cast<float32>(vs.node(0, node2)),
+                                                                 static_cast<float32>(vs.node(1, node2)), static_cast<float32>(vs.node(2, node2))));
+  }
+
   vs.status = is_smoothed(vs.type.size());
   for(int i = 0; i < vs.type.size(); i++)
   {
@@ -607,11 +634,6 @@ void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& sur
   }
 
   vs.nodeSmooth = vs.node;
-
-  // Compute minimum edge length for error threshold
-  vs.error = (vs.node.col(vs.mesh(0, 0)).array() - vs.node.col(vs.mesh(0, 1)).array()).matrix().norm();
-  vs.error = std::min(vs.error, (vs.node.col(vs.mesh(0, 1)).array() - vs.node.col(vs.mesh(0, 2)).array()).matrix().norm());
-  vs.error = std::sqrt(3.0 * vs.error * vs.error);
 
   // Build boundary dictionary and ensure consistent mesh handedness
   for(int i = 0; i < vs.label.rows(); i++)
@@ -638,6 +660,7 @@ void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& sur
       got->second.push_back(i);
     }
   }
+  return {};
 }
 
 trimesh sliceMesh(const VolumeSolverData& vs, const std::vector<int>& fromThesePatches)
@@ -865,9 +888,14 @@ Result<> HierarchicalSmooth::operator()()
 
   // Initialize solver and run (move Eigen matrices to avoid copies)
   VolumeSolverData vs;
-  initVolumeSolver(vs, std::move(faces), std::move(vertices), std::move(fLabels), std::move(nType), m_InputValues->maxIterations, m_InputValues->errorThreshold);
+  Result<> result = initVolumeSolver(vs, std::move(faces), std::move(vertices), std::move(fLabels), std::move(nType), m_InputValues->maxIterations, m_InputValues->errorThreshold,
+                                     m_InputValues->triangleGeometryDataPath);
+  if(result.invalid())
+  {
+    return result;
+  }
 
-  Result<> result = runHierarchicalSmooth(vs, m_ShouldCancel, m_MessageHandler);
+  result = runHierarchicalSmooth(vs, m_ShouldCancel, m_MessageHandler);
   if(result.invalid())
   {
     return result;

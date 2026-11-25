@@ -103,6 +103,9 @@ public:
    */
   Result<> operator()();
 
+  /// Error code for a .cpr file whose [Phases] section lists no phases.
+  static constexpr int32 k_NoPhasesError = -66502;
+
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;
@@ -112,7 +115,7 @@ private:
   /**
    * @brief Loads ensemble data from the parsed reader.
    * @param reader Provides parsed Channel 5 data.
-   * @return Reader error code and message.
+   * @return Reader error code and message, k_NoPhasesError when the file lists no phases, or {0, ""} on success.
    */
   std::pair<int32, std::string> loadMaterialInfo(ebsdlib::CprReader* reader) const;
 

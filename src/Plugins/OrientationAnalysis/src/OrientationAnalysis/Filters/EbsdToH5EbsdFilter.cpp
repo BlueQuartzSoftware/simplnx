@@ -1,5 +1,7 @@
 #include "EbsdToH5EbsdFilter.hpp"
 
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/EbsdToH5Ebsd.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -97,7 +99,7 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  std::string lowerExtension = StringUtilities::toLower(generatedFileListInfo.fileExtension);
+  std::string lowerExtension = EbsdReaderUtilities::NormalizedExtension(fs::path("input" + generatedFileListInfo.fileExtension));
 
   if(lowerExtension != ".ang" && lowerExtension != ".ctf")
   {

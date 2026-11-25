@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`WritePoleFigureFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-All entries below were established by an expert (Class 5) side-by-side review of pole figures rendered from the same 502 hex-Ti orientations through DREAM3D 6.5.171, DREAM3D 6.5.172, and SIMPLNX (EbsdLib 3.1.0). 6.5.171 and 6.5.172 outputs are byte-identical. The pole-figure **data** (pole positions, intensity distribution, color-intensity mapping) is visually identical across all three; the only differences are the cosmetic / labeling / rendering items below. None is a correctness defect.
+Entries D1–D5 below were established by an expert (Class 5) side-by-side review of pole figures rendered from the same 502 hex-Ti orientations through DREAM3D 6.5.171, DREAM3D 6.5.172, and SIMPLNX (EbsdLib 3.1.0). 6.5.171 and 6.5.172 outputs are byte-identical. The pole-figure **data** (pole positions, intensity distribution, color-intensity mapping) is visually identical across all three; the only differences are the cosmetic / labeling / rendering items in D1–D5. None is a correctness defect. Entry D6 records the sampling-domain change from issue #1957, based on source inspection.
 
 ---
 
@@ -95,3 +95,21 @@ All entries below were established by an expert (Class 5) side-by-side review of
 **Affected users:** Anyone whose legacy pipeline selected a non-PNG output format, or whose downstream tooling expects a `.tif`/`.pdf` file extension. The image content is the same composite; only the container format is fixed to PNG.
 
 **Recommendation:** Trust SIMPLNX. PNG is lossless and universally readable; convert externally if another container is required.
+
+---
+
+## WritePoleFigureFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `WritePoleFigureFilter-D6` |
+| **Filter UUID** | `00cbb97e-a5c2-43e6-9a35-17a0f9ce26ed` |
+| **Status** | active |
+
+**Symptom:** A converted legacy pipeline can load but fail preflight because a sampling value is outside the supported range. SIMPLNX requires Image Size 128–8000 (`-680002`) for both algorithms. For Color Intensity only, it requires Lambert Image Size 16–1024 (`-680004`) and Number of Colors 4–256 (`-680005`). Both limits are included. Discrete ignores the latter two values.
+
+**Root cause:** Issue #1957 defines supported sampling ranges. DREAM.3D 6.5.171 did not check these three ranges; its defaults were 512/64/32. SIMPL conversion preserves the supplied values. Public legacy source: `BlueQuartzSoftware/DREAM3D`, `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/WritePoleFigure.cpp`, constructor, `setupFilterParameters()` and `dataCheck()`.
+
+**Affected users:** Users converting legacy pipelines whose sampling values fall outside the applicable ranges. Both versions set the label font size to Image Size / 16. A small Image Size therefore gave labels that are difficult to read in legacy DREAM.3D too. For example, Image Size 64 gives labels that are 4 pixels high.
+
+**Recommendation:** Change each value reported by preflight to a value in its supported range, then run preflight again. The legacy defaults remain valid.

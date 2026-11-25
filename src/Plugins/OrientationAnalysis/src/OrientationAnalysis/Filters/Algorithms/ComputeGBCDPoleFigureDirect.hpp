@@ -18,7 +18,7 @@ namespace nx::core
  * misorientation, and square output image.
  *
  * PhaseOfInterest is one-based. MisorientationRotation stores an angle in degrees followed by an
- * axis. The executors normalize the axis. OutputImageDimension specifies the square side length
+ * axis. The executors reject an axis that is not finite or has length 0, and normalize the axis. OutputImageDimension specifies the square side length
  * in pixels.
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDPoleFigureInputValues
@@ -73,6 +73,16 @@ public:
   ComputeGBCDPoleFigureDirect(ComputeGBCDPoleFigureDirect&&) noexcept = delete;
   ComputeGBCDPoleFigureDirect& operator=(const ComputeGBCDPoleFigureDirect&) = delete;
   ComputeGBCDPoleFigureDirect& operator=(ComputeGBCDPoleFigureDirect&&) noexcept = delete;
+
+  /**
+   * @brief Checks the axis of the Misorientation Angle-Axis. preflightImpl() and both executors call it.
+   * @param misorientationRotation Angle in degrees followed by the h, k and l axis components.
+   * @return k_InvalidMisorientationAxisError when an axis component is NaN or infinite or the axis is [0, 0, 0].
+   */
+  static Result<> ValidateMisorientationAxis(const std::vector<float32>& misorientationRotation);
+
+  /// Error code for a Misorientation Angle-Axis axis that is not finite or has length 0.
+  static constexpr int32 k_InvalidMisorientationAxisError = -34646;
 
   /**
    * @brief Generates the pole figure.

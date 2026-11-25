@@ -14,6 +14,8 @@ The GBCD is a 5-dimensional histogram that captures the statistical distribution
 
 ![Using ParaView's Threshold filter + Cells to Points + Delaunay2D Filters](Images/Small_IN100_GBCD_Delaunay2D.png)
 
+The **Misorientation Angle-Axis** gives the angle in degrees followed by the (h, k, l) axis. The axis must have finite components and must not be (0, 0, 0); otherwise preflight reports error -34646.
+
 The GBCD DataArray must have the 6-dimension component shape that Compute GBCD creates (5 positive bin dimensions followed by a final dimension of 2 hemispheres).
 
 ## Algorithm

@@ -1,5 +1,7 @@
 # Read Ensemble Info File
 
+Preflight requires a positive phase count and validates all required phase groups, keys, crystal structures, and phase types before creating outputs.
+
 ## Group (Subgroup)
 
 IO (Input)

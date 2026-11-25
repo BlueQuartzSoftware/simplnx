@@ -35,6 +35,8 @@ where &epsilon; is the relative error of the distribution function at a given po
 | ![](Images/ComputeGBCDMetricBased_err2.png)|
 |![Fig. 3: (a) Errors (absolute values of one standard deviation) corresponding to the distribution shown in Fig. 1. Levels are given in MRDs. (b) Relative errors (given in %) of the distribution from Fig. 1.](Images/ComputeGBCDMetricBased_err2.png)|
 
+The **Fixed Misorientation** angle must be greater than 0 and at most 180 degrees (error -7230). The axis must have finite components and must not be (0, 0, 0) (error -7231).
+
 ## Format of Output Files
 
 Output files are formatted to be readable by GMT plotting program. The first line contains the fixed misorientation axis and angle. Each of the remaining lines contains three numbers. The first two columns are angles (in degrees) describing a given sampling direction; let us denote them  *col*<sub>1</sub> and *col*<sub>2</sub>, respectively. The third column is either the value of the GBCD (in MRD) for that direction or its error (in MRD or %, depending on user's selection). If you use other software, you can retrive spherical angles &theta; and &phi; of the sampling directions in the following way:

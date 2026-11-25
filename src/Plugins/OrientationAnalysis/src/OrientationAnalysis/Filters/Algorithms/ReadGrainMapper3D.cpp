@@ -16,6 +16,9 @@
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
+
 #include <fmt/format.h>
 
 #include <algorithm>
@@ -25,7 +28,6 @@
 #include <vector>
 
 using namespace nx::core;
-using namespace H5Support;
 using namespace GrainMapper3DUtilities;
 namespace GM3DConst = GrainMapper3DUtilities::Constants;
 
@@ -190,11 +192,6 @@ Result<> FillDataArrayAnnounced(DataStructure& dataStructure, const DataPath& da
 
 } // namespace
 
-namespace ebsdlib::CrystalStructure
-{
-inline constexpr uint32_t UnknownCrystalStructure = 999; // Sentinel for an invalid ensemble entry.
-}
-
 ReadGrainMapper3D::ReadGrainMapper3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadGrainMapper3DInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -208,19 +205,18 @@ const std::atomic_bool& ReadGrainMapper3D::getCancel()
   return m_ShouldCancel;
 }
 
-Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_t fileId) const
+Result<> ReadGrainMapper3D::copyPhaseInformation(const GrainMapperReader& reader) const
 {
   if(!m_InputValues->ReadDctData)
   {
     return {};
   }
-  herr_t error = reader.readPhaseInfo(fileId);
-  if(error < 0)
+  const auto phases = reader.getPhaseVector();
+  const auto validationResult = ValidateSpaceGroups(phases, m_InputValues->InputFile.string());
+  if(validationResult.invalid())
   {
-    return MakeErrorResult(-39801, fmt::format("Error reading phase info"));
+    return validationResult;
   }
-
-  auto phases = reader.getPhaseVector();
   DataPath cellEnsembleAMPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellEnsembleAttributeMatrixName);
 
   // Use the standard EBSD ensemble names that downstream orientation filters expect.
@@ -243,7 +239,7 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
   for(const auto& phase : phases)
   {
     const int32 phaseId = index++;
-    crystalStructures[phaseId] = GrainMapper3DUtilities::GetLaueIndexFromSpaceGroup(phase.SpaceGroup);
+    crystalStructures[phaseId] = ebsdlib::LaueOps::GetLaueOpsIndexFromSpaceGroupNumber(static_cast<usize>(phase.SpaceGroup));
     materialNames[phaseId] = phase.Name;
     std::vector<double> lc = phase.UnitCell;
 
@@ -281,7 +277,6 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   }
   groupSentinel.addGroupId(dataGid);
 
-  reader.findAvailableDctDatasets(labDctGid);
   auto dctDataSets = reader.getDctDatasetNames();
 
   std::set<std::string> floatDataSets;
@@ -458,6 +453,37 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     {
       result = FillDataArrayAnnounced<uint8>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
     }
+    else
+    {
+      // Conversion datasets were removed from their sets above. Only the remaining
+      // mapped scalar types need a direct transfer here.
+      switch(nameToDataTypeMap.at(dataSetName))
+      {
+      case DataType::int8:
+        result = FillDataArrayAnnounced<int8>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::int16:
+        result = FillDataArrayAnnounced<int16>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::uint16:
+        result = FillDataArrayAnnounced<uint16>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::uint32:
+        result = FillDataArrayAnnounced<uint32>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::int64:
+        result = FillDataArrayAnnounced<int64>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::uint64:
+        result = FillDataArrayAnnounced<uint64>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::float64:
+        result = FillDataArrayAnnounced<float64>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      default:
+        break;
+      }
+    }
     if(result.invalid())
     {
       return result;
@@ -499,7 +525,18 @@ Result<> ReadGrainMapper3D::operator()()
   }
   auto sentinel = H5Support::H5ScopedFileSentinel(fileId, false);
 
-  Result<> result = copyPhaseInformation(reader, fileId);
+  Result<> result = reader.readLabDCTHeader(fileId);
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = reader.readAbsorptionHeader(fileId);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  result = copyPhaseInformation(reader);
   if(result.invalid())
   {
     return result;

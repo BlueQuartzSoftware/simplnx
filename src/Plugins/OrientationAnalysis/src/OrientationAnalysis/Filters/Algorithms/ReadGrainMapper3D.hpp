@@ -86,11 +86,10 @@ public:
 protected:
   /**
    * @brief Imports phase metadata into standard ensemble arrays.
-   * @param reader Supplies GrainMapper3D phase metadata.
-   * @param fileId Open source file identifier.
-   * @return Phase-read errors.
+   * @param reader Supplies phases validated by the LabDCT header read.
+   * @return Success after copying phases, or when LabDCT is disabled.
    */
-  Result<> copyPhaseInformation(GrainMapperReader& reader, hid_t fileId) const;
+  Result<> copyPhaseInformation(const GrainMapperReader& reader) const;
 
   /**
    * @brief Imports and converts selected LabDCT datasets.
