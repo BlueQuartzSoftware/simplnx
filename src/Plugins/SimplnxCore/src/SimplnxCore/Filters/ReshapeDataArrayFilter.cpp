@@ -54,7 +54,7 @@ Parameters ReshapeDataArrayFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayKey, "Input Array", "The input array that will be reshaped.", DataPath({"Data"}), GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayKey, "Input Array", "The input array that will be reshaped.", DataPath({"Data"}), GetAllArrayTypes(), GetAllDataTypes()));
 
   {
     DynamicTableInfo tableInfo;
@@ -109,31 +109,19 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   // Reshape the array
   auto inputArrayType = inputArray.getArrayType();
   auto outputArrayPath = inputArrayPath.getParent().createChildPath(fmt::format(".{}", inputArrayPath.getTargetName()));
-  switch(inputArrayType)
+  if(inputArrayType == IArray::ArrayType::DataArray)
   {
-  case IArray::ArrayType::DataArray: {
-    const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+    auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputDataArray.getDataType(), tDims, inputDataArray.getComponentShape(), outputArrayPath));
-    break;
   }
-  case IArray::ArrayType::NeighborListArray: {
-    const auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
+  else if(inputArrayType == IArray::ArrayType::NeighborListArray)
+  {
+    auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
     resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), tDims, outputArrayPath));
-    break;
   }
-  case IArray::ArrayType::StringArray: {
+  else
+  {
     resultOutputActions.value().appendAction(std::make_unique<CreateStringArrayAction>(tDims, outputArrayPath));
-    break;
-  }
-  case IArray::ArrayType::Any: {
-    return MakePreflightErrorResult(to_underlying(ReshapeDataArray::ErrorCodes::InputArrayEqualsAny),
-                                    fmt::format("Input array '{}' has array type 'Any'.  Something has gone horribly wrong, please contact the developers.", inputArray.getName()));
-  }
-  default: {
-    return MakePreflightErrorResult(to_underlying(ReshapeDataArray::ErrorCodes::InputArrayUnsupported),
-                                    fmt::format("Input array '{}' has array type '{}'.  This array type is not currently supported by this filter, please contact the developers.",
-                                                inputArray.getName(), inputArray.getTypeName()));
-  }
   }
 
   resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(inputArrayPath));

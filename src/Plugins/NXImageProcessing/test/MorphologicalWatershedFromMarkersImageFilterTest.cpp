@@ -12,6 +12,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -146,7 +147,7 @@ std::vector<TLabel> MakeNegativeMarkerField(usize dx, usize dy, usize dz)
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (4) Preflight guards: a multi-component grayscale is rejected (requireScalar); a non-integer (float32) marker is
+// (4) Preflight guards: a multi-component grayscale is rejected; a non-integer (float32) marker is
 //     rejected; a marker whose tuple count mismatches the grayscale is rejected; a valid pair creates an output of
 //     the MARKER's element type (NOT the grayscale's).
 // -----------------------------------------------------------------------------
@@ -180,7 +181,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     setArgs(args, DataPath({"Image Geometry"}), vecPath, markerPath);
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("float marker rejected")
   {
@@ -192,20 +193,15 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     Arguments args;
     setArgs(args, DataPath({"Image Geometry"}), inputPath, markerPath);
     const auto result = filter.preflight(dataStructure, args);
-    // A float32 marker is rejected: the marker ArraySelectionParameter admits only integer scalar types, so the
-    // parameter layer rejects it before preflightImpl (the filter's own -8600 integer-type guard is the defensive
-    // backstop for any non-GUI caller). Either way the marker cannot be non-integer.
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateAllowedTypeError);
   }
-  SECTION("multi-component marker rejected (-8601)")
+  SECTION("multi-component marker rejected")
   {
     DataStructure dataStructure;
     const std::vector<int16> gray = rt::MakePlateauPattern<int16>(8, 8, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 1, gray); // scalar grayscale + geometry/CellData
-    // A 3-component INTEGER marker: the marker ArraySelectionParameter admits integer types with NO component-shape
-    // restriction, so it passes the parameter layer and reaches preflightImpl, which rejects it with -8601. int32 is
-    // integer (so the -8600 integer-type guard passes), and the tuple count matches the grayscale (so the -8602
-    // tuple-mismatch guard does not fire first) -- this isolates the non-scalar-marker guard, which had no coverage.
+    // An integer marker image with the correct tuple count isolates component-shape validation.
     const DataPath markerPath({"Image Geometry", "CellData", "Marker"});
     auto markerStore = data_store_utilities::CreateDataStore<int32>(dataStructure, markerPath, {1, 8, 8}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
@@ -215,7 +211,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     setArgs(args, DataPath({"Image Geometry"}), inputPath, markerPath);
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == -8601); // non-scalar (multi-component) marker
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue); // non-scalar (multi-component) marker
   }
   SECTION("marker tuple-count mismatch rejected")
   {

@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/Filters/ClosingByReconstructionImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 
@@ -164,4 +165,9 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: Kernel Radius 
 TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<ClosingByReconstructionImageFilter>({5, 5, 5});
+}
+
+TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<ClosingByReconstructionImageFilter, float32>();
 }

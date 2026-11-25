@@ -74,7 +74,7 @@ The SIMPLNX algorithm is a **Rewrite** of the filter plumbing under the retained
 
 **Symptom:** Selecting the same representation for input and output produces an error in SIMPLNX (`-67005`) before any computation; 6.5.171 errored similarly (`-1000`) but with a different code/message, and 6.5.171 additionally emitted distinct error codes for out-of-range type indices (`-1001`/`-1002`).
 
-**Root cause:** *algorithmic choice (preflight refactor).* SIMPLNX delegates input/output type-range validation to the `ChoicesParameter` (which emits the framework `k_Validate_OutOfRange_Error`) and keeps only the same-type check (`-67005`) and array-shape checks (`-67003`/`-67004`) in `preflightImpl`. The legacy `-1001`/`-1002`/`-1004` (converter-failure) error codes have no SIMPLNX equivalent.
+**Root cause:** SIMPLNX validates the representation indices with `ChoicesParameter` and the supported input shapes with `ArraySelectionParameter` (`-208`). Filter preflight rejects selecting the same representation twice (`-67005`) or selecting an input shape that differs from the selected representation's shape (`-67004`). The legacy `-1001`, `-1002`, and `-1004` error codes have no SIMPLNX equivalent.
 
 **Affected users:** Scripts or tests that matched on the legacy numeric error codes `-1000`/`-1001`/`-1002`. No effect on successful conversions.
 

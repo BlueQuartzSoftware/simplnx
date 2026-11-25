@@ -81,19 +81,22 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Volumes", "The Feature Volumes Data Array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Volumes", "The Feature Volumes Data Array", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellParentIdsArrayName_Key, "Cell Parent Ids Array name", "Output Cell Parent Ids Data Array", "Cell Parent Ids"));

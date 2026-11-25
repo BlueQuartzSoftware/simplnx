@@ -64,11 +64,17 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      ArraySelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[DataType], required_comps: List[List[int]] = ..., location: ArraySelectionParameter.DataLocation = ...) -> None
+      ArraySelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_array_types: Set[IArray.ArrayType], allowed_data_types: Set[DataType], required_comps: List[List[int]] = ..., location: ArraySelectionParameter.DataLocation = ...) -> None
 
    Description
    ~~~~~~~~~~~
    The ``ArraySelectionParameter`` is used for selecting an existing array within the data structure based on certain criteria.
+
+   The deprecated constructor accepts ``allowed_types`` in the fifth position, followed by the optional
+   ``required_comps`` and ``location``. It accepts only ``DataArray`` selections and emits a
+   ``DeprecationWarning``. An empty ``allowed_types`` set raises ``RuntimeError``.
+   Migrate by passing ``allowed_array_types=nx.get_data_array_only_types()`` and
+   renaming the old ``allowed_types`` argument to ``allowed_data_types``.
 
    Inputs
    ~~~~~~
@@ -88,16 +94,21 @@ General Parameters
       - **Description**: The default DataPath pointing to the array to be selected.
       - **Type**: `DataPath`
 
-   - ``allowed_types`` : Set[DataType]
-      - **Description**: Set of allowed data types for the array.
+   - ``allowed_array_types`` : Set[IArray.ArrayType]
+      - **Description**: A nonempty set of array kinds chosen from ``DataArray``, ``NeighborListArray``, and ``StringArray``. Use ``nx.get_all_array_types()`` for all three, ``nx.get_numeric_array_types()`` for data arrays and neighbor lists, or ``nx.get_data_array_only_types()`` for data arrays.
+      - **Type**: Set of `IArray.ArrayType`
+
+   - ``allowed_data_types`` : Set[DataType]
+      - **Description**: Allowed element types for data arrays and neighbor lists. Use ``set()`` for string-only selections.
+        The explicit constructor raises ``ValueError`` if this set is empty and the allowed kinds are anything other than ``{IArray.ArrayType.StringArray}``.
       - **Type**: Set of `DataType`
 
    - ``required_comps`` : List[List[int]]
-      - **Description**: List of component structures that are required.
+      - **Description**: Accepted component shapes. String arrays and neighbor lists have shape ``[1]``. An empty list allows any shape.
       - **Type**: List of lists of integers
 
    - ``location`` : ArraySelectionParameter.DataLocation
-      - **Description**: Location of the array (e.g., on nodes, cells, etc.).
+      - **Description**: Required storage location for data arrays. Defaults to ``Any``.
       - **Type**: `ArraySelectionParameter.DataLocation`
 
    Usage
@@ -108,7 +119,7 @@ General Parameters
       import simplnx as nx
 
       data_path = nx.DataPath("Small IN100/Scan Data/Data")
-      params.insert(nx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', data_path, nx.get_all_data_types(), [[1]]))
+      params.insert(nx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', data_path, {nx.IArray.ArrayType.DataArray}, nx.get_all_data_types(), [[1]]))
 
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
@@ -1633,15 +1644,18 @@ General Parameters
       - **Type**: List of `DataPath`
 
    - ``allowed_types`` : Set[IArray.ArrayType]
-      - **Description**: The set of allowed array types for the selected arrays.
+      - **Description**: A nonempty set of kinds accepted for each selected array. The keyword ``allowed_array_types`` is an alias. Use ``nx.get_all_array_types()`` to allow every kind. ``IArray.ArrayType.Any`` also accepts every kind.
       - **Type**: Set of `IArray.ArrayType`
 
    - ``allowed_data_types`` : Set[DataType]
-      - **Description**: The set of allowed data types for the selected arrays.
+      - **Description**: The element types accepted for DataArray and NeighborListArray selections. Provide a
+        nonempty set if either kind or ``Any`` is allowed. For compatibility, an empty set with one of these
+        kinds accepts every element type and emits a ``DeprecationWarning``. Use ``nx.get_all_data_types()``
+        to request all element types explicitly. Use ``set()`` for string-only selections.
       - **Type**: Set of `DataType`
 
    - ``required_comps`` : List[List[int]]
-      - **Description**: List of required component dimensions for the selected arrays.
+      - **Description**: The exact component shapes accepted for each selected array. An empty list allows any shape. StringArray and NeighborListArray have shape ``[1]``.
       - **Type**: List of lists of integers
 
    Usage
@@ -1651,7 +1665,8 @@ General Parameters
 
       import simplnx as nx
 
-      params.insert(nx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [], set([nx.IArray.ArrayType.Any]), nx.get_all_data_types(), [[1]]))
+      params.insert(nx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [],
+                                                  allowed_types=nx.get_all_array_types(), allowed_data_types=nx.get_all_data_types(), required_comps=[[1]]))
 
 
 .. _MultiPathSelectionParameter:

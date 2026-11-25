@@ -1,26 +1,31 @@
 #pragma once
 
-#include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Parameters/ArraySelectionDataTypes.hpp"
 
 namespace nx::core
 {
 /**
- * @brief This Filter Parameter represents multiple DataArrays as input.
+ * @brief Selects multiple arrays with the declared kinds, element types, and component shapes.
  */
 class SIMPLNX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = std::vector<DataPath>;
-  using AllowedTypeSetType = std::set<IArray::ArrayType>;
-  using AllowedDataTypesType = nx::core::DataTypeSetType;
+  using AllowedArrayTypes = std::set<IArray::ArrayType>;
+  using AllowedDataTypesType = ArraySelectionDataTypes;
   using AllowedComponentShapesType = std::vector<ShapeType>;
 
   MultiArraySelectionParameter() = delete;
-  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes,
-                               AllowedDataTypesType allowedDataTypes, AllowedComponentShapesType requiredComps = {});
+  /**
+   * @param allowedDataTypes Element types for data arrays and neighbor lists. Use
+   * AllowedDataTypesType::StringOnly() when StringArray is the only allowed kind.
+   * @throws std::runtime_error If allowedArrayTypes is empty, or if DataArray, NeighborListArray or Any is allowed and allowedDataTypes is empty.
+   */
+  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedArrayTypes& allowedArrayTypes,
+                               const AllowedDataTypesType& allowedDataTypes, AllowedComponentShapesType requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;
@@ -68,19 +73,19 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief Returns the set of allowed IArray types. An empty set means all are allowed.
+   * @brief Returns the allowed array kinds. Any allows every kind.
    * @return
    */
-  AllowedTypeSetType allowedTypes() const;
+  AllowedArrayTypes allowedArrayTypes() const;
 
   /**
-   * @brief Returns the set of allowed DataTypes. An empty set means all are allowed.
-   * @return
+   * @brief Returns the allowed element types for DataArray and NeighborListArray selections.
+   * @return The allowed element types. The set can be empty for a string-array-only selection.
    */
-  AllowedDataTypesType allowedDataTypes() const;
+  DataTypeSetType allowedDataTypes() const;
 
   /**
-   * @brief Returns the required number of components. If return value is empty, then no component requirements.
+   * @brief Returns the accepted component shapes. An empty set allows any shape.
    * @return
    */
   AllowedComponentShapesType requiredComponentShapes() const;
@@ -127,7 +132,7 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedTypeSetType m_AllowedTypes;
+  AllowedArrayTypes m_AllowedArrayTypes;
   AllowedDataTypesType m_AllowedDataTypes;
   AllowedComponentShapesType m_RequiredComponentShapes;
 };

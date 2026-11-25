@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -1149,7 +1150,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Reject nonnumeric Feature Ids"
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   REQUIRE(result.output_actions.errors().size() == 1);
-  CHECK(result.output_actions.errors()[0].code == -5561);
+  const auto& error = result.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK(error.message.find(idsPath.toString()) != std::string::npos);
+  CHECK(error.message.find("Select an array of one of these kinds: DataArray.") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Reject another geometry element Feature AM", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")

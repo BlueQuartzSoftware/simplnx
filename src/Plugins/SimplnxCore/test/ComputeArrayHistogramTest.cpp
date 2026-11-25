@@ -944,7 +944,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: rejects nonnumeric masks", "[Simp
   IFilter::PreflightResult preflight;
   REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
-  REQUIRE(preflight.output_actions.errors().front().code == -57222);
+  REQUIRE(preflight.output_actions.errors().front().code == filter_parameter::constants::k_Validate_ArrayType_Error);
   REQUIRE(preflight.output_actions.errors().front().message.find("Mask") != std::string::npos);
 }
 

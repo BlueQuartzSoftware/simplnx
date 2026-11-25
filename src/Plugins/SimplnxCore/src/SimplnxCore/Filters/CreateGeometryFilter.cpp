@@ -90,25 +90,31 @@ Parameters CreateGeometryFilter::parameters() const
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F},
                                                              std::vector<std::string>{"X"s, "Y"s, "Z"s}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_XBoundsPath_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_YBoundsPath_Key, "Y Bounds", "The spatial locations of the planes along the y direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ZBoundsPath_Key, "Z Bounds", "The spatial locations of the planes along the z direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_XBoundsPath_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_YBoundsPath_Key, "Y Bounds", "The spatial locations of the planes along the y direction", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ZBoundsPath_Key, "Z Bounds", "The spatial locations of the planes along the z direction", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexListPath_Key, "Shared Vertex List", "The complete path to the data array defining the point coordinates for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeListPath_Key, "Edge List", "The complete path to the data array defining the edges for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleListPath_Key, "Triangle List", "The complete path to the data array defining the (triangular) faces for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuadrilateralListPath_Key, "Quadrilateral List", "The complete path to the data array defining the (quad) faces for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TetrahedralListPath_Key, "Tetrahedral List", "The complete path to the data array defining the tetrahedral elements for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_HexahedralListPath_Key, "Hexahedral List", "The complete path to the data array defining the hexahedral elements for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{8}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{8}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryPath_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));

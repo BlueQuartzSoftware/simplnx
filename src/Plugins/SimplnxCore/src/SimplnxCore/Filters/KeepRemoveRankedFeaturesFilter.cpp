@@ -91,13 +91,14 @@ Parameters KeepRemoveRankedFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_RankingArrayPath_Key, "Feature Ranking Array", "The scalar Feature level array used to rank the Features", DataPath{},
-                                                          nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing Features",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control

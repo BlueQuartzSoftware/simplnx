@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/BinaryProjectionImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -154,4 +155,9 @@ TEST_CASE("NXImageProcessing::BinaryProjectionImageFilter: ITK real-image golden
 {
   const auto setForeground = [](Arguments& args) { args.insertOrAssign(BinaryProjectionImageFilter::k_ForegroundValue_Key, std::make_any<float64>(255.0)); };
   projection_test::RunProjectionMd5ItkGolden<BinaryProjectionImageFilter>("WhiteDots.png", /*projDim=*/1, /*removeOriginalGeometry=*/true, "827f263ef9fb63d05499d14fcef32f60", setForeground);
+}
+
+TEST_CASE("NXImageProcessing::BinaryProjectionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][BinaryProjectionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<BinaryProjectionImageFilter, float32>();
 }

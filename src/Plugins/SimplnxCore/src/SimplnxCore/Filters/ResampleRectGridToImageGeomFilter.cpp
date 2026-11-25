@@ -62,7 +62,7 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Attribute Arrays to Copy", "Rectilinear Grid Cell Data to possibly copy", MultiArraySelectionParameter::ValueType{},
-      MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
+      MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<VectorInt32ParameterType>(k_Dimensions_Key, "Dimensions (Voxels)", "The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry",
                                                            std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
@@ -177,14 +177,10 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
       auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArrayPtr->getDataType(), cellTupleShape, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    else if(arrayType == IArray::ArrayType::StringArray)
+    else
     {
       auto createArrayAction = std::make_unique<CreateStringArrayAction>(cellTupleShape, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
-    }
-    else
-    {
-      resultOutputActions.warnings().push_back({-7366, fmt::format("Data Object at path '{}' is not an IArray type and thus cannot be copied over to the re-sampled image geometry", path.toString())});
     }
   }
 

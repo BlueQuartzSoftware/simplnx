@@ -50,8 +50,8 @@ Parameters ChangeAngleRepresentationFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_ConversionType_Key, "Conversion Type", "Tells the Filter which conversion is being made", 0,
                                                    ChoicesParameter::ChoicesType{"Degrees to Radians", "Radians to Degrees"}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AnglesArrayPath_Key, "Angles", "The DataArray containing the angles to be converted.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AnglesArrayPath_Key, "Angles", "The DataArray containing the angles to be converted.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float32}));
 
   return params;
 }

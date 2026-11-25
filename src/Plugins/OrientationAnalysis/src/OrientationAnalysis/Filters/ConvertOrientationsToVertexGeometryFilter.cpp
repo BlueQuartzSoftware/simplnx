@@ -62,19 +62,20 @@ Parameters ConvertOrientationsToVertexGeometryFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "Specifies the incoming orientation representation enumeration index", 0,
                                                    OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "The complete path to the incoming orientation representation data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64},
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32, DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{3}, {4}, {9}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays",
                                                                "Paths to vertex-related DataArrays that should be copied to the output rodrigues vertex geometry", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypesType{}));
+                                                               MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToFundamentalZone_Key, "Convert To Fundamental Zone", "Convert the orientations to the fundamental zone.", false));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Input Phases", "The phases of the data. The data should be the indices into the Crystal Structures Data Array.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});

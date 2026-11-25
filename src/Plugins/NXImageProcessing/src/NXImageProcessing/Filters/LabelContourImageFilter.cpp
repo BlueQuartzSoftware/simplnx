@@ -15,8 +15,6 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
-
 using namespace nx::core;
 
 namespace
@@ -24,7 +22,6 @@ namespace
 // Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/NXImageProcessing tree for
 // -84xx/-85xx codes: the -84xx blocks up to -8493 and the -8500 block (Binary Contour, -8500..-8503) are taken,
 // so this filter uses the still-unused -8510 block.
-constexpr int32 k_NonScalarInput = -8510;
 constexpr int32 k_NonFiniteBackgroundValue = -8511;
 constexpr int32 k_BackgroundValueOutOfRange = -8512;
 constexpr int32 k_BackgroundValueTruncated = -8513;
@@ -68,8 +65,8 @@ Parameters LabelContourImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetIntegerScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -94,14 +91,8 @@ IFilter::PreflightResult LabelContourImageFilter::preflightImpl(const DataStruct
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Label Contour requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
-  }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
@@ -109,7 +100,7 @@ IFilter::PreflightResult LabelContourImageFilter::preflightImpl(const DataStruct
 
   // The Float64 background parameter is cast to the (integer) input element type by the contour façade. That
   // conversion is UNDEFINED for a non-finite or out-of-range value, so validate the parameter here (the array is
-  // guaranteed present/scalar/integer by the successful checks above). There is no foreground for this filter.
+  // validated by its selection parameter). There is no foreground for this filter.
   const DataType inputType = inputArray.getDataType();
   Result<> paramGuard = ImageProcessing::ValidateBackgroundInRange(inputType, backgroundValue, k_NonFiniteBackgroundValue, k_BackgroundValueOutOfRange, k_BackgroundValueTruncated);
   if(paramGuard.invalid())

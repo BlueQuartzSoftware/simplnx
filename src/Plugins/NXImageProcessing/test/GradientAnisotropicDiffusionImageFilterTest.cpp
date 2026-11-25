@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -65,7 +66,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: an INTEGER input is rejected (FloatingScalar admits only float32/float64, unlike
-//     CurvatureFlow's AllNumeric); a multi-component input is rejected (requireScalar); a valid float input
+//     CurvatureFlow's AllNumeric); a multi-component input is rejected; a valid float input
 //     produces a SameAsInput output array; and a TimeStep exceeding the CFL stability bound is VALID but carries a
 //     warning (matching ITK's own non-fatal InitializeIteration check).
 // -----------------------------------------------------------------------------
@@ -76,10 +77,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
 
   SECTION("integer input rejected")
   {
-    // Rejected by the ArraySelectionParameter's own allowed-type check (GetFloatingScalarTypes() in parameters())
-    // BEFORE preflightImpl/PreflightImageFilter ever runs -- so this asserts rejection, not a specific error code
-    // (unlike the multi-component case below, which int32 with 1 component sails past that parameter check and is
-    // rejected inside PreflightImageFilter itself, where the code IS stable).
+    // The input selection accepts only floating-point elements.
     DataStructure dataStructure;
     const std::vector<int32> field = MakeRamp<int32>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, field);
@@ -115,7 +113,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
     args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("scalar float input creates a SameAsInput output")
   {

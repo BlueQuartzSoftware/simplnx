@@ -263,7 +263,7 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean/uint8 mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          DataPath(), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});

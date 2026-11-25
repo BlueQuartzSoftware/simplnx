@@ -17,8 +17,6 @@ namespace
 {
 constexpr int32 k_MissingTriangleVerticesArray = -351;
 constexpr int32 k_MissingTriangleFacesArray = -352;
-constexpr int32 k_MissingVertexArray = -354;
-constexpr int32 k_MissingTriangleArray = -355;
 
 } // namespace
 
@@ -70,13 +68,13 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
       "internal surface meets the bounding box. 'Face Labels' removes only the bounding box wall backed by the background (Feature Id 0), which leaves Features flush with the box closed.",
       0, ChoicesParameter::ChoicesType{"Node Type Range", "Face Labels"}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<VectorInt8ParameterType>(k_NodeTypeRange_Key, "Internal Surface Node Type Min & Max",
                                                           "The min and max (inclusive) Node Type values that distinguish an internal surface from an external surface", std::vector<int8>{0, 8},
                                                           std::vector<std::string>{"Min", "Max"}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels Array", "Path to the Face Labels array", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels Array", "Path to the Face Labels array", DataPath(), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
@@ -87,9 +85,9 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Face Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
 
   params.linkParameters(k_CriterionMode_Key, k_NodeTypesPath_Key, static_cast<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_CriterionMode_Key, k_NodeTypeRange_Key, static_cast<ChoicesParameter::ValueType>(0));
@@ -195,17 +193,12 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   for(const auto& dataArray : copyVertexPaths)
   {
     copiedArrays.push_back(dataArray);
-    const auto* targetDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataArray);
-    if(targetDataArrayPtr == nullptr)
-    {
-      std::string ss = fmt::format("Could not find DataArray at path '{}'", dataArray.toString());
-      return {.output_actions = MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
-    }
+    const auto& targetDataArrayPtr = dataStructure.getDataRefAs<IDataArray>(dataArray);
 
-    DataType type = targetDataArrayPtr->getDataType();
+    DataType type = targetDataArrayPtr.getDataType();
     DataPath copyPath = internalVertexDataPath.createChildPath(dataArray.getTargetName());
-    auto numTuples = targetDataArrayPtr->getNumberOfTuples();
-    auto components = targetDataArrayPtr->getNumberOfComponents();
+    auto numTuples = targetDataArrayPtr.getNumberOfTuples();
+    auto components = targetDataArrayPtr.getNumberOfComponents();
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
     actions.appendAction(std::move(action));
   }
@@ -220,17 +213,12 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   for(const auto& dataArray : copyTrianglePaths)
   {
     copiedArrays.push_back(dataArray);
-    const auto* targetDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataArray);
-    if(targetDataArrayPtr == nullptr)
-    {
-      std::string ss = fmt::format("Could not find DataArray at path '{}'", dataArray.toString());
-      return {.output_actions = MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
-    }
+    const auto& targetDataArrayPtr = dataStructure.getDataRefAs<IDataArray>(dataArray);
 
-    DataType type = targetDataArrayPtr->getDataType();
+    DataType type = targetDataArrayPtr.getDataType();
     DataPath copyPath = internalFaceDataPath.createChildPath(dataArray.getTargetName());
-    auto numTuples = targetDataArrayPtr->getNumberOfTuples();
-    auto components = targetDataArrayPtr->getNumberOfComponents();
+    auto numTuples = targetDataArrayPtr.getNumberOfTuples();
+    auto components = targetDataArrayPtr.getNumberOfComponents();
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
     actions.appendAction(std::move(action));
   }

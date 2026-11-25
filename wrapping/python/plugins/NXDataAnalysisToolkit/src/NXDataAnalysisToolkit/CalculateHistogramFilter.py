@@ -59,7 +59,7 @@ class CalculateHistogramFilter:
     params.insert(nx.StringParameter(CalculateHistogramFilter.HISTOGRAM_X_LABEL, 'Histogram X Label', 'The label shown along the X axis of the histogram.', 'Value'))
     params.insert(nx.StringParameter(CalculateHistogramFilter.HISTOGRAM_Y_LABEL, 'Histogram Y Label', 'The label shown along the Y axis of the histogram.', 'Frequency'))
     params.insert(nx.Parameters.Separator("Required Data Objects"))
-    params.insert(nx.ArraySelectionParameter(CalculateHistogramFilter.INPUT_ARRAY_PATH, 'Input Array', 'The dataset that will be used to calculate the histogram.', nx.DataPath(), nx.get_all_data_types()))
+    params.insert(nx.ArraySelectionParameter(CalculateHistogramFilter.INPUT_ARRAY_PATH, 'Input Array', 'The dataset that will be used to calculate the histogram.', nx.DataPath(), {nx.IArray.ArrayType.DataArray}, nx.get_all_data_types()))
     params.insert(nx.Parameters.Separator("Created Data Objects"))
     params.insert(nx.DataGroupCreationParameter(CalculateHistogramFilter.HISTOGRAM_STATS_ATTRMAT_PATH, 'Histogram Stats Attribute Matrix', 'The path to the newly created histogram statistics attribute matrix.', nx.DataPath("Histogram Statistics")))
     params.insert(nx.DataObjectNameParameter(CalculateHistogramFilter.COUNTS, 'Histogram Counts', 'The name of the array that will contain the number of values that appear in each bin.', "Counts"))

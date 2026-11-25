@@ -17,8 +17,6 @@
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
-
 #include <utility>
 
 using namespace nx::core;
@@ -28,7 +26,6 @@ namespace
 // Error/warning codes for this filter (verified free by grepping the codebase for -84xx codes; -8480..-8483 do
 // not collide with any existing filter -- the grayscale composites use -8390/-8400/-8410/-8420, Binary
 // Erode/Dilate use -8440..-8443 / -8460..-8463).
-constexpr int32 k_NonScalarInput = -8480;
 constexpr int32 k_NonFiniteBinaryValue = -8481;
 constexpr int32 k_BinaryValueOutOfRange = -8482;
 constexpr int32 k_BinaryValueTruncated = -8483;
@@ -76,8 +73,8 @@ Parameters BinaryMorphologicalOpeningImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetIntegerScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -115,14 +112,8 @@ IFilter::PreflightResult BinaryMorphologicalOpeningImageFilter::preflightImpl(co
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Morphological Opening requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
-  }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
@@ -130,7 +121,7 @@ IFilter::PreflightResult BinaryMorphologicalOpeningImageFilter::preflightImpl(co
 
   // The Float64 foreground/background parameters are cast to the (integer) input element type by the binary
   // morphology façade. That conversion is UNDEFINED for a non-finite or out-of-range value, so validate the
-  // parameters here (the array is guaranteed present/scalar/integer by the successful checks above).
+  // parameters here.
   const DataType inputType = inputArray.getDataType();
   Result<> paramGuard = ImageProcessing::ValidateBinaryFgBgInRange(inputType, foregroundValue, backgroundValue, k_NonFiniteBinaryValue, k_BinaryValueOutOfRange, k_BinaryValueTruncated);
   if(paramGuard.invalid())

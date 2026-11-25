@@ -2,7 +2,9 @@
 
 ## Description
 
-This **Filter** accepts one or more numeric **DataArray** inputs and computes per-**Feature** histograms. A **Feature** is a connected region of **Cells** that share the same **Feature Id** (the integer label assigned by a segmentation filter). For each selected array, the per-Cell values are grouped according to their owning **Feature Id**, then divided into equal-width bins—using either automatically derived or user-defined minimum/maximum bounds—and counted per bin.
+This **Filter** accepts one or more **DataArray** inputs and computes per-**Feature** histograms. A **Feature** is a connected region of **Cells** that share the same **Feature Id** (the integer label assigned by a segmentation filter). For each selected array, the per-Cell values are grouped according to their owning **Feature Id**, then divided into equal-width bins—using either automatically derived or user-defined minimum/maximum bounds—and counted per bin.
+
+When **Calculate Modal Bin Ranges** is enabled, select integer or floating-point inputs. Boolean arrays require this option to be disabled.
 
 Optionally, a mask **DataArray** can be provided to include only specific elements in the histogram computation.
 
@@ -13,7 +15,7 @@ Outputs include:
   - *Example*: For 4 bins spanning [0,8), a feature's tuple is [0,2), [2,4), [4,6), [6,8) represented as `[0,2,2,4,4,6,6,8]`.
 - **Most Populated Bin DataArray**: One tuple per feature with one component indicating the bin index containing the most values.
   - *Example*: If feature 3's third bin contains the most values, then tuple 3 has the value `2`.
-- **Modal Bin Ranges INeighborList** (optional): Each feature has one list. Each modal entry is the stored lower/upper pair of the bin that counted a mode. A mode that falls outside the bins adds no pair. One pair is kept per mode, including duplicate pairs. For integer data, the stored bounds are rounded like Bin Ranges. For example, mode 3 can map to `{1,3}` when the bin width is 2.5. When the counting bin width has magnitude below `1E-10`, each populated feature instead gives one `{0, number of features}` pair. Boolean input gives no modal ranges.
+- **Modal Bin Ranges INeighborList** (optional): Each feature has one list. Each modal entry is the stored lower/upper pair of the bin that counted a mode. A mode that falls outside the bins adds no pair. One pair is kept per mode, including duplicate pairs. For integer data, the stored bounds are rounded like Bin Ranges. For example, mode 3 can map to `{1,3}` when the bin width is 2.5. When the counting bin width has magnitude below `1E-10`, each populated feature instead gives one `{0, number of features}` pair.
   - *Example*: list 5 contains `[0.5, 10.2, 41.3, 54.1]` if feature 5 has two mode values and they fall between 0.5 and 10.2 and between 41.3 and 54.1.
 
 ### Required Input Sources

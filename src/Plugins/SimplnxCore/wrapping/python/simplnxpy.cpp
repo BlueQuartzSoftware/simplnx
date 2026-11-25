@@ -177,6 +177,34 @@ nx::core::AttributeMatrix& RequireAttributeMatrix(nx::core::AttributeMatrix* att
   }
   return *attributeMatrix;
 }
+
+std::unique_ptr<MultiArraySelectionParameter> MakePythonMultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText,
+                                                                                     const MultiArraySelectionParameter::ValueType& defaultValue,
+                                                                                     const MultiArraySelectionParameter::AllowedArrayTypes& allowedArrayTypes, DataTypeSetType allowedDataTypes,
+                                                                                     MultiArraySelectionParameter::AllowedComponentShapesType requiredComps)
+{
+  using AllowedDataTypesType = MultiArraySelectionParameter::AllowedDataTypesType;
+  using Kind = IArray::ArrayType;
+  if(allowedDataTypes.empty())
+  {
+    if(allowedArrayTypes == MultiArraySelectionParameter::AllowedArrayTypes{Kind::StringArray})
+    {
+      return std::make_unique<MultiArraySelectionParameter>(name, humanName, helpText, defaultValue, allowedArrayTypes, AllowedDataTypesType::StringOnly(), std::move(requiredComps));
+    }
+    if(allowedArrayTypes.contains(Kind::DataArray) || allowedArrayTypes.contains(Kind::NeighborListArray) || allowedArrayTypes.contains(Kind::Any))
+    {
+      if(PyErr_WarnEx(
+             PyExc_DeprecationWarning,
+             "Passing an empty allowed_data_types set to MultiArraySelectionParameter to accept all element types is deprecated. Specify the accepted element types or use get_all_data_types().",
+             1) < 0)
+      {
+        throw py::error_already_set();
+      }
+      allowedDataTypes = GetAllDataTypes();
+    }
+  }
+  return std::make_unique<MultiArraySelectionParameter>(name, humanName, helpText, defaultValue, allowedArrayTypes, std::move(allowedDataTypes), std::move(requiredComps));
+}
 } // namespace
 
 template <>
@@ -1649,10 +1677,36 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindParameterConstructor(arrayCreationParameter);
 
-  arraySelectionParameter.def(py::init<const std::string&, const std::string&, const std::string&, const ArraySelectionParameter::ValueType&, const ArraySelectionParameter::AllowedTypeSetType&,
-                                       ArraySelectionParameter::AllowedComponentShapesType, ArraySelectionParameter::DataLocation>(),
-                              "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "required_comps"_a = ArraySelectionParameter::AllowedComponentShapesType{},
-                              "location"_a = ArraySelectionParameter::DataLocation::Any);
+  arraySelectionParameter.def(
+      py::init([](const std::string& name, const std::string& humanName, const std::string& helpText, const ArraySelectionParameter::ValueType& defaultValue,
+                  const ArraySelectionParameter::AllowedArrayTypes& allowedArrayTypes, DataTypeSetType allowedDataTypes, ArraySelectionParameter::AllowedComponentShapesType requiredComps,
+                  ArraySelectionParameter::DataLocation location) {
+        using AllowedDataTypes = ArraySelectionParameter::AllowedDataTypes;
+        if(allowedDataTypes.empty())
+        {
+          if(allowedArrayTypes != ArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::StringArray})
+          {
+            throw py::value_error(fmt::format("ArraySelectionParameter '{}': allowed_data_types is empty. Specify the accepted element types or use get_all_data_types(). An empty set requires "
+                                              "StringArray as the only allowed kind.",
+                                              name));
+          }
+          return std::make_unique<ArraySelectionParameter>(name, humanName, helpText, defaultValue, allowedArrayTypes, AllowedDataTypes::StringOnly(), std::move(requiredComps), location);
+        }
+        return std::make_unique<ArraySelectionParameter>(name, humanName, helpText, defaultValue, allowedArrayTypes, std::move(allowedDataTypes), std::move(requiredComps), location);
+      }),
+      "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_array_types"_a, "allowed_data_types"_a, "required_comps"_a = ArraySelectionParameter::AllowedComponentShapesType{},
+      "location"_a = ArraySelectionParameter::DataLocation::Any);
+  arraySelectionParameter.def(
+      py::init([](const std::string& name, const std::string& humanName, const std::string& helpText, const ArraySelectionParameter::ValueType& defaultValue, DataTypeSetType allowedDataTypes,
+                  ArraySelectionParameter::AllowedComponentShapesType requiredComps, ArraySelectionParameter::DataLocation location) {
+        if(PyErr_WarnEx(PyExc_DeprecationWarning, "Pass allowed_array_types and allowed_data_types to ArraySelectionParameter. The legacy constructor only accepts DataArray inputs.", 1) < 0)
+        {
+          throw py::error_already_set();
+        }
+        return std::make_unique<ArraySelectionParameter>(name, humanName, helpText, defaultValue, GetDataArrayOnlyTypes(), std::move(allowedDataTypes), std::move(requiredComps), location);
+      }),
+      "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "required_comps"_a = ArraySelectionParameter::AllowedComponentShapesType{},
+      "location"_a = ArraySelectionParameter::DataLocation::Any);
 
   arrayThresholdsParameter.def(py::init<const std::string&, const std::string&, const std::string&, const ArrayThresholdsParameter::ValueType&, ArrayThresholdsParameter::AllowedComponentShapesType>(),
                                "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "required_comps"_a = ArrayThresholdsParameter::AllowedComponentShapesType{});
@@ -1704,10 +1758,10 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindParameterConstructor(importHDF5DatasetParameter);
 
-  multiArraySelectionParameter.def(
-      py::init<const std::string&, const std::string&, const std::string&, const MultiArraySelectionParameter::ValueType&, const MultiArraySelectionParameter::AllowedTypeSetType&,
-               const MultiArraySelectionParameter::AllowedDataTypesType&, MultiArraySelectionParameter::AllowedComponentShapesType>(),
-      "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "allowed_data_types"_a, "required_comps"_a = MultiArraySelectionParameter::AllowedComponentShapesType{});
+  multiArraySelectionParameter.def(py::init(&MakePythonMultiArraySelectionParameter), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "allowed_data_types"_a,
+                                   "required_comps"_a = MultiArraySelectionParameter::AllowedComponentShapesType{});
+  multiArraySelectionParameter.def(py::init(&MakePythonMultiArraySelectionParameter), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_array_types"_a, "allowed_data_types"_a,
+                                   "required_comps"_a = MultiArraySelectionParameter::AllowedComponentShapesType{});
 
   BindParameterConstructor(multiPathSelectionParameter);
 
@@ -1989,6 +2043,9 @@ PYBIND11_MODULE(simplnx, mod)
   SimplnxCore::BindFilters(mod, *internalsPtr);
 
   mod.def("get_all_data_types", &GetAllDataTypes);
+  mod.def("get_all_array_types", &GetAllArrayTypes);
+  mod.def("get_data_array_only_types", &GetDataArrayOnlyTypes);
+  mod.def("get_numeric_array_types", &GetNumericArrayTypes);
 
   mod.def("convert_numeric_type_to_data_type", &ConvertNumericTypeToDataType);
   mod.def("convert_data_type_to_numeric_type", &ConvertDataTypeToNumericType);

@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/ValuedRegionalMaximaImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <array>
@@ -151,4 +152,9 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: FromSIMPLJson", "
 TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][ValuedRegionalMaximaImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ValuedRegionalMaximaImageFilter>("cthead1.png", "c94b3702844c508818e4718a75102472");
+}
+
+TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][ValuedRegionalMaximaImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<ValuedRegionalMaximaImageFilter, float32>();
 }

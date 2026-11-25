@@ -92,8 +92,9 @@ class WriteVtuFile:
 
     params.insert(params.Separator("Input Parameters"))
     params.insert(nx.GeometrySelectionParameter(WriteVtuFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the VTK file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Vertex, nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
-    params.insert(nx.MultiArraySelectionParameter(WriteVtuFile.CELL_DATA_ARRAY_PATHS_KEY, 'Cell Data Arrays To Write', 'The cell data arrays to write to the VTK file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
-    params.insert(nx.MultiArraySelectionParameter(WriteVtuFile.POINT_DATA_ARRAY_PATHS_KEY, 'Point Data Arrays To Write', 'The point data arrays to write to the VTK file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
+    numeric_types = nx.get_all_data_types() - {nx.DataType.boolean}
+    params.insert(nx.MultiArraySelectionParameter(WriteVtuFile.CELL_DATA_ARRAY_PATHS_KEY, 'Cell Data Arrays To Write', 'The cell data arrays to write to the VTK file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=numeric_types))
+    params.insert(nx.MultiArraySelectionParameter(WriteVtuFile.POINT_DATA_ARRAY_PATHS_KEY, 'Point Data Arrays To Write', 'The point data arrays to write to the VTK file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=numeric_types))
 
     params.insert(params.Separator("Output Parameters"))
     params.insert(nx.FileSystemPathParameter(WriteVtuFile.OUTPUT_FILE_PATH_KEY, 'Output File (.vtu)', 'The output file that contains the specified geometry as a mesh.', '', extensions_type={'.vtu'}, path_type=nx.FileSystemPathParameter.PathType.OutputFile))

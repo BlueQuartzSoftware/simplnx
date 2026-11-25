@@ -156,6 +156,25 @@ Result<> ComputeCAxisReferenceMisalignments::ValidateReferenceDirection(const st
 }
 
 // -----------------------------------------------------------------------------
+Result<> ComputeCAxisReferenceMisalignments::ValidateInputTupleCounts(const DataStructure& dataStructure, const ComputeCAxisReferenceMisalignmentsInputValues& inputValues)
+{
+  const auto& quatsPath = inputValues.quats_array_path;
+  const auto& phasesPath = inputValues.phases_array_path;
+  const usize quatsTupleCount = dataStructure.getDataRefAs<IDataArray>(quatsPath).getNumberOfTuples();
+
+  if(auto result = ValidateTupleCount(dataStructure, dataStructure.getDataRefAs<IDataArray>(phasesPath), phasesPath, "Phases", quatsPath, quatsTupleCount, k_TupleCountMismatchError); result.invalid())
+  {
+    return result;
+  }
+  if(inputValues.use_mask)
+  {
+    const auto& maskPath = inputValues.mask_array_path;
+    return ValidateTupleCount(dataStructure, dataStructure.getDataRefAs<IDataArray>(maskPath), maskPath, "Mask", quatsPath, quatsTupleCount, k_TupleCountMismatchError);
+  }
+  return {};
+}
+
+// -----------------------------------------------------------------------------
 Result<> ComputeCAxisReferenceMisalignments::ValidateInputs(const DataStructure& dataStructure, const ComputeCAxisReferenceMisalignmentsInputValues& inputValues)
 {
   if(auto result = ValidateReferenceDirection(inputValues.reference_direction); result.invalid())

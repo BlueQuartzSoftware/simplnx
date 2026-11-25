@@ -346,3 +346,8 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image 
       },
       "fb65e730472c8001185f355fb626ca3f");
 }
+
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<OtsuMultipleThresholdsImageFilter, float32>();
+}

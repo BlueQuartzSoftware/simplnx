@@ -4,10 +4,8 @@
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-#include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
@@ -67,18 +65,23 @@ Parameters WriteINLFileFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Cell Euler Angles", "Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_MaterialNameArrayPath_Key, "Material Names", "Name of each Ensemble", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NumFeaturesArrayPath_Key, "Number of Features", "The number of Features per Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaterialNameArrayPath_Key, "Material Names", "Name of each Ensemble", DataPath{},
+                                                          ArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::StringArray}, ArraySelectionParameter::AllowedDataTypes::StringOnly(),
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumFeaturesArrayPath_Key, "Number of Features", "The number of Features per Ensemble", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -103,25 +106,13 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
   auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto cellPhasesPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto eulerAnglesPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  auto pMaterialNameArrayPathValue = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {featureIdsPath, cellPhasesPath, eulerAnglesPath}, -78431); tupleResult.invalid())
   {
     return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  IArray::ArrayType arrayType = dataStructure.getDataAs<IArray>(pMaterialNameArrayPathValue)->getArrayType();
-  if(arrayType != IArray::ArrayType::StringArray)
-  {
-    return MakePreflightErrorResult(-78430, fmt::format("Array [{}] type is incorrect, must be of type StringArray.", pMaterialNameArrayPathValue.toString()));
-  }
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------
@@ -143,7 +134,7 @@ Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.cell_euler_angles_array_path = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.material_name_array_path = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
+  inputValues.material_name_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_MaterialNameArrayPath_Key);
   inputValues.num_features_array_path = filterArgs.value<DataPath>(k_NumFeaturesArrayPath_Key);
 
   auto result = WriteINLFile(dataStructure, messageHandler, shouldCancel, &inputValues)();

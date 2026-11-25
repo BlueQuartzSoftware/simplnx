@@ -65,7 +65,7 @@ Parameters ExtractVertexGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array when extracting cell centers.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Cell Arrays to Move/Copy"});
@@ -73,7 +73,7 @@ Parameters ExtractVertexGeometryFilter::parameters() const
                                                    ChoicesParameter::ChoicesType{"Copy Attribute Arrays", "Move Attribute Arrays"}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});

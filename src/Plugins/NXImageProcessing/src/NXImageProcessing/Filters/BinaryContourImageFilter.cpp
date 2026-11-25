@@ -15,8 +15,6 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
-
 using namespace nx::core;
 
 namespace
@@ -25,7 +23,6 @@ namespace
 // -84xx/-85xx codes: the -84xx blocks up to -8493 are already taken (grayscale composites -8390/-8400/-8410/
 // -8420, Binary Erode -8440..-8443, Binary Dilate -8460..-8463, Binary Opening -8480..-8483, Binary Closing
 // -8490..-8493), so this filter uses the still-unused -8500 block.
-constexpr int32 k_NonScalarInput = -8500;
 constexpr int32 k_NonFiniteBinaryValue = -8501;
 constexpr int32 k_BinaryValueOutOfRange = -8502;
 constexpr int32 k_BinaryValueTruncated = -8503;
@@ -73,8 +70,8 @@ Parameters BinaryContourImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetIntegerScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -100,14 +97,8 @@ IFilter::PreflightResult BinaryContourImageFilter::preflightImpl(const DataStruc
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Contour requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
-  }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
@@ -115,7 +106,7 @@ IFilter::PreflightResult BinaryContourImageFilter::preflightImpl(const DataStruc
 
   // The Float64 foreground/background parameters are cast to the (integer) input element type by the contour
   // façade. That conversion is UNDEFINED for a non-finite or out-of-range value, so validate the parameters
-  // here (the array is guaranteed present/scalar/integer by the successful checks above).
+  // here.
   const DataType inputType = inputArray.getDataType();
   Result<> paramGuard = ImageProcessing::ValidateBinaryFgBgInRange(inputType, foregroundValue, backgroundValue, k_NonFiniteBinaryValue, k_BinaryValueOutOfRange, k_BinaryValueTruncated);
   if(paramGuard.invalid())

@@ -64,7 +64,7 @@ Parameters ComputeVertexToTriangleDistancesFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Target Triangle Geometry", "The triangle geometry to compare against", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "The triangle geometry's normals array", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "The triangle geometry's normals array", DataPath{}, GetDataArrayOnlyTypes(),
                                                           std::set<DataType>{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Arrays"});

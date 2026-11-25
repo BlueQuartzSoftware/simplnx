@@ -151,10 +151,10 @@ Parameters ComputeBoundingBoxStatsFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Selected Image Geometry", "The DataPath to the Geometry that contains the points/edges/faces for the geometry",
                                                              DataPath{}, GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
-                                                          nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_UnifiedBoundsPath_Key, "Unified Bounding Boxes Array",
-                                                          "The array containing the min and max point of the bounding box for each feature | tuple ordering {Min-X,Min-Y,Min-Z,Max-X,Max-Y,Max-Z}",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{6}}));
+                                                          GetDataArrayOnlyTypes(), nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(
+      k_UnifiedBoundsPath_Key, "Unified Bounding Boxes Array", "The array containing the min and max point of the bounding box for each feature | tuple ordering {Min-X,Min-Y,Min-Z,Max-X,Max-Y,Max-Z}",
+      DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{6}}));
 
   params.insertSeparator(Parameters::Separator{"Output Destination"});
   params.insertLinkableParameter(

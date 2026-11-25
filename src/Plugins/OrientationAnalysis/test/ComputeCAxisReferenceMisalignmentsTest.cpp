@@ -755,8 +755,6 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: output name 
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: preflight rejects string array selections", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  // ArraySelectionParameter applies its numeric type and component-shape lists only to IDataArray,
-  // so a StringArray with the right tuple count reaches preflightImpl.
   auto ds = MakeData({{0, 30, 0}, {0, 45, 0}}, {2});
   REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
   const auto parentId = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
@@ -764,7 +762,6 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: preflight re
   REQUIRE(StringArray::CreateWithValues(ds, stringsPath.getTargetName(), {2}, {"a", "b"}, parentId) != nullptr);
   const bool useMask = GENERATE(false, true);
   auto args = MakeArgs({0, 0, 1}, useMask);
-  int32 expectedCode = AlgorithmType::k_InvalidMaskArrayError;
   if(useMask)
   {
     args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(stringsPath));
@@ -772,14 +769,13 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: preflight re
   else
   {
     args.insertOrAssign(FilterType::k_QuatsArrayPath_Key, std::make_any<DataPath>(stringsPath));
-    expectedCode = AlgorithmType::k_InvalidQuatsArrayError;
   }
   IFilter::PreflightResult result;
   REQUIRE_NOTHROW(result = FilterType().preflight(ds, args));
   REQUIRE(result.output_actions.invalid());
   REQUIRE(result.output_actions.errors().size() == 1);
-  REQUIRE(result.output_actions.errors()[0].code == expectedCode);
-  REQUIRE(result.output_actions.errors()[0].message.find("has type 'StringArray'") != std::string::npos);
+  REQUIRE(result.output_actions.errors()[0].code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  REQUIRE(result.output_actions.errors()[0].message.find("has kind StringArray") != std::string::npos);
   REQUIRE(ds.getDataAs<Float32ArrayType>(k_Output) == nullptr);
 }
 

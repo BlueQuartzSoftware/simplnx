@@ -1,4 +1,5 @@
 #include "ProjectionFilterTestUtils.hpp"
+#include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/MinimumProjectionImageFilter.hpp"
 
@@ -25,4 +26,9 @@ TEST_CASE("NXImageProcessing::MinimumProjectionImageFilter: ITK real-image golde
 TEST_CASE("NXImageProcessing::MinimumProjectionImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][MinimumProjectionImageFilter]")
 {
   projection_test::RunProjectionMd5ItkGolden<MinimumProjectionImageFilter>("Ramp-Up-Short.nrrd", /*projDim=*/1, /*removeOriginalGeometry=*/true, "c4d83f61ffd5cc3a163155bb5d6a0698");
+}
+
+TEST_CASE("NXImageProcessing::MinimumProjectionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][MinimumProjectionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<MinimumProjectionImageFilter, float32>();
 }

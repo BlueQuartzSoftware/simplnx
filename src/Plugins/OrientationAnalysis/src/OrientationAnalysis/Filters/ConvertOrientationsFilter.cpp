@@ -2,8 +2,8 @@
 
 #include "Algorithms/ConvertOrientations.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -67,7 +67,8 @@ Parameters ConvertOrientationsFilter::parameters() const
                                                    "Specifies to which orientation representation to convert the incoming data. Specified as an enumeration index", 1,
                                                    OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "The complete path to the incoming orientation representation data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}, {4}, {9}}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputOrientationArrayName_Key, "Output Orientations", "The name of the data array with the converted orientation representation", ""));
 
   return params;
@@ -99,14 +100,8 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
-  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
-  std::vector<size_t> inputCompShape = inputArrayPtr->getIDataStore()->getComponentShape();
-
-  if(inputCompShape.size() > 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
-                                                             fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
-  }
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(pInputArrayPath);
+  const ShapeType inputCompShape = inputArray.getComponentShape();
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float>, float>;
   auto representationNames = OrientationConverterType::GetOrientationTypeStrings<std::vector<std::string>>();
   auto representationElementCount = OrientationConverterType::GetComponentCounts<std::vector<size_t>>();
@@ -120,9 +115,9 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
-  auto numericType = inputArrayPtr->getDataType();
+  const auto numericType = inputArray.getDataType();
   std::vector<size_t> componentDims = {representationElementCount[static_cast<size_t>(outputType)]};
-  auto action = std::make_unique<CreateArrayAction>(numericType, inputArrayPtr->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, inputArray.getTupleShape(), componentDims, pOutputArrayPath);
 
   // Create the Output actions
   OutputActions actions;

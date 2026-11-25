@@ -4,6 +4,7 @@
 
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/MaurerDistanceMapEngine.hpp"
@@ -332,7 +333,7 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
     DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
     const auto result = filter.preflight(dataStructure, makeArgs(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == -8550);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("tuple mismatch")
   {

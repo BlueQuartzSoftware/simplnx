@@ -5,7 +5,6 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -70,11 +69,12 @@ Parameters ComputeSurfaceAreaToVolumeFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_NumCellsArrayPath_Key, "Number of Cells", "Number of Cells that are owned by the Feature. This value does not place any distinction between Cells that may be of a different size",
-      DataPath({"Cell Feature Data", "NumElements"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+      DataPath({"Cell Feature Data", "NumElements"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio",
                                                           "Ratio of surface area to volume for each Feature. The units are inverse length", "SurfaceAreaVolumeRatio"));
@@ -107,16 +107,8 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPathValue);
-  // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
-  // Keep the local type checks until the parameter validates supported array kinds.
-  // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
+
   const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
-  if(featureIdsPtr == nullptr)
-  {
-    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(pFeatureIdsArrayPathValue);
-    return MakePreflightErrorResult(-12803, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
-                                                        pFeatureIdsArrayPathValue.toString(), selectedObject.getTypeName()));
-  }
   auto tupleCountResult = ValidateCellTupleCount(imageGeom, pImageGeometryPathValue, featureIdsPtr->getNumberOfTuples(), pFeatureIdsArrayPathValue, -12804);
   if(tupleCountResult.invalid())
   {
@@ -127,12 +119,6 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* featureDataArrayPtr = dataStructure.getDataAs<Int32ArrayType>(pNumCellsArrayPathValue);
-  if(nullptr == featureDataArrayPtr)
-  {
-    return MakePreflightErrorResult(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pNumCellsArrayPathValue.toString()));
-  }
   const auto* cellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(pNumCellsArrayPathValue.getParent());
   if(cellFeatureDataPtr == nullptr)
   {

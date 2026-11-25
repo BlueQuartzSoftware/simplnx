@@ -57,18 +57,19 @@ Parameters WriteGBCDTriangleDataFilter::parameters() const
                                                           FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face",
-                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceLabels"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face",
-                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceNormals"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Specifies the area of each Face",
-                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceAreas"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceAreas"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(
-      k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles", "Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z).",
-      DataPath({"[Image Geometry]", "Cell Feature Data", "AvgEulerAngles"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles",
+                                                          "Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z).",
+                                                          DataPath({"[Image Geometry]", "Cell Feature Data", "AvgEulerAngles"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   return params;
 }

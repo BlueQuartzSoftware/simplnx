@@ -88,7 +88,8 @@ Parameters InitializeDataFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive]  The upper bound initialization range for random values", "1;1;1"));
 
   params.insertSeparator(Parameters::Separator{"Input Data Array"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Array", "The data array in which to initialize the data", DataPath{}, nx::core::GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Array", "The data array in which to initialize the data", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   /* Using Fill Value */

@@ -57,8 +57,8 @@ Parameters StandardDeviationProjectionImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetScalarNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetScalarNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(std::make_unique<StringParameter>(k_OutputImageGeomName_Key, "Created Image Geometry", "The name of the projected geometry", "Projected Image"));
@@ -93,12 +93,7 @@ IFilter::PreflightResult StandardDeviationProjectionImageFilter::preflightImpl(c
   auto performInPlace = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto outputGeomName = filterArgs.value<std::string>(k_OutputImageGeomName_Key);
 
-  // The standard deviation is a real-valued statistic, so the legacy ITK filter emits a double (Float64)
-  // output regardless of input type. The façade is therefore instantiated with the AllNumeric input policy
-  // (any scalar numeric input) and the AlwaysFloat64Type OutTypeMap (Float64 output); the execute façade below
-  // MUST use the same pair, or the allocated and written output types disagree. The scalar
-  // (single-component) and tuple-consistency checks are performed inside PreflightAxisProjection.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AlwaysFloat64Type>(
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
 
   return {.output_actions = std::move(resultOutputActions)};

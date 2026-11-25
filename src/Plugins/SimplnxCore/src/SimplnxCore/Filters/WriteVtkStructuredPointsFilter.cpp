@@ -60,8 +60,8 @@ Parameters WriteVtkStructuredPointsFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The path to the image geometry in which to write out to the vtk file", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Cell Data Arrays to Write", "The paths to the cell data arrays to write out with the geometry",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray},
+                                                               GetAllNumericTypes()));
 
   return params;
 }

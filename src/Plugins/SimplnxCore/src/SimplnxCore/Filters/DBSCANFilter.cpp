@@ -87,12 +87,12 @@ Parameters DBSCANFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array",
-                                                          "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, nx::core::GetAllNumericTypes(),
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}, {3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{2}, {3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "Name of the ids array to be created in Attribute Array to Cluster's parent group",

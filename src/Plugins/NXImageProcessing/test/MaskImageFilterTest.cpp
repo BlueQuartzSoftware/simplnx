@@ -3,6 +3,7 @@
 #include "UnaryFilterTestUtils.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/MaskEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -255,7 +256,7 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight guards (Outside Value r
     buildInt8(dataStructure, 2);
     auto result = filter.preflight(dataStructure, makeArgs(0.0));
     REQUIRE(result.output_actions.invalid());
-    REQUIRE(result.output_actions.errors().front().code == -8105);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
 }
 
@@ -340,11 +341,8 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: uint32 mask keep/discard", "[NXIm
   RunMaskTypeKeepDiscard<uint32>(uint32{3000000000U}); // nonzero beyond the uint16 range, exercising the uint32 mask path
 }
 
-// Additional preflight guards not covered by the Outside-Value / mask-component test above: the mask must be
-// uint8/uint16/uint32 (a valid-but-wrong integer type -> -8100), and must have the same tuple count as the
-// input (-8101). The mask param is restricted to integer scalar types, so int32 passes parameter validation
-// yet trips the filter's uint8/uint16/uint32-only guard.
-TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type (-8100) and tuple mismatch (-8101)", "[NXImageProcessing][MaskImageFilter]")
+// The mask selection accepts uint8, uint16, or uint32. The filter compares its tuple count to the image.
+TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type and tuple mismatch (-8101)", "[NXImageProcessing][MaskImageFilter]")
 {
   unit_test::LoadPlugins();
   const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -361,7 +359,7 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type
 
   MaskImageFilter filter;
 
-  SECTION("wrong mask type (int32) -> -8100")
+  SECTION("wrong mask type (int32)")
   {
     DataStructure dataStructure;
     const ShapeType cellShape = {2, 2, 2};
@@ -378,7 +376,7 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type
 
     auto result = filter.preflight(dataStructure, makeArgs());
     REQUIRE(result.output_actions.invalid());
-    REQUIRE(result.output_actions.errors().front().code == -8100);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateAllowedTypeError);
   }
 
   SECTION("mask/input tuple mismatch -> -8101")

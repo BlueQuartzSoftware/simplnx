@@ -1,25 +1,40 @@
 #include "MultiArraySelectionParameter.hpp"
 
+#include "ArraySelectionValidation.hpp"
+
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
-#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <utility>
 
+#include <stdexcept>
+
 namespace nx::core
 {
-MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes,
-                                                           AllowedDataTypesType allowedDataTypes, AllowedComponentShapesType requiredComps)
+MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                           const AllowedArrayTypes& allowedArrayTypes, const AllowedDataTypesType& allowedDataTypes, AllowedComponentShapesType requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(std::move(defaultValue))
-, m_AllowedTypes(std::move(allowedTypes))
-, m_AllowedDataTypes(std::move(allowedDataTypes))
-, m_RequiredComponentShapes(std::move(requiredComps))
+, m_DefaultValue(defaultValue)
+, m_AllowedArrayTypes(allowedArrayTypes)
+, m_AllowedDataTypes(allowedDataTypes)
+, m_RequiredComponentShapes(requiredComps)
 {
+  if(allowedArrayTypes.empty())
+  {
+    throw std::runtime_error(
+        fmt::format("MultiArraySelectionParameter requires a nonempty AllowedArrayTypes set. Please report this to the developer.\n  Parameter Name:{}\n  Human Name:{}", name, humanName));
+  }
+
+  using Kind = IArray::ArrayType;
+  if(allowedDataTypes.dataTypes().empty() && (allowedArrayTypes.contains(Kind::DataArray) || allowedArrayTypes.contains(Kind::NeighborListArray) || allowedArrayTypes.contains(Kind::Any)))
+  {
+    throw std::runtime_error(fmt::format("MultiArraySelectionParameter requires a nonempty AllowedDataTypes set when DataArray, NeighborListArray or Any is allowed. Please report this to the "
+                                         "developer. \n  Parameter Name:{}\n  Human Name:{}",
+                                         name, humanName));
+  }
 }
 
 Uuid MultiArraySelectionParameter::uuid() const
@@ -87,7 +102,7 @@ Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json
 
 IParameter::UniquePointerType MultiArraySelectionParameter::clone() const
 {
-  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowedDataTypes, m_RequiredComponentShapes);
+  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedArrayTypes, m_AllowedDataTypes, m_RequiredComponentShapes);
 }
 
 std::any MultiArraySelectionParameter::defaultValue() const
@@ -100,14 +115,14 @@ typename MultiArraySelectionParameter::ValueType MultiArraySelectionParameter::d
   return m_DefaultValue;
 }
 
-MultiArraySelectionParameter::AllowedTypeSetType MultiArraySelectionParameter::allowedTypes() const
+MultiArraySelectionParameter::AllowedArrayTypes MultiArraySelectionParameter::allowedArrayTypes() const
 {
-  return m_AllowedTypes;
+  return m_AllowedArrayTypes;
 }
 
-MultiArraySelectionParameter::AllowedDataTypesType MultiArraySelectionParameter::allowedDataTypes() const
+DataTypeSetType MultiArraySelectionParameter::allowedDataTypes() const
 {
-  return m_AllowedDataTypes;
+  return m_AllowedDataTypes.dataTypes();
 }
 
 MultiArraySelectionParameter::AllowedComponentShapesType MultiArraySelectionParameter::requiredComponentShapes() const
@@ -142,43 +157,15 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       errors.push_back(Error{.code = filter_parameter::constants::k_ValidateDoesNotExist, .message = fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
-    const auto* dataArrayPtr = dataStructure.getDataAs<IArray>(path);
-    if(dataArrayPtr == nullptr)
+    const auto* array = dynamic_cast<const IArray*>(objectPtr);
+    if(array == nullptr)
     {
       errors.push_back(Error{.code = filter_parameter::constants::k_ValidateTypeError, .message = fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
       continue;
     }
-    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && !m_AllowedTypes.contains(dataArrayPtr->getArrayType()))
+    if(auto error = detail::ValidateArraySelection(*array, path, m_AllowedArrayTypes, m_AllowedDataTypes.dataTypes(), m_RequiredComponentShapes, prefix); error.has_value())
     {
-      errors.push_back(Error{.code = filter_parameter::constants::k_ValidateTypeError,
-                             .message = fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(), dataArrayPtr->getTypeName(),
-                                                    IArray::StringListFromArrayType(m_AllowedTypes))});
-      continue;
-    }
-    if(!m_RequiredComponentShapes.empty())
-    {
-      std::string compStr;
-      bool foundMatch = false;
-      for(const auto& compShape : m_RequiredComponentShapes)
-      {
-        if(compShape == dataArrayPtr->getComponentShape())
-        {
-          foundMatch = true;
-          break;
-        }
-        compStr += string_utilities::Number(compShape[0]);
-        for(usize j = 1; j < compShape.size(); ++j)
-        {
-          compStr += " x " + string_utilities::Number(compShape[j]);
-        }
-        compStr += " or ";
-      }
-      if(!foundMatch)
-      {
-        compStr.erase(compStr.size() - 4); // Remove trailing " or "
-        errors.push_back(Error{.code = nx::core::filter_parameter::constants::k_ValidateTupleShapeValue,
-                               .message = fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, path.toString(), compStr)});
-      }
+      errors.push_back(std::move(*error));
     }
   }
 

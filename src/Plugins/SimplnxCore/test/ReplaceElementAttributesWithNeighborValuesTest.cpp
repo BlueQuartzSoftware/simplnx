@@ -15,6 +15,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -694,7 +695,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Compar
     const auto preflight = FilterType().preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
     REQUIRE(preflight.output_actions.errors().size() == 1);
-    CHECK(preflight.output_actions.errors().front().code == -15003);
+    CHECK(preflight.output_actions.errors().front().code == filter_parameter::constants::k_Validate_ArrayType_Error);
   }
 }
 

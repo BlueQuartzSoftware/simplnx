@@ -73,7 +73,8 @@ Parameters LaplacianSmoothingFilter::parameters() const
       GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);

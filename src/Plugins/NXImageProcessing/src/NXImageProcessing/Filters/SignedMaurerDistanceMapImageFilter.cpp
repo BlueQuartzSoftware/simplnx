@@ -115,8 +115,8 @@ Parameters SignedMaurerDistanceMapImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetIntegerScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -139,13 +139,10 @@ IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  // requireScalar=true: the Maurer distance transform is defined on scalar images. The distance output is a FIXED
-  // float32 (matching the legacy ITK SignedMaurerDistanceMap FilterOutputType), so AlwaysFloat32Type maps every integer
-  // input type to a float32 output array. IntegerOnly restricts the input to the integer scalar types.
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32Type>(
-      dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true, PredictMaurerChunkHint(inputArray, imageGeom.getDimensions()));
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AlwaysFloat32Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                     PredictMaurerChunkHint(inputArray, imageGeom.getDimensions()));
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
@@ -153,7 +150,7 @@ IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const
 
   // The Float64 BackgroundValue is cast to the (integer) input element type at execute; a non-finite or out-of-range
   // value is undefined behavior and a fractional value truncates silently, so validate it here. The input is
-  // guaranteed present/scalar/integer by the successful preflight above.
+  // a scalar of an integer element type by parameter validation.
   const auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   Result<> backgroundGuard = ImageProcessing::ValidateBackgroundInRange(inputType, backgroundValue, k_NonFiniteBackgroundValue, k_BackgroundValueOutOfRange, k_BackgroundValueTruncated);

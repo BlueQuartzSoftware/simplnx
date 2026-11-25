@@ -67,8 +67,8 @@ Parameters AlignSectionsListFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
                                                              DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ShiftsArrayPath_Key, "Shifts Array", "The array containing the relative or cumulative shifts for each slice",
-                                                          DataPath({"Data Container", "Alignment Shifts Data", "Shifts"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int64},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+                                                          DataPath({"Data Container", "Alignment Shifts Data", "Shifts"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int64}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   return params;
 }
@@ -118,11 +118,6 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
   if(pUseFileValue == 0u)
   {
     const auto* shiftsArrayPtr = dataStructure.getDataAs<IDataArray>(pShiftsArrayPathValue);
-    if(shiftsArrayPtr == nullptr)
-    {
-      return MakePreflightErrorResult(-8942, "Shifts array is not valid.");
-    }
-
     if(shiftsArrayPtr->getNumberOfTuples() != imageGeom.getNumZCells())
     {
       return MakePreflightErrorResult(-8943,

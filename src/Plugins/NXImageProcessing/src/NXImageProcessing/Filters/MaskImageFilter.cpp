@@ -48,11 +48,11 @@ Parameters MaskImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskImageDataPath_Key, "Mask Cell Data",
-                                                          "The mask image data; must be uint8, uint16, or uint32 and have the same number of tuples as the input.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(
+      k_MaskImageDataPath_Key, "Mask Cell Data", "The mask image data; must be uint8, uint16, or uint32 and have the same number of tuples as the input.", DataPath{}, GetDataArrayOnlyTypes(),
+      ArraySelectionParameter::AllowedDataTypes{DataType::uint8, DataType::uint16, DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
                                                           "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
@@ -76,19 +76,6 @@ IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dat
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
-  const DataType maskType = maskArray.getDataType();
-  if(maskType != DataType::uint8 && maskType != DataType::uint16 && maskType != DataType::uint32)
-  {
-    return {.output_actions =
-                MakeErrorResult<OutputActions>(-8100, fmt::format("Mask array '{}' must be uint8, uint16, or uint32, but is '{}'.", maskArrayPath.toString(), DataTypeToString(maskType)))};
-  }
-  // The mask engine reads the mask as a single-component scalar (ApplyMask/ReadMaskKeepChunk index by tuple);
-  // a multi-component mask would be mis-read, so require scalar here.
-  if(maskArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(
-                -8105, fmt::format("Mask array '{}' must be single-component (scalar), but has {} components.", maskArrayPath.toString(), maskArray.getNumberOfComponents()))};
-  }
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(maskArray.getNumberOfTuples() != inputArray.getNumberOfTuples())
   {

@@ -79,11 +79,12 @@ Parameters ComputeKMeansFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array",
-                                                          "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to cluster from", DataPath{}, nx::core::GetAllNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to cluster from", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "name of the ids array to be created in Attribute Array to Cluster's parent group",
@@ -129,12 +130,7 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* clusterArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  if(clusterArrayPtr == nullptr)
-  {
-    return MakePreflightErrorResult(-7585, "Array to Cluster MUST be a valid DataPath.");
-  }
-
+  const auto& clusterArray = dataStructure.getDataRefAs<IDataArray>(pSelectedArrayPathValue);
   if(filterArgs.value<bool>(k_UseMask_Key))
   {
     const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
@@ -143,13 +139,13 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
       const auto& maskArray = dataStructure.getDataRefAs<IArray>(maskPath);
       return MakePreflightErrorResult(
           -7588, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Cell Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
-                             pSelectedArrayPathValue.toString(), clusterArrayPtr->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
+                             pSelectedArrayPathValue.toString(), clusterArray.getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
     }
   }
 
   {
     auto createAction =
-        std::make_unique<CreateArrayAction>(DataType::int32, clusterArrayPtr->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
+        std::make_unique<CreateArrayAction>(DataType::int32, clusterArray.getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -159,7 +155,7 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, tupDims, clusterArrayPtr->getComponentShape(), pFeatureAMPathValue.createChildPath(pMeansArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, tupDims, clusterArray.getComponentShape(), pFeatureAMPathValue.createChildPath(pMeansArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 

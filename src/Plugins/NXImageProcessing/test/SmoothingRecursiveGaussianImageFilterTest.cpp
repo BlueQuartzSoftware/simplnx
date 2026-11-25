@@ -3,6 +3,7 @@
 
 #include "NXImageProcessing/Filters/SmoothingRecursiveGaussianImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -474,4 +475,9 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<SmoothingRecursiveGaussianImageFilter, float32>();
 }

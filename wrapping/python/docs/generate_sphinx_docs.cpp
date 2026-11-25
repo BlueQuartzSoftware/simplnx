@@ -189,17 +189,17 @@ static bool CheckArraySelectionParameter(std::ostream& rstStream, const nx::core
   const ArraySelectionParameter* paramPtr = dynamic_cast<const ArraySelectionParameter*>(paramValue.get());
   if(paramPtr != nullptr)
   {
-    rstStream << "| " << paramValue->humanName() << " | " << paramTypeName << " | Allowed Types: ";
-    auto allowedTypes = paramPtr->allowedTypes();
-    int i = 0;
-    for(const auto& allowedType : allowedTypes)
+    const auto arrayKinds = nx::core::IArray::StringListFromArrayType(paramPtr->allowedArrayTypes());
+    rstStream << "| " << paramValue->humanName() << " | " << paramTypeName << " | Allowed Array Kinds: " << fmt::format("{}", fmt::join(arrayKinds, ", "));
+    const auto allowedDataTypes = paramPtr->allowedDataTypes();
+    if(!allowedDataTypes.empty())
     {
-      rstStream << nx::core::DataTypeToString(allowedType).str();
-      i++;
-      if(i != allowedTypes.size())
+      std::vector<std::string> elementTypes;
+      for(const auto dataType : allowedDataTypes)
       {
-        rstStream << ", ";
+        elementTypes.push_back(nx::core::DataTypeToString(dataType).str());
       }
+      rstStream << ". Allowed Element Types: " << fmt::format("{}", fmt::join(elementTypes, ", "));
     }
     auto compShapes = paramPtr->requiredComponentShapes();
     if(!compShapes.empty())

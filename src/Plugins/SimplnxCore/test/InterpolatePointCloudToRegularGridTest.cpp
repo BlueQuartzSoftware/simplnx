@@ -378,8 +378,11 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Boolean Interp
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
-  REQUIRE(preflightResult.output_actions.errors()[0].code == -205);
-  REQUIRE(preflightResult.output_actions.errors()[0].message.find("for interpolation") != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  const auto& error = preflightResult.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_ValidateAllowedTypeError);
+  CHECK(error.message.find("Attribute Arrays to Interpolate") != std::string::npos);
+  CHECK(error.message.find(k_MaskPath.toString()) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Boolean Copy Array Is Rejected", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
@@ -393,8 +396,11 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Boolean Copy A
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
-  REQUIRE(preflightResult.output_actions.errors()[0].code == -205);
-  REQUIRE(preflightResult.output_actions.errors()[0].message.find("for copying") != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  const auto& error = preflightResult.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_ValidateAllowedTypeError);
+  CHECK(error.message.find("Attribute Arrays to Copy") != std::string::npos);
+  CHECK(error.message.find(k_MaskPath.toString()) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter Execution", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")

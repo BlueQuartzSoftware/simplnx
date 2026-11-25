@@ -1,55 +1,42 @@
 #include "ArraySelectionParameter.hpp"
-#include "simplnx/DataStructure/IDataStore.hpp"
-#include "simplnx/Filter/IParameter.hpp"
-#include <memory>
+
+#include "ArraySelectionValidation.hpp"
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
-#include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
-#include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
 #include <utility>
 
-using namespace nx::core;
-
-template <>
-/**
- * @struct fmt::formatter<nx::core::DataType>
- * @brief Formats a simplnx DataType as its registered name.
- */
-struct fmt::formatter<nx::core::DataType>
-{
-  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
-  {
-    return ctx.begin();
-  }
-
-  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx)
-  {
-    return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
-  }
-};
+#include <memory>
+#include <stdexcept>
 
 namespace nx::core
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
-                                                 AllowedComponentShapesType requiredComps, DataLocation location)
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                 const AllowedArrayTypes& allowedArrayTypes, const AllowedDataTypes& allowedDataTypes, AllowedComponentShapesType requiredComps, DataLocation location)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(std::move(defaultValue))
-, m_AllowedTypes(allowedTypes)
+, m_DefaultValue(defaultValue)
+, m_AllowedArrayTypes(allowedArrayTypes)
+, m_AllowedDataTypes(allowedDataTypes)
 , m_RequiredComponentShapes(std::move(requiredComps))
 , m_Location(location)
 {
-  if(allowedTypes.empty())
+  if(allowedArrayTypes.empty() || allowedArrayTypes.contains(IArray::ArrayType::Any))
   {
-    throw std::runtime_error(
-        fmt::format("ArraySelectionParameter REQUIRES a non-empty AllowedTypes variable. Please report this to the developer. \n  Parameter Name:{}\n  Human Name:{}", name, humanName));
+    throw std::runtime_error(fmt::format(
+        "ArraySelectionParameter requires a nonempty AllowedArrayTypes set of concrete array kinds. Please report this to the developer. \n  Parameter Name:{}\n  Human Name:{}", name, humanName));
+  }
+
+  if(allowedDataTypes.dataTypes().empty() && (allowedArrayTypes.contains(IArray::ArrayType::DataArray) || allowedArrayTypes.contains(IArray::ArrayType::NeighborListArray)))
+  {
+    throw std::runtime_error(fmt::format(
+        "ArraySelectionParameter requires a nonempty AllowedDataTypes set when DataArray or NeighborListArray is allowed. Please report this to the developer. \n  Parameter Name:{}\n  Human Name:{}",
+        name, humanName));
   }
 }
 
@@ -97,7 +84,7 @@ Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& jso
 
 IParameter::UniquePointerType ArraySelectionParameter::clone() const
 {
-  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_RequiredComponentShapes, m_Location);
+  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedArrayTypes, m_AllowedDataTypes, m_RequiredComponentShapes, m_Location);
 }
 
 std::any ArraySelectionParameter::defaultValue() const
@@ -110,9 +97,14 @@ typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath
   return m_DefaultValue;
 }
 
-ArraySelectionParameter::AllowedTypeSetType ArraySelectionParameter::allowedTypes() const
+ArraySelectionParameter::AllowedArrayTypes ArraySelectionParameter::allowedArrayTypes() const
 {
-  return m_AllowedTypes;
+  return m_AllowedArrayTypes;
+}
+
+DataTypeSetType ArraySelectionParameter::allowedDataTypes() const
+{
+  return m_AllowedDataTypes.dataTypes();
 }
 
 ArraySelectionParameter::AllowedComponentShapesType ArraySelectionParameter::requiredComponentShapes() const
@@ -159,81 +151,47 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   const auto* iArrayPtr = dynamic_cast<const IArray*>(objectPtr);
   if(iArrayPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' must be an array.", prefix, value.toString()));
   }
 
-  // StringArray has fixed string type and component shape. Numeric type,
-  // component-shape, and storage-location rules apply only to IDataArray.
-  const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(objectPtr);
-  if(dataArrayPtr != nullptr)
+  if(auto error = detail::ValidateArraySelection(*iArrayPtr, value, m_AllowedArrayTypes, m_AllowedDataTypes.dataTypes(), m_RequiredComponentShapes, prefix); error.has_value())
   {
-    if(!m_AllowedTypes.empty())
+    return MakeErrorResult(error->code, std::move(error->message));
+  }
+
+  const auto* dataArray = dynamic_cast<const IDataArray*>(iArrayPtr);
+  if(dataArray != nullptr && m_Location != DataLocation::Any)
+  {
+    const IDataStore::StoreType storeType = dataArray->getStoreType();
+    const bool matches =
+        (m_Location == DataLocation::InMemory && storeType == IDataStore::StoreType::InMemory) || (m_Location == DataLocation::OutOfCore && storeType == IDataStore::StoreType::OutOfCore);
+    if(storeType != IDataStore::StoreType::Empty && !matches)
     {
-
-      DataType dataType = dataArrayPtr->getDataType();
-      if(!m_AllowedTypes.contains(dataType))
+      const char* actualLocationNamePtr = "unsupported";
+      if(storeType == IDataStore::StoreType::InMemory)
       {
-        return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateAllowedTypeError,
-                                         fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
+        actualLocationNamePtr = "in-memory";
       }
-    }
-
-    if(!m_RequiredComponentShapes.empty())
-    {
-      std::string compStr;
-      bool foundMatch = false;
-      for(const auto& compShape : m_RequiredComponentShapes)
+      else if(storeType == IDataStore::StoreType::OutOfCore)
       {
-        if(compShape == dataArrayPtr->getComponentShape())
-        {
-          foundMatch = true;
-          break;
-        }
-        compStr += string_utilities::Number(compShape[0]);
-        for(usize i = 1; i < compShape.size(); ++i)
-        {
-          compStr += " x " + string_utilities::Number(compShape[i]);
-        }
-        compStr += " or ";
+        actualLocationNamePtr = "out-of-core";
       }
-      if(!foundMatch)
+
+      const char* requestedLocationNamePtr = "unsupported";
+      if(m_Location == DataLocation::InMemory)
       {
-        compStr.erase(compStr.size() - 4); // Remove trailing " or "
-        return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTupleShapeValue,
-                                           fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, value.toString(), compStr));
+        requestedLocationNamePtr = "in-memory";
       }
-    }
+      else
 
-    if(m_Location != DataLocation::Any)
-    {
-      const IDataStore::StoreType storeType = dataArrayPtr->getStoreType();
-      const bool matches =
-          (m_Location == DataLocation::InMemory && storeType == IDataStore::StoreType::InMemory) || (m_Location == DataLocation::OutOfCore && storeType == IDataStore::StoreType::OutOfCore);
-      if(storeType != IDataStore::StoreType::Empty && !matches)
+          if(m_Location == DataLocation::OutOfCore)
       {
-        const char* actualLocationNamePtr = "unsupported";
-        if(storeType == IDataStore::StoreType::InMemory)
-        {
-          actualLocationNamePtr = "in-memory";
-        }
-        else if(storeType == IDataStore::StoreType::OutOfCore)
-        {
-          actualLocationNamePtr = "out-of-core";
-        }
 
-        const char* requestedLocationNamePtr = "unsupported";
-        if(m_Location == DataLocation::InMemory)
-        {
-          requestedLocationNamePtr = "in-memory";
-        }
-        else if(m_Location == DataLocation::OutOfCore)
-        {
-          requestedLocationNamePtr = "out-of-core";
-        }
-
-        return MakeErrorResult(filter_parameter::constants::k_ValidateDataLocationError,
-                               fmt::format("{}DataArray at path '{}' has '{}' storage; required storage is '{}'.", prefix, value.toString(), actualLocationNamePtr, requestedLocationNamePtr));
+        requestedLocationNamePtr = "out-of-core";
       }
+
+      return MakeErrorResult(filter_parameter::constants::k_ValidateDataLocationError,
+                             fmt::format("{}DataArray at path '{}' has '{}' storage; required storage is '{}'.", prefix, value.toString(), actualLocationNamePtr, requestedLocationNamePtr));
     }
   }
   return {};

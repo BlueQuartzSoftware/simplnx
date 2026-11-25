@@ -1,9 +1,9 @@
 #pragma once
 
-#include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Parameters/ArraySelectionDataTypes.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <set>
@@ -12,14 +12,17 @@
 namespace nx::core
 {
 /**
- * @brief This Filter Parameter describes a specific DataPath where the last DataObject in
- * the path is a DataArray Object.
+ * @brief Selects an array by DataPath and validates its kind, element type, component shape, and storage location.
+ *
+ * String arrays and neighbor lists have a single component. Element types apply to data arrays and
+ * neighbor lists, and storage location applies only to data arrays.
  */
 class SIMPLNX_EXPORT ArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedTypeSetType = nx::core::DataTypeSetType;
+  using AllowedArrayTypes = std::set<IArray::ArrayType>;
+  using AllowedDataTypes = ArraySelectionDataTypes;
   using AllowedComponentShapesType = std::vector<ShapeType>;
 
   enum class DataLocation : uint8
@@ -30,8 +33,14 @@ public:
   };
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
-                          AllowedComponentShapesType requiredComps = {}, DataLocation location = DataLocation::Any);
+  /**
+   * @param allowedDataTypes Element types for data arrays and neighbor lists. Use
+   * AllowedDataTypes::StringOnly() when StringArray is the only allowed kind.
+   * @throws std::runtime_error If the array kinds are empty or include Any, or if a data array
+   * or neighbor list is allowed without specifying element types.
+   */
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedArrayTypes& allowedArrayTypes,
+                          const AllowedDataTypes& allowedDataTypes, AllowedComponentShapesType requiredComps = {}, DataLocation location = DataLocation::Any);
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -79,10 +88,16 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
-   * @return
+   * @brief Returns the array kinds accepted by this parameter.
+   * @return The allowed array kinds.
    */
-  AllowedTypeSetType allowedTypes() const;
+  AllowedArrayTypes allowedArrayTypes() const;
+
+  /**
+   * @brief Returns the element types accepted for data arrays and neighbor lists.
+   * @return The allowed element types. The set can be empty for a string-array-only selection.
+   */
+  DataTypeSetType allowedDataTypes() const;
 
   /**
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
@@ -150,7 +165,8 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedTypeSetType m_AllowedTypes;
+  AllowedArrayTypes m_AllowedArrayTypes;
+  AllowedDataTypes m_AllowedDataTypes;
   AllowedComponentShapesType m_RequiredComponentShapes;
   DataLocation m_Location = DataLocation::Any;
 };

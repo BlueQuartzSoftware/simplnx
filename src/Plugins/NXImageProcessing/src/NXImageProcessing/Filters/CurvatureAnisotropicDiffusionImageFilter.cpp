@@ -50,8 +50,8 @@ Parameters CurvatureAnisotropicDiffusionImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetFloatingScalarTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetFloatingScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -77,15 +77,9 @@ IFilter::PreflightResult CurvatureAnisotropicDiffusionImageFilter::preflightImpl
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
 
-  // requireScalar=true: the conductance term is defined on scalar images. The output is SameAsInput
-  // (type-preserving). FloatingScalar admits only float32/float64 (the legacy FloatingScalarPixelIdTypeList) --
-  // the exp()-based conductance term requires a signed, unbounded-precision pixel type (integer input is rejected).
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightImageFilter<ImageProcessing::FloatingScalar, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
-  // ITK's AnisotropicDiffusionImageFilter::InitializeIteration WARNS (never throws) when TimeStep exceeds the CFL
-  // stability bound. Only append the check once the input/geometry above are confirmed valid (imageGeomPath is
-  // guaranteed resolvable by PreflightImageFilter having succeeded).
+  // Warn when the time step exceeds the CFL stability bound for this geometry.
   if(resultOutputActions.valid())
   {
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

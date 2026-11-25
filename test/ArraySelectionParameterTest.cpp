@@ -3,16 +3,25 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <any>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 using namespace nx::core;
+
+static_assert(!std::is_default_constructible_v<ArraySelectionParameter::AllowedDataTypes>);
+static_assert(!std::is_default_constructible_v<MultiArraySelectionParameter::AllowedDataTypesType>);
+static_assert(std::is_same_v<ArraySelectionParameter::AllowedDataTypes, MultiArraySelectionParameter::AllowedDataTypesType>);
+static_assert(std::is_convertible_v<DataTypeSetType, ArraySelectionParameter::AllowedDataTypes>);
 
 namespace
 {
@@ -52,7 +61,7 @@ public:
  */
 void CheckLocation(const DataStructure& dataStructure, const DataPath& path, ArraySelectionParameter::DataLocation location, bool expectedValid)
 {
-  ArraySelectionParameter parameter("values", "Values", "Select values.", path, {DataType::int32}, {{1}}, location);
+  ArraySelectionParameter parameter("values", "Values", "Select values.", path, GetDataArrayOnlyTypes(), {DataType::int32}, {{1}}, location);
   auto copy = parameter.clone();
   const auto* typedCopyPtr = dynamic_cast<ArraySelectionParameter*>(copy.get());
   REQUIRE(typedCopyPtr != nullptr);
@@ -142,7 +151,7 @@ TEST_CASE("ArraySelectionParameter keeps type and shape checks for empty stores"
   {
     for(const auto& path : {DataPath({"WrongType"}), DataPath({"WrongShape"})})
     {
-      ArraySelectionParameter parameter("values", "Values", "Select values.", path, {DataType::int32}, {{1}}, location);
+      ArraySelectionParameter parameter("values", "Values", "Select values.", path, GetDataArrayOnlyTypes(), {DataType::int32}, {{1}}, location);
       auto copy = parameter.clone();
       const auto* typedCopyPtr = dynamic_cast<ArraySelectionParameter*>(copy.get());
       REQUIRE(typedCopyPtr != nullptr);
@@ -166,17 +175,168 @@ TEST_CASE("ArraySelectionParameter keeps type and shape checks for empty stores"
   }
 }
 
-TEST_CASE("ArraySelectionParameter retains StringArray and default location behavior", "[simplnx][Parameters]")
+TEST_CASE("ArraySelectionParameter validates array kinds, element types, and component shapes", "[simplnx][Parameters]")
 {
+  using namespace filter_parameter::constants;
+  using Kind = IArray::ArrayType;
   DataStructure dataStructure;
-  const DataPath path({"Strings"});
-  REQUIRE(StringArray::CreateWithValues(dataStructure, path.getTargetName(), {2}, {"one", "two"}) != nullptr);
+  const DataPath stringsPath({"Strings"});
+  const DataPath neighborsPath({"Neighbors"});
+  REQUIRE(StringArray::CreateWithValues(dataStructure, stringsPath.getTargetName(), {2}, {"one", "two"}) != nullptr);
+  REQUIRE(NeighborList<int32>::Create(dataStructure, neighborsPath.getTargetName(), {2}) != nullptr);
 
-  ArraySelectionParameter defaultParameter("values", "Values", "Select values.", path, {DataType::int32}, {{1}});
-  CHECK(defaultParameter.allowedDataLocations() == ArraySelectionParameter::DataLocation::Any);
-
-  for(const auto location : {ArraySelectionParameter::DataLocation::Any, ArraySelectionParameter::DataLocation::InMemory, ArraySelectionParameter::DataLocation::OutOfCore})
+  SECTION("DataArray-only selection rejects the other kinds before checking shapes or element types")
   {
-    CheckLocation(dataStructure, path, location, true);
+    const ArraySelectionParameter parameter("values", "Values", "Select values.", {}, GetDataArrayOnlyTypes(), {DataType::float32}, {{2}});
+    CHECK(parameter.allowedDataLocations() == ArraySelectionParameter::DataLocation::Any);
+    const bool isString = GENERATE(false, true);
+    const auto& path = isString ? stringsPath : neighborsPath;
+    const auto result = parameter.validatePath(dataStructure, path);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    const auto& error = result.errors().front();
+    CHECK(error.code == k_Validate_ArrayType_Error);
+    CHECK(error.message.find(path.toString()) != std::string::npos);
+    CHECK(error.message.find(isString ? "has kind StringArray" : "has kind NeighborListArray") != std::string::npos);
+    CHECK(error.message.find("Select an array of one of these kinds: DataArray") != std::string::npos);
   }
+
+  SECTION("Non-DataArray selections have one component, independent of the storage requirement")
+  {
+    const ArraySelectionParameter parameter("values", "Values", "Select values.", {}, GetAllArrayTypes(), {DataType::int32}, {{2}, {1}}, ArraySelectionParameter::DataLocation::OutOfCore);
+    const auto copy = parameter.clone();
+    const auto* clonedParameter = dynamic_cast<const ArraySelectionParameter*>(copy.get());
+    REQUIRE(clonedParameter != nullptr);
+    CHECK(clonedParameter->allowedArrayTypes() == std::set<Kind>{Kind::DataArray, Kind::NeighborListArray, Kind::StringArray});
+    CHECK(clonedParameter->allowedDataTypes() == std::set<DataType>{DataType::int32});
+    for(const auto& path : {stringsPath, neighborsPath})
+    {
+      const auto result = clonedParameter->validatePath(dataStructure, path);
+      SIMPLNX_RESULT_REQUIRE_VALID(result);
+    }
+  }
+
+  SECTION("The numeric kind set accepts a matching NeighborList")
+  {
+    const ArraySelectionParameter parameter("values", "Values", "Select values.", {}, GetNumericArrayTypes(), {DataType::int32}, {{1}});
+    const auto result = parameter.validatePath(dataStructure, neighborsPath);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+
+  SECTION("NeighborList selection rejects a disallowed element type")
+  {
+    const ArraySelectionParameter parameter("values", "Values", "Select values.", {}, GetNumericArrayTypes(), {DataType::float32}, {{1}});
+    CHECK(parameter.allowedArrayTypes() == std::set<Kind>{Kind::DataArray, Kind::NeighborListArray});
+    const auto result = parameter.validatePath(dataStructure, neighborsPath);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == k_ValidateAllowedTypeError);
+    CHECK(result.errors().front().message.find("has element type 'int32'") != std::string::npos);
+  }
+
+  SECTION("Component shape requirements apply to strings and neighbor lists")
+  {
+    const ArraySelectionParameter parameter("values", "Values", "Select values.", {}, GetAllArrayTypes(), {DataType::int32}, {{2}, {1, 1}});
+    for(const auto& path : {stringsPath, neighborsPath})
+    {
+      const auto result = parameter.validatePath(dataStructure, path);
+      SIMPLNX_RESULT_REQUIRE_INVALID(result);
+      REQUIRE(result.errors().size() == 1);
+      CHECK(result.errors().front().code == k_ValidateTupleShapeValue);
+    }
+  }
+
+  SECTION("String-only selection may omit element types")
+  {
+    const ArraySelectionParameter parameter("values", "Values", "Select values.", {}, {Kind::StringArray}, ArraySelectionParameter::AllowedDataTypes::StringOnly());
+    CHECK(parameter.allowedDataTypes().empty());
+    const auto result = parameter.validatePath(dataStructure, stringsPath);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+}
+
+TEST_CASE("ArraySelectionParameter requires concrete kinds and element types for numeric arrays", "[simplnx][Parameters]")
+{
+  using Kind = IArray::ArrayType;
+  REQUIRE_THROWS_AS(ArraySelectionParameter("values", "Values", "Select values.", {}, {}, {DataType::int32}), std::runtime_error);
+  REQUIRE_THROWS_AS(ArraySelectionParameter("values", "Values", "Select values.", {}, {Kind::DataArray, Kind::Any}, {DataType::int32}), std::runtime_error);
+  for(const auto kind : {Kind::DataArray, Kind::NeighborListArray})
+  {
+    const DataTypeSetType emptyTypes;
+    REQUIRE_THROWS_AS(ArraySelectionParameter("values", "Values", "Select values.", {}, {kind}, emptyTypes), std::runtime_error);
+    REQUIRE_THROWS_AS(ArraySelectionParameter("values", "Values", "Select values.", {}, {kind}, ArraySelectionParameter::AllowedDataTypes::StringOnly()), std::runtime_error);
+  }
+}
+
+TEST_CASE("MultiArraySelectionParameter validates kinds, element types, and component shapes", "[simplnx][Parameters]")
+{
+  using namespace filter_parameter::constants;
+  using Kind = IArray::ArrayType;
+  DataStructure dataStructure;
+  const DataPath integersPath({"Integers"});
+  const DataPath floatsPath({"Floats"});
+  const DataPath neighborsPath({"Neighbors"});
+  const DataPath stringsPath({"Strings"});
+  REQUIRE(Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, integersPath.getTargetName(), {2}, {1}) != nullptr);
+  REQUIRE(Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, floatsPath.getTargetName(), {2}, {1}) != nullptr);
+  REQUIRE(NeighborList<int32>::Create(dataStructure, neighborsPath.getTargetName(), {2}) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, stringsPath.getTargetName(), {2}, {"one", "two"}) != nullptr);
+
+  SECTION("Any accepts all kinds and checks element types on numeric arrays")
+  {
+    const MultiArraySelectionParameter parameter("values", "Values", "Select values.", {}, {Kind::Any}, {DataType::float32}, {{1}});
+    const auto validResult = parameter.validatePaths(dataStructure, {floatsPath, stringsPath});
+    SIMPLNX_RESULT_REQUIRE_VALID(validResult);
+    const auto result = parameter.validatePaths(dataStructure, {integersPath, stringsPath, neighborsPath});
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 2);
+    CHECK(result.errors()[0].code == k_ValidateAllowedTypeError);
+    CHECK(result.errors()[0].message.find("DataArray at path 'Integers' has element type 'int32'") != std::string::npos);
+    CHECK(result.errors()[1].code == k_ValidateAllowedTypeError);
+    CHECK(result.errors()[1].message.find("NeighborListArray at path 'Neighbors' has element type 'int32'") != std::string::npos);
+  }
+
+  SECTION("Kind errors precede element type and component shape checks")
+  {
+    const MultiArraySelectionParameter parameter("values", "Values", "Select values.", {}, GetDataArrayOnlyTypes(), {DataType::float32}, {{2}});
+    const auto result = parameter.validatePaths(dataStructure, {neighborsPath});
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == k_Validate_ArrayType_Error);
+    CHECK(result.errors().front().message.find("Array at path 'Neighbors' has kind NeighborListArray. Select an array of one of these kinds: DataArray.") != std::string::npos);
+  }
+
+  SECTION("Strings have no element type restriction")
+  {
+    const MultiArraySelectionParameter parameter("values", "Values", "Select values.", {}, {Kind::StringArray}, MultiArraySelectionParameter::AllowedDataTypesType::StringOnly(), {{1}});
+    CHECK(parameter.allowedDataTypes().empty());
+    const auto result = parameter.validatePaths(dataStructure, {stringsPath});
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+
+  SECTION("Component shapes are checked for strings and neighbor lists")
+  {
+    const MultiArraySelectionParameter parameter("values", "Values", "Select values.", {}, GetAllArrayTypes(), {DataType::int32}, {{2}});
+    const auto result = parameter.validatePaths(dataStructure, {stringsPath, neighborsPath});
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 2);
+    for(const auto& error : result.errors())
+    {
+      CHECK(error.code == k_ValidateTupleShapeValue);
+    }
+  }
+}
+
+TEST_CASE("MultiArraySelectionParameter requires element types for numeric arrays and Any", "[simplnx][Parameters]")
+{
+  using Kind = IArray::ArrayType;
+  const auto kind = GENERATE(Kind::DataArray, Kind::NeighborListArray, Kind::Any);
+  const DataTypeSetType emptyTypes;
+  REQUIRE_THROWS_AS(MultiArraySelectionParameter("values", "Values", "Select values.", {}, {kind}, emptyTypes), std::runtime_error);
+  REQUIRE_THROWS_AS(MultiArraySelectionParameter("values", "Values", "Select values.", {}, {kind}, MultiArraySelectionParameter::AllowedDataTypesType::StringOnly()), std::runtime_error);
+}
+
+TEST_CASE("MultiArraySelectionParameter requires at least one array kind", "[simplnx][Parameters]")
+{
+  REQUIRE_THROWS_AS(MultiArraySelectionParameter("values", "Values", "Select values.", {}, {}, {DataType::int32}), std::runtime_error);
 }

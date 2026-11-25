@@ -52,7 +52,8 @@ Parameters ComputeFeatureRectFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{{"FeatureIds"}},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
                                                                     "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});

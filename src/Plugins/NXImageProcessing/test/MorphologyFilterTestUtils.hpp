@@ -235,8 +235,7 @@ inline KernelParamSetterType BinaryKernelParamSetter(float64 foreground, float64
  *        type T -- its tuple count still equals the geometry's cell count, so the ONLY preflight violation is
  *        the non-scalar component count. Points @p NewFilterT at that array, sets otherwise-valid geom/input/
  *        output + kernel arguments via @p setKernelParams (Box r{1,1,1}), and asserts preflight is INVALID with
- *        @p expectedErrorCode -- each morphology filter's own `getNumberOfComponents() != 1` guard, which fires
- *        before the shared PreflightImageFilter type/geometry checks. Isolates that non-scalar rejection guard.
+ *        @p expectedErrorCode from component-shape validation.
  */
 template <class NewFilterT, class T>
 inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const KernelParamSetterType& setKernelParams)

@@ -81,3 +81,8 @@ TEST_CASE("NXImageProcessing::SumProjectionImageFilter: ITK real-image golden (z
 {
   projection_test::RunProjectionBaselineItkGolden<SumProjectionImageFilter>("RA-Float.nrrd", "BasicFilters_SumProjectionImageFilter_z_projection.nrrd", /*projDim=*/2, /*tolerance=*/0.0001);
 }
+
+TEST_CASE("NXImageProcessing::SumProjectionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][SumProjectionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<SumProjectionImageFilter, float32>();
+}

@@ -59,10 +59,10 @@ Parameters CreateAMScanPathsFilter::parameters() const
   params.insert(std::make_unique<Float32ParameterType>(k_RotationAngle, "Hatch Rotation Angle (Degrees)", "The angle in degrees by which each slice's hatches are rotated", 67.0f));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_CADSliceDataContainerPath_Key, "Slice Data Container", "The input edge geometry from which to create the scan paths", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CADSliceIdsArrayPath_Key, "Slice Ids", "Identifies the slice to which each edge belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CADRegionIdsArrayPath_Key, "Region Ids", "Identifies the region to which each edge belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CADSliceIdsArrayPath_Key, "Slice Ids", "Identifies the slice to which each edge belongs", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CADRegionIdsArrayPath_Key, "Region Ids", "Identifies the region to which each edge belongs", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Objects"});
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_HatchDataContainerPath_Key, "Scan Vector Geometry", "The created edge geometry representing the scan paths", DataPath({"ScanVectorGeometry"})));

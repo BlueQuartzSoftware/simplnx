@@ -12,8 +12,8 @@ The output file can also be compressed if the user chooses LZMA or ZLIB as the O
 
 ### Input Parameters
 - **`Input Geometry`** (nx.DataPath): Specifies the complete path to the input geometry.
-- **`Cell Data Arrays To Write`** (List[nx.DataPath]): List of DataPaths to the cell data arrays to include in the output mesh file.
-- **`Point Data Arrays To Write`** (List[nx.DataPath]): List of DataPaths to the point data arrays to include in the output mesh file.
+- **`Cell Data Arrays To Write`** (List[nx.DataPath]): Integer or floating-point cell data arrays to include in the output mesh file.
+- **`Point Data Arrays To Write`** (List[nx.DataPath]): Integer or floating-point point data arrays to include in the output mesh file.
 
 ### Output Parameters
 - **`Output File`** (str): The path to the output .vtu file.

@@ -310,8 +310,7 @@ inline ObjectParamSetterType ErodeParamSetter(float64 objectValue, float64 backg
  *        type T -- its tuple count still equals the geometry's cell count, so the ONLY preflight violation is
  *        the non-scalar component count. Points @p NewFilterT at that array, sets otherwise-valid geom/input/
  *        output + params via @p setParams (Box r{1,1,1}), and asserts preflight is INVALID with
- *        @p expectedErrorCode -- each object-morphology filter's own `getNumberOfComponents() != 1` guard, which
- *        fires before the shared PreflightImageFilter type/geometry checks. Isolates that non-scalar guard.
+ *        @p expectedErrorCode from component-shape validation.
  */
 template <class NewFilterT, class T>
 inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const ObjectParamSetterType& setParams)

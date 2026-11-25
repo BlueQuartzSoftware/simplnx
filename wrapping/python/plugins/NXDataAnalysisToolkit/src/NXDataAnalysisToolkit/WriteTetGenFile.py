@@ -76,7 +76,8 @@ class WriteTetGenFile:
 
     params.insert(params.Separator("Input Parameters"))
     params.insert(nx.GeometrySelectionParameter(WriteTetGenFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the TetGen file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Tetrahedral}))
-    params.insert(nx.MultiArraySelectionParameter(WriteTetGenFile.CELL_DATA_ARRAY_PATHS_KEY, 'Cell Data Arrays To Write', 'The cell data arrays to write to the TetGen file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
+    integer_types = nx.get_all_data_types() - {nx.DataType.boolean, nx.DataType.float32, nx.DataType.float64}
+    params.insert(nx.MultiArraySelectionParameter(WriteTetGenFile.CELL_DATA_ARRAY_PATHS_KEY, 'Cell Data Arrays To Write', 'The integer region attributes to write to the TetGen element file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=integer_types))
     params.insert(nx.MultiArraySelectionParameter(WriteTetGenFile.POINT_DATA_ARRAY_PATHS_KEY, 'Point Data Arrays To Write', 'The point data arrays to write to the TetGen file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
 
     params.insert(params.Separator("Output Parameters"))

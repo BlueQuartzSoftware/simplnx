@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -44,8 +45,8 @@ void RunTMCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inpu
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
-//     type, incl. float) produces a FIXED uint8 output array (AlwaysUInt8Type).
+// (1) Preflight guards: a multi-component input is rejected; a valid scalar input (of ANY numeric
+//     type, incl. float) produces a FIXED uint8 output array (AlwaysUInt8).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: preflight guards", "[NXImageProcessing][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -72,7 +73,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
     args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("scalar input (incl. float) creates a uint8 output")
   {

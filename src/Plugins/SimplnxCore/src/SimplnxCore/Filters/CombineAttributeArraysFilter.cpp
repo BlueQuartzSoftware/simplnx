@@ -60,8 +60,8 @@ Parameters CombineAttributeArraysFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "The complete path to each of the Attribute Arrays to combine",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypesType{}));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray},
+                                                               GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the name of the created output array of the combined attribute arrays.",

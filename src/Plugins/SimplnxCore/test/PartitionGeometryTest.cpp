@@ -649,11 +649,10 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Rejects unsupported active vert
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   REQUIRE(preflightResult.output_actions.errors().size() == 1);
   const auto& error = preflightResult.output_actions.errors().front();
-  CHECK(error.code == -3044);
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
   CHECK(error.message.find(maskPath.toString()) != std::string::npos);
-  CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
-  CHECK(error.message.find("scalar Boolean DataArray") != std::string::npos);
-  CHECK(error.message.find("Select a scalar Boolean DataArray") != std::string::npos);
+  CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborListArray") != std::string::npos);
+  CHECK(error.message.find("Select an array of one of these kinds: DataArray") != std::string::npos);
   CHECK(dataStructure.getAllDataPaths() == initialPaths);
   CHECK(dataStructure.getNextId() == initialNextId);
   CHECK_FALSE(dataStructure.containsData(k_SelectedVertexTupleMatrixPath.createChildPath("PartitionIds")));
@@ -708,7 +707,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Inactive mask selections and ac
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry errors precede vertex mask kind errors", "[Plugins][PartitionGeometryFilter]")
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Active vertex mask kind errors precede geometry errors", "[Plugins][PartitionGeometryFilter]")
 {
   unit_test::LoadPlugins();
   const usize geometryKind = GENERATE(usize{0}, usize{1}, usize{2});
@@ -744,17 +743,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry errors precede vertex 
   REQUIRE_NOTHROW(preflightResult = PartitionGeometryFilter().preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   REQUIRE(preflightResult.output_actions.errors().size() == 1);
-  constexpr std::array<int32, 3> k_TupleErrorCodes = {-3043, -3009, -3010};
-  int32 expectedCode = -3019;
-  if(tupleMismatch)
-  {
-    expectedCode = k_TupleErrorCodes.at(geometryKind);
-  }
-  else if(geometryKind == 0)
-  {
-    expectedCode = -3044;
-  }
-  CHECK(preflightResult.output_actions.errors().front().code == expectedCode);
+  CHECK(preflightResult.output_actions.errors().front().code == filter_parameter::constants::k_Validate_ArrayType_Error);
   CHECK(dataStructure.getAllDataPaths() == initialPaths);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

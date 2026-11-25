@@ -67,15 +67,16 @@ Parameters ComputeArrayHistogramByFeatureFilter::parameters() const
       std::make_unique<BoolParameter>(k_CalculateModalBinRanges_Key, "Calculate Modal Bin Ranges", "Whether to compute the histogram bin ranges that contain the mode values.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               nx::core::GetAllNumericTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray},
+                                                               nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insertLinkableParameter(
@@ -169,6 +170,11 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
     const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    if(pCalculateModalBinRanges && dataArrayPtr->getDataType() == DataType::boolean)
+    {
+      return MakePreflightErrorResult(
+          -57213, fmt::format("Boolean input array '{}' does not support modal bin ranges. Turn off 'Calculate Modal Bin Ranges' or select a numeric array.", selectedArrayPath.toString()));
+    }
     if(featureIdsArray.getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
       return {.output_actions = MakeErrorResult<OutputActions>(

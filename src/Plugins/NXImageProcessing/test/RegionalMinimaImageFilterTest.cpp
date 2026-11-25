@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <array>
@@ -203,4 +204,9 @@ TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: FromSIMPLJson", "[NXIma
 TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][RegionalMinimaImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<RegionalMinimaImageFilter>("cthead1.png", "3be99cf6b3116f16f6663cd2c4edb5b4");
+}
+
+TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][RegionalMinimaImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<RegionalMinimaImageFilter, float32>();
 }

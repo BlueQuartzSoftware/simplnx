@@ -198,7 +198,7 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteBinaryMorphologyCompositeImageFilter(Da
  *        markers (ignored by the border markers). When @p differenceFromInput is true (HConvex: the h-dome), the
  *        reconstruction result is subtracted from the input in place after reconstruction (output = input -
  *        reconstruction). Output type == input type (SameAsInput). The caller's preflight must have enforced a
- *        scalar input (@ref PreflightImageFilter requireScalar=true) and, for the height markers, a finite
+ *        scalar input and, for the height markers, a finite
  *        @p height.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,

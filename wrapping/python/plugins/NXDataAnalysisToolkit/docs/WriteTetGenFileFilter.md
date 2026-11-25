@@ -12,7 +12,7 @@ The `WriteTetGenFile` filter uses the Python MeshIO library to write a simplnx t
 
 ### Input Parameters
 - **`Input Geometry`** (nx.DataPath): Specifies the complete path to the input geometry.
-- **`Cell Data Arrays To Write`** (List[nx.DataPath]): List of DataPaths to the cell data arrays to include in the output mesh file.
+- **`Cell Data Arrays To Write`** (List[nx.DataPath]): Integer cell data arrays to write as region attributes in the element file.
 - **`Point Data Arrays To Write`** (List[nx.DataPath]): List of DataPaths to the point data arrays to include in the output mesh file.
 
 ### Output Parameters

@@ -57,10 +57,10 @@ Parameters MorphologicalWatershedFromMarkersImageFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The grayscale image data that will be flooded by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetScalarNumericTypes()));
+                                                          GetDataArrayOnlyTypes(), nx::core::ImageProcessing::GetScalarNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MarkerImageDataPath_Key, "Marker Cell Data",
                                                           "The marker/seed label image; must be an integer scalar array with the same number of tuples as the input.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+                                                          GetDataArrayOnlyTypes(), nx::core::ImageProcessing::GetIntegerScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(
@@ -87,31 +87,16 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
 
-  // Validate the marker/seed array: it must be an integer scalar type (the flood dispatches its label copy on an
-  // integer element type) with the same number of tuples as the grayscale input (they share the image grid).
   const auto& markerArray = dataStructure.getDataRefAs<IDataArray>(markerArrayPath);
   const DataType markerType = markerArray.getDataType();
-  if(!nx::core::ImageProcessing::GetIntegerScalarTypes().contains(markerType))
-  {
-    return {.output_actions =
-                MakeErrorResult<OutputActions>(-8600, fmt::format("Marker array '{}' must be an integer scalar type, but is '{}'.", markerArrayPath.toString(), DataTypeToString(markerType)))};
-  }
-  if(markerArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(
-                -8601, fmt::format("Marker array '{}' must be single-component (scalar), but has {} components.", markerArrayPath.toString(), markerArray.getNumberOfComponents()))};
-  }
   if(markerArray.getNumberOfTuples() != inputArray.getNumberOfTuples())
   {
     return {.output_actions = MakeErrorResult<OutputActions>(
                 -8602, fmt::format("Marker array tuple count ({}) does not match input array tuple count ({}).", markerArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
   }
 
-  // Validate the grayscale input (allowed type, single-component, tuple==geom cells) via the shared preflight, but
-  // DISCARD its CreateArrayAction: that action would allocate the output of the INPUT (grayscale) type, whereas this
-  // filter's output must be the MARKER's type. requireScalar=true because the flood is defined on scalar images.
-  Result<OutputActions> grayscaleValidation =
-      ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
+  // Check that the grayscale array matches the geometry. The actual output action below uses the marker element type.
+  Result<OutputActions> grayscaleValidation = ImageProcessing::PreflightImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(grayscaleValidation.invalid())
   {
     return {.output_actions = std::move(grayscaleValidation)};

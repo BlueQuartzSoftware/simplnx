@@ -251,3 +251,29 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Legacy scalar component 
   }
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Rejects Boolean scalar arrays in preflight", "[SimplnxCore][WriteVtkStructuredPointsFilter]")
+{
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({1, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", {1, 1, 1}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  const DataPath arrayPath({"Image", "Cells", "Values"});
+  REQUIRE(BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Values", {1, 1, 1}, {1}, cells->getId()) != nullptr);
+
+  const WriteVtkStructuredPointsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteVtkStructuredPointsFilter::k_OutputFile_Key, fs::path(unit_test::k_BinaryTestOutputDir.view()) / "boolean_StructuredPoints.vtk");
+  args.insertOrAssign(WriteVtkStructuredPointsFilter::k_ImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(WriteVtkStructuredPointsFilter::k_SelectedDataArrayPaths_Key, MultiArraySelectionParameter::ValueType{arrayPath});
+  const auto result = filter.preflight(dataStructure, args);
+
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  const auto& error = result.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_ValidateAllowedTypeError);
+  CHECK(error.message.find(arrayPath.toString()) != std::string::npos);
+}

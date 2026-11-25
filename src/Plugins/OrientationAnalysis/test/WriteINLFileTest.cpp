@@ -466,6 +466,41 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: SIMPL Backwards Compatibilit
   }
 }
 
+TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Rejects a DataArray or Attribute Matrix for Material Names", "[OrientationAnalysis][WriteINLFileFilter]")
+{
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({1, 1, 1});
+  REQUIRE(Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", {1}, {1}) != nullptr);
+  REQUIRE(Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Phases", {1}, {1}) != nullptr);
+  REQUIRE(Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Eulers", {1}, {3}) != nullptr);
+  REQUIRE(UInt32ArrayType::CreateWithStore<UInt32DataStoreType>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  REQUIRE(Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "NumFeatures", {2}, {1}) != nullptr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}) != nullptr);
+
+  const WriteINLFileFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteINLFileFilter::k_OutputFile_Key, fs::path(unit_test::k_BinaryTestOutputDir.view()) / "Rejected_Material_Names.inl");
+  args.insertOrAssign(WriteINLFileFilter::k_ImageGeomPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(WriteINLFileFilter::k_FeatureIdsArrayPath_Key, DataPath({"FeatureIds"}));
+  args.insertOrAssign(WriteINLFileFilter::k_CellPhasesArrayPath_Key, DataPath({"Phases"}));
+  args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, DataPath({"Eulers"}));
+  args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, DataPath({"CrystalStructures"}));
+  args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, DataPath({"NumFeatures"}));
+  const bool selectAttributeMatrix = GENERATE(false, true);
+  const DataPath rejectedPath({selectAttributeMatrix ? "Ensemble Data" : "NumFeatures"});
+  CAPTURE(rejectedPath.toString());
+  args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, rejectedPath);
+  const auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  const auto& error = result.output_actions.errors().front();
+  const auto expectedCode = selectAttributeMatrix ? filter_parameter::constants::k_ValidateTypeError : filter_parameter::constants::k_Validate_ArrayType_Error;
+  CHECK(error.code == expectedCode);
+  CHECK(error.message.find("material_name_array_path") != std::string::npos);
+}
+
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Geometry cell tuple counts", "[OrientationAnalysis][WriteINLFileFilter][TupleCount]")
 {
   // Cases: all short, all long, all matching outside Cell Data, then each input short.

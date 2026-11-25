@@ -24,7 +24,6 @@ namespace
 {
 const std::string k_VertexNormals = "VertexNormals";
 constexpr int32 k_CellTupleCountError = -10510;
-constexpr int32 k_InvalidInputArrayError = -10512;
 
 FlyingEdges3DInputValues CreateInputValues(const Arguments& filterArgs)
 {
@@ -86,7 +85,7 @@ Parameters FlyingEdges3DFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{},
-                                                          GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Name of Output Triangle Geometry", "This is where the contouring line will be stored",
@@ -114,13 +113,6 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto pContouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-
-  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
-  if(dataStructure.getDataAs<IDataArray>(pContouringArrayPath) == nullptr)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(
-                k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pContouringArrayPath.toString()))};
-  }
 
   if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, k_CellTupleCountError); result.invalid())
   {

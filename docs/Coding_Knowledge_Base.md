@@ -221,7 +221,8 @@ algorithm reads it with the wrong stride: wrong output, or a read past the end.
 
 ```cpp
 params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "...", DataPath{},
-                                                        ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                        GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                        ArraySelectionParameter::AllowedComponentShapes{{1}}));
 ```
 
 ### Support every type and value that a parameter accepts
@@ -381,11 +382,12 @@ sufficiently wide arithmetic.
 the application. In preflight:
 
 - Use `getDataRefAs<T>()` only when a selection parameter or an earlier check guarantees the object and its type.
-  Otherwise use `getDataAs<T>()` and check for `nullptr`. Array kind and element type are different things:
-  `ArraySelectionParameter` accepts any `IArray` and applies its numeric-type and component-shape lists only to
-  `IDataArray`, so a `StringArray` can pass a numeric selection. `MultiArraySelectionParameter::AllowedTypes` can
-  establish the array kind, but its `AllowedDataTypes` list does not establish the element type. A check that needs
-  only the tuple count reads the selection as `IArray`.
+  Otherwise use `getDataAs<T>()` and check for `nullptr`. Active `ArraySelectionParameter` and
+  `MultiArraySelectionParameter` selections validate the path, array kind, declared element types for data arrays
+  and neighbor lists, and declared component shapes. Declare `GetDataArrayOnlyTypes()` for a selection read as
+  `IDataArray`. Declare the accepted element types when the selection allows data arrays or neighbor lists. Use
+  `AllowedDataTypes::StringOnly()` when the only allowed kind is `StringArray`. An empty brace initializer for
+  `AllowedDataTypes` fails to compile. A check that needs only the tuple count reads the selection as `IArray`.
 - Use `getCellData()`, `getVertexAttributeMatrix()`, `getFaceAttributeMatrix()` and similar accessors and check for
   `nullptr`: a geometry can have lost its Attribute Matrix.
 - Use non-throwing library calls (`std::filesystem::directory_iterator(path, errorCode)`,
@@ -394,19 +396,19 @@ the application. In preflight:
 - When code walks every child of an Attribute Matrix, handle each array kind (`IDataArray`, `StringArray`,
   `INeighborList`) or return an error that names the array.
 
-**Example of the broken rule:** selections that the parameters accepted caused `std::bad_cast` in preflight (issues
-#1821 and #1833; fixed filter by filter in PRs #1817 and #1763). `ConvertDataFilter::preflightImpl()` still reads its
-selection with `getDataRefAs<IDataArray>()`. `CropEdgeGeometry` cast every child of an Attribute Matrix by reference
+**Example of the broken rule:** a `StringArray` selection passed parameter validation and caused `std::bad_cast` in
+`ConvertDataFilter::preflightImpl()` (issues #1821 and #1833). The parameter now rejects that selection before
+the filter reads it as an `IDataArray`. `CropEdgeGeometry` cast every child of an Attribute Matrix by reference
 (PR #1765). QuickSurfaceMesh dereferences a missing Cell Attribute Matrix (issue #1843).
 
 **Why:** `getDataRefAs<T>()` throws `std::out_of_range` for a missing path and `std::bad_cast` for another type.
 
-**What to look for:** `getDataRefAs` in `preflightImpl()` that relies only on the numeric-type list of a selection
-parameter; a reference cast in a loop over Attribute Matrix children; an unchecked `getCellData()`.
+**What to look for:** `getDataRefAs` in `preflightImpl()` where the selection admits a wider array kind or element type,
+a reference cast in a loop over Attribute Matrix children, or an unchecked `getCellData()`.
 
-**Pattern to use:** `getDataAs<Int32Array>()` with a `nullptr` check, as `ComputeSurfaceAreaToVolumeFilter` does; the
-mask-size check of `DBSCANFilter`, which reads the selection as `IArray`; the per-kind handling in
-`CropEdgeGeometryFilter`.
+**Pattern to use:** `getDataAs<Int32Array>()` with a `nullptr` check for a derived path, as
+`RequireMinNumNeighborsFilter` does for remapped Feature Ids. See the mask-size check of `DBSCANFilter`, which reads
+the selection as `IArray`, and the per-kind handling in `CropEdgeGeometryFilter`.
 
 ### Do not allocate or read array data in preflight
 

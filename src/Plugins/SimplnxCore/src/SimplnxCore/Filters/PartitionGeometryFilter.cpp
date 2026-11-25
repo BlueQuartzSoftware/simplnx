@@ -5,7 +5,6 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
@@ -352,8 +351,8 @@ Parameters PartitionGeometryFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseVertexMask_Key, "Use Vertex Mask (Node Geometries Only)",
                                       "Feature ID values will only be placed on vertices that have a 'true' mask value. All others will have the Out-Of-Bounds Feature ID value used instead", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VertexMaskPath_Key, "Vertex Mask", "The complete path to the vertex mask array.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VertexMaskPath_Key, "Vertex Mask", "The complete path to the vertex mask array.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Geometry Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAttrMatrixName_Key, "Partition Attribute Matrix",
@@ -600,21 +599,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
                 MakeErrorResult<OutputActions>(-3019, fmt::format("{}: The input geometry is {}, which is not vertex-based.  Vertex mask cannot be used.", humanName(), iGeom.getTypeName()))};
   }
 
-  if(pUseVertexMask)
-  {
-    const auto maskPath = filterArgs.value<DataPath>(k_VertexMaskPath_Key);
-    // ArraySelectionParameter also accepts StringArray and NeighborList for Boolean selections.
-    // Keep the local type check until the parameter validates supported array kinds.
-    // TODO(#1833): Revisit this guard after the shared fix preserves generic array support.
-    if(dataStructure.getDataAs<BoolArrayType>(maskPath) == nullptr)
-    {
-      const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(maskPath);
-      return MakePreflightErrorResult(-3044, fmt::format("The selected Vertex Mask object '{}' has type '{}', but a scalar Boolean DataArray is required. Select a scalar Boolean DataArray.",
-                                                         maskPath.toString(), selectedObject.getTypeName()));
-    }
-  }
-
-  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------

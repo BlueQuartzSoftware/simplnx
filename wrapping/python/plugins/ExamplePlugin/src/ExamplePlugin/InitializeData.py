@@ -49,7 +49,8 @@ class InitializeDataPythonFilter:
   def parameters(self) -> nx.Parameters:
     params = nx.Parameters()
 
-    params.insert(nx.MultiArraySelectionParameter(InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY, 'Cell Arrays', '', [], {nx.IArray.ArrayType.DataArray}, nx.get_all_data_types(), []))
+    numeric_types = nx.get_all_data_types() - {nx.DataType.boolean}
+    params.insert(nx.MultiArraySelectionParameter(InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY, 'Cell Arrays', '', [], {nx.IArray.ArrayType.DataArray}, numeric_types, []))
     params.insert(nx.GeometrySelectionParameter(InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY, 'Image Geometry', '', nx.DataPath(), {nx.IGeometry.Type.Image}))
     params.insert(nx.VectorUInt64Parameter(InitializeDataPythonFilter.MIN_POINT_KEY, 'Min Point', '', [0, 0, 0], ['X (Column)', 'Y (Row)', 'Z (Plane)']))
     params.insert(nx.VectorUInt64Parameter(InitializeDataPythonFilter.MAX_POINT_KEY, 'Max Point', '', [0, 0, 0], ['X (Column)', 'Y (Row)', 'Z (Plane)']))

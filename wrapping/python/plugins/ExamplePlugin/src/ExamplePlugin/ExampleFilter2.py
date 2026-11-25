@@ -97,7 +97,7 @@ class ExampleFilter2:
     params.insert(nx.Parameters.Separator("Required Data Objects"))
     params.insert(nx.DataGroupSelectionParameter(ExampleFilter2.PARAM9_KEY, 'DataGroupSelectionParameter', 'Example data group selection help text', nx.DataPath([]), set([nx.BaseGroup.GroupType.DataGroup])))
     params.insert(nx.DataPathSelectionParameter(ExampleFilter2.PARAM10_KEY, 'DataPathSelectionParameter', 'Example data path selection help text', nx.DataPath([])))
-    params.insert(nx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', nx.DataPath([]), nx.get_all_data_types(), [[1]]))
+    params.insert(nx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', nx.DataPath([]), {nx.IArray.ArrayType.DataArray}, nx.get_all_data_types(), [[1]]))
     params.insert(nx.GeometrySelectionParameter(ExampleFilter2.PARAM11_KEY, 'GeometrySelectionParameter', 'Example geometry selection help text', nx.DataPath([]), set()))
     params.insert(nx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [], set([nx.IArray.ArrayType.Any]), nx.get_all_data_types(), [[1]]))
     params.insert(nx.AttributeMatrixSelectionParameter(ExampleFilter2.PARAM17_KEY, "Cell Attribute Matrix", "Example attribute matrix selection help text", nx.DataPath([])))

@@ -98,11 +98,12 @@ Parameters ExampleFilter2Filter::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroup Selection Parameter", "Example data group selection help text", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypeSetType{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPath Selection Parameter", "Example data path selection help text", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}, nx::core::GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::GetAllDataTypes()));
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_Param11, "Geometry Selection Parameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypeSetType{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArray Selection Parameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
+                                                               nx::core::GetAllArrayTypes(), nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_Param30, "Attribute Matrix Selection", "Example Help Text", DataPath{}));
 
   params.linkParameters(k_Param7, k_Param9, std::make_any<BoolParameter::ValueType>(true));

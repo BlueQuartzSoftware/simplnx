@@ -99,7 +99,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
                                                              std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Precomputed Transformation Matrix Path", "A precomputed 4x4 transformation matrix", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32}));
 
   params.insert(std::make_unique<BoolParameter>(k_TranslateGeometryToGlobalOrigin_Key, "Translate Geometry To Global Origin Before Transformation",
                                                 "Specifies whether to translate the geometry to (0, 0, 0), apply the transformation, and then translate the geometry back to its original origin.",
@@ -127,7 +127,8 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after transformation", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which feature each element belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Output Transform Matrix"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveTransformMatrix_Key, "Save Transformation Matrix", "Save the generated transform matrix as a Data Array", false));

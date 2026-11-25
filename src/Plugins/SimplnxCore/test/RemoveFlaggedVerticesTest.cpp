@@ -11,6 +11,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -975,9 +976,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject nonnumeric Feature I
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   REQUIRE(result.output_actions.errors().size() == 1);
-  CHECK(result.output_actions.errors()[0].code == -67425);
+  CHECK(result.output_actions.errors()[0].code == filter_parameter::constants::k_Validate_ArrayType_Error);
   CHECK(result.output_actions.errors()[0].message.find(idsPath.toString()) != std::string::npos);
-  CHECK(result.output_actions.errors()[0].message.find("single-component int32 DataArray") != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find("Select an array of one of these kinds: DataArray.") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject another geometry element Feature AM", "[SimplnxCore][RemoveFlaggedVerticesFilter][ClearFeatureAM]")

@@ -64,7 +64,7 @@ class ContourDetectionFilter:
     params = nx.Parameters()
 
     params.insert(nx.Parameters.Separator("Required Data Objects"))
-    params.insert(nx.ArraySelectionParameter(ContourDetectionFilter.INPUT_IMAGE_ARRAY_KEY, 'Input Image Data Array', 'The input binary image array that will be used to detect contours.', nx.DataPath([]), set([nx.DataType.uint8]), [[1]]))
+    params.insert(nx.ArraySelectionParameter(ContourDetectionFilter.INPUT_IMAGE_ARRAY_KEY, 'Input Image Data Array', 'The input binary image array that will be used to detect contours.', nx.DataPath([]), {nx.IArray.ArrayType.DataArray}, set([nx.DataType.uint8]), [[1]]))
     params.insert(nx.Float64Parameter(ContourDetectionFilter.THRESHOLD_VALUE_KEY, 'Threshold Value', "", 50.0))
 
     params.insert(nx.Parameters.Separator("Created Data Objects"))

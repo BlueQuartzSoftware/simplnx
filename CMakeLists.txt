@@ -566,6 +566,8 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.hpp
 
+  ${SIMPLNX_SOURCE_DIR}/Parameters/ArraySelectionDataTypes.hpp
+  ${SIMPLNX_SOURCE_DIR}/Parameters/ArraySelectionValidation.hpp
   ${SIMPLNX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
   ${SIMPLNX_SOURCE_DIR}/Parameters/util/ReadCSVData.hpp
 

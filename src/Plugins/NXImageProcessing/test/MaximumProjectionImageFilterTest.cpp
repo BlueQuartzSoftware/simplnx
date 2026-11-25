@@ -4,6 +4,7 @@
 #include "NXImageProcessing/Filters/MaximumProjectionImageFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 
 #include <memory>
 
@@ -53,10 +54,9 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: In-place discards si
 }
 
 // -----------------------------------------------------------------------------
-// (Shared-façade preflight guards, PreflightAxisProjection) Two data/param-independent guards: an out-of-range Projection Dimension (> 2) -> -8340, and a multi-component (non-scalar) input ->
-// -8341. Exercised on Maximum (the guards live in the shared façade, so one filter covers them for all).
+// Projection preflight checks the projection dimension and requires a scalar input.
 // -----------------------------------------------------------------------------
-TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (projDim>2 -8340, non-scalar -8341)", "[NXImageProcessing][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (projDim>2 -8340, non-scalar input)", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
   unit_test::LoadPlugins();
   const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -79,7 +79,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (pr
     REQUIRE(result.output_actions.errors().front().code == -8340);
   }
 
-  SECTION("Non-scalar (multi-component) input -> -8341")
+  SECTION("Non-scalar input")
   {
     DataStructure dataStructure;
     const ShapeType cellShape = {4, 4, 4};
@@ -101,7 +101,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (pr
     args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     auto result = filter.preflight(dataStructure, args);
     REQUIRE(result.output_actions.invalid());
-    REQUIRE(result.output_actions.errors().front().code == -8341);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
 }
 

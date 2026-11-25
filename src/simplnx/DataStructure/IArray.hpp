@@ -4,6 +4,8 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 
+#include <set>
+
 namespace nx::core
 {
 class SIMPLNX_EXPORT IArray : public DataObject
@@ -155,4 +157,34 @@ protected:
   {
   }
 };
+
+/**
+ * @brief Returns every concrete array kind.
+ * @return The set containing DataArray, NeighborListArray, and StringArray.
+ */
+inline const std::set<IArray::ArrayType>& GetAllArrayTypes()
+{
+  static const std::set<IArray::ArrayType> arrayTypes = {IArray::ArrayType::DataArray, IArray::ArrayType::NeighborListArray, IArray::ArrayType::StringArray};
+  return arrayTypes;
+}
+
+/**
+ * @brief Returns the array kinds with numeric element types.
+ * @return The set containing DataArray and NeighborListArray.
+ */
+inline const std::set<IArray::ArrayType>& GetNumericArrayTypes()
+{
+  static const std::set<IArray::ArrayType> arrayTypes = {IArray::ArrayType::DataArray, IArray::ArrayType::NeighborListArray};
+  return arrayTypes;
+}
+
+/**
+ * @brief Returns the array kind for data arrays only.
+ * @return The set containing DataArray.
+ */
+inline const std::set<IArray::ArrayType>& GetDataArrayOnlyTypes()
+{
+  static const std::set<IArray::ArrayType> arrayTypes = {IArray::ArrayType::DataArray};
+  return arrayTypes;
+}
 } // namespace nx::core

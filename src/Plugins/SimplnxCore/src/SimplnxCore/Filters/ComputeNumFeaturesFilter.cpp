@@ -52,7 +52,7 @@ Parameters ComputeNumFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Array specifying which Ensemble each Feature belongs",
-                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
+                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});

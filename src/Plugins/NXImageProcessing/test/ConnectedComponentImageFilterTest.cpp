@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -78,8 +79,8 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
-//     rejected (IntegerOnly); a valid integer scalar input produces a FIXED uint32 output array (AlwaysUInt32Type).
+// (1) Preflight guards: a multi-component input is rejected; a non-integer (float32) input is
+//     rejected (IntegerOnly); a valid integer scalar input produces a FIXED uint32 output array (AlwaysUInt32).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", "[NXImageProcessing][ConnectedComponentImageFilter]")
 {
@@ -103,7 +104,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", 
     args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("float input rejected")
   {

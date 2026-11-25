@@ -134,7 +134,7 @@ public:
   ComputeCAxisReferenceMisalignments& operator=(ComputeCAxisReferenceMisalignments&&) noexcept = delete;
 
   /**
-   * @brief Validates the reference direction. ValidateInputs() calls it.
+   * @brief Validates the reference direction.
    * @param referenceDirection Three finite sample-frame components.
    * @return k_ReferenceDirectionSizeError for a size other than three, or
    * k_InvalidReferenceDirectionError for a non-finite component or a near-zero norm.
@@ -142,7 +142,16 @@ public:
   static Result<> ValidateReferenceDirection(const std::vector<float32>& referenceDirection);
 
   /**
-   * @brief Makes every input check that preflight data can answer. preflightImpl() and operator()() both call it.
+   * @brief Checks that Phases and the enabled Mask have one tuple per quaternion.
+   * @pre The Input Quaternions, Phases and enabled Mask paths select DataArrays.
+   * @param dataStructure Holds the selected arrays.
+   * @param inputValues Identifies the selected arrays and whether the mask is enabled.
+   * @return The first tuple-count mismatch, or a valid result.
+   */
+  static Result<> ValidateInputTupleCounts(const DataStructure& dataStructure, const ComputeCAxisReferenceMisalignmentsInputValues& inputValues);
+
+  /**
+   * @brief Validates the inputs for a direct algorithm call.
    *
    * Checks the reference direction, and the types and component shapes of the quaternion, Phases,
    * and Crystal Structures arrays. Checks the mask only when UseMask is set. Phases and the enabled

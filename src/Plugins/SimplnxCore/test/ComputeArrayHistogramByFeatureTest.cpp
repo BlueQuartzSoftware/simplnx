@@ -515,6 +515,40 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Rejects invalid output s
   }
 }
 
+TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Boolean arrays require modal ranges disabled", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const bool modalRanges = GENERATE(false, true);
+  CAPTURE(modalRanges);
+  DataStructure dataStructure;
+  const auto* group = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(group != nullptr);
+  const DataPath arrayPath({"Input", "Values"});
+  const DataPath featureIdsPath({"Input", "FeatureIds"});
+  REQUIRE(BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Values", {2}, {1}, group->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {2}, {1}, group->getId()) != nullptr);
+
+  const ComputeArrayHistogramByFeatureFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_SelectedArrayPaths_Key, MultiArraySelectionParameter::ValueType{arrayPath});
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, featureIdsPath);
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, DataPath({"Histograms"}));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CalculateModalBinRanges_Key, modalRanges);
+  const auto result = filter.preflight(dataStructure, args);
+
+  if(modalRanges)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& error = result.output_actions.errors().front();
+    CHECK(error.code == -57213);
+    CHECK(error.message.find(arrayPath.toString()) != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  }
+}
+
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Numeric-type sparse full and custom range parity", "[SimplnxCore][ComputeArrayHistogram]")
 {
   unit_test::LoadPlugins();

@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/GrayscaleGrindPeakImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <array>
@@ -148,7 +149,7 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar gu
 
     auto result = filter.preflight(dataStructure, makeArgs(vecPath));
     REQUIRE(result.output_actions.invalid());
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
 }
 

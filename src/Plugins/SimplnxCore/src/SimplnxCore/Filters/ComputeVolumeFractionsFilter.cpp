@@ -53,7 +53,7 @@ Parameters ComputeVolumeFractionsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Array specifying which Ensemble each Cell belong",
-                                                          DataPath({"DataContainer", "Cell Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
+                                                          DataPath({"DataContainer", "Cell Data", "Phases"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",

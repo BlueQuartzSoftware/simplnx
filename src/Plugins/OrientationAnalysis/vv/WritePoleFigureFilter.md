@@ -15,8 +15,8 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — same intent (generate `<001>/<011>/<111>` pole figures) but a different output medium and rendering stack: legacy writes a **PDF per phase** via libharu; SIMPLNX creates an **image geometry** (+ optional intensity arrays) and optional raster image on disk, rendered by the **EbsdLib compositor**. |
 | Oracle (confirmed) | Class 5 expert-visual and Class 4 wiring invariants are retained; the new Class 1 HDF5 boundary oracle checks exact discrete pole counts and the entire <001> intensity image. |
-| Code paths enumerated | 10 of 14 listed paths exercised; layout selection and three defensive validation/warning rows remain unasserted. Empty-phase skipping is not separately proven. |
-| Tests today | 5 visible cases and 2 hidden store-contract cases. In Release, the visible cases pass 5/5 in-core and out-of-core, and the hidden two-phase case passes with `HDF5-OOC` stores; historical paired selections passed 4/4. |
+| Code paths enumerated | 11 of 15 listed paths exercised. The inventory lists the remaining gaps in layout selection, defensive checks, and empty-phase handling. |
+| Tests today | All 6 visible cases pass in both Release builds, including the Material Name selection regression. Both hidden store-contract cases pass in the out-of-core Release build. |
 | Exemplar archive       | `Pole_Figure_Exemplars_v6.tar.gz` (inputs only — 502 hex-Ti orientations + 251/251 mask). No baked image exemplar (deliberate: avoids coupling CI to EbsdLib pixel byte-identity). |
 | Legacy comparison      | Three-way expert-visual (6.5.171 / patched local legacy build / SIMPLNX) on hex **and** cubic. 6.5.171 matches the patched local legacy build (byte-identical). Data (pole positions, intensity, color mapping) visually identical; 4 cosmetic/rendering deviations. |
 | Bug flags              | No listed legacy deviation is a correctness defect. The later-phase tuple-shape defect is corrected; see "Bugs found and fixed". |
@@ -62,7 +62,7 @@ Two synthetic regressions check both populated phases and whole-DataStructure tu
 
 ## Code path coverage
 
-10 of 14 listed simplnx-wrapper paths exercised. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
+11 of 15 listed simplnx-wrapper paths exercised. The filter wraps the EbsdLib compositor, which owns and tests per-Laue-class projection and pixel rendering. The filter validates parameters and creates arrays in preflight, translates parameters to enums, filters each phase by mask, generates intensities, and generates composite images.
 
 Source: `Algorithms/WritePoleFigure.cpp` (536 lines), plus `WritePoleFigureFilter.cpp` preflight.
 
@@ -82,6 +82,7 @@ Source: `Algorithms/WritePoleFigure.cpp` (536 lines), plus `WritePoleFigureFilte
 | 12 | (a) Preflight      | ImageSize ≤ 0 → error `-680002`; Discrete mode with marker radius < 1 → error `-680003` | *Guards added during review; not directly tested — low-value validation branches.* |
 | 13 | (h) SIMPL convert  | 6.4 / 6.5 SIMPL JSON → Arguments (legacy ImageFormat dropped, D5)       | `SIMPL Backwards Compatibility`                                  |
 | 14 | OOC storage | 65536-block discrete-count oracle | `real HDF5 65536-block discrete-count oracle` — independent exact values across the boundary |
+| 15 | (a) Preflight | The Material Name selection rejects a numeric DataArray with error `-211`. | `Rejects a DataArray for Material Name` selects the scalar Crystal Structures array for Material Name and checks the error code and parameter key. |
 
 ## Test inventory
 
@@ -91,6 +92,7 @@ Source: `Algorithms/WritePoleFigure.cpp` (536 lines), plus `WritePoleFigureFilte
 | `HexConvention choice reaches algorithm` | kept | Class 4 invariant: X‖a vs X‖a* differ in both the intensity array and the composite RGB (both plumbing paths). Passes on EbsdLib 3.1.0. |
 | `Discrete mode and marker radius reach algorithm` | new-for-V&V | Class 4 invariant: Discrete vs Color composites differ; 1 px vs 10 px marker radii differ. Pins the GenerationAlgorithm and DiscreteMarkerRadius plumbing in CI (previously covered only by manual A/B renders). |
 | `SIMPL Backwards Compatibility` | kept | 6.4 + 6.5 SIMPL JSON → Arguments round-trip. The legacy `ImageFormat` key is intentionally not converted (D5). |
+| `Rejects a DataArray for Material Name` | added in #1833 | A synthetic scalar numeric array produces the array-kind validation error `-211` for `material_name_array_path`. |
 | `real HDF5 65536-block discrete-count oracle` | new-for-V&V | 29 assertions; Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 32×32 <001> count image is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. |
 | `two populated phases preserve count array tuple shape` | new-for-V&V | Synthetic Class 4 structural invariant: two identity orientations in two cubic phases, discrete counts, image size 32, Lambert size 64. Checks in-memory inputs/outputs, matrix shape `{1,32,32}`, six Float64 array tuple shapes and scalar component shapes, and whole-DataStructure tuple inheritance. No archive or image file is used. Passes in in-core and out-of-core Release builds. |
 | `real HDF5 two populated phases preserve count array tuple shape` | new-for-V&V | Same synthetic structural oracle with forced out-of-core storage. Requires the registered `HDF5-OOC` manager and that format on all three numeric inputs and all six outputs. Runs through `OrientationAnalysisOocStoreContracts`; passes in the out-of-core Release build. |

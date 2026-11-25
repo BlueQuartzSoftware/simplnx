@@ -77,7 +77,7 @@ Parameters BinaryOpeningByReconstructionImageFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The binary image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+                                                          GetDataArrayOnlyTypes(), nx::core::ImageProcessing::GetIntegerScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -123,10 +123,7 @@ IFilter::PreflightResult BinaryOpeningByReconstructionImageFilter::preflightImpl
                                                              fmt::format("Binary Opening By Reconstruction requires distinct Foreground and Background values, but both were {}.", foregroundValue))};
   }
 
-  // requireScalar=true: binary morphology + reconstruction are defined on scalar images. IntegerOnly restricts to
-  // the integer element types the legacy binary filter accepts; the shared preflight also validates the geometry.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(
-      dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
@@ -134,7 +131,7 @@ IFilter::PreflightResult BinaryOpeningByReconstructionImageFilter::preflightImpl
 
   // The Float64 foreground/background parameters are cast to the (integer) input element type by the façade. That
   // conversion is UNDEFINED for a non-finite or out-of-range value, so validate them here (the array is guaranteed
-  // present/scalar/integer by the successful preflight above).
+  // selection parameter validates the array).
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   Result<> paramGuard = ImageProcessing::ValidateBinaryFgBgInRange(inputType, foregroundValue, backgroundValue, k_NonFiniteBinaryValue, k_BinaryValueOutOfRange, k_BinaryValueTruncated);
   if(paramGuard.invalid())

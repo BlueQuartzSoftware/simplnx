@@ -486,14 +486,10 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: rejects non-DataArray 
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
   REQUIRE(preflight.output_actions.errors().size() == 1);
   const auto& error = preflight.output_actions.errors().front();
-  CHECK(error.code == (replaceFeatureIds ? -12803 : -12801));
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
   CHECK(error.message.find(malformedPath.toString()) != std::string::npos);
-  if(replaceFeatureIds)
-  {
-    CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
-    CHECK(error.message.find("scalar int32 DataArray") != std::string::npos);
-    CHECK(error.message.find("Select a scalar int32 DataArray") != std::string::npos);
-  }
+  CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborListArray") != std::string::npos);
+  CHECK(error.message.find("Select an array of one of these kinds: DataArray") != std::string::npos);
   CHECK(dataStructure.getData(ratioPath) == nullptr);
   CHECK(dataStructure.getData(sphericityPath) == nullptr);
   unit_test::CheckArraysInheritTupleDims(dataStructure);

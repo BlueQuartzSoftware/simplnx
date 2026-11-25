@@ -75,7 +75,7 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ComparisonDataPath, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ComparisonDataPath, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{}, GetDataArrayOnlyTypes(),
                                                           nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
@@ -109,7 +109,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   const auto* cellDataPtr = imageGeomRef.getCellData();
   const bool loopUntilGone = filterArgs.value<bool>(k_Loop_Key);
   // Loop mode must write the same comparison array it reads, including when selected through another parent.
-  if(cellDataPtr == nullptr || (loopUntilGone && !cellDataPtr->contains(dataStructure.getDataAs<IDataArray>(inputArrayPath))))
+  if(cellDataPtr == nullptr || (loopUntilGone && !cellDataPtr->contains(&dataStructure.getDataRefAs<IDataArray>(inputArrayPath))))
   {
     if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, k_ComparisonNotInCellDataError, "Input Comparison Array"); cellDataResult.invalid())
     {

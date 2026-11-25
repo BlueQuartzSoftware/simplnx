@@ -70,7 +70,7 @@ Parameters ComputeKMedoidsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<UInt64ParameterType>(k_InitClusters_Key, "Number of Clusters", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0));
   params.insert(std::make_unique<ChoicesParameter>(
@@ -78,7 +78,8 @@ Parameters ComputeKMedoidsFilter::parameters() const
       ChoicesParameter::ChoicesType{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // Choice order matches ClusterUtilities::DistanceMetric values.
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to find the medoids for", DataPath{}, nx::core::GetAllNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to find the medoids for", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "name of the ids array to be created in Attribute Array to Cluster's parent group",
@@ -118,17 +119,13 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* clusterArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  if(clusterArrayPtr == nullptr)
-  {
-    return MakePreflightErrorResult(-7584, "Array to Cluster MUST be a valid DataPath.");
-  }
+  const auto& clusterArray = dataStructure.getDataRefAs<IDataArray>(pSelectedArrayPathValue);
   if(pInitClustersValue == 0 || pInitClustersValue >= static_cast<uint64>(std::numeric_limits<int32>::max()) || pInitClustersValue == std::numeric_limits<uint64>::max())
   {
     return MakePreflightErrorResult(-7585, "The number of initial clusters must be between 1 and INT32_MAX - 1.");
   }
-  if(clusterArrayPtr->getNumberOfComponents() == 0 || (pInitClustersValue + 1) > std::numeric_limits<usize>::max() ||
-     static_cast<usize>(pInitClustersValue + 1) > std::numeric_limits<usize>::max() / clusterArrayPtr->getNumberOfComponents())
+  if(clusterArray.getNumberOfComponents() == 0 || (pInitClustersValue + 1) > std::numeric_limits<usize>::max() ||
+     static_cast<usize>(pInitClustersValue + 1) > std::numeric_limits<usize>::max() / clusterArray.getNumberOfComponents())
   {
     return MakePreflightErrorResult(-7586, "The medoids output dimensions overflow the supported address range.");
   }
@@ -141,13 +138,13 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
       const auto& maskArray = dataStructure.getDataRefAs<IArray>(maskPath);
       return MakePreflightErrorResult(
           -7589, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
-                             pSelectedArrayPathValue.toString(), clusterArrayPtr->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
+                             pSelectedArrayPathValue.toString(), clusterArray.getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
     }
   }
 
   {
     auto createAction =
-        std::make_unique<CreateArrayAction>(DataType::int32, clusterArrayPtr->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
+        std::make_unique<CreateArrayAction>(DataType::int32, clusterArray.getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -157,7 +154,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
-    auto createAction = std::make_unique<CreateArrayAction>(clusterArrayPtr->getDataType(), tupDims, clusterArrayPtr->getComponentShape(), pFeatureAMPathValue.createChildPath(pMedoidsArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(clusterArray.getDataType(), tupDims, clusterArray.getComponentShape(), pFeatureAMPathValue.createChildPath(pMedoidsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 

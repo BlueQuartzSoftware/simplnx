@@ -1,8 +1,8 @@
 #include "ComputeFeatureNeighborMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/ComputeFeatureNeighborMisorientations.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
@@ -63,16 +63,16 @@ Parameters ComputeFeatureNeighborMisorientationsFilter::parameters() const
                                                                  DataPath({"DataContainer", "Feature Data", "NeighborList"}),
                                                                  NeighborListSelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Feature Average Quaternions", "Defines the average orientation of the Feature in quaternion representation",
-                                                          DataPath({"DataContainer", "Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
+                                                          DataPath({"DataContainer", "Feature Data", "AvgQuats"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs",
-                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"DataContainer", "Cell Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath({"DataContainer", "Cell Ensemble Data", "CrystalStructures"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationListArrayName_Key, "Misorientation List",
@@ -124,15 +124,7 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
 
   std::vector<DataPath> dataArrayPaths;
 
-  // Validate the Quats is a 4 component array
-  const auto* avgQuatsPtr = dataStructure.getDataAs<Float32ArrayType>(pAvgQuatsArrayPathValue);
-  if(avgQuatsPtr->getNumberOfComponents() != 4)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(
-                -34500, fmt::format("Input Average Quaternions array at path '{}' has {} components but 4 are required.", pAvgQuatsArrayPathValue.toString(), avgQuatsPtr->getNumberOfComponents()))};
-  }
-
-  const auto* featurePhasesPtr = dataStructure.getDataAs<Int32ArrayType>(pFeaturePhasesArrayPathValue);
+  const auto& avgQuats = dataStructure.getDataRefAs<IDataArray>(pAvgQuatsArrayPathValue);
 
   dataArrayPaths.push_back(pAvgQuatsArrayPathValue);
   dataArrayPaths.push_back(pFeaturePhasesArrayPathValue);
@@ -149,12 +141,12 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
 
   if(pComputeAvgMisorsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, avgQuatsPtr->getIDataStore()->getTupleShape(), std::vector<usize>{1}, pAvgMisorientationsArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, avgQuats.getTupleShape(), std::vector<usize>{1}, pAvgMisorientationsArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create the NeighborList array
-  auto createArrayAction = std::make_unique<CreateNeighborListAction>(nx::core::DataType::float32, avgQuatsPtr->getTupleShape(), pMisorientationListArrayPath);
+  auto createArrayAction = std::make_unique<CreateNeighborListAction>(nx::core::DataType::float32, avgQuats.getTupleShape(), pMisorientationListArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   std::vector<PreflightValue> preflightUpdatedValues;
