@@ -197,9 +197,23 @@ Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& j
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+
+  // Legacy ChangeResolution uses these Feature paths only when RenumberFeatures is on.
+  bool renumberDisabled = false;
+  if(json.contains(SIMPL::k_RenumberFeaturesKey))
+  {
+    const auto renumber = SIMPLConversion::LinkedBooleanFilterParameterConverter::convert(json[SIMPL::k_RenumberFeaturesKey]);
+    renumberDisabled = renumber.valid() && !renumber.value();
+  }
+  if(!renumberDisabled || json.contains(SIMPL::k_CellFeatureAttributeMatrixPathKey))
+  {
+    results.push_back(
+        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
+  }
+  if(!renumberDisabled || json.contains(SIMPL::k_FeatureIdsArrayPathKey))
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(
       args, json, json.contains(SIMPL::k_NewDataContainerNameKey) ? SIMPL::k_NewDataContainerNameKey : SIMPL::k_NewDataContainerPathKey, k_CreatedImageGeometry_Key));
 

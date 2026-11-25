@@ -36,6 +36,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -1288,20 +1289,89 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL conversion Feature option
   REQUIRE(stream.is_open());
   auto json = nlohmann::json::parse(stream).at("0");
   json["CellFeatureAttributeMatrixPath"] = {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Feature Data"}, {"Data Array Name", ""}};
-  const bool renumber = GENERATE(true, false);
-  json["RenumberFeatures"] = renumber ? 1 : 0;
-  auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
-  SIMPLNX_RESULT_REQUIRE_VALID(converted);
-  CHECK(converted.value().value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key) == renumber);
-  CHECK(converted.value().value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == renumber);
-  CHECK(converted.value().value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"Image", "Cell Feature Data"}));
 
-  SECTION("Missing RenumberFeatures follows the standard conversion error")
+  SECTION("Present Feature paths are converted for either RenumberFeatures value")
   {
-    json.erase("RenumberFeatures");
-    auto missing = ResampleImageGeomFilter::FromSIMPLJson(json);
-    SIMPLNX_RESULT_REQUIRE_INVALID(missing);
-    CHECK(missing.errors().front().code == -571);
+    const bool renumber = GENERATE(true, false);
+    json["RenumberFeatures"] = renumber ? 1 : 0;
+    auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+    SIMPLNX_RESULT_REQUIRE_VALID(converted);
+    const auto& args = converted.value();
+    CHECK(args.value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key) == renumber);
+    CHECK(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == renumber);
+    CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"Image", "Cell Feature Data"}));
+    CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  }
+
+  SECTION("Missing Feature paths keep their defaults when renumbering is off")
+  {
+    const auto [omitFeatureMatrix, omitFeatureIds] = GENERATE(table<bool, bool>({{true, true}, {true, false}, {false, true}}));
+    CAPTURE(omitFeatureMatrix, omitFeatureIds);
+    json["RenumberFeatures"] = 0;
+    if(omitFeatureMatrix)
+    {
+      json.erase("CellFeatureAttributeMatrixPath");
+    }
+    if(omitFeatureIds)
+    {
+      json.erase("FeatureIdsArrayPath");
+    }
+    auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+    SIMPLNX_RESULT_REQUIRE_VALID(converted);
+    const auto& args = converted.value();
+    CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+    CHECK(args.value<VectorFloat32Parameter::ValueType>(ResampleImageGeomFilter::k_Spacing_Key) == std::vector<float32>{1.0F, 2.0F, 3.0F});
+    CHECK_FALSE(args.value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key));
+    CHECK_FALSE(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key));
+    const auto defaults = ResampleImageGeomFilter().getDefaultArguments();
+    const auto defaultFeatureMatrixPath = defaults.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key);
+    const auto defaultFeatureIdsPath = defaults.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key);
+    CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == (omitFeatureMatrix ? defaultFeatureMatrixPath : DataPath({"Image", "Cell Feature Data"})));
+    CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key) == (omitFeatureIds ? defaultFeatureIdsPath : DataPath({"DataContainer", "CellData", "TestArray"})));
+  }
+
+  SECTION("Missing Feature paths report a conversion error when renumbering is on")
+  {
+    const auto& missingKey = GENERATE(as<std::string>{}, "CellFeatureAttributeMatrixPath", "FeatureIdsArrayPath");
+    CAPTURE(missingKey);
+    json["RenumberFeatures"] = 1;
+    json.erase(missingKey);
+    auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+    SIMPLNX_RESULT_REQUIRE_INVALID(converted);
+    REQUIRE(converted.errors().size() == 1);
+    CHECK(converted.errors().front().code == -571);
+    CHECK(converted.errors().front().message.starts_with(fmt::format("Key `{}` not found", missingKey)));
+  }
+
+  SECTION("Missing Feature paths report a conversion error when RenumberFeatures is missing or invalid")
+  {
+    const bool omitRenumber = GENERATE(true, false);
+    CAPTURE(omitRenumber);
+    if(omitRenumber)
+    {
+      json.erase("RenumberFeatures");
+    }
+    else
+    {
+      json["RenumberFeatures"] = "0";
+    }
+    json.erase("FeatureIdsArrayPath");
+    auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+    SIMPLNX_RESULT_REQUIRE_INVALID(converted);
+    const auto& errors = converted.errors();
+    CHECK(std::any_of(errors.cbegin(), errors.cend(), [](const Error& error) { return error.code == -571 && error.message.starts_with("Key `FeatureIdsArrayPath` not found"); }));
+  }
+
+  SECTION("Malformed Feature paths report a conversion error when renumbering is off")
+  {
+    const auto& invalidKey = GENERATE(as<std::string>{}, "CellFeatureAttributeMatrixPath", "FeatureIdsArrayPath");
+    CAPTURE(invalidKey);
+    json["RenumberFeatures"] = 0;
+    json[invalidKey]["Data Container Name"] = 7;
+    auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+    SIMPLNX_RESULT_REQUIRE_INVALID(converted);
+    REQUIRE(converted.errors().size() == 1);
+    CHECK(converted.errors().front().code == -2);
   }
 }
 
