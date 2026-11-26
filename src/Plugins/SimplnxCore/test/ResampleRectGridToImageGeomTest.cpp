@@ -1,14 +1,11 @@
 #include <catch2/catch.hpp>
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -259,40 +256,12 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: InValid Filter Execut
 
 TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ResampleRectGridToImageGeomFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ResampleRectGridToImageGeomFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ResampleRectGridToImageGeomFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<DataPath>(ResampleRectGridToImageGeomFilter::k_RectilinearGridPath_Key) == DataPath({"DataContainer"}));
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(ResampleRectGridToImageGeomFilter::k_ImageGeometryPath_Key) == DataPath({"ImageGeometry"}));
-      CHECK(args.value<std::string>(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrixName_Key) == "CellData");
-    }
-  }
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "ResampleRectGridToImageGeomFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ResampleRectGridToImageGeomFilter>::uuid);
+  CHECK(args.value<DataPath>(ResampleRectGridToImageGeomFilter::k_RectilinearGridPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<std::vector<DataPath>>(ResampleRectGridToImageGeomFilter::k_SelectedDataArrayPaths_Key) ==
+        std::vector<DataPath>{DataPath({"DataContainer", "CellData", "Temperature"}), DataPath({"DataContainer", "CellData", "Pressure"})});
+  CHECK(args.value<std::vector<int32>>(ResampleRectGridToImageGeomFilter::k_Dimensions_Key) == std::vector<int32>{10, 20, 30});
+  CHECK(args.value<DataPath>(ResampleRectGridToImageGeomFilter::k_ImageGeometryPath_Key) == DataPath({"ImageGeometry"}));
+  CHECK(args.value<std::string>(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrixName_Key) == "CellData");
 }

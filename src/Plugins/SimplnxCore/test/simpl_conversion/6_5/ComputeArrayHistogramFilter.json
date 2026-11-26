@@ -12,12 +12,12 @@
     "NumberOfBins": 5,
     "UserDefinedRange": 1,
     "MinRange": 2.5,
-    "MaxRange": 2.5,
+    "MaxRange": 12.5,
     "NewDataContainer": 1,
     "SelectedArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Intensities"
     },
     "NewDataContainerName": {
       "Data Container Name": "DataContainer"

@@ -24,7 +24,8 @@ public:
   {
     All = 0,
     IncludeList = 1,
-    ExcludeList = 2
+    ExcludeList = 2,
+    LegacySelection = 3
   };
 
   struct ImportData
@@ -42,6 +43,7 @@ public:
      *               IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
                      ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
                      All -> Imports all possible data and ignores the DataPaths list.
+     *               LegacySelection -> Imports the exact checked SIMPL objects and the geometry of each checked container.
      *               Defaults to PathImportPolicy::All.
      * @param dataPaths A vector of DataPaths of objects to include/exclude during the import process. Defaults to an empty vector.
      *                  If the path import policy is set to 'All', this parameter is ignored.
@@ -68,8 +70,12 @@ public:
      * IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty or missing, nothing will be imported.
      * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
      * All -> Imports all possible data and ignores the DataPaths list.
+     * LegacySelection -> DataPaths holds each checked container, matrix and array. Containers absent from both lists are newly discovered.
      */
     PathImportPolicy ImportPolicy = PathImportPolicy::All;
+
+    /** @brief Names of unchecked SIMPL containers. Used only with LegacySelection. */
+    std::vector<std::string> LegacyExcludedContainers;
   };
 
   /** @brief Filter name used in the filter list and in strict-load diagnostics. */

@@ -10,21 +10,21 @@
     "Filter_Name": "WriteASCIIData",
     "Filter_Uuid": "{5fbf9204-2c6c-597b-856a-f4612adbac38}",
     "OutputStyle": 0,
-    "OutputPath": "/test/path/file.txt",
-    "FileExtension": "TestName",
+    "OutputPath": "/test/export",
+    "FileExtension": ".csv",
     "MaxValPerLine": 5,
-    "OutputFilePath": "/test/path/file.txt",
+    "OutputFilePath": "/test/export/measurements.csv",
     "Delimiter": 0,
     "SelectedDataArrayPaths": [
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA1"
+        "Data Container Name": "Scan",
+        "Attribute Matrix Name": "Cells",
+        "Data Array Name": "Temperature"
       },
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA2"
+        "Data Container Name": "Scan",
+        "Attribute Matrix Name": "Cells",
+        "Data Array Name": "Pressure"
       }
     ]
   }

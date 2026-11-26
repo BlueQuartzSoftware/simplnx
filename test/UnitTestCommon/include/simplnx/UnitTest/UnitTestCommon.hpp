@@ -493,6 +493,21 @@ DataStructure LoadDataStructure(const fs::path& filepath);
 void LoadPlugins();
 
 /**
+ * @brief Loads a single-filter SIMPL fixture and returns its converted arguments.
+ * @param fixturePath Legacy pipeline JSON file.
+ * @param expectedFilter Expected simplnx filter UUID.
+ */
+Arguments LoadSIMPLConversionArguments(const fs::path& fixturePath, Uuid expectedFilter);
+
+/**
+ * @brief Loads the checked SIMPL pipeline for tests that also preflight it.
+ * @param fixturePath Legacy pipeline JSON file.
+ * @param expectedFilter Expected simplnx filter UUID.
+ * @param args Receives the converted filter arguments.
+ */
+Pipeline LoadSIMPLConversionPipeline(const fs::path& fixturePath, Uuid expectedFilter, Arguments& args);
+
+/**
  * @brief Writes a DataStructure to a .dream3d file and requires success.
  * @param dataStructure DataStructure to write.
  * @param filepath Destination file path.

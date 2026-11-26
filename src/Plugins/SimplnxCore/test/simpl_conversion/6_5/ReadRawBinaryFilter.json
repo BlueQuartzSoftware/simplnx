@@ -10,14 +10,14 @@
     "Filter_Name": "RawBinaryReader",
     "Filter_Uuid": "{0791f556-3d73-5b1e-b275-db3f7bb6850d}",
     "InputFile": "/test/path/file.txt",
-    "ScalarType": 0,
-    "NumberOfComponents": 1,
-    "Endian": 0,
+    "ScalarType": 2,
+    "NumberOfComponents": 3,
+    "Endian": 1,
     "SkipHeaderBytes": "5",
     "CreatedAttributeArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Samples"
     }
   }
 }

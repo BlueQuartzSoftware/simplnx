@@ -5,7 +5,6 @@
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/Types.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -17,8 +16,6 @@
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
@@ -1313,47 +1310,19 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Sele
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RequireMinNumNeighborsFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "RequireMinNumNeighborsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "RequireMinNumNeighborsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RequireMinNumNeighborsFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<uint64>(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key) == 5);
-      CHECK(args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key) == true);
-      CHECK(args.value<uint64>(RequireMinNumNeighborsFilter::k_PhaseNumber_Key) == 5);
-      CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Successful pipeline loading verifies the MultiDataArraySelectionFilterParameterConverter value.
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "RequireMinNumNeighborsFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<RequireMinNumNeighborsFilter>::uuid);
+  CHECK(args.value<uint64>(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key) == 5);
+  CHECK(args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key) == true);
+  CHECK(args.value<uint64>(RequireMinNumNeighborsFilter::k_PhaseNumber_Key) == 5);
+  CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key) == DataPath({"DataContainer", "Features", "Phases"}));
+  CHECK(args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key) == DataPath({"DataContainer", "Features", "Neighbors"}));
+  CHECK(args.value<std::vector<DataPath>>(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key) ==
+        std::vector<DataPath>{DataPath({"DataContainer", "CellData", "Confidence"}), DataPath({"DataContainer", "CellData", "Intensity"})});
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Stale Arrays", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")

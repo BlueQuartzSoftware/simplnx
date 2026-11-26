@@ -2,14 +2,11 @@
 #include "SimplnxCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -424,42 +421,16 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: SIMPL Backwards Compatibility", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "InterpolatePointCloudToRegularGridFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<bool>(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key) == true);
-      CHECK(args.value<ChoicesParameter::ValueType>(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key) == 0);
-      CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"VertexDataContainer"}));
-      CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_InputMaskPath_Key) == DataPath({"DataContainer", "CellData", "Mask"}));
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
-    }
-  }
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "InterpolatePointCloudToRegularGridFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid);
+  CHECK(args.value<bool>(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key) == true);
+  CHECK(args.value<ChoicesParameter::ValueType>(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key) == InterpolatePointCloudToRegularGrid::k_Gaussian);
+  CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key) == DataPath({"OutputGrid"}));
+  CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"ScanPoints"}));
+  CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_InputMaskPath_Key) == DataPath({"ScanPoints", "PointData", "Mask"}));
+  CHECK(args.value<std::vector<float32>>(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key) == std::vector<float32>{2.0F, 4.0F, 6.0F});
+  CHECK(args.value<std::vector<float32>>(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key) == std::vector<float32>{0.5F, 1.0F, 1.5F});
+  CHECK(args.value<std::vector<DataPath>>(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key) ==
+        std::vector<DataPath>{DataPath({"ScanPoints", "PointData", "Temperature"}), DataPath({"ScanPoints", "PointData", "Pressure"})});
+  CHECK(args.value<std::vector<DataPath>>(InterpolatePointCloudToRegularGridFilter::k_CopyArrays_Key) == std::vector<DataPath>{DataPath({"ScanPoints", "PointData", "ScanId"})});
 }

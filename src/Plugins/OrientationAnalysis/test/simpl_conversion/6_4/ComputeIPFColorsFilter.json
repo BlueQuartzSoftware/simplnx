@@ -17,23 +17,23 @@
     "CellEulerAnglesArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "CellEulerAngles"
     },
     "CellPhasesArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "CellPhases"
     },
     "GoodVoxelsArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "GoodVoxels"
     },
     "CrystalStructuresArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "CrystalStructures"
     },
-    "CellIPFColorsArrayName": "TestName"
+    "CellIPFColorsArrayName": "CellIPFColors"
   }
 }

@@ -16,22 +16,27 @@
     },
     "TriangleAreasArrayPath": {
       "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "Areas"
     },
     "MaskArrayPath": {
       "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "Mask"
     },
     "SelectedDataArrayPaths": [
       {
         "Data Container Name": "DataContainer",
-        "Attribute Matrix Name": "CellData",
-        "Data Array Name": "TestArray"
+        "Attribute Matrix Name": "FaceData",
+        "Data Array Name": "Phase"
+      },
+      {
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "FaceData",
+        "Data Array Name": "Intensity"
       }
     ],
-    "VertexGeometry": "VertexGeom",
+    "VertexGeometry": "SampledPoints",
     "VertexAttributeMatrixName": "TestName"
   }
 }

@@ -10,40 +10,45 @@
     "Filter_Name": "InterpolatePointCloudToRegularGrid",
     "Filter_Uuid": "{4b551c15-418d-5081-be3f-d3aeb62408e5}",
     "UseMask": 1,
-    "InterpolationTechnique": 0,
+    "InterpolationTechnique": 1,
     "KernelSize": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 3.0
+      "x": 2.0,
+      "y": 4.0,
+      "z": 6.0
     },
     "Sigmas": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 3.0
+      "x": 0.5,
+      "y": 1.0,
+      "z": 1.5
     },
     "DataContainerName": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "ScanPoints"
     },
     "InterpolatedDataContainerName": {
-      "Data Container Name": "VertexDataContainer"
+      "Data Container Name": "OutputGrid"
     },
     "MaskArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
+      "Data Container Name": "ScanPoints",
+      "Attribute Matrix Name": "PointData",
       "Data Array Name": "Mask"
     },
     "ArraysToInterpolate": [
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA1"
+        "Data Container Name": "ScanPoints",
+        "Attribute Matrix Name": "PointData",
+        "Data Array Name": "Temperature"
+      },
+      {
+        "Data Container Name": "ScanPoints",
+        "Attribute Matrix Name": "PointData",
+        "Data Array Name": "Pressure"
       }
     ],
     "ArraysToCopy": [
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA2"
+        "Data Container Name": "ScanPoints",
+        "Attribute Matrix Name": "PointData",
+        "Data Array Name": "ScanId"
       }
     ]
   }

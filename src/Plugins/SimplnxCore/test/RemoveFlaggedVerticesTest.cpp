@@ -1,7 +1,6 @@
 #include "SimplnxCore/Filters/RemoveFlaggedVerticesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -11,8 +10,6 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -318,62 +315,33 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
 
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RemoveFlaggedVerticesFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "RemoveFlaggedVerticesFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<RemoveFlaggedVerticesFilter>::uuid);
+  // The legacy filter copied every non-Vertex Attribute Matrix unchanged, so conversion turns Clear off.
+  CHECK(args.value<bool>(RemoveFlaggedVerticesFilter::k_ClearFeatureAttributeMatrix_Key) == false);
+  CHECK(args.value<bool>(RemoveFlaggedVerticesFilter::k_RenumberFeatures_Key) == false);
+  CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_VertexFeatureIdsPath_Key) == DataPath({"Vertex Data", "FeatureIds"}));
+  CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_FeatureAttributeMatrixPath_Key) == DataPath({"Vertex Feature Data"}));
+  CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_InputMaskPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_CreatedVertexGeometryPath_Key) == DataPath({"ReducedVertexGeom"}));
 
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "RemoveFlaggedVerticesFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "RemoveFlaggedVerticesFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RemoveFlaggedVerticesFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // The legacy filter copied every non-Vertex Attribute Matrix unchanged, so conversion turns Clear off.
-      CHECK(args.value<bool>(RemoveFlaggedVerticesFilter::k_ClearFeatureAttributeMatrix_Key) == false);
-      CHECK(args.value<bool>(RemoveFlaggedVerticesFilter::k_RenumberFeatures_Key) == false);
-      CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_VertexFeatureIdsPath_Key) == DataPath({"Vertex Data", "FeatureIds"}));
-      CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_FeatureAttributeMatrixPath_Key) == DataPath({"Vertex Feature Data"}));
-      CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(RemoveFlaggedVerticesFilter::k_InputMaskPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (StringToDataPathFilterParameterConverter) - verified by successful pipeline loading
-
-      // The converted arguments preflight on a matching geometry that has no Feature Attribute Matrix.
-      DataStructure dataStructure;
-      auto* vertexGeom = VertexGeom::Create(dataStructure, "DataContainer");
-      REQUIRE(vertexGeom != nullptr);
-      auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {3}, {3}, vertexGeom->getId());
-      REQUIRE(vertices != nullptr);
-      vertexGeom->setVertices(*vertices);
-      auto* vertexData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{3}, vertexGeom->getId());
-      REQUIRE(vertexData != nullptr);
-      vertexGeom->setVertexAttributeMatrix(*vertexData);
-      REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "TestArray", {3}, {1}, vertexData->getId()) != nullptr);
-      auto preflightResult = filter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      CHECK(std::any_of(preflightResult.outputValues.begin(), preflightResult.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
-    }
-  }
+  // The converted arguments preflight on a matching geometry that has no Feature Attribute Matrix.
+  DataStructure dataStructure;
+  auto* vertexGeom = VertexGeom::Create(dataStructure, "DataContainer");
+  REQUIRE(vertexGeom != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {3}, {3}, vertexGeom->getId());
+  REQUIRE(vertices != nullptr);
+  vertexGeom->setVertices(*vertices);
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{3}, vertexGeom->getId());
+  REQUIRE(vertexData != nullptr);
+  vertexGeom->setVertexAttributeMatrix(*vertexData);
+  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "TestArray", {3}, {1}, vertexData->getId()) != nullptr);
+  auto preflightResult = RemoveFlaggedVerticesFilter{}.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  CHECK(std::any_of(preflightResult.outputValues.begin(), preflightResult.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Child names containing the geometry name are kept", "[SimplnxCore][RemoveFlaggedVertices]")

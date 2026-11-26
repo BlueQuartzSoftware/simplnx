@@ -1,15 +1,12 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
@@ -20,6 +17,7 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <string_view>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -479,51 +477,22 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "RegularGridSampleSurfaceMeshFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "RegularGridSampleSurfaceMeshFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
+  const std::string_view version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "RegularGridSampleSurfaceMeshFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid);
+  if(version == "6_5")
   {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      if(label == "SIMPL 6.5 (UUID)")
-      {
-        CHECK(args.value<ChoicesParameter::ValueType>(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key) == 0);
-        // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
-      }
-      CHECK(args.value<DataPath>(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<std::string>(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key) == "TestName");
-      CHECK(args.value<std::string>(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key) == "TestName");
-    }
+    CHECK(args.value<ChoicesParameter::ValueType>(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key) == 0);
   }
+  CHECK(args.value<VectorUInt64Parameter::ValueType>(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key) == std::vector<uint64>{3, 5, 7});
+  CHECK(args.value<DataPath>(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key) == std::vector<float32>{0.5F, 1.25F, 2});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(RegularGridSampleSurfaceMeshFilter::k_Origin_Key) == std::vector<float32>{-4, 7.5F, 11});
+  CHECK(args.value<DataPath>(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key) == DataPath({"SampledVolume"}));
+  CHECK(args.value<std::string>(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key) == "Voxels");
+  CHECK(args.value<std::string>(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key) == "SampledIds");
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Custom Output Type", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")

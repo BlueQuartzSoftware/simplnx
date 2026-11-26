@@ -15,22 +15,22 @@
     },
     "SelectedDataArrayPaths": [
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA1"
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "Phases"
       },
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA2"
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "Confidence"
       }
     ],
     "SurfaceDataContainerName": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "Surface"
     },
-    "VertexAttributeMatrixName": "TestName",
-    "NodeTypesArrayName": "TestName",
-    "FaceAttributeMatrixName": "TestName",
-    "FaceLabelsArrayName": "TestName"
+    "VertexAttributeMatrixName": "Vertices",
+    "NodeTypesArrayName": "NodeTypes",
+    "FaceAttributeMatrixName": "Faces",
+    "FaceLabelsArrayName": "Labels"
   }
 }

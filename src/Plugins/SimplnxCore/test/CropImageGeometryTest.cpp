@@ -4,7 +4,6 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -19,8 +18,7 @@
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -2308,49 +2306,20 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Z Physical Bounds", "[Simp
 
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CropImageGeometryFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "CropImageGeometryFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "CropImageGeometryFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CropImageGeometryFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<bool>(CropImageGeometryFilter::k_UsePhysicalBounds_Key) == false);
-      CHECK(args.value<bool>(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key) == false);
-      CHECK(args.value<DataPath>(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<bool>(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key) == true);
-      CHECK(args.value<bool>(CropImageGeometryFilter::k_RenumberFeatures_Key) == true);
-      CHECK(args.value<DataPath>(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "CropImageGeometryFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<CropImageGeometryFilter>::uuid);
+  CHECK(args.value<VectorUInt64Parameter::ValueType>(CropImageGeometryFilter::k_MinVoxel_Key) == std::vector<uint64>{1, 2, 3});
+  CHECK(args.value<VectorUInt64Parameter::ValueType>(CropImageGeometryFilter::k_MaxVoxel_Key) == std::vector<uint64>{5, 7, 11});
+  CHECK(args.value<bool>(CropImageGeometryFilter::k_UsePhysicalBounds_Key) == false);
+  CHECK(args.value<bool>(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key) == false);
+  CHECK(args.value<DataPath>(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key) == DataPath({"CroppedVolume"}));
+  CHECK(args.value<bool>(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key) == true);
+  CHECK(args.value<bool>(CropImageGeometryFilter::k_RenumberFeatures_Key) == true);
+  CHECK(args.value<DataPath>(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellFeatureData"}));
 }
 
 TEST_CASE("SimplnxCore::CropImageGeometry: Child names containing the geometry name are kept", "[SimplnxCore][CropImageGeometry]")

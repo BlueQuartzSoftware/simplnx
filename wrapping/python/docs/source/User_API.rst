@@ -465,14 +465,16 @@ General Parameters
 
    .. py:class:: Dream3dImportParameter.ValueType
    
-      The ImportData object has 2 member variables that can be set.
+      The ImportData object holds the file path and the selection settings.
 
    :ivar file_path: Path to the .dream3d file on the file system
    :ivar path_import_policy: The import policy that governs how the DataPaths will be processed.
             * IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
             * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
             * All -> Imports all possible data and ignores the DataPaths list.
+            * LegacySelection -> Restores the exact object selections of a converted SIMPL pipeline. New top-level containers are included.
             * Defaults to PathImportPolicy::All.
+   :ivar legacy_excluded_containers: Names of unchecked top-level containers for LegacySelection.
    :ivar data_paths: List of :ref:`DataPath <DataPath>` of objects to include/exclude during the import process. Defaults to an empty vector.
             * If the path import policy is set to 'All', this parameter is ignored.
 

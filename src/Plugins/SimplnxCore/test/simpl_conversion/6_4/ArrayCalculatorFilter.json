@@ -9,16 +9,15 @@
     "Filter_Human_Label": "Array Calculator",
     "Filter_Name": "ArrayCalculator",
     "SelectedAttributeMatrix": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells"
     },
-    "InfixEquation": "1+2",
-    "ScalarType": 0,
+    "InfixEquation": "sin(30)",
     "CalculatedArray": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "SineValues"
     },
-    "Units": 0
+    "Units": 1
   }
 }

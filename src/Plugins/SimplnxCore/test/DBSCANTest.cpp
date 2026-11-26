@@ -13,8 +13,6 @@
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -996,47 +994,18 @@ TEST_CASE("SimplnxCore::DBSCANScanline: Direct out-of-core call rejects invalid 
 
 TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxCore][DBSCANFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "DBSCANFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "DBSCANFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<DBSCANFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Successful pipeline loading verifies the AMPathBuilderFilterParameterConverter value.
-      CHECK(args.value<float32>(DBSCANFilter::k_Epsilon_Key) == 2.5f);
-      CHECK(args.value<int32>(DBSCANFilter::k_MinPoints_Key) == 5);
-      CHECK(args.value<ChoicesParameter::ValueType>(DBSCANFilter::k_DistanceMetric_Key) == 0);
-      CHECK(args.value<bool>(DBSCANFilter::k_UseMask_Key) == true);
-      CHECK(args.value<DataPath>(DBSCANFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(DBSCANFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(DBSCANFilter::k_FeatureIdsArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "DBSCANFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<DBSCANFilter>::uuid);
+  CHECK(args.value<float32>(DBSCANFilter::k_Epsilon_Key) == 2.5F);
+  CHECK(args.value<int32>(DBSCANFilter::k_MinPoints_Key) == 5);
+  CHECK(args.value<ChoicesParameter::ValueType>(DBSCANFilter::k_DistanceMetric_Key) == 2);
+  CHECK(args.value<bool>(DBSCANFilter::k_UseMask_Key));
+  CHECK(args.value<DataPath>(DBSCANFilter::k_SelectedArrayPath_Key) == DataPath({"Scan", "Cells", "Measurements"}));
+  CHECK(args.value<DataPath>(DBSCANFilter::k_MaskArrayPath_Key) == DataPath({"Scan", "Cells", "Included"}));
+  CHECK(args.value<std::string>(DBSCANFilter::k_FeatureIdsArrayName_Key) == "PopulationIds");
+  CHECK(args.value<DataPath>(DBSCANFilter::k_FeatureAMPath_Key) == DataPath({"Scan", "Populations"}));
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[SimplnxCore][DBSCAN]")

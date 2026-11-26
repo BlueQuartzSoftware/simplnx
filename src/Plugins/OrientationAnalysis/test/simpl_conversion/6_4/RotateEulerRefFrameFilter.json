@@ -9,11 +9,11 @@
     "Filter_Human_Label": "Rotate Euler Ref Frame",
     "Filter_Name": "RotateEulerRefFrame",
     "RotationAxis": {
-      "x": 1.0,
-      "y": 0.0,
-      "z": 0.0
+      "x": 0.0,
+      "y": -0.6,
+      "z": 0.8
     },
-    "RotationAngle": 90.0,
+    "RotationAngle": 37.0,
     "CellEulerAnglesArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",

@@ -22,6 +22,12 @@ The selected objects are added into the pipeline's current **DataStructure** at 
 
 This filter can also read **legacy** `.dream3d` files — those written by the older DREAM3D 6.x / SIMPL-era applications. Such files use an earlier internal layout, and this filter converts them to the current **DataStructure** format on import.
 
+When simplnx converts a DREAM.3D 6.x **Data Container Reader** pipeline, it saves the legacy selection with the pipeline. A checked data container keeps its geometry, including mesh vertices and connectivity. Within that container, the reader imports the checked Attribute Matrices and Data Arrays. An unchecked container and its contents are skipped.
+
+If the input file later gains a Data Array or Attribute Matrix inside a saved container, the reader skips that addition. A new top-level data container is imported with its contents. An empty legacy selection tree reads the entire file.
+
+If you converted the pipeline with an earlier version of simplnx, convert the original SIMPL JSON again to recover its checkbox settings. The earlier conversion discarded the unchecked flags.
+
 ### Use Default Origin/Spacing for Invalid Values
 
 Stored image origin components must be finite. Stored spacing components must be finite and greater than zero. By default, the filter rejects invalid values in image geometries selected for import.

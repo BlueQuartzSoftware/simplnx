@@ -12,15 +12,23 @@
     "DataArraysToRemove": {
       "Data Containers": [
         {
-          "Name": "DataContainer",
+          "Name": "Scan",
           "Flag": 2,
           "Attribute Matricies": [
             {
-              "Name": "CellData",
+              "Name": "Cells",
               "Flag": 2,
               "Data Arrays": [
                 {
-                  "Name": "TestArray",
+                  "Name": "Quality",
+                  "Flag": 2
+                },
+                {
+                  "Name": "Labels",
+                  "Flag": 0
+                },
+                {
+                  "Name": "Phases",
                   "Flag": 2
                 }
               ]

@@ -10,21 +10,21 @@
     "Filter_Name": "ExtractVertexGeometry",
     "IncludedDataArrayPaths": [
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA1"
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "Phases"
       },
       {
-        "Data Container Name": "DC",
-        "Attribute Matrix Name": "AM",
-        "Data Array Name": "DA2"
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "Intensity"
       }
     ],
     "SelectedDataContainerName": {
       "Data Container Name": "DataContainer"
     },
     "VertexDataContainerName": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "ExtractedPoints"
     }
   }
 }

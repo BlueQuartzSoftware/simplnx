@@ -2,15 +2,11 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
-#include <fstream>
 
 #include <cmath>
 #include <limits>
@@ -157,43 +153,15 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
 
 TEST_CASE("SimplnxCore::CreateDataArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateDataArrayFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "CreateDataArrayFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "CreateDataArrayFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateDataArrayFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Complex type (ScalarTypeParameterToNumericTypeConverter) - verified by successful pipeline loading
-      CHECK(args.value<uint64>(CreateDataArrayFilter::k_NumComps_Key) == 5);
-      CHECK(args.value<std::string>(CreateDataArrayFilter::k_InitializationValue_Key) == "TestName");
-      // Complex type (DataArrayCreationFilterParameterConverter) - verified by successful pipeline loading
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "CreateDataArrayFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<CreateDataArrayFilter>::uuid);
+  CHECK_FALSE(args.value<bool>(CreateDataArrayFilter::k_AdvancedOptions_Key));
+  CHECK(args.value<NumericType>(CreateDataArrayFilter::k_NumericType_Key) == NumericType::uint16);
+  CHECK(args.value<uint64>(CreateDataArrayFilter::k_NumComps_Key) == 5);
+  CHECK(args.value<std::string>(CreateDataArrayFilter::k_InitializationValue_Key) == "24");
+  CHECK(args.value<DataPath>(CreateDataArrayFilter::k_DataPath_Key) == DataPath({"Scan", "Cells", "Counts"}));
 }
 
 TEST_CASE("SimplnxCore::CreateDataArray: Dimension RED fractional", "[SimplnxCore][CreateDataArray][DimensionRed]")

@@ -32,7 +32,7 @@
       "Data Array Name": "TestArray"
     },
     "NewDataContainerPath": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "ResampledVolume"
     }
   }
 }

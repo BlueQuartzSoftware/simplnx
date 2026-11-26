@@ -14,8 +14,6 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -282,48 +280,19 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
 
 TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeBoundaryStrengthsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeBoundaryStrengthsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeBoundaryStrengthsFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Complex type (DoubleVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sptsArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF7sArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshmPrimesArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ComputeBoundaryStrengthsFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ComputeBoundaryStrengthsFilter>::uuid);
+  CHECK(args.value<VectorFloat64Parameter::ValueType>(ComputeBoundaryStrengthsFilter::k_Loading_Key) == std::vector<float64>{1, 2, 3});
+  CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"Mesh", "Faces", "Labels"}));
+  CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"Volume", "Features", "Quats"}));
+  CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"Volume", "Features", "Phases"}));
+  CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"Volume", "Ensembles", "Structures"}));
+  CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sArrayName_Key) == "F1");
+  CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sptsArrayName_Key) == "F1spt");
+  CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF7sArrayName_Key) == "F7");
+  CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshmPrimesArrayName_Key) == "mPrime");
 }
 
 TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter]")

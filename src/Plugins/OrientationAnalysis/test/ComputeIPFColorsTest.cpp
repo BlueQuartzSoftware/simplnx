@@ -21,8 +21,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
@@ -506,44 +504,15 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell a
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeIPFColorsFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeIPFColorsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeIPFColorsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeIPFColorsFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Pipeline loading verifies FloatVec3FilterParameterConverter.
-      CHECK(args.value<bool>(ComputeIPFColorsFilter::k_UseMask_Key) == true);
-      CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ComputeIPFColorsFilter::k_CellIPFColorsArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ComputeIPFColorsFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ComputeIPFColorsFilter>::uuid);
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ComputeIPFColorsFilter::k_ReferenceDir_Key) == VectorFloat32Parameter::ValueType{1, 2, 3});
+  CHECK(args.value<bool>(ComputeIPFColorsFilter::k_UseMask_Key) == true);
+  CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "CellEulerAngles"}));
+  CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "CellPhases"}));
+  CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "GoodVoxels"}));
+  CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "CrystalStructures"}));
+  CHECK(args.value<std::string>(ComputeIPFColorsFilter::k_CellIPFColorsArrayName_Key) == "CellIPFColors");
 }

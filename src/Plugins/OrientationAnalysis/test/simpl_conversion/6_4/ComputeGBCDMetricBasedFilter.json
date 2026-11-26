@@ -10,56 +10,56 @@
     "Filter_Name": "FindGBCDMetricBased",
     "PhaseOfInterest": 5,
     "MisorientationRotation": {
-      "angle": 90.0,
-      "h": 1.0,
-      "k": 0.0,
-      "l": 0.0
+      "angle": 43.0,
+      "h": 2.0,
+      "k": -1.0,
+      "l": 3.0
     },
     "ChosenLimitDists": 0,
     "NumSamplPts": 5,
     "ExcludeTripleLines": 1,
-    "DistOutputFile": "/test/path/file.txt",
-    "ErrOutputFile": "/test/path/file.txt",
+    "DistOutputFile": "/test/path/distribution.txt",
+    "ErrOutputFile": "/test/path/errors.txt",
     "SaveRelativeErr": 1,
     "NodeTypesArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "NodeTypes"
     },
     "SurfaceMeshFaceLabelsArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "FaceLabels"
     },
     "SurfaceMeshFaceNormalsArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "FaceNormals"
     },
     "SurfaceMeshFaceAreasArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "FaceAreas"
     },
     "SurfaceMeshFeatureFaceLabelsArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "FeatureFaceLabels"
     },
     "FeatureEulerAnglesArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "FeatureEulerAngles"
     },
     "FeaturePhasesArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "FeaturePhases"
     },
     "CrystalStructuresArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "CrystalStructures"
     }
   }
 }

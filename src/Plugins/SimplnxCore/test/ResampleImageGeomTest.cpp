@@ -21,8 +21,6 @@
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -1068,47 +1066,18 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ResampleImageGeomFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ResampleImageGeomFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ResampleImageGeomFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ResampleImageGeomFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key) == true);
-      CHECK(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == true);
-      CHECK(args.value<bool>(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key) == false);
-      CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"DataContainer", "CellFeatureData"}));
-      CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CreatedImageGeometry_Key) == DataPath({"DataContainer"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ResampleImageGeomFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ResampleImageGeomFilter>::uuid);
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ResampleImageGeomFilter::k_Spacing_Key) == std::vector<float32>{1, 2, 3});
+  CHECK(args.value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key) == true);
+  CHECK(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == true);
+  CHECK(args.value<bool>(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key) == false);
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"DataContainer", "CellFeatureData"}));
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CreatedImageGeometry_Key) == DataPath({"ResampledVolume"}));
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry name are kept", "[SimplnxCore][ResampleImageGeom]")

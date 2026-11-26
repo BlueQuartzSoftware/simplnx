@@ -2,6 +2,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
@@ -305,4 +306,57 @@ TEST_CASE("FileSystemPathParameter::MatchExtension")
     auto m = FileSystemPathParameter::MatchExtension("foo.gz.bak", accepted);
     REQUIRE_FALSE(m.has_value());
   }
+}
+
+TEST_CASE("simplnx::Dream3dImportParameter: Invalid SIMPL reader proxies", "[simplnx][Dream3dImportParameter][SIMPLConversion]")
+{
+  using nlohmann::json;
+  json matrix = {{"Name", "Cells"}, {"Flag", 2}, {"Data Arrays", json::array({{{"Name", "Quality"}, {"Flag", 2}}})}};
+  json container = {{"Name", "Scan"}, {"Flag", 2}, {"Attribute Matricies", json::array({matrix})}};
+  json input = {{"InputFile", "scan.dream3d"}, {"InputFileDataContainerArrayProxy", {{"Data Containers", json::array({container})}}}};
+  const auto [path, replacement, expectedCode] = GENERATE(table<std::string, json, int32>({
+      {"/InputFile", nullptr, -2},
+      {"/InputFileDataContainerArrayProxy", nullptr, -1},
+      {"/InputFileDataContainerArrayProxy/Data Containers/0/Attribute Matricies", false, -3},
+      {"/InputFileDataContainerArrayProxy/Data Containers/0/Name", "Scan/Cells", -4},
+      {"/InputFileDataContainerArrayProxy/Data Containers/0/Attribute Matricies/0/Data Arrays", json::array({{{"Name", "A"}}, {{"Name", "A"}}}), -5},
+      {"/InputFileDataContainerArrayProxy/Data Containers/0/Attribute Matricies/0/Data Arrays/0/Flag", "2", -6},
+      {"/InputFileDataContainerArrayProxy/Data Containers/0/Flag", -1, -7},
+      {"/InputFileDataContainerArrayProxy/Data Containers/0/Flag", 1.5, -7},
+      {"/InputFileDataContainerArrayProxy/Data Containers/0/Flag", 256, -7},
+  }));
+  CAPTURE(path, replacement.dump());
+  input.at(json::json_pointer(path)) = replacement;
+  const auto result = SIMPLConversion::DataContainerReaderFilterParameterConverter::convert(input);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == expectedCode);
+}
+
+TEST_CASE("simplnx::Dream3dImportParameter: Invalid saved legacy selections", "[simplnx][Dream3dImportParameter][SIMPLConversion]")
+{
+  using nlohmann::json;
+  Dream3dImportParameter::ImportData selection("scan.dream3d", Dream3dImportParameter::PathImportPolicy::LegacySelection, {DataPath({"Scan"}), DataPath({"Scan", "Cells"})});
+  selection.LegacyExcludedContainers = {"Skipped"};
+  const Dream3dImportParameter parameter("file", "File", "", selection);
+  auto saved = parameter.toJson(selection);
+  const auto [field, replacement, expectedCode] = GENERATE(table<std::string, json, int32>({
+      {"data_paths", json::array({true}), -7},
+      {"path_import_policy", nullptr, -8},
+      {"path_import_policy", 259, -9},
+      {"data_paths", json::array({"Scan/Cells/A/Extra"}), -10},
+      {"data_paths", json::array({"Scan", "Scan"}), -11},
+      {"data_paths", json::array({"Scan/Cells"}), -12},
+      {"legacy_excluded_containers", json::array({"Skipped/Cells"}), -13},
+      {"legacy_excluded_containers", json::array({"Skipped", "Skipped"}), -14},
+      {"legacy_excluded_containers", json::array({"Scan"}), -15},
+      {"legacy_excluded_containers", nullptr, -16},
+      {"legacy_excluded_containers", json::array({1}), -17},
+      {"data_paths", nullptr, -18},
+      {"data_paths", json::array({"Scan", "Scan//Cells"}), -19},
+  }));
+  CAPTURE(field, replacement.dump());
+  saved["value"].at(field) = replacement;
+  const auto result = parameter.fromJson(saved);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == expectedCode);
 }

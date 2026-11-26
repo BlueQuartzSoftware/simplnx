@@ -10,19 +10,19 @@
     "Filter_Name": "FindDifferenceMap",
     "Filter_Uuid": "{29086169-20ce-52dc-b13e-824694d759aa}",
     "FirstInputArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Before"
     },
     "SecondInputArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "After"
     },
     "DifferenceMapArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Changes"
     }
   }
 }

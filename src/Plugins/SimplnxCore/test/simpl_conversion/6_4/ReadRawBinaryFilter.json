@@ -9,14 +9,14 @@
     "Filter_Human_Label": "Read Raw Binary",
     "Filter_Name": "RawBinaryReader",
     "InputFile": "/test/path/file.txt",
-    "ScalarType": 0,
-    "NumberOfComponents": 1,
-    "Endian": 0,
+    "ScalarType": 2,
+    "NumberOfComponents": 3,
+    "Endian": 1,
     "SkipHeaderBytes": "5",
     "CreatedAttributeArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Samples"
     }
   }
 }

@@ -213,6 +213,8 @@ def _encode_dream3d_import(name: str, value: Any, context: CodeGenContext) -> li
     path_import_policy = _encode_enum(value.path_import_policy)
     paths_str = _encode_list(value.data_paths)
     lines = [f"{var} = nx.Dream3dImportParameter.ImportData(file_path={file_path}, path_import_policy={path_import_policy}, data_paths={paths_str})"]
+    if value.path_import_policy.name == "LegacySelection" and value.legacy_excluded_containers:
+        lines.append(f"{var}.legacy_excluded_containers = {_encode_list(value.legacy_excluded_containers)}")
     lines.append(var)
     return lines
 

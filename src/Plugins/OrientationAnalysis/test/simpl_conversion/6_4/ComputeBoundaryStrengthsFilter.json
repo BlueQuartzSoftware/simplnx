@@ -14,28 +14,28 @@
       "z": 3.0
     },
     "SurfaceMeshFaceLabelsArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Mesh",
+      "Attribute Matrix Name": "Faces",
+      "Data Array Name": "Labels"
     },
     "AvgQuatsArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Volume",
+      "Attribute Matrix Name": "Features",
+      "Data Array Name": "Quats"
     },
     "FeaturePhasesArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Volume",
+      "Attribute Matrix Name": "Features",
+      "Data Array Name": "Phases"
     },
     "CrystalStructuresArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Volume",
+      "Attribute Matrix Name": "Ensembles",
+      "Data Array Name": "Structures"
     },
-    "SurfaceMeshF1sArrayName": "TestName",
-    "SurfaceMeshF1sptsArrayName": "TestName",
-    "SurfaceMeshF7sArrayName": "TestName",
-    "SurfaceMeshmPrimesArrayName": "TestName"
+    "SurfaceMeshF1sArrayName": "F1",
+    "SurfaceMeshF1sptsArrayName": "F1spt",
+    "SurfaceMeshF7sArrayName": "F7",
+    "SurfaceMeshmPrimesArrayName": "mPrime"
   }
 }

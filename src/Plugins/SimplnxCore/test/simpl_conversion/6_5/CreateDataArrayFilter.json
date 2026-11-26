@@ -9,13 +9,13 @@
     "Filter_Human_Label": "Create Data Array",
     "Filter_Name": "CreateDataArray",
     "Filter_Uuid": "{77f392fb-c1eb-57da-a1b1-e7acf9239fb8}",
-    "ScalarType": 0,
+    "ScalarType": 3,
     "NumberOfComponents": 5,
-    "InitializationValue": "TestName",
+    "InitializationValue": "24",
     "NewArray": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Counts"
     }
   }
 }

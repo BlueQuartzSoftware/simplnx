@@ -10,14 +10,14 @@
     "Filter_Name": "ImportAsciDataArray",
     "Filter_Uuid": "{a7007472-29e5-5d0a-89a6-1aed11b603f8}",
     "InputFile": "/test/path/file.txt",
-    "ScalarType": 0,
+    "ScalarType": 8,
     "NumberOfComponents": 5,
-    "SkipHeaderLines": 5,
-    "Delimiter": 0,
+    "SkipHeaderLines": 2,
+    "Delimiter": 1,
     "CreatedAttributeArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Signals"
     }
   }
 }

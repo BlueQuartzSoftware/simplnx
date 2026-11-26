@@ -58,6 +58,7 @@
 #include <catch2/catch.hpp>
 #include <fmt/format.h>
 #include <fmt/std.h> // IWYU pragma: keep (filesystem path formatter)
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <array>
@@ -1814,37 +1815,227 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths"
 
 TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ReadDREAM3DFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ReadDREAM3DFilter>::uuid);
+  const auto importData = args.value<Dream3dImportParameter::ValueType>(ReadDREAM3DFilter::k_ImportFileData);
+  CHECK(importData.FilePath == fs::path("/test/path/file.dream3d"));
+  CHECK(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::LegacySelection);
+  CHECK(importData.DataPaths == std::vector<DataPath>{DataPath({"Scan"}), DataPath({"Scan", "Faces"}), DataPath({"Scan", "Faces", "Confidence"}), DataPath({"Scan", "Faces", "RetiredArray"}),
+                                                      DataPath({"Scan", "EmptySelection"}), DataPath({"GeometryOnly"})});
+  CHECK(importData.LegacyExcludedContainers == std::vector<std::string>{"IgnoredContainer"});
+}
 
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: empty SIMPL proxy reads all containers", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
+{
+  const nlohmann::json proxy = {{"Data Containers", nlohmann::json::array()}};
+  const auto converted = ReadDREAM3DFilter::FromSIMPLJson({{"InputFile", "scan.dream3d"}, {"InputFileDataContainerArrayProxy", proxy}});
+  SIMPLNX_RESULT_REQUIRE_VALID(converted);
+  const auto& import = converted.value().valueRef<Dream3dImportParameter::ImportData>(ReadDREAM3DFilter::k_ImportFileData);
+  CHECK(import.ImportPolicy == Dream3dImportParameter::PathImportPolicy::All);
+  CHECK(import.DataPaths.empty());
+  CHECK(import.LegacyExcludedContainers.empty());
+}
 
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadDREAM3DFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadDREAM3DFilter.json"},
-  };
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: reads native import parameter versions 1 and 2", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
+{
+  using Policy = Dream3dImportParameter::PathImportPolicy;
+  uint64 version = 1;
+  Policy expected = Policy::All;
+  std::vector<DataPath> expectedPaths;
+  nlohmann::json value = {{"file_path", "scan.dream3d"}, {"data_paths", nlohmann::json::array()}};
 
-  for(const auto& [label, fixturePath] : fixtures)
+  SECTION("Version 1 with no selected paths reads all data")
   {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadDREAM3DFilter>::uuid);
-
-      // Successful pipeline loading verifies the DataContainerReaderFilterParameterConverter value.
-    }
+    value["data_paths"] = nullptr;
   }
+  SECTION("Version 1 with selected paths includes each subtree")
+  {
+    value["data_paths"] = {"Scan/Faces"};
+    expected = Policy::IncludeList;
+    expectedPaths = {DataPath({"Scan", "Faces"})};
+  }
+  SECTION("Version 2 preserves the explicit policy")
+  {
+    version = 2;
+    expected = GENERATE(Policy::All, Policy::IncludeList, Policy::ExcludeList);
+    value["path_import_policy"] = static_cast<uint8>(expected);
+    value["data_paths"] = {"Scan/Faces"};
+    expectedPaths = {DataPath({"Scan", "Faces"})};
+  }
+
+  const nlohmann::json encoded = {{"import_data_object", {{"version", version}, {"value", value}}}};
+  const auto decoded = ReadDREAM3DFilter{}.fromJson(encoded);
+  SIMPLNX_RESULT_REQUIRE_VALID(decoded);
+  const auto& import = decoded.value().valueRef<Dream3dImportParameter::ImportData>(ReadDREAM3DFilter::k_ImportFileData);
+  CHECK(import.FilePath == fs::path("scan.dream3d"));
+  CHECK(import.ImportPolicy == expected);
+  CHECK(import.DataPaths == expectedPaths);
+  CHECK(import.LegacyExcludedContainers.empty());
+}
+
+namespace
+{
+template <typename T>
+void WriteSelectionArray(HDF5::GroupIO& parent, const std::string& name, usize tuples, usize components, const std::vector<T>& values)
+{
+  auto dataset = parent.createDataset(name);
+  const auto payload = dataset.writeSpan<T>({tuples, components}, nonstd::span<const T>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(payload);
+  const auto version = dataset.writeScalarAttribute<int32>("DataArrayVersion", 2);
+  SIMPLNX_RESULT_REQUIRE_VALID(version);
+  const auto type = dataset.writeStringAttribute(nx::core::Constants::k_ObjectTypeTag, DataArray<T>::GetTypeName());
+  SIMPLNX_RESULT_REQUIRE_VALID(type);
+  const auto tupleShape = dataset.writeVectorAttribute("TupleDimensions", ShapeType{tuples});
+  SIMPLNX_RESULT_REQUIRE_VALID(tupleShape);
+  const auto componentShape = dataset.writeVectorAttribute("ComponentDimensions", ShapeType{components});
+  SIMPLNX_RESULT_REQUIRE_VALID(componentShape);
+}
+
+HDF5::GroupIO CreateSelectionMatrix(HDF5::GroupIO& container, const std::string& name, uint32 matrixType = 13)
+{
+  auto matrix = container.createGroup(name);
+  const auto type = matrix.writeScalarAttribute<uint32>("AttributeMatrixType", matrixType);
+  SIMPLNX_RESULT_REQUIRE_VALID(type);
+  const auto shape = matrix.writeVectorAttribute("TupleDimensions", ShapeType{1});
+  SIMPLNX_RESULT_REQUIRE_VALID(shape);
+  return matrix;
+}
+
+HDF5::GroupIO CreateSelectionGeometry(HDF5::GroupIO& container, const std::string& geometryName, uint32 geometryType, std::optional<uint32> unitDimension = {})
+{
+  auto geometry = container.createGroup("_SIMPL_GEOMETRY");
+  const auto name = geometry.writeStringAttribute("GeometryTypeName", geometryName);
+  SIMPLNX_RESULT_REQUIRE_VALID(name);
+  const auto type = geometry.writeScalarAttribute<uint32>("GeometryType", geometryType);
+  SIMPLNX_RESULT_REQUIRE_VALID(type);
+  if(unitDimension.has_value())
+  {
+    const auto meshName = geometry.writeStringAttribute("GeometryName", container.getName());
+    SIMPLNX_RESULT_REQUIRE_VALID(meshName);
+    const auto spatial = geometry.writeScalarAttribute<uint32>("SpatialDimensionality", 3);
+    SIMPLNX_RESULT_REQUIRE_VALID(spatial);
+    const auto unit = geometry.writeScalarAttribute<uint32>("UnitDimensionality", *unitDimension);
+    SIMPLNX_RESULT_REQUIRE_VALID(unit);
+  }
+  return geometry;
+}
+
+void WriteLegacySelectionFile(const fs::path& path)
+{
+  auto file = HDF5::FileIO::WriteFile(path);
+  REQUIRE(file.isValid());
+  const auto version = file.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str());
+  SIMPLNX_RESULT_REQUIRE_VALID(version);
+  auto containers = file.createGroup("DataContainers");
+  auto scan = containers.createGroup("Scan");
+  auto geometry = CreateSelectionGeometry(scan, "TriangleGeometry", 4, 2);
+  WriteSelectionArray<float32>(geometry, "SharedVertexList", 3, 3, {0.0F, 0.0F, 0.0F, 4.0F, 0.0F, 0.0F, 0.0F, 2.0F, 0.0F});
+  WriteSelectionArray<uint64>(geometry, "SharedTriList", 1, 3, {2, 0, 1});
+
+  auto faces = CreateSelectionMatrix(scan, "Faces", 2);
+  WriteSelectionArray<int32>(faces, "Confidence", 1, 1, {17});
+  WriteSelectionArray<int32>(faces, "Phases", 1, 1, {23});
+  WriteSelectionArray<int32>(faces, "AddedArray", 1, 1, {31});
+  auto emptySelection = CreateSelectionMatrix(scan, "EmptySelection");
+  WriteSelectionArray<int32>(emptySelection, "AddedArray", 1, 1, {37});
+  auto ignoredMatrix = CreateSelectionMatrix(scan, "IgnoredMatrix");
+  WriteSelectionArray<int32>(ignoredMatrix, "PreviouslyChecked", 1, 1, {41});
+  CreateSelectionMatrix(scan, "AddedMatrix");
+
+  auto geometryOnly = containers.createGroup("GeometryOnly");
+  auto points = CreateSelectionGeometry(geometryOnly, "VertexGeometry", 2, 0);
+  WriteSelectionArray<float32>(points, "SharedVertexList", 1, 3, {8.0F, 9.0F, 10.0F});
+  CreateSelectionMatrix(geometryOnly, "AddedMatrix");
+  auto ignored = containers.createGroup("IgnoredContainer");
+  CreateSelectionGeometry(ignored, "UnknownGeometry", 999);
+  auto ignoredData = CreateSelectionMatrix(ignored, "IgnoredData");
+  WriteSelectionArray<int32>(ignoredData, "PreviouslyChecked", 1, 1, {43});
+  auto added = containers.createGroup("AddedContainer");
+  auto addedPoints = CreateSelectionGeometry(added, "VertexGeometry", 2, 0);
+  WriteSelectionArray<float32>(addedPoints, "SharedVertexList", 1, 3, {11.0F, 12.0F, 13.0F});
+  auto measurements = CreateSelectionMatrix(added, "Measurements");
+  WriteSelectionArray<int32>(measurements, "Counts", 1, 1, {47});
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: replay SIMPL selections after the input file changes", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
+{
+  const bool legacyFile = GENERATE(true, false);
+  CAPTURE(legacyFile);
+  const fs::path fixture = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "ReadDREAM3DFilter.json";
+  auto args = UnitTest::LoadSIMPLConversionArguments(fixture, FilterTraits<ReadDREAM3DFilter>::uuid);
+  const fs::path legacyPath = GetTestFilePath("reader_selection_v7.dream3d");
+  const fs::path currentPath = GetTestFilePath("reader_selection_v8.dream3d");
+  const fs::path pipelinePath = GetTestFilePath("reader_selection.d3dpipeline");
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(legacyPath, ec);
+    fs::remove(currentPath, ec);
+    fs::remove(pipelinePath, ec);
+  });
+
+  auto import = args.value<Dream3dImportParameter::ImportData>(ReadDREAM3DFilter::k_ImportFileData);
+  import.FilePath = legacyFile ? legacyPath : currentPath;
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, std::move(import));
+  Pipeline converted;
+  REQUIRE(converted.push_back(std::make_unique<ReadDREAM3DFilter>(), args));
+  {
+    std::ofstream saved(pipelinePath);
+    saved << converted.toJson();
+    saved.close();
+    REQUIRE(saved.good());
+  }
+
+  // The replacement source contains new arrays, matrices and a new container.
+  WriteLegacySelectionFile(legacyPath);
+  if(!legacyFile)
+  {
+    auto data = DREAM3D::ImportDataStructureFromFile(legacyPath, false);
+    SIMPLNX_RESULT_REQUIRE_VALID(data);
+    const auto write = DREAM3D::WriteFile(currentPath, data.value());
+    SIMPLNX_RESULT_REQUIRE_VALID(write);
+  }
+  auto reloaded = Pipeline::FromFile(pipelinePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(reloaded);
+  DataStructure imported;
+  REQUIRE(reloaded.value().execute(imported, false));
+
+  const auto* mesh = imported.getDataAs<TriangleGeom>(DataPath({"Scan"}));
+  REQUIRE(mesh != nullptr);
+  const auto* vertices = imported.getDataAs<Float32Array>(DataPath({"Scan", "SharedVertexList"}));
+  REQUIRE(vertices != nullptr);
+  REQUIRE(mesh->getVertices() == vertices);
+  REQUIRE(vertices->getSize() == 9);
+  CHECK((*vertices)[3] == 4.0F);
+  CHECK((*vertices)[7] == 2.0F);
+  const auto* triangles = imported.getDataAs<UInt64Array>(DataPath({"Scan", "SharedTriList"}));
+  REQUIRE(triangles != nullptr);
+  REQUIRE(mesh->getFaces() == triangles);
+  REQUIRE(triangles->getSize() == 3);
+  CHECK((*triangles)[0] == 2);
+  CHECK((*triangles)[1] == 0);
+  CHECK((*triangles)[2] == 1);
+  const auto* confidence = imported.getDataAs<Int32Array>(DataPath({"Scan", "Faces", "Confidence"}));
+  REQUIRE(confidence != nullptr);
+  CHECK((*confidence)[0] == 17);
+  CHECK_FALSE(imported.containsData(DataPath({"Scan", "Faces", "Phases"})));
+  CHECK_FALSE(imported.containsData(DataPath({"Scan", "Faces", "AddedArray"})));
+  CHECK_FALSE(imported.containsData(DataPath({"Scan", "Faces", "RetiredArray"})));
+  CHECK_FALSE(imported.containsData(DataPath({"Scan", "IgnoredMatrix"})));
+  CHECK_FALSE(imported.containsData(DataPath({"Scan", "AddedMatrix"})));
+  CHECK(imported.containsData(DataPath({"Scan", "EmptySelection"})));
+  CHECK_FALSE(imported.containsData(DataPath({"Scan", "EmptySelection", "AddedArray"})));
+  const auto* geometryOnly = imported.getDataAs<VertexGeom>(DataPath({"GeometryOnly"}));
+  REQUIRE(geometryOnly != nullptr);
+  REQUIRE(geometryOnly->getVertices() != nullptr);
+  CHECK((*geometryOnly->getVertices())[0] == 8.0F);
+  CHECK_FALSE(imported.containsData(DataPath({"GeometryOnly", "AddedMatrix"})));
+  CHECK_FALSE(imported.containsData(DataPath({"IgnoredContainer"})));
+  const auto* added = imported.getDataAs<Int32Array>(DataPath({"AddedContainer", "Measurements", "Counts"}));
+  REQUIRE(added != nullptr);
+  CHECK((*added)[0] == 47);
 }
 
 TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteDREAM3DFilter][BackwardsCompatibility]")
@@ -2323,6 +2514,7 @@ void WriteC8FilterLegacyWarningFile(const fs::path& path)
     REQUIRE(file.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
     auto containers = file.createGroup("DataContainers");
     auto container = containers.createGroup("StatsContainer");
+    CreateSelectionGeometry(container, "UnknownGeometry", 999);
     auto attributeMatrix = container.createGroup("StatsAM");
     REQUIRE(attributeMatrix.writeVectorAttribute("TupleDimensions", ShapeType{1}).valid());
     REQUIRE(attributeMatrix.writeScalarAttribute<uint32>("AttributeMatrixType", 13).valid());
@@ -2341,6 +2533,43 @@ void WriteC8FilterLegacyWarningFile(const fs::path& path)
   fs::last_write_time(path, fs::last_write_time(path) - std::chrono::seconds(10));
 }
 } // namespace
+
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL selection controls relocated v7 Statistics", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
+{
+  const bool checked = GENERATE(false, true);
+  CAPTURE(checked);
+  const auto path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "reader_selection_statistics.dream3d";
+  const auto cleanup = MakeScopeGuard([&path]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteC8FilterLegacyWarningFile(path);
+
+  const nlohmann::json stats = {{"Name", "StatisticsSource"}, {"Flag", checked ? 2 : 0}};
+  const nlohmann::json matrix = {{"Name", "StatsAM"}, {"Flag", 2}, {"Data Arrays", {stats}}};
+  const nlohmann::json container = {{"Name", "StatsContainer"}, {"Flag", 2}, {"Attribute Matricies", {matrix}}};
+  const nlohmann::json proxy = {{"Data Containers", {container}}};
+  const auto converted = ReadDREAM3DFilter::FromSIMPLJson({{"InputFile", path.string()}, {"InputFileDataContainerArrayProxy", proxy}});
+  SIMPLNX_RESULT_REQUIRE_VALID(converted);
+  DataStructure imported;
+  const auto executed = ReadDREAM3DFilter{}.execute(imported, converted.value());
+  SIMPLNX_RESULT_REQUIRE_VALID(executed.result);
+  CHECK(imported.containsData(DataPath({"StatsContainer", "StatsAM"})));
+  CHECK(imported.containsData(DataPath({"StatsContainer", "Statistics"})) == checked);
+  const auto* values = imported.getDataAs<Float32Array>(DataPath({"StatsContainer", "Statistics", "Values_Mean"}));
+  if(checked)
+  {
+    REQUIRE(values != nullptr);
+    REQUIRE(values->getSize() == 3);
+    CHECK((*values)[0] == 4.0F);
+    CHECK((*values)[1] == 5.0F);
+    CHECK((*values)[2] == 6.0F);
+  }
+  else
+  {
+    CHECK(values == nullptr);
+  }
+}
 
 TEST_CASE("Scoped default format resolver preserves ownership and nested restoration", "[Core][FormatResolver]")
 {

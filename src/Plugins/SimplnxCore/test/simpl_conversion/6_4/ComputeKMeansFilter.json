@@ -9,22 +9,22 @@
     "Filter_Human_Label": "Compute K Means",
     "Filter_Name": "KMeans",
     "SelectedArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Measurements"
     },
-    "FeatureAttributeMatrixName": "TestName",
+    "FeatureAttributeMatrixName": "Populations",
     "InitClusters": 5,
-    "DistanceMetric": 0,
+    "DistanceMetric": 2,
     "UseMask": 1,
     "UseRandomSeed": 1,
-    "RandomSeedValue": "5",
+    "RandomSeedValue": "47",
     "MaskArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Included"
     },
-    "FeatureIdsArrayName": "TestName",
-    "MeansArrayName": "TestName"
+    "FeatureIdsArrayName": "PopulationIds",
+    "MeansArrayName": "ClusterMeans"
   }
 }

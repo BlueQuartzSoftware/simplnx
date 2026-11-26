@@ -13,13 +13,112 @@
     "InputFileDataContainerArrayProxy": {
       "Data Containers": [
         {
-          "Name": "DataContainer",
+          "Name": "Scan",
+          "Flag": 1,
+          "Type": 4,
           "Attribute Matricies": [
             {
-              "Name": "CellData",
+              "Name": "Faces",
+              "Flag": 1,
+              "Type": 2,
               "Data Arrays": [
                 {
-                  "Name": "TestArray"
+                  "Name": "Confidence",
+                  "Flag": 2,
+                  "Version": 2,
+                  "Path": "/DataContainers/Scan/Faces/Confidence",
+                  "Object Type": "DataArray<int32_t>",
+                  "Tuple Dimensions": [
+                    1
+                  ],
+                  "Component Dimensions": [
+                    1
+                  ]
+                },
+                {
+                  "Name": "Phases",
+                  "Flag": 0,
+                  "Version": 2,
+                  "Path": "/DataContainers/Scan/Faces/Phases",
+                  "Object Type": "DataArray<int32_t>",
+                  "Tuple Dimensions": [
+                    1
+                  ],
+                  "Component Dimensions": [
+                    1
+                  ]
+                },
+                {
+                  "Name": "RetiredArray",
+                  "Flag": 2,
+                  "Version": 2,
+                  "Path": "/DataContainers/Scan/Faces/RetiredArray",
+                  "Object Type": "DataArray<int32_t>",
+                  "Tuple Dimensions": [
+                    1
+                  ],
+                  "Component Dimensions": [
+                    1
+                  ]
+                }
+              ]
+            },
+            {
+              "Name": "EmptySelection",
+              "Flag": 2,
+              "Type": 13,
+              "Data Arrays": []
+            },
+            {
+              "Name": "IgnoredMatrix",
+              "Flag": 0,
+              "Type": 13,
+              "Data Arrays": [
+                {
+                  "Name": "PreviouslyChecked",
+                  "Flag": 2,
+                  "Version": 2,
+                  "Path": "/DataContainers/Scan/IgnoredMatrix/PreviouslyChecked",
+                  "Object Type": "DataArray<int32_t>",
+                  "Tuple Dimensions": [
+                    1
+                  ],
+                  "Component Dimensions": [
+                    1
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "GeometryOnly",
+          "Flag": 2,
+          "Type": 2,
+          "Attribute Matricies": []
+        },
+        {
+          "Name": "IgnoredContainer",
+          "Flag": 0,
+          "Type": 999,
+          "Attribute Matricies": [
+            {
+              "Name": "IgnoredData",
+              "Flag": 2,
+              "Type": 13,
+              "Data Arrays": [
+                {
+                  "Name": "PreviouslyChecked",
+                  "Flag": 2,
+                  "Version": 2,
+                  "Path": "/DataContainers/IgnoredContainer/IgnoredData/PreviouslyChecked",
+                  "Object Type": "DataArray<int32_t>",
+                  "Tuple Dimensions": [
+                    1
+                  ],
+                  "Component Dimensions": [
+                    1
+                  ]
                 }
               ]
             }

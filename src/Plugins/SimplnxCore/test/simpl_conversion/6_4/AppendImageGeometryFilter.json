@@ -9,12 +9,14 @@
     "Filter_Human_Label": "Append Image Geometry",
     "Filter_Name": "AppendImageGeometryZSlice",
     "InputAttributeMatrix": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "SourceVolume",
+      "Attribute Matrix Name": "SourceCells",
+      "Data Array Name": ""
     },
     "DestinationAttributeMatrix": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "DestinationVolume",
+      "Attribute Matrix Name": "DestinationCells",
+      "Data Array Name": ""
     },
     "CheckResolution": 1
   }

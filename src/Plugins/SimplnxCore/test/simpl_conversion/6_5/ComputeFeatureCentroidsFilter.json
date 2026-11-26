@@ -10,14 +10,14 @@
     "Filter_Name": "FindFeatureCentroids",
     "Filter_Uuid": "{6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca}",
     "FeatureIdsArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "GrainIds"
     },
     "CentroidsArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Grains",
+      "Data Array Name": "GrainCenters"
     }
   }
 }

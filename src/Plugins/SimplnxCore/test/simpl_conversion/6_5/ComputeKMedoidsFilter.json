@@ -10,22 +10,22 @@
     "Filter_Name": "KMedoids",
     "Filter_Uuid": "{f7486aa6-3049-5be7-8511-ae772b70c90b}",
     "SelectedArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Measurements"
     },
-    "FeatureAttributeMatrixName": "TestName",
+    "FeatureAttributeMatrixName": "Populations",
     "InitClusters": 5,
-    "DistanceMetric": 0,
+    "DistanceMetric": 2,
     "UseMask": 1,
     "UseRandomSeed": 1,
-    "RandomSeedValue": "5",
+    "RandomSeedValue": "47",
     "MaskArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Included"
     },
-    "FeatureIdsArrayName": "TestName",
-    "MedoidsArrayName": "TestName"
+    "FeatureIdsArrayName": "PopulationIds",
+    "MedoidsArrayName": "ClusterMedoids"
   }
 }

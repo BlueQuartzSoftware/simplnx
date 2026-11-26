@@ -3,6 +3,8 @@
 #include "ReaderGeometryTest.hpp"
 
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 
 #include <zlib.h>
 
@@ -56,6 +58,31 @@ void RequireDiskBackedStore(const IDataArray& array)
   REQUIRE((backingPath != metadata.cend()));
   REQUIRE_FALSE(backingPath->second.empty());
   REQUIRE(fs::is_regular_file(fs::path(backingPath->second)));
+}
+
+Arguments LoadSIMPLConversionArguments(const fs::path& fixturePath, Uuid expectedFilter)
+{
+  Arguments args;
+  LoadSIMPLConversionPipeline(fixturePath, expectedFilter, args);
+  return args;
+}
+
+Pipeline LoadSIMPLConversionPipeline(const fs::path& fixturePath, Uuid expectedFilter, Arguments& args)
+{
+  CAPTURE(fixturePath.string());
+  LoadPlugins();
+  auto result = Pipeline::FromSIMPLFile(fixturePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto& pipeline = result.value();
+  REQUIRE(pipeline.size() == 1);
+  const auto* node = dynamic_cast<const PipelineFilter*>(pipeline.at(0));
+  REQUIRE(node != nullptr);
+  const auto* filter = node->getFilter();
+  REQUIRE(filter != nullptr);
+  REQUIRE(filter->uuid() == expectedFilter);
+  CHECK(node->getComments().empty());
+  args = node->getArguments();
+  return std::move(result.value());
 }
 
 DataStructure LoadDataStructure(const fs::path& filepath)
@@ -684,98 +711,96 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         break;
       }
       }
+    }
 
-      for(usize i = 0; i < childrenNamesA.size(); ++i)
+    REQUIRE(childrenNamesA == childrenNamesB);
+    for(const auto& childName : childrenNamesA)
+    {
+      const DataPath childPath = parentGroup.createChildPath(childName);
+      CAPTURE(childPath.toString());
+      const DataObject* objectA = dataStructureA.getData(childPath);
+      const DataObject* objectB = dataStructureB.getData(childPath);
+      REQUIRE(objectA != nullptr);
+      REQUIRE(objectB != nullptr);
+
+      const DataObject::Type objectADataObjectType = objectA->getDataObjectType();
+      REQUIRE(objectADataObjectType == objectB->getDataObjectType());
+
+      switch(objectADataObjectType)
       {
-        // std::cout << "DEBUG TEST: child A name = " << childrenNamesA[i] << "\tchild B name = " << childrenNamesB[i];
-        INFO(fmt::format("DEBUG TEST: child A name = '{}'\tchild B name = '{}'", childrenNamesA[i], childrenNamesB[i]));
-        REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
+      case nx::core::DataObject::Type::DynamicListArray: {
+        // This recursive helper does not compare DynamicListArray objects.
+        break;
+      }
+      case nx::core::DataObject::Type::ScalarData: {
+        // This recursive helper reports ScalarData objects without comparing values.
+        std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
+        break;
+      }
+      case nx::core::DataObject::Type::AbstractMontage: {
+        // This recursive helper does not compare AbstractMontage objects.
+        break;
+      }
+      case nx::core::DataObject::Type::IDataArray:
+      case nx::core::DataObject::Type::DataArray: {
+        const auto* dataArrayA = dynamic_cast<const IDataArray*>(objectA);
+        const auto* dataArrayB = dynamic_cast<const IDataArray*>(objectB);
+        REQUIRE(dataArrayA != nullptr);
+        REQUIRE(dataArrayB != nullptr);
+        REQUIRE(dataArrayA->getDataType() == dataArrayB->getDataType());
+        // std::cout << "DEBUG TEST: data array A DataType = " << DataTypeToString(dataArrayA->getDataType()) << "\tdata array B DataType = " << DataTypeToString(dataArrayB->getDataType());
+        INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayA->getDataType()), DataTypeToString(dataArrayB->getDataType())));
 
-        DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
-        const DataObject* objectA = dataStructureA.getData(childPath);
-        const DataObject* objectB = dataStructureB.getData(childPath);
-        REQUIRE(objectA != nullptr);
-        REQUIRE(objectB != nullptr);
+        ExecuteDataFunction(CompareArraysFunctor{}, dataArrayA->getDataType(), *dataArrayA, *dataArrayB);
 
-        const DataObject::Type objectADataObjectType = objectA->getDataObjectType();
-        REQUIRE(objectADataObjectType == objectB->getDataObjectType());
+        break;
+      }
+      case nx::core::DataObject::Type::StringArray: {
+        const auto* stringArrayA = dynamic_cast<const StringArray*>(objectA);
+        const auto* stringArrayB = dynamic_cast<const StringArray*>(objectB);
+        REQUIRE(stringArrayA != nullptr);
+        REQUIRE(stringArrayB != nullptr);
+        CompareStringArrays(*stringArrayA, *stringArrayB);
+        break;
+      }
+      case nx::core::DataObject::Type::INeighborList:
+      case nx::core::DataObject::Type::NeighborList: {
+        const auto* neighborlistA = dynamic_cast<const INeighborList*>(objectA);
+        const auto* neighborlistB = dynamic_cast<const INeighborList*>(objectB);
+        REQUIRE(neighborlistA != nullptr);
+        REQUIRE(neighborlistB != nullptr);
+        // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
+        // DataTypeToString(neighborlistB->getDataType());
+        INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistA->getDataType()), DataTypeToString(neighborlistB->getDataType())));
+        REQUIRE(neighborlistA->getDataType() == neighborlistB->getDataType());
 
-        switch(objectADataObjectType)
-        {
-        case nx::core::DataObject::Type::DynamicListArray: {
-          // This recursive helper does not compare DynamicListArray objects.
-          break;
-        }
-        case nx::core::DataObject::Type::ScalarData: {
-          // This recursive helper reports ScalarData objects without comparing values.
-          std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
-          break;
-        }
-        case nx::core::DataObject::Type::AbstractMontage: {
-          // This recursive helper does not compare AbstractMontage objects.
-          break;
-        }
-        case nx::core::DataObject::Type::IDataArray:
-        case nx::core::DataObject::Type::DataArray: {
-          const auto* dataArrayA = dynamic_cast<const IDataArray*>(objectA);
-          const auto* dataArrayB = dynamic_cast<const IDataArray*>(objectB);
-          REQUIRE(dataArrayA != nullptr);
-          REQUIRE(dataArrayB != nullptr);
-          REQUIRE(dataArrayA->getDataType() == dataArrayB->getDataType());
-          // std::cout << "DEBUG TEST: data array A DataType = " << DataTypeToString(dataArrayA->getDataType()) << "\tdata array B DataType = " << DataTypeToString(dataArrayB->getDataType());
-          INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayA->getDataType()), DataTypeToString(dataArrayB->getDataType())));
+        ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistA->getDataType(), neighborlistA, neighborlistB);
 
-          ExecuteDataFunction(CompareArraysFunctor{}, dataArrayA->getDataType(), *dataArrayA, *dataArrayB);
-
-          break;
-        }
-        case nx::core::DataObject::Type::StringArray: {
-          const auto* stringArrayA = dynamic_cast<const StringArray*>(objectA);
-          const auto* stringArrayB = dynamic_cast<const StringArray*>(objectB);
-          REQUIRE(stringArrayA != nullptr);
-          REQUIRE(stringArrayB != nullptr);
-          CompareStringArrays(*stringArrayA, *stringArrayB);
-          break;
-        }
-        case nx::core::DataObject::Type::INeighborList:
-        case nx::core::DataObject::Type::NeighborList: {
-          const auto* neighborlistA = dynamic_cast<const INeighborList*>(objectA);
-          const auto* neighborlistB = dynamic_cast<const INeighborList*>(objectB);
-          REQUIRE(neighborlistA != nullptr);
-          REQUIRE(neighborlistB != nullptr);
-          // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
-          // DataTypeToString(neighborlistB->getDataType());
-          INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistA->getDataType()), DataTypeToString(neighborlistB->getDataType())));
-          REQUIRE(neighborlistA->getDataType() == neighborlistB->getDataType());
-
-          ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistA->getDataType(), neighborlistA, neighborlistB);
-
-          break;
-        }
-        case nx::core::DataObject::Type::VertexGeom:
-        case nx::core::DataObject::Type::EdgeGeom:
-        case nx::core::DataObject::Type::RectGridGeom:
-        case nx::core::DataObject::Type::ImageGeom:
-        case nx::core::DataObject::Type::INodeGeometry2D:
-        case nx::core::DataObject::Type::QuadGeom:
-        case nx::core::DataObject::Type::TriangleGeom:
-        case nx::core::DataObject::Type::INodeGeometry3D:
-        case nx::core::DataObject::Type::HexahedralGeom:
-        case nx::core::DataObject::Type::TetrahedralGeom:
-        case nx::core::DataObject::Type::AttributeMatrix:
-        case nx::core::DataObject::Type::DataGroup:
-        case nx::core::DataObject::Type::BaseGroup: {
-          CompareDataStructures(dataStructureA, dataStructureB, childPath);
-          break;
-        }
-        default: {
-          auto underlyingDataType = to_underlying(objectADataObjectType);
-          std::cout << "Missing DataType: " << underlyingDataType << std::endl;
-          INFO(fmt::format("Object at path ({}) has unhandled type ({})", childPath.toString(), underlyingDataType));
-          REQUIRE(false);
-          break;
-        }
-        }
+        break;
+      }
+      case nx::core::DataObject::Type::VertexGeom:
+      case nx::core::DataObject::Type::EdgeGeom:
+      case nx::core::DataObject::Type::RectGridGeom:
+      case nx::core::DataObject::Type::ImageGeom:
+      case nx::core::DataObject::Type::INodeGeometry2D:
+      case nx::core::DataObject::Type::QuadGeom:
+      case nx::core::DataObject::Type::TriangleGeom:
+      case nx::core::DataObject::Type::INodeGeometry3D:
+      case nx::core::DataObject::Type::HexahedralGeom:
+      case nx::core::DataObject::Type::TetrahedralGeom:
+      case nx::core::DataObject::Type::AttributeMatrix:
+      case nx::core::DataObject::Type::DataGroup:
+      case nx::core::DataObject::Type::BaseGroup: {
+        CompareDataStructures(dataStructureA, dataStructureB, childPath);
+        break;
+      }
+      default: {
+        auto underlyingDataType = to_underlying(objectADataObjectType);
+        std::cout << "Missing DataType: " << underlyingDataType << std::endl;
+        INFO(fmt::format("Object at path ({}) has unhandled type ({})", childPath.toString(), underlyingDataType));
+        REQUIRE(false);
+        break;
+      }
       }
     }
   } catch(std::exception& e)

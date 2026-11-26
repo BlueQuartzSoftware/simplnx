@@ -1,10 +1,7 @@
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -82,43 +79,14 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateImageGeometryFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "CreateImageGeometryFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "CreateImageGeometryFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateImageGeometryFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<DataPath>(CreateImageGeometryFilter::k_GeometryDataPath_Key) == DataPath({"DataContainer"}));
-      // Complex type (UInt64Vec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "CreateImageGeometryFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<CreateImageGeometryFilter>::uuid);
+  CHECK(args.value<DataPath>(CreateImageGeometryFilter::k_GeometryDataPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<VectorUInt64Parameter::ValueType>(CreateImageGeometryFilter::k_Dimensions_Key) == std::vector<uint64>{1, 2, 3});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(CreateImageGeometryFilter::k_Origin_Key) == std::vector<float32>{-4, 7.5F, 11});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(CreateImageGeometryFilter::k_Spacing_Key) == std::vector<float32>{0.5F, 1.25F, 2});
 }
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "[SimplnxCore][CreateImageGeometryFilter][NumericDomainRed]")

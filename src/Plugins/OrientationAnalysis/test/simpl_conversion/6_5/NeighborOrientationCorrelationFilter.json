@@ -15,22 +15,22 @@
     "ConfidenceIndexArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "ConfidenceIndex"
     },
     "CellPhasesArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "CellPhases"
     },
     "QuatsArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "Quats"
     },
     "CrystalStructuresArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Array Name": "CrystalStructures"
     },
     "IgnoredDataArrayPaths": [
       {

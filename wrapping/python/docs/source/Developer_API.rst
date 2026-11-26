@@ -863,7 +863,9 @@ General Parameters
             * IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
             * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
             * All -> Imports all possible data and ignores the DataPaths list.
+            * LegacySelection -> Restores the exact object selections of a converted SIMPL pipeline. New top-level containers are included.
             * Defaults to PathImportPolicy::All.
+         - **legacy_excluded_containers**: Names of unchecked top-level containers for LegacySelection.
          - **data_paths**: List of :ref:`DataPath <DataPath>` of objects to include/exclude during the import process. Defaults to an empty vector.
             * If the path import policy is set to 'All', this parameter is ignored.
 

@@ -10,28 +10,28 @@
     "Filter_Name": "RegularGridSampleSurfaceMesh",
     "Filter_Uuid": "{0df3da89-9106-538e-b1a9-6bbf1cf0aa92}",
     "LengthUnit": 0,
-    "XPoints": 1,
-    "YPoints": 1,
-    "ZPoints": 1,
+    "XPoints": 3,
+    "YPoints": 5,
+    "ZPoints": 7,
     "SurfaceMeshFaceLabelsArrayPath": {
       "Data Container Name": "DataContainer",
       "Attribute Matrix Name": "CellData",
       "Data Array Name": "TestArray"
     },
     "Resolution": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 3.0
+      "x": 0.5,
+      "y": 1.25,
+      "z": 2.0
     },
     "Origin": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 3.0
+      "x": -4.0,
+      "y": 7.5,
+      "z": 11.0
     },
     "DataContainerName": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "SampledVolume"
     },
-    "CellAttributeMatrixName": "TestName",
-    "FeatureIdsArrayName": "TestName"
+    "CellAttributeMatrixName": "Voxels",
+    "FeatureIdsArrayName": "SampledIds"
   }
 }

@@ -1303,21 +1303,34 @@ if(json.contains(SIMPL::k_IgnoredDataArrayPathsKey))
 
 ### Keep the legacy conversions when a filter moves or a plugin is retired
 
-**Rule:** every legacy SIMPL filter UUID has one conversion owner; several legacy UUIDs can map to the same current
-filter. Each mapping has a fixture with non-default values, and its test checks the target filter UUID and the
-converted arguments. When a filter or plugin is retired, move its conversions to the replacement first.
+**Rule:** every legacy SIMPL filter UUID has one conversion owner. Several legacy UUIDs can map to the same current
+filter. Each mapping has a fixture with distinguishable, non-default values. Check the target filter UUID and each
+converted argument against the meaning of the saved field and the parameter that consumes it. When a filter or plugin
+is retired, move its conversions to the replacement first.
 
 **Example of the broken rule:** retiring the ITKImageProcessing plugin dropped its 59 legacy SIMPL filter mappings
 (DiscreteGaussian, ReadImage, WriteImage, ReadImageStack, Median, RescaleIntensity, the morphology filters, ...), and no
 test failed. PR #1752 restored them in `ImageProcessingLegacyUUIDMapping.hpp` and added the coverage test.
 
-**Why:** a missing mapping stops an old pipeline from converting, and a conversion that produces only the defaults loses
-every saved value without an error.
+PR #1476 wired the point-cloud input of `InterpolatePointCloudToRegularGridFilter::FromSIMPLJson()` to the Image
+Geometry and its output grid to the Vertex Geometry. In `AppendImageGeometryFilter::FromSIMPLJson()`, the converter
+chosen in PR #1041 retained the input Attribute Matrix name even though the filter selects a geometry. The append test
+in PR #1588 used one container name for both geometries and omitted the input-path assertion. The rotation test in
+that PR also loaded `RotateEulerRefFrameFilter` without checking its four-component axis-angle value.
 
-**What to look for:** a change that removes or moves a filter or plugin without moving its conversion map and fixtures.
+**Why:** a missing mapping stops an old pipeline from converting. A successful load can still leave a default in place
+or assign the wrong value. Both geometry selections have type `DataPath`, and a path to an Attribute Matrix has the
+same C++ type as a path to its parent geometry.
+
+**What to look for:** a filter move that leaves its conversion map behind, identical fixture values for two inputs,
+and checks that stop after loading the pipeline. Follow each legacy key to the argument the filter actually reads.
+Check the order of vector components, the source and destination of each selection, and the depth of each path.
 
 **Pattern to use:** `src/Plugins/NXImageProcessing/test/SimplConversionCoverageTest.cpp`, which reads the live map,
 requires a fixture for each entry, checks the target UUID and rejects a conversion that produces only defaults.
+For the values themselves, see the SIMPL compatibility cases in `AppendImageGeometryTest.cpp` and
+`RotateEulerRefFrameTest.cpp`. The first supplies separately named containers and Attribute Matrices, then checks
+both geometry paths. The second checks the saved X, Y and Z axis components followed by the angle in degrees.
 
 ---
 

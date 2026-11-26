@@ -10,14 +10,14 @@
     "Filter_Name": "CropImageGeometry",
     "Filter_Uuid": "{baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf}",
     "XMin": 1,
-    "YMin": 1,
-    "ZMin": 1,
-    "XMax": 1,
-    "YMax": 1,
-    "ZMax": 1,
+    "YMin": 2,
+    "ZMin": 3,
+    "XMax": 5,
+    "YMax": 7,
+    "ZMax": 11,
     "SaveAsNewDataContainer": 1,
     "NewDataContainerName": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "CroppedVolume"
     },
     "RenumberFeatures": 1,
     "FeatureIdsArrayPath": {
@@ -27,7 +27,7 @@
     },
     "CellFeatureAttributeMatrixPath": {
       "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData"
+      "Attribute Matrix Name": "CellFeatureData"
     }
   }
 }

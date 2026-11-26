@@ -9,20 +9,20 @@
     "Filter_Human_Label": "DBSCAN",
     "Filter_Name": "DBSCAN",
     "SelectedArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Measurements"
     },
-    "FeatureAttributeMatrixName": "TestName",
+    "FeatureAttributeMatrixName": "Populations",
     "Epsilon": 2.5,
     "MinPnts": 5,
-    "DistanceMetric": 0,
+    "DistanceMetric": 2,
     "UseMask": 1,
     "MaskArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "Included"
     },
-    "FeatureIdsArrayName": "TestName"
+    "FeatureIdsArrayName": "PopulationIds"
   }
 }

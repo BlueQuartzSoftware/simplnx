@@ -15,20 +15,36 @@
     "ManualTransformationMatrix": {
       "Table Data": [
         [
-          1.0,
-          2.0
+          2,
+          0,
+          0,
+          7
         ],
         [
-          3.0,
-          4.0
+          0,
+          3,
+          0,
+          -5
+        ],
+        [
+          0,
+          0,
+          4,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          1
         ]
       ]
     },
-    "RotationAngle": 90.0,
+    "RotationAngle": 45.0,
     "RotationAxis": {
       "x": 1.0,
-      "y": 0.0,
-      "z": 0.0
+      "y": -2.0,
+      "z": 3.0
     },
     "Translation": {
       "x": 1.0,
@@ -36,9 +52,9 @@
       "z": 3.0
     },
     "Scale": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 3.0
+      "x": 0.5,
+      "y": 1.5,
+      "z": 2.5
     },
     "ComputedTransformationMatrix": {
       "Data Container Name": "DataContainer",

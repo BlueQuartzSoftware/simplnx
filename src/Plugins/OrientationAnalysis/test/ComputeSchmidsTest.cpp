@@ -8,8 +8,6 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -832,50 +830,21 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: real HDF5 quaternion-chunk
 
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeSchmidsFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeSchmidsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeSchmidsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeSchmidsFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<bool>(ComputeSchmidsFilter::k_StoreAngleComponents_Key) == true);
-      CHECK(args.value<bool>(ComputeSchmidsFilter::k_OverrideSystem_Key) == true);
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(ComputeSchmidsFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeSchmidsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeSchmidsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ComputeSchmidsFilter::k_SchmidsArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(ComputeSchmidsFilter::k_SlipSystemsArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(ComputeSchmidsFilter::k_PolesArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(ComputeSchmidsFilter::k_PhisArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(ComputeSchmidsFilter::k_LambdasArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ComputeSchmidsFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ComputeSchmidsFilter>::uuid);
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ComputeSchmidsFilter::k_LoadingDirection_Key) == VectorFloat32Parameter::ValueType{1, 2, 3});
+  CHECK(args.value<bool>(ComputeSchmidsFilter::k_StoreAngleComponents_Key) == true);
+  CHECK(args.value<bool>(ComputeSchmidsFilter::k_OverrideSystem_Key) == true);
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ComputeSchmidsFilter::k_SlipPlane_Key) == VectorFloat32Parameter::ValueType{2, -1, 0});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ComputeSchmidsFilter::k_SlipDirection_Key) == VectorFloat32Parameter::ValueType{1, 2, -3});
+  CHECK(args.value<DataPath>(ComputeSchmidsFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "FeaturePhases"}));
+  CHECK(args.value<DataPath>(ComputeSchmidsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "AvgQuats"}));
+  CHECK(args.value<DataPath>(ComputeSchmidsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "CrystalStructures"}));
+  CHECK(args.value<std::string>(ComputeSchmidsFilter::k_SchmidsArrayName_Key) == "Schmids");
+  CHECK(args.value<std::string>(ComputeSchmidsFilter::k_SlipSystemsArrayName_Key) == "SlipSystems");
+  CHECK(args.value<std::string>(ComputeSchmidsFilter::k_PolesArrayName_Key) == "Poles");
+  CHECK(args.value<std::string>(ComputeSchmidsFilter::k_PhisArrayName_Key) == "Phis");
+  CHECK(args.value<std::string>(ComputeSchmidsFilter::k_LambdasArrayName_Key) == "Lambdas");
 }

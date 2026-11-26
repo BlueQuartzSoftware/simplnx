@@ -1,9 +1,7 @@
 #include "SimplnxCore/Filters/CropVertexGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <array>
@@ -192,41 +190,12 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(PreserveComponentShapes)", "[Si
 
 TEST_CASE("SimplnxCore::CropVertexGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CropVertexGeometryFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "CropVertexGeometryFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "CropVertexGeometryFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CropVertexGeometryFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Complex type (FloatToVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatToVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(CropVertexGeometryFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(CropVertexGeometryFilter::k_CreatedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "CropVertexGeometryFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<CropVertexGeometryFilter>::uuid);
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(CropVertexGeometryFilter::k_MinPos_Key) == std::vector<float32>{-3.5F, -2, 0.5F});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(CropVertexGeometryFilter::k_MaxPos_Key) == std::vector<float32>{1, 4.5F, 7});
+  CHECK(args.value<DataPath>(CropVertexGeometryFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(CropVertexGeometryFilter::k_CreatedVertexGeometryPath_Key) == DataPath({"CroppedVertices"}));
 }

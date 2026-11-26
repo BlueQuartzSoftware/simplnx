@@ -9,17 +9,17 @@
     "Filter_Human_Label": "Crop Vertex Geometry",
     "Filter_Name": "CropVertexGeometry",
     "Filter_Uuid": "{f28cbf07-f15a-53ca-8c7f-b41a11dae6cc}",
-    "XMin": 1.0,
-    "YMin": 1.0,
-    "ZMin": 1.0,
+    "XMin": -3.5,
+    "YMin": -2.0,
+    "ZMin": 0.5,
     "XMax": 1.0,
-    "YMax": 1.0,
-    "ZMax": 1.0,
+    "YMax": 4.5,
+    "ZMax": 7.0,
     "DataContainerName": {
       "Data Container Name": "DataContainer"
     },
     "CroppedDataContainerName": {
-      "Data Container Name": "DataContainer"
+      "Data Container Name": "CroppedVertices"
     }
   }
 }

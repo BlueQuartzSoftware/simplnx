@@ -1202,50 +1202,22 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image", 
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ApplyTransformationToGeometryFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ApplyTransformationToGeometryFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ApplyTransformationToGeometryFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ApplyTransformationToGeometryFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK_FALSE(args.value<bool>(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key));
-      CHECK_FALSE(args.value<bool>(ApplyTransformationToGeometryFilter::k_RenumberFeatures_Key));
-      // Complex type (FloatVec3p1FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_TransformationType_Key) == 0);
-      CHECK(args.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_InterpolationType_Key) == 0);
-      // Complex type (DynamicTableFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ApplyTransformationToGeometryFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ApplyTransformationToGeometryFilter>::uuid);
+  CHECK_FALSE(args.value<bool>(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key));
+  CHECK_FALSE(args.value<bool>(ApplyTransformationToGeometryFilter::k_RenumberFeatures_Key));
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ApplyTransformationToGeometryFilter::k_Rotation_Key) == std::vector<float32>{1, -2, 3, 45});
+  CHECK(args.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_TransformationType_Key) == 0);
+  CHECK(args.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_InterpolationType_Key) == 0);
+  CHECK(args.value<DynamicTableParameter::ValueType>(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key) ==
+        DynamicTableParameter::ValueType{{2, 0, 0, 7}, {0, 3, 0, -5}, {0, 0, 4, 2}, {0, 0, 0, 1}});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ApplyTransformationToGeometryFilter::k_Translation_Key) == std::vector<float32>{1, 2, 3});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ApplyTransformationToGeometryFilter::k_Scale_Key) == std::vector<float32>{0.5F, 1.5F, 2.5F});
+  CHECK(args.value<DataPath>(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
 }
 
 namespace

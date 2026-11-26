@@ -8,8 +8,6 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -20,7 +18,6 @@
 #include <atomic>
 #include <catch2/catch.hpp>
 #include <filesystem>
-#include <fstream>
 #include <limits>
 #include <memory>
 #include <nonstd/span.hpp>
@@ -402,47 +399,18 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Distinct Modal Values", "[Sim
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeArrayHistogramFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeArrayHistogramFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeArrayHistogramFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeArrayHistogramFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<int32>(ComputeArrayHistogramFilter::k_NumberOfBins_Key) == 5);
-      CHECK(args.value<bool>(ComputeArrayHistogramFilter::k_UserDefinedRange_Key) == true);
-      CHECK(args.value<float64>(ComputeArrayHistogramFilter::k_MinRange_Key) == 2.5);
-      CHECK(args.value<float64>(ComputeArrayHistogramFilter::k_MaxRange_Key) == 2.5);
-      CHECK(args.value<bool>(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key) == true);
-      // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<std::string>(ComputeArrayHistogramFilter::k_HistoBinCountName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ComputeArrayHistogramFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ComputeArrayHistogramFilter>::uuid);
+  CHECK(args.value<int32>(ComputeArrayHistogramFilter::k_NumberOfBins_Key) == 5);
+  CHECK(args.value<bool>(ComputeArrayHistogramFilter::k_UserDefinedRange_Key));
+  CHECK(args.value<float64>(ComputeArrayHistogramFilter::k_MinRange_Key) == 2.5);
+  CHECK(args.value<float64>(ComputeArrayHistogramFilter::k_MaxRange_Key) == 12.5);
+  CHECK(args.value<bool>(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key));
+  CHECK(args.value<MultiArraySelectionParameter::ValueType>(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key) == std::vector<DataPath>{DataPath({"Scan", "Cells", "Intensities"})});
+  CHECK(args.value<DataPath>(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<std::string>(ComputeArrayHistogramFilter::k_HistoBinCountName_Key) == "TestName");
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogram: zero bins preflight", "[SimplnxCore][ComputeArrayHistogram]")

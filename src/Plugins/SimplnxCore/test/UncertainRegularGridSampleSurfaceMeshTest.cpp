@@ -1,13 +1,10 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -184,48 +181,19 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Valid Filte
 
 TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: SIMPL Backwards Compatibility", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "UncertainRegularGridSampleSurfaceMeshFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "UncertainRegularGridSampleSurfaceMeshFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<std::string>(UncertainRegularGridSampleSurfaceMeshFilter::k_CellAMName_Key) == "TestName");
-      CHECK(args.value<std::string>(UncertainRegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "UncertainRegularGridSampleSurfaceMeshFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid);
+  CHECK(args.value<VectorUInt64Parameter::ValueType>(UncertainRegularGridSampleSurfaceMeshFilter::k_Dimensions_Key) == std::vector<uint64>{3, 5, 7});
+  CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key) == std::vector<float32>{0.5F, 1.25F, 2});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key) == std::vector<float32>{-4, 7.5F, 11});
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key) == std::vector<float32>{0.125F, 0.25F, 0.375F});
+  CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key) == DataPath({"SampledVolume"}));
+  CHECK(args.value<std::string>(UncertainRegularGridSampleSurfaceMeshFilter::k_CellAMName_Key) == "Voxels");
+  CHECK(args.value<std::string>(UncertainRegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key) == "SampledIds");
 }
 
 TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Ray exits long thin feature", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter][SampleSurfaceMeshRay]")

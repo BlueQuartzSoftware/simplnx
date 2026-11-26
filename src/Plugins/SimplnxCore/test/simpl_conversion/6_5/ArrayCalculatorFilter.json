@@ -10,16 +10,16 @@
     "Filter_Name": "ArrayCalculator",
     "Filter_Uuid": "{7ff0ebb3-7b0d-5ff7-b9d8-5147031aca10}",
     "SelectedAttributeMatrix": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells"
     },
-    "InfixEquation": "1+2",
-    "ScalarType": 0,
+    "InfixEquation": "sin(30)",
+    "ScalarType": 8,
     "CalculatedArray": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "SineValues"
     },
-    "Units": 0
+    "Units": 1
   }
 }

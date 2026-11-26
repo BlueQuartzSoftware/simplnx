@@ -9,14 +9,14 @@
     "Filter_Human_Label": "Compute Feature Centroids",
     "Filter_Name": "FindFeatureCentroids",
     "FeatureIdsArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Cells",
+      "Data Array Name": "GrainIds"
     },
     "CentroidsArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Scan",
+      "Attribute Matrix Name": "Grains",
+      "Data Array Name": "GrainCenters"
     }
   }
 }
