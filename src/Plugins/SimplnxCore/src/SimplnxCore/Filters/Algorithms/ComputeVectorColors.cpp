@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 
 #include "ComputeVectorColors.hpp"
@@ -133,18 +134,9 @@ Result<> ComputeVectorColorsInChunks(const AbstractDataStore<float32>& vectors, 
         r += (deltaR * ((90.0f - plunge) / 90.0f));
         g += (deltaG * ((90.0f - plunge) / 90.0f));
         b += (deltaB * ((90.0f - plunge) / 90.0f));
-        if(r > 255.0f)
-        {
-          r = 255.0f;
-        }
-        if(g > 255.0f)
-        {
-          g = 255.0f;
-        }
-        if(b > 255.0f)
-        {
-          b = 255.0f;
-        }
+        r = std::min(r, 255.0f);
+        g = std::min(g, 255.0f);
+        b = std::min(b, 255.0f);
 
         Rgb argb = RgbColor::dRgb(static_cast<uint8>(r), static_cast<uint8>(g), static_cast<uint8>(b), 255);
         (*colorsBuffer)[index] = RgbColor::dRed(argb);

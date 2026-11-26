@@ -5,6 +5,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 
+#include <algorithm>
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
@@ -135,10 +136,7 @@ public:
     const uint64 wholeGiB = bytes / k_BytesPerGiB;
     const uint64 remainderBytes = bytes % k_BytesPerGiB;
     uint64 hundredths = wholeGiB * 100 + (remainderBytes * 100 + k_BytesPerGiB / 2) / k_BytesPerGiB;
-    if(hundredths > k_MaxOocSizeHundredths)
-    {
-      hundredths = k_MaxOocSizeHundredths;
-    }
+    hundredths = std::min(hundredths, k_MaxOocSizeHundredths);
     if(bytes > 0 && hundredths == 0)
     {
       hundredths = 1;

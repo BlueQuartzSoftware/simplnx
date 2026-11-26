@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <functional>
 #include <random>
@@ -438,54 +439,18 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache&
   Point3Df ll = points[0];
   Point3Df ur = points[0];
 
-  if(points[1][0] < ll[0])
-  {
-    ll[0] = points[1][0];
-  }
-  if(points[1][0] > ur[0])
-  {
-    ur[0] = points[1][0];
-  }
-  if(points[1][1] < ll[1])
-  {
-    ll[1] = points[1][1];
-  }
-  if(points[1][1] > ur[1])
-  {
-    ur[1] = points[1][1];
-  }
-  if(points[1][2] < ll[2])
-  {
-    ll[2] = points[1][2];
-  }
-  if(points[1][2] > ur[2])
-  {
-    ur[2] = points[1][2];
-  }
-  if(points[2][0] < ll[0])
-  {
-    ll[0] = points[2][0];
-  }
-  if(points[2][0] > ur[0])
-  {
-    ur[0] = points[2][0];
-  }
-  if(points[2][1] < ll[1])
-  {
-    ll[1] = points[2][1];
-  }
-  if(points[2][1] > ur[1])
-  {
-    ur[1] = points[2][1];
-  }
-  if(points[2][2] < ll[2])
-  {
-    ll[2] = points[2][2];
-  }
-  if(points[2][2] > ur[2])
-  {
-    ur[2] = points[2][2];
-  }
+  ll[0] = std::min(points[1][0], ll[0]);
+  ur[0] = std::max(points[1][0], ur[0]);
+  ll[1] = std::min(points[1][1], ll[1]);
+  ur[1] = std::max(points[1][1], ur[1]);
+  ll[2] = std::min(points[1][2], ll[2]);
+  ur[2] = std::max(points[1][2], ur[2]);
+  ll[0] = std::min(points[2][0], ll[0]);
+  ur[0] = std::max(points[2][0], ur[0]);
+  ll[1] = std::min(points[2][1], ll[1]);
+  ur[1] = std::max(points[2][1], ur[1]);
+  ll[2] = std::min(points[2][2], ll[2]);
+  ur[2] = std::max(points[2][2], ur[2]);
 
   return {ll, ur};
 }
@@ -517,30 +482,12 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& tr
     const Point3Df& min = bounds.getMinPoint();
     const Point3Df& max = bounds.getMaxPoint();
 
-    if(min[0] < ll[0])
-    {
-      ll[0] = min[0];
-    }
-    if(min[1] < ll[1])
-    {
-      ll[1] = min[1];
-    }
-    if(min[2] < ll[2])
-    {
-      ll[2] = min[2];
-    }
-    if(max[0] > ur[0])
-    {
-      ur[0] = max[0];
-    }
-    if(max[1] > ur[1])
-    {
-      ur[1] = max[1];
-    }
-    if(max[2] > ur[2])
-    {
-      ur[2] = max[2];
-    }
+    ll[0] = std::min(min[0], ll[0]);
+    ll[1] = std::min(min[1], ll[1]);
+    ll[2] = std::min(min[2], ll[2]);
+    ur[0] = std::max(max[0], ur[0]);
+    ur[1] = std::max(max[1], ur[1]);
+    ur[2] = std::max(max[2], ur[2]);
   }
 
   return {ll, ur};

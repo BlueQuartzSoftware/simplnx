@@ -11,6 +11,7 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
@@ -634,10 +635,7 @@ private:
   {
     const usize startValue = i * maxTriangles;
     usize endValue = (i + 1) * maxTriangles;
-    if(endValue > nTriangles)
-    {
-      endValue = nTriangles;
-    }
+    endValue = std::min(endValue, nTriangles);
     taskRunner.execute(SingleOutWrapper(filter, limitedFile.m_AtomicFilesList[i].tempFilePath(), endValue, header, triangles, vertices, startValue, shouldCancel));
   }
 

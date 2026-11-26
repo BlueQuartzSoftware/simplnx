@@ -19,6 +19,7 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace nx::core
@@ -90,30 +91,12 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
   {
     if(!useMask || mask->getValue(i))
     {
-      if(vertex[3 * i] > meshMaxExtents[0])
-      {
-        meshMaxExtents[0] = vertex[3 * i];
-      }
-      if(vertex[3 * i + 1] > meshMaxExtents[1])
-      {
-        meshMaxExtents[1] = vertex[3 * i + 1];
-      }
-      if(vertex[3 * i + 2] > meshMaxExtents[2])
-      {
-        meshMaxExtents[2] = vertex[3 * i + 2];
-      }
-      if(vertex[3 * i] < meshMinExtents[0])
-      {
-        meshMinExtents[0] = vertex[3 * i];
-      }
-      if(vertex[3 * i + 1] < meshMinExtents[1])
-      {
-        meshMinExtents[1] = vertex[3 * i + 1];
-      }
-      if(vertex[3 * i + 2] < meshMinExtents[2])
-      {
-        meshMinExtents[2] = vertex[3 * i + 2];
-      }
+      meshMaxExtents[0] = std::max(vertex[3 * i], meshMaxExtents[0]);
+      meshMaxExtents[1] = std::max(vertex[3 * i + 1], meshMaxExtents[1]);
+      meshMaxExtents[2] = std::max(vertex[3 * i + 2], meshMaxExtents[2]);
+      meshMinExtents[0] = std::min(vertex[3 * i], meshMinExtents[0]);
+      meshMinExtents[1] = std::min(vertex[3 * i + 1], meshMinExtents[1]);
+      meshMinExtents[2] = std::min(vertex[3 * i + 2], meshMinExtents[2]);
     }
   }
 

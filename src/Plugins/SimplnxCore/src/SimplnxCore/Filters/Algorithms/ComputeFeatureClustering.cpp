@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
+#include <algorithm>
 #include <random>
 
 using namespace nx::core;
@@ -263,14 +264,8 @@ Result<> ComputeFeatureClustering::operator()()
     {
       for(auto value : clusters[i])
       {
-        if(value > max)
-        {
-          max = value;
-        }
-        if(value < min)
-        {
-          min = value;
-        }
+        max = std::max(value, max);
+        min = std::min(value, min);
       }
     }
   }

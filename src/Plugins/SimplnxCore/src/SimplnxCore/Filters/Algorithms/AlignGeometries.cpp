@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
+#include <algorithm>
 #include <array>
 
 using namespace nx::core;
@@ -32,24 +33,15 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
-      if(xBounds[i] < origin[0])
-      {
-        origin[0] = xBounds[i];
-      }
+      origin[0] = std::min(xBounds[i], origin[0]);
     }
     for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
     {
-      if(yBounds[i] < origin[1])
-      {
-        origin[1] = yBounds[i];
-      }
+      origin[1] = std::min(yBounds[i], origin[1]);
     }
     for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
     {
-      if(zBounds[i] < origin[2])
-      {
-        origin[2] = zBounds[i];
-      }
+      origin[2] = std::min(zBounds[i], origin[2]);
     }
     return origin;
   }
@@ -62,10 +54,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -79,10 +68,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -99,10 +85,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -119,10 +102,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -160,36 +140,18 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
     float max[3] = {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
     for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
-      if(xBounds[i] < min[0])
-      {
-        min[0] = xBounds[i];
-      }
-      if(xBounds[i] > max[0])
-      {
-        max[0] = xBounds[i];
-      }
+      min[0] = std::min(xBounds[i], min[0]);
+      max[0] = std::max(xBounds[i], max[0]);
     }
     for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
     {
-      if(yBounds[i] < min[1])
-      {
-        min[1] = yBounds[i];
-      }
-      if(yBounds[i] > max[1])
-      {
-        max[1] = yBounds[i];
-      }
+      min[1] = std::min(yBounds[i], min[1]);
+      max[1] = std::max(yBounds[i], max[1]);
     }
     for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
     {
-      if(zBounds[i] < min[2])
-      {
-        min[2] = zBounds[i];
-      }
-      if(zBounds[i] > max[2])
-      {
-        max[2] = zBounds[i];
-      }
+      min[2] = std::min(zBounds[i], min[2]);
+      max[2] = std::max(zBounds[i], max[2]);
     }
     centroid[0] = (max[0] + min[0]) / 2.0f;
     centroid[1] = (max[1] + min[1]) / 2.0f;

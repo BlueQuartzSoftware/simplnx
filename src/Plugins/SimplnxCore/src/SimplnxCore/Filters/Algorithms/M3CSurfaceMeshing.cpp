@@ -357,10 +357,7 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
     for(usize i = 0; i < totalPoints; ++i)
     {
       p[i + 1] = grainIds[i];
-      if(p[i + 1] > maxGrainId)
-      {
-        maxGrainId = p[i + 1];
-      }
+      maxGrainId = std::max(p[i + 1], maxGrainId);
     }
   }
   else
@@ -396,10 +393,7 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
         for(usize x = 0; x < dims[0]; ++x)
         {
           p[++index] = grainIds[gIdx++];
-          if(p[index] > maxGrainId)
-          {
-            maxGrainId = p[index];
-          }
+          maxGrainId = std::max(p[index], maxGrainId);
         }
         p[++index] = k_GhostLabel; // trailing surface voxel for this row
       }

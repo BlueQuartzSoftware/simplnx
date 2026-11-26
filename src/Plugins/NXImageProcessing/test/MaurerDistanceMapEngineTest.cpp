@@ -7,6 +7,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 
 #include <algorithm>
@@ -776,10 +777,7 @@ std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize 
           const int64 ddy = y - f[1];
           const int64 ddz = z - f[2];
           const int64 sq = ddx * ddx + ddy * ddy + ddz * ddz;
-          if(sq < bestSq)
-          {
-            bestSq = sq;
-          }
+          bestSq = std::min(sq, bestSq);
         }
         const float32 v = squared ? static_cast<float32>(bestSq) : std::sqrt(static_cast<float32>(bestSq));
         const bool inside = at(x, y, z) != bg;

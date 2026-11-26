@@ -557,14 +557,8 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
     for(usize j = 0; j < 3; j++)
     {
       const usize vert = tris[3 * i + j];
-      if(minDim > triVerts[3 * vert + 2])
-      {
-        minDim = triVerts[3 * vert + 2];
-      }
-      if(maxDim < triVerts[3 * vert + 2])
-      {
-        maxDim = triVerts[3 * vert + 2];
-      }
+      minDim = std::min<nx::core::types::float32>(minDim, triVerts[3 * vert + 2]);
+      maxDim = std::max<nx::core::types::float32>(maxDim, triVerts[3 * vert + 2]);
     }
   }
 

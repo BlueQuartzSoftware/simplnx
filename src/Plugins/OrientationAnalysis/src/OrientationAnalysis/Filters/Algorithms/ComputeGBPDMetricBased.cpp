@@ -16,6 +16,7 @@
 #include <tbb/concurrent_vector.h>
 #endif
 
+#include <algorithm>
 #include <cmath>
 
 using namespace nx::core;
@@ -590,10 +591,7 @@ Result<> ComputeGBPDMetricBased::operator()()
 #endif
 
   usize triChunkSize = 50000;
-  if(numMeshTriangles < triChunkSize)
-  {
-    triChunkSize = numMeshTriangles;
-  }
+  triChunkSize = std::min(numMeshTriangles, triChunkSize);
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   m_MessageHandler.sendInfoMessage("Selecting Triangles for the Phase of Interest");
@@ -657,10 +655,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   std::vector<float64> errorValues(samplePtsX.size(), 0.0);
 
   usize pointsChunkSize = 20;
-  if(samplePtsX.size() < pointsChunkSize)
-  {
-    pointsChunkSize = samplePtsX.size();
-  }
+  pointsChunkSize = std::min(samplePtsX.size(), pointsChunkSize);
 
   m_MessageHandler.sendInfoMessage("Determining GBPD Values");
   progressThrottle.reset(samplePtsX.size(), "Determining GBPD Values");

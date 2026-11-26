@@ -49,6 +49,7 @@ Supporting Paper: https://www.researchgate.net/publication/308703724_Flying_edge
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -1223,8 +1224,7 @@ private:
     xl = usize(std::min({ge0.xl, ge1.xl, ge2.xl, ge3.xl}));
     xr = usize(std::max({ge0.xr, ge1.xr, ge2.xr, ge3.xr}));
 
-    if(xl > xr)
-      xl = xr;
+    xl = std::min(xl, xr);
   }
 
   /**

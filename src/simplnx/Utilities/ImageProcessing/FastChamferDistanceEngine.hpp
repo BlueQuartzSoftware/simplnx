@@ -14,6 +14,7 @@
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -1626,18 +1627,12 @@ private:
     if(doPos)
     {
       const float32 cand = c + w;
-      if(cand < neighbor)
-      {
-        neighbor = cand;
-      }
+      neighbor = std::min(cand, neighbor);
     }
     if(doNeg)
     {
       const float32 cand = c - w;
-      if(cand > neighbor)
-      {
-        neighbor = cand;
-      }
+      neighbor = std::max(cand, neighbor);
     }
   }
 

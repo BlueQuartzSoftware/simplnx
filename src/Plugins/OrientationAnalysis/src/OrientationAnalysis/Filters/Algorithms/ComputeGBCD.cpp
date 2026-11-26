@@ -220,14 +220,8 @@ public:
     for(usize i = 0; i < k_GBCDParamCount; i++)
     {
       index[i] = static_cast<int32>((misEulerNorm[i] - gbcdLimits[i]) / gbcdDelta[i]);
-      if(index[i] > (gbcdSz[i] - 1))
-      {
-        index[i] = (gbcdSz[i] - 1);
-      }
-      if(index[i] < 0)
-      {
-        index[i] = 0;
-      }
+      index[i] = std::min(index[i], gbcdSz[i] - 1);
+      index[i] = std::max(index[i], 0);
     }
 
     gbcdIndex = index[0] + k_N1 * index[1] + k_N1N2 * index[2] + k_N1N2N3 * index[3] + k_N1N2N3N4 * index[4];
@@ -381,10 +375,7 @@ Result<> ComputeGBCD::operator()()
   usize totalFaces = faceLabels.getNumberOfTuples();
   usize triangleChunkSize = 50000;
 
-  if(totalFaces < triangleChunkSize)
-  {
-    triangleChunkSize = totalFaces;
-  }
+  triangleChunkSize = std::min(totalFaces, triangleChunkSize);
   SizeGBCD sizeGbcd(triangleChunkSize, k_NumMisoReps, m_InputValues->GBCDRes);
   int32 totalGBCDBins = sizeGbcd.m_GbcdSizes[0] * sizeGbcd.m_GbcdSizes[1] * sizeGbcd.m_GbcdSizes[2] * sizeGbcd.m_GbcdSizes[3] * sizeGbcd.m_GbcdSizes[4] * 2;
 

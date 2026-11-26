@@ -1,5 +1,6 @@
 #include "DataIOCollection.hpp"
 
+#include <algorithm>
 #include <cassert>
 
 #include "simplnx/Core/Preferences.hpp"
@@ -323,10 +324,7 @@ std::string DataIOCollection::generateManagerListString() const
       capList = "(no factories registered)";
     }
 
-    if(displayName.size() > maxNameWidth)
-    {
-      maxNameWidth = displayName.size();
-    }
+    maxNameWidth = std::max(displayName.size(), maxNameWidth);
     rows.push_back({std::move(displayName), std::move(capList)});
   }
 

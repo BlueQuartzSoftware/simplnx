@@ -16,6 +16,7 @@
 
 #include <Eigen/Dense>
 
+#include <algorithm>
 #include <concepts>
 #include <cstring>
 #include <fstream>
@@ -198,28 +199,19 @@ SIMPLNX_EXPORT ImageRotationUtilities::RotateArgs CreateRotationArgs(const Image
 template <typename T>
 T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, const DataArray<T>& sourceArray, usize compIndex)
 {
-  if(xyzIndex[0] < 0)
-  {
-    xyzIndex[0] = 0;
-  }
+  xyzIndex[0] = std::max<Eigen::DenseCoeffsBase<class Eigen::Array<long, 1, 3>, 1>::Scalar>(xyzIndex[0], 0);
   if(xyzIndex[0] >= params.xp)
   {
     xyzIndex[0] = params.xp - 1;
   }
 
-  if(xyzIndex[1] < 0)
-  {
-    xyzIndex[1] = 0;
-  }
+  xyzIndex[1] = std::max<Eigen::DenseCoeffsBase<class Eigen::Array<long, 1, 3>, 1>::Scalar>(xyzIndex[1], 0);
   if(xyzIndex[1] >= params.yp)
   {
     xyzIndex[1] = params.yp - 1;
   }
 
-  if(xyzIndex[2] < 0)
-  {
-    xyzIndex[2] = 0;
-  }
+  xyzIndex[2] = std::max<Eigen::DenseCoeffsBase<class Eigen::Array<long, 1, 3>, 1>::Scalar>(xyzIndex[2], 0);
   if(xyzIndex[2] >= params.zp)
   {
     xyzIndex[2] = params.zp - 1;
@@ -977,14 +969,8 @@ public:
             {
               float32 cellSize = (axis == 0) ? m_Params.xRes : (axis == 1) ? m_Params.yRes : m_Params.zRes;
               uvw[axis] = (static_cast<float32>(coordsOld[axis]) - p1Coord[axis]) / cellSize;
-              if(uvw[axis] < 0.0f)
-              {
-                uvw[axis] = 0.0f;
-              }
-              if(uvw[axis] > 1.0f)
-              {
-                uvw[axis] = 1.0f;
-              }
+              uvw[axis] = std::max(uvw[axis], 0.0f);
+              uvw[axis] = std::min(uvw[axis], 1.0f);
             }
 
             for(usize compIndex = 0; compIndex < numComps; compIndex++)

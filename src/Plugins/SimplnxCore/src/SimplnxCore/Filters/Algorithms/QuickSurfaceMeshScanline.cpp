@@ -26,6 +26,7 @@
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include <fmt/format.h>
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -1012,10 +1013,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
         }
 
         // Track max featureId for numFeatures
-        if(static_cast<usize>(curFeature) > numFeatures)
-        {
-          numFeatures = static_cast<usize>(curFeature);
-        }
+        numFeatures = std::max(static_cast<usize>(curFeature), numFeatures);
 
         // A dual-grid node at (ni, nj) has offset nj * (xP + 1) + ni.
 

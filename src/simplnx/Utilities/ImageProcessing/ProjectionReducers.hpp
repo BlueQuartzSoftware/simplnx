@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Types.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -212,10 +213,7 @@ struct StdDevReduce
     }
     float64 variance = state.sumSquaredDeviations / static_cast<float64>(state.count - 1);
     // Guard against a negative variance from rounding before taking the square root.
-    if(variance < 0.0)
-    {
-      variance = 0.0;
-    }
+    variance = std::max(variance, 0.0);
     return static_cast<TOut>(std::sqrt(variance));
   }
 };

@@ -17,6 +17,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 
 #include <algorithm>
@@ -387,10 +388,7 @@ TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytic
   int32 maxParent = 0;
   for(usize f = 1; f < featureParentIds.getNumberOfTuples(); f++)
   {
-    if(featureParentIds[f] > maxParent)
-    {
-      maxParent = featureParentIds[f];
-    }
+    maxParent = std::max(featureParentIds[f], maxParent);
   }
   CHECK(newFeatureAM.getNumberOfTuples() == static_cast<usize>(maxParent + 1));
 

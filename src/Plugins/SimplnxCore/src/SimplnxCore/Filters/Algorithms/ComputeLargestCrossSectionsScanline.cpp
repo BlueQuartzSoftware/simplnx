@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -122,10 +123,7 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
     for(usize featureId = 1; featureId < numFeatures; featureId++)
     {
       const float32 area = featureCounts[featureId] * areaScalar;
-      if(area > largestCrossSections[featureId])
-      {
-        largestCrossSections[featureId] = area;
-      }
+      largestCrossSections[featureId] = std::max(area, largestCrossSections[featureId]);
     }
   }
   return largestCrossSectStore.copyFromBuffer(0, nonstd::span<const float32>(largestCrossSections.data(), numFeatures));

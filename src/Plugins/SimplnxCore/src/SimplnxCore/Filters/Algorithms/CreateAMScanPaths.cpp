@@ -375,14 +375,8 @@ Result<> CreateAMScanPaths::operator()()
   {
     int32 layer = cadSliceIds[i];
     int32 region = cadRegionIds[i];
-    if(numCADLayers < layer)
-    {
-      numCADLayers = layer;
-    }
-    if(numCADRegions < region)
-    {
-      numCADRegions = region;
-    }
+    numCADLayers = std::max(numCADLayers, layer);
+    numCADRegions = std::max(numCADRegions, region);
   }
   numCADLayers += 1;
   numCADRegions += 1;

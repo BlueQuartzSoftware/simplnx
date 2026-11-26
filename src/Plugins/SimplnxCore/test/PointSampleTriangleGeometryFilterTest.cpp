@@ -19,6 +19,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 
 #include <array>
@@ -39,32 +40,14 @@ static std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertice
 
   for(usize v = 0; v < numVerts; v++)
   {
-    if((*vertices)[v * 3] < minMaxVerts[0])
-    {
-      minMaxVerts[0] = (*vertices)[v * 3];
-    }
-    if((*vertices)[v * 3] > minMaxVerts[1])
-    {
-      minMaxVerts[1] = (*vertices)[v * 3];
-    }
+    minMaxVerts[0] = std::min<float>((*vertices)[v * 3], minMaxVerts[0]);
+    minMaxVerts[1] = std::max<float>((*vertices)[v * 3], minMaxVerts[1]);
 
-    if((*vertices)[v * 3 + 1] < minMaxVerts[2])
-    {
-      minMaxVerts[2] = (*vertices)[v * 3 + 1];
-    }
-    if((*vertices)[v * 3 + 1] > minMaxVerts[3])
-    {
-      minMaxVerts[3] = (*vertices)[v * 3 + 1];
-    }
+    minMaxVerts[2] = std::min<float>((*vertices)[v * 3 + 1], minMaxVerts[2]);
+    minMaxVerts[3] = std::max<float>((*vertices)[v * 3 + 1], minMaxVerts[3]);
 
-    if((*vertices)[v * 3 + 2] < minMaxVerts[4])
-    {
-      minMaxVerts[4] = (*vertices)[v * 3 + 2];
-    }
-    if((*vertices)[v * 3 + 2] > minMaxVerts[5])
-    {
-      minMaxVerts[5] = (*vertices)[v * 3 + 2];
-    }
+    minMaxVerts[4] = std::min<float>((*vertices)[v * 3 + 2], minMaxVerts[4]);
+    minMaxVerts[5] = std::max<float>((*vertices)[v * 3 + 2], minMaxVerts[5]);
   }
 
   //  for(auto& coord : minMaxVerts)

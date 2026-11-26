@@ -109,10 +109,7 @@ Result<> FeatureFaceCurvature::operator()()
   int32_t maxFaceId = 0;
   for(int64_t t = 0; t < numTriangles; ++t)
   {
-    if(surfaceMeshFeatureFaceIds[t] > maxFaceId)
-    {
-      maxFaceId = surfaceMeshFeatureFaceIds[t];
-    }
+    maxFaceId = std::max<int>(surfaceMeshFeatureFaceIds[t], maxFaceId);
   }
 
   std::vector<int32_t> faceSizes(maxFaceId + 1, 0);

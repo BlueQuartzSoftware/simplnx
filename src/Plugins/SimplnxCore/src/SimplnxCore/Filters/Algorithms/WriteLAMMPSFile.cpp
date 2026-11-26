@@ -63,10 +63,7 @@ Result<> WriteLAMMPSFile::operator()()
       return {};
     }
     int32 atomLabel = atomLabels.getValue(i);
-    if(atomLabel > atomTypes)
-    {
-      atomTypes = atomLabel;
-    }
+    atomTypes = std::max(atomLabel, atomTypes);
   }
 
   float xMin = 1000000000.0;
@@ -85,30 +82,12 @@ Result<> WriteLAMMPSFile::operator()()
       return {};
     }
     std::array<float32, 3> pos = {verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1), verts.getValue((i * 3) + 2)};
-    if(pos[0] < xMin)
-    {
-      xMin = pos[0];
-    }
-    if(pos[0] > xMax)
-    {
-      xMax = pos[0];
-    }
-    if(pos[1] < yMin)
-    {
-      yMin = pos[1];
-    }
-    if(pos[1] > yMax)
-    {
-      yMax = pos[1];
-    }
-    if(pos[2] < zMin)
-    {
-      zMin = pos[2];
-    }
-    if(pos[2] > zMax)
-    {
-      zMax = pos[2];
-    }
+    xMin = std::min(pos[0], xMin);
+    xMax = std::max(pos[0], xMax);
+    yMin = std::min(pos[1], yMin);
+    yMax = std::max(pos[1], yMax);
+    zMin = std::min(pos[2], zMin);
+    zMax = std::max(pos[2], zMax);
   }
 
   m_MessageHandler.sendInfoMessage("Writing File Metadata...");

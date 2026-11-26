@@ -314,10 +314,7 @@ std::array<uint8, 3> ColorTableUtilities::ComputeRgbFromControlPoints(float32 nV
     currFraction = (nValue - binPoints[leftBinIndex]) / (1 - binPoints[leftBinIndex]);
   }
 
-  if(leftBinIndex > static_cast<int>(numControlColors) - 1)
-  {
-    leftBinIndex = static_cast<int>(numControlColors) - 1;
-  }
+  leftBinIndex = std::min(leftBinIndex, static_cast<int>(numControlColors) - 1);
 
   const uint8 redVal =
       static_cast<uint8>((controlPoints[leftBinIndex * k_ControlPointCompSize + 1] * (1.0 - currFraction) + controlPoints[rightBinIndex * k_ControlPointCompSize + 1] * currFraction) * 255);

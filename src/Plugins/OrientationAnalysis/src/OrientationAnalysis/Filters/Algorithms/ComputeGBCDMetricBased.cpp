@@ -13,6 +13,7 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <Eigen/Dense>
+#include <algorithm>
 #include <utility>
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -504,10 +505,7 @@ Result<> ComputeGBCDMetricBased::operator()()
 #endif
 
   usize triChunkSize = 50000;
-  if(numMeshTriangles < triChunkSize)
-  {
-    triChunkSize = numMeshTriangles;
-  }
+  triChunkSize = std::min(numMeshTriangles, triChunkSize);
 
   // Accumulate totalFaceArea by re-checking geometric filter conditions per
   // chunk, rather than storing an O(n) triIncluded mask. This trades a small
@@ -610,10 +608,7 @@ Result<> ComputeGBCDMetricBased::operator()()
   std::vector<float64> errorValues(samplePtsX.size(), 0.0);
 
   usize pointsChunkSize = 100;
-  if(samplePtsX.size() < pointsChunkSize)
-  {
-    pointsChunkSize = samplePtsX.size();
-  }
+  pointsChunkSize = std::min(samplePtsX.size(), pointsChunkSize);
 
   m_MessageHandler.sendInfoMessage("Computing Distribution Values at the Section of Interest");
   progressThrottle.reset(samplePtsX.size(), "Computing Distribution Values at the Section of Interest");
