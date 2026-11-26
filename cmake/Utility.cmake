@@ -84,6 +84,7 @@ function(simplnx_enable_warnings)
         -Werror=implicit-exception-spec-mismatch # Wimplicit-exception-spec-mismatch: function previously declared with an explicit/implicit exception specification redeclared with an implicit/explicit exception specification
         -Werror=inconsistent-missing-override # Winconsistent-missing-override: A overrides a member function but is not marked "override"
         -Werror=inconsistent-missing-destructor-override # Winconsistent-missing-destructor-override: A overrides a destructor but is not marked "override"
+        -Werror=reorder-init-list # Wreorder-init-list: designated initializers out of declaration order. Apple clang accepts them; gcc and MSVC reject them.
       )
     endif()
 

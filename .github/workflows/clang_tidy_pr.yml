@@ -1,0 +1,48 @@
+name: clang-tidy pr
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  clang_tidy_pr:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          submodules: true
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.10'
+      - name: Install LLVM 19.1.1
+        run: |
+          archive=LLVM-19.1.1-Linux-X64.tar.xz
+          curl --fail --show-error --silent --location --retry 3 \
+            "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.1/$archive" -o "$RUNNER_TEMP/$archive"
+          echo "8204de000b6a6921f0572e038336601e3225898e9a253c8aaa43b0a5fae8a4ce  $RUNNER_TEMP/$archive" | sha256sum --check
+          mkdir "$RUNNER_TEMP/llvm-19.1.1"
+          tar -xJf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/llvm-19.1.1" --strip-components=1
+          echo "$RUNNER_TEMP/llvm-19.1.1/bin" >> "$GITHUB_PATH"
+      - name: Add C++ Problem Matcher
+        uses: ammaraskar/gcc-problem-matcher@cb2e3f949c41b7818628f35f8484a9b0acf90cf9
+      - name: Install Python dependencies
+        run: python -m pip install numpy
+      - name: Configure compile commands
+        env:
+          CC: clang
+          CXX: clang++
+        run: |
+          cmake --preset ci-linux-x64 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DSIMPLNX_BUILD_NXIMAGEPROCESSING_BENCHMARK=ON \
+            -DSIMPLNX_BUILD_PYTHON_DOCS=OFF -DSIMPLNX_DOWNLOAD_TEST_FILES_FIRST=OFF
+      - name: Check changed C++ files
+        run: python .github/scripts/clang_tidy_changed.py --database build --base HEAD^1
