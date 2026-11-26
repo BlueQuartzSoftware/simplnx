@@ -231,7 +231,7 @@ public:
     return true;
   }
 
-  Result<> onImportFinalize(DataStructure&, const std::vector<DataPath>&, const HDF5::FileIO&) override
+  Result<> onImportFinalize(DataStructure& /*dataStructure*/, const std::vector<DataPath>& /*paths*/, const HDF5::FileIO& /*fileReader*/) override
   {
     return MakeWarningVoidResult(-89201, "Synthetic import-finalizer warning");
   }

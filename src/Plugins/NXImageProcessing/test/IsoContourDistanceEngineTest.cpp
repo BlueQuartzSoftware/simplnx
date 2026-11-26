@@ -143,7 +143,7 @@ public:
   static constexpr int32 k_ErrorCode = -8630;
   using OocReportingDataStore<T>::OocReportingDataStore;
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(k_ErrorCode, "The test input store rejected a bulk read.");
   }
@@ -156,7 +156,7 @@ public:
   static constexpr int32 k_ErrorCode = -8631;
   using OocReportingDataStore<T>::OocReportingDataStore;
 
-  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  Result<> copyFromBuffer(usize /*unused*/, nonstd::span<const T> /*unused*/) override
   {
     return MakeErrorResult(k_ErrorCode, "The test output store rejected a bulk write.");
   }

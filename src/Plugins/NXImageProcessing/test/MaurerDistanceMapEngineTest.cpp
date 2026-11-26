@@ -666,7 +666,7 @@ struct SeamResults
 };
 
 template <class T>
-SeamResults RunSeam(const std::vector<int32>& pattern, const SizeVec3& dims, const ImageProcessing::detail::Maurer3DSlabParameters<T>& parameters, TransferLog&, RecordingInputStore<T>& inputStore,
+SeamResults RunSeam(const std::vector<int32>& pattern, const SizeVec3& dims, const ImageProcessing::detail::Maurer3DSlabParameters<T>& parameters, TransferLog& /*unused*/, RecordingInputStore<T>& inputStore,
                     RecordingWorkStore& workStore, RecordingOutputStore& outputStore, std::atomic_bool& shouldCancel)
 {
   REQUIRE(pattern.size() == dims[0] * dims[1] * dims[2]);

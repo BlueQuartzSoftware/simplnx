@@ -59,7 +59,7 @@ public:
   {
   }
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(m_ErrorCode, "Injected statistics bulk-read failure");
   }
@@ -78,7 +78,7 @@ public:
   {
   }
 
-  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  Result<> copyFromBuffer(usize /*unused*/, nonstd::span<const T> /*unused*/) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected statistics bulk-write failure");
   }

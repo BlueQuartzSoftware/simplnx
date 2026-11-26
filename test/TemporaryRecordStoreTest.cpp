@@ -75,11 +75,11 @@ public:
     std::memcpy(m_Bytes.data() + offset * m_Width, bytes.data(), static_cast<usize>(count * m_Width));
     return {};
   }
-  Result<> fill(uint64, uint64, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> fill(uint64 /*recordOffset*/, uint64 /*recordCount*/, nonstd::span<const std::byte> /*record*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return {};
   }
-  Result<> resize(uint64, const std::atomic_bool&) override
+  Result<> resize(uint64 /*recordCount*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return {};
   }

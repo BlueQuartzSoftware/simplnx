@@ -392,7 +392,7 @@ public:
 class RecordingFormatResolver final : public IDataStoreFormatResolver
 {
 public:
-  std::string resolveFormat(const DataStructure&, const DataPath& arrayPath, DataType, uint64) const override
+  std::string resolveFormat(const DataStructure& /*dataStructure*/, const DataPath& arrayPath, DataType /*numericType*/, uint64 /*dataSizeBytes*/) const override
   {
     const std::scoped_lock lock(m_Mutex);
     m_RequestedPaths.push_back(arrayPath);

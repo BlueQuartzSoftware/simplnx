@@ -972,7 +972,7 @@ public:
 
   mutable std::vector<AliasPlanRecord> records;
 
-  std::string resolveFormat(const DataStructure&, const DataPath& path, DataType type, uint64 bytes) const override
+  std::string resolveFormat(const DataStructure& /*dataStructure*/, const DataPath& path, DataType type, uint64 bytes) const override
   {
     records.push_back({path, type, bytes});
     return {};

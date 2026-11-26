@@ -51,7 +51,7 @@ public:
   {
     return false;
   }
-  Result<uint64> read(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<std::byte> records, const std::atomic_bool&) const override
+  Result<uint64> read(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<std::byte> records, const std::atomic_bool& /*shouldCancel*/) const override
   {
     readCalls++;
     if(failRead)
@@ -62,7 +62,7 @@ public:
     std::memcpy(records.data(), m_Bytes.data() + static_cast<usize>(recordOffset * m_RecordSize), static_cast<usize>(returnedRecords * m_RecordSize));
     return {returnedRecords};
   }
-  Result<> write(uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool&) override
+  Result<> write(uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& /*shouldCancel*/) override
   {
     writeCalls++;
     if(failWrite)
@@ -72,11 +72,11 @@ public:
     std::memcpy(m_Bytes.data() + static_cast<usize>(recordOffset * m_RecordSize), records.data(), static_cast<usize>(recordCount * m_RecordSize));
     return {};
   }
-  Result<> fill(uint64, uint64, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> fill(uint64 /*recordOffset*/, uint64 /*recordCount*/, nonstd::span<const std::byte> /*record*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-7652, "Unexpected Gaussian scratch fill");
   }
-  Result<> resize(uint64, const std::atomic_bool&) override
+  Result<> resize(uint64 /*recordCount*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-7653, "Unexpected Gaussian scratch resize");
   }

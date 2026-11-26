@@ -54,7 +54,7 @@ public:
    * instance or return false upon failure. The second argument
    * indicates whether implicit conversions should be applied.
    */
-  bool load(handle src, bool)
+  bool load(handle src, bool /*unused*/)
   {
     if(!isinstance<nx::core::IParameter>(src))
     {
@@ -89,7 +89,7 @@ template <class T>
 using CastNameT = std::remove_cv_t<decltype(py::detail::make_caster<T>::name)>;
 
 template <usize N, class... Ts>
-boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>*)
+boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>* /*unused*/)
 {
   return boost::mp11::mp_list<Ts...>{};
 }

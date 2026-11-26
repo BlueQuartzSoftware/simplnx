@@ -139,7 +139,7 @@ class FailingReadDataStore : public TransferCountingDataStore<T>
 public:
   using TransferCountingDataStore<T>::TransferCountingDataStore;
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(-9750, "Contour test read failure.");
   }

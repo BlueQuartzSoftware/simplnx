@@ -114,7 +114,7 @@ class FailingReadDataStore : public TransferCountingDataStore<T>
 public:
   using TransferCountingDataStore<T>::TransferCountingDataStore;
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(-9750, "Injected gradient-magnitude input read failure.");
   }
@@ -126,7 +126,7 @@ class FailingWriteDataStore : public TransferCountingDataStore<T>
 public:
   using TransferCountingDataStore<T>::TransferCountingDataStore;
 
-  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  Result<> copyFromBuffer(usize /*unused*/, nonstd::span<const T> /*unused*/) override
   {
     return MakeErrorResult(-9751, "Injected gradient-magnitude output write failure.");
   }

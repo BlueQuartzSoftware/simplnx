@@ -135,17 +135,17 @@ public:
     return {requestedRecordCount};
   }
 
-  Result<> write(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> write(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte> /*records*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-79071, fmt::format("External watershed input-page view is read-only. Write offset: {}; records: {}.", recordOffset, requestedRecordCount));
   }
 
-  Result<> fill(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> fill(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte> /*record*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-79071, fmt::format("External watershed input-page view is read-only. Fill offset: {}; records: {}.", recordOffset, requestedRecordCount));
   }
 
-  Result<> resize(uint64 recordCount, const std::atomic_bool&) override
+  Result<> resize(uint64 recordCount, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-79071, fmt::format("External watershed input-page view is read-only. Requested record count: {}.", recordCount));
   }

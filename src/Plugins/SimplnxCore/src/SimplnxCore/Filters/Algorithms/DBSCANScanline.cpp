@@ -3598,7 +3598,7 @@ struct DBSCANScanlineFunctor
 };
 } // namespace
 
-DBSCANScanline::DBSCANScanline(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues)
+DBSCANScanline::DBSCANScanline(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

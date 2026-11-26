@@ -337,7 +337,7 @@ public:
   {
   }
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(m_ErrorCode, "Injected ComputeAvgOrientations bulk-read failure");
   }
@@ -356,7 +356,7 @@ public:
   {
   }
 
-  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  Result<> copyFromBuffer(usize /*unused*/, nonstd::span<const T> /*unused*/) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected ComputeAvgOrientations bulk-write failure");
   }
@@ -425,17 +425,17 @@ public:
   {
   }
 
-  Result<> append(uint64, nonstd::span<const std::byte>, const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  Result<> append(uint64 /*recordCount*/, nonstd::span<const std::byte> /*records*/, const std::atomic_bool& /*shouldCancel*/, const ExternalSortProgressCallback& /*progressCallback*/) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected ComputeAvgOrientations external-sort append failure");
   }
 
-  Result<> finish(const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  Result<> finish(const std::atomic_bool& /*shouldCancel*/, const ExternalSortProgressCallback& /*progressCallback*/) override
   {
     return {};
   }
 
-  Result<uint64> read(uint64, uint64, nonstd::span<std::byte>, const std::atomic_bool&) const override
+  Result<uint64> read(uint64 /*recordOffset*/, uint64 /*recordCount*/, nonstd::span<std::byte> /*records*/, const std::atomic_bool& /*shouldCancel*/) const override
   {
     return {uint64{0}};
   }
@@ -468,7 +468,7 @@ public:
     return true;
   }
 
-  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig&) const override
+  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig& /*config*/) const override
   {
     return {std::make_unique<FailingOrientationExternalSort>(m_ErrorCode)};
   }

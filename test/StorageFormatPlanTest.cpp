@@ -685,7 +685,7 @@ public:
 
   mutable usize calls = 0;
 
-  std::string resolveFormat(const DataStructure&, const DataPath&, DataType, uint64) const override
+  std::string resolveFormat(const DataStructure& /*dataStructure*/, const DataPath& /*arrayPath*/, DataType /*numericType*/, uint64 /*dataSizeBytes*/) const override
   {
     ++calls;
     throw std::runtime_error("selected-import process policy witness");

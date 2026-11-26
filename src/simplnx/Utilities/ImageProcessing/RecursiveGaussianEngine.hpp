@@ -62,7 +62,7 @@ namespace detail
 constexpr usize k_ProgressBatchGroup = 64;
 
 template <class T, class StoreT>
-const DataStore<T>* GetRecursiveGaussianDataStore(const StoreT&)
+const DataStore<T>* GetRecursiveGaussianDataStore(const StoreT& /*unused*/)
 {
   return nullptr;
 }
@@ -74,7 +74,7 @@ const DataStore<T>* GetRecursiveGaussianDataStore(const AbstractDataStore<T>& st
 }
 
 template <class T, class StoreT>
-DataStore<T>* GetRecursiveGaussianDataStore(StoreT&)
+DataStore<T>* GetRecursiveGaussianDataStore(StoreT& /*unused*/)
 {
   return nullptr;
 }

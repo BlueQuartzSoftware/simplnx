@@ -92,7 +92,7 @@ public:
   {
   }
 
-  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  Result<> copyFromBuffer(usize /*unused*/, nonstd::span<const T> /*unused*/) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected CopyFeatureArray bulk-write failure");
   }

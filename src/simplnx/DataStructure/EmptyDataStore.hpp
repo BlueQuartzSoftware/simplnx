@@ -525,7 +525,7 @@ private:
   {
   };
 
-  EmptyDataStore(ValidatedConstruction, ShapeType tupleShape, ShapeType componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
+  EmptyDataStore(ValidatedConstruction /*unused*/, ShapeType tupleShape, ShapeType componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
   : m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(componentCount)

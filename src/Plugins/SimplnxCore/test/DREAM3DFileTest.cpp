@@ -2262,7 +2262,7 @@ public:
   bool requireContext = false;
   mutable std::vector<DataPath> paths;
 
-  std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, DataType, uint64) const override
+  std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, DataType /*numericType*/, uint64 /*dataSizeBytes*/) const override
   {
     paths.push_back(path);
     if(reject)

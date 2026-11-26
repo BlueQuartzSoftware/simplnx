@@ -304,7 +304,7 @@ public:
     return true;
   }
 
-  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig&) const override
+  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig& /*config*/) const override
   {
     return MakeErrorResult<std::unique_ptr<IExternalSort>>(k_ProviderReachedCode, "DBSCAN shape-guard test: execution reached external-sort creation.");
   }
@@ -314,7 +314,7 @@ public:
     return true;
   }
 
-  Result<std::unique_ptr<ITemporaryRecordStore>> createTemporaryRecordStore(const TemporaryRecordStoreConfig&) const override
+  Result<std::unique_ptr<ITemporaryRecordStore>> createTemporaryRecordStore(const TemporaryRecordStoreConfig& /*config*/) const override
   {
     return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(k_ProviderReachedCode, "DBSCAN shape-guard test: execution reached temporary record-store creation.");
   }

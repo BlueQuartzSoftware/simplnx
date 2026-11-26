@@ -191,7 +191,7 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
       return {};
     }
 
-    Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback&) override
+    Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback& /*progressCallback*/) override
     {
       return shouldCancel ? MakeErrorResult(-7001, "cancelled") : Result<>{};
     }

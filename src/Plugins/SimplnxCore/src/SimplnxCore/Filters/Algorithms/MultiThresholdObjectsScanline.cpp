@@ -294,7 +294,7 @@ struct ScanlineEvaluator
 };
 } // namespace
 
-MultiThresholdObjectsScanline::MultiThresholdObjectsScanline(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel,
+MultiThresholdObjectsScanline::MultiThresholdObjectsScanline(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& shouldCancel,
                                                              const MultiThresholdObjectsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)

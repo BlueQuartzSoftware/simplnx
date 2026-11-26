@@ -94,7 +94,7 @@ public:
   {
   }
 
-  static Result<> prepareChunk(usize, usize)
+  static Result<> prepareChunk(usize /*unused*/, usize /*unused*/)
   {
     return {};
   }
