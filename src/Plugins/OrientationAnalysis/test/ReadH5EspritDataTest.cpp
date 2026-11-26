@@ -1,12 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/ReadH5EspritDataFilter.hpp"
@@ -253,44 +250,17 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
 
 TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadH5EspritDataFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadH5EspritDataFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadH5EspritDataFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadH5EspritDataFilter>::uuid);
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<float32>(ReadH5EspritDataFilter::k_ZSpacing_Key) == 2.5f);
-      CHECK(args.value<bool>(ReadH5EspritDataFilter::k_DegreesToRadians_Key) == true);
-      CHECK(args.value<bool>(ReadH5EspritDataFilter::k_ReadPatternData_Key) == true);
-      CHECK(args.value<DataPath>(ReadH5EspritDataFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<std::string>(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key) == "TestName");
-      CHECK(args.value<std::string>(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
-      const auto scanSel = args.value<OEMEbsdScanSelectionParameter::ValueType>(ReadH5EspritDataFilter::k_SelectedScanNames_Key);
-      CHECK(scanSel.inputFilePath == "/test/path/file.h5");
-      CHECK(scanSel.scanNames == std::list<std::string>{"Scan1"});
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ReadH5EspritDataFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ReadH5EspritDataFilter>::uuid);
+  CHECK(args.value<float32>(ReadH5EspritDataFilter::k_ZSpacing_Key) == 2.5f);
+  CHECK(args.value<bool>(ReadH5EspritDataFilter::k_DegreesToRadians_Key) == true);
+  CHECK(args.value<bool>(ReadH5EspritDataFilter::k_ReadPatternData_Key) == true);
+  CHECK(args.value<DataPath>(ReadH5EspritDataFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<std::string>(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key) == "TestName");
+  CHECK(args.value<std::string>(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
+  const auto scanSel = args.value<OEMEbsdScanSelectionParameter::ValueType>(ReadH5EspritDataFilter::k_SelectedScanNames_Key);
+  CHECK(scanSel.inputFilePath == "/test/path/file.h5");
+  CHECK(scanSel.scanNames == std::list<std::string>{"Scan1"});
 }

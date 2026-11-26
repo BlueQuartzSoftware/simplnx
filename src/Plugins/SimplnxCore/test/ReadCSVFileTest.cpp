@@ -6,12 +6,9 @@
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
@@ -700,41 +697,14 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 8): Valid filter execution - Mix
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadCSVFileFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadCSVFileFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadCSVFileFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadCSVFileFilter>::uuid);
-
-      const Arguments args = pipelineFilter->getArguments();
-      // Fixture has Wizard_AutomaticAM=1, so the CreationFilter branch fires and sets k_CreatedDataGroup_Key.
-      CHECK(args.value<DataPath>(ReadCSVFileFilter::k_CreatedDataGroup_Key) == DataPath({"DataContainer", "CellData"}));
-      // DREAM.3D 6.x dropped every empty token whatever Wizard_ConsecutiveDelimiters was (fixture: 0), so the converted option must collapse delimiters.
-      CHECK(args.value<ReadCSVData>(ReadCSVFileFilter::k_ReadCSVData_Key).consecutiveDelimiters);
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ReadCSVFileFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ReadCSVFileFilter>::uuid);
+  // Fixture has Wizard_AutomaticAM=1, so the CreationFilter branch fires and sets k_CreatedDataGroup_Key.
+  CHECK(args.value<DataPath>(ReadCSVFileFilter::k_CreatedDataGroup_Key) == DataPath({"DataContainer", "CellData"}));
+  // DREAM.3D 6.x dropped every empty token whatever Wizard_ConsecutiveDelimiters was (fixture: 0), so the converted option must collapse delimiters.
+  CHECK(args.value<ReadCSVData>(ReadCSVFileFilter::k_ReadCSVData_Key).consecutiveDelimiters);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter: Consecutive delimiters collapse space-aligned values", "[SimplnxCore][ReadCSVFileFilter]")

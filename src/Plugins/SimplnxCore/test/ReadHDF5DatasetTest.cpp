@@ -3,12 +3,9 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/ReadHDF5DatasetParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
@@ -631,40 +628,18 @@ TEST_CASE("SimplnxCore::ReadHDF5DatasetFilter Filter")
 
 TEST_CASE("SimplnxCore::ReadHDF5DatasetFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadHDF5DatasetFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadHDF5DatasetFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadHDF5DatasetFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadHDF5DatasetFilter>::uuid);
-
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
-      const Arguments args = pipelineFilter->getArguments();
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ReadHDF5DatasetFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ReadHDF5DatasetFilter>::uuid);
+  const auto& import = args.valueRef<ReadHDF5DatasetParameter::ValueType>(ReadHDF5DatasetFilter::k_ImportHDF5File_Key);
+  CHECK(import.inputFile == "/test/path/file.h5");
+  CHECK(import.parent == DataPath({"DataContainer", "CellData"}));
+  REQUIRE(import.datasets.size() == 2);
+  CHECK(import.datasets.front().dataSetPath == "/data/array1");
+  CHECK(import.datasets.front().componentDimensions == "1");
+  CHECK(import.datasets.back().dataSetPath == "/data/directions");
+  CHECK(import.datasets.back().componentDimensions == "3");
 }
 
 TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension RED tokens", "[SimplnxCore][ReadHDF5Dataset][DimensionRed]")

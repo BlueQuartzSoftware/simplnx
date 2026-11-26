@@ -1,13 +1,10 @@
 #include "SimplnxCore/Filters/SplitDataArrayByComponentFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -186,39 +183,10 @@ TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArra
 
 TEST_CASE("SimplnxCore::SplitDataArrayByComponentFilter: SIMPL Backwards Compatibility", "[SimplnxCore][SplitDataArrayByComponentFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "SplitDataArrayByComponentFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "SplitDataArrayByComponentFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<SplitDataArrayByComponentFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<DataPath>(SplitDataArrayByComponentFilter::k_MultiCompArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(SplitDataArrayByComponentFilter::k_Postfix_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "SplitDataArrayByComponentFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<SplitDataArrayByComponentFilter>::uuid);
+  CHECK(args.value<DataPath>(SplitDataArrayByComponentFilter::k_MultiCompArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<std::string>(SplitDataArrayByComponentFilter::k_Postfix_Key) == "TestName");
 }

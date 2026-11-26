@@ -9,8 +9,6 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NeighborListSelectionParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -474,45 +472,15 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: real HDF5 neighbor-list ch
 
 TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeGroupingDensityFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeGroupingDensityFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeGroupingDensityFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<std::string>(ComputeGroupingDensityFilter::k_CheckedFeaturesName_Key) == "CheckedFeatures");
-      CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_ContiguousNeighborListArrayPath_Key) == DataPath({"DataContainer", "FeatureData", "ContiguousNeighborList"}));
-      CHECK(args.value<bool>(ComputeGroupingDensityFilter::k_FindCheckedFeatures_Key) == true);
-      CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_NonContiguousNeighborListArrayPath_Key) == DataPath({"DataContainer", "FeatureData", "NonContiguousNeighborList"}));
-      CHECK(args.value<std::string>(ComputeGroupingDensityFilter::k_GroupingDensitiesName_Key) == "GroupingDensities");
-      CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_ParentIdsPath_Key) == DataPath({"DataContainer", "FeatureData", "ParentIds"}));
-      CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_ParentVolumesPath_Key) == DataPath({"DataContainer", "FeatureData", "ParentVolumes"}));
-      CHECK(args.value<bool>(ComputeGroupingDensityFilter::k_UseNonContiguousNeighbors_Key) == true);
-      CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_FeatureVolumesArrayPath_Key) == DataPath({"DataContainer", "FeatureData", "Volumes"}));
-    }
-  }
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "ComputeGroupingDensityFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ComputeGroupingDensityFilter>::uuid);
+  CHECK(args.value<std::string>(ComputeGroupingDensityFilter::k_CheckedFeaturesName_Key) == "CheckedFeatures");
+  CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_ContiguousNeighborListArrayPath_Key) == DataPath({"DataContainer", "FeatureData", "ContiguousNeighborList"}));
+  CHECK(args.value<bool>(ComputeGroupingDensityFilter::k_FindCheckedFeatures_Key) == true);
+  CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_NonContiguousNeighborListArrayPath_Key) == DataPath({"DataContainer", "FeatureData", "NonContiguousNeighborList"}));
+  CHECK(args.value<std::string>(ComputeGroupingDensityFilter::k_GroupingDensitiesName_Key) == "GroupingDensities");
+  CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_ParentIdsPath_Key) == DataPath({"DataContainer", "FeatureData", "ParentIds"}));
+  CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_ParentVolumesPath_Key) == DataPath({"DataContainer", "FeatureData", "ParentVolumes"}));
+  CHECK(args.value<bool>(ComputeGroupingDensityFilter::k_UseNonContiguousNeighbors_Key) == true);
+  CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_FeatureVolumesArrayPath_Key) == DataPath({"DataContainer", "FeatureData", "Volumes"}));
 }

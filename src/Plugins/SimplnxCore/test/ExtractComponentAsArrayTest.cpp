@@ -1,13 +1,10 @@
 #include "SimplnxCore/Filters/ExtractComponentAsArrayFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -130,40 +127,11 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: InValid filter execution"
 
 TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ExtractComponentAsArrayFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ExtractComponentAsArrayFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ExtractComponentAsArrayFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ExtractComponentAsArrayFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<int32>(ExtractComponentAsArrayFilter::k_CompNumber_Key) == 5);
-      CHECK(args.value<DataPath>(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ExtractComponentAsArrayFilter::k_NewArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ExtractComponentAsArrayFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ExtractComponentAsArrayFilter>::uuid);
+  CHECK(args.value<int32>(ExtractComponentAsArrayFilter::k_CompNumber_Key) == 5);
+  CHECK(args.value<DataPath>(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<std::string>(ExtractComponentAsArrayFilter::k_NewArrayName_Key) == "TestName");
 }

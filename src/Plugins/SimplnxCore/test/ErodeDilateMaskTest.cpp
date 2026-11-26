@@ -6,7 +6,6 @@
 #include "SimplnxCore/Filters/ErodeDilateMaskFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -14,8 +13,6 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/CellTupleCountTest.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -785,42 +782,17 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Invalid Number of Iterations", "[
 
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ErodeDilateMaskFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ErodeDilateMaskFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ErodeDilateMaskFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      const auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      const auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-      const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ErodeDilateMaskFilter>::uuid);
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<ChoicesParameter::ValueType>(ErodeDilateMaskFilter::k_Operation_Key) == k_Dilate);
-      CHECK(args.value<int32>(ErodeDilateMaskFilter::k_NumIterations_Key) == 5);
-      CHECK(args.value<bool>(ErodeDilateMaskFilter::k_XDirOn_Key));
-      CHECK(args.value<bool>(ErodeDilateMaskFilter::k_YDirOn_Key));
-      CHECK(args.value<bool>(ErodeDilateMaskFilter::k_ZDirOn_Key));
-      CHECK(args.value<DataPath>(ErodeDilateMaskFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ErodeDilateMaskFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ErodeDilateMaskFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ErodeDilateMaskFilter>::uuid);
+  CHECK(args.value<ChoicesParameter::ValueType>(ErodeDilateMaskFilter::k_Operation_Key) == k_Dilate);
+  CHECK(args.value<int32>(ErodeDilateMaskFilter::k_NumIterations_Key) == 5);
+  CHECK(args.value<bool>(ErodeDilateMaskFilter::k_XDirOn_Key));
+  CHECK(args.value<bool>(ErodeDilateMaskFilter::k_YDirOn_Key));
+  CHECK(args.value<bool>(ErodeDilateMaskFilter::k_ZDirOn_Key));
+  CHECK(args.value<DataPath>(ErodeDilateMaskFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(ErodeDilateMaskFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Geometry cell tuple count", "[SimplnxCore][ErodeDilateMaskFilter][TupleCount]")

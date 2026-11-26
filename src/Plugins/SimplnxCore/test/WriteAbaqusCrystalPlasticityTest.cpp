@@ -1,15 +1,12 @@
 #include "SimplnxCore/Filters/WriteAbaqusCrystalPlasticityFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -863,51 +860,26 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Output Path Is A Fil
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")
 {
-  UnitTest::LoadPlugins();
-  auto app = Application::GetOrCreateInstance();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "WriteAbaqusCrystalPlasticityFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "WriteAbaqusCrystalPlasticityFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteAbaqusCrystalPlasticityFilter>::uuid);
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key));
-      CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_WriteEulerAnglesInDegrees_Key));
-      CHECK_FALSE(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseUnsymmetricSolver_Key));
-      CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key));
-      CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key) == 3);
-      CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key) == 250);
-      CHECK(args.value<FileSystemPathParameter::ValueType>(WriteAbaqusCrystalPlasticityFilter::k_OutputPath_Key) == fs::path("/test/path"));
-      CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_FilePrefix_Key) == "TestPrefix");
-      CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_JobName_Key) == "TestJob");
-      CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_NumDepvar_Key) == 7);
-      CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_NumUserOutVar_Key) == 4);
-      CHECK(args.value<DynamicTableParameter::ValueType>(WriteAbaqusCrystalPlasticityFilter::k_MaterialConstants_Key) == DynamicTableParameter::ValueType{{1.0}, {2.0}, {3.0}});
-      CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "FeatureIds"}));
-      CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "EulerAngles"}));
-      CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "Phases"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "WriteAbaqusCrystalPlasticityFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<WriteAbaqusCrystalPlasticityFilter>::uuid);
+  CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseReducedIntegration_Key));
+  CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_WriteEulerAnglesInDegrees_Key));
+  CHECK_FALSE(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_UseUnsymmetricSolver_Key));
+  CHECK(args.value<bool>(WriteAbaqusCrystalPlasticityFilter::k_IncludeGrainAndPhaseIds_Key));
+  CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_EulerAnglesStartIndex_Key) == 3);
+  CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_HourglassStiffness_Key) == 250);
+  CHECK(args.value<FileSystemPathParameter::ValueType>(WriteAbaqusCrystalPlasticityFilter::k_OutputPath_Key) == fs::path("/test/path"));
+  CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_FilePrefix_Key) == "TestPrefix");
+  CHECK(args.value<std::string>(WriteAbaqusCrystalPlasticityFilter::k_JobName_Key) == "TestJob");
+  CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_NumDepvar_Key) == 7);
+  CHECK(args.value<int32>(WriteAbaqusCrystalPlasticityFilter::k_NumUserOutVar_Key) == 4);
+  CHECK(args.value<DynamicTableParameter::ValueType>(WriteAbaqusCrystalPlasticityFilter::k_MaterialConstants_Key) == DynamicTableParameter::ValueType{{1.0}, {2.0}, {3.0}});
+  CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "FeatureIds"}));
+  CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "EulerAngles"}));
+  CHECK(args.value<DataPath>(WriteAbaqusCrystalPlasticityFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "Phases"}));
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Label And Feature Limits", "[SimplnxCore][WriteAbaqusCrystalPlasticityFilter]")

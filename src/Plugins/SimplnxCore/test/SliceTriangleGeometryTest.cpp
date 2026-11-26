@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -506,47 +505,17 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
 
 TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][SliceTriangleGeometryFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "SliceTriangleGeometryFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<SliceTriangleGeometryFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<ChoicesParameter::ValueType>(SliceTriangleGeometryFilter::k_SliceRange_Key) == 0);
-      CHECK(args.value<float32>(SliceTriangleGeometryFilter::k_Zstart_Key) == Approx(2.5f));
-      CHECK(args.value<float32>(SliceTriangleGeometryFilter::k_Zend_Key) == Approx(2.5f));
-      CHECK(args.value<float32>(SliceTriangleGeometryFilter::k_SliceResolution_Key) == Approx(2.5f));
-      CHECK(args.value<bool>(SliceTriangleGeometryFilter::k_HaveRegionIds_Key) == true);
-      CHECK(args.value<DataPath>(SliceTriangleGeometryFilter::k_RegionIdArrayPath_Key) == DataPath({"DataContainer", "CellData", "RegionIds"}));
-      CHECK(args.value<DataPath>(SliceTriangleGeometryFilter::k_TriangleGeometryDataPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(SliceTriangleGeometryFilter::k_OutputEdgeGeometryPath_Key) == DataPath({"SliceDataContainer"}));
-      CHECK(args.value<std::string>(SliceTriangleGeometryFilter::k_EdgeAttributeMatrixName_Key) == "EdgeData");
-      CHECK(args.value<std::string>(SliceTriangleGeometryFilter::k_SliceAttributeMatrixName_Key) == "SliceData");
-      CHECK(args.value<std::string>(SliceTriangleGeometryFilter::k_SliceIdArrayName_Key) == "SliceIds");
-    }
-  }
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "SliceTriangleGeometryFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<SliceTriangleGeometryFilter>::uuid);
+  CHECK(args.value<ChoicesParameter::ValueType>(SliceTriangleGeometryFilter::k_SliceRange_Key) == 0);
+  CHECK(args.value<float32>(SliceTriangleGeometryFilter::k_Zstart_Key) == Approx(2.5f));
+  CHECK(args.value<float32>(SliceTriangleGeometryFilter::k_Zend_Key) == Approx(2.5f));
+  CHECK(args.value<float32>(SliceTriangleGeometryFilter::k_SliceResolution_Key) == Approx(2.5f));
+  CHECK(args.value<bool>(SliceTriangleGeometryFilter::k_HaveRegionIds_Key) == true);
+  CHECK(args.value<DataPath>(SliceTriangleGeometryFilter::k_RegionIdArrayPath_Key) == DataPath({"DataContainer", "CellData", "RegionIds"}));
+  CHECK(args.value<DataPath>(SliceTriangleGeometryFilter::k_TriangleGeometryDataPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(SliceTriangleGeometryFilter::k_OutputEdgeGeometryPath_Key) == DataPath({"SliceDataContainer"}));
+  CHECK(args.value<std::string>(SliceTriangleGeometryFilter::k_EdgeAttributeMatrixName_Key) == "EdgeData");
+  CHECK(args.value<std::string>(SliceTriangleGeometryFilter::k_SliceAttributeMatrixName_Key) == "SliceData");
+  CHECK(args.value<std::string>(SliceTriangleGeometryFilter::k_SliceIdArrayName_Key) == "SliceIds");
 }

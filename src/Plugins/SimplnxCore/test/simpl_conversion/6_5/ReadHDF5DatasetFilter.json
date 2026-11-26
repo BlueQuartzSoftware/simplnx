@@ -14,6 +14,10 @@
       {
         "dataset_path": "/data/array1",
         "component_dimensions": "1"
+      },
+      {
+        "dataset_path": "/data/directions",
+        "component_dimensions": "3"
       }
     ],
     "SelectedAttributeMatrix": {

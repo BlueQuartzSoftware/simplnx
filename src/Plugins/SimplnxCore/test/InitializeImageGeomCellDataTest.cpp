@@ -2,13 +2,10 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/CellTupleCountTest.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -417,42 +414,15 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[S
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][InitializeImageGeomCellDataFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "InitializeImageGeomCellDataFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "InitializeImageGeomCellDataFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<InitializeImageGeomCellDataFilter>::uuid);
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<ChoicesParameter::ValueType>(InitializeImageGeomCellDataFilter::k_InitType_Key) == 0);
-      CHECK(args.value<float64>(InitializeImageGeomCellDataFilter::k_InitValue_Key) == 2.5);
-      CHECK(args.value<std::vector<float64>>(InitializeImageGeomCellDataFilter::k_InitRange_Key) == std::vector<float64>{0.0, 1.0});
-      CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MinPoint_Key) == std::vector<uint64>{0, 0, 0});
-      CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MaxPoint_Key) == std::vector<uint64>{5, 5, 5});
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "InitializeImageGeomCellDataFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<InitializeImageGeomCellDataFilter>::uuid);
+  CHECK(args.value<ChoicesParameter::ValueType>(InitializeImageGeomCellDataFilter::k_InitType_Key) == 0);
+  CHECK(args.value<float64>(InitializeImageGeomCellDataFilter::k_InitValue_Key) == 2.5);
+  CHECK(args.value<std::vector<float64>>(InitializeImageGeomCellDataFilter::k_InitRange_Key) == std::vector<float64>{0.0, 1.0});
+  CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MinPoint_Key) == std::vector<uint64>{0, 0, 0});
+  CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MaxPoint_Key) == std::vector<uint64>{5, 5, 5});
 }
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Geometry cell tuple count", "[SimplnxCore][InitializeImageGeomCellDataFilter][TupleCount]")

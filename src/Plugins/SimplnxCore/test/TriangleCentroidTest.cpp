@@ -1,12 +1,9 @@
 #include "SimplnxCore/Filters/TriangleCentroidFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -117,39 +114,10 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
 
 TEST_CASE("SimplnxCore::TriangleCentroidFilter: SIMPL Backwards Compatibility", "[SimplnxCore][TriangleCentroidFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "TriangleCentroidFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "TriangleCentroidFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<TriangleCentroidFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<std::string>(TriangleCentroidFilter::k_CentroidsArrayName_Key) == "TestArray");
-      CHECK(args.value<DataPath>(TriangleCentroidFilter::k_TriGeometryDataPath_Key) == DataPath({"DataContainer"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "TriangleCentroidFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<TriangleCentroidFilter>::uuid);
+  CHECK(args.value<std::string>(TriangleCentroidFilter::k_CentroidsArrayName_Key) == "TestArray");
+  CHECK(args.value<DataPath>(TriangleCentroidFilter::k_TriGeometryDataPath_Key) == DataPath({"DataContainer"}));
 }

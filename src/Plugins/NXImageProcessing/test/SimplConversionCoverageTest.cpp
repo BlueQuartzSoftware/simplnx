@@ -212,22 +212,12 @@ TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixtu
 
       DYNAMIC_SECTION(version + "::" + className)
       {
-        auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-        REQUIRE(pipelineResult.valid());
-
-        auto& pipeline = pipelineResult.value();
-        REQUIRE(pipeline.size() == 1);
-
-        auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-        REQUIRE(pipelineFilter != nullptr);
-
-        const IFilter* filter = pipelineFilter->getFilter();
-        REQUIRE(filter != nullptr);
-        REQUIRE(filter->uuid() == newUuid);
+        Arguments args;
+        const auto pipeline = UnitTest::LoadSIMPLConversionPipeline(fixturePath, newUuid, args);
+        const auto* filter = static_cast<const PipelineFilter*>(pipeline.at(0))->getFilter();
 
         // The conversion must move data. A conversion that silently produces the defaults resolves
         // the filter but loses every saved value, so compare the arguments with the defaults.
-        const Arguments& args = pipelineFilter->getArguments();
         REQUIRE(filter->toJson(args) != filter->toJson(filter->getDefaultArguments()));
 
         // The restored fixtures all select DataContainer/CellData/TestArray. Check the keys that

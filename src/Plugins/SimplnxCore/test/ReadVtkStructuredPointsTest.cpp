@@ -4,15 +4,12 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Common/ScopeGuard.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <nonstd/span.hpp>
@@ -502,46 +499,17 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Other Errors", "[SimplnxC
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadVtkStructuredPointsFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadVtkStructuredPointsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadVtkStructuredPointsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadVtkStructuredPointsFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<std::string>(ReadVtkStructuredPointsFilter::k_CellAttributeMatrixName_Key) == "TestName");
-      CHECK(args.value<FileSystemPathParameter::ValueType>(ReadVtkStructuredPointsFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
-      CHECK(args.value<bool>(ReadVtkStructuredPointsFilter::k_ReadCellData_Key) == true);
-      CHECK(args.value<bool>(ReadVtkStructuredPointsFilter::k_ReadPointData_Key) == true);
-      CHECK(args.value<std::string>(ReadVtkStructuredPointsFilter::k_VertexAttributeMatrixName_Key) == "TestName");
-      CHECK(args.value<DataPath>(ReadVtkStructuredPointsFilter::k_CreatedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(ReadVtkStructuredPointsFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ReadVtkStructuredPointsFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ReadVtkStructuredPointsFilter>::uuid);
+  CHECK(args.value<std::string>(ReadVtkStructuredPointsFilter::k_CellAttributeMatrixName_Key) == "TestName");
+  CHECK(args.value<FileSystemPathParameter::ValueType>(ReadVtkStructuredPointsFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
+  CHECK(args.value<bool>(ReadVtkStructuredPointsFilter::k_ReadCellData_Key) == true);
+  CHECK(args.value<bool>(ReadVtkStructuredPointsFilter::k_ReadPointData_Key) == true);
+  CHECK(args.value<std::string>(ReadVtkStructuredPointsFilter::k_VertexAttributeMatrixName_Key) == "TestName");
+  CHECK(args.value<DataPath>(ReadVtkStructuredPointsFilter::k_CreatedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<DataPath>(ReadVtkStructuredPointsFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: uses supplied values before the singleton origin shift", "[SimplnxCore][ReadVtkStructuredPointsFilter]")

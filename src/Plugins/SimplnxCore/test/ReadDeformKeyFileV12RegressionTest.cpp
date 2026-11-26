@@ -3,6 +3,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -123,4 +124,14 @@ TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: USRNOD stops at the first fa
   CHECK(result.result.errors()[0].message.find(fmt::format("record {}", failedRecord)) != std::string::npos);
   CheckDeformValues(dataStructure, failedRecord);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadDeformKeyFileV12Filter][BackwardsCompatibility]")
+{
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "ReadDeformKeyFileV12Filter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ReadDeformKeyFileV12Filter>::uuid);
+  CHECK(args.value<FileSystemPathParameter::ValueType>(ReadDeformKeyFileV12Filter::k_InputFilePath_Key) == fs::path("/test/path/file.key"));
+  CHECK(args.value<DataPath>(ReadDeformKeyFileV12Filter::k_QuadGeomPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<std::string>(ReadDeformKeyFileV12Filter::k_VertexAMName_Key) == "VertexData");
+  CHECK(args.value<std::string>(ReadDeformKeyFileV12Filter::k_CellAMName_Key) == "CellData");
 }

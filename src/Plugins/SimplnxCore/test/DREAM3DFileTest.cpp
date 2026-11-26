@@ -2040,42 +2040,13 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: replay SIMPL selections after the inp
 
 TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteDREAM3DFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "WriteDREAM3DFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "WriteDREAM3DFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteDREAM3DFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<FileSystemPathParameter::ValueType>(WriteDREAM3DFilter::k_ExportFilePath) == fs::path("/test/path/output.dream3d"));
-      CHECK(args.value<bool>(WriteDREAM3DFilter::k_WriteXdmf) == true);
-      CHECK(args.value<bool>(WriteDREAM3DFilter::k_UseCompression) == false);
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "WriteDREAM3DFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<WriteDREAM3DFilter>::uuid);
+  CHECK(args.value<FileSystemPathParameter::ValueType>(WriteDREAM3DFilter::k_ExportFilePath) == fs::path("/test/path/output.dream3d"));
+  CHECK(args.value<bool>(WriteDREAM3DFilter::k_WriteXdmf) == true);
+  CHECK(args.value<bool>(WriteDREAM3DFilter::k_UseCompression) == false);
 }
 
 TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOptions requests it", "[WriteDREAM3DFilter][Compression]")
