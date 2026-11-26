@@ -64,7 +64,7 @@ DataPath LinkedPath::toDataPath() const
   {
     names[i] = getNameAt(i);
   }
-  return DataPath(names);
+  return {names};
 }
 
 usize LinkedPath::getLength() const

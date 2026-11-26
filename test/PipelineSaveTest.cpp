@@ -55,7 +55,7 @@ public:
 
   nx::core::Parameters parameters() const override
   {
-    return Parameters();
+    return {};
   }
 
   VersionType parametersVersion() const override

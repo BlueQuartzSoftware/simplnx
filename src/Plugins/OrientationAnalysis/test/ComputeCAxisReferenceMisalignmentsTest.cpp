@@ -64,7 +64,7 @@ DataPath InGroup(const std::string& groupName, const DataPath& path)
   std::vector<std::string> names = {groupName};
   const std::vector<std::string> pathNames = path.getPathVector();
   names.insert(names.end(), pathNames.begin(), pathNames.end());
-  return DataPath(names);
+  return {names};
 }
 
 // Builds the Orientations and Ensembles Attribute Matrices at the root, or inside a DataGroup named groupName.

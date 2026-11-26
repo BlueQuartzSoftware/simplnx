@@ -223,7 +223,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
     return LinkedPath(this, pathIds);
   } catch(const std::exception& e)
   {
-    return LinkedPath();
+    return {};
   }
 }
 

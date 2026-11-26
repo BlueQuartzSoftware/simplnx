@@ -120,17 +120,17 @@ GridTileIndex GridMontage::getTileIndex(usize col, usize row, usize depth) const
 {
   if(col >= m_ColumnCount)
   {
-    return GridTileIndex();
+    return {};
   }
   if(row >= m_RowCount)
   {
-    return GridTileIndex();
+    return {};
   }
   if(depth >= m_DepthCount)
   {
-    return GridTileIndex();
+    return {};
   }
-  return GridTileIndex(this, {col, row, depth});
+  return {this, {col, row, depth}};
 }
 
 GridTileIndex GridMontage::getTileIndex(const SizeVec3& pos) const

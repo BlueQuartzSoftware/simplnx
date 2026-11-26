@@ -41,7 +41,7 @@ nx::core::DataPath RebasePath(const nx::core::DataPath& path, const nx::core::Da
   auto pathVector = path.getPathVector();
   std::vector<std::string> newVector = newPrefix.getPathVector();
   newVector.insert(newVector.end(), pathVector.begin() + static_cast<std::ptrdiff_t>(oldPrefix.getLength()), pathVector.end());
-  return nx::core::DataPath(newVector);
+  return {newVector};
 }
 } // namespace
 
