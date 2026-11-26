@@ -254,8 +254,8 @@ TEST_CASE("NXImageProcessing::ApplyPointwise doubles every value", "[NXImageProc
   // Keep the basic transform check pinned in memory; the dedicated non-power-of-two test below covers real OOC stores.
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize k_KDim = 10;
-  const ShapeType tupleShape = {k_KDim, k_KDim, k_KDim};
+  constexpr usize k_Dim = 10;
+  const ShapeType tupleShape = {k_Dim, k_Dim, k_Dim};
   DataStructure dataStructure;
 
   const DataPath inputPath({"input"});

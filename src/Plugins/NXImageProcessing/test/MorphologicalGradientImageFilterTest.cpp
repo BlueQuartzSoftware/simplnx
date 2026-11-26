@@ -19,27 +19,27 @@ TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Computed-expecte
   using morph_test::KernelType;
   auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); };
   const auto setParams = morph_test::DefaultKernelParamSetter<MorphologicalGradientImageFilter>();
-  constexpr auto k_KGradient = CompositeKind::Gradient;
+  constexpr auto k_Gradient = CompositeKind::Gradient;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KGradient, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_Gradient, setParams);
   }
   SECTION("Annulus 3D r{2,2,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_KGradient, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_Gradient, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KGradient, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_Gradient, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KGradient, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_Gradient, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KGradient, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<MorphologicalGradientImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_Gradient, setParams);
   }
 }
 

@@ -64,14 +64,14 @@ void WriteEscapedTextName(std::ostream& outputStream, std::string_view name)
  */
 void WriteIndent(std::ostream& outputStream, usize depth)
 {
-  constexpr std::string_view k_KSpaces = "                                                                ";
+  constexpr std::string_view k_Spaces = "                                                                ";
   usize remainingSpaces = depth * 2;
-  while(remainingSpaces >= k_KSpaces.size())
+  while(remainingSpaces >= k_Spaces.size())
   {
-    outputStream << k_KSpaces;
-    remainingSpaces -= k_KSpaces.size();
+    outputStream << k_Spaces;
+    remainingSpaces -= k_Spaces.size();
   }
-  outputStream << k_KSpaces.substr(0, remainingSpaces);
+  outputStream << k_Spaces.substr(0, remainingSpaces);
 }
 
 /**

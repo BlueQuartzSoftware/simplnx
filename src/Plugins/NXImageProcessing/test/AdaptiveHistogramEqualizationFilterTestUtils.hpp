@@ -78,9 +78,9 @@ inline std::vector<T> AdaptiveHistogramEqualizationOracle(const std::vector<T>& 
   // Gate mirrors the engine's LUT gate: integral T AND the integer gray span within the table-size cap. For the
   // integer types exercised here (uint8/int16/int32) iscale equals the exact integer span, so this float64
   // comparison decides the path identically to the engine's integer arithmetic.
-  constexpr usize k_KMaxAheLutEntries = usize{1} << 22;                               // must match the engine's cap
-  constexpr float64 k_KMaxSpan = static_cast<float64>((k_KMaxAheLutEntries - 1) / 2); // 2*span + 1 <= kMaxAheLutEntries
-  const bool useLut = std::is_integral_v<T> && iscale <= k_KMaxSpan;
+  constexpr usize k_MaxAheLutEntries = usize{1} << 22;                              // must match the engine's cap
+  constexpr float64 k_MaxSpan = static_cast<float64>((k_MaxAheLutEntries - 1) / 2); // 2*span + 1 <= kMaxAheLutEntries
+  const bool useLut = std::is_integral_v<T> && iscale <= k_MaxSpan;
 
   std::vector<T> out(in.size());
   for(int64 zi = 0; zi < dimZi; ++zi)

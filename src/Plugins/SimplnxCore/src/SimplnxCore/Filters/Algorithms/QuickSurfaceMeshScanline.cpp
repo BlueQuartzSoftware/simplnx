@@ -954,16 +954,16 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
 
   const MeshIndexType sliceSize = xP * yP;
   const MeshIndexType nodePlaneSize = (xP + 1) * (yP + 1);
-  constexpr auto k_KMax = std::numeric_limits<MeshIndexType>::max();
+  constexpr auto k_Max = std::numeric_limits<MeshIndexType>::max();
 
   // Two planes keep node IDs proportional to one slice. Later cells cannot reference a retired Z plane.
   // The sentinel marks a node that needs an output ID.
-  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, k_KMax);
-  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, k_KMax);
+  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, k_Max);
+  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, k_Max);
 
   // Count each dual-grid node once before mesh output uses its ID.
   auto countNode = [&](std::vector<MeshIndexType>& plane, MeshIndexType offset) {
-    if(plane[offset] == k_KMax)
+    if(plane[offset] == k_Max)
     {
       plane[offset] = nodeCount;
       nodeCount++;
@@ -1093,7 +1093,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
 
     // The next node plane becomes current. Reset the other plane for later nodes.
     std::swap(nodePlane0, nodePlane1);
-    std::fill(nodePlane1.begin(), nodePlane1.end(), k_KMax);
+    std::fill(nodePlane1.begin(), nodePlane1.end(), k_Max);
 
     // The next Feature ID slice becomes current.
     std::swap(curSlice, nextSlice);
@@ -1121,7 +1121,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
   const MeshIndexType sliceSize = xP * yP;
   const MeshIndexType nodePlaneSize = (xP + 1) * (yP + 1);
-  constexpr auto k_KMax = std::numeric_limits<MeshIndexType>::max();
+  constexpr auto k_Max = std::numeric_limits<MeshIndexType>::max();
 
   auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
 
@@ -1200,12 +1200,12 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
   auto nextSlice = std::make_unique<int32[]>(sliceSize);
 
   // Two node planes keep vertex IDs proportional to one Z slice.
-  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, k_KMax);
-  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, k_KMax);
+  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, k_Max);
+  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, k_Max);
 
   // Repeated face visits preserve QuickSurfaceMeshDirect last-write behavior. Bounded records hold owner state outside rolling planes.
   auto assignNode = [&](std::vector<MeshIndexType>& plane, MeshIndexType offset, MeshIndexType& assignedNodeCount, usize coordX, usize coordY, usize coordZ) {
-    if(plane[offset] == k_KMax)
+    if(plane[offset] == k_Max)
     {
       plane[offset] = assignedNodeCount;
       assignedNodeCount++;
@@ -1739,7 +1739,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
     // The next node plane becomes current. Reset the other plane for later nodes.
     std::swap(nodePlane0, nodePlane1);
-    std::fill(nodePlane1.begin(), nodePlane1.end(), k_KMax);
+    std::fill(nodePlane1.begin(), nodePlane1.end(), k_Max);
 
     // The next Feature ID slice becomes current.
     std::swap(curSlice, nextSlice);

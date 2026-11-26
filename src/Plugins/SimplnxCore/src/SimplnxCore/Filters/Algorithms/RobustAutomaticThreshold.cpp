@@ -40,21 +40,21 @@ struct FindThresholdFunctor
   {
     const auto& inputData = inputObject->template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize numTuples = inputData.getNumberOfTuples();
-    constexpr usize k_KTuplesPerBatch = 65536;
-    auto inputBuffer = std::make_unique<T[]>(k_KTuplesPerBatch);
-    auto gradientBuffer = std::make_unique<float32[]>(k_KTuplesPerBatch);
-    auto maskBuffer = std::make_unique<bool[]>(k_KTuplesPerBatch);
+    constexpr usize k_TuplesPerBatch = 65536;
+    auto inputBuffer = std::make_unique<T[]>(k_TuplesPerBatch);
+    auto gradientBuffer = std::make_unique<float32[]>(k_TuplesPerBatch);
+    auto maskBuffer = std::make_unique<bool[]>(k_TuplesPerBatch);
     float numerator = 0;
     float denominator = 0;
 
     // Sequential tuple order preserves the established float accumulation result.
-    for(usize start = 0; start < numTuples; start += k_KTuplesPerBatch)
+    for(usize start = 0; start < numTuples; start += k_TuplesPerBatch)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize count = std::min(k_KTuplesPerBatch, numTuples - start);
+      const usize count = std::min(k_TuplesPerBatch, numTuples - start);
       auto result = inputData.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count));
       if(result.invalid())
       {
@@ -74,13 +74,13 @@ struct FindThresholdFunctor
 
     float threshold = numerator / denominator;
 
-    for(usize start = 0; start < numTuples; start += k_KTuplesPerBatch)
+    for(usize start = 0; start < numTuples; start += k_TuplesPerBatch)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize count = std::min(k_KTuplesPerBatch, numTuples - start);
+      const usize count = std::min(k_TuplesPerBatch, numTuples - start);
       auto result = inputData.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count));
       if(result.invalid())
       {

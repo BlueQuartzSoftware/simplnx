@@ -49,7 +49,7 @@ const std::vector<omt::ObjCase> k_ParityConfigs = {{.label = "3D r{1,1,1}", .rad
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected grid (Ball/Box/Cross)", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
-  constexpr auto k_KDilate = ImageProcessing::ObjectMorphOp::Dilate;
+  constexpr auto k_Dilate = ImageProcessing::ObjectMorphOp::Dilate;
   const std::vector<std::pair<const char*, KernelType>> kernels = {{"Ball", KernelType::Ball}, {"Box", KernelType::Box}, {"Cross", KernelType::Cross}};
 
   SECTION("ObjectValue=1 (uint8)")
@@ -63,7 +63,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
         DYNAMIC_SECTION("kernel=" << kernel.first << " " << cfg.label)
         {
           const std::array<int32, 3> radius = {static_cast<int32>(cfg.radius[0]), static_cast<int32>(cfg.radius[1]), static_cast<int32>(cfg.radius[2])};
-          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, k_KDilate, uint8{1}, uint8{0}, setParams);
+          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, k_Dilate, uint8{1}, uint8{0}, setParams);
         }
       }
     }
@@ -79,7 +79,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
         DYNAMIC_SECTION("kernel=" << kernel.first << " " << cfg.label)
         {
           const std::array<int32, 3> radius = {static_cast<int32>(cfg.radius[0]), static_cast<int32>(cfg.radius[1]), static_cast<int32>(cfg.radius[2])};
-          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, int32>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, k_KDilate, int32{7}, int32{0}, setParams);
+          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, int32>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, k_Dilate, int32{7}, int32{0}, setParams);
         }
       }
     }
@@ -95,19 +95,19 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Annulus compute
 {
   const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(dataStructure, dx, dy, dz, uint8{1}, uint8{0}); };
   const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0);
-  constexpr auto k_KDilate = ImageProcessing::ObjectMorphOp::Dilate;
+  constexpr auto k_Dilate = ImageProcessing::ObjectMorphOp::Dilate;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KDilate, uint8{1}, uint8{0}, setParams);
+    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_Dilate, uint8{1}, uint8{0}, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KDilate, uint8{1}, uint8{0}, setParams);
+    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_Dilate, uint8{1}, uint8{0}, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KDilate, uint8{1}, uint8{0}, setParams);
+    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_Dilate, uint8{1}, uint8{0}, setParams);
   }
 }
 

@@ -3255,8 +3255,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
   // First bounded pass preserves initialize_micro's zero-feature renumbering
   // without retaining a second copy of the cell data. Large bounded batches
   // are heap-backed so this path remains within the default Windows stack.
-  constexpr usize k_KFeatureIdBulkValues = 65536;
-  std::vector<int32> maxScanBuffer(k_KFeatureIdBulkValues);
+  constexpr usize k_FeatureIdBulkValues = 65536;
+  std::vector<int32> maxScanBuffer(k_FeatureIdBulkValues);
   int32 maxGrainId = 0;
   for(usize offset = 0; offset < cellCount;)
   {
@@ -3264,7 +3264,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     {
       return {};
     }
-    const usize count = std::min(k_KFeatureIdBulkValues, cellCount - offset);
+    const usize count = std::min(k_FeatureIdBulkValues, cellCount - offset);
     auto readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(maxScanBuffer.data(), count));
     if(readResult.invalid())
     {
@@ -3994,10 +3994,10 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return {std::numeric_limits<usize>::max()};
   };
 
-  constexpr usize k_KFaceBatch = 16384;
-  std::vector<IGeometry::MeshIndexType> faceValues(k_KFaceBatch * 3);
-  std::vector<int32> labelValues(k_KFaceBatch * 2);
-  std::vector<QuickSurfaceTransferData> transferValues(k_KFaceBatch);
+  constexpr usize k_FaceBatch = 16384;
+  std::vector<IGeometry::MeshIndexType> faceValues(k_FaceBatch * 3);
+  std::vector<int32> labelValues(k_FaceBatch * 2);
+  std::vector<QuickSurfaceTransferData> transferValues(k_FaceBatch);
   const usize localCapacity = std::max<usize>(1, static_cast<usize>(maximumTrianglesPerCube));
   std::vector<Triangle> localTriangles(localCapacity);
   std::vector<SiteIdType> localCubes(localCapacity);
@@ -4107,9 +4107,9 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     {
       return MakeErrorResult(-90555, "M3C out-of-core generation disagrees with its counted triangle range.");
     }
-    for(usize start = 0; start < generated; start += k_KFaceBatch)
+    for(usize start = 0; start < generated; start += k_FaceBatch)
     {
-      const usize count = std::min(k_KFaceBatch, generated - start);
+      const usize count = std::min(k_FaceBatch, generated - start);
       for(usize local = 0; local < count; local++)
       {
         const Triangle& triangle = localTriangles[start + local];
@@ -4169,16 +4169,16 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
   }
 
   auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
-  constexpr usize k_KVertexBatch = 16384;
-  std::vector<float32> vertexValues(k_KVertexBatch * 3);
-  std::vector<int8> typeValues(k_KVertexBatch);
+  constexpr usize k_VertexBatch = 16384;
+  std::vector<float32> vertexValues(k_VertexBatch * 3);
+  std::vector<int8> typeValues(k_VertexBatch);
   for(uint64 candidate = 0; candidate < candidateCount;)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    const uint64 end = std::min(candidateCount, candidate + static_cast<uint64>(k_KVertexBatch));
+    const uint64 end = std::min(candidateCount, candidate + static_cast<uint64>(k_VertexBatch));
     usize count = 0;
     uint64 firstCompact = 0;
     for(uint64 current = candidate; current < end; current++)

@@ -38,23 +38,23 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
   using morph_test::KernelType;
   const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(dataStructure, dx, dy, dz, uint8{41}, uint8{0}); };
   const auto setParams = OpeningKernelParamSetter(41.0, 0.0);
-  constexpr auto k_KOpening = BinaryCompositeKind::Opening;
+  constexpr auto k_Opening = BinaryCompositeKind::Opening;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
 }
 

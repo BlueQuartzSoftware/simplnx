@@ -80,9 +80,9 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   std::cout << "\n[TEST] ThresholdImageFilter: Small Correctness (in-memory)" << '\n';
 
-  constexpr usize k_KDim = 10;
+  constexpr usize k_Dim = 10;
   DataStructure dataStructure;
-  const DataPath inputPath = BuildRampImage(dataStructure, k_KDim, k_KDim, k_KDim);
+  const DataPath inputPath = BuildRampImage(dataStructure, k_Dim, k_Dim, k_Dim);
 
   const float64 lower = 100.0;
   const float64 upper = 500.0;

@@ -22,7 +22,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize k_KBufferSize = 1024ULL;
+constexpr usize k_BufferSize = 1024ULL;
 constexpr usize k_MaxChunkBytes = 1048576;
 constexpr usize k_AsciiInputBufferSize = 16384;
 constexpr usize k_MaxAsciiTokenLength = 1024;
@@ -632,17 +632,17 @@ Result<> ReadVtkStructuredPoints::readFile()
     return MakeErrorResult(to_underlying(ErrorCodes::FileOpenErr), msg);
   }
 
-  std::vector<char> buf(k_KBufferSize, '\0');
+  std::vector<char> buf(k_BufferSize, '\0');
   std::string line;
   // char* buffer = buf.data();
-  auto result = ReadLine(in, buf.data(), k_KBufferSize);
+  auto result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
   }
   std::fill(buf.begin(), buf.end(), '\0');
 
-  result = ReadLine(in, buf.data(), k_KBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -650,7 +650,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   setComment(std::string(buf.data()));
   std::fill(buf.begin(), buf.end(), '\0');
 
-  result = ReadLine(in, buf.data(), k_KBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -671,7 +671,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), k_KBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -700,7 +700,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   setDatasetType(dataset);
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), k_KBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -752,7 +752,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), k_KBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -787,7 +787,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), k_KBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -846,7 +846,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), k_KBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -923,11 +923,11 @@ Result<> ReadVtkStructuredPoints::readFile()
 
 Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int32 numValues, const std::string& nextKeyWord)
 {
-  std::vector<char> buf(k_KBufferSize, '\0');
+  std::vector<char> buf(k_BufferSize, '\0');
 
-  while(!m_ShouldCancel && ReadString(in, buf.data(), k_KBufferSize).valid())
+  while(!m_ShouldCancel && ReadString(in, buf.data(), k_BufferSize).valid())
   {
-    if(strncmp(LowerCase(buf.data(), k_KBufferSize), "scalars", 7) == 0)
+    if(strncmp(LowerCase(buf.data(), k_BufferSize), "scalars", 7) == 0)
     {
       auto result = readScalarData(in, numValues);
       if(result.invalid())
@@ -1039,7 +1039,7 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
       std::vector<std::string> tokens = StringUtilities::split(line, ' ');
       std::string sectionType = std::string(tokens[0]);
       std::fill(buf.begin(), buf.end(), '\0');
-      ReadString(in, buf.data(), k_KBufferSize);
+      ReadString(in, buf.data(), k_BufferSize);
       auto convertResultI32 = StringInterpretationUtilities::Convert<int32>({buf.data()});
       return {convertResultI32.value()};
     }

@@ -17,27 +17,27 @@ TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Computed-expected (Annu
   using morph_test::KernelType;
   auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); };
   const auto setParams = morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>();
-  constexpr auto k_KErode = ImageProcessing::MorphOp::Erode;
+  constexpr auto k_Erode = ImageProcessing::MorphOp::Erode;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KErode, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_Erode, setParams);
   }
   SECTION("Annulus 3D r{2,2,2}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_KErode, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_Erode, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KErode, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_Erode, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KErode, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_Erode, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KErode, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleErodeImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_Erode, setParams);
   }
 }
 

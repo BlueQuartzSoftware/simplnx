@@ -299,11 +299,11 @@ void RunMaskTypeKeepDiscard(MaskT nonzeroValue)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  constexpr usize k_KDim = 6;
+  constexpr usize k_Dim = 6;
   const float64 outsideValue = -7.0;
 
   DataStructure dataStructure;
-  BuildTypedMaskInputs<MaskT>(dataStructure, k_KDim, nonzeroValue);
+  BuildTypedMaskInputs<MaskT>(dataStructure, k_Dim, nonzeroValue);
 
   MaskImageFilter filter;
   Arguments args;

@@ -21,35 +21,35 @@ TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Computed-expected (safeBor
   using morph_test::KernelType;
   auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); };
   const auto setParams = morph_test::CompositeKernelParamSetter<WhiteTopHatImageFilter>(/*safeBorder=*/false);
-  constexpr auto k_KWhiteTopHat = CompositeKind::WhiteTopHat;
+  constexpr auto k_WhiteTopHat = CompositeKind::WhiteTopHat;
 
   SECTION("safeBorder=false Ball 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {1, 1, 1}, k_KWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {1, 1, 1}, k_WhiteTopHat, setParams);
   }
   SECTION("safeBorder=false Box 3D r{2,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 1}, k_KWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 1}, k_WhiteTopHat, setParams);
   }
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_WhiteTopHat, setParams);
   }
   SECTION("Annulus 3D r{2,2,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_KWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_WhiteTopHat, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_WhiteTopHat, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_WhiteTopHat, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_WhiteTopHat, setParams);
   }
 }
 

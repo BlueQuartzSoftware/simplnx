@@ -562,23 +562,23 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: validates stores and cance
 
   SECTION("pre-cancel preserves output")
   {
-    constexpr float32 k_KPoison = -12345.0f;
+    constexpr float32 k_Poison = -12345.0f;
     DataStore<float32> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, 1.0f);
-    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_KPoison);
+    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_Poison);
     shouldCancel = true;
     const Result<> result = ApplyFiniteDifference(inputStore, outputStore, SizeVec3{4, 4, 4}, FloatVec3{1.0f, 1.0f, 1.0f}, fn, 0.05, 1, shouldCancel, {});
     REQUIRE(result.valid());
     for(const float32 value : outputStore)
     {
-      REQUIRE(value == k_KPoison);
+      REQUIRE(value == k_Poison);
     }
   }
 }
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: mixed storage selects an OOC working format", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  constexpr const char* k_KInputOocFormat = "HDF5-OOC-Input";
-  constexpr const char* k_KOutputOocFormat = "HDF5-OOC-Output";
+  constexpr const char* k_InputOocFormat = "HDF5-OOC-Input";
+  constexpr const char* k_OutputOocFormat = "HDF5-OOC-Output";
 
   SECTION("resident input and resident output preserve the input format")
   {
@@ -590,23 +590,23 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: mixed storage selects an O
   SECTION("resident input and OOC output select the output format")
   {
     const auto selectedFormat = nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore,
-                                                                                                           IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
-    REQUIRE(selectedFormat == k_KOutputOocFormat);
+                                                                                                           IDataStore::StoreType::OutOfCore, k_OutputOocFormat);
+    REQUIRE(selectedFormat == k_OutputOocFormat);
   }
 
   SECTION("OOC input and resident output select the input format")
   {
-    const auto selectedFormat = nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory,
+    const auto selectedFormat = nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::InMemory,
                                                                                                            DataStore<float32>::k_DataStore);
-    REQUIRE(selectedFormat == k_KInputOocFormat);
+    REQUIRE(selectedFormat == k_InputOocFormat);
   }
 
   SECTION("OOC input takes precedence when both endpoints are OOC")
   {
     // The endpoint suffixes make the precedence observable without registering either backend in this helper-level test.
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
-    REQUIRE(selectedFormat == k_KInputOocFormat);
+        nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat);
+    REQUIRE(selectedFormat == k_InputOocFormat);
   }
 }
 
@@ -642,18 +642,18 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: 2D planner bounds row bloc
   REQUIRE(overwide.coreRows == 1);
   REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_FiniteDifference2DResidentLimit);
 
-  constexpr usize k_KSmallLimit = 5000;
-  const auto forcedTiled = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(100, 8, 2, sizeof(float64), k_KSmallLimit);
+  constexpr usize k_SmallLimit = 5000;
+  const auto forcedTiled = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(100, 8, 2, sizeof(float64), k_SmallLimit);
   REQUIRE(forcedTiled.valid);
   REQUIRE(forcedTiled.coreCols < 100);
   REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= k_KSmallLimit);
+  REQUIRE(forcedTiled.residentBytes <= k_SmallLimit);
 
-  constexpr usize k_KOneColumnTileLimit = ImageProcessing::detail::k_FiniteDifference2DFixedStateBytes + ((1 + 2 * 2) * (1 + 2 * 2) + 1) * sizeof(float64);
-  const auto oneColumnTiles = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(9, 7, 2, sizeof(float64), k_KOneColumnTileLimit);
+  constexpr usize k_OneColumnTileLimit = ImageProcessing::detail::k_FiniteDifference2DFixedStateBytes + ((1 + 2 * 2) * (1 + 2 * 2) + 1) * sizeof(float64);
+  const auto oneColumnTiles = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(9, 7, 2, sizeof(float64), k_OneColumnTileLimit);
   REQUIRE(oneColumnTiles.valid);
   REQUIRE(oneColumnTiles.coreCols == 1);
-  REQUIRE(oneColumnTiles.residentBytes == k_KOneColumnTileLimit);
+  REQUIRE(oneColumnTiles.residentBytes == k_OneColumnTileLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(1, 1, 0, sizeof(float32));
   REQUIRE(oneCell.valid);

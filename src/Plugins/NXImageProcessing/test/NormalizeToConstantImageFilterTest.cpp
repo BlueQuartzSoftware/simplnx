@@ -7,11 +7,11 @@ TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Correctness", "[NX
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  constexpr usize k_KDim = 12;
+  constexpr usize k_Dim = 12;
   const double constant = 100.0;
 
   DataStructure dataStructure;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_KDim, 1.0, 1.0); // values 1..1728 -> sum > 0
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_Dim, 1.0, 1.0); // values 1..1728 -> sum > 0
   NormalizeToConstantImageFilter filter;
   Arguments args;
   args.insertOrAssign(NormalizeToConstantImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
@@ -21,7 +21,7 @@ TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Correctness", "[NX
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const usize n = k_KDim * k_KDim * k_KDim;
+  const usize n = k_Dim * k_Dim * k_Dim;
   const double sum = static_cast<double>(n) * (1.0 + static_cast<double>(n)) / 2.0; // sum of 1..n
   const double factor = constant / sum;
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});

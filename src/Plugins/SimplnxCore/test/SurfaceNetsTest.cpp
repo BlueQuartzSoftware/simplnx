@@ -653,25 +653,25 @@ TEST_CASE("SimplnxCore::SurfaceNets: pre-cancelled scanline does not write", "[S
 
 TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[SimplnxCore][SurfaceNetsFilter][OOC]")
 {
-  constexpr usize k_KComponents = detail::kTransferPageValues + 1;
-  constexpr usize k_KValuesPerFace = k_KComponents * 2;
+  constexpr usize k_Components = detail::kTransferPageValues + 1;
+  constexpr usize k_ValuesPerFace = k_Components * 2;
   DataStructure dataStructure;
   const DataPath sourcePath({"Direct Source"});
   const DataPath destinationPath({"Direct Destination"});
-  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_KComponents});
-  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_KComponents});
+  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_Components});
+  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_Components});
   REQUIRE(sourcePtr != nullptr);
   REQUIRE(destinationPtr != nullptr);
 
-  auto sourceValues = std::make_unique<int32[]>(3 * k_KComponents);
+  auto sourceValues = std::make_unique<int32[]>(3 * k_Components);
   for(usize tuple = 0; tuple < 3; tuple++)
   {
-    for(usize component = 0; component < k_KComponents; component++)
+    for(usize component = 0; component < k_Components; component++)
     {
-      sourceValues[tuple * k_KComponents + component] = static_cast<int32>(tuple * 1000000 + component);
+      sourceValues[tuple * k_Components + component] = static_cast<int32>(tuple * 1000000 + component);
     }
   }
-  auto sourceWriteResult = sourcePtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * k_KComponents));
+  auto sourceWriteResult = sourcePtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * k_Components));
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
@@ -685,23 +685,23 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[Simpl
   for(const usize component : {usize{0}, detail::kTransferPageValues - 1, detail::kTransferPageValues})
   {
     RequireLargeTransferValue(destinationPtr->getDataStoreRef(), component, static_cast<int32>(component));
-    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KComponents + component, static_cast<int32>(1000000 + component));
-    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + component, static_cast<int32>(2000000 + component));
-    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + k_KComponents + component, 0);
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_Components + component, static_cast<int32>(1000000 + component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_ValuesPerFace + component, static_cast<int32>(2000000 + component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_ValuesPerFace + k_Components + component, 0);
   }
 }
 
 TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[SimplnxCore][SurfaceNetsFilter][OOC]")
 {
-  constexpr usize k_KComponents = detail::kTransferPageValues + 1;
-  constexpr usize k_KValuesPerFace = k_KComponents * 2;
+  constexpr usize k_Components = detail::kTransferPageValues + 1;
+  constexpr usize k_ValuesPerFace = k_Components * 2;
   DataStructure dataStructure;
   const DataPath featureIdsPath({"Feature Ids"});
   const DataPath sourcePath({"Feature Source"});
   const DataPath destinationPath({"Feature Destination"});
   auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, featureIdsPath.getTargetName(), ShapeType{3}, ShapeType{1});
-  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_KComponents});
-  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_KComponents});
+  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_Components});
+  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_Components});
   REQUIRE(featureIdsPtr != nullptr);
   REQUIRE(sourcePtr != nullptr);
   REQUIRE(destinationPtr != nullptr);
@@ -709,15 +709,15 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[Simp
   const std::array<int32, 3> featureIdsValues = {2, 0, 1};
   auto featureIdsWriteResult = featureIdsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featureIdsValues.data(), featureIdsValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
-  auto sourceValues = std::make_unique<int32[]>(3 * k_KComponents);
+  auto sourceValues = std::make_unique<int32[]>(3 * k_Components);
   for(usize feature = 0; feature < 3; feature++)
   {
-    for(usize component = 0; component < k_KComponents; component++)
+    for(usize component = 0; component < k_Components; component++)
     {
-      sourceValues[feature * k_KComponents + component] = static_cast<int32>(feature * 1000000 + component);
+      sourceValues[feature * k_Components + component] = static_cast<int32>(feature * 1000000 + component);
     }
   }
-  auto sourceWriteResult = sourcePtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * k_KComponents));
+  auto sourceWriteResult = sourcePtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * k_Components));
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
@@ -731,9 +731,9 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[Simp
   for(const usize component : {usize{0}, detail::kTransferPageValues - 1, detail::kTransferPageValues})
   {
     RequireLargeTransferValue(destinationPtr->getDataStoreRef(), component, static_cast<int32>(2000000 + component));
-    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KComponents + component, static_cast<int32>(component));
-    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + component, static_cast<int32>(1000000 + component));
-    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + k_KComponents + component, 0);
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_Components + component, static_cast<int32>(component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_ValuesPerFace + component, static_cast<int32>(1000000 + component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_ValuesPerFace + k_Components + component, 0);
   }
 }
 #endif

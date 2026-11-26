@@ -855,13 +855,13 @@ Result<> SurfaceNetsScanline::operator()()
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
   const Point3Df halfVoxelOffset(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
-  constexpr usize k_KOutputChunkSize = 4096;
+  constexpr usize k_OutputChunkSize = 4096;
   std::vector<float32> vertexBuffer;
   std::vector<int8> nodeBuffer;
   try
   {
-    vertexBuffer.reserve(k_KOutputChunkSize * 3);
-    nodeBuffer.reserve(k_KOutputChunkSize);
+    vertexBuffer.reserve(k_OutputChunkSize * 3);
+    nodeBuffer.reserve(k_OutputChunkSize);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-62054, "SurfaceNets failed to allocate its bounded vertex output buffers.");
@@ -918,7 +918,7 @@ Result<> SurfaceNetsScanline::operator()()
         vertexBuffer.push_back(voxelSize[1] * (static_cast<float32>(j) + record.LocalPosition[1]) + origin[1] - halfVoxelOffset[1]);
         vertexBuffer.push_back(voxelSize[2] * (static_cast<float32>(k) + record.LocalPosition[2]) + origin[2] - halfVoxelOffset[2]);
         nodeBuffer.push_back(record.NodeType);
-        if(nodeBuffer.size() == k_KOutputChunkSize)
+        if(nodeBuffer.size() == k_OutputChunkSize)
         {
           auto result = flushVertices();
           if(result.invalid())
@@ -991,9 +991,9 @@ Result<> SurfaceNetsScanline::operator()()
   std::vector<SurfaceNetsTransferData> transferBuffer;
   try
   {
-    faceBuffer.reserve(k_KOutputChunkSize * 3);
-    faceLabelBuffer.reserve(k_KOutputChunkSize * 2);
-    transferBuffer.reserve(k_KOutputChunkSize);
+    faceBuffer.reserve(k_OutputChunkSize * 3);
+    faceLabelBuffer.reserve(k_OutputChunkSize * 2);
+    transferBuffer.reserve(k_OutputChunkSize);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-62054, "SurfaceNets failed to allocate its bounded face output buffers.");
@@ -1083,7 +1083,7 @@ Result<> SurfaceNetsScanline::operator()()
     };
     appendTriangle(0);
     appendTriangle(3);
-    if(transferBuffer.size() >= k_KOutputChunkSize)
+    if(transferBuffer.size() >= k_OutputChunkSize)
     {
       auto flushResult = flushFaces();
       if(flushResult.invalid())

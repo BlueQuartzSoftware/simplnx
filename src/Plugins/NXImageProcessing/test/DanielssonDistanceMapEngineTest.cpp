@@ -584,22 +584,22 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: rolling z-neighbor ed
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: pre-cancel preserves poison output", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
-  constexpr usize k_KDimX = 5;
-  constexpr usize k_KDimY = 4;
-  constexpr usize k_KDimZ = 3;
-  constexpr float32 k_KPoison = -12345.0f;
-  DataStore<int32> inputStore(ShapeType{k_KDimZ, k_KDimY, k_KDimX}, ShapeType{1}, 0);
-  DataStore<float32> outputStore(ShapeType{k_KDimZ, k_KDimY, k_KDimX}, ShapeType{1}, k_KPoison);
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 4;
+  constexpr usize k_DimZ = 3;
+  constexpr float32 k_Poison = -12345.0f;
+  DataStore<int32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0);
+  DataStore<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
 
-  DanielssonDistanceSlab<int32> engine(inputStore, outputStore, SizeVec3{k_KDimX, k_KDimY, k_KDimZ}, /*squaredDistance=*/true, /*useSpacing=*/false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel,
+  DanielssonDistanceSlab<int32> engine(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, /*squaredDistance=*/true, /*useSpacing=*/false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel,
                                        messageHandler);
   const Result<> result = engine();
   REQUIRE(result.valid());
   for(const float32 value : outputStore)
   {
-    REQUIRE(value == k_KPoison);
+    REQUIRE(value == k_Poison);
   }
 }
 
@@ -626,8 +626,8 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: in-core pre-cancel pr
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: mixed storage selects an OOC working format", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
-  constexpr const char* k_KInputOocFormat = "HDF5-OOC-Input";
-  constexpr const char* k_KOutputOocFormat = "HDF5-OOC-Output";
+  constexpr const char* k_InputOocFormat = "HDF5-OOC-Input";
+  constexpr const char* k_OutputOocFormat = "HDF5-OOC-Output";
 
   SECTION("resident input and resident output preserve the input format")
   {
@@ -639,22 +639,22 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: mixed storage selects
   SECTION("resident input and OOC output select the output format")
   {
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
-    REQUIRE(selectedFormat == k_KOutputOocFormat);
+        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, k_OutputOocFormat);
+    REQUIRE(selectedFormat == k_OutputOocFormat);
   }
 
   SECTION("OOC input and resident output select the input format")
   {
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore);
-    REQUIRE(selectedFormat == k_KInputOocFormat);
+        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore);
+    REQUIRE(selectedFormat == k_InputOocFormat);
   }
 
   SECTION("OOC input takes precedence when both endpoints are OOC")
   {
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
-    REQUIRE(selectedFormat == k_KInputOocFormat);
+        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat);
+    REQUIRE(selectedFormat == k_InputOocFormat);
   }
 }
 
@@ -803,12 +803,12 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: 2D planner bounds blo
   REQUIRE(overwide.coreRows == 1);
   REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_Danielsson2DResidentLimit);
 
-  constexpr usize k_KSmallLimit = 6000;
-  const auto forcedTiled = ImageProcessing::detail::BuildDanielsson2DBufferPlan(100, 8, sizeof(uint8), k_KSmallLimit);
+  constexpr usize k_SmallLimit = 6000;
+  const auto forcedTiled = ImageProcessing::detail::BuildDanielsson2DBufferPlan(100, 8, sizeof(uint8), k_SmallLimit);
   REQUIRE(forcedTiled.valid);
   REQUIRE(forcedTiled.coreCols < 100);
   REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= k_KSmallLimit);
+  REQUIRE(forcedTiled.residentBytes <= k_SmallLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildDanielsson2DBufferPlan(1, 1, sizeof(uint64));
   REQUIRE(oneCell.valid);

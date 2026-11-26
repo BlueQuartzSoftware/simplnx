@@ -1496,11 +1496,11 @@ private:
                              fmt::format("Fast chamfer distance store size ({}) does not match the expected image size ({}) for dimensions {} x {} x {}.", m_Store.getSize(), volume, nx, ny, nz));
     }
 
-    constexpr usize k_KMaxCorePlanes = 16;
+    constexpr usize k_MaxCorePlanes = 16;
     const usize availableBytes = detail::k_Chamfer2DResidentLimit - detail::k_Chamfer2DFixedStateBytes;
     const usize planesFit = planeBytes == 0 ? 0 : availableBytes / planeBytes;
     usize corePlanes = planesFit > 1 ? planesFit - 1 : 1;
-    corePlanes = std::min({corePlanes, k_KMaxCorePlanes, nz});
+    corePlanes = std::min({corePlanes, k_MaxCorePlanes, nz});
     const usize capacityPlanes = corePlanes + static_cast<usize>(corePlanes < nz);
     usize capacityValues = 0;
     if(!detail::ChamferCheckedMultiply(capacityPlanes, slice, capacityValues))

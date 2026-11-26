@@ -556,8 +556,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
   const int axis = GENERATE(0, 1, 2);
   const bool aniso = GENERATE(false, true);
   const FloatVec3 spacing = aniso ? FloatVec3{2.0f, 1.5f, 3.0f} : FloatVec3{1.0f, 1.0f, 1.0f};
-  constexpr float64 k_KLevel = 2.5;
-  constexpr float32 k_KFar = 10.0f;
+  constexpr float64 k_Level = 2.5;
+  constexpr float32 k_Far = 10.0f;
   CAPTURE(axis, aniso);
 
   constexpr usize k_Dx = 6;
@@ -576,7 +576,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
     }
   }
 
-  const std::vector<float32> out = RunEngine<T>(field, k_Dx, k_Dy, k_Dz, k_KLevel, k_KFar, spacing);
+  const std::vector<float32> out = RunEngine<T>(field, k_Dx, k_Dy, k_Dz, k_Level, k_Far, spacing);
   const float32 sp = spacing[static_cast<usize>(axis)];
 
   for(usize z = 0; z < k_Dz; ++z)
@@ -590,15 +590,15 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
         INFO("axis " << axis << " coord " << coord << " aniso " << aniso);
         if(coord == 2 || coord == 3)
         {
-          REQUIRE(got == Approx(static_cast<float32>((static_cast<float64>(coord) - k_KLevel)) * sp).epsilon(1e-5));
+          REQUIRE(got == Approx(static_cast<float32>((static_cast<float64>(coord) - k_Level)) * sp).epsilon(1e-5));
         }
         else if(coord < 2)
         {
-          REQUIRE(got == -k_KFar);
+          REQUIRE(got == -k_Far);
         }
         else
         {
-          REQUIRE(got == k_KFar);
+          REQUIRE(got == k_Far);
         }
       }
     }
@@ -699,7 +699,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-
   constexpr usize k_Dx = 9;
   constexpr usize k_Dy = 8;
   constexpr usize k_Dz = 40;
-  constexpr float32 k_KFar = 50.0f;
+  constexpr float32 k_Far = 50.0f;
   std::vector<int32> field(k_Dx * k_Dy * k_Dz);
   for(usize z = 0; z < k_Dz; ++z)
   {
@@ -714,7 +714,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-
   constexpr uint64 k_PlaneInputBytes = k_Dx * k_Dy * sizeof(int32);
   constexpr uint64 k_PlaneOutputBytes = k_Dx * k_Dy * sizeof(float32);
   constexpr uint64 k_BudgetBytes = 4 * (5 * k_PlaneInputBytes + k_PlaneOutputBytes - 1);
-  const IsoContourCountingResult result = RunSlabCounting(field, SizeVec3{k_Dx, k_Dy, k_Dz}, k_BudgetBytes, 2.5, k_KFar, FloatVec3{1.0f, 1.0f, 1.0f});
+  const IsoContourCountingResult result = RunSlabCounting(field, SizeVec3{k_Dx, k_Dy, k_Dz}, k_BudgetBytes, 2.5, k_Far, FloatVec3{1.0f, 1.0f, 1.0f});
   const std::vector<float32>& out = result.output;
   REQUIRE(result.read_values == field.size());
   REQUIRE(result.read_count <= 2 * k_Dz);
@@ -728,11 +728,11 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-
     }
     else if(z < 2)
     {
-      REQUIRE(got == -k_KFar);
+      REQUIRE(got == -k_Far);
     }
     else
     {
-      REQUIRE(got == k_KFar);
+      REQUIRE(got == k_Far);
     }
   }
 }
@@ -762,16 +762,16 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: validates stores and can
 
   SECTION("pre-cancel preserves output")
   {
-    constexpr float32 k_KPoison = -12345.0f;
+    constexpr float32 k_Poison = -12345.0f;
     DataStore<uint8> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, uint8{1});
-    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_KPoison);
+    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_Poison);
     shouldCancel = true;
     IsoContourDistance<uint8> engine(inputStore, outputStore, SizeVec3{4, 4, 4}, 0.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.valid());
     for(const float32 value : outputStore)
     {
-      REQUIRE(value == k_KPoison);
+      REQUIRE(value == k_Poison);
     }
   }
 }
@@ -1082,12 +1082,12 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: 2D planner bounds row bl
   REQUIRE(overwide.coreRows == 1);
   REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
 
-  constexpr usize k_KSmallLimit = 4995;
-  const auto forcedTiled = ImageProcessing::detail::BuildIsoContour2DBufferPlan(100, 8, sizeof(uint8), k_KSmallLimit);
+  constexpr usize k_SmallLimit = 4995;
+  const auto forcedTiled = ImageProcessing::detail::BuildIsoContour2DBufferPlan(100, 8, sizeof(uint8), k_SmallLimit);
   REQUIRE(forcedTiled.valid);
   REQUIRE(forcedTiled.coreCols < 100);
   REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= k_KSmallLimit);
+  REQUIRE(forcedTiled.residentBytes <= k_SmallLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildIsoContour2DBufferPlan(1, 1, sizeof(uint64));
   REQUIRE(oneCell.valid);

@@ -246,19 +246,19 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
 
   {
     // Each admitted row holds both labels and its count. Cap rows before multiplying to keep byte arithmetic bounded.
-    constexpr usize k_KMetadataBytesPerRow = 3 * sizeof(int32);
-    constexpr usize k_KPreferredMetadataRows = 262144;
-    const usize requestedBytes = std::min(k_KPreferredMetadataRows, faceLabelVector.size()) * k_KMetadataBytesPerRow;
+    constexpr usize k_MetadataBytesPerRow = 3 * sizeof(int32);
+    constexpr usize k_PreferredMetadataRows = 262144;
+    const usize requestedBytes = std::min(k_PreferredMetadataRows, faceLabelVector.size()) * k_MetadataBytesPerRow;
     auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
-    const usize blockRows = static_cast<usize>(reservation.sizeBytes() / k_KMetadataBytesPerRow);
+    const usize blockRows = static_cast<usize>(reservation.sizeBytes() / k_MetadataBytesPerRow);
     if(blockRows == 0)
     {
       return MergeResults(std::move(result),
                           MakeErrorResult(-12918, fmt::format("Cannot allocate shared face metadata buffers for '{}': requested {} bytes but received {}. At least {} bytes are required. "
                                                               "Release other working memory or increase the cache budget and retry.",
-                                                              inputValues.GrainBoundaryAttributeMatrixPath.toString(), requestedBytes, reservation.sizeBytes(), k_KMetadataBytesPerRow)));
+                                                              inputValues.GrainBoundaryAttributeMatrixPath.toString(), requestedBytes, reservation.sizeBytes(), k_MetadataBytesPerRow)));
     }
-    reservation.shrinkTo(blockRows * k_KMetadataBytesPerRow);
+    reservation.shrinkTo(blockRows * k_MetadataBytesPerRow);
     std::vector<int32> metadataBuffer(blockRows * 3);
     const nonstd::span<int32> metadataValues(metadataBuffer.data(), metadataBuffer.size());
     const auto& countsByFace = faceSizeMap;

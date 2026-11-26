@@ -41,23 +41,23 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
   using morph_test::KernelType;
   const auto build410 = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(dataStructure, dx, dy, dz, uint8{41}, uint8{0}); };
   const auto setParams41 = ClosingKernelParamSetter(41.0, /*safeBorder=*/false);
-  constexpr auto k_KClosing = BinaryCompositeKind::Closing;
+  constexpr auto k_Closing = BinaryCompositeKind::Closing;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_Closing, uint8{41}, uint8{0}, setParams41);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_Closing, uint8{41}, uint8{0}, setParams41);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_Closing, uint8{41}, uint8{0}, setParams41);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_Closing, uint8{41}, uint8{0}, setParams41);
   }
 }
 

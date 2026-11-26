@@ -34,7 +34,7 @@ const DataPath k_SmallCrystalPath({"Crystal Structures"});
 void CreateSmallFixture(DataStructure& dataStructure)
 {
   const ShapeType cellShape = {2, 8, 8};
-  constexpr usize k_KTupleCount = 2 * 8 * 8;
+  constexpr usize k_TupleCount = 2 * 8 * 8;
   auto* imagePtr = ImageGeom::Create(dataStructure, "Small Image");
   imagePtr->setDimensions({8, 8, 2});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, imagePtr->getId());
@@ -51,11 +51,11 @@ void CreateSmallFixture(DataStructure& dataStructure)
   REQUIRE(BoolArray::Create(dataStructure, "Bool Sibling", boolStore, cellDataPtr->getId()) != nullptr);
   auto* crystalPtr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "Crystal Structures", {2}, {1});
   REQUIRE(crystalPtr != nullptr);
-  std::vector<float32> quatValues(k_KTupleCount * 4);
-  std::vector<int32> phaseValues(k_KTupleCount);
-  std::vector<float32> numericValues(k_KTupleCount * 2);
-  auto boolValues = std::make_unique<bool[]>(k_KTupleCount);
-  for(usize i = 0; i < k_KTupleCount; i++)
+  std::vector<float32> quatValues(k_TupleCount * 4);
+  std::vector<int32> phaseValues(k_TupleCount);
+  std::vector<float32> numericValues(k_TupleCount * 2);
+  auto boolValues = std::make_unique<bool[]>(k_TupleCount);
+  for(usize i = 0; i < k_TupleCount; i++)
   {
     quatValues[i * 4] = 1.0F;
     phaseValues[i] = 1;
@@ -70,9 +70,9 @@ void CreateSmallFixture(DataStructure& dataStructure)
   SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
   auto numericWriteResult = numericPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(numericValues.data(), numericValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(numericWriteResult);
-  auto maskStoreWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), k_KTupleCount));
+  auto maskStoreWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), k_TupleCount));
   SIMPLNX_RESULT_REQUIRE_VALID(maskStoreWriteResult);
-  auto boolStoreWriteResult = boolStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), k_KTupleCount));
+  auto boolStoreWriteResult = boolStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), k_TupleCount));
   SIMPLNX_RESULT_REQUIRE_VALID(boolStoreWriteResult);
   auto crystalWriteResult = crystalPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalValues.data(), crystalValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalWriteResult);

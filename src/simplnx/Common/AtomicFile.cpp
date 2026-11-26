@@ -153,8 +153,8 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
       return ConvertInvalidResult<AtomicFile>(std::move(result));
     }
 
-    constexpr usize k_KMaxCreateAttempts = 32;
-    for(usize attempt = 0; attempt < k_KMaxCreateAttempts; ++attempt)
+    constexpr usize k_MaxCreateAttempts = 32;
+    for(usize attempt = 0; attempt < k_MaxCreateAttempts; ++attempt)
     {
       const fs::path temporaryDirectory = outputDirectory / CreateRandomDirectoryName();
       std::error_code createError;
@@ -171,7 +171,7 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
     if(atomicFile.m_TempFilePath.empty())
     {
       return MakeErrorResult<AtomicFile>(-15784,
-                                         fmt::format("Could not create a unique temporary output directory beside '{}' after {} attempts.", atomicFile.m_FilePath.string(), k_KMaxCreateAttempts));
+                                         fmt::format("Could not create a unique temporary output directory beside '{}' after {} attempts.", atomicFile.m_FilePath.string(), k_MaxCreateAttempts));
     }
 
     // A cloud-sync hint is optional and must not add diagnostics to an embedding application.

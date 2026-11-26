@@ -1126,8 +1126,8 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
   [[maybe_unused]] int64 dMin = 0;          // = -span; LUT index for difference d is (d - dMin)
   if constexpr(std::is_integral_v<T>)
   {
-    constexpr usize k_KMaxAheLutEntries = detail::k_AdaptiveHistogramEqualizationMaximumLutEntries; // ~4M entries (16 MB float), table-size cap
-    constexpr int64 k_KMaxSpan = static_cast<int64>((k_KMaxAheLutEntries - 1) / 2);                 // 2*span + 1 <= kMaxAheLutEntries
+    constexpr usize k_MaxAheLutEntries = detail::k_AdaptiveHistogramEqualizationMaximumLutEntries; // ~4M entries (16 MB float), table-size cap
+    constexpr int64 k_MaxSpan = static_cast<int64>((k_MaxAheLutEntries - 1) / 2);                  // 2*span + 1 <= kMaxAheLutEntries
     const T minT = statsResult.value().min;
     const T maxT = statsResult.value().max;
     // Exact span magnitude for any integer width: unsigned subtraction cannot overflow, and maxT >= minT here
@@ -1135,7 +1135,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
     // [min,max] band straddles the int64 sign boundary; that would make the int64 difference in the plane body
     // overflow, so it stays on the exact path instead.
     const uint64 uSpan = static_cast<uint64>(maxT) - static_cast<uint64>(minT);
-    if(uSpan >= 1 && uSpan <= static_cast<uint64>(k_KMaxSpan) && static_cast<int64>(minT) <= static_cast<int64>(maxT))
+    if(uSpan >= 1 && uSpan <= static_cast<uint64>(k_MaxSpan) && static_cast<int64>(minT) <= static_cast<int64>(maxT))
     {
       const int64 span = static_cast<int64>(uSpan);
       dMin = -span;

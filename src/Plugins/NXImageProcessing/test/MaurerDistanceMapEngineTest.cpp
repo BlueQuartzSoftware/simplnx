@@ -790,7 +790,7 @@ std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize 
 template <class T>
 std::vector<float32> BuildMaurerEncodedInitReference(const std::vector<T>& input, T backgroundValue, const SizeVec3& dims, bool insideIsPositive)
 {
-  constexpr float32 k_KMax = std::numeric_limits<float32>::max();
+  constexpr float32 k_Max = std::numeric_limits<float32>::max();
   const int64 dimX = static_cast<int64>(dims[0]);
   const int64 dimY = static_cast<int64>(dims[1]);
   const int64 dimZ = static_cast<int64>(dims[2]);
@@ -832,7 +832,7 @@ std::vector<float32> BuildMaurerEncodedInitReference(const std::vector<T>& input
             }
           }
         }
-        reference[index] = ImageProcessing::detail::MaurerSignedValue(isBoundary ? 0.0f : k_KMax, isObject, insideIsPositive);
+        reference[index] = ImageProcessing::detail::MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, insideIsPositive);
       }
     }
   }
@@ -1073,8 +1073,8 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: every interior neighbour 
 TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded initialisation writes every work value", "[NXImageProcessing][MaurerDistanceMapEngine]", uint8, int16)
 {
   using T = TestType;
-  constexpr uint32 k_KPoisonBits = 0x7FC00001u;
-  const float32 poison = std::bit_cast<float32>(k_KPoisonBits);
+  constexpr uint32 k_PoisonBits = 0x7FC00001u;
+  const float32 poison = std::bit_cast<float32>(k_PoisonBits);
   const std::array<SizeVec3, 12> dimensions = {SizeVec3{1, 1, 1}, SizeVec3{1, 1, 7}, SizeVec3{7, 1, 1}, SizeVec3{1, 5, 1}, SizeVec3{5, 1, 7}, SizeVec3{5, 6, 1},
                                                SizeVec3{5, 6, 2}, SizeVec3{2, 6, 7}, SizeVec3{5, 2, 7}, SizeVec3{2, 2, 2}, SizeVec3{3, 3, 3}, SizeVec3{5, 6, 7}};
 
@@ -1098,7 +1098,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded initiali
         for(usize index = 0; index < work.size(); ++index)
         {
           CAPTURE(index);
-          REQUIRE(std::bit_cast<uint32>(work[index]) != k_KPoisonBits);
+          REQUIRE(std::bit_cast<uint32>(work[index]) != k_PoisonBits);
           REQUIRE(std::bit_cast<uint32>(work[index]) == std::bit_cast<uint32>(reference[index]));
         }
       }
@@ -1161,7 +1161,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: featureless volume normal
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
   constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
-  constexpr float32 k_KMax = std::numeric_limits<float32>::max();
+  constexpr float32 k_Max = std::numeric_limits<float32>::max();
   const FloatVec3 spacing{0.5f, 2.0f, 1.25f};
 
   for(const int32 inputValue : {int32{0}, int32{1}})
@@ -1175,9 +1175,9 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: featureless volume normal
           CAPTURE(inputValue, insideIsPositive, squared, useSpacing);
           const std::vector<int32> pattern(k_ValueCount, inputValue);
           // ITK leaves +FLT_MAX for squared boundary-free images and signs the square root by input classification.
-          const float32 root = static_cast<float32>(std::sqrt(static_cast<float64>(k_KMax)));
+          const float32 root = static_cast<float32>(std::sqrt(static_cast<float64>(k_Max)));
           const std::array<std::array<float32, 2>, 2> signTable = {{{root, -root}, {-root, root}}};
-          const float32 expectedValue = squared ? k_KMax : signTable[inputValue == 0 ? 0 : 1][insideIsPositive ? 1 : 0];
+          const float32 expectedValue = squared ? k_Max : signTable[inputValue == 0 ? 0 : 1][insideIsPositive ? 1 : 0];
           const std::vector<float32> expected(k_ValueCount, expectedValue);
           const std::vector<float32> inCore = RunInCore<uint8>(pattern, k_DimX, k_DimY, k_DimZ, 0, insideIsPositive, squared, useSpacing, spacing);
           const std::vector<float32> slab = RunSlab<uint8>(pattern, k_DimX, k_DimY, k_DimZ, 0, insideIsPositive, squared, useSpacing, spacing);
@@ -1228,17 +1228,17 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner selects spill 
   REQUIRE(xPlan.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
   REQUIRE(yPlan.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
 
-  constexpr usize k_KSmallTestLimit = 8192;
-  const auto forcedX = ImageProcessing::detail::BuildMaurer2DBufferPlan(100, 8, sizeof(uint8), k_KSmallTestLimit);
-  const auto forcedY = ImageProcessing::detail::BuildMaurer2DBufferPlan(8, 100, sizeof(uint8), k_KSmallTestLimit);
+  constexpr usize k_SmallTestLimit = 8192;
+  const auto forcedX = ImageProcessing::detail::BuildMaurer2DBufferPlan(100, 8, sizeof(uint8), k_SmallTestLimit);
+  const auto forcedY = ImageProcessing::detail::BuildMaurer2DBufferPlan(8, 100, sizeof(uint8), k_SmallTestLimit);
   REQUIRE(forcedX.valid);
   REQUIRE(forcedX.spillX);
   REQUIRE(forcedX.spillY);
-  REQUIRE(forcedX.residentBytes <= k_KSmallTestLimit);
+  REQUIRE(forcedX.residentBytes <= k_SmallTestLimit);
   REQUIRE(forcedY.valid);
   REQUIRE_FALSE(forcedY.spillX);
   REQUIRE(forcedY.spillY);
-  REQUIRE(forcedY.residentBytes <= k_KSmallTestLimit);
+  REQUIRE(forcedY.residentBytes <= k_SmallTestLimit);
 }
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner rejects overflow", "[NXImageProcessing][MaurerDistanceMapEngine]")
@@ -1469,12 +1469,12 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: slab cancellation after t
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  constexpr float32 k_KPoison = -999.0f;
+  constexpr float32 k_Poison = -999.0f;
   const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   std::atomic_bool shouldCancel{false};
   CancelOnThirdReadDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, shouldCancel);
-  WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_KPoison);
+  WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
   for(usize index = 0; index < pattern.size(); ++index)
   {
     inputStore.setValue(index, static_cast<uint8>(pattern[index]));
@@ -1490,7 +1490,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: slab cancellation after t
   for(usize index = 0; index < pattern.size(); ++index)
   {
     CAPTURE(index);
-    REQUIRE(outputStore.getValue(index) == k_KPoison);
+    REQUIRE(outputStore.getValue(index) == k_Poison);
   }
 }
 
@@ -1526,11 +1526,11 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled copied-inpu
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  constexpr float32 k_KPoison = -999.0f;
+  constexpr float32 k_Poison = -999.0f;
   const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   CountingForwardingDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0});
-  WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_KPoison);
+  WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
   for(usize index = 0; index < pattern.size(); ++index)
   {
     inputStore.setValue(index, static_cast<uint8>(pattern[index]));
@@ -1547,7 +1547,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled copied-inpu
   for(usize index = 0; index < pattern.size(); ++index)
   {
     CAPTURE(index);
-    REQUIRE(outputStore.getValue(index) == k_KPoison);
+    REQUIRE(outputStore.getValue(index) == k_Poison);
   }
 }
 
@@ -1556,11 +1556,11 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled borrowed-sp
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  constexpr float32 k_KPoison = -999.0f;
+  constexpr float32 k_Poison = -999.0f;
   const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   ReadCountingDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0});
-  WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_KPoison);
+  WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
   for(usize index = 0; index < pattern.size(); ++index)
   {
     inputStore.setValue(index, static_cast<uint8>(pattern[index]));
@@ -1577,7 +1577,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled borrowed-sp
   for(usize index = 0; index < pattern.size(); ++index)
   {
     CAPTURE(index);
-    REQUIRE(outputStore.getValue(index) == k_KPoison);
+    REQUIRE(outputStore.getValue(index) == k_Poison);
   }
 }
 
@@ -1711,14 +1711,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a pre
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  constexpr float32 k_KPoison = -999.0f;
+  constexpr float32 k_Poison = -999.0f;
   const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   TransferLog log;
   std::atomic_bool shouldCancel{false};
   RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel, std::nullopt, 3);
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
-  RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_KPoison, log, shouldCancel);
+  RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison, log, shouldCancel);
   const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
       .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
 
@@ -1730,7 +1730,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a pre
   REQUIRE(GetTransferEvents(log, TransferEvent::Kind::WorkWrite).size() <= 2);
   REQUIRE(GetTransferEvents(log, TransferEvent::Kind::OutputExtent).empty());
   const std::vector<float32> output = ReadOutput(outputStore, pattern.size());
-  REQUIRE(std::all_of(output.cbegin(), output.cend(), [](float32 value) { return value == k_KPoison; }));
+  REQUIRE(std::all_of(output.cbegin(), output.cend(), [](float32 value) { return value == k_Poison; }));
 }
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during the first output extent write", "[NXImageProcessing][MaurerDistanceMapEngine]")
@@ -2064,10 +2064,10 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: seam matches the
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded-sign line matches explicit inside mask", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
-  constexpr float32 k_KMax = std::numeric_limits<float32>::max();
-  const std::vector<std::vector<float32>> sources = {{k_KMax, 0.0f, k_KMax, k_KMax, 0.0f, k_KMax, 0.0f, k_KMax, k_KMax, 0.0f, k_KMax},
-                                                     {0.0f, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax},
-                                                     {k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, k_KMax, 0.0f}};
+  constexpr float32 k_Max = std::numeric_limits<float32>::max();
+  const std::vector<std::vector<float32>> sources = {{k_Max, 0.0f, k_Max, k_Max, 0.0f, k_Max, 0.0f, k_Max, k_Max, 0.0f, k_Max},
+                                                     {0.0f, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max},
+                                                     {k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, k_Max, 0.0f}};
   const std::vector<uint8> inside = {0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1};
 
   for(const std::vector<float32>& source : sources)
@@ -2098,12 +2098,12 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded-sign line matches
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: external envelope matches resident kernel across blocks", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
-  constexpr float32 k_KMax = std::numeric_limits<float32>::max();
-  const std::vector<std::vector<float32>> sources = {{k_KMax, 0.0f, k_KMax, k_KMax, 0.0f, k_KMax, 0.0f, k_KMax, k_KMax, 0.0f, k_KMax},
+  constexpr float32 k_Max = std::numeric_limits<float32>::max();
+  const std::vector<std::vector<float32>> sources = {{k_Max, 0.0f, k_Max, k_Max, 0.0f, k_Max, 0.0f, k_Max, k_Max, 0.0f, k_Max},
                                                      // The high candidate at index 4 is popped by index 6; the remaining zero-valued candidates span multiple
                                                      // three-value G/H blocks during evaluation.
-                                                     {0.0f, k_KMax, 0.0f, k_KMax, 100.0f, k_KMax, 0.0f, k_KMax, 0.0f, k_KMax, 0.0f},
-                                                     std::vector<float32>(11, k_KMax)};
+                                                     {0.0f, k_Max, 0.0f, k_Max, 100.0f, k_Max, 0.0f, k_Max, 0.0f, k_Max, 0.0f},
+                                                     std::vector<float32>(11, k_Max)};
   const std::vector<uint8> inside = {0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1};
 
   for(const std::vector<float32>& source : sources)

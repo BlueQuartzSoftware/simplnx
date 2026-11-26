@@ -487,9 +487,9 @@ inline void VerifyPeriodicBlockSegmentation(const DataStructure& dataStructure, 
 template <typename FilterT, typename SetupArgsFn>
 void RunNoValidVoxelsErrorTest(AlgorithmTestScope* algorithmTestScope, SetupArgsFn setupArgs)
 {
-  constexpr usize k_KDim = 3;
-  const std::array<usize, 3> dims = {k_KDim, k_KDim, k_KDim};
-  const ShapeType cellShape = {k_KDim, k_KDim, k_KDim};
+  constexpr usize k_Dim = 3;
+  const std::array<usize, 3> dims = {k_Dim, k_Dim, k_Dim};
+  const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
 
   DataStructure dataStructure;
   auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Geom", "CellData");
@@ -563,9 +563,9 @@ void RunNoValidVoxelsErrorTest(AlgorithmTestScope& algorithmTestScope, SetupArgs
 template <typename FilterT, typename SetupFaceFn, typename SetupFevFn>
 void RunFaceEdgeVertexConnectivityTest(AlgorithmTestScope* algorithmTestScope, SetupFaceFn setupFaceArgs, SetupFevFn setupFevArgs)
 {
-  constexpr usize k_KDim = 3;
-  const std::array<usize, 3> dims = {k_KDim, k_KDim, k_KDim};
-  const ShapeType cellShape = {k_KDim, k_KDim, k_KDim};
+  constexpr usize k_Dim = 3;
+  const std::array<usize, 3> dims = {k_Dim, k_Dim, k_Dim};
+  const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
 
   const DataPath geomPath({"Geom"});
   const DataPath cellDataPath({"Geom", "CellData"});

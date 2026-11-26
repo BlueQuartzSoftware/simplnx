@@ -801,11 +801,11 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   const usize totalTuples = fidsStore.getNumberOfTuples();
   usize badCount = 0;
   {
-    constexpr usize k_KChunk = 40000;
-    auto buf = std::make_unique<int32[]>(k_KChunk);
-    for(usize off = 0; off < totalTuples; off += k_KChunk)
+    constexpr usize k_Chunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_Chunk);
+    for(usize off = 0; off < totalTuples; off += k_Chunk)
     {
-      const usize count = std::min(k_KChunk, totalTuples - off);
+      const usize count = std::min(k_Chunk, totalTuples - off);
       auto fidsStoreReadResult = fidsStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(fidsStoreReadResult);
       for(usize i = 0; i < count; i++)
@@ -842,11 +842,11 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   const auto& featureIdsAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
   {
     const auto& fidsAfterStore = featureIdsAfter.getDataStoreRef();
-    constexpr usize k_KChunk = 40000;
-    auto buf = std::make_unique<int32[]>(k_KChunk);
-    for(usize off = 0; off < totalTuples; off += k_KChunk)
+    constexpr usize k_Chunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_Chunk);
+    for(usize off = 0; off < totalTuples; off += k_Chunk)
     {
-      const usize count = std::min(k_KChunk, totalTuples - off);
+      const usize count = std::min(k_Chunk, totalTuples - off);
       auto fidsAfterStoreReadResult = fidsAfterStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(fidsAfterStoreReadResult);
       for(usize i = 0; i < count; i++)
@@ -864,11 +864,11 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   const auto& ignoredAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "IgnoredArray"}));
   {
     const auto& ignoredAfterStore = ignoredAfter.getDataStoreRef();
-    constexpr usize k_KChunk = 40000;
-    auto buf = std::make_unique<int32[]>(k_KChunk);
-    for(usize off = 0; off < totalTuples; off += k_KChunk)
+    constexpr usize k_Chunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_Chunk);
+    for(usize off = 0; off < totalTuples; off += k_Chunk)
     {
-      const usize count = std::min(k_KChunk, totalTuples - off);
+      const usize count = std::min(k_Chunk, totalTuples - off);
       auto ignoredAfterStoreReadResult = ignoredAfterStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(ignoredAfterStoreReadResult);
       for(usize i = 0; i < count; i++)
