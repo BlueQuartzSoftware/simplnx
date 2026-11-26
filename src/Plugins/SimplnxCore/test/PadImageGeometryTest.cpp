@@ -804,7 +804,7 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Nonzero default paddin
   REQUIRE(CountWarnings(warnings, -67402) == 0);
   const auto warningIter = std::find_if(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -67401; });
   REQUIRE(warningIter != warnings.end());
-  REQUIRE(warningIter->message.find("5") != std::string::npos);
+  REQUIRE(warningIter->message.find('5') != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

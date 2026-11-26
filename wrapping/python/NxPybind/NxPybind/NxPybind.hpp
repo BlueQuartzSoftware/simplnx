@@ -129,7 +129,7 @@ template <usize N, class... Ts>
 constexpr bool CheckIfPythonNameNeedsFixup(const py::detail::descr<N, Ts...>& descr) noexcept
 {
   std::string_view text = descr.text;
-  usize index = text.find("%");
+  usize index = text.find('%');
   return index != std::string_view::npos;
 }
 
@@ -143,7 +143,7 @@ std::string GetFixedPythonTypeCasterName()
   static constexpr usize N = mp_size<Types>::value;
   mp_for_each<mp_iota_c<N>>([&](auto I) {
     using CurrentType = mp_at_c<Types, static_cast<usize>(I)>;
-    usize index = typeName.find("%");
+    usize index = typeName.find('%');
     if(index == std::string::npos)
     {
       return;

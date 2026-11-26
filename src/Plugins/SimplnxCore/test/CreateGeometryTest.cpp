@@ -3208,7 +3208,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Origin X domain regression", "[Sim
   SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
   CHECK(pre.outputActions.errors()[0].code == -86008);
   CHECK(pre.outputActions.errors()[0].message.find("Origin") != std::string::npos);
-  CHECK(pre.outputActions.errors()[0].message.find("X") != std::string::npos);
+  CHECK(pre.outputActions.errors()[0].message.find('X') != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::CreateGeometryFilter: Inactive image vectors", "[SimplnxCore][CreateGeometryFilter]")

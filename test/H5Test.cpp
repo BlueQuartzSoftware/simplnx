@@ -1970,7 +1970,7 @@ TEST_CASE("ImageGeomIO rejects stored invalid spacing", "[simplnx][HDF5][ImageGe
   CHECK(result.errors().front().code == ImageGeom::k_InvalidSpacing);
   CHECK(result.errors().front().message.find("Stored Image") != std::string::npos);
   CHECK(result.errors().front().message.find(filePath.filename().string()) != std::string::npos);
-  CHECK(result.errors().front().message.find("Z") != std::string::npos);
+  CHECK(result.errors().front().message.find('Z') != std::string::npos);
 }
 
 TEST_CASE("RectGridGeomIO rejects invalid external bounds on full and selective reads", "[simplnx][HDF5][RectGridGeom]")

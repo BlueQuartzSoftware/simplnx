@@ -172,7 +172,7 @@ std::string nx::core::HDF5::GetParentPath(const std::string& objectPath)
   {
     return "";
   }
-  auto back = objectPath.find_last_not_of("/");
+  auto back = objectPath.find_last_not_of('/');
   if(back == std::string::npos)
   {
     return "";
