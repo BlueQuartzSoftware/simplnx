@@ -25,8 +25,8 @@
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
-#include <fmt/format.h>
 #include <algorithm>
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <array>
@@ -253,7 +253,7 @@ private:
     {
       record.touchesExterior = 1;
     }
-    const auto *const ownerEnd = record.owners.cbegin() + record.ownerCount;
+    const auto* const ownerEnd = record.owners.cbegin() + record.ownerCount;
     if(std::find(record.owners.cbegin(), ownerEnd, owner) == ownerEnd && record.ownerCount < record.owners.size())
     {
       record.owners[record.ownerCount++] = owner;

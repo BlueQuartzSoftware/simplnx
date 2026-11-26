@@ -13,8 +13,8 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
-#include <fmt/format.h>
 #include <algorithm>
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #ifdef SIMPLNX_ENABLE_MULTICORE

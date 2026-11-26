@@ -87,7 +87,7 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -195,7 +195,7 @@ SupportSnapshot CaptureSupportSnapshot(const DataStructure& dataStructure, bool 
     {
       std::vector<SupportIndexType> list;
       list.reserve(snapshot.Object->getNumberOfElements(i));
-for(usize j = 0; j < snapshot.Object->getNumberOfElements(i); ++j)
+      for(usize j = 0; j < snapshot.Object->getNumberOfElements(i); ++j)
       {
         list.push_back(snapshot.Object->getElementListPointer(i)[j]);
       }

@@ -45,7 +45,7 @@ constexpr usize k_FaceCompCount = 3;
 
 const IGeometry::SharedVertexList* createVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto *dataStructure = geom.getDataStructure();
+  auto* dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_VertexTupleCount}, std::vector<usize>{k_VertexCompCount}, 0.0f);
   auto* dataArr = IGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
@@ -54,7 +54,7 @@ const IGeometry::SharedVertexList* createVertexList(IGeometry& geom, const DataO
 
 const IGeometry::SharedFaceList* createFaceList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto *dataStructure = geom.getDataStructure();
+  auto* dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
   auto* dataArr = IGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
@@ -79,8 +79,8 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   acuteTriangle.setFaceAttributeMatrix(*faceData);
   AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
   acuteTriangle.setVertexAttributeMatrix(*vertData);
-  const auto *vertexList = createVertexList(acuteTriangle, vertData->getId());
-  const auto *facesList = createFaceList(acuteTriangle, faceData->getId());
+  const auto* vertexList = createVertexList(acuteTriangle, vertData->getId());
+  const auto* facesList = createFaceList(acuteTriangle, faceData->getId());
   auto underlyingStoreV = vertexList->getDataStorePtr().lock();
   auto underlyingStoreF = facesList->getDataStorePtr().lock();
 
@@ -153,7 +153,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

@@ -327,7 +327,7 @@ std::vector<DataPath> DataObject::getDataPaths() const
   std::vector<DataPath> paths;
   for(const auto& parentId : m_ParentList)
   {
-    const auto *parent = getDataStructure()->getData(parentId);
+    const auto* parent = getDataStructure()->getData(parentId);
     if(parent == nullptr)
     {
       continue;

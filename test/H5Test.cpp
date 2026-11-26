@@ -204,17 +204,17 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 DataStructure GetTestDataStructure()
 {
   DataStructure dataStructure;
-  auto *group = DataGroup::Create(dataStructure, "Group");
+  auto* group = DataGroup::Create(dataStructure, "Group");
   REQUIRE(group != nullptr);
 
-  auto *geom = ImageGeom::Create(dataStructure, "Geometry");
+  auto* geom = ImageGeom::Create(dataStructure, "Geometry");
   REQUIRE(geom != nullptr);
 
-  auto *scalar = ScalarData<int32>::Create(dataStructure, "Scalar", 7, geom->getId());
+  auto* scalar = ScalarData<int32>::Create(dataStructure, "Scalar", 7, geom->getId());
   REQUIRE(scalar != nullptr);
 
   auto dataStore = std::make_unique<DataStore<uint8>>(std::vector<usize>{2}, std::vector<usize>{3}, 0);
-  auto *dataArray = DataArray<uint8>::Create(dataStructure, "DataArray", std::move(dataStore), geom->getId());
+  auto* dataArray = DataArray<uint8>::Create(dataStructure, "DataArray", std::move(dataStore), geom->getId());
   REQUIRE(dataArray != nullptr);
 
   return dataStructure;
@@ -286,7 +286,7 @@ const std::string k_NeighborGroupName = "NEIGHBORLIST_GROUP";
 void CreateVertexGeometry(DataStructure& dataStructure)
 {
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_VertexGroupName);
-  auto *vertexGeometry = VertexGeom::Create(dataStructure, "[Geometry] Vertex", geometryGroup->getId());
+  auto* vertexGeometry = VertexGeom::Create(dataStructure, "[Geometry] Vertex", geometryGroup->getId());
 
   // DataGroup* scanData = DataGroup::Create(dataStructure, "AttributeMatrix", group->getId());
   uint64 skipLines = 1;
@@ -327,7 +327,7 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_TriangleGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto *triangleGeom = TriangleGeom::Create(dataStructure, "[Geometry] Triangle", geometryGroup->getId());
+  auto* triangleGeom = TriangleGeom::Create(dataStructure, "[Geometry] Triangle", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_TriangleGroupName, k_TriangleFaceName});
@@ -369,7 +369,7 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_QuadGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto *geometry = QuadGeom::Create(dataStructure, "[Geometry] Quad", geometryGroup->getId());
+  auto* geometry = QuadGeom::Create(dataStructure, "[Geometry] Quad", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_QuadGroupName, k_QuadFaceName});
@@ -411,7 +411,7 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_EdgeGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto *geometry = EdgeGeom::Create(dataStructure, "[Geometry] Edge", geometryGroup->getId());
+  auto* geometry = EdgeGeom::Create(dataStructure, "[Geometry] Edge", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_EdgeGroupName, k_EdgeFaceName});
@@ -453,7 +453,7 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
   // Create a Tetrahedral Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_TetraGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto *geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Tetrahedral", geometryGroup->getId());
+  auto* geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Tetrahedral", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_TetraGroupName, k_TetraFaceName});
@@ -495,7 +495,7 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
   // Create a Hexahedral Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_HexaGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto *geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Hexahedral", geometryGroup->getId());
+  auto* geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Hexahedral", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_HexaGroupName, k_HexaFaceName});
@@ -950,7 +950,7 @@ TEST_CASE("NeighborList IO")
     DataStructure dataStructure = std::move(readResult.value());
 
     // auto neighborList = dataStructure.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
-    auto *neighborList = dataStructure.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
+    auto* neighborList = dataStructure.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborList != nullptr);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);

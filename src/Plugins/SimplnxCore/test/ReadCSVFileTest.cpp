@@ -161,8 +161,8 @@ static void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::
  * @return Configured filter arguments.
  */
 static Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
-                          const std::vector<std::string>& customHeaders, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
-                          nonstd::span<std::string> /*values*/, const std::string& newGroupName)
+                                 const std::vector<std::string>& customHeaders, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
+                                 nonstd::span<std::string> /*values*/, const std::string& newGroupName)
 {
   Arguments args;
 
@@ -259,8 +259,8 @@ static void TestCase_TestPrimitives_Error(UnitTest::AlgorithmTestScope& scope, n
 }
 
 static void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
-                                     const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
-                                     nonstd::span<std::string> values, int32 expectedErrorCode)
+                                            const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
+                                            nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   std::string newGroupName = "New Group";
   ReadCSVFileFilter filter;
@@ -702,7 +702,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: SIMPL Backwards Compatibility", "[Sim
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

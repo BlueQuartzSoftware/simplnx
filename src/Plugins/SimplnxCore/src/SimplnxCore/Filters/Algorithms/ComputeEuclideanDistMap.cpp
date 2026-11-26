@@ -422,7 +422,8 @@ ComputeEuclideanDistMap::ComputeEuclideanDistMap(DataStructure& dataStructure, c
  * with -1 before seed discovery. Worker tasks publish the first output error through shared state.
  */
 template <typename T>
-static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues* inputValues, const std::atomic_bool& shouldCancel,
+                                const IFilter::MessageHandler& messageHandler)
 {
   using DataArrayType = DataArray<T>;
   using DataStoreType = AbstractDataStore<T>;

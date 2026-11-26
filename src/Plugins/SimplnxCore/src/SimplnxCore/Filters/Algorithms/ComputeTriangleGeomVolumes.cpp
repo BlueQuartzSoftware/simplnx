@@ -63,7 +63,7 @@ Result<> ComputeTriangleGeomVolumes::operator()()
     return result;
   }
 
-  for(auto && volume : volumes)
+  for(auto&& volume : volumes)
   {
     volume = std::abs(volume);
   }

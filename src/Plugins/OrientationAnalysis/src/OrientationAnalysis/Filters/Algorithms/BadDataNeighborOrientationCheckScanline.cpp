@@ -79,7 +79,8 @@ inline int32 countMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 di
   {
     count++;
   }
-  if(xIdx < dimX - 1 && (curMask[sliceIndex + 1] != 0u) && isMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(xIdx < dimX - 1 && (curMask[sliceIndex + 1] != 0u) &&
+     isMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
@@ -87,7 +88,8 @@ inline int32 countMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 di
   {
     count++;
   }
-  if(yIdx < dimY - 1 && (curMask[sliceIndex + dimX] != 0u) && isMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(yIdx < dimY - 1 && (curMask[sliceIndex + dimX] != 0u) &&
+     isMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }

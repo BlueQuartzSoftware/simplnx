@@ -7,7 +7,6 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-
 /**
  * @brief Shared values for the "Bounding Box Skin" ChoicesParameter used by QuickSurfaceMeshFilter,
  * SurfaceNetsFilter, and M3CSurfaceMeshingFilter. Named here (rather than as bare literals) so a
@@ -21,7 +20,6 @@ namespace nx::core::BoundingBoxSkinMode
 inline constexpr uint64 k_Off = 0;
 inline constexpr uint64 k_BackgroundBackedWallsOnly = 1;
 } // namespace nx::core::BoundingBoxSkinMode
-
 
 namespace nx::core::MeshingUtilities
 {

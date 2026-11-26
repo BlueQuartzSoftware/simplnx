@@ -13,8 +13,6 @@
 #include <numeric>
 #include <stdexcept>
 
-
-
 namespace nx::core::HDF5::DataStoreIO
 {
 
@@ -153,5 +151,3 @@ inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(con
 }
 
 } // namespace nx::core::HDF5::DataStoreIO
-
-

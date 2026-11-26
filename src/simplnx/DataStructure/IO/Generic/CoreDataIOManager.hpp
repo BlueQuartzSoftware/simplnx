@@ -61,4 +61,3 @@ private:
   factory_collection m_FactoryCollection;
 };
 } // namespace nx::core::Generic
-

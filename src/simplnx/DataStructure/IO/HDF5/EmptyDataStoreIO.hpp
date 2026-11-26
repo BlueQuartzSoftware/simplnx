@@ -5,7 +5,6 @@
 #include <iterator>
 #include <utility>
 
-
 namespace nx::core::HDF5::EmptyDataStoreIO
 {
 /**
@@ -38,4 +37,3 @@ inline Result<std::pair<ShapeType, ShapeType>> ReadShapes(const nx::core::HDF5::
   return result;
 }
 } // namespace nx::core::HDF5::EmptyDataStoreIO
-

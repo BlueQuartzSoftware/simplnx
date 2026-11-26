@@ -543,7 +543,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int 
  * unionOperator Union operator to apply on the threshold. Defaults to And
  */
 static std::shared_ptr<ArrayThreshold> CreateArrayThreshold(const DataPath& arrayPath, ArrayThreshold::ComparisonType comparisonType, double value, bool isInverted, int componentIndex,
-                                                     ArrayThreshold::UnionOperator unionOperator = ArrayThreshold::UnionOperator::And)
+                                                            ArrayThreshold::UnionOperator unionOperator = ArrayThreshold::UnionOperator::And)
 {
   auto threshold = std::make_shared<ArrayThreshold>();
   threshold->setArrayPath(arrayPath);
@@ -1354,7 +1354,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conver
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   // A legacy "Threshold Objects (Advanced)" pipeline whose thresholds are a leaf sibling to an inverted
   // nested set, with the nested set's children joined by Or:
@@ -1413,7 +1413,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compati
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

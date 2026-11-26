@@ -185,7 +185,7 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 
   std::vector<DataPath> dataArrayPaths;
 
-  const auto *inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
+  const auto* inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
   if(inputArray == nullptr)
   {
     return MakePreflightErrorResult(k_MissingInputArray, "Missing input array");

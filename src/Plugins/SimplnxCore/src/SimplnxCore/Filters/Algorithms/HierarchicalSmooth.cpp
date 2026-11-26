@@ -217,7 +217,7 @@ matindex matunion(const matindex& mat1, const matindex& mat2)
 {
   std::vector<int> v;
   v.reserve(mat1.size());
-for(int i = 0; i < mat1.size(); i++)
+  for(int i = 0; i < mat1.size(); i++)
   {
     v.push_back(mat1(i));
   }
@@ -263,7 +263,7 @@ public:
   {
     std::vector<Triplet> tripletList;
     tripletList.reserve(m_Unique.size() + 2 * m_Dict.size());
-    for(const auto & it : m_Dict)
+    for(const auto& it : m_Dict)
     {
       int l = it.first.first;
       int m = it.first.second;
@@ -362,7 +362,7 @@ private:
       }
     }
 
-    for(auto & it : m_Dict)
+    for(auto& it : m_Dict)
     {
       edgeList.push_back(it.second.origPair);
       if(it.second.count == 1)
@@ -378,7 +378,7 @@ private:
   {
     // Use std::map for deterministic iteration order across platforms
     std::map<int, std::vector<int>> windingDict;
-    for(const auto & i : inList)
+    for(const auto& i : inList)
     {
       int ltemp = i.first;
       int rtemp = i.second;
@@ -686,7 +686,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
     auto [fb, fbSec] = tri.freeBoundary();
 
     // Smooth each free boundary segment first
-    for(auto & i : fbSec)
+    for(auto& i : fbSec)
     {
       if(shouldCancel)
       {
@@ -754,7 +754,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
     // Smooth entire boundary subject to fixed triple points
     meshnode boundaryNode = sliceMeshnodeCols(vs.nodeSmooth, nUniq);
     std::vector<int> fixed;
-    for(auto & i : fb)
+    for(auto& i : fb)
     {
       fixed.push_back(i.first);
     }

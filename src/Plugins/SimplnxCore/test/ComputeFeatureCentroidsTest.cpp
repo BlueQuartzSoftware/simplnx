@@ -220,8 +220,8 @@ inline static Arguments MakeArguments(const Scaffold& s, bool isPeriodic)
   return args;
 }
 
-inline static std::shared_ptr<CentroidsObservedReadStore> ObserveIds(Scaffold& s, const std::vector<int32>& values, usize failOnRead = 0, std::atomic_bool* cancelAfterRead = nullptr, usize cancelOnRead = 0,
-                                                              usize warnOnRead = 0)
+inline static std::shared_ptr<CentroidsObservedReadStore> ObserveIds(Scaffold& s, const std::vector<int32>& values, usize failOnRead = 0, std::atomic_bool* cancelAfterRead = nullptr,
+                                                                     usize cancelOnRead = 0, usize warnOnRead = 0)
 {
   auto observed = std::make_shared<CentroidsObservedReadStore>(ShapeType{values.size()}, failOnRead, cancelAfterRead, cancelOnRead, warnOnRead);
   for(usize index = 0; index < values.size(); index++)
@@ -290,7 +290,7 @@ inline static std::vector<int32> PopulationIds(const std::vector<usize>& populat
 // Independent test oracle: sort occupied integer coordinates to find the seam,
 // then average every original voxel coordinate so repeated cells retain weight.
 inline static std::vector<float32> SortedCoordinateOracle(const std::array<usize, 3>& dims, const std::vector<int32>& ids, usize features, const std::array<float32, 3>& origin,
-                                                   const std::array<float32, 3>& spacing, bool periodic)
+                                                          const std::array<float32, 3>& spacing, bool periodic)
 {
   std::vector<float32> expected(features * 3, 0.0F);
   for(usize feature = 0; feature < features; feature++)
@@ -1064,7 +1064,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

@@ -679,7 +679,8 @@ extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::spa
 extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 template <>
-SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool> /*data*/, const std::optional<std::vector<uint64>>& /*start*/, const std::optional<std::vector<uint64>>& /*count*/) const;
+SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool> /*data*/, const std::optional<std::vector<uint64>>& /*start*/,
+                                                                const std::optional<std::vector<uint64>>& /*count*/) const;
 
 #if 0
 extern template nx::core::Result<> DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool>, nonstd::span<const usize>, nonstd::span<const usize>) const;

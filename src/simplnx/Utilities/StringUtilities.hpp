@@ -107,8 +107,8 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
   {
     return {};
   }
-  const auto *endPos = str.end();
-  const auto *startPos = str.begin();
+  const auto* endPos = str.end();
+  const auto* startPos = str.begin();
 
   std::vector<std::string> tokens;
   tokens.reserve(str.size() / 2);
@@ -309,9 +309,8 @@ inline std::vector<std::string> split(std::string_view str, nonstd::span<const c
     // Split Allow All was selected to match QString's base split functionality
     return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
   }
-  
-      return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
- 
+
+  return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
 }
 
 inline std::vector<std::string> split(std::string_view str, char delim)

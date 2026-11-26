@@ -469,13 +469,13 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
     switch(inputArray.getArrayType())
     {
     case IArray::ArrayType::DataArray: {
-      const auto *iInputDataArray = dynamic_cast<const IDataArray*>(&inputArray);
+      const auto* iInputDataArray = dynamic_cast<const IDataArray*>(&inputArray);
       ShapeType cDims = iInputDataArray->getComponentShape();
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(iInputDataArray->getDataType(), tupleShapes[i], cDims, arrayPaths[i]));
       break;
     }
     case IArray::ArrayType::NeighborListArray: {
-      const auto *iInputNeighborList = dynamic_cast<const INeighborList*>(&inputArray);
+      const auto* iInputNeighborList = dynamic_cast<const INeighborList*>(&inputArray);
       resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborList->getDataType(), tupleShapes[i], arrayPaths[i]));
       break;
     }

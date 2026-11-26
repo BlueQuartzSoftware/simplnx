@@ -111,7 +111,7 @@ TEST_CASE("HDF5 group construction failure preserves native ownership", "[simpln
 {
   const auto operation = GENERATE(0, 1, 2);
   const auto groupName = GENERATE(std::string{"child"}, std::string(256, 'g'));
-  const auto *const operationName = operation == 0 ? "open existing group" : operation == 1 ? "create existing group" : "create missing group";
+  const auto* const operationName = operation == 0 ? "open existing group" : operation == 1 ? "create existing group" : "create missing group";
   DYNAMIC_SECTION(operationName << " with " << groupName.size() << " name bytes")
   {
     const auto path = std::filesystem::temp_directory_path() / ("h5io_group_ownership_" + Uuid::GenerateV4().str() + ".h5");

@@ -82,9 +82,8 @@ static IdType getGroupId(IdType parentId, const std::string& groupName)
   {
     return H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
   }
-  
-      return H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
- 
+
+  return H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 }
 
 GroupIO::GroupIO() = default;

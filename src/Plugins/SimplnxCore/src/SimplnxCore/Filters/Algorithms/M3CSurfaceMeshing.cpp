@@ -527,7 +527,7 @@ void initialize_squares(Face* sq, SiteId ns)
 {
   for(SiteId sqId = 0; sqId < 3 * ns; sqId++)
   {
-    for(unsigned int & j : sq[sqId].edge_id)
+    for(unsigned int& j : sq[sqId].edge_id)
     {
       j = k_UnusedNodeId;
     }
@@ -1628,7 +1628,7 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
     int nFE = 0;
     int eff = 0;
     SiteId arrayFC[6];
-    for(long & ii : arrayFC)
+    for(long& ii : arrayFC)
     {
       ii = -1;
     }
@@ -1662,7 +1662,7 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
       }
       int nds = 0;
       int nburnt = 0;
-      for(int & k : arraySpin)
+      for(int& k : arraySpin)
       {
         int cspin = k;
         if(cspin != -1)
@@ -1670,7 +1670,7 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
           nds++;
           k = -1;
           nburnt++;
-          for(int & kk : arraySpin)
+          for(int& kk : arraySpin)
           {
             if(cspin == kk)
             {
@@ -2467,7 +2467,7 @@ bool RemapSharpEdgeTriangle(Triangle& triangle, const SharpEdgeResult& result, c
     return (it != result.SnappedCoords.end()) ? it->second : nodeCoords[id];
   };
   int numTouched = 0;
-  for(long & corner : triangle.node_id)
+  for(long& corner : triangle.node_id)
   {
     const auto it = result.MergedInto.find(corner);
     if(it != result.MergedInto.end())
@@ -2694,7 +2694,7 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
     int eff = 0;
     SiteId bodyCtr = 7 * (i - 1) + 6;
     SiteId arrayFC[6];
-    for(long & ii : arrayFC)
+    for(long& ii : arrayFC)
     {
       ii = -1;
     }
@@ -2929,7 +2929,7 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // connectivity pass: the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also
   // built never appear in the output (Triangle Geometry + Face Labels + Node Types), so that machinery
   // has been removed.
-  for(auto & triangle : triangles)
+  for(auto& triangle : triangles)
   {
     if(triangle.nSpin[0] * triangle.nSpin[1] < 0)
     {
@@ -3639,14 +3639,14 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         cubeSpins[index] = firstSpin.value();
         cubeSpins[index + 4] = lastSpin.value();
       }
-      for(int & cubeSpin : cubeSpins)
+      for(int& cubeSpin : cubeSpins)
       {
         const int spin = cubeSpin;
         if(spin != -1)
         {
           uniqueSpins++;
           cubeSpin = -1;
-          for(int & other : cubeSpins)
+          for(int& other : cubeSpins)
           {
             if(other == spin)
             {
@@ -4386,7 +4386,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
     for(SiteId k = kLo; k < kHi; k++)
     {
       Face& sqk = window[winIndex(k)];
-      for(unsigned int & j : sqk.edge_id)
+      for(unsigned int& j : sqk.edge_id)
       {
         j = k_UnusedNodeId;
       }
@@ -4564,7 +4564,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       sqID[5] = 3 * (i + numSitesPerPlane - 1);
 
       SiteId arrayFC[6];
-      for(long & ii : arrayFC)
+      for(long& ii : arrayFC)
       {
         ii = -1;
       }
@@ -4599,14 +4599,14 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
           arraySpin[j + 4] = point[corners2[j]];
         }
         int nds = 0;
-        for(int & k : arraySpin)
+        for(int& k : arraySpin)
         {
           int cspin = k;
           if(cspin != -1)
           {
             nds++;
             k = -1;
-            for(int & kk : arraySpin)
+            for(int& kk : arraySpin)
             {
               if(cspin == kk)
               {
@@ -4716,7 +4716,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       sqID[4] = 3 * (i + xDim - 1) + 1;
       sqID[5] = 3 * (i + numSitesPerPlane - 1);
       SiteId arrayFC[6];
-      for(long & ii : arrayFC)
+      for(long& ii : arrayFC)
       {
         ii = -1;
       }
@@ -4747,14 +4747,14 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
           arraySpin[j + 4] = point[corners2[j]];
         }
         int nds = 0;
-        for(int & k : arraySpin)
+        for(int& k : arraySpin)
         {
           int cspin = k;
           if(cspin != -1)
           {
             nds++;
             k = -1;
-            for(int & kk : arraySpin)
+            for(int& kk : arraySpin)
             {
               if(cspin == kk)
               {

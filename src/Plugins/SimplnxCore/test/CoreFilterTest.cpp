@@ -46,7 +46,7 @@ TEST_CASE("CoreFilterTest:Create Core Filter")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
   REQUIRE(filterList != nullptr);
 
   // Only core filters should exist since plugins were not loaded
@@ -159,7 +159,7 @@ TEST_CASE("SimplnxCore::CreateDataGroupFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

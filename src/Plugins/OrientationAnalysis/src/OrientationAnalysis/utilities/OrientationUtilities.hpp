@@ -12,7 +12,6 @@
 #include <array>
 #include <string>
 
-
 namespace nx::core::OrientationUtilities
 {
 /**
@@ -128,4 +127,3 @@ Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrixTranspose(const T oM
 #endif
 
 } // namespace nx::core::OrientationUtilities
-

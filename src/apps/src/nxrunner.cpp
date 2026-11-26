@@ -275,9 +275,8 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
     {
       return {args};
     }
-    
-          index++;
-   
+
+    index++;
   }
 
   do

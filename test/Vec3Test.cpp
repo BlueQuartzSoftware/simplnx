@@ -535,7 +535,7 @@ TEST_CASE("Vec3 Iterator Support")
 
   SECTION("begin/end")
   {
-    auto *it = v.begin();
+    auto* it = v.begin();
     REQUIRE(*it == 1.0f);
     ++it;
     REQUIRE(*it == 2.0f);

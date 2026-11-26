@@ -2,7 +2,6 @@
 
 namespace fs = std::filesystem;
 
-
 namespace nx::core::CsvParser
 {
 
@@ -85,4 +84,3 @@ char IndexToDelimiter(uint64_t index)
   }
 }
 } // namespace nx::core::CsvParser
-

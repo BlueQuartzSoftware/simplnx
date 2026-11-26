@@ -299,14 +299,13 @@ std::vector<std::string> standardizeMultiComponent(const usize numComps, const s
   {
     return {componentValues};
   }
-  
-      std::vector<std::string> standardized(numComps);
-    for(usize comp = 0; comp < numComps; comp++)
-    {
-      standardized[comp] = componentValues[0];
-    }
-    return standardized;
- 
+
+  std::vector<std::string> standardized(numComps);
+  for(usize comp = 0; comp < numComps; comp++)
+  {
+    standardized[comp] = componentValues[0];
+  }
+  return standardized;
 }
 
 /**
@@ -420,7 +419,6 @@ std::vector<float64> PreviewValues(const std::vector<std::string>& tokens, usize
   return values;
 }
 } // namespace
-
 
 namespace nx::core
 {
@@ -608,7 +606,6 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
   preflightUpdatedValues.push_back({"Tuple Details", ss.str()});
 }
 } // namespace nx::core
-
 
 InitializeData::InitializeData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, InitializeDataInputValues* inputValues)
 : m_DataStructure(dataStructure)

@@ -307,4 +307,3 @@ std::string SIMPLNX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
 SIMPLNX_EXPORT std::mutex& ApiLock();
 
 } // namespace nx::core::HDF5::Support
-

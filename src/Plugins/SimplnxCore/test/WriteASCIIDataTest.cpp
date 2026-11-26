@@ -200,7 +200,7 @@ private:
     // read the file(s) back in
     if(fileType == k_MultipleFiles)
     {
-      for(const auto & i : daps1)
+      for(const auto& i : daps1)
       {
         CompareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
       }
@@ -341,7 +341,7 @@ TEST_CASE("SimplnxCore::WriteASCIIDataFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

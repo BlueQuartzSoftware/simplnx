@@ -3,7 +3,6 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Euler.hpp>
 
-
 namespace nx::core::OrientationUtilities
 {
 
@@ -29,4 +28,3 @@ std::string CrystalStructureEnumToString(uint32_t crystalStructureType)
 }
 
 } // namespace nx::core::OrientationUtilities
-

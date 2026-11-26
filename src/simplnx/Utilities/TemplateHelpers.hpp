@@ -6,7 +6,6 @@
 #include <memory>
 #include <vector>
 
-
 namespace nx::core::TemplateHelpers
 {
 /**
@@ -22,4 +21,3 @@ struct CanDynamicCast
   }
 };
 } // namespace nx::core::TemplateHelpers
-

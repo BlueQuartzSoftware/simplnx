@@ -25,7 +25,7 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, 
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(const auto *dataArray = dataStructure.getDataAs<IDataArray>(dataPath))
+    if(const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath))
     {
       if(!dataType.has_value())
       {

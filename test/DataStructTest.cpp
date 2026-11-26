@@ -310,7 +310,7 @@ DataStructure createTestDataStructure(DynamicListMode dynamicListMode = DynamicL
   {
     EdgeGeom* edgeGeom = EdgeGeom::Create(dataStruct, k_EdgeGeo);
 
-    auto *scalar = ScalarData<int64>::Create(dataStruct, k_ScalarData, 60, edgeGeom->getId());
+    auto* scalar = ScalarData<int64>::Create(dataStruct, k_ScalarData, 60, edgeGeom->getId());
     std::vector<usize> edgeTupleShape = {4};
     AttributeMatrix* edgeAttMatrix = AttributeMatrix::Create(dataStruct, EdgeGeom::k_EdgeAttributeMatrixName, edgeTupleShape, edgeGeom->getId());
     edgeGeom->setEdgeAttributeMatrix(*edgeAttMatrix);
@@ -1044,9 +1044,9 @@ TEST_CASE("DataGroupTree")
 {
   // Create structuure
   DataStructure dataStr;
-  auto *group = DataGroup::Create(dataStr, "Foo");
-  auto *child = DataGroup::Create(dataStr, "bar", group->getId());
-  auto *grandchild = DataGroup::Create(dataStr, "bazz", child->getId());
+  auto* group = DataGroup::Create(dataStr, "Foo");
+  auto* child = DataGroup::Create(dataStr, "bar", group->getId());
+  auto* grandchild = DataGroup::Create(dataStr, "bazz", child->getId());
 
   auto groupId = group->getId();
   auto childId = child->getId();
@@ -1078,10 +1078,10 @@ TEST_CASE("DataGroupGraph")
 {
   // Create DataStructure
   DataStructure dataStr;
-  auto *group = DataGroup::Create(dataStr, "Foo");
-  auto *child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
-  auto *child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
-  auto *grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
+  auto* group = DataGroup::Create(dataStr, "Foo");
+  auto* child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto* child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto* grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   // Get IDs
   auto groupId = group->getId();
@@ -1129,10 +1129,10 @@ TEST_CASE("DataPathTest")
 {
   // Create DataStructure
   DataStructure dataStr;
-  auto *group = DataGroup::Create(dataStr, "Foo");
-  auto *child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
-  auto *child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
-  auto *grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
+  auto* group = DataGroup::Create(dataStr, "Foo");
+  auto* child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto* child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto* grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
@@ -1154,7 +1154,7 @@ TEST_CASE("DataPathTest")
   REQUIRE(dataStr.removeData(c1Path));
   REQUIRE(dataStr.getData(gcPath1) == nullptr);
   REQUIRE(dataStr.getData(DataPath({"Foo", "Bar2"})) != nullptr);
-  auto *gc2 = dataStr.getData(gcPath2);
+  auto* gc2 = dataStr.getData(gcPath2);
   REQUIRE(dataStr.getData(gcPath2) != nullptr);
 
   dataStr.removeData(child2Id);
@@ -1176,10 +1176,10 @@ TEST_CASE("DataPathTest")
 TEST_CASE("LinkedPathTest")
 {
   DataStructure dataStr;
-  auto *group = DataGroup::Create(dataStr, "Foo");
-  auto *child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
-  auto *child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
-  auto *grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
+  auto* group = DataGroup::Create(dataStr, "Foo");
+  auto* child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto* child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto* grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
@@ -1211,10 +1211,10 @@ TEST_CASE("DataStructureListenerTest")
   DataStructObserver dsListener(dataStr);
 
   // Adds items to the DataStructure. Each addition should trigger dsListener.
-  auto *group = DataGroup::Create(dataStr, "Foo");
-  auto *child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
-  auto *child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
-  auto *grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
+  auto* group = DataGroup::Create(dataStr, "Foo");
+  auto* child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto* child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto* grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto groupId = group->getId();
   auto child2Id = child2->getId();
@@ -1234,10 +1234,10 @@ TEST_CASE("DataStructureListenerTest")
 TEST_CASE("DataStructureCopyTest")
 {
   DataStructure dataStr;
-  auto *group = DataGroup::Create(dataStr, "Foo");
-  auto *child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
-  auto *child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
-  auto *grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
+  auto* group = DataGroup::Create(dataStr, "Foo");
+  auto* child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto* child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto* grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto groupId = group->getId();
   auto child1Id = child1->getId();
@@ -1262,12 +1262,12 @@ TEST_CASE("DataStructureCopyTest")
   REQUIRE(dataStrCopy.getData(grandchildId) != dataStr.getData(grandchildId));
 
   // Create new group
-  auto *newGroup = DataGroup::Create(dataStr, "New Group", child2Id);
+  auto* newGroup = DataGroup::Create(dataStr, "New Group", child2Id);
   auto newId = newGroup->getId();
   REQUIRE(dataStr.getData(newId));
   REQUIRE(!dataStrCopy.getData(newId));
 
-  auto *newGroup2 = DataGroup::Create(dataStrCopy, "New Group (2)", child2Id);
+  auto* newGroup2 = DataGroup::Create(dataStrCopy, "New Group (2)", child2Id);
   auto newId2 = newGroup2->getId();
   REQUIRE(dataStr.getData(newId2) != dataStrCopy.getData(newId2));
   REQUIRE(dataStrCopy.getData(newId2));
@@ -1324,7 +1324,7 @@ TEST_CASE("DataArrayTest")
 
   auto store = std::make_shared<DataStore<int32>>(std::vector<usize>{2}, std::vector<usize>{2}, 0);
   REQUIRE(store != nullptr);
-  auto *dataArr = DataArray<int32>::Create(dataStr, "array", store);
+  auto* dataArr = DataArray<int32>::Create(dataStr, "array", store);
   REQUIRE(dataArr != nullptr);
 
   SECTION("test size")
@@ -1369,7 +1369,7 @@ TEST_CASE("ScalarDataTest")
 {
   DataStructure dataStr;
   const int32 value = 6;
-  auto *scalar = ScalarData<int32>::Create(dataStr, "scalar", value);
+  auto* scalar = ScalarData<int32>::Create(dataStr, "scalar", value);
 
   // get value
   REQUIRE(value == scalar->getValue());
@@ -1441,8 +1441,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestImageGeoDataPaths = destImageGeoResults.value();
     REQUIRE(allSrcImageGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
-    auto *const srcImageGeo = dataStruct.getDataAs<ImageGeom>(srcImageGeoPath);
-    auto *const destImageGeo = dataStruct.getDataAs<ImageGeom>(destImageGeoPath);
+    auto* const srcImageGeo = dataStruct.getDataAs<ImageGeom>(srcImageGeoPath);
+    auto* const destImageGeo = dataStruct.getDataAs<ImageGeom>(destImageGeoPath);
     REQUIRE(srcImageGeo != destImageGeo);
     REQUIRE(srcImageGeo->getOrigin() == destImageGeo->getOrigin());
     REQUIRE(srcImageGeo->getSpacing() == destImageGeo->getSpacing());
@@ -1470,8 +1470,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcAttMatrixPath = srcImageGeoPath.createChildPath(Constants::k_CellData);
     const DataPath destAttMatrixPath = destImageGeoPath.createChildPath(Constants::k_CellData);
-    auto *const srcAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcAttMatrixPath);
-    auto *const destAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destAttMatrixPath);
+    auto* const srcAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcAttMatrixPath);
+    auto* const destAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destAttMatrixPath);
     REQUIRE(srcAttMatrix != destAttMatrix);
     REQUIRE(srcAttMatrix->getShape() == destAttMatrix->getShape());
 
@@ -1494,8 +1494,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestRectGeoDataPaths = destRectGeoResults.value();
     REQUIRE(allSrcRectGeoDataPaths.size() == allDestRectGeoDataPaths.size() - 3);
 
-    auto *const srcRectGeo = dataStruct.getDataAs<RectGridGeom>(srcRectGeoPath);
-    auto *const destRectGeo = dataStruct.getDataAs<RectGridGeom>(destRectGeoPath);
+    auto* const srcRectGeo = dataStruct.getDataAs<RectGridGeom>(srcRectGeoPath);
+    auto* const destRectGeo = dataStruct.getDataAs<RectGridGeom>(destRectGeoPath);
     REQUIRE(srcRectGeo != destRectGeo);
     REQUIRE(srcRectGeo->getDimensions() == destRectGeo->getDimensions());
 
@@ -1535,8 +1535,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
     const DataPath destAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    auto *const srcAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcAttMatrixPath);
-    auto *const destAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destAttMatrixPath);
+    auto* const srcAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcAttMatrixPath);
+    auto* const destAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destAttMatrixPath);
     REQUIRE(srcAttMatrix != destAttMatrix);
     REQUIRE(srcAttMatrix->getShape() == destAttMatrix->getShape());
 
@@ -1571,22 +1571,22 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
     const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    auto *const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
-    auto *const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
+    auto* const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
+    auto* const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrix != destVertAttMatrix);
     REQUIRE(srcVertAttMatrix->getShape() == destVertAttMatrix->getShape());
 
     const DataPath srcCellAttMatrixPath = srcGeoPath.createChildPath(EdgeGeom::k_EdgeAttributeMatrixName);
     const DataPath destCellAttMatrixPath = destGeoPath.createChildPath(EdgeGeom::k_EdgeAttributeMatrixName);
-    auto *const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
-    auto *const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
+    auto* const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
+    auto* const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
     REQUIRE(srcCellAttMatrix != destCellAttMatrix);
     REQUIRE(srcCellAttMatrix->getShape() == destCellAttMatrix->getShape());
 
     const DataPath srcScalarPath = srcGeoPath.createChildPath(k_ScalarData);
     const DataPath destScalarPath = destGeoPath.createChildPath(k_ScalarData);
-    auto *const srcScalarData = dataStruct.getDataAs<ScalarData<int64>>(srcScalarPath);
-    auto *const destScalarData = dataStruct.getDataAs<ScalarData<int64>>(destScalarPath);
+    auto* const srcScalarData = dataStruct.getDataAs<ScalarData<int64>>(srcScalarPath);
+    auto* const destScalarData = dataStruct.getDataAs<ScalarData<int64>>(destScalarPath);
     REQUIRE(srcScalarData != destScalarData);
     REQUIRE(srcScalarData->getValue() == destScalarData->getValue());
 
@@ -1638,15 +1638,15 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
     const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    auto *const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
-    auto *const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
+    auto* const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
+    auto* const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrix != destVertAttMatrix);
     REQUIRE(srcVertAttMatrix->getShape() == destVertAttMatrix->getShape());
 
     const DataPath srcCellAttMatrixPath = srcGeoPath.createChildPath(TriangleGeom::k_FaceAttributeMatrixName);
     const DataPath destCellAttMatrixPath = destGeoPath.createChildPath(TriangleGeom::k_FaceAttributeMatrixName);
-    auto *const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
-    auto *const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
+    auto* const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
+    auto* const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
     REQUIRE(srcCellAttMatrix != destCellAttMatrix);
     REQUIRE(srcCellAttMatrix->getShape() == destCellAttMatrix->getShape());
 
@@ -1703,15 +1703,15 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
     const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    auto *const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
-    auto *const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
+    auto* const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
+    auto* const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrix != destVertAttMatrix);
     REQUIRE(srcVertAttMatrix->getShape() == destVertAttMatrix->getShape());
 
     const DataPath srcCellAttMatrixPath = srcGeoPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName);
     const DataPath destCellAttMatrixPath = destGeoPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName);
-    auto *const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
-    auto *const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
+    auto* const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
+    auto* const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
     REQUIRE(srcCellAttMatrix != destCellAttMatrix);
     REQUIRE(srcCellAttMatrix->getShape() == destCellAttMatrix->getShape());
 
@@ -1768,15 +1768,15 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
     const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    auto *const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
-    auto *const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
+    auto* const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
+    auto* const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrix != destVertAttMatrix);
     REQUIRE(srcVertAttMatrix->getShape() == destVertAttMatrix->getShape());
 
     const DataPath srcCellAttMatrixPath = srcGeoPath.createChildPath(INodeGeometry3D::k_PolyhedronDataName);
     const DataPath destCellAttMatrixPath = destGeoPath.createChildPath(INodeGeometry3D::k_PolyhedronDataName);
-    auto *const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
-    auto *const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
+    auto* const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
+    auto* const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
     REQUIRE(srcCellAttMatrix != destCellAttMatrix);
     REQUIRE(srcCellAttMatrix->getShape() == destCellAttMatrix->getShape());
 
@@ -1843,15 +1843,15 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
     const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    auto *const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
-    auto *const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
+    auto* const srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
+    auto* const destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrix != destVertAttMatrix);
     REQUIRE(srcVertAttMatrix->getShape() == destVertAttMatrix->getShape());
 
     const DataPath srcCellAttMatrixPath = srcGeoPath.createChildPath(INodeGeometry3D::k_PolyhedronDataName);
     const DataPath destCellAttMatrixPath = destGeoPath.createChildPath(INodeGeometry3D::k_PolyhedronDataName);
-    auto *const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
-    auto *const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
+    auto* const srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
+    auto* const destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
     REQUIRE(srcCellAttMatrix != destCellAttMatrix);
     REQUIRE(srcCellAttMatrix->getShape() == destCellAttMatrix->getShape());
 

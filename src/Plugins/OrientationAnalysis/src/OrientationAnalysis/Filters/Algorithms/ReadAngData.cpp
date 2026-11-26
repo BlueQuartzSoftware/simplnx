@@ -10,8 +10,8 @@
 
 #include <EbsdLib/Core/Orientation.hpp>
 
-#include <fmt/format.h>
 #include <algorithm>
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 using namespace nx::core;

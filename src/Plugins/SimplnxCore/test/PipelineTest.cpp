@@ -130,7 +130,7 @@ TEST_CASE("PipelineTest:Execute Pipeline")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
   REQUIRE(test1Plugin != nullptr);
@@ -179,7 +179,7 @@ TEST_CASE("PipelineTest:Simplnx Pipeline")
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
 
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
   REQUIRE(filterList->size() != 0);
 
   const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
@@ -206,7 +206,7 @@ TEST_CASE("PipelineTest:Simplnx Pipeline")
     constexpr Pipeline::index_type fromIndex = 1;
     constexpr Pipeline::index_type toIndex = 3;
 
-    auto *movedNode = pipeline.at(fromIndex);
+    auto* movedNode = pipeline.at(fromIndex);
 
     REQUIRE(pipeline.move(fromIndex, toIndex));
 

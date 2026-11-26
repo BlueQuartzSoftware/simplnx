@@ -457,7 +457,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -935,7 +935,7 @@ void RequireSupportMemberships(DataStructure& dataStructure, bool neighbors)
   {
     std::vector<MeshIndexType> members;
     members.reserve(supportPtr->getNumberOfElements(tupleIdx));
-for(usize memberIdx = 0; memberIdx < supportPtr->getNumberOfElements(tupleIdx); ++memberIdx)
+    for(usize memberIdx = 0; memberIdx < supportPtr->getNumberOfElements(tupleIdx); ++memberIdx)
     {
       members.push_back(supportPtr->getElementListPointer(tupleIdx)[memberIdx]);
     }

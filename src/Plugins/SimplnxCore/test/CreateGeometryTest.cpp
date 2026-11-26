@@ -2410,9 +2410,9 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<ImageGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<ImageGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
-    auto *const cellAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    auto* const cellAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(cellAm != nullptr);
     REQUIRE(createdGeom->getCellData() != nullptr);
   }
@@ -2505,20 +2505,20 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<RectGridGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<RectGridGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
     const auto dims = createdGeom->getDimensions();
     REQUIRE(dims == SizeVec3{13, 13, 13});
-    auto *const cellAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    auto* const cellAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(cellAm != nullptr);
     REQUIRE(createdGeom->getCellData() != nullptr);
-    auto *const destXBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsName));
+    auto* const destXBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsName));
     REQUIRE(destXBounds != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, xBoundsPath, geometryPath.createChildPath(xBoundsName));
-    auto *const destYBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsName));
+    auto* const destYBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsName));
     REQUIRE(destYBounds != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, yBoundsPath, geometryPath.createChildPath(yBoundsName));
-    auto *const destZBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsName));
+    auto* const destZBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsName));
     REQUIRE(destZBounds != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, zBoundsPath, geometryPath.createChildPath(zBoundsName));
   }
@@ -2565,12 +2565,12 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<VertexGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<VertexGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
-    auto *const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    auto* const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    auto *const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
@@ -2618,21 +2618,21 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<EdgeGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<EdgeGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    auto *const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    auto* const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    auto *const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
-    auto *const edgeAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(edgeAmName));
+    auto* const edgeAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(edgeAmName));
     REQUIRE(edgeAm != nullptr);
     REQUIRE(createdGeom->getEdgeAttributeMatrix() != nullptr);
-    auto *const destEdges = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(edgeListName));
+    auto* const destEdges = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(edgeListName));
     REQUIRE(destEdges != nullptr);
     REQUIRE(createdGeom->getEdges() != nullptr);
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcEdgesPath, geometryPath.createChildPath(edgeListName));
@@ -2680,21 +2680,21 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<TriangleGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<TriangleGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    auto *const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    auto* const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    auto *const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
-    auto *const faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
+    auto* const faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(faceAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    auto *const destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
+    auto* const destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTrianglesPath, geometryPath.createChildPath(triangleListName));
@@ -2742,21 +2742,21 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<QuadGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<QuadGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    auto *const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    auto* const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    auto *const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
-    auto *const quadAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
+    auto* const quadAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(quadAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    auto *const destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(quadListName));
+    auto* const destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(quadListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcQuadsPath, geometryPath.createChildPath(quadListName));
@@ -2804,21 +2804,21 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<TetrahedralGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<TetrahedralGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    auto *const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    auto* const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    auto *const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(tetVertexListName));
+    auto* const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(tetVertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, srcTetVerticesPath, geometryPath.createChildPath(tetVertexListName));
 
-    auto *const tetAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    auto* const tetAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(tetAm != nullptr);
     REQUIRE(createdGeom->getPolyhedraAttributeMatrix() != nullptr);
-    auto *const destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(tetListName));
+    auto* const destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(tetListName));
     REQUIRE(destCells != nullptr);
     REQUIRE(createdGeom->getPolyhedra() != nullptr);
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTetsPath, geometryPath.createChildPath(tetListName));
@@ -2866,21 +2866,21 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<HexahedralGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<HexahedralGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    auto *const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    auto* const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    auto *const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(hexVertexListName));
+    auto* const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(hexVertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
     UnitTest::CompareArrays<float32>(dataStructure, srcHexVerticesPath, geometryPath.createChildPath(hexVertexListName));
 
-    auto *const hexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    auto* const hexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(hexAm != nullptr);
     REQUIRE(createdGeom->getPolyhedraAttributeMatrix() != nullptr);
-    auto *const destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(hexListName));
+    auto* const destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(hexListName));
     REQUIRE(destCells != nullptr);
     REQUIRE(createdGeom->getPolyhedra() != nullptr);
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcHexsPath, geometryPath.createChildPath(hexListName));
@@ -2928,20 +2928,20 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto *const createdGeom = dataStructure.getDataAs<TriangleGeom>(geometryPath);
+    auto* const createdGeom = dataStructure.getDataAs<TriangleGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    auto *const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    auto* const vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    auto *const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
 
-    auto *const faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
+    auto* const faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(faceAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    auto *const destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
+    auto* const destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
 
@@ -3138,7 +3138,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

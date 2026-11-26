@@ -184,9 +184,8 @@ public:
       {
         return importDataStore<bool>(dataArray, dataPath, datasetReader);
       }
-      
-              return importDataStore<uint8>(dataArray, dataPath, datasetReader);
-     
+
+      return importDataStore<uint8>(dataArray, dataPath, datasetReader);
     }
     break;
     case DataType::uint16:

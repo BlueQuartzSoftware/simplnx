@@ -162,7 +162,7 @@ std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(IGeometry* geom) co
 
 IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
 {
-  const auto *pos = dynamic_cast<const GridTileIndex*>(index);
+  const auto* pos = dynamic_cast<const GridTileIndex*>(index);
   if(pos == nullptr)
   {
     return nullptr;
@@ -172,7 +172,7 @@ IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
 
 const IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
 {
-  const auto *pos = dynamic_cast<const GridTileIndex*>(index);
+  const auto* pos = dynamic_cast<const GridTileIndex*>(index);
   if(pos == nullptr)
   {
     return nullptr;
@@ -194,7 +194,7 @@ const IGeometry* GridMontage::getGeometry(const SizeVec3& position) const
 
 void GridMontage::setGeometry(const AbstractTileIndex* index, IGeometry* geom)
 {
-  const auto *pos = dynamic_cast<const GridTileIndex*>(index);
+  const auto* pos = dynamic_cast<const GridTileIndex*>(index);
   if(pos == nullptr)
   {
     return;

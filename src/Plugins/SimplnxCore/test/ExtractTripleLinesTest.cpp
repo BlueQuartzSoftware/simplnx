@@ -1180,18 +1180,18 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Batch sizes preserve han
       std::vector<float32> vertices;
       std::vector<uint64> edges;
       vertices.reserve(edgeGeomPtr->getNumberOfVertices() * 3);
-for(usize index = 0; index < edgeGeomPtr->getNumberOfVertices() * 3; index++)
+      for(usize index = 0; index < edgeGeomPtr->getNumberOfVertices() * 3; index++)
       {
         vertices.push_back((*edgeGeomPtr->getVertices())[index]);
       }
       edges.reserve(edgeGeomPtr->getNumberOfEdges() * 2);
-for(usize index = 0; index < edgeGeomPtr->getNumberOfEdges() * 2; index++)
+      for(usize index = 0; index < edgeGeomPtr->getNumberOfEdges() * 2; index++)
       {
         edges.push_back((*edgeGeomPtr->getEdges())[index]);
       }
       std::vector<int8> nodeTypes;
       nodeTypes.reserve(nodesPtr->getNumberOfTuples());
-for(usize index = 0; index < nodesPtr->getNumberOfTuples(); index++)
+      for(usize index = 0; index < nodesPtr->getNumberOfTuples(); index++)
       {
         nodeTypes.push_back((*nodesPtr)[index]);
       }

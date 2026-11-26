@@ -34,7 +34,6 @@
 #define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
 #define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
 
-
 namespace pybind11::detail
 {
 template <>
@@ -78,7 +77,6 @@ public:
   }
 };
 } // namespace pybind11::detail
-
 
 namespace nx::core::NxPybind
 {
@@ -302,7 +300,7 @@ public:
   {
     std::vector<std::shared_ptr<PythonPlugin>> plugins;
     plugins.reserve(m_PythonPlugins.size());
-for(auto&& [id, plugin] : m_PythonPlugins)
+    for(auto&& [id, plugin] : m_PythonPlugins)
     {
       plugins.push_back(plugin);
     }

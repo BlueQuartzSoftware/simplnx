@@ -293,9 +293,10 @@ static void BindVec2(py::module_& m, const char* name)
       .def(py::init<>())
       .def(py::init<T, T>())
       .def(py::init([](const py::sequence& s) {
-        if(py::len(s) != 2) {
+        if(py::len(s) != 2)
+        {
           throw py::type_error("Expected length-2 sequence");
-}
+        }
         return Vec{s[0].cast<T>(), s[1].cast<T>()};
       }))
       .def_property(
@@ -304,16 +305,18 @@ static void BindVec2(py::module_& m, const char* name)
           "max", [](const Vec& v) { return v[1]; }, [](Vec& v, T x) { v[1] = x; })
       .def("__getitem__",
            [](const Vec& v, size_t i) {
-             if(i >= 2) {
+             if(i >= 2)
+             {
                throw py::index_error();
-}
+             }
              return v[i];
            })
       .def("__setitem__",
            [](Vec& v, size_t i, T x) {
-             if(i >= 2) {
+             if(i >= 2)
+             {
                throw py::index_error();
-}
+             }
              v[i] = x;
            })
       .def(
@@ -1157,14 +1160,13 @@ PYBIND11_MODULE(simplnx, mod)
       }
       return outputPaths;
     }
-    
-          auto result_ = nx::core::GetAllChildDataPaths(self, parentPath);
-      if(result_)
-      {
-        return result_.value();
-      }
-      return std::vector<DataPath>{};
-   
+
+    auto result_ = nx::core::GetAllChildDataPaths(self, parentPath);
+    if(result_)
+    {
+      return result_.value();
+    }
+    return std::vector<DataPath>{};
   });
   dataStructure.def("get_children", [](DataStructure& self, const std::string& parentPath) {
     if(parentPath.empty())
@@ -1177,20 +1179,19 @@ PYBIND11_MODULE(simplnx, mod)
       }
       return outputPaths;
     }
-    
-          auto pathConversionResult = DataPath::FromString(parentPath);
-      if(!pathConversionResult)
-      {
-        return std::vector<DataPath>{};
-      }
 
-      auto result_ = nx::core::GetAllChildDataPaths(self, pathConversionResult.value());
-      if(result_)
-      {
-        return result_.value();
-      }
+    auto pathConversionResult = DataPath::FromString(parentPath);
+    if(!pathConversionResult)
+    {
       return std::vector<DataPath>{};
-   
+    }
+
+    auto result_ = nx::core::GetAllChildDataPaths(self, pathConversionResult.value());
+    if(result_)
+    {
+      return result_.value();
+    }
+    return std::vector<DataPath>{};
   });
 
   auto dataObjectType = py::enum_<DataObject::Type>(dataObject, "DataObjectType");

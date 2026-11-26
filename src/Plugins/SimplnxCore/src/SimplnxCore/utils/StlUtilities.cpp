@@ -232,7 +232,7 @@ void StlUtilities::ConvertAsciiToBinaryStl(const std::filesystem::path& inputPat
     if(token == "facet")
     {
       iss >> token; // Skip "normal" word
-      for(float & i : tri.normal)
+      for(float& i : tri.normal)
       {
         iss >> i;
       }

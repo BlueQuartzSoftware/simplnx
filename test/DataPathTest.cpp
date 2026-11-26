@@ -17,9 +17,8 @@ bool CompareFromStringToExemplar(const std::string& input, const DataPath& exemp
   {
     return (result.value() == exemplar);
   }
-  
-      return false;
- 
+
+  return false;
 }
 } // namespace
 

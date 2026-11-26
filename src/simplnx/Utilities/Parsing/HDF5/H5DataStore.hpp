@@ -8,7 +8,6 @@
 #include <atomic>
 #include <limits>
 
-
 namespace nx::core::HDF5::Support
 {
 /**
@@ -257,9 +256,7 @@ Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
   {
     return FillDataStore(dataArray, dataArrayPath, datasetReader, start, count);
   }
-  
-      return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count, shouldCancel);
- 
+
+  return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count, shouldCancel);
 }
 } // namespace nx::core::HDF5::Support
-

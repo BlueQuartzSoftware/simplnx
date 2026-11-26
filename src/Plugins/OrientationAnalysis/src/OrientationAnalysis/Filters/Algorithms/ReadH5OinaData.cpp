@@ -263,31 +263,37 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
     return copyRawData<decltype(typeTag)>(m_InputValues, count, m_DataStructure, *m_Reader, name, offset, m_ShouldCancel);
   };
   Result<> result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::BandContrast, tupleOffset);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
   result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::BandSlope, tupleOffset);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
   result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::Bands, tupleOffset);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
   result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::Error, tupleOffset);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
   // Euler carries three components per scan point, so both the element count and the
   // destination offset are three times the tuple counts.
   result = copy(float32{}, totalPoints * 3, ebsdlib::H5OINA::Euler, tupleOffset * 3);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
   result = copy(float32{}, totalPoints, ebsdlib::H5OINA::MeanAngularDeviation, tupleOffset);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
 
   // The phase value of every point indexes the ensemble arrays, both in the alignment
   // loop below and in every downstream filter, so it is range checked before it is
@@ -333,18 +339,21 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
   else
   {
     result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::Phase, tupleOffset);
-    if(result.invalid()) {
+    if(result.invalid())
+    {
       return result;
-}
+    }
   }
   result = copy(float32{}, totalPoints, ebsdlib::H5OINA::X, tupleOffset);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
   result = copy(float32{}, totalPoints, ebsdlib::H5OINA::Y, tupleOffset);
-  if(result.invalid()) {
+  if(result.invalid())
+  {
     return result;
-}
+  }
 
   if(m_ShouldCancel)
   {
@@ -361,9 +370,10 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
     {
       result = convertHexEulerAngle<uint8>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
     }
-    if(result.invalid()) {
+    if(result.invalid())
+    {
       return result;
-}
+    }
   }
 
   return {};

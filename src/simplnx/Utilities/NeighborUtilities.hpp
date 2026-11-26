@@ -81,14 +81,12 @@ struct ImageDimensionState
 
   static constexpr bool Is1DImageDimsState()
   {
-    return (HasEmptyXDim && HasEmptyYDim && !HasEmptyZDim) || (HasEmptyXDim && !HasEmptyYDim && HasEmptyZDim) ||
-           (!HasEmptyXDim && HasEmptyYDim && HasEmptyZDim);
+    return (HasEmptyXDim && HasEmptyYDim && !HasEmptyZDim) || (HasEmptyXDim && !HasEmptyYDim && HasEmptyZDim) || (!HasEmptyXDim && HasEmptyYDim && HasEmptyZDim);
   }
 
   static constexpr bool Is2DImageDimsState()
   {
-    return (HasEmptyXDim && !HasEmptyYDim && !HasEmptyZDim) || (!HasEmptyXDim && HasEmptyYDim && !HasEmptyZDim) ||
-           (!HasEmptyXDim && !HasEmptyYDim && HasEmptyZDim);
+    return (HasEmptyXDim && !HasEmptyYDim && !HasEmptyZDim) || (!HasEmptyXDim && HasEmptyYDim && !HasEmptyZDim) || (!HasEmptyXDim && !HasEmptyYDim && HasEmptyZDim);
   }
 };
 

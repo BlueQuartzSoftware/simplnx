@@ -335,15 +335,18 @@ size_t MMCellMap::numEdgeCrossings() const
     {
       for(int i = 0; i < m_arraySize[0]; i++)
       {
-        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBackEdge)) {
+        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBackEdge))
+        {
           numCrossings++;
-}
-        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBottomEdge)) {
+        }
+        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBottomEdge))
+        {
           numCrossings++;
-}
-        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::BackBottomEdge)) {
+        }
+        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::BackBottomEdge))
+        {
           numCrossings++;
-}
+        }
         cellMapIdx++;
       }
     }

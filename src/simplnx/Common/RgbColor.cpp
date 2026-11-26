@@ -2,7 +2,6 @@
 
 #include <cmath>
 
-
 namespace nx::core::RgbColor
 {
 Component dRed(Rgba rgb)
@@ -101,4 +100,3 @@ void GetColorTable(int numColors, std::vector<float>& colorsOut)
 }
 
 } // namespace nx::core::RgbColor
-

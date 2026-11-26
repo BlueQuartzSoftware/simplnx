@@ -333,17 +333,20 @@ private:
       }
       const usize count = std::min(tuplesPerChunk, tupleCount - offset);
       result = m_Input.copyIntoBuffer(offset * components, nonstd::span<T>(input.get(), count * components));
-      if(result.invalid()) {
+      if(result.invalid())
+      {
         return result;
-}
+      }
       result = m_FeatureIds.copyIntoBuffer(offset, nonstd::span<int32>(featureIds.get(), count));
-      if(result.invalid()) {
+      if(result.invalid())
+      {
         return result;
-}
+      }
       result = maskReader.load(offset, count);
-      if(result.invalid()) {
+      if(result.invalid())
+      {
         return result;
-}
+      }
       for(usize local = 0; local < count; local++)
       {
         if(maskReader.value(offset + local))
@@ -361,9 +364,10 @@ private:
         }
       }
       result = m_FeatureIds.copyFromBuffer(offset, nonstd::span<const int32>(featureIds.get(), count));
-      if(result.invalid()) {
+      if(result.invalid())
+      {
         return result;
-}
+      }
     }
     return {};
   }
@@ -387,18 +391,21 @@ private:
     auto featureIds = std::make_unique<int32[]>(tuplesPerChunk);
     for(usize offset = 0; offset < tupleCount; offset += tuplesPerChunk)
     {
-      if(m_Filter.getCancel()) {
+      if(m_Filter.getCancel())
+      {
         return {};
-}
+      }
       const usize count = std::min(tuplesPerChunk, tupleCount - offset);
       auto result = m_Input.copyIntoBuffer(offset * components, nonstd::span<T>(input.get(), count * components));
-      if(result.invalid()) {
+      if(result.invalid())
+      {
         return result;
-}
+      }
       result = m_FeatureIds.copyIntoBuffer(offset, nonstd::span<int32>(featureIds.get(), count));
-      if(result.invalid()) {
+      if(result.invalid())
+      {
         return result;
-}
+      }
       for(usize local = 0; local < count; local++)
       {
         const usize feature = static_cast<usize>(featureIds[local]);
@@ -406,9 +413,10 @@ private:
         {
           return MakeErrorResult(-54064, "Compute K Means encountered a cluster id outside the configured cluster range.");
         }
-        for(usize component = 0; component < components; component++) {
+        for(usize component = 0; component < components; component++)
+        {
           sums[feature * components + component] += static_cast<float64>(input[local * components + component]);
-}
+        }
         counts[feature]++;
       }
     }

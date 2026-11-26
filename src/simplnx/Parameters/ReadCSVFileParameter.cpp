@@ -123,7 +123,7 @@ std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataT
 {
   std::vector<CSVType> output;
 
-  for(const auto & dataType : dataTypes)
+  for(const auto& dataType : dataTypes)
   {
     try
     {

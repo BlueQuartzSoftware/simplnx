@@ -212,8 +212,8 @@ inline bool IsoContour2DFullWidthPeak(usize columns, usize rows, usize inputByte
   usize output = 0;
   usize total = 0;
   return !(!IsoContourCheckedAdd(rows, 4, inputRows) || !IsoContourCheckedMultiply(inputRows, columns, inputValues) || !IsoContourCheckedMultiply(rows, columns, outputValues) ||
-     !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedMultiply(outputValues, sizeof(float32), output) || !IsoContourCheckedAdd(input, output, total) ||
-     !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak));
+           !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedMultiply(outputValues, sizeof(float32), output) || !IsoContourCheckedAdd(input, output, total) ||
+           !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak));
 }
 
 inline bool IsoContour2DTiledPeak(usize columns, usize inputBytes, usize& peak)
@@ -224,7 +224,7 @@ inline bool IsoContour2DTiledPeak(usize columns, usize inputBytes, usize& peak)
   usize output = 0;
   usize total = 0;
   return !(!IsoContourCheckedAdd(columns, 4, haloColumns) || !IsoContourCheckedMultiply(haloColumns, 5, inputValues) || !IsoContourCheckedMultiply(columns, sizeof(float32), output) ||
-     !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedAdd(input, output, total) || !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak));
+           !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedAdd(input, output, total) || !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak));
 }
 
 inline IsoContour2DBufferPlan BuildIsoContour2DBufferPlan(usize nx, usize ny, usize inputBytes, usize residentLimit = k_IsoContour2DResidentLimit)

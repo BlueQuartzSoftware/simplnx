@@ -33,15 +33,15 @@ constexpr StringLiteral k_DataArray1Name = "Array1";
 DataStructure createDataStructure()
 {
   DataStructure data;
-  auto *group1 = DataGroup::Create(data, k_Group1Name);
-  auto *group2 = DataGroup::Create(data, k_Group2Name);
-  auto *group3 = DataGroup::Create(data, k_Group3Name, group2->getId());
-  auto *group4 = DataGroup::Create(data, k_Group4Name, group2->getId());
+  auto* group1 = DataGroup::Create(data, k_Group1Name);
+  auto* group2 = DataGroup::Create(data, k_Group2Name);
+  auto* group3 = DataGroup::Create(data, k_Group3Name, group2->getId());
+  auto* group4 = DataGroup::Create(data, k_Group4Name, group2->getId());
 
-  auto *am1 = AttributeMatrix::Create(data, k_AM1Name, std::vector<usize>{2});
+  auto* am1 = AttributeMatrix::Create(data, k_AM1Name, std::vector<usize>{2});
 
   auto dataStore = std::make_unique<DataStore<uint8>>(std::vector<usize>{20}, std::vector<usize>{3}, 0);
-  auto *dataArray1 = DataArray<uint8>::Create(data, k_DataArray1Name, std::move(dataStore));
+  auto* dataArray1 = DataArray<uint8>::Create(data, k_DataArray1Name, std::move(dataStore));
 
   data.setAdditionalParent(group4->getId(), group3->getId());
   return data;
@@ -168,7 +168,7 @@ TEST_CASE("SimplnxCore::MoveDataFilter: SIMPL Backwards Compatibility", "[Simpln
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

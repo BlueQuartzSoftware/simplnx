@@ -181,7 +181,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
   }
 
   std::vector<size_t> cDims = {1ULL};
-  for(const auto & name : names)
+  for(const auto& name : names)
   {
     // First check to see if the name is in our list of names to read.
     if(m_SelectedArrayNames.find(name) == m_SelectedArrayNames.end())

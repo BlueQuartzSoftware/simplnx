@@ -10,7 +10,6 @@
 
 #include <array>
 
-
 namespace nx::core::IntersectionUtilities
 {
 inline constexpr float k_Epsilon = 1e-8;
@@ -529,5 +528,3 @@ bool SphereIntersectsRectangularPrism(const std::array<T, 3>& sphereCenter, T ra
 }
 
 } // namespace nx::core::IntersectionUtilities
-
-

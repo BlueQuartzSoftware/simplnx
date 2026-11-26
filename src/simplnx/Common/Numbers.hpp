@@ -2,7 +2,6 @@
 
 #include <type_traits>
 
-
 // Based on <numbers> from C++20
 namespace nx::core::numbers
 {
@@ -60,4 +59,3 @@ inline constexpr double egamma = egamma_v<double>;
 inline constexpr double phi = phi_v<double>;
 
 } // namespace nx::core::numbers
-

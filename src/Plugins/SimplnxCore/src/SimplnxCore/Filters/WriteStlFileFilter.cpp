@@ -153,7 +153,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
   if(pGroupingTypeValue == GroupingType::Features || pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
     const auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue);
-if( featureIds == nullptr)
+    if(featureIds == nullptr)
     {
       return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
     }
@@ -167,7 +167,7 @@ if( featureIds == nullptr)
   if(pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
     const auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue);
-if( featurePhases == nullptr)
+    if(featurePhases == nullptr)
     {
       return MakePreflightErrorResult(-27872, fmt::format("Face Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
     }
@@ -181,7 +181,7 @@ if( featurePhases == nullptr)
   if(pGroupingTypeValue == GroupingType::PartNumber)
   {
     const auto* partNumbers = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue);
-if( partNumbers == nullptr)
+    if(partNumbers == nullptr)
     {
       return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
     }

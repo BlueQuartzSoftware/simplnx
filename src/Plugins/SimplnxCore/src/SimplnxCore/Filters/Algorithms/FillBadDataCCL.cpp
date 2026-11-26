@@ -324,9 +324,10 @@ Result<> FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, Ex
             else if(assignedLabel != neighLabel)
             {
               auto uniteResult = equivalences.unite(static_cast<uint64>(assignedLabel), static_cast<uint64>(neighLabel), m_ShouldCancel);
-              if(uniteResult.invalid()) {
+              if(uniteResult.invalid())
+              {
                 return uniteResult;
-}
+              }
             }
           }
         }
@@ -343,9 +344,10 @@ Result<> FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, Ex
             else if(assignedLabel != neighLabel)
             {
               auto uniteResult = equivalences.unite(static_cast<uint64>(assignedLabel), static_cast<uint64>(neighLabel), m_ShouldCancel);
-              if(uniteResult.invalid()) {
+              if(uniteResult.invalid())
+              {
                 return uniteResult;
-}
+              }
             }
           }
         }
@@ -366,9 +368,10 @@ Result<> FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, Ex
 
         // Add this voxel to the provisional component size.
         auto sizeResult = equivalences.addSize(static_cast<uint64>(assignedLabel), 1, m_ShouldCancel);
-        if(sizeResult.invalid()) {
+        if(sizeResult.invalid())
+        {
           return sizeResult;
-}
+        }
       }
     }
 
@@ -413,17 +416,19 @@ Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIds
       return {};
     }
     auto readResult = featureIdsStore.copyIntoBuffer(z * sliceSize, nonstd::span<int32>(sliceData.data(), sliceSize));
-    if(readResult.invalid()) {
+    if(readResult.invalid())
+    {
       return readResult;
-}
+    }
 
     bool phasesModified = false;
     if(needPhasesBuffer)
     {
       auto phaseReadResult = cellPhasesStorePtr->copyIntoBuffer(z * sliceSize, nonstd::span<int32>(phasesSlice.data(), sliceSize));
-      if(phaseReadResult.invalid()) {
+      if(phaseReadResult.invalid())
+      {
         return phaseReadResult;
-}
+      }
     }
 
     for(usize y = 0; y < udims[1]; y++)
@@ -436,13 +441,15 @@ Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIds
         if(label >= startLabel)
         {
           auto rootResult = equivalences.find(static_cast<uint64>(label), m_ShouldCancel);
-          if(rootResult.invalid()) {
+          if(rootResult.invalid())
+          {
             return ConvertResult(std::move(rootResult));
-}
+          }
           auto sizeResult = equivalences.componentSize(rootResult.value(), m_ShouldCancel);
-          if(sizeResult.invalid()) {
+          if(sizeResult.invalid())
+          {
             return ConvertResult(std::move(sizeResult));
-}
+          }
 
           if(sizeResult.value() < static_cast<uint64>(m_InputValues->minAllowedDefectSizeValue))
           {
@@ -463,15 +470,17 @@ Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIds
     }
 
     auto writeResult = featureIdsStore.copyFromBuffer(z * sliceSize, nonstd::span<const int32>(sliceData.data(), sliceSize));
-    if(writeResult.invalid()) {
+    if(writeResult.invalid())
+    {
       return writeResult;
-}
+    }
     if(phasesModified)
     {
       auto phaseWriteResult = cellPhasesStorePtr->copyFromBuffer(z * sliceSize, nonstd::span<const int32>(phasesSlice.data(), sliceSize));
-      if(phaseWriteResult.invalid()) {
+      if(phaseWriteResult.invalid())
+      {
         return phaseWriteResult;
-}
+      }
     }
   }
   return {};

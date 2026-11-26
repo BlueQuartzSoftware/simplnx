@@ -3,7 +3,6 @@
 #include "simplnx/Pipeline/Messaging/PipelineNodeObserver.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 
-
 namespace nx::core::CLI
 {
 /**
@@ -32,4 +31,3 @@ private:
   std::vector<nod::scoped_connection> m_SignalConnections;
 };
 } // namespace nx::core::CLI
-

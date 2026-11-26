@@ -3208,7 +3208,7 @@ public:
     }
 
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
-    for(unsigned long & coreGridId : coreGridIds)
+    for(unsigned long& coreGridId : coreGridIds)
     {
       if(m_ShouldCancel)
       {

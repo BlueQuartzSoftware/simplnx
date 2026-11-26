@@ -94,7 +94,7 @@ static StringArray* CreateStringArray(AttributeMatrix& attrMatrix, DataStructure
 
 static void AddStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 {
-  auto *strArray = CreateStringArray(attrMatrix, dataStructure, "StringArray");
+  auto* strArray = CreateStringArray(attrMatrix, dataStructure, "StringArray");
   int counter = 1;
   std::generate(strArray->begin(), strArray->end(), [&counter]() { return "Item" + std::to_string(counter++); });
 }
@@ -182,7 +182,7 @@ static void CreateNodeArray(TGeom& geom, DataStructure& dataStructure, const std
 
 template <typename TGeom, typename TNode, typename TGetNumPerElement, typename TGetNodeArray, typename TSetNodeArray, typename TGetAttrMatrix, typename TSetAttrMatrix>
 static void InitializeNodeGeometry(TGeom& geom, DataStructure& dataStructure, DataInitOption initOption, const std::string& attrMatrixName, const std::string& sharedListName, usize numElements,
-                            TGetNumPerElement getNumPerElement, TGetNodeArray getNodeArray, TSetNodeArray setNodeArray, TGetAttrMatrix getAttrMatrix, TSetAttrMatrix setAttrMatrix)
+                                   TGetNumPerElement getNumPerElement, TGetNodeArray getNodeArray, TSetNodeArray setNodeArray, TGetAttrMatrix getAttrMatrix, TSetAttrMatrix setAttrMatrix)
 {
   if(initOption == DataInitOption::None)
   {
@@ -244,7 +244,7 @@ static void InitializeNode2DGeometry(INodeGeometry2D& geom, DataStructure& dataS
 }
 
 static void InitializeNode3DGeometry(INodeGeometry3D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption, DataInitOption edgeDataInitOption, DataInitOption faceDataInitOption,
-                              DataInitOption polyDataInitOption)
+                                     DataInitOption polyDataInitOption)
 {
   InitializeNode2DGeometry(geom, dataStructure, vertexDataInitOption, edgeDataInitOption, faceDataInitOption);
 
@@ -705,11 +705,11 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
   }
   SECTION("Differing Geometries")
   {
-    auto *geom1 = VertexGeom::Create(dataStructure, k_Geometry1Name);
-    auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, 10, 3);
+    auto* geom1 = VertexGeom::Create(dataStructure, k_Geometry1Name);
+    auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, 10, 3);
     geom1->setVertices(*vertices);
 
-    auto *geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+    auto* geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
     vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, 10, 3);
     geom2->setVertices(*vertices);
 
@@ -747,42 +747,42 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     {
       SECTION("1D Geometry")
       {
-        auto *geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerEdge(), 3);
         geom2->setVertices(*vertices);
 
-        auto *edges = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry1D::k_SharedEdgeListName, 1, geom1->getNumberOfVerticesPerEdge());
+        auto* edges = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry1D::k_SharedEdgeListName, 1, geom1->getNumberOfVerticesPerEdge());
         geom1->setEdgeList(*edges);
       }
       SECTION("2D Geometry")
       {
-        auto *geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
         geom2->setVertices(*vertices);
 
-        auto *faces = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry2D::k_SharedFacesListName, 1, geom1->getNumberOfVerticesPerFace());
+        auto* faces = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry2D::k_SharedFacesListName, 1, geom1->getNumberOfVerticesPerFace());
         geom1->setFaceList(*faces);
       }
 
       SECTION("3D Geometry")
       {
-        auto *geom1 = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerCell(), 3);
         geom2->setVertices(*vertices);
 
-        auto *polyhedra = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry3D::k_SharedPolyhedronListName, 1, geom1->getNumberOfVerticesPerCell());
+        auto* polyhedra = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry3D::k_SharedPolyhedronListName, 1, geom1->getNumberOfVerticesPerCell());
         geom1->setPolyhedraList(*polyhedra);
       }
 
@@ -790,15 +790,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     }
     SECTION("Vertex Attribute Matrix")
     {
-      auto *geom1 = TetrahedralGeom::Create(dataStructure, k_Geometry1Name);
-      auto *geom2 = TetrahedralGeom::Create(dataStructure, k_Geometry2Name);
+      auto* geom1 = TetrahedralGeom::Create(dataStructure, k_Geometry1Name);
+      auto* geom2 = TetrahedralGeom::Create(dataStructure, k_Geometry2Name);
 
-      auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
+      auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
       geom1->setVertices(*vertices);
       vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerCell(), 3);
       geom2->setVertices(*vertices);
 
-      auto *vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerCell());
+      auto* vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerCell());
       geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
 
       errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElements;
@@ -807,15 +807,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     {
       SECTION("Data Array Missing")
       {
-        auto *geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerEdge(), 3);
         geom2->setVertices(*vertices);
 
-        auto *vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerEdge());
+        auto* vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerEdge());
         geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
 
         vertexAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2->getNumberOfVerticesPerEdge());
@@ -827,15 +827,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
       }
       SECTION("Mismatching Data Types")
       {
-        auto *geom1 = QuadGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = QuadGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = QuadGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = QuadGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
         geom2->setVertices(*vertices);
 
-        auto *vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
+        auto* vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
         geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
 
         CreateDataArray<uint8, 2>(*vertexAttrMatrix, dataStructure, "TestArray");
@@ -849,15 +849,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
       }
       SECTION("Mismatching Array Types")
       {
-        auto *geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
         geom2->setVertices(*vertices);
 
-        auto *vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
+        auto* vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
         geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
 
         CreateDataArray<uint8, 2>(*vertexAttrMatrix, dataStructure, "TestArray");
@@ -871,15 +871,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
       }
       SECTION("Mismatching Component Dimensions")
       {
-        auto *geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
         geom2->setVertices(*vertices);
 
-        auto *vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
+        auto* vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
         geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
 
         CreateDataArray<int32>(*vertexAttrMatrix, dataStructure, "TestArray", {2, 3});
@@ -896,15 +896,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     {
       SECTION("Data Array Missing")
       {
-        auto *geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerEdge(), 3);
         geom2->setVertices(*vertices);
 
-        auto *cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        auto* cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
         geom1->setEdgeAttributeMatrix(*cellAttrMatrix);
 
         cellAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
@@ -916,15 +916,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
       }
       SECTION("Mismatching Data Types")
       {
-        auto *geom1 = QuadGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = QuadGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = QuadGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = QuadGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
         geom2->setVertices(*vertices);
 
-        auto *cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        auto* cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
         geom1->setFaceAttributeMatrix(*cellAttrMatrix);
 
         CreateDataArray<uint8, 2>(*cellAttrMatrix, dataStructure, "TestArray");
@@ -938,15 +938,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
       }
       SECTION("Mismatching Array Types")
       {
-        auto *geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
         geom2->setVertices(*vertices);
 
-        auto *cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        auto* cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
         geom1->setFaceAttributeMatrix(*cellAttrMatrix);
 
         CreateDataArray<uint8, 2>(*cellAttrMatrix, dataStructure, "TestArray");
@@ -960,15 +960,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
       }
       SECTION("Mismatching Component Dimensions")
       {
-        auto *geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto *geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
+        auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
         geom1->setVertices(*vertices);
         vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
         geom2->setVertices(*vertices);
 
-        auto *cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        auto* cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
         geom1->setFaceAttributeMatrix(*cellAttrMatrix);
 
         CreateDataArray<int32>(*cellAttrMatrix, dataStructure, "TestArray", {2, 3});
@@ -983,15 +983,15 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     }
     SECTION("Cell Attribute Matrix")
     {
-      auto *geom1 = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
-      auto *geom2 = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
+      auto* geom1 = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
+      auto* geom2 = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
 
-      auto *vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
+      auto* vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
       geom1->setVertices(*vertices);
       vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerCell(), 3);
       geom2->setVertices(*vertices);
 
-      auto *vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+      auto* vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
       geom1->setPolyhedraAttributeMatrix(*vertexAttrMatrix);
 
       errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElements;

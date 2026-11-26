@@ -134,7 +134,7 @@ TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8_t Z-stack", "[SimplnxCore]
 
   std::vector<TiffPage> pages;
   pages.reserve(planeValues.size());
-for(uint8_t value : planeValues)
+  for(uint8_t value : planeValues)
   {
     // No SubfileType tag: the common ImageJ-style multi-page stack layout.
     pages.push_back(MakeConstantPage(width, height, 1, value));

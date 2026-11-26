@@ -194,12 +194,14 @@ public:
     return std::make_unique<MockOomFilter>();
   }
 
-  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     return {OutputActions{}};
   }
 
-  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     throw std::bad_alloc{};
   }

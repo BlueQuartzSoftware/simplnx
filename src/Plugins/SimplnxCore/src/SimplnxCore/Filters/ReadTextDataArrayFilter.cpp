@@ -117,14 +117,13 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
           -78602, fmt::format("The DataArray to be created '{}'is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions",
                               arrayPath.toString()));
     }
-    
-          auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
-      if(dimensions.invalid())
-      {
-        return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
-      }
-      tupleDims = std::move(dimensions.value());
-   
+
+    auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
+    if(dimensions.invalid())
+    {
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+    }
+    tupleDims = std::move(dimensions.value());
   }
   else
   {

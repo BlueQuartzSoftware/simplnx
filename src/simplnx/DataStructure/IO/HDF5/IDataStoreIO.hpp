@@ -5,8 +5,6 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
-
-
 namespace nx::core::HDF5::IDataStoreIO
 {
 /**
@@ -23,5 +21,3 @@ Result<ShapeType> SIMPLNX_EXPORT ReadTupleShape(const nx::core::HDF5::DatasetIO&
  */
 Result<ShapeType> SIMPLNX_EXPORT ReadComponentShape(const nx::core::HDF5::DatasetIO& datasetReader);
 } // namespace nx::core::HDF5::IDataStoreIO
-
-

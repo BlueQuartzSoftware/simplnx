@@ -102,7 +102,7 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto *const baseGroupObj = dataStructure.getDataAs<BaseGroup>(value);
+  const auto* const baseGroupObj = dataStructure.getDataAs<BaseGroup>(value);
   if(baseGroupObj == nullptr)
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, value.toString()));

@@ -136,8 +136,8 @@ DataStructure CreateComponentShapeDataStructure()
 } // namespace
 
 // -----------------------------------------------------------------------------
-static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units, DataStructure& dataStructure,
-                                                             ArrayCalculatorFilter& filter)
+static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units,
+                                                                    DataStructure& dataStructure, ArrayCalculatorFilter& filter)
 {
   Arguments args;
 
@@ -151,8 +151,8 @@ static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::s
 }
 
 // -----------------------------------------------------------------------------
-static void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition, const int* expectedNumberOfTuples = nullptr,
-             const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
+static void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition,
+                    const int* expectedNumberOfTuples = nullptr, const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
 {
   std::cout << "  Testing equation: ==>" << equation << "<==" << '\n';
 
@@ -1604,7 +1604,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto *filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

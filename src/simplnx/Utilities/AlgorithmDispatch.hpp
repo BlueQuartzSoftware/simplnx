@@ -366,9 +366,8 @@ Result<> DispatchAlgorithm(const AlgorithmArrayTargets& targets, ArgsT&&... args
   {
     return OocAlgo(std::forward<ArgsT>(args)...)();
   }
-  
-      return InCoreAlgo(std::forward<ArgsT>(args)...)();
- 
+
+  return InCoreAlgo(std::forward<ArgsT>(args)...)();
 }
 
 } // namespace nx::core

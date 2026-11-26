@@ -9,7 +9,6 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-
 #include <catch2/catch.hpp>
 
 #include <fstream>
