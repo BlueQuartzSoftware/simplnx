@@ -131,8 +131,8 @@ Result<> IterativeClosestPoint::operator()()
 
   const usize nn = 1;
 
-  typedef Eigen::Matrix<float, 3, Eigen::Dynamic, Eigen::ColMajor> PointCloud;
-  typedef Eigen::Matrix<float, 4, 4, Eigen::ColMajor> UmeyamaTransform;
+  using PointCloud = Eigen::Matrix<float, 3, Eigen::Dynamic, Eigen::ColMajor>;
+  using UmeyamaTransform = Eigen::Matrix<float, 4, 4, Eigen::ColMajor>;
 
   UmeyamaTransform globalTransform;
   globalTransform << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;

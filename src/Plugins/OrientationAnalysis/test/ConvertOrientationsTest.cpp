@@ -363,7 +363,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Stereographic closed form (
 
 TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations", "[ConvertOrientationsFilter]")
 {
-  typedef ebsdlib::OrientationConverter<EbsdDataArray<float32>, float32> OCType;
+  using OCType = ebsdlib::OrientationConverter<EbsdDataArray<float32>, float32>;
   const std::vector<ebsdlib::orientations::Type> ocTypes = OCType::GetOrientationTypes();
 
   ebsdlib::orientations::Type ocType = GENERATE_COPY(from_range(OCType::GetOrientationTypes()));

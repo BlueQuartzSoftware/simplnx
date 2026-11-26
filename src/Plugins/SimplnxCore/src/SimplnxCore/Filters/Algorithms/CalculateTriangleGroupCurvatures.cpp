@@ -338,7 +338,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
       if(!m_UseNormalsForCurveFitting)
       {
-        typedef Eigen::Matrix<double, NO_NORMALS, 1> Vector3d;
+        using Vector3d = Eigen::Matrix<double, NO_NORMALS, 1>;
         Vector3d sln1 = A.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C constants we can solve the Eigen value/vector problem
         // to get the principal curvatures and principal directions.
@@ -346,7 +346,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       }
       else
       {
-        typedef Eigen::Matrix<double, USE_NORMALS, 1> Vector7d;
+        using Vector7d = Eigen::Matrix<double, USE_NORMALS, 1>;
         Vector7d sln1 = A.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C, D, E, F & G constants we can solve the Eigen value/vector problem
         // to get the principal curvatures and principal directions.
