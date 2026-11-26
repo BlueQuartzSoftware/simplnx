@@ -94,13 +94,12 @@ public:
   : parent_type(initValue)
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
-  , m_Data(std::unique_ptr<value_type[]>(new value_type[this->getSize()]))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   {
     // new value_type[n] leaves the buffer uninitialized. Value initialization would add a full pass before the caller overwrites these values.
     // It would also hide reads of unwritten elements behind plausible zeros.
-
+    m_Data = std::unique_ptr<value_type[]>(new value_type[this->getSize()]);
     if(initValue.has_value())
     {
       std::fill_n(data(), this->getSize(), *initValue);

@@ -48,12 +48,11 @@ class CLocale
 {
 public:
   CLocale()
-  : m_Locale(newlocale(LC_ALL_MASK, "C", nullptr))
   {
 #ifdef _WIN32
     m_Locale = _create_locale(LC_ALL, "C");
 #else
-
+    m_Locale = newlocale(LC_ALL_MASK, "C", nullptr);
 #endif
   }
 
