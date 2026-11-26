@@ -934,7 +934,8 @@ void RequireSupportMemberships(DataStructure& dataStructure, bool neighbors)
   for(usize tupleIdx = 0; tupleIdx < expected.size(); ++tupleIdx)
   {
     std::vector<MeshIndexType> members;
-    for(usize memberIdx = 0; memberIdx < supportPtr->getNumberOfElements(tupleIdx); ++memberIdx)
+    members.reserve(supportPtr->getNumberOfElements(tupleIdx));
+for(usize memberIdx = 0; memberIdx < supportPtr->getNumberOfElements(tupleIdx); ++memberIdx)
     {
       members.push_back(supportPtr->getElementListPointer(tupleIdx)[memberIdx]);
     }

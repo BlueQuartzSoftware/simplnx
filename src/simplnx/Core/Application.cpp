@@ -266,7 +266,8 @@ std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
     }
   }
   std::vector<Uuid> uuidList;
-  for(const auto& index : indices)
+  uuidList.reserve(indices.size());
+for(const auto& index : indices)
   {
     uuidList.push_back(m_Simpl_Uuids[index]);
   }

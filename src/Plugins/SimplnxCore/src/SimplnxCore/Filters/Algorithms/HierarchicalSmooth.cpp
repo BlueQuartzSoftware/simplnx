@@ -216,7 +216,8 @@ matindex getcomplement(const matindex& nSet, int n)
 matindex matunion(const matindex& mat1, const matindex& mat2)
 {
   std::vector<int> v;
-  for(int i = 0; i < mat1.size(); i++)
+  v.reserve(mat1.size());
+for(int i = 0; i < mat1.size(); i++)
   {
     v.push_back(mat1(i));
   }

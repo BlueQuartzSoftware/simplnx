@@ -94,7 +94,8 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
   for(Eigen::Index i = 0; i < matrix.rows(); i++)
   {
     std::vector<float64> row;
-    for(Eigen::Index j = 0; j < matrix.cols(); j++)
+    row.reserve(matrix.cols());
+for(Eigen::Index j = 0; j < matrix.cols(); j++)
     {
       row.push_back(matrix(i, j));
     }

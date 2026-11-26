@@ -135,7 +135,8 @@ Result<std::any> MultiPathSelectionParameter::resolve(DataStructure& dataStructu
 {
   const auto& paths = GetAnyRef<ValueType>(value);
   std::vector<DataObject*> objects;
-  for(const auto& path : paths)
+  objects.reserve(paths.size());
+for(const auto& path : paths)
   {
     objects.push_back(dataStructure.getData(path));
   }

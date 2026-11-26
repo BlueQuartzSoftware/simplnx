@@ -170,7 +170,8 @@ std::vector<std::string> Parameters::getKeys() const
 std::vector<std::string> Parameters::getGroupKeys() const
 {
   std::vector<std::string> keys;
-  for(const auto& pair : m_Groups)
+  keys.reserve(m_Groups.size());
+for(const auto& pair : m_Groups)
   {
     keys.push_back(pair.first);
   }

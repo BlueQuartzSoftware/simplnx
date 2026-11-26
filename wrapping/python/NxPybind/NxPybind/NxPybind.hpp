@@ -301,7 +301,8 @@ public:
   std::vector<std::shared_ptr<PythonPlugin>> getPythonPlugins()
   {
     std::vector<std::shared_ptr<PythonPlugin>> plugins;
-    for(auto&& [id, plugin] : m_PythonPlugins)
+    plugins.reserve(m_PythonPlugins.size());
+for(auto&& [id, plugin] : m_PythonPlugins)
     {
       plugins.push_back(plugin);
     }
