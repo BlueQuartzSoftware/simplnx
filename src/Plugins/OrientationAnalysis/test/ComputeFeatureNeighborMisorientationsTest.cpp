@@ -1,6 +1,8 @@
 #include "OrientationAnalysis/Filters/ComputeFeatureNeighborMisorientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "FeatureNeighborOrientationTestUtils.hpp"
+
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -45,10 +47,7 @@ const DataPath k_ImageGeomPath = DataPath({k_GeomName});
 const DataPath k_FeatureDataPath = k_ImageGeomPath.createChildPath("FeatureData");
 const DataPath k_EnsembleDataPath = k_ImageGeomPath.createChildPath("EnsembleData");
 
-const std::string k_FeaturePhasesName = "FeaturePhases";
-const std::string k_AvgQuatsName = "AvgQuats";
-const std::string k_NeighborListName = "NeighborList";
-const std::string k_CrystalStructuresName = "CrystalStructures";
+const FeatureNeighbors::InputPaths k_InputPaths(k_FeatureDataPath, k_EnsembleDataPath);
 
 const std::string k_MisorientationListOutName = "MisorientationListOut";
 const std::string k_AvgMisorientationsOutName = "AvgMisorientationsOut";
@@ -84,24 +83,16 @@ FixtureData CreateScaffold(usize numFeatures, usize numCrystalStructures)
   td.featureAM = AttributeMatrix::Create(td.ds, "FeatureData", ShapeType{numFeatures}, td.geom->getId());
   td.ensembleAM = AttributeMatrix::Create(td.ds, "EnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_FeatureDataPath.createChildPath(k_FeaturePhasesName), {numFeatures}, {1});
-  td.featurePhases = Int32Array::Create(td.ds, k_FeaturePhasesName, featurePhasesStore, td.featureAM->getId());
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_FeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
-  td.avgQuats = Float32Array::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.featureAM->getId());
-  td.neighborList = NeighborList<int32>::Create(td.ds, k_NeighborListName, ShapeType{numFeatures}, td.featureAM->getId());
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_EnsembleDataPath.createChildPath(k_CrystalStructuresName), {numCrystalStructures}, {1});
-  td.crystalStructures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.ensembleAM->getId());
+  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_InputPaths.featurePhases, {numFeatures}, {1});
+  td.featurePhases = Int32Array::Create(td.ds, k_InputPaths.featurePhases.getTargetName(), featurePhasesStore, td.featureAM->getId());
+  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_InputPaths.avgQuats, {numFeatures}, {4});
+  td.avgQuats = Float32Array::Create(td.ds, k_InputPaths.avgQuats.getTargetName(), avgQuatsStore, td.featureAM->getId());
+  td.neighborList = NeighborList<int32>::Create(td.ds, k_InputPaths.neighborList.getTargetName(), ShapeType{numFeatures}, td.featureAM->getId());
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_InputPaths.crystalStructures, {numCrystalStructures}, {1});
+  td.crystalStructures = UInt32Array::Create(td.ds, k_InputPaths.crystalStructures.getTargetName(), crystalStructuresStore, td.ensembleAM->getId());
 
   // Default: feature 0 sentinel; all other features phase=0 (unassigned); identity quats.
-  for(usize i = 0; i < numFeatures; ++i)
-  {
-    (*td.featurePhases)[i] = 0;
-    (*td.avgQuats)[i * 4 + 0] = 0.0f;
-    (*td.avgQuats)[i * 4 + 1] = 0.0f;
-    (*td.avgQuats)[i * 4 + 2] = 0.0f;
-    (*td.avgQuats)[i * 4 + 3] = 1.0f;
-    td.neighborList->setList(i, std::make_shared<std::vector<int32>>(std::vector<int32>{}));
-  }
+  FeatureNeighbors::InitializeFeatures(*td.featurePhases, *td.avgQuats, *td.neighborList);
   // Default crystal structures: index 0 sentinel; index 1 Cubic_High; subsequent left as zeros to be set by caller.
   (*td.crystalStructures)[0] = 999u;
   if(numCrystalStructures > 1)
@@ -147,10 +138,10 @@ Arguments BuildArgs(bool computeAvgMisors)
 {
   Arguments args;
   args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_ComputeAvgMisors_Key, std::make_any<bool>(computeAvgMisors));
-  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(k_FeatureDataPath.createChildPath(k_NeighborListName)));
-  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
-  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_FeatureDataPath.createChildPath(k_FeaturePhasesName)));
-  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_EnsembleDataPath.createChildPath(k_CrystalStructuresName)));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(k_InputPaths.neighborList));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_InputPaths.avgQuats));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_InputPaths.featurePhases));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_InputPaths.crystalStructures));
   args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_MisorientationListArrayName_Key, std::make_any<std::string>(k_MisorientationListOutName));
   args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_AvgMisorientationsArrayName_Key, std::make_any<std::string>(k_AvgMisorientationsOutName));
   return args;
@@ -449,7 +440,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Ave
   AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
 
   // The scaffold creates a resident list. Replace its store before filling the fixture.
-  const DataPath neighborListPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_NeighborListName);
+  const DataPath neighborListPath = AnalyticalFixtures::k_InputPaths.neighborList;
   const auto neighborListStore = DataStoreUtilities::CreateListStore<int32>(td.ds, neighborListPath, {5}, IDataAction::Mode::Execute, "HDF5-OOC");
   REQUIRE(neighborListStore != nullptr);
   REQUIRE(td.neighborList != nullptr);
@@ -495,70 +486,12 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: gen
   UnitTest::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
 
-  // Each four-component float32 quaternion tuple is 16 bytes. The 1 MiB HDF5
-  // chunk policy therefore places 65,536 tuples in one physical chunk.
-  constexpr usize k_ChunkTuples = 65536;
-  constexpr usize k_FeatureTuples = k_ChunkTuples + 1;
-  constexpr usize k_LastFullChunkTuple = k_ChunkTuples - 1;
-  constexpr usize k_TailTuple = k_ChunkTuples;
-
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-
   DataStructure dataStructure;
-  auto* dataGroup = DataGroup::Create(dataStructure, AnalyticalFixtures::k_GeomName);
-  REQUIRE(dataGroup != nullptr);
-  auto* featureData = AttributeMatrix::Create(dataStructure, AnalyticalFixtures::k_FeatureDataPath.getTargetName(), {k_FeatureTuples}, dataGroup->getId());
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, AnalyticalFixtures::k_EnsembleDataPath.getTargetName(), {2}, dataGroup->getId());
-  REQUIRE(featureData != nullptr);
-  REQUIRE(ensembleData != nullptr);
-
-  const DataPath featurePhasesPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_FeaturePhasesName);
-  const DataPath avgQuatsPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_AvgQuatsName);
-  const DataPath neighborListPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_NeighborListName);
-  const DataPath crystalStructuresPath = AnalyticalFixtures::k_EnsembleDataPath.createChildPath(AnalyticalFixtures::k_CrystalStructuresName);
+  FeatureNeighbors::CreateChunkTailInputs(dataStructure, AnalyticalFixtures::k_InputPaths, ebsdlib::CrystalStructure::Cubic_High, AnalyticalFixtures::QuatFromPhi1Deg(15.0F),
+                                          AnalyticalFixtures::QuatFromPhi1Deg(30.0F));
   const DataPath misalignmentListPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_MisorientationListOutName);
   const DataPath avgMisalignmentsPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_AvgMisorientationsOutName);
-
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featurePhasesPath, {k_FeatureTuples}, {1});
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, avgQuatsPath, {k_FeatureTuples}, {4});
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
-  auto* featurePhases = Int32Array::Create(dataStructure, featurePhasesPath.getTargetName(), featurePhasesStore, featureData->getId());
-  auto* avgQuats = Float32Array::Create(dataStructure, avgQuatsPath.getTargetName(), avgQuatsStore, featureData->getId());
-  auto* neighborList = NeighborList<int32>::Create(dataStructure, neighborListPath.getTargetName(), {k_FeatureTuples}, featureData->getId());
-  auto* crystalStructures = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleData->getId());
-  REQUIRE(featurePhases != nullptr);
-  REQUIRE(avgQuats != nullptr);
-  REQUIRE(neighborList != nullptr);
-  REQUIRE(crystalStructures != nullptr);
-
-  std::vector<int32> featurePhaseValues(k_FeatureTuples, 1);
-  featurePhaseValues[0] = 0;
-  std::vector<float32> avgQuatValues(k_FeatureTuples * 4, 0.0F);
-  for(usize featureIdx = 0; featureIdx < k_FeatureTuples; featureIdx++)
-  {
-    avgQuatValues[featureIdx * 4 + 3] = 1.0F;
-  }
-  const auto lastFullChunkQuat = AnalyticalFixtures::QuatFromPhi1Deg(15.0F);
-  const auto tailQuat = AnalyticalFixtures::QuatFromPhi1Deg(30.0F);
-  std::copy(lastFullChunkQuat.cbegin(), lastFullChunkQuat.cend(), avgQuatValues.begin() + k_LastFullChunkTuple * 4);
-  std::copy(tailQuat.cbegin(), tailQuat.cend(), avgQuatValues.begin() + k_TailTuple * 4);
-  const std::array<uint32, 2> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Cubic_High};
-
-  auto featurePhasesWriteResult = featurePhases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featurePhaseValues.data(), featurePhaseValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(featurePhasesWriteResult);
-  auto avgQuatsWriteResult = avgQuats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(avgQuatValues.data(), avgQuatValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(avgQuatsWriteResult);
-  auto crystalStructuresWriteResult = crystalStructures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
-
-  neighborList->setList(k_LastFullChunkTuple, std::vector<int32>{1});
-  neighborList->setList(k_TailTuple, std::vector<int32>{1});
-
-  REQUIRE(featurePhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(avgQuats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  const auto quaternionMetadata = avgQuats->getDataStoreRef().getRecoveryMetadata();
-  REQUIRE(quaternionMetadata.at("OocChunkShape") == "65536");
-  REQUIRE(crystalStructures->getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   ComputeFeatureNeighborMisorientationsFilter filter;
   Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/true);
@@ -574,15 +507,15 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: gen
   const auto& avgMisalignments = dataStructure.getDataRefAs<Float32Array>(avgMisalignmentsPath);
   REQUIRE(avgMisalignments.getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
-  const auto lastFullChunkValues = misalignmentList.at(k_LastFullChunkTuple);
+  const auto lastFullChunkValues = misalignmentList.at(FeatureNeighbors::k_LastFullChunkTuple);
   REQUIRE(lastFullChunkValues.size() == 1);
   REQUIRE(lastFullChunkValues[0] == Approx(15.0F).margin(1.0E-3F));
-  REQUIRE(avgMisalignments[k_LastFullChunkTuple] == Approx(15.0F).margin(1.0E-3F));
+  REQUIRE(avgMisalignments[FeatureNeighbors::k_LastFullChunkTuple] == Approx(15.0F).margin(1.0E-3F));
 
-  const auto tailValues = misalignmentList.at(k_TailTuple);
+  const auto tailValues = misalignmentList.at(FeatureNeighbors::k_TailTuple);
   REQUIRE(tailValues.size() == 1);
   REQUIRE(tailValues[0] == Approx(30.0F).margin(1.0E-3F));
-  REQUIRE(avgMisalignments[k_TailTuple] == Approx(30.0F).margin(1.0E-3F));
+  REQUIRE(avgMisalignments[FeatureNeighbors::k_TailTuple] == Approx(30.0F).margin(1.0E-3F));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
