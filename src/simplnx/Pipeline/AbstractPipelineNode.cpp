@@ -77,7 +77,7 @@ void AbstractPipelineNode::checkDataStructureSize(DataStructure& dataStructure)
   if(dataStructure.memoryUsage() > largeDataStructureSize)
   {
     auto result = dataStructure.transferDataArraysOoc();
-    if(result.warnings().size() > 0)
+    if(!result.warnings().empty())
     {
       std::cout << "Some DataArrays not converted to out-of-core:" << '\n';
       for(const auto& warning : result.warnings())

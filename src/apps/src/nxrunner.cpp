@@ -116,7 +116,7 @@ public:
    */
   Result<> setLogFile(const std::filesystem::path& filepath)
   {
-    if(filepath.empty() || filepath.string().length() == 0)
+    if(filepath.empty() || filepath.string().empty())
     {
       std::string errorMessage = "Log file cannot be created with an empty filepath.";
       return nx::core::MakeErrorResult(k_NullLogFileError, errorMessage);

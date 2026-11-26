@@ -1486,7 +1486,7 @@ TEST_CASE("Dream3dLoadingApi: selected NeighborList preserves metadata and value
   NeighborList<int32>* loadedNeighborListPtr = nullptr;
   REQUIRE_NOTHROW(loadedNeighborListPtr = &loaded.getDataRefAs<NeighborList<int32>>(k_NonnumericNeighborListPath));
   REQUIRE(loadedNeighborListPtr != nullptr);
-  CHECK(loadedNeighborListPtr->getList(0) == std::vector<int32>{});
+  CHECK(loadedNeighborListPtr->getList(0).empty());
   CHECK(loadedNeighborListPtr->getList(1) == std::vector<int32>{7, 11});
   CHECK(loadedNeighborListPtr->getList(2) == std::vector<int32>{13});
   CHECK(loaded.containsData(k_NonnumericGroupPath));
@@ -1515,7 +1515,7 @@ TEST_CASE("Dream3dLoadingApi: selected NeighborList preserves metadata and value
   NeighborList<int32>* executeNeighborListPtr = nullptr;
   REQUIRE_NOTHROW(executeNeighborListPtr = &executeDestination.getDataRefAs<NeighborList<int32>>(k_NonnumericNeighborListPath));
   REQUIRE(executeNeighborListPtr != nullptr);
-  CHECK(executeNeighborListPtr->getList(0) == std::vector<int32>{});
+  CHECK(executeNeighborListPtr->getList(0).empty());
   CHECK(executeNeighborListPtr->getList(1) == std::vector<int32>{7, 11});
   CHECK(executeNeighborListPtr->getList(2) == std::vector<int32>{13});
   CHECK(executeDestination.containsData(k_NonnumericGroupPath));

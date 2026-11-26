@@ -562,7 +562,7 @@ bool DataStructure::removeData(DataObject* data)
 
   auto pathsToData = data->getDataPaths();
   auto parentIds = data->getParentIds();
-  if(parentIds.size() == 0)
+  if(parentIds.empty())
   {
     return removeTopLevel(data);
   }

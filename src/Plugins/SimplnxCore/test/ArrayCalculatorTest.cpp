@@ -178,7 +178,7 @@ static void runTest(const std::string& equation, const DataPath& targetArrayPath
     REQUIRE(executeResult.result.errors()[0].code == expectedErrorCondition);
   }
 
-  if(executeResult.result.warnings().size() != 0)
+  if(!executeResult.result.warnings().empty())
   {
     REQUIRE(expectedWarningCondition != CalculatorWarningCode::None);
     REQUIRE(executeResult.result.warnings()[0].code == static_cast<int32>(expectedWarningCondition));

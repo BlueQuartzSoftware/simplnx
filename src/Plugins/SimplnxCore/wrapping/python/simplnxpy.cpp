@@ -963,7 +963,7 @@ PYBIND11_MODULE(simplnx, mod)
   dataPath.def("name", [](const DataPath& self) { return self.getTargetName(); });
   dataPath.def("with_name", [](const DataPath& self, const std::string& name) {
     auto pathVector = self.getPathVector();
-    if(pathVector.size() == 0)
+    if(pathVector.empty())
     {
       return DataPath(std::vector<std::string>{name});
     }

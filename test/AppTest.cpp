@@ -238,7 +238,7 @@ TEST_CASE("Application::loadPlugins", "[Application]")
     {
       auto plugins = app->getPluginList();
       // If plugins loaded successfully, there should be at least one
-      REQUIRE(plugins.size() > 0);
+      REQUIRE(!plugins.empty());
     }
   }
 }
@@ -260,7 +260,7 @@ TEST_CASE("Application::getFilterList", "[Application]")
     {
       auto* filterList = app->getFilterList();
       auto handles = filterList->getFilterHandles();
-      REQUIRE(handles.size() > 0);
+      REQUIRE(!handles.empty());
     }
   }
 }

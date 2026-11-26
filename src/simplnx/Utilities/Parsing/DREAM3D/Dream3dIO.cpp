@@ -2642,7 +2642,7 @@ Result<std::shared_ptr<DataObject>> DREAM3D::ImportDataObjectFromFile(const nx::
       return ConvertInvalidResult<std::shared_ptr<DataObject>>(std::move(result));
     }
     std::vector<std::shared_ptr<DataObject>> value = result.value();
-    if(value.size() != 0)
+    if(!value.empty())
     {
       return MakeErrorResult<std::shared_ptr<DataObject>>(-48264, fmt::format("Error extracting a single DataObject from legacy DREAM3D file at path '{}'", dataPath.toString()));
     }
