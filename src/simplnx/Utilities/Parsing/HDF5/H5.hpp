@@ -22,17 +22,17 @@ using SizeType = uint64;
  */
 enum class Type
 {
-  int8,         ///< Selects signed 8-bit integers.
-  int16,        ///< Selects signed 16-bit integers.
-  int32,        ///< Selects signed 32-bit integers.
-  int64,        ///< Selects signed 64-bit integers.
-  uint8,        ///< Selects unsigned 8-bit integers.
-  uint16,       ///< Selects unsigned 16-bit integers.
-  uint32,       ///< Selects unsigned 32-bit integers.
-  uint64,       ///< Selects unsigned 64-bit integers.
-  float32,      ///< Selects 32-bit floating-point values.
-  float64,      ///< Selects 64-bit floating-point values.
-  string,       ///< Selects string values.
+  int8 = 0,         ///< Selects signed 8-bit integers.
+  int16 = 1,        ///< Selects signed 16-bit integers.
+  int32 = 2,        ///< Selects signed 32-bit integers.
+  int64 = 3,        ///< Selects signed 64-bit integers.
+  uint8 = 4,        ///< Selects unsigned 8-bit integers.
+  uint16 = 5,       ///< Selects unsigned 16-bit integers.
+  uint32 = 6,       ///< Selects unsigned 32-bit integers.
+  uint64 = 7,       ///< Selects unsigned 64-bit integers.
+  float32 = 8,      ///< Selects 32-bit floating-point values.
+  float64 = 9,      ///< Selects 64-bit floating-point values.
+  string = 10,       ///< Selects string values.
   unknown = 255 ///< Identifies an unsupported or invalid type.
 };
 
