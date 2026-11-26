@@ -47,7 +47,7 @@ public:
    * @brief Move constructor.
    * @param other The VertexGeom to move from
    */
-  VertexGeom(VertexGeom&& other);
+  VertexGeom(VertexGeom&& other) noexcept ;
 
   ~VertexGeom() noexcept override;
 

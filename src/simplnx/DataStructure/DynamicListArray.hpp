@@ -101,7 +101,7 @@ public:
    * @param other The DynamicListArray to move from
    */
   DynamicListArray(DynamicListArray&& other)
-  : DataObject(std::move(other))
+ noexcept   : DataObject(std::move(other))
   , m_Array(std::move(other.m_Array))
   , m_Size(std::move(other.m_Size))
   {

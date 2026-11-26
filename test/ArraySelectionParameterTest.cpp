@@ -31,7 +31,7 @@ public:
   ReportingOocStore(const ReportingOocStore&) = default;
   ReportingOocStore(ReportingOocStore&&) = default;
   ReportingOocStore& operator=(const ReportingOocStore&) = delete;
-  ReportingOocStore& operator=(ReportingOocStore&&) = default;
+  ReportingOocStore& operator=(ReportingOocStore&&)  noexcept = default;
 
   /**
    * @brief Reports OOC storage for location validation.

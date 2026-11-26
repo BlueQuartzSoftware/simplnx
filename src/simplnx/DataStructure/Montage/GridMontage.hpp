@@ -71,7 +71,7 @@ public:
    * montage.
    * @param other
    */
-  GridMontage(GridMontage&& other);
+  GridMontage(GridMontage&& other) noexcept ;
 
   ~GridMontage() override;
 

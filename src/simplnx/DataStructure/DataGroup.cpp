@@ -19,7 +19,7 @@ DataGroup::DataGroup(const DataGroup& other)
 }
 
 DataGroup::DataGroup(DataGroup&& other)
-: BaseGroup(std::move(other))
+ noexcept : BaseGroup(std::move(other))
 {
 }
 

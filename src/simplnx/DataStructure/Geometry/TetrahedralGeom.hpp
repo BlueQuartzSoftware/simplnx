@@ -52,7 +52,7 @@ public:
    * @brief Move constructor.
    * @param other The TetrahedralGeom to move from
    */
-  TetrahedralGeom(TetrahedralGeom&& other) = default;
+  TetrahedralGeom(TetrahedralGeom&& other)  noexcept = default;
 
   ~TetrahedralGeom() noexcept override = default;
 

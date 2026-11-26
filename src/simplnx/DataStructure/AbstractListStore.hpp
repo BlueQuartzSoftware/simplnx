@@ -151,7 +151,7 @@ public:
       return *this;
     }
     ReferenceList& operator=(ReferenceList&& rhs)
-    {
+ noexcept     {
       m_Edited = rhs.m_Edited;
       m_List = std::move(rhs.m_List);
       m_Index = rhs.m_Index;

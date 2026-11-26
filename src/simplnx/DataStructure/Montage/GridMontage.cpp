@@ -23,7 +23,7 @@ GridMontage::GridMontage(const GridMontage& other)
 }
 
 GridMontage::GridMontage(GridMontage&& other)
-: AbstractMontage(std::move(other))
+ noexcept : AbstractMontage(std::move(other))
 {
 }
 

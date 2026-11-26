@@ -22,7 +22,7 @@ BaseGroup::BaseGroup(const BaseGroup& other)
 }
 
 BaseGroup::BaseGroup(BaseGroup&& other)
-: DataObject(std::move(other))
+ noexcept : DataObject(std::move(other))
 , m_DataMap(std::move(other.m_DataMap))
 {
   auto keys = m_DataMap.getKeys();

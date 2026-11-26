@@ -1351,7 +1351,7 @@ protected:
    * @param other Data store to move.
    */
   AbstractDataStore(AbstractDataStore&& other)
-  : IDataStore(std::move(other))
+ noexcept   : IDataStore(std::move(other))
   , m_InitValue(std::move(other.m_InitValue))
   {
   }

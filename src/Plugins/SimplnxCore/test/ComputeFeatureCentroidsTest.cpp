@@ -106,7 +106,7 @@ public:
   CentroidsObservedReadStore(const CentroidsObservedReadStore&) = default;
   CentroidsObservedReadStore(CentroidsObservedReadStore&&) = default;
   CentroidsObservedReadStore& operator=(const CentroidsObservedReadStore&) = delete;
-  CentroidsObservedReadStore& operator=(CentroidsObservedReadStore&&) = default;
+  CentroidsObservedReadStore& operator=(CentroidsObservedReadStore&&)  noexcept = default;
 
   Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
   {

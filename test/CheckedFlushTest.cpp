@@ -76,7 +76,7 @@ public:
   LegacyFlushStore(const LegacyFlushStore&) = default;
   LegacyFlushStore(LegacyFlushStore&&) = default;
   LegacyFlushStore& operator=(const LegacyFlushStore&) = delete;
-  LegacyFlushStore& operator=(LegacyFlushStore&&) = default;
+  LegacyFlushStore& operator=(LegacyFlushStore&&)  noexcept = default;
 
   /**
    * @brief Counts the legacy call and throws the selected exception.
@@ -108,9 +108,9 @@ public:
 
   ~ReportingFlushStore() override = default;
   ReportingFlushStore(const ReportingFlushStore&) = default;
-  ReportingFlushStore(ReportingFlushStore&&) = default;
+  ReportingFlushStore(ReportingFlushStore&&)  noexcept = default;
   ReportingFlushStore& operator=(const ReportingFlushStore&) = delete;
-  ReportingFlushStore& operator=(ReportingFlushStore&&) = default;
+  ReportingFlushStore& operator=(ReportingFlushStore&&)  noexcept = default;
 
   /**
    * @brief Counts calls to the separate legacy operation.
@@ -152,7 +152,7 @@ public:
 
   ~ReportingFlushListStore() override = default;
   ReportingFlushListStore(const ReportingFlushListStore&) = default;
-  ReportingFlushListStore(ReportingFlushListStore&&) = default;
+  ReportingFlushListStore(ReportingFlushListStore&&)  noexcept = default;
   ReportingFlushListStore& operator=(const ReportingFlushListStore&) = delete;
   ReportingFlushListStore& operator=(ReportingFlushListStore&&) = delete;
 
@@ -189,7 +189,7 @@ public:
 
   ~LegacyFlushGroup() override = default;
   LegacyFlushGroup(const LegacyFlushGroup&) = default;
-  LegacyFlushGroup(LegacyFlushGroup&&) = default;
+  LegacyFlushGroup(LegacyFlushGroup&&)  noexcept = default;
   LegacyFlushGroup& operator=(const LegacyFlushGroup&) = delete;
   LegacyFlushGroup& operator=(LegacyFlushGroup&&) = delete;
 
@@ -225,7 +225,7 @@ public:
 
   ~ThrowingCheckedFlushGroup() override = default;
   ThrowingCheckedFlushGroup(const ThrowingCheckedFlushGroup&) = default;
-  ThrowingCheckedFlushGroup(ThrowingCheckedFlushGroup&&) = default;
+  ThrowingCheckedFlushGroup(ThrowingCheckedFlushGroup&&)  noexcept = default;
   ThrowingCheckedFlushGroup& operator=(const ThrowingCheckedFlushGroup&) = delete;
   ThrowingCheckedFlushGroup& operator=(ThrowingCheckedFlushGroup&&) = delete;
 

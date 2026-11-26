@@ -52,7 +52,7 @@ public:
   ObservedAvizoStore(const ObservedAvizoStore&) = default;
   ObservedAvizoStore(ObservedAvizoStore&&) = default;
   ObservedAvizoStore& operator=(const ObservedAvizoStore&) = delete;
-  ObservedAvizoStore& operator=(ObservedAvizoStore&&) = default;
+  ObservedAvizoStore& operator=(ObservedAvizoStore&&)  noexcept = default;
 
   /**
    * @brief Copies a source window or reports the selected read failure.

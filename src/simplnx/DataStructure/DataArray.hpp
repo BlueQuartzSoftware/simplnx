@@ -265,7 +265,7 @@ public:
    * @param other Source array.
    */
   DataArray(DataArray<T>&& other)
-  : IDataArray(std::move(other))
+ noexcept   : IDataArray(std::move(other))
   , m_DataStore(std::move(other.m_DataStore))
   {
   }

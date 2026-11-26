@@ -52,7 +52,7 @@ public:
    * @brief Move constructor.
    * @param other The HexahedralGeom to move from
    */
-  HexahedralGeom(HexahedralGeom&& other) = default;
+  HexahedralGeom(HexahedralGeom&& other)  noexcept = default;
 
   ~HexahedralGeom() noexcept override = default;
 

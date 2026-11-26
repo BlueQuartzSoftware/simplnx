@@ -164,7 +164,7 @@ public:
    * @return This data store.
    */
   DataStore& operator=(DataStore&& rhs)
-  {
+ noexcept   {
     m_ComponentShape = std::move(rhs.m_ComponentShape);
     m_TupleShape = std::move(rhs.m_TupleShape);
     m_Data = std::move(rhs.m_Data);

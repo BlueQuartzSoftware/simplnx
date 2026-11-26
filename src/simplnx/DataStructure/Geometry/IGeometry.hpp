@@ -86,7 +86,7 @@ public:
   IGeometry() = delete;
 
   IGeometry(const IGeometry&) = default;
-  IGeometry(IGeometry&&) = default;
+  IGeometry(IGeometry&&)  noexcept = default;
 
   IGeometry& operator=(const IGeometry&) = delete;
   IGeometry& operator=(IGeometry&&) noexcept = delete;

@@ -92,7 +92,7 @@ public:
   NumericCompletionStore(const NumericCompletionStore&) = default;
   NumericCompletionStore(NumericCompletionStore&&) = default;
   NumericCompletionStore& operator=(const NumericCompletionStore&) = delete;
-  NumericCompletionStore& operator=(NumericCompletionStore&&) = default;
+  NumericCompletionStore& operator=(NumericCompletionStore&&)  noexcept = default;
 
   /**
    * @brief Counts a legacy call without returning checked diagnostics.
@@ -418,7 +418,7 @@ public:
 
   // Rvalues retain the source topology and shared fault control through the copy contract.
   SnapshotGroup(SnapshotGroup&& other)
-  : SnapshotGroup(static_cast<const SnapshotGroup&>(other))
+ noexcept   : SnapshotGroup(static_cast<const SnapshotGroup&>(other))
   {
   }
 

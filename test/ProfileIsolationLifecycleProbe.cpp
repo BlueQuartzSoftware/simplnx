@@ -27,12 +27,12 @@ struct LateWitness
 
   // Rvalues copy the path so the source keeps its shutdown check.
   LateWitness(LateWitness&& other)
-  : LateWitness(static_cast<const LateWitness&>(other))
+ noexcept   : LateWitness(static_cast<const LateWitness&>(other))
   {
   }
 
   LateWitness& operator=(LateWitness&& other)
-  {
+ noexcept   {
     return *this = static_cast<const LateWitness&>(other);
   }
 
