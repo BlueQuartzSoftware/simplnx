@@ -120,7 +120,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
-  auto numericType = static_cast<DataType>(inputArray->getDataType());
+  auto numericType = inputArray->getDataType();
   std::vector<size_t> componentDims = {representationElementCount[static_cast<size_t>(outputType)]};
   auto action = std::make_unique<CreateArrayAction>(numericType, inputArray->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
 

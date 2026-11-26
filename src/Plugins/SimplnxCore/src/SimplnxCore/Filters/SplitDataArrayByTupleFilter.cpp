@@ -239,7 +239,7 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
     tupleShape = existingAttrMatrix.getShape();
   }
 
-  auto result = commonMultiplier(inputArrayTupleShape, tupleShape, static_cast<usize>(splitDimension));
+  auto result = commonMultiplier(inputArrayTupleShape, tupleShape, splitDimension);
   if(result.invalid())
   {
     return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier),

@@ -523,7 +523,7 @@ Result<> ComputeGBPDMetricBased::operator()()
 
       samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
       samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
-      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
+      samplePtsZ.push_back(cosAtan1OverCosPhi);
     }
   }
   if(crystal == 2 || crystal == 10) // 6/m ||  -3m
@@ -546,11 +546,11 @@ Result<> ComputeGBPDMetricBased::operator()()
 
       samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
       samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
-      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
+      samplePtsZ.push_back(cosAtan1OverCosPhi);
 
       samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
       samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
-      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
+      samplePtsZ.push_back(cosAtan1OverCosPhi);
     }
   }
   if(crystal == 4) // -1

@@ -407,7 +407,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
               }
               for(int32 featureCount2Index = 0; featureCount2Index < featureCount2; featureCount2Index++)
               {
-                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / static_cast<float32>(count);
+                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / count;
               }
               for(int32 featureCount1Index = 0; featureCount1Index < featureCount1; featureCount1Index++)
               {
@@ -549,7 +549,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
               }
               for(int32 featureCount2Index = 0; featureCount2Index < featureCount2; featureCount2Index++)
               {
-                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / static_cast<float32>(count);
+                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / count;
               }
               for(int32 featureCount1Index = 0; featureCount1Index < featureCount1; featureCount1Index++)
               {

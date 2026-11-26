@@ -94,7 +94,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
 
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(0.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{0.0}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1"));
@@ -106,7 +106,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>(""));
@@ -118,7 +118,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1000"));

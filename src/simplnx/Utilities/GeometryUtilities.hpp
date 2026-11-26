@@ -254,7 +254,7 @@ requires std::is_base_of<INodeGeometry1D, GeometryType>::value
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
-  dataAlg.setRange(0ULL, static_cast<usize>(numXBins * numYBins * numZBins));
+  dataAlg.setRange(0ULL, (numXBins * numYBins * numZBins));
   dataAlg.execute(GeometryUtilities::FindUniqueIdsImpl(vertices, nodesInBin, uniqueIds));
 
   // renumber the unique nodes

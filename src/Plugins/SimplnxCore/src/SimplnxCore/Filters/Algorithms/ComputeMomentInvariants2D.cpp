@@ -342,7 +342,7 @@ public:
       const double* m2DInternal = m2D.array().data();
       for(usize comp = 0; comp < 9; comp++)
       {
-        centralMoments[static_cast<usize>(featureId) * 9UL + comp] = static_cast<float32>(m2DInternal[comp]);
+        centralMoments[featureId * 9UL + comp] = static_cast<float32>(m2DInternal[comp]);
       }
 
       m_ReportProgress(1);

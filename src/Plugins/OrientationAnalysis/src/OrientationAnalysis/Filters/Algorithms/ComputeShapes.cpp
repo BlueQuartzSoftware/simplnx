@@ -371,7 +371,7 @@ Result<> ComputeShapes::findMoments()
 
   double sphere = (2000.0 * std::numbers::pi * std::numbers::pi) / 9.0;
   // constant for moments because voxels are broken into smaller voxels
-  double konst1 = static_cast<double>((modXRes / 2.0) * (modYRes / 2.0) * (modZRes / 2.0));
+  double konst1 = ((modXRes / 2.0) * (modYRes / 2.0) * (modZRes / 2.0));
   // constant for volumes because voxels are counted as one
   double konst2 = static_cast<double>((spacing[0]) * (spacing[1]) * (spacing[2]));
   double konst3 = static_cast<double>((modXRes) * (modYRes) * (modZRes));
