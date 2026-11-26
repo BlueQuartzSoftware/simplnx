@@ -209,11 +209,7 @@ bool CAxisSegmentFeatures::isValidVoxel(int64 point) const
     return false;
   }
   Int32Array& cellPhases = *m_CellPhases;
-  if(cellPhases[point] <= 0)
-  {
-    return false;
-  }
-  return true;
+  return cellPhases[point] > 0;
 }
 
 bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const

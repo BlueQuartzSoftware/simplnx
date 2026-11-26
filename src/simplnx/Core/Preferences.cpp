@@ -115,7 +115,7 @@ std::optional<uint64> savedGBToHundredths(const nlohmann::json& value)
   }
   const double gigabytes = value.get<double>();
   // NaN fails both comparisons. The range check also rejects infinity before the integer conversion.
-  if(!(gigabytes >= 0.0 && gigabytes <= k_MaxOocSizeGB))
+  if(gigabytes < 0.0 || gigabytes > k_MaxOocSizeGB)
   {
     return std::nullopt;
   }

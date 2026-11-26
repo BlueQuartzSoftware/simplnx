@@ -72,7 +72,7 @@ void BuildLargeTestData(DataStructure& dataStructure, bool includeBlockedCells =
     {
       for(usize x = 0; x < k_LargeDimX; x++)
       {
-        const bool isBlocked = includeBlockedCells && x == k_LargeDimX / 2 && y > 2 && y + 3 < k_LargeDimY && z > 2 && z + 3 < k_LargeDimZ && !(y == k_LargeDimY / 2 && z == k_LargeDimZ / 2);
+        const bool isBlocked = includeBlockedCells && x == k_LargeDimX / 2 && y > 2 && y + 3 < k_LargeDimY && z > 2 && z + 3 < k_LargeDimZ && (y != k_LargeDimY / 2 || z != k_LargeDimZ / 2);
         if(isBlocked)
         {
           sliceBuffer[y * k_LargeDimX + x] = -1;
@@ -252,7 +252,7 @@ void BuildComparisonTestData(DataStructure& dataStructure, bool includeBlockedCe
     {
       for(usize x = 0; x < k_DimX; x++)
       {
-        const bool isBlocked = includeBlockedCells && x == k_DimX / 2 && y > 2 && y + 3 < k_DimY && z > 2 && z + 3 < k_DimZ && !(y == k_DimY / 2 && z == k_DimZ / 2);
+        const bool isBlocked = includeBlockedCells && x == k_DimX / 2 && y > 2 && y + 3 < k_DimY && z > 2 && z + 3 < k_DimZ && (y != k_DimY / 2 || z != k_DimZ / 2);
         if(isBlocked)
         {
           sliceBuffer[y * k_DimX + x] = -1;

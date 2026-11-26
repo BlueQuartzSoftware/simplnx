@@ -85,7 +85,7 @@ Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, cons
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath, const WriteOptions& options)
 {
   auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filepath);
-  if(fileWriter.isValid() == false)
+  if(!fileWriter.isValid())
   {
     return MakeErrorResult(-8054, fmt::format("Failed to create file at path {}", filepath.string()));
   }

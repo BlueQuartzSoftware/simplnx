@@ -124,7 +124,7 @@ public:
 
     const std::ios_base::openmode openmode = std::ios_base::out | std::ios_base::trunc;
     m_LogStream = std::fstream(filepath, openmode);
-    if(m_LogStream.is_open() == false)
+    if(!m_LogStream.is_open())
     {
       std::string errorMessage = fmt::format("Failed to open log file: '{}'", filepath.string());
       return nx::core::MakeErrorResult(k_LogFileError, errorMessage);

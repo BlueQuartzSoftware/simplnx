@@ -342,11 +342,7 @@ bool ScalarSegmentFeatures::isValidVoxel(int64 point) const
     if(slot >= 0)
     {
       const usize off = static_cast<usize>(slot) * static_cast<usize>(m_BufSliceSize) + static_cast<usize>(point - iz * m_BufSliceSize);
-      if(m_InputValues->UseMask && m_MaskBuffer[off] == 0)
-      {
-        return false;
-      }
-      return true;
+      return !(m_InputValues->UseMask && m_MaskBuffer[off] == 0);
     }
     return false;
   }

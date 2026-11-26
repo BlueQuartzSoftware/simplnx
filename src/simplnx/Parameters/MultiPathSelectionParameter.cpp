@@ -172,7 +172,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
       return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
     }
 
-    if(attributeMatrixNameResult.value().empty() == false)
+    if(!attributeMatrixNameResult.value().empty())
     {
       dataPath = dataPath.createChildPath(attributeMatrixNameResult.value());
 
@@ -185,7 +185,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
           return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
         }
 
-        if(dataArrayNameResult.value().empty() == false)
+        if(!dataArrayNameResult.value().empty())
         {
           dataPath = dataPath.createChildPath(dataArrayNameResult.value());
         }

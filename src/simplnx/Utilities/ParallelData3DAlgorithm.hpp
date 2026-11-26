@@ -74,7 +74,7 @@ public:
   void execute(const Body& body)
   {
     // Check if pre-existing chunk sizes should be preserved
-    if(m_ChunkSize.has_value() == false)
+    if(!m_ChunkSize.has_value())
     {
       executeRange<Body>(body, m_Range);
     }

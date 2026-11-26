@@ -29,7 +29,7 @@ Result<> ReadHDF5Dataset::operator()()
   auto datasetImportInfoList = m_InputValues->ImportHdf5Object.datasets;
 
   auto h5FileReader = nx::core::HDF5::FileIO::ReadFile(inputFilePath);
-  if(h5FileReader.isValid() == false)
+  if(!h5FileReader.isValid())
   {
     return MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
   }

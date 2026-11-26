@@ -134,7 +134,7 @@ inline std::string EscapeDiagnosticText(std::string_view value)
     if(valid && count > 1)
     {
       const auto second = static_cast<unsigned char>(value[index + 1]);
-      valid = !((first == 0xE0 && second < 0xA0) || (first == 0xED && second >= 0xA0) || (first == 0xF0 && second < 0x90) || (first == 0xF4 && second >= 0x90));
+      valid = (first != 0xE0 || second >= 0xA0) && (first != 0xED || second < 0xA0) && (first != 0xF0 || second >= 0x90) && (first != 0xF4 || second < 0x90);
     }
     std::array<char, 4> escaped{};
     const char* bytesPtr = value.data() + index;

@@ -23,7 +23,7 @@ namespace
  */
 bool AreEndpointsInBounds(float32 minValue, float32 maxValue, float32 minBound, float32 maxBound)
 {
-  return !(minBound > minValue || maxBound < minValue || minBound > maxValue || maxBound < maxValue);
+  return minBound <= minValue && maxBound >= minValue && minBound <= maxValue && maxBound >= maxValue;
 }
 
 /**

@@ -307,7 +307,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       static const uint32_t NO_NORMALS = 3;
       static const uint32_t USE_NORMALS = 7;
       uint32_t cols = NO_NORMALS;
-      if(m_UseNormalsForCurveFitting == true)
+      if(m_UseNormalsForCurveFitting)
       {
         cols = USE_NORMALS;
       }

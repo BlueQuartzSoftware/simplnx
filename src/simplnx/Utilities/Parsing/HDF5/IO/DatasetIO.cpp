@@ -2057,11 +2057,7 @@ Result<> DatasetIO::deleteH5Attribute(const std::string& name)
 
 bool DatasetIO::exists() const
 {
-  if(getId() > 0)
-  {
-    return true;
-  }
-  return false;
+  return getId() > 0;
 }
 
 std::string DatasetIO::getFilterName() const

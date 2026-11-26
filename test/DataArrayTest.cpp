@@ -2657,7 +2657,7 @@ TEST_CASE("Large metadata array copies resolve exact logical bytes without alloc
 TEMPLATE_TEST_CASE("DataStore common initialization API changes future values only", "[simplnx][DataStore][GrowthInitialization]", int32, bool)
 {
   using T = TestType;
-  static_assert(GetMudflap<bool>() == true);
+  static_assert(GetMudflap<bool>());
   DataStore<T> concrete({2}, {2}, static_cast<T>(7));
   AbstractDataStore<T>& store = concrete;
   CHECK(store.getInitValue() == std::optional<T>{static_cast<T>(7)});

@@ -120,11 +120,7 @@ std::string ColorTableUtilities::ColorPreset::toJsonString(int indent) const
 
 bool ColorTableUtilities::IsValidPreset(const ColorPreset& preset)
 {
-  if(!preset.RGBPoints.empty() && ((preset.ColorSpace == "RGB" || preset.ColorSpace == "Diverging" || preset.ColorSpace == "Lab" || preset.ColorSpace == "CIELAB")))
-  {
-    return true;
-  }
-  return false;
+  return !preset.RGBPoints.empty() && ((preset.ColorSpace == "RGB" || preset.ColorSpace == "Diverging" || preset.ColorSpace == "Lab" || preset.ColorSpace == "CIELAB"));
 }
 
 bool ColorTableUtilities::IsValidIndexedPreset(const ColorPreset& preset)
@@ -135,15 +131,11 @@ bool ColorTableUtilities::IsValidIndexedPreset(const ColorPreset& preset)
 bool ColorTableUtilities::IsValidPreset(const nlohmann::json& preset)
 {
   const bool hasRgbPoints = preset.contains("RGBPoints");
-  const bool rgbPointsIsArray = (hasRgbPoints && preset["RGBPoints"].is_array() ? true : false);
+  const bool rgbPointsIsArray = (hasRgbPoints && preset["RGBPoints"].is_array());
   const bool hasColorSpace = preset.contains("ColorSpace");
   const std::string colorSpaceValue = (hasColorSpace ? preset["ColorSpace"].get<std::string>() : "");
 
-  if(rgbPointsIsArray && (hasColorSpace && (colorSpaceValue == "RGB" || colorSpaceValue == "Diverging" || colorSpaceValue == "Lab" || colorSpaceValue == "CIELAB")))
-  {
-    return true;
-  }
-  return false;
+  return rgbPointsIsArray && (hasColorSpace && (colorSpaceValue == "RGB" || colorSpaceValue == "Diverging" || colorSpaceValue == "Lab" || colorSpaceValue == "CIELAB"));
 }
 
 bool ColorTableUtilities::IsValidIndexedPreset(const nlohmann::json& preset)

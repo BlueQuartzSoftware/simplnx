@@ -137,7 +137,7 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   }
 
   const SizeVec3 dimensions = geometry.getDimensions();
-  if(geometry.getGeomType() == IGeometry::Type::RectGrid && !(dimensions[0] >= dimensions[1] && dimensions[1] >= dimensions[2]))
+  if(geometry.getGeomType() == IGeometry::Type::RectGrid && (dimensions[0] < dimensions[1] || dimensions[1] < dimensions[2]))
   {
     return MakePreflightErrorResult(-12026,
                                     fmt::format("The Rectilinear Grid Geometry '{}' has dimensions ({}). OnScale export requires X >= Y >= Z. Only Image Geometries can be reordered automatically.",
