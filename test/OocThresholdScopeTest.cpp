@@ -115,7 +115,7 @@ TEST_CASE("P1 owned Application retains startup correction through clean reload"
   {
     std::ofstream stream(profile);
     REQUIRE(stream.is_open());
-    stream << "{\"large_data_size\":-1,\"large_datastructure_size\":18446744073709551615,\"plugins\":{\"P1\":{\"keep\":17}}}";
+    stream << R"({"large_data_size":-1,"large_datastructure_size":18446744073709551615,"plugins":{"P1":{"keep":17}}})";
   }
   Preferences freshDefaults;
   const uint64 expectedDefault = freshDefaults.defaultValueAs<uint64>(Preferences::k_LargeDataSize_Key);
@@ -132,7 +132,7 @@ TEST_CASE("P1 owned Application retains startup correction through clean reload"
   {
     std::ofstream stream(profile);
     REQUIRE(stream.is_open());
-    stream << "{\"large_data_size\":0,\"large_datastructure_size\":18446744073709551615,\"plugins\":{\"P1\":{\"keep\":17}}}";
+    stream << R"({"large_data_size":0,"large_datastructure_size":18446744073709551615,"plugins":{"P1":{"keep":17}}})";
   }
   const auto cleanLoad = app->loadPreferences();
   REQUIRE(cleanLoad.valid());
@@ -146,7 +146,7 @@ TEST_CASE("P1 owned Application retains startup correction through clean reload"
   {
     std::ofstream stream(profile);
     REQUIRE(stream.is_open());
-    stream << "{\"large_datastructure_size\":\"bad\"}";
+    stream << R"({"large_datastructure_size":"bad"})";
   }
   REQUIRE(app->loadPreferences().valid());
   {

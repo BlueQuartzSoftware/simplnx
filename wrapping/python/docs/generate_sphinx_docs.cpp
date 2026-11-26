@@ -488,7 +488,7 @@ static std::string MarkdownToRst(const std::string& markDown)
   std::istringstream lines(rst);
   std::string line;
   const std::regex unorderedListRegex("^\\s*[-*+] (.+)$");
-  const std::regex orderedListRegex("^\\s*\\d+\\. (.+)$");
+  const std::regex orderedListRegex(R"(^\s*\d+\. (.+)$)");
   rst.clear();
   while(std::getline(lines, line))
   {
