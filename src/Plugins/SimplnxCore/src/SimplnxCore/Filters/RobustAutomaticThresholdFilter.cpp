@@ -10,7 +10,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace

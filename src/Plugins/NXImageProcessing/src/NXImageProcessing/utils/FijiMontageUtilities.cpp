@@ -10,7 +10,6 @@
 #include <fstream>
 #include <limits>
 
-namespace fs = std::filesystem;
 
 namespace nx::core::fiji
 {

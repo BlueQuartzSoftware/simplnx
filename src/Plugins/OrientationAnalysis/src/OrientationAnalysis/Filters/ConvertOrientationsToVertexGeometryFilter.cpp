@@ -16,7 +16,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace nx::core

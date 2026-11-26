@@ -17,7 +17,6 @@
 
 #include <filesystem>
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace nx::core

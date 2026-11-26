@@ -28,7 +28,6 @@
 
 using namespace nx::core;
 
-namespace fs = std::filesystem;
 
 namespace
 {

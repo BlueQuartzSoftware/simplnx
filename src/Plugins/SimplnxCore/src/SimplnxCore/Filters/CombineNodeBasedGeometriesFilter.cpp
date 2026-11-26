@@ -23,7 +23,6 @@
 
 #include <filesystem>
 #include <ranges>
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 

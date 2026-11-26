@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <fstream>
 
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 

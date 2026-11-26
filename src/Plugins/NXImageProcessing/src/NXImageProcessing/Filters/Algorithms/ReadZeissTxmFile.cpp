@@ -10,7 +10,6 @@
 #include "oless/pole.h"
 
 using namespace nx::core;
-namespace fs = std::filesystem;
 
 namespace read_zeiss_txm
 {

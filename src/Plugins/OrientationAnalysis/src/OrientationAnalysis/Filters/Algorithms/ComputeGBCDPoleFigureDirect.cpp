@@ -10,7 +10,6 @@
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <utility>
 
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 

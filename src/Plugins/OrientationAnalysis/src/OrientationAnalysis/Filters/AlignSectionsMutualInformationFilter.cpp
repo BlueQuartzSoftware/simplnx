@@ -19,7 +19,6 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 

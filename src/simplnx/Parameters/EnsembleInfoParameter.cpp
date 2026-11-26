@@ -9,7 +9,6 @@
 #include <filesystem>
 #include <utility>
 
-namespace fs = std::filesystem;
 
 namespace nx::core
 {
