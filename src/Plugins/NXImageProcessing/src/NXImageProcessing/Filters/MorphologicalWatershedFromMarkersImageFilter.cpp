@@ -91,7 +91,7 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   // integer element type) with the same number of tuples as the grayscale input (they share the image grid).
   const auto& markerArray = dataStructure.getDataRefAs<IDataArray>(markerArrayPath);
   const DataType markerType = markerArray.getDataType();
-  if(nx::core::ImageProcessing::GetIntegerScalarTypes().count(markerType) == 0)
+  if(!nx::core::ImageProcessing::GetIntegerScalarTypes().contains(markerType))
   {
     return {.outputActions =
                 MakeErrorResult<OutputActions>(-8600, fmt::format("Marker array '{}' must be an integer scalar type, but is '{}'.", markerArrayPath.toString(), DataTypeToString(markerType)))};

@@ -75,7 +75,7 @@ std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeigh
   }
 
   // Keep the requested seed and require a neighbor to construct the local frame.
-  if(triPatch.size() < 2 || triPatch.count(triId) == 0)
+  if(triPatch.size() < 2 || !triPatch.contains(triId))
   {
     return nullptr;
   }

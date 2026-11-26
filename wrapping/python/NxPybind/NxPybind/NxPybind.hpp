@@ -230,7 +230,7 @@ public:
 
   bool contains(const Uuid& uuid) const
   {
-    return m_ParameterConversionMap.count(uuid) > 0;
+    return m_ParameterConversionMap.contains(uuid);
   }
 
   template <class ParameterT>
@@ -239,7 +239,7 @@ public:
     static_assert(std::is_base_of_v<IParameter, ParameterT>);
 
     Uuid uuid = ParameterTraits<ParameterT>::uuid;
-    if(m_ParameterConversionMap.count(uuid) > 0)
+    if(m_ParameterConversionMap.contains(uuid))
     {
       throw std::invalid_argument("Duplicate uuid");
     }

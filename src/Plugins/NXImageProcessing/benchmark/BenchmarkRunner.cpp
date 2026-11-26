@@ -298,11 +298,11 @@ Result<std::vector<ParsedRow>> ReadCsv(const std::string& path)
     ParsedRow r;
     r.filter = at(f, "filter");
     r.type = at(f, "type");
-    r.inDims = (col.count("in_dims") != 0u) ? at(f, "in_dims") : std::string{};
-    r.inVoxels = (col.count("in_voxels") != 0u) ? at(f, "in_voxels") : std::string{};
+    r.inDims = (col.contains("in_dims")) ? at(f, "in_dims") : std::string{};
+    r.inVoxels = (col.contains("in_voxels")) ? at(f, "in_voxels") : std::string{};
     r.newIncoreMs = ParseMs(at(f, "new_incore_ms"));
     r.newOocMs = ParseMs(at(f, "new_ooc_ms"));
-    r.notes = (col.count("notes") != 0u) ? at(f, "notes") : std::string{};
+    r.notes = (col.contains("notes")) ? at(f, "notes") : std::string{};
     rows.push_back(std::move(r));
   }
   return {std::move(rows)};

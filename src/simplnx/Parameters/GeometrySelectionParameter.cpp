@@ -107,7 +107,7 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
   }
 
   // Look for the actual geometry type that the user selected in the allowed set
-  if(m_AllowedTypes.count(geometry->getGeomType()) > 0)
+  if(m_AllowedTypes.contains(geometry->getGeomType()))
   {
     return {};
   }

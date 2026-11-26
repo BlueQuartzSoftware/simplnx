@@ -148,7 +148,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Type_Error, .message = fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
       continue;
     }
-    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && m_AllowedTypes.count(dataArray->getArrayType()) == 0)
+    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && !m_AllowedTypes.contains(dataArray->getArrayType()))
     {
       errors.push_back(Error{
           .code = FilterParameter::Constants::k_Validate_Type_Error,

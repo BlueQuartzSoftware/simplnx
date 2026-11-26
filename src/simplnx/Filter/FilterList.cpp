@@ -99,7 +99,7 @@ Result<> FilterList::addPlugin(const std::shared_ptr<IPluginLoader>& loader)
   }
   AbstractPlugin* plugin = loader->getPlugin();
   Uuid pluginUuid = plugin->getId();
-  if(m_PluginMap.count(pluginUuid) > 0)
+  if(m_PluginMap.contains(pluginUuid))
   {
     return MakeErrorResult(-445, fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", plugin->getName(), pluginUuid.str(),
                                              m_PluginMap[pluginUuid]->getPlugin()->getName()));
@@ -136,7 +136,7 @@ std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
 
 void FilterList::removePlugin(const Uuid& pluginId)
 {
-  if(m_PluginMap.count(pluginId) == 0)
+  if(!m_PluginMap.contains(pluginId))
   {
     return;
   }

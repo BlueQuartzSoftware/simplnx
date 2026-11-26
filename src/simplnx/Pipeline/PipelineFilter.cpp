@@ -53,7 +53,7 @@ std::optional<AbstractPlugin::SIMPLData> FindComplexConversionFromSIMPL(const Uu
   for(const auto* plugin : plugins)
   {
     auto filterMap = plugin->getSimplToSimplnxMap();
-    if(filterMap.count(uuid) > 0)
+    if(filterMap.contains(uuid))
     {
       return filterMap.at(uuid);
     }

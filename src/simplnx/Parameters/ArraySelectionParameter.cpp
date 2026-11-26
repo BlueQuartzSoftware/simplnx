@@ -171,7 +171,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     {
 
       DataType dataType = dataArray->getDataType();
-      if(m_AllowedTypes.count(dataType) == 0)
+      if(!m_AllowedTypes.contains(dataType))
       {
         return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
                                          fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));

@@ -182,7 +182,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   // parameters here (the array is guaranteed present/scalar by the successful PreflightAxisProjection above).
   // Float input types can represent any Float64 value, so they are skipped.
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
-  if(ImageProcessing::GetIntegerScalarTypes().count(inputType) != 0)
+  if(ImageProcessing::GetIntegerScalarTypes().contains(inputType))
   {
     Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foregroundValue = foregroundValue, .backgroundValue = backgroundValue});
     if(paramGuard.invalid())

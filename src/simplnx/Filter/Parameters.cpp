@@ -20,7 +20,7 @@ namespace nx::core
 {
 bool Parameters::contains(std::string_view name) const
 {
-  return m_Params.count(name) > 0;
+  return m_Params.contains(name);
 }
 
 usize Parameters::size() const
@@ -135,7 +135,7 @@ bool Parameters::isParameterActive(std::string_view key, const Arguments& args) 
 
 bool Parameters::containsGroup(std::string_view key) const
 {
-  return m_Groups.count(key) > 0;
+  return m_Groups.contains(key);
 }
 
 std::vector<std::string> Parameters::getKeysInGroup(std::string_view groupKey) const

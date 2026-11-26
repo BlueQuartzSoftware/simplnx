@@ -109,7 +109,7 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
   }
 
   // Look for the actual group type that the user selected in the allowed set
-  if(m_AllowedTypes.count(baseGroupObj->getGroupType()) > 0)
+  if(m_AllowedTypes.contains(baseGroupObj->getGroupType()))
   {
     return {};
   }

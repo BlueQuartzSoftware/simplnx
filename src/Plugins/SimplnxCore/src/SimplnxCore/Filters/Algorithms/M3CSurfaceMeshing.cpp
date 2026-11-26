@@ -2474,7 +2474,7 @@ bool RemapSharpEdgeTriangle(Triangle& triangle, const SharpEdgeResult& result, c
     {
       corner = it->second;
     }
-    if(result.Touched.count(corner) != 0)
+    if(result.Touched.contains(corner))
     {
       numTouched++;
     }

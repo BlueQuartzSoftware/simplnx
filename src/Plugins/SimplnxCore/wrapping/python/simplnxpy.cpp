@@ -665,7 +665,7 @@ public:
    */
   bool containsPath(const fs::path& path) const
   {
-    return m_PathToModuleMap.count(path) > 0;
+    return m_PathToModuleMap.contains(path);
   }
 
   /**
@@ -675,7 +675,7 @@ public:
    */
   bool containsModule(const std::string& modName) const
   {
-    return m_ModuleToPathMap.count(modName) > 0;
+    return m_ModuleToPathMap.contains(modName);
   }
 
   /**
