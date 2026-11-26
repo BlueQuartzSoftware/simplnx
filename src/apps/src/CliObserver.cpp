@@ -17,7 +17,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   if(pipeline != nullptr)
   {
     startObservingNode(pipeline);
-    pipeline->getCancelledSignal().connect([this](void) { onCancelled(); });
+    pipeline->getCancelledSignal().connect([this]() { onCancelled(); });
     pipeline->getPipelineFaultSignal().connect([this](AbstractPipelineNode* node, FaultState state) { onFaultStateChanged(node, state); });
   }
   if(pipeline == nullptr)
