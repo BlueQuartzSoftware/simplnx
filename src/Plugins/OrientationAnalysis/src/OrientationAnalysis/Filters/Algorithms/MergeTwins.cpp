@@ -136,7 +136,9 @@ Result<> MergeTwins::groupFeaturesExecute()
 
   int32_t parentCount = 0;
   int32_t featureSeed = 0;
-  int32_t list1size = 0, list2size = 0, listsize = 0;
+  int32_t list1size = 0;
+  int32_t list2size = 0;
+  int32_t listsize = 0;
   int32 neighborFeatureIdx = 0;
 
   while(featureSeed >= 0)

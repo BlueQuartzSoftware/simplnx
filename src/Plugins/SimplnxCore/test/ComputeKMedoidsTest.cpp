@@ -162,8 +162,10 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: cancellation leaves outputs unchanged",
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_ParityMedoidsPath));
       const auto& ids = dataStructure.getDataRefAs<Int32Array>(k_ParityIdsPath);
       const auto& medoids = dataStructure.getDataRefAs<Float64Array>(k_ParityMedoidsPath);
-      std::array<int32, 8> idsBefore = {}, idsAfter = {};
-      std::array<float64, 6> medoidsBefore = {}, medoidsAfter = {};
+      std::array<int32, 8> idsBefore = {};
+      std::array<int32, 8> idsAfter = {};
+      std::array<float64, 6> medoidsBefore = {};
+      std::array<float64, 6> medoidsAfter = {};
       auto idsBeforeReadResult = ids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(idsBefore.data(), idsBefore.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(idsBeforeReadResult);
       auto medoidsBeforeReadResult = medoids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(medoidsBefore.data(), medoidsBefore.size()));

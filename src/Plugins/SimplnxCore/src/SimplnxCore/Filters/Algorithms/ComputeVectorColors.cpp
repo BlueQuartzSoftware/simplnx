@@ -104,7 +104,9 @@ Result<> ComputeVectorColorsInChunks(const AbstractDataStore<float32>& vectors, 
         }
 
         // Trend selects the RGB hue. Plunge blends that hue toward white.
-        float32 r = 0, g = 0, b = 0;
+        float32 r = 0;
+        float32 g = 0;
+        float32 b = 0;
         if(trend <= 120.0f)
         {
           r = 255.0f * ((120.0f - trend) / 120.0f);

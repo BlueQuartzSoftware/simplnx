@@ -179,7 +179,9 @@ std::vector<float32> RunGradMag(const std::vector<T>& field, usize dx, usize dy,
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: gradient of an X ramp is the slope", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
-  const usize dx = 10, dy = 6, dz = 6;
+  const usize dx = 10;
+  const usize dy = 6;
+  const usize dz = 6;
   std::vector<float32> field(dx * dy * dz);
   for(usize z = 0; z < dz; ++z)
   {
@@ -218,7 +220,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: gradient of a constant im
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: UseImageSpacing scales the gradient", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
-  const usize dx = 10, dy = 6, dz = 6;
+  const usize dx = 10;
+  const usize dy = 6;
+  const usize dz = 6;
   std::vector<float32> field(dx * dy * dz);
   for(usize z = 0; z < dz; ++z)
     for(usize y = 0; y < dy; ++y)
@@ -233,7 +237,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: UseImageSpacing scales th
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: deterministic + tall-Z streaming", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 64;
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 64;
   std::vector<float32> field(dx * dy * dz);
   for(usize i = 0; i < field.size(); ++i)
   {
@@ -249,7 +255,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: 2D X ramp — interior sl
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
-  const usize dx = 10, dy = 6, dz = 1;
+  const usize dx = 10;
+  const usize dy = 6;
+  const usize dz = 1;
   std::vector<float32> field(dx * dy * dz);
   for(usize y = 0; y < dy; ++y)
     for(usize x = 0; x < dx; ++x)
@@ -269,7 +277,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: 2D X ramp — interior sl
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: nZ==2 Z ramp with edge-clamped rolling window", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
-  const usize dx = 5, dy = 5, dz = 2;
+  const usize dx = 5;
+  const usize dy = 5;
+  const usize dz = 2;
   std::vector<float32> field(dx * dy * dz);
   for(usize z = 0; z < dz; ++z)
     for(usize y = 0; y < dy; ++y)

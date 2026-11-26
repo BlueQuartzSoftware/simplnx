@@ -410,7 +410,10 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: single seed == chamfer 
 // the correct sign (positive on the +x side, negative on the -x side).
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: signed plane band", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize DX = 9, DY = 5, DZ = 1, C = 4;
+  constexpr usize DX = 9;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
+  constexpr usize C = 4;
   constexpr float32 kMax = 100.0f;
   std::vector<float32> field(DX * DY * DZ);
   for(usize y = 0; y < DY; ++y)
@@ -436,7 +439,9 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: signed plane band", "[N
 // distance exceeds maxDist retains a magnitude >= maxDist (the propagation front stops there).
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: maxDist freeze", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize DX = 12, DY = 3, DZ = 1;
+  constexpr usize DX = 12;
+  constexpr usize DY = 3;
+  constexpr usize DZ = 1;
   constexpr float32 kMax = 2.0f;
   std::vector<float32> field(DX * DY * DZ, kMax + 1.0f);
   for(usize y = 0; y < DY; ++y)
@@ -488,7 +493,9 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: fused output negation i
 // metric (n * w0), validating the forward/backward streaming bookkeeping.
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: tall-volume streaming", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize DX = 7, DY = 6, DZ = 40;
+  constexpr usize DX = 7;
+  constexpr usize DY = 6;
+  constexpr usize DZ = 40;
   constexpr float32 kMax = 200.0f;
   std::vector<float32> field(DX * DY * DZ, kMax + 1.0f);
   field[FlatIndex(3, 3, 20, DX, DY)] = 0.0f;

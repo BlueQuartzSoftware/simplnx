@@ -40,7 +40,9 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: flat-image special case
   const bool flatIsMaxima = GENERATE(false, true);
   CAPTURE(flatIsMaxima);
 
-  constexpr usize DX = 8, DY = 8, DZ = 4;
+  constexpr usize DX = 8;
+  constexpr usize DY = 8;
+  constexpr usize DZ = 4;
   const std::vector<uint8> flatImg(DX * DY * DZ, uint8{100});
 
   DataStructure newDs;
@@ -66,7 +68,9 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   std::vector<int32> pattern(DX * DY * DZ, 10);
   pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 50;
   pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = 50;
@@ -98,7 +102,9 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   std::vector<int32> pattern(DX * DY * DZ, 10);
   pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 50;
   pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = 50;

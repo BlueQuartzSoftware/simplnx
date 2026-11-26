@@ -226,7 +226,8 @@ struct SampleSurfaceMeshFunctor
     messageHandler.sendInfoMessage("Counting number of Features...");
 
     // The largest positive face label determines the feature-list count.
-    T g1 = 0, g2 = 0;
+    T g1 = 0;
+    T g2 = 0;
     T maxFeatureId = 0;
     for(usize i = 0; i < numFaces; i++)
     {

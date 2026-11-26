@@ -1777,7 +1777,9 @@ public:
       auto processLines = [&](const Range& lineRange) {
         // The raw pointer avoids the per-element span contract check in the X-axis line kernel.
         float32* workData = work.data();
-        std::vector<float32> g(nd), h(nd), lineBuf(nd);
+        std::vector<float32> g(nd);
+        std::vector<float32> h(nd);
+        std::vector<float32> lineBuf(nd);
         for(usize k = lineRange.min(); k < lineRange.max(); ++k)
         {
           if(m_ShouldCancel)

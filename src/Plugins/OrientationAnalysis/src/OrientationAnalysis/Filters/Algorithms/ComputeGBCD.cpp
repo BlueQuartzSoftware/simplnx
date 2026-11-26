@@ -66,7 +66,8 @@ public:
     std::vector<int32>& gbcdBins = m_SizeGBCD.m_GbcdBins;
     std::vector<bool>& hemiCheck = m_SizeGBCD.m_GbcdHemiCheck; // Definitely do NOT want a raw pointer to vector<bool> because that done in bits, not bytes.
 
-    int32 feature1 = 0, feature2 = 0;
+    int32 feature1 = 0;
+    int32 feature2 = 0;
     int32 inversion = 1;
     float32 g1ea[3] = {0.0f, 0.0f, 0.0f};
     float32 g2ea[3] = {0.0f, 0.0f, 0.0f};
@@ -77,7 +78,8 @@ public:
     std::array<float32, 3> eulerMis = {0.0f, 0.0f, 0.0f};
     ebsdlib::Matrix3X1<float32> normal;     // = {0.0f, 0.0f, 0.0f};
     ebsdlib::Matrix3X1<float32> xstl1Norm1; // {0.0f, 0.0f, 0.0f};
-    float32 sqCoord[2] = {0.0f, 0.0f}, sqCoordInv[2] = {0.0f, 0.0f};
+    float32 sqCoord[2] = {0.0f, 0.0f};
+    float32 sqCoordInv[2] = {0.0f, 0.0f};
 
     for(usize triangleIndex = start; triangleIndex < end; triangleIndex++)
     {

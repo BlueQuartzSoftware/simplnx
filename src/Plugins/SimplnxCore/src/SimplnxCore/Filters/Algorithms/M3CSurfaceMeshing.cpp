@@ -1766,7 +1766,9 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
     if(numN == 3)
     {
-      SiteId te0 = loop[0], te1 = loop[1], te2 = loop[2];
+      SiteId te0 = loop[0];
+      SiteId te1 = loop[1];
+      SiteId te2 = loop[2];
       SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
       SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
       SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
@@ -1955,7 +1957,8 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
       if(numN == 2)
       {
-        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1];
+        SiteId te0 = burnt_loop[0];
+        SiteId te1 = burnt_loop[1];
         SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
         SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
         SiteId tv2 = static_cast<SiteId>(e1[te1].node_id[1]);
@@ -2072,7 +2075,9 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
       if(numN == 3)
       {
-        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        SiteId te0 = burnt_loop[0];
+        SiteId te1 = burnt_loop[1];
+        SiteId te2 = burnt_loop[2];
         SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
         SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
         SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
@@ -2327,7 +2332,9 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
       if(numN == 3)
       {
-        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        SiteId te0 = burnt_loop[0];
+        SiteId te1 = burnt_loop[1];
+        SiteId te2 = burnt_loop[2];
         SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
         SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
         SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
@@ -2720,7 +2727,8 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
 
     if(cubeFlag == 1 && nFE > 2)
     {
-      double coord1[3], coord2[3];
+      double coord1[3];
+      double coord2[3];
       for(int k = 0; k < 3; k++)
       {
         coord1[k] = p[i].coord[k];

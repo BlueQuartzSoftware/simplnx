@@ -330,9 +330,12 @@ private:
   Result<> optimizeClusters(usize tuples, usize dims, std::vector<usize>& medoidIndices, std::vector<float64>& costs)
   {
     costs.assign(m_Clusters, std::numeric_limits<float64>::max());
-    std::vector<T> candidate(k_TileTuples * dims), inner(k_TileTuples * dims);
-    std::vector<int32> candidateIds(k_TileTuples), innerIds(k_TileTuples);
-    std::vector<uint8> candidateMask(k_TileTuples), innerMask(k_TileTuples);
+    std::vector<T> candidate(k_TileTuples * dims);
+    std::vector<T> inner(k_TileTuples * dims);
+    std::vector<int32> candidateIds(k_TileTuples);
+    std::vector<int32> innerIds(k_TileTuples);
+    std::vector<uint8> candidateMask(k_TileTuples);
+    std::vector<uint8> innerMask(k_TileTuples);
     std::vector<float64> candidateCosts(k_TileTuples);
     for(usize candidateOffset = 0; candidateOffset < tuples; candidateOffset += k_TileTuples)
     {
@@ -426,7 +429,8 @@ private:
    */
   Result<> writeMedoids(usize tuples, usize dims, const std::vector<usize>& medoidIndices)
   {
-    std::vector<T> input(k_TileTuples * dims), medoids((m_Clusters + 1) * dims);
+    std::vector<T> input(k_TileTuples * dims);
+    std::vector<T> medoids((m_Clusters + 1) * dims);
     std::vector<uint8> found(m_Clusters, 0);
     for(usize offset = 0; offset < tuples; offset += k_TileTuples)
     {

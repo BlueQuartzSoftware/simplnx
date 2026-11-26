@@ -169,9 +169,13 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-1 and order-2 of a 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-0 impulse response is symmetric and sums to ~1", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   // A 1D-along-x impulse embedded in a 3D volume (single non-zero voxel at the x-center of one row).
-  const usize dx = 32, dy = 4, dz = 4;
+  const usize dx = 32;
+  const usize dy = 4;
+  const usize dz = 4;
   std::vector<float32> field(dx * dy * dz, 0.0f);
-  const usize cx = dx / 2, cy = dy / 2, cz = dz / 2;
+  const usize cx = dx / 2;
+  const usize cy = dy / 2;
+  const usize cz = dz / 2;
   field[FlatIndex(cx, cy, cz, dx, dy)] = 1.0f;
   const std::vector<float32> out = RunPass(field, dx, dy, dz, /*axis=*/0, /*sigma=*/3.0, /*spacing=*/1.0, /*order=*/0, false);
 
@@ -187,7 +191,9 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-0 impulse response 
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: smoothing along X leaves a pure-Y ramp unchanged", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const usize dx = 12, dy = 12, dz = 4;
+  const usize dx = 12;
+  const usize dy = 12;
+  const usize dz = 4;
   std::vector<float32> field(dx * dy * dz, 0.0f);
   for(usize z = 0; z < dz; ++z)
   {
@@ -208,7 +214,9 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: smoothing along X leaves 
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: deterministic + tall-Z streaming runs", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 64; // dz large enough to exercise the z-slab path
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 64; // dz large enough to exercise the z-slab path
   std::vector<float32> field(dx * dy * dz);
   for(usize i = 0; i < field.size(); ++i)
   {

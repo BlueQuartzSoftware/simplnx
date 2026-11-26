@@ -163,7 +163,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   std::vector<int32> pattern(DX * DY * DZ, 0);
   pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 1;
 
@@ -198,7 +200,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   std::vector<int32> pattern(DX * DY * DZ, 0);
   pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 1;
 
@@ -283,7 +287,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 6, DZ = 1;
+  constexpr usize DX = 6;
+  constexpr usize DY = 6;
+  constexpr usize DZ = 1;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 1.0f));
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -352,7 +358,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight vali
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 6, DZ = 1;
+  constexpr usize DX = 6;
+  constexpr usize DY = 6;
+  constexpr usize DZ = 1;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, DX, DY, DZ, std::vector<uint8>(DX * DY * DZ, uint8{1})); // uint8 input: valid range [0, 255]
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -424,7 +432,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 6, DZ = 1;
+  constexpr usize DX = 6;
+  constexpr usize DY = 6;
+  constexpr usize DZ = 1;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, DX, DY, DZ, std::vector<uint8>(DX * DY * DZ, uint8{1})); // uint8 input
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -475,7 +485,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight Back
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 4, DY = 4, DZ = 1;
+  constexpr usize DX = 4;
+  constexpr usize DY = 4;
+  constexpr usize DZ = 1;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<int64>(ds, DX, DY, DZ, std::vector<int64>(DX * DY * DZ, int64{1})); // int64 input
   const DataPath geomPath = inputPath.getParent().getParent();

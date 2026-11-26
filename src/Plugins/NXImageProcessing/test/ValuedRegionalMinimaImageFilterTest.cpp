@@ -22,7 +22,9 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: hand-computed cen
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   constexpr int32 field = 50;
   constexpr int32 pit = 10;
 
@@ -60,7 +62,9 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: hand-computed cen
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   constexpr int32 field = 50;
   constexpr int32 pit = 10;
 
@@ -104,7 +108,9 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: flat image unchan
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 5, DZ = 3;
+  constexpr usize DX = 6;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 3;
   const std::vector<int32> pattern(DX * DY * DZ, 77);
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);

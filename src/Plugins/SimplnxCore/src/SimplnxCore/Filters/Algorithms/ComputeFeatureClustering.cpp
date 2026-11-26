@@ -179,8 +179,12 @@ Result<> ComputeFeatureClustering::operator()()
     }
   }
 
-  float32 x = 0.0f, y = 0.0f, z = 0.0f;
-  float32 xn = 0.0f, yn = 0.0f, zn = 0.0f;
+  float32 x = 0.0f;
+  float32 y = 0.0f;
+  float32 z = 0.0f;
+  float32 xn = 0.0f;
+  float32 yn = 0.0f;
+  float32 zn = 0.0f;
   float32 r = 0.0f;
 
   int32 bin = 0;

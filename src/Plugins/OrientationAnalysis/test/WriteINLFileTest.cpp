@@ -356,8 +356,14 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[
     REQUIRE(rowCount < numCells);
     CAPTURE(rowCount);
     std::istringstream row(line);
-    float64 phi1 = 0, phi = 0, phi2 = 0, x = 0, y = 0, z = 0;
-    int32 featureId = -1, phaseId = -1;
+    float64 phi1 = 0;
+    float64 phi = 0;
+    float64 phi2 = 0;
+    float64 x = 0;
+    float64 y = 0;
+    float64 z = 0;
+    int32 featureId = -1;
+    int32 phaseId = -1;
     uint32 symmetry = 0;
     REQUIRE(static_cast<bool>(row >> phi1 >> phi >> phi2 >> x >> y >> z >> featureId >> phaseId >> symmetry));
     CHECK(phaseId == static_cast<int32>(rowCount));

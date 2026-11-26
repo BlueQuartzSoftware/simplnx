@@ -215,7 +215,8 @@ public:
     changed = 1;
     int64_t i = 0;
     int64_t zBlock = xpoints * ypoints;
-    int64_t zStride = 0, yStride = 0;
+    int64_t zStride = 0;
+    int64_t yStride = 0;
     char mask[6] = {0, 0, 0, 0, 0, 0};
     usize iteration = 0;
     m_ReportProgress(DistanceMapPhase::Propagating, 0, static_cast<usize>(MapType), 0);
@@ -321,7 +322,12 @@ public:
     // Float output converts nearest-seed positions to Euclidean distances.
     if constexpr(std::is_same_v<T, float32>)
     {
-      float64 x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0, z1 = 0.0, z2 = 0.0;
+      float64 x1 = 0.0;
+      float64 x2 = 0.0;
+      float64 y1 = 0.0;
+      float64 y2 = 0.0;
+      float64 z1 = 0.0;
+      float64 z2 = 0.0;
       float64 dist = 0.0;
       float64 oneOverzBlock = 1.0 / static_cast<float64>(zBlock);
       float64 oneOverxpoints = 1.0 / static_cast<float64>(xpoints);

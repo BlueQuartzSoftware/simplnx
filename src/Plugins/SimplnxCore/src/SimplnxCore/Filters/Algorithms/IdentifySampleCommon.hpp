@@ -309,8 +309,12 @@ struct IdentifySampleSliceBySliceFunctor
     const int64 dimY = static_cast<int64>(uDims[1]);
     const int64 dimZ = static_cast<int64>(uDims[2]);
 
-    int64 planeDim1 = 0, planeDim2 = 0, fixedDim = 0;
-    int64 stride1 = 0, stride2 = 0, fixedStride = 0;
+    int64 planeDim1 = 0;
+    int64 planeDim2 = 0;
+    int64 fixedDim = 0;
+    int64 stride1 = 0;
+    int64 stride2 = 0;
+    int64 fixedStride = 0;
 
     switch(plane)
     {

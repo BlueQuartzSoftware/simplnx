@@ -711,8 +711,11 @@ std::vector<float32> ReadOutput(const RecordingOutputStore& outputStore, usize v
 // Distance is the exact Euclidean distance to the nearest feature. The sign follows the ITK rule.
 std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize dy, usize dz, int32 bg, bool insideIsPositive, bool squared)
 {
-  const int64 nX = static_cast<int64>(dx), nY = static_cast<int64>(dy), nZ = static_cast<int64>(dz);
-  const int64 wzLo = (nZ == 1) ? 0 : -1, wzHi = (nZ == 1) ? 0 : 1;
+  const int64 nX = static_cast<int64>(dx);
+  const int64 nY = static_cast<int64>(dy);
+  const int64 nZ = static_cast<int64>(dz);
+  const int64 wzLo = (nZ == 1) ? 0 : -1;
+  const int64 wzHi = (nZ == 1) ? 0 : 1;
   auto at = [&](int64 x, int64 y, int64 z) { return in[FlatIndex(static_cast<usize>(x), static_cast<usize>(y), static_cast<usize>(z), dx, dy)]; };
 
   std::vector<std::array<int64, 3>> feats;
@@ -737,7 +740,9 @@ std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize 
               {
                 continue;
               }
-              const int64 ax = x + wx, ay = y + wy, az = z + wz;
+              const int64 ax = x + wx;
+              const int64 ay = y + wy;
+              const int64 az = z + wz;
               if(ax < 0 || ay < 0 || az < 0 || ax >= nX || ay >= nY || az >= nZ)
               {
                 continue; // ITK BinaryContour ignores out-of-bounds neighbors.
@@ -767,7 +772,9 @@ std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize 
         int64 bestSq = std::numeric_limits<int64>::max();
         for(const auto& f : feats)
         {
-          const int64 ddx = x - f[0], ddy = y - f[1], ddz = z - f[2];
+          const int64 ddx = x - f[0];
+          const int64 ddy = y - f[1];
+          const int64 ddz = z - f[2];
           const int64 sq = ddx * ddx + ddy * ddy + ddz * ddz;
           if(sq < bestSq)
           {
@@ -1106,7 +1113,9 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: single-seed hand values",
 {
   // A single object pixel at the center of a 5x5x1 background field. That pixel is a boundary feature (touches bg on
   // all sides), so distances are the squared distance to (2,2). Inside is only the center; everything else outside.
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   std::vector<int32> pattern(DX * DY * DZ, 0);
   pattern[FlatIndex(2, 2, 0, DX, DY)] = 1;
   const std::vector<float32> got = RunInCore<int32>(pattern, DX, DY, DZ, /*bg=*/0, /*insideIsPositive=*/false, /*squared=*/true);

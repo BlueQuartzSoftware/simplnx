@@ -894,7 +894,9 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
   // shell triangulated against itself and wrapped the box in extra surface.
   const FloatVec3 origin(-1.0f, 3.0f, 0.5f);
   const FloatVec3 spacing(2.0f, 0.5f, 1.5f);
-  const usize dimX = 3, dimY = 2, dimZ = 2;
+  const usize dimX = 3;
+  const usize dimY = 2;
+  const usize dimZ = 2;
 
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");

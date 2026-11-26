@@ -189,7 +189,10 @@ public:
                                        Point3Df{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
                                        Point3Df{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
 
-      float32 ex1 = NAN, ey1 = NAN, ex2 = NAN, ey2 = NAN;
+      float32 ex1 = NAN;
+      float32 ey1 = NAN;
+      float32 ex2 = NAN;
+      float32 ey2 = NAN;
       if(sliceTriangleAtZ(verts, zCoord, ex1, ey1, ex2, ey2))
       {
         edges.push_back({ex1, ey1, ex2, ey2, t});
@@ -207,7 +210,8 @@ public:
       intersections.clear();
       for(const auto& edge : edges)
       {
-        float32 eYMin = NAN, eYMax = NAN;
+        float32 eYMin = NAN;
+        float32 eYMax = NAN;
         if(edge.y1 < edge.y2)
         {
           eYMin = edge.y1;
@@ -251,7 +255,8 @@ public:
         while(nextIsect < intersections.size() && intersections[nextIsect].x <= xCoord)
         {
           usize faceIdx = intersections[nextIsect].faceIndex;
-          T label0, label1;
+          T label0;
+          T label1;
           if(m_NumFaceLabelComps == 2)
           {
             label0 = m_FaceLabelsBuffer[faceIdx * 2];

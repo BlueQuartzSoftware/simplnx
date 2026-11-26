@@ -82,7 +82,9 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed 
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 11, DY = 11, DZ = 1;
+  constexpr usize DX = 11;
+  constexpr usize DY = 11;
+  constexpr usize DZ = 1;
   constexpr int32 field = 100; // bright background
   constexpr int32 dark = 0;
   std::vector<int32> pattern(DX * DY * DZ, field);

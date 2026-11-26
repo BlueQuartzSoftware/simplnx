@@ -211,7 +211,9 @@ requires std::is_base_of<INodeGeometry1D, GeometryType>::value
   std::vector<std::vector<usize>> nodesInBin(numXBins * numYBins * numZBins);
 
   // The spatial bins reduce the number of node comparisons.
-  usize xBin = 0, yBin = 0, zBin = 0;
+  usize xBin = 0;
+  usize yBin = 0;
+  usize zBin = 0;
   for(size_t i = 0; i < nNodes; i++)
   {
     if(stepX != 0.0)

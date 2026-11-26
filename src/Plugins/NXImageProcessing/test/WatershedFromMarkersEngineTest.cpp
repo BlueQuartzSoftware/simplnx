@@ -201,7 +201,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: 1D double-well, one ma
 
 TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: single marker floods the whole basin", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  const usize dx = 5, dy = 5, dz = 1;
+  const usize dx = 5;
+  const usize dy = 5;
+  const usize dz = 1;
   std::vector<int32> gray(dx * dy);
   for(usize y = 0; y < dy; ++y)
   {
@@ -221,7 +223,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: single marker floods t
 
 TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: determinism", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 4;
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 4;
   std::vector<int32> gray(dx * dy * dz);
   std::vector<uint32> markers(dx * dy * dz, 0u);
   for(usize i = 0; i < gray.size(); ++i)
@@ -241,7 +245,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: fullyConnected offset 
   // label among a voxel's neighbors, so no collision/watershed line ever forms. This exercises the fullyConnected=true
   // 8-neighbor offset generation and confirms it does not break the flood. A true-vs-false split where the watershed
   // LINE differs is a non-unique-plateau case gated by the direct-ITK grid in Task 2, not asserted analytically here.
-  const usize dx = 5, dy = 5, dz = 1;
+  const usize dx = 5;
+  const usize dy = 5;
+  const usize dz = 1;
   std::vector<int32> gray(dx * dy);
   for(usize y = 0; y < dy; ++y)
   {
@@ -267,7 +273,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: a marker valued at the
   // out-of-image boundary. Place it at a border-touching corner so its OOB neighbors also read as the sentinel: with a
   // single marker the whole grid still floods to that label (OOB reads are neutral and never collide).
   const uint32 sentinel = std::numeric_limits<uint32>::max();
-  const usize dx = 4, dy = 4, dz = 1;
+  const usize dx = 4;
+  const usize dy = 4;
+  const usize dz = 1;
   std::vector<int32> gray(dx * dy);
   for(usize y = 0; y < dy; ++y)
   {

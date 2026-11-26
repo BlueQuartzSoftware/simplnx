@@ -719,7 +719,8 @@ public:
       }
       for(usize j = 0; j != m_NY - 1; ++j)
       {
-        usize xl = 0, xr = 0;
+        usize xl = 0;
+        usize xr = 0;
         calcTrimValues(xl, xr, j, k);
 
         // ge0 belongs to this cube row. Neighbor rows own ge1 through ge3.
@@ -899,7 +900,8 @@ public:
       }
       for(usize j = 0; j != m_NY - 1; ++j)
       {
-        usize xl = 0, xr = 0;
+        usize xl = 0;
+        usize xr = 0;
         calcTrimValues(xl, xr, j, k);
 
         if(xl == xr) {

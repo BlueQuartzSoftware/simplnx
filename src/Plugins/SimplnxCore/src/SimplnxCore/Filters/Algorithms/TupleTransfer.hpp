@@ -422,7 +422,10 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
   const usize facesPerRun = std::min(kTransferFaceRun, std::max(usize{1}, kTransferPageValues / valuesPerFace));
   std::array<std::unique_ptr<K[]>, kTransferPageCount> idPages;
   std::array<std::unique_ptr<T[]>, kTransferPageCount> valuePages;
-  std::array<usize, kTransferPageCount> idStarts{}, valueStarts{}, idUse{}, valueUse{};
+  std::array<usize, kTransferPageCount> idStarts{};
+  std::array<usize, kTransferPageCount> valueStarts{};
+  std::array<usize, kTransferPageCount> idUse{};
+  std::array<usize, kTransferPageCount> valueUse{};
   usize idUseCounter = 0;
   usize valueUseCounter = 0;
   idStarts.fill(kInvalid);

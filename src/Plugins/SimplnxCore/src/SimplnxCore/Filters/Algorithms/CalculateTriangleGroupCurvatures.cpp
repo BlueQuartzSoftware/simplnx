@@ -314,7 +314,9 @@ void CalculateTriangleGroupCurvatures::operator()() const
       size_t rows = patchCentroids->getNumberOfTuples();
       Eigen::MatrixXd A(rows, cols);
       Eigen::VectorXd b(rows);
-      double x = 0.0, y = 0.0, z = 0.0;
+      double x = 0.0;
+      double y = 0.0;
+      double z = 0.0;
       for(size_t m = 0; m < rows; ++m)
       {
         x = patchCentroids->getComponentValue(m, 0);

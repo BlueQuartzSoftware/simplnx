@@ -465,7 +465,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == 
   }
   SECTION("monotone ramp along X -> only the extreme end plateau kept")
   {
-    constexpr usize DX = 6, DY = 3, DZ = 1;
+    constexpr usize DX = 6;
+    constexpr usize DY = 3;
+    constexpr usize DZ = 1;
     std::vector<T> ramp(DX * DY * DZ);
     for(usize z = 0; z < DZ; ++z)
     {
@@ -506,7 +508,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == 
     // exists to converge quickly on. Flood == Sweep == oracle confirms the streamed sweep reaches the exact
     // fixpoint regardless of how many passes it takes (this would be O(corridor length) passes without the
     // bidirectional in-plane traversal, and terminates either way).
-    constexpr usize DX = 20, DY = 11, DZ = 1;
+    constexpr usize DX = 20;
+    constexpr usize DY = 11;
+    constexpr usize DZ = 1;
     std::vector<T> img(DX * DY * DZ, static_cast<T>(0));
     for(usize y = 0; y < DY; ++y)
     {
@@ -535,7 +539,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RegionalExtremaEngine: hand-computed central extremum", "[RegionalExtremaEngine]")
 {
-  constexpr usize DX = 5, DY = 5, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 1;
   const int32 field = 10;
   const int32 peak = 50;
 

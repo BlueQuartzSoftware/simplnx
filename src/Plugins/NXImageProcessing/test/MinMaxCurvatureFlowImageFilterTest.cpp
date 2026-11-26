@@ -155,7 +155,9 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: StencilRadius 0 cl
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12, DY = 12, DZ = 12;
+  constexpr usize DX = 12;
+  constexpr usize DY = 12;
+  constexpr usize DZ = 12;
   const std::vector<float32> field = MakeRamp<float32>(DX, DY, DZ);
 
   DataStructure ds0;
@@ -182,7 +184,9 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: constant image is 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8, DY = 8, DZ = 8;
+  constexpr usize DX = 8;
+  constexpr usize DY = 8;
+  constexpr usize DZ = 8;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 7.0f));
   MinMaxFilter filter;
@@ -201,7 +205,9 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: zero iterations is
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8, DY = 8, DZ = 8;
+  constexpr usize DX = 8;
+  constexpr usize DY = 8;
+  constexpr usize DZ = 8;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
   MinMaxFilter filter;

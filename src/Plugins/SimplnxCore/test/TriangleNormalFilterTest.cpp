@@ -121,7 +121,8 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
     DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
     auto& officialNormals = dataStructure.getDataRefAs<Float64Array>(normalsDataPath);
     Float64Array& calculatedNormals = dataStructure.getDataRefAs<Float64Array>(triangleNormalsDataPath);
-    std::vector<double> offNorms, calcNorms;
+    std::vector<double> offNorms;
+    std::vector<double> calcNorms;
     for(int64 i = 0; i < officialNormals.getSize(); i++)
     {
       auto result = fabs(officialNormals[i] - calculatedNormals[i]);

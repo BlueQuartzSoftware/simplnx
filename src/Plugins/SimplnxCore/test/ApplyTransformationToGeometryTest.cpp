@@ -1317,7 +1317,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Parameter domain regressi
   }
   const usize type = row < 4 ? 5 : row < 6 ? 4 : 3;
   auto args = ValidationTransformArgs(type, image);
-  const float32 nan = std::numeric_limits<float32>::quiet_NaN(), inf = std::numeric_limits<float32>::infinity();
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN();
+  const float32 inf = std::numeric_limits<float32>::infinity();
   const std::vector<VectorFloat32Parameter::ValueType> values = {{0, 1, 1}, {-1, 1, 1}, {nan, 1, 1}, {nan, 1, 1}, {inf, 0, 0}, {nan, 0, 0}, {0, 0, 0, 90}, {nan, 0, 1, 90}, {0, 0, 1, inf}};
   args.insertOrAssign(type == 5 ? ApplyTransformationToGeometryFilter::k_Scale_Key :
                       type == 4 ? ApplyTransformationToGeometryFilter::k_Translation_Key :
@@ -1337,7 +1338,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Result domain regression"
   CAPTURE(row);
   DataStructure ds;
   auto* geom = MakeValidationImage(ds, {1, 1, 1}, {row == 0 ? 2.0f : row == 1 ? 0.25f : 1.0f, 1, 1}, {row == 2 ? 3e38f : 0, 0, 0});
-  const auto oldSpacing = geom->getSpacing(), oldOrigin = geom->getOrigin();
+  const auto oldSpacing = geom->getSpacing();
+  const auto oldOrigin = geom->getOrigin();
   auto args = ValidationTransformArgs(row == 2 ? 4 : 5, true);
   args.insertOrAssign(row == 2 ? ApplyTransformationToGeometryFilter::k_Translation_Key : ApplyTransformationToGeometryFilter::k_Scale_Key,
                       VectorFloat32Parameter::ValueType{row == 1 ? std::numeric_limits<float32>::denorm_min() : 3e38f, row == 2 ? 0.0f : 1.0f, row == 2 ? 0.0f : 1.0f});

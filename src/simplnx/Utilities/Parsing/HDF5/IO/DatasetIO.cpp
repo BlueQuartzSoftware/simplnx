@@ -891,7 +891,8 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
     {
       std::vector<hsize_t> memDims;
       int rank = H5Sget_simple_extent_ndims(fileSpaceId);
-      std::vector<hsize_t> dims(rank), maxDims(rank);
+      std::vector<hsize_t> dims(rank);
+      std::vector<hsize_t> maxDims(rank);
       H5Sget_simple_extent_dims(fileSpaceId, dims.data(), maxDims.data());
       if(start.has_value() && count.has_value())
       {

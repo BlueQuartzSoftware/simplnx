@@ -441,7 +441,9 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: no crossing in a monotone-posi
 
 TEST_CASE("NXImageProcessing::ZeroCrossingEngine: determinism + tall-Z analytic check (float plane crossing)", "[NXImageProcessing][ZeroCrossingEngine]")
 {
-  const usize dx = 5, dy = 5, dz = 30;
+  const usize dx = 5;
+  const usize dy = 5;
+  const usize dz = 30;
   std::vector<float32> field(dx * dy * dz);
   for(usize z = 0; z < dz; ++z)
   {

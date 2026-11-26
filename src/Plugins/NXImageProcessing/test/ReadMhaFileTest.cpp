@@ -619,7 +619,9 @@ Result<> RunReadMhaFile(DataStructure& ds, const fs::path& inputFile, const Crop
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize X = 4, Y = 3, Z = 2;
+  constexpr usize X = 4;
+  constexpr usize Y = 3;
+  constexpr usize Z = 2;
   std::vector<int16_t> fileValues(X * Y * Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(-5));
   const fs::path p = MhaOutputDir() / "algo_scalar3d.mha";
@@ -640,7 +642,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]",
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: big-endian data is byteswapped", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize X = 4, Y = 3, Z = 1;
+  constexpr usize X = 4;
+  constexpr usize Y = 3;
+  constexpr usize Z = 1;
   std::vector<int16_t> logical(X * Y * Z);
   for(usize i = 0; i < logical.size(); i++)
   {
@@ -672,7 +676,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: numeric CompressedData = 1 round-trip
 {
   // Regression for the ParseBool fix: "CompressedData = 1" must decode as zlib, not be
   // read raw (which short-read errored before).
-  constexpr usize X = 4, Y = 3, Z = 2;
+  constexpr usize X = 4;
+  constexpr usize Y = 3;
+  constexpr usize Z = 2;
   std::vector<int16_t> fileValues(X * Y * Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(-5));
   const fs::path p = MhaOutputDir() / "algo_numeric_compressed.mha";
@@ -694,7 +700,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps 
 {
   // Regression for the ParseBool fix: the numeric-form true "T" must engage the byteswap
   // just like "True"; the old whole-string check left it off and produced wrong values.
-  constexpr usize X = 4, Y = 3, Z = 1;
+  constexpr usize X = 4;
+  constexpr usize Y = 3;
+  constexpr usize Z = 1;
   std::vector<int16_t> logical(X * Y * Z);
   for(usize i = 0; i < logical.size(); i++)
   {
@@ -724,7 +732,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps 
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: multi-component interleaves channels", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize comp = 2, X = 4, Y = 2, Z = 1;
+  constexpr usize comp = 2;
+  constexpr usize X = 4;
+  constexpr usize Y = 2;
+  constexpr usize Z = 1;
   std::vector<float32> fileValues(comp * X * Y);
   std::iota(fileValues.begin(), fileValues.end(), 0.0f);
   const fs::path p = MhaOutputDir() / "algo_multicomp.mha";
@@ -745,7 +756,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: multi-component interleaves channels"
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the requested region", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize X = 4, Y = 3, Z = 2;
+  constexpr usize X = 4;
+  constexpr usize Y = 3;
+  constexpr usize Z = 2;
   std::vector<int16_t> fileValues(X * Y * Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(0)); // value == flat file position (X-fastest)
   const fs::path p = MhaOutputDir() / "algo_crop.mha";
@@ -776,7 +789,8 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zli
 {
   UnitTest::LoadPlugins();
 
-  const usize X = 4, Y = 3;
+  const usize X = 4;
+  const usize Y = 3;
   std::vector<uint8_t> voxels(X * Y);
   for(usize i = 0; i < voxels.size(); i++)
   {
@@ -819,7 +833,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zli
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round trip", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
-  const usize X = 4, Y = 3, comp = 2;
+  const usize X = 4;
+  const usize Y = 3;
+  const usize comp = 2;
   std::vector<float32> voxels(X * Y * comp);
   std::iota(voxels.begin(), voxels.end(), 0.5f);
   const fs::path p = MhaOutputDir() / "rt_multicomp.mha";
@@ -849,7 +865,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round t
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
-  constexpr usize X = 6, Y = 5, Z = 4;
+  constexpr usize X = 6;
+  constexpr usize Y = 5;
+  constexpr usize Z = 4;
   std::vector<uint16_t> voxels(X * Y * Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
@@ -1069,7 +1087,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: OOC output matches in-core (sca
   SECTION("float32 scalar (compressed)")
   {
     // 40x40x20 == 32000 tuples (128 KiB); large enough for a forced-OOC store to span chunks.
-    constexpr usize X = 40, Y = 40, Z = 20;
+    constexpr usize X = 40;
+    constexpr usize Y = 40;
+    constexpr usize Z = 20;
     std::vector<float32> voxels(X * Y * Z);
     for(usize i = 0; i < voxels.size(); i++)
     {
@@ -1086,7 +1106,8 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: OOC output matches in-core (sca
   SECTION("uint8 multi-component (ElementNumberOfChannels=3, raw)")
   {
     // 2D image (Z=1): 48x32 == 1536 tuples x 3 components == 4608 bytes.
-    constexpr usize X = 48, Y = 32;
+    constexpr usize X = 48;
+    constexpr usize Y = 32;
     std::vector<uint8> voxels(3 * X * Y);
     for(usize i = 0; i < voxels.size(); i++)
     {

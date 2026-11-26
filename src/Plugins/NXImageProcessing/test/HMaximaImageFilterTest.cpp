@@ -116,7 +116,9 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: Height 0 is the identity", "[N
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12, DY = 12, DZ = 3;
+  constexpr usize DX = 12;
+  constexpr usize DY = 12;
+  constexpr usize DZ = 3;
   const std::vector<int32> pattern = rt::MakeGradientNoisePattern<int32>(DX, DY, DZ);
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);

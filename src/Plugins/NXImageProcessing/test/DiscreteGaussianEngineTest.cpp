@@ -181,9 +181,13 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: constant image preserved",
 
 TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: impulse response sums to ~1 and is symmetric along X", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
-  const usize dx = 21, dy = 5, dz = 5;
+  const usize dx = 21;
+  const usize dy = 5;
+  const usize dz = 5;
   std::vector<float64> field(dx * dy * dz, 0.0);
-  const usize cx = dx / 2, cy = dy / 2, cz = dz / 2;
+  const usize cx = dx / 2;
+  const usize cy = dy / 2;
+  const usize cz = dz / 2;
   field[FlatIndex(cx, cy, cz, dx, dy)] = 1.0;
   // Smooth only along X (variance 0 on Y,Z => identity there) to isolate the 1-D response on the center row.
   const std::vector<float64> out = RunDG<float64>(field, dx, dy, dz, {4.0, 0.0, 0.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f});
@@ -199,7 +203,9 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: impulse response sums to ~
 
 TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: deterministic + tall-Z streaming", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 64;
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 64;
   std::vector<int16> field(dx * dy * dz);
   for(usize i = 0; i < field.size(); ++i)
   {
@@ -313,7 +319,9 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: pre-cancellation leaves fu
 
 TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: ZeroFluxNeumann boundary keeps a ramp monotonic + linear interior", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
-  const usize dx = 41, dy = 3, dz = 3;
+  const usize dx = 41;
+  const usize dy = 3;
+  const usize dz = 3;
   std::vector<float64> field(dx * dy * dz);
   for(usize z = 0; z < dz; ++z)
     for(usize y = 0; y < dy; ++y)
@@ -321,7 +329,8 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: ZeroFluxNeumann boundary k
         field[FlatIndex(x, y, z, dx, dy)] = static_cast<float64>(x); // ramp along X, constant in Y/Z
   // Smooth along X only (variance 0 on Y/Z => identity there) so the boundary behavior on the X line is isolated.
   const std::vector<float64> out = RunDG<float64>(field, dx, dy, dz, {2.0, 0.0, 0.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f});
-  const usize yc = dy / 2, zc = dz / 2;
+  const usize yc = dy / 2;
+  const usize zc = dz / 2;
   auto at = [&](usize x) { return out[FlatIndex(x, yc, zc, dx, dy)]; };
   // A symmetric, sum-normalized kernel preserves a linear ramp in the interior (sum(k)=1, sum(k*offset)=0), well away
   // from the clamped ends.

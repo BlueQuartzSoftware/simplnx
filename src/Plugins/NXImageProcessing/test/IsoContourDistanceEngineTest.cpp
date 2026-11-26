@@ -560,7 +560,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
   constexpr float32 kFar = 10.0f;
   CAPTURE(axis, aniso);
 
-  constexpr usize DX = 6, DY = 5, DZ = 4;
+  constexpr usize DX = 6;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 4;
   std::vector<T> field(DX * DY * DZ, T{0});
   for(usize z = 0; z < DZ; ++z)
   {
@@ -607,7 +609,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
 // Each voxel receives the applicable signed far value. A voxel on the level set receives zero.
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  constexpr usize DX = 5, DY = 4, DZ = 3;
+  constexpr usize DX = 5;
+  constexpr usize DY = 4;
+  constexpr usize DZ = 3;
   const float64 levelSet = GENERATE(0.0, 3.0, -1.0);
   const float64 farValue = GENERATE(10.0, 4.0);
   CAPTURE(levelSet, farValue);
@@ -654,7 +658,9 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: radial sign + finiteness
     {
       for(usize x = 0; x < D; ++x)
       {
-        const float64 dxc = x - c, dyc = y - c, dzc = z - c;
+        const float64 dxc = x - c;
+        const float64 dyc = y - c;
+        const float64 dzc = z - c;
         field[FlatIndex(x, y, z, D, D)] = static_cast<float32>(std::sqrt(dxc * dxc + dyc * dyc + dzc * dzc));
       }
     }
@@ -690,7 +696,9 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: deterministic", "[NXImag
 // The output must reproduce the analytic Z-ramp result.
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-ramp", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  constexpr usize DX = 9, DY = 8, DZ = 40;
+  constexpr usize DX = 9;
+  constexpr usize DY = 8;
+  constexpr usize DZ = 40;
   constexpr float32 kFar = 50.0f;
   std::vector<int32> field(DX * DY * DZ);
   for(usize z = 0; z < DZ; ++z)

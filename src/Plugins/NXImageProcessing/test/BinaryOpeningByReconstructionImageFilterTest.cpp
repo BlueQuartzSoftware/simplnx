@@ -77,7 +77,9 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 11, DY = 11, DZ = 1;
+  constexpr usize DX = 11;
+  constexpr usize DY = 11;
+  constexpr usize DZ = 1;
   constexpr int32 bg = 0;
   constexpr int32 fg = 1;
   std::vector<int32> pattern(DX * DY * DZ, bg);
@@ -134,7 +136,9 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 11, DY = 11, DZ = 1;
+  constexpr usize DX = 11;
+  constexpr usize DY = 11;
+  constexpr usize DZ = 1;
   constexpr int32 bg = 0;
   constexpr int32 fg = 1;
   std::vector<int32> pattern(DX * DY * DZ, bg);

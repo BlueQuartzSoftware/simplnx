@@ -120,7 +120,9 @@ private:
 // or a 2D image (dz==1) collapses the z term. Matches the engine's float math (double sum, float32 cast).
 std::vector<float32> ExactEdtOracle(const std::vector<int32>& in, usize dx, usize dy, usize dz, bool squared, bool useSpacing, FloatVec3 spacing)
 {
-  const int64 nX = static_cast<int64>(dx), nY = static_cast<int64>(dy), nZ = static_cast<int64>(dz);
+  const int64 nX = static_cast<int64>(dx);
+  const int64 nY = static_cast<int64>(dy);
+  const int64 nZ = static_cast<int64>(dz);
   const float64 sp[3] = {static_cast<float64>(spacing[0]), static_cast<float64>(spacing[1]), static_cast<float64>(spacing[2])};
   auto at = [&](int64 x, int64 y, int64 z) { return in[FlatIndex(static_cast<usize>(x), static_cast<usize>(y), static_cast<usize>(z), dx, dy)]; };
 
@@ -403,7 +405,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: axis seed pl
   const FloatVec3 spacing = useSpacing ? FloatVec3{2.0f, 1.5f, 3.0f} : FloatVec3{1.0f, 1.0f, 1.0f};
   CAPTURE(squared, useSpacing);
 
-  constexpr usize DX = 6, DY = 5, DZ = 4;
+  constexpr usize DX = 6;
+  constexpr usize DY = 5;
+  constexpr usize DZ = 4;
   auto runAxis = [&](int axis) {
     std::vector<int32> pattern(DX * DY * DZ, 0);
     for(usize z = 0; z < DZ; ++z)
@@ -447,7 +451,10 @@ TEMPLATE_TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: axis seed pl
 // distance is exactly (k-x) along x -- 4SED-exact and hand-obvious.
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: half-space == exact EDT", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
-  constexpr usize DX = 8, DY = 4, DZ = 3, K = 5;
+  constexpr usize DX = 8;
+  constexpr usize DY = 4;
+  constexpr usize DZ = 3;
+  constexpr usize K = 5;
   std::vector<int32> pattern(DX * DY * DZ, 0);
   for(usize z = 0; z < DZ; ++z)
   {

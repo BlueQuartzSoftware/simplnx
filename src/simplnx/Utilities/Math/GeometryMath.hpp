@@ -821,7 +821,8 @@ template <typename T, typename FaceIdsT = int32>
 char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<FaceIdsT>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
                          const nx::core::BoundingBox3D<T>& bounds, T radius)
 {
-  usize iter = 0, crossings = 0;
+  usize iter = 0;
+  usize crossings = 0;
 
   //* If query point is outside bounding box, finished. */
   if(!IsPointInBox(point, bounds))

@@ -26,7 +26,10 @@ struct IntensityWindowingOperation
   template <class T, class U>
   auto makeMapOp() const
   {
-    const float64 wMin = windowMinimum, wMax = windowMaximum, oMin = outputMinimum, oMax = outputMaximum;
+    const float64 wMin = windowMinimum;
+    const float64 wMax = windowMaximum;
+    const float64 oMin = outputMinimum;
+    const float64 oMax = outputMaximum;
     const float64 scale = (oMax - oMin) / (wMax - wMin);
     return [wMin, wMax, oMin, oMax, scale](T value) -> U {
       // Output bounds are Float64 and can exceed a narrow output type; saturate-cast to U to avoid UB.

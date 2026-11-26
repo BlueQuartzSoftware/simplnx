@@ -127,7 +127,8 @@ Result<> PadImageGeometry::operator()()
   }
   if(m_InputValues->UpdateOrigin)
   {
-    const auto origin = srcImageGeom.getOrigin(), spacing = srcImageGeom.getSpacing();
+    const auto origin = srcImageGeom.getOrigin();
+    const auto spacing = srcImageGeom.getSpacing();
     for(usize axis = 0; axis < 3; ++axis)
     {
       if(!active[axis])

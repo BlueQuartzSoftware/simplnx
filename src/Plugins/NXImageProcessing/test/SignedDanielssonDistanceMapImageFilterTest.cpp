@@ -146,7 +146,9 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 6, DZ = 1;
+  constexpr usize DX = 6;
+  constexpr usize DY = 6;
+  constexpr usize DZ = 1;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 1.0f));
   const DataPath geomPath = inputPath.getParent().getParent();

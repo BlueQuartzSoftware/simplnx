@@ -232,7 +232,9 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: constant
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8, DY = 8, DZ = 8;
+  constexpr usize DX = 8;
+  constexpr usize DY = 8;
+  constexpr usize DZ = 8;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 7.0f));
   CurvatureAnisoFilter filter;
@@ -253,7 +255,9 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-lar
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 6, DZ = 6;
+  constexpr usize DX = 6;
+  constexpr usize DY = 6;
+  constexpr usize DZ = 6;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
   CurvatureAnisoFilter filter;
@@ -282,7 +286,9 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero con
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8, DY = 8, DZ = 8;
+  constexpr usize DX = 8;
+  constexpr usize DY = 8;
+  constexpr usize DZ = 8;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
   CurvatureAnisoFilter filter;
@@ -301,7 +307,9 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero ite
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8, DY = 8, DZ = 8;
+  constexpr usize DX = 8;
+  constexpr usize DY = 8;
+  constexpr usize DZ = 8;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
   CurvatureAnisoFilter filter;

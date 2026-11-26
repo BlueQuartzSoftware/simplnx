@@ -315,10 +315,20 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
     {
       acrossScaleNormalization = sigma * sigma;
     }
-    double N0_0 = 0.0, N1_0 = 0.0, N2_0 = 0.0, N3_0 = 0.0;
-    double N0_2 = 0.0, N1_2 = 0.0, N2_2 = 0.0, N3_2 = 0.0;
-    double SN0 = 0.0, DN0 = 0.0, EN0 = 0.0;
-    double SN2 = 0.0, DN2 = 0.0, EN2 = 0.0;
+    double N0_0 = 0.0;
+    double N1_0 = 0.0;
+    double N2_0 = 0.0;
+    double N3_0 = 0.0;
+    double N0_2 = 0.0;
+    double N1_2 = 0.0;
+    double N2_2 = 0.0;
+    double N3_2 = 0.0;
+    double SN0 = 0.0;
+    double DN0 = 0.0;
+    double EN0 = 0.0;
+    double SN2 = 0.0;
+    double DN2 = 0.0;
+    double EN2 = 0.0;
     ComputeNCoefficients(sigmad, A1[0], B1[0], W1, L1, A2[0], B2[0], W2, L2, N0_0, N1_0, N2_0, N3_0, SN0, DN0, EN0);
     ComputeNCoefficients(sigmad, A1[2], B1[2], W1, L1, A2[2], B2[2], W2, L2, N0_2, N1_2, N2_2, N3_2, SN2, DN2, EN2);
 
