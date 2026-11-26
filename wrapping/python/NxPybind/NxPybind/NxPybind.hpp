@@ -34,9 +34,8 @@
 #define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
 #define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
 
-namespace pybind11
-{
-namespace detail
+
+namespace pybind11::detail
 {
 template <>
 struct type_caster<nx::core::AnyParameter>
@@ -78,8 +77,8 @@ public:
     return pybind11::cast(src->clone()).release();
   }
 };
-} // namespace detail
-} // namespace pybind11
+} // namespace pybind11::detail
+
 
 namespace nx::core::NxPybind
 {

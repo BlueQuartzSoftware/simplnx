@@ -13,9 +13,8 @@
 
 #include <vector>
 
-namespace nx::core
-{
-namespace HDF5
+
+namespace nx::core::HDF5
 {
 
 /**
@@ -345,5 +344,5 @@ using UInt64NeighborIO = NeighborListIO<uint64>;
 // using BoolNeighborIO = NeighborListIO<bool>;
 using Float32NeighborIO = NeighborListIO<float32>;
 using Float64NeighborIO = NeighborListIO<float64>;
-} // namespace HDF5
-} // namespace nx::core
+} // namespace nx::core::HDF5
+

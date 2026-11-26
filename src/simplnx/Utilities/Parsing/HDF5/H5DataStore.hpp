@@ -8,9 +8,8 @@
 #include <atomic>
 #include <limits>
 
-namespace nx::core::HDF5
-{
-namespace Support
+
+namespace nx::core::HDF5::Support
 {
 /**
  * @brief Reads an HDF5 dataset region directly into an in-memory DataStore.
@@ -262,5 +261,5 @@ Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
       return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count, shouldCancel);
  
 }
-} // namespace Support
-} // namespace nx::core::HDF5
+} // namespace nx::core::HDF5::Support
+

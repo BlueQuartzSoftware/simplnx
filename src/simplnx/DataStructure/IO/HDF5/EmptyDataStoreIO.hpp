@@ -5,9 +5,8 @@
 #include <iterator>
 #include <utility>
 
-namespace nx::core::HDF5
-{
-namespace EmptyDataStoreIO
+
+namespace nx::core::HDF5::EmptyDataStoreIO
 {
 /**
  * @brief Reads numeric tuple and component shapes without creating a store.
@@ -38,5 +37,5 @@ inline Result<std::pair<ShapeType, ShapeType>> ReadShapes(const nx::core::HDF5::
   }
   return result;
 }
-} // namespace EmptyDataStoreIO
-} // namespace nx::core::HDF5
+} // namespace nx::core::HDF5::EmptyDataStoreIO
+

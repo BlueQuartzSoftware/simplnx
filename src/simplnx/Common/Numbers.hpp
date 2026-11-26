@@ -2,10 +2,9 @@
 
 #include <type_traits>
 
-namespace nx::core
-{
+
 // Based on <numbers> from C++20
-namespace numbers
+namespace nx::core::numbers
 {
 template <class T>
 inline constexpr T e_v = static_cast<std::enable_if_t<std::is_floating_point_v<T>, T>>(2.718281828459045);
@@ -60,5 +59,5 @@ inline constexpr double inv_sqrt3 = inv_sqrt3_v<double>;
 inline constexpr double egamma = egamma_v<double>;
 inline constexpr double phi = phi_v<double>;
 
-} // namespace numbers
-} // namespace nx::core
+} // namespace nx::core::numbers
+

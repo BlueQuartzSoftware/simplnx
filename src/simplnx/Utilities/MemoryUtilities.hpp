@@ -5,9 +5,8 @@
 
 #include <filesystem>
 
-namespace nx::core
-{
-namespace Memory
+
+namespace nx::core::Memory
 {
 
 /**
@@ -75,5 +74,5 @@ struct SIMPLNX_EXPORT SystemMemoryInfo
  */
 SIMPLNX_EXPORT SystemMemoryInfo GetSystemMemoryInfo();
 
-} // namespace Memory
-} // namespace nx::core
+} // namespace nx::core::Memory
+

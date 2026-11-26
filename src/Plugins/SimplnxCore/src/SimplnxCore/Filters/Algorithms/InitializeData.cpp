@@ -421,9 +421,8 @@ std::vector<float64> PreviewValues(const std::vector<std::string>& tokens, usize
 }
 } // namespace
 
-namespace nx
-{
-namespace core
+
+namespace nx::core
 {
 std::string CreateCompValsStr(const std::vector<float64>& componentValues, usize numComps)
 {
@@ -608,8 +607,8 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
 
   preflightUpdatedValues.push_back({"Tuple Details", ss.str()});
 }
-} // namespace core
-} // namespace nx
+} // namespace nx::core
+
 
 InitializeData::InitializeData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, InitializeDataInputValues* inputValues)
 : m_DataStructure(dataStructure)

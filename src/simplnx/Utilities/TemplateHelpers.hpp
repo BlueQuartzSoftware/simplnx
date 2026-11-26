@@ -6,9 +6,8 @@
 #include <memory>
 #include <vector>
 
-namespace nx::core
-{
-namespace TemplateHelpers
+
+namespace nx::core::TemplateHelpers
 {
 /**
  * @brief This class (functor) simply returns true or false if the IDataArray can be downcast to a certain DataArray type
@@ -22,5 +21,5 @@ struct CanDynamicCast
     return dynamic_cast<const T*>(p) != nullptr;
   }
 };
-} // namespace TemplateHelpers
-} // namespace nx::core
+} // namespace nx::core::TemplateHelpers
+
