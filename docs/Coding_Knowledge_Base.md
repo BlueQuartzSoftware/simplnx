@@ -1360,6 +1360,18 @@ own indexing.
 **Pattern to use:** the analytical box geometries and scale-invariance cases in
 `src/Plugins/SimplnxCore/test/ComputeSurfaceAreaToVolumeTest.cpp`.
 
+### Check numeric array structure and nonfinite values before accepting an exemplar match
+
+**Rule:** compare both tuple and component counts before reading. Compare integer values exactly. For floating-point values, check the NaN policy and evaluate the absolute tolerance without narrowing the difference.
+
+**Example of the broken rule:** the `ComputeBoundaryStrengthsFilter` exemplar test passed when a finite F1 output was deliberately replaced with NaN. The same path-based comparator also accepted an extra component in the computed array (#2026).
+
+**Why:** a NaN difference makes `difference >= epsilon` false, and reading only the exemplar's flat element count can skip part of the computed array.
+
+**What to look for:** a comparator checking only a flat size or only a tuple count, narrowing a float64 difference to float32, or subtracting signed integers to check equality.
+
+**Pattern to use:** the shared numeric comparisons in `UnitTestCommon` check counts before bulk reads. If a filter promises a specific multidimensional shape, assert that shape in the filter test as well.
+
 ### Compare associated neighbor values in their stored slots
 
 **Rule:** when a neighbor ID identifies the meaning of another list's value at the same index, verify the ID and value together. Check the length of every row, including empty rows.

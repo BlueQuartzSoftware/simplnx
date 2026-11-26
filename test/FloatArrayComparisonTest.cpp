@@ -1,3 +1,5 @@
+#include "ArrayComparisonRecordingStore.hpp"
+
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -18,49 +20,12 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_InjectedReadError = -98781;
-constexpr int32 k_InjectedReadWarning = 98782;
+using UnitTest::ArrayComparison::k_InjectedReadError;
+using UnitTest::ArrayComparison::k_InjectedReadWarning;
+using UnitTest::ArrayComparison::RecordingStore;
+
 const DataPath k_ExemplarPath({"Exemplar"});
 const DataPath k_ComputedPath({"Computed"});
-
-/**
- * @class RecordingFloatStore
- * @brief Records real resident reads and can fail one selected call.
- * @tparam T Floating-point scalar type.
- */
-template <typename T>
-class RecordingFloatStore : public DataStore<T>
-{
-public:
-  using DataStore<T>::DataStore;
-
-  ~RecordingFloatStore() override = default;
-  RecordingFloatStore(const RecordingFloatStore&) = default;
-  RecordingFloatStore(RecordingFloatStore&&) = default;
-  RecordingFloatStore& operator=(const RecordingFloatStore&) = delete;
-  RecordingFloatStore& operator=(RecordingFloatStore&&) = default;
-
-  mutable std::vector<std::pair<usize, usize>> reads;
-  usize failingReadCall = 0;
-  bool warnOnRead = false;
-
-  /**
-   * @brief Records each range before reading values or returning the selected error.
-   * @param startIndex First flat value index.
-   * @param buffer Receives real resident values on success.
-   * @return Known injected error or the resident read result, with an optional known warning.
-   */
-  Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
-  {
-    reads.emplace_back(startIndex, buffer.size());
-    auto result = reads.size() == failingReadCall ? MakeErrorResult(k_InjectedReadError, "Injected floating-array read error") : DataStore<T>::copyIntoBuffer(startIndex, buffer);
-    if(warnOnRead)
-    {
-      result.warnings().push_back({k_InjectedReadWarning, "Injected floating-array read warning"});
-    }
-    return result;
-  }
-};
 
 /**
  * @brief Checks every stored value without calling the comparison helper or its bulk read path.
@@ -69,7 +34,7 @@ public:
  * @param expected Independent snapshot supplied by the fixture.
  */
 template <typename T>
-void CheckPreservedValues(const RecordingFloatStore<T>& store, const std::vector<T>& expected)
+void CheckPreservedValues(const RecordingStore<T>& store, const std::vector<T>& expected)
 {
   REQUIRE(store.getSize() == expected.size());
   for(usize valueIndex = 0; valueIndex < expected.size(); ++valueIndex)
@@ -99,8 +64,8 @@ struct FloatComparisonFixture
   DataStructure dataStructure;
   std::vector<T> exemplaryValues;
   std::vector<T> computedValues;
-  std::shared_ptr<RecordingFloatStore<T>> exemplaryStore;
-  std::shared_ptr<RecordingFloatStore<T>> computedStore;
+  std::shared_ptr<RecordingStore<T>> exemplaryStore;
+  std::shared_ptr<RecordingStore<T>> computedStore;
   DataArray<T>* exemplaryArray = nullptr;
   DataArray<T>* computedArray = nullptr;
 
@@ -126,8 +91,8 @@ struct FloatComparisonFixture
     {
       computedTuples = {computedValues.size()};
     }
-    exemplaryStore = std::make_shared<RecordingFloatStore<T>>(exemplaryTuples, exemplaryComponents, T{});
-    computedStore = std::make_shared<RecordingFloatStore<T>>(computedTuples, computedComponents, T{});
+    exemplaryStore = std::make_shared<RecordingStore<T>>(exemplaryTuples, exemplaryComponents, T{});
+    computedStore = std::make_shared<RecordingStore<T>>(computedTuples, computedComponents, T{});
     REQUIRE(exemplaryStore->getSize() == exemplaryValues.size());
     REQUIRE(computedStore->getSize() == computedValues.size());
     exemplaryArray = DataArray<T>::Create(dataStructure, k_ExemplarPath.getTargetName(), exemplaryStore);
@@ -378,4 +343,173 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: empty arrays and unusu
     CHECK(fixture.exemplaryStore->reads.empty());
     CHECK(fixture.computedStore->reads.empty());
   }
+}
+
+namespace
+{
+void RequireFullComparisonError(const Result<>& result, int32 expectedCode)
+{
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == expectedCode);
+}
+} // namespace
+
+TEMPLATE_TEST_CASE("simplnx::Numeric array comparison preserves compatible factorizations and special values", "[simplnx][NumericArrayComparison]", float32, float64)
+{
+  const TestType nan = std::numeric_limits<TestType>::quiet_NaN();
+  const TestType inf = std::numeric_limits<TestType>::infinity();
+  const TestType epsilon = static_cast<TestType>(UnitTest::EPSILON);
+  const TestType below = std::nextafter(epsilon, TestType{0});
+  FloatComparisonFixture<TestType> fixture({0, nan, inf, -inf, -1, 0, 2, -3}, {below, nan, inf, -inf, -1, TestType{-0.0}, 2, -3}, {2, 2}, {2}, {4}, {1, 2});
+
+  UnitTest::CompareDataArrays<TestType>(*fixture.exemplaryArray, *fixture.computedArray);
+  UnitTest::CompareArrays<TestType>(fixture.dataStructure, k_ExemplarPath, k_ComputedPath);
+  fixture.requireUnchanged();
+}
+
+TEMPLATE_TEST_CASE("simplnx::Numeric array comparison distinguishes epsilon boundaries", "[simplnx][NumericArrayComparison]", float32, float64)
+{
+  const TestType epsilon = static_cast<TestType>(UnitTest::EPSILON);
+  SECTION("The flat wrapper includes the boundary and the path policy excludes it")
+  {
+    FloatComparisonFixture<TestType> fixture({0}, {epsilon});
+    UnitTest::CompareDataArrays<TestType>(*fixture.exemplaryArray, *fixture.computedArray);
+    const auto result = UnitTest::EvaluateNumericArrays(*fixture.exemplaryArray, *fixture.computedArray, GetDataType<TestType>(), 0, std::nullopt, UnitTest::NumericTolerance::Exclusive);
+    RequireFullComparisonError(result, -90074);
+  }
+  SECTION("The first value above the boundary fails even at float64 precision")
+  {
+    const TestType above = std::nextafter(epsilon, std::numeric_limits<TestType>::infinity());
+    FloatComparisonFixture<TestType> fixture({0}, {above});
+    const auto result = UnitTest::EvaluateNumericArrays(*fixture.exemplaryArray, *fixture.computedArray, GetDataType<TestType>());
+    RequireFullComparisonError(result, -90074);
+  }
+}
+
+TEMPLATE_TEST_CASE("simplnx::Numeric array comparison rejects one-sided NaNs and unequal infinities", "[simplnx][NumericArrayComparison]", float32, float64)
+{
+  const bool reverse = GENERATE(false, true);
+  const TestType inf = std::numeric_limits<TestType>::infinity();
+  TestType exemplar = -inf;
+  TestType computed = inf;
+  SECTION("Only one value is NaN")
+  {
+    exemplar = std::numeric_limits<TestType>::quiet_NaN();
+    computed = TestType{7};
+  }
+  SECTION("Infinities of opposite signs")
+  {
+  }
+  if(reverse)
+  {
+    std::swap(exemplar, computed);
+  }
+  const auto tolerance = GENERATE(UnitTest::NumericTolerance::Inclusive, UnitTest::NumericTolerance::Exclusive);
+  FloatComparisonFixture<TestType> fixture({exemplar}, {computed});
+  const auto result = UnitTest::EvaluateNumericArrays(*fixture.exemplaryArray, *fixture.computedArray, GetDataType<TestType>(), 0, std::nullopt, tolerance);
+  RequireFullComparisonError(result, -90074);
+}
+
+TEST_CASE("simplnx::Numeric array comparison validates counts and ranges before reading", "[simplnx][NumericArrayComparison]")
+{
+  SECTION("Equal flat size with different tuple and component counts")
+  {
+    FloatComparisonFixture<float32> fixture({1, 2, 3, 4}, {1, 2, 3, 4}, {2}, {2}, {4}, {1});
+    const auto result = UnitTest::EvaluateNumericArrays(*fixture.exemplaryArray, *fixture.computedArray, DataType::float32);
+    RequireFullComparisonError(result, -90072);
+    CHECK(fixture.exemplaryStore->reads.empty());
+    CHECK(fixture.computedStore->reads.empty());
+  }
+  SECTION("Computed array has an extra component after its matching prefix")
+  {
+    FloatComparisonFixture<float32> fixture({7}, {7, 8}, {1}, {1}, {1}, {2});
+    const auto result = UnitTest::EvaluateNumericArrays(*fixture.exemplaryArray, *fixture.computedArray, DataType::float32);
+    RequireFullComparisonError(result, -90072);
+    CHECK(fixture.exemplaryStore->reads.empty());
+    CHECK(fixture.computedStore->reads.empty());
+  }
+  SECTION("Incorrect requested type and starts at or past the end")
+  {
+    FloatComparisonFixture<float32> fixture({7}, {8});
+    RequireFullComparisonError(UnitTest::EvaluateNumericArrays(*fixture.exemplaryArray, *fixture.computedArray, DataType::float64), -90071);
+    RequireFullComparisonError(UnitTest::EvaluateNumericArrays(*fixture.exemplaryArray, *fixture.computedArray, DataType::float32, 2), -90073);
+    UnitTest::CompareDataArrays<float32>(*fixture.exemplaryArray, *fixture.computedArray, 1);
+    CHECK(fixture.exemplaryStore->reads.empty());
+    CHECK(fixture.computedStore->reads.empty());
+  }
+}
+
+TEMPLATE_TEST_CASE("simplnx::Numeric array comparison uses exact integer and boolean values", "[simplnx][NumericArrayComparison]", int64, uint64, bool)
+{
+  DataStructure ds;
+  const TestType high = std::numeric_limits<TestType>::max();
+  auto* exemplar = DataArray<TestType>::Create(ds, "Exemplar", std::make_shared<DataStore<TestType>>(2, high));
+  auto* computed = DataArray<TestType>::Create(ds, "Computed", std::make_shared<DataStore<TestType>>(2, high));
+  REQUIRE(exemplar != nullptr);
+  REQUIRE(computed != nullptr);
+  exemplar->setValue(0, std::numeric_limits<TestType>::lowest());
+  computed->setValue(0, std::numeric_limits<TestType>::lowest());
+  UnitTest::CompareArrays<TestType>(ds, k_ExemplarPath, k_ComputedPath);
+  UnitTest::CompareDataArrays<TestType>(*exemplar, *computed);
+  SECTION("Adjacent high values")
+  {
+    computed->setValue(1, static_cast<TestType>(high - 1));
+  }
+  SECTION("Opposite limits")
+  {
+    computed->setValue(0, high);
+  }
+  const auto result = UnitTest::EvaluateNumericArrays(*exemplar, *computed, GetDataType<TestType>());
+  RequireFullComparisonError(result, -90074);
+}
+
+TEST_CASE("simplnx::Numeric array comparison reads the requested flat suffix in bounded blocks", "[simplnx][NumericArrayComparison]")
+{
+  DataStructure ds;
+  auto left = std::make_shared<RecordingStore<float64>>(ShapeType{20002}, ShapeType{2}, 3.0);
+  auto right = std::make_shared<RecordingStore<float64>>(ShapeType{20002}, ShapeType{2}, 3.0);
+  auto* exemplar = Float64Array::Create(ds, "Exemplar", left);
+  auto* computed = Float64Array::Create(ds, "Computed", right);
+  REQUIRE(exemplar != nullptr);
+  REQUIRE(computed != nullptr);
+  right->setValue(2, -3.0); // Start at the second component of tuple 1.
+  const std::vector<std::pair<usize, usize>> fullReads{{3, 40000}, {40003, 1}};
+  const std::vector<std::pair<usize, usize>> firstRead{{3, 40000}};
+  SECTION("Equal suffix through the public wrapper")
+  {
+    UnitTest::CompareDataArrays<float64>(*exemplar, *computed, 3);
+    CHECK(left->reads == fullReads);
+    CHECK(right->reads == fullReads);
+  }
+  SECTION("A mismatched value stops before the next read")
+  {
+    right->setValue(3, 4.0);
+    left->failingReadCall = 2;
+    RequireFullComparisonError(UnitTest::EvaluateNumericArrays(*exemplar, *computed, DataType::float64, 3), -90074);
+    CHECK(left->reads == firstRead);
+    CHECK(right->reads == firstRead);
+  }
+  SECTION("Either input can fail on the short final block")
+  {
+    const bool failExemplar = GENERATE(false, true);
+    (failExemplar ? left : right)->failingReadCall = 2;
+    left->warnOnRead = true;
+    right->warnOnRead = true;
+    const auto result = UnitTest::EvaluateNumericArrays(*exemplar, *computed, DataType::float64, 3);
+    RequireFullComparisonError(result, k_InjectedReadError);
+    REQUIRE(result.warnings().size() == (failExemplar ? 3 : 4));
+    for(const auto& warning : result.warnings())
+    {
+      CHECK(warning.code == k_InjectedReadWarning);
+    }
+    CHECK(left->reads == fullReads);
+    CHECK(right->reads == (failExemplar ? firstRead : fullReads));
+  }
+}
+
+TEST_CASE("simplnx::Numeric array comparison through paths rejects the exact tolerance boundary", "[simplnx][NumericArrayComparison][!shouldfail]")
+{
+  FloatComparisonFixture<float64> fixture({0}, {static_cast<float64>(UnitTest::EPSILON)});
+  UnitTest::CompareArrays<float64>(fixture.dataStructure, k_ExemplarPath, k_ComputedPath);
 }

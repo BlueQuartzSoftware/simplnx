@@ -79,6 +79,7 @@ set(SIMPLNX_TEST_SRCS
   MessageHandlerTest.cpp
   MontageTest.cpp
   NeighborListComparisonTest.cpp
+  NumericComponentComparisonTest.cpp
   NeighborUtilitiesTest.cpp
   ParallelChunkCodecTest.cpp
   NxInfoTest.cpp

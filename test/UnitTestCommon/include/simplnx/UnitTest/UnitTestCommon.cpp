@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstring>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <stdexcept>
 
@@ -72,6 +73,105 @@ void SortNeighborRow(std::vector<T>& row)
   });
 }
 } // namespace
+
+Result<> EvaluateNumericArrays(const IDataArray& exemplar, const IDataArray& computed, DataType expectedType, usize start, std::optional<usize> component, NumericTolerance tolerance)
+{
+  if(exemplar.getDataType() != expectedType || computed.getDataType() != expectedType)
+  {
+    return MakeErrorResult(-90071, fmt::format("Expected two {} arrays. '{}' has type {} and '{}' has type {}.", DataTypeToString(expectedType), exemplar.getName(),
+                                               DataTypeToString(exemplar.getDataType()), computed.getName(), DataTypeToString(computed.getDataType())));
+  }
+  const usize tuples = exemplar.getNumberOfTuples();
+  const usize components = exemplar.getNumberOfComponents();
+  const usize size = exemplar.getSize();
+  if(tuples != computed.getNumberOfTuples() || components != computed.getNumberOfComponents() || size != computed.getSize())
+  {
+    return MakeErrorResult(-90072, fmt::format("'{}' has {} tuples, {} components and {} values. '{}' has {} tuples, {} components and {} values.", exemplar.getName(), tuples, components, size,
+                                               computed.getName(), computed.getNumberOfTuples(), computed.getNumberOfComponents(), computed.getSize()));
+  }
+  if(component.has_value() && (*component >= components || start >= tuples))
+  {
+    return MakeErrorResult(-90073, fmt::format("Cannot compare tuple {} and component {} in '{}' with {} tuples and {} components.", start, *component, exemplar.getName(), tuples, components));
+  }
+  if(!component.has_value() && start > size)
+  {
+    return MakeErrorResult(-90073, fmt::format("Start index {} exceeds the {} values in '{}'.", start, size, exemplar.getName()));
+  }
+
+  const usize stride = component.has_value() ? components : 1;
+  const usize count = component.has_value() ? tuples - start : size - start;
+  if(count == 0)
+  {
+    return {};
+  }
+  // A bulk read spans the selected values in this batch, including any intervening components.
+  // When one tuple is wider than the buffer, read only the selected element of that tuple.
+  constexpr usize k_MaxBufferValues = 40000;
+  const usize batchCapacity = std::min(count, 1 + (k_MaxBufferValues - 1) / stride);
+  const usize bufferSize = 1 + (batchCapacity - 1) * stride;
+
+  return ExecuteDataFunction(
+      [&]<class T>() -> Result<> {
+        const auto& expectedStore = exemplar.getIDataStoreRefAs<AbstractDataStore<T>>();
+        const auto& actualStore = computed.getIDataStoreRefAs<AbstractDataStore<T>>();
+        auto expectedBuffer = std::make_unique_for_overwrite<T[]>(bufferSize);
+        auto actualBuffer = std::make_unique_for_overwrite<T[]>(bufferSize);
+        Result<> result;
+        usize offset = component.has_value() ? start * stride + *component : start;
+        usize remaining = count;
+        while(true)
+        {
+          const usize batch = std::min(remaining, batchCapacity);
+          const usize spanSize = 1 + (batch - 1) * stride;
+          auto read = [&](const AbstractDataStore<T>& store, T* buffer) {
+            auto readResult = store.copyIntoBuffer(offset, nonstd::span<T>(buffer, spanSize));
+            std::move(readResult.warnings().begin(), readResult.warnings().end(), std::back_inserter(result.warnings()));
+            if(readResult.invalid())
+            {
+              result.m_Expected = nonstd::make_unexpected(std::move(readResult.errors()));
+              return false;
+            }
+            return true;
+          };
+          if(!read(expectedStore, expectedBuffer.get()) || !read(actualStore, actualBuffer.get()))
+          {
+            return result;
+          }
+
+          for(usize i = 0; i < batch; ++i)
+          {
+            const T expected = expectedBuffer[i * stride];
+            const T actual = actualBuffer[i * stride];
+            if(expected == actual)
+            {
+              continue;
+            }
+            if constexpr(std::is_floating_point_v<T>)
+            {
+              if(!component.has_value() && std::isnan(expected) && std::isnan(actual))
+              {
+                continue;
+              }
+              const float64 difference = std::abs(static_cast<float64>(expected) - static_cast<float64>(actual));
+              if(tolerance == NumericTolerance::Inclusive ? difference <= EPSILON : difference < EPSILON)
+              {
+                continue;
+              }
+            }
+            const usize index = offset + i * stride;
+            return MergeResults(std::move(result), MakeErrorResult(-90074, fmt::format("Array mismatch at index {} (tuple {}, component {}): '{}' expected {}, '{}' contained {}.", index,
+                                                                                       index / components, index % components, exemplar.getName(), expected, computed.getName(), actual)));
+          }
+          remaining -= batch;
+          if(remaining == 0)
+          {
+            return result;
+          }
+          offset += batch * stride;
+        }
+      },
+      expectedType);
+}
 
 Result<> EvaluateNeighborLists(const INeighborList* exemplar, const INeighborList* computed, DataType expectedType, NeighborListOrder order, float64 epsilon, NeighborListNaNs nans)
 {

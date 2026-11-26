@@ -539,6 +539,22 @@ void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& ex
  */
 bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2);
 
+/** @brief Controls whether a difference exactly equal to EPSILON is accepted. */
+enum class NumericTolerance
+{
+  Inclusive,
+  Exclusive
+};
+
+/**
+ * @brief Compares equal tuple and component counts, allowing different dimension factorizations.
+ * @param start First flat element, or first tuple when a component is selected.
+ * @param component Optional component index. Component comparisons reject paired NaNs; whole-array comparisons accept them.
+ * @return The first read failure or mismatch. Integral values compare exactly.
+ */
+Result<> EvaluateNumericArrays(const IDataArray& exemplar, const IDataArray& computed, DataType expectedType, usize start = 0, std::optional<usize> component = std::nullopt,
+                               NumericTolerance tolerance = NumericTolerance::Inclusive);
+
 /**
  * @brief Compares two IDataArray objects in bounded blocks.
  *
@@ -554,62 +570,8 @@ bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2);
 template <typename T>
 void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
 {
-  const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  const usize totalSize = oldDataStore.getSize();
-  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
-  REQUIRE(totalSize == newDataStore.getSize());
-
-  constexpr usize k_ChunkSize = 40000;
-  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
-  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
-
-  bool failed = false;
-  usize failIndex = 0;
-  T failOld = {};
-  T failNew = {};
-
-  for(usize offset = start; offset < totalSize && !failed; offset += k_ChunkSize)
-  {
-    const usize count = std::min(k_ChunkSize, totalSize - offset);
-    auto oldDataStoreReadResult = oldDataStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
-    SIMPLNX_RESULT_REQUIRE_VALID(oldDataStoreReadResult);
-    auto newDataStoreReadResult = newDataStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
-    SIMPLNX_RESULT_REQUIRE_VALID(newDataStoreReadResult);
-
-    for(usize i = 0; i < count; i++)
-    {
-      const T oldVal = oldBuf[i];
-      const T newVal = newBuf[i];
-      if(oldVal != newVal)
-      {
-        if constexpr(std::is_floating_point_v<T>)
-        {
-          // Two NaN values represent the same missing result for this test helper.
-          if(std::isnan(oldVal) && std::isnan(newVal))
-          {
-            continue;
-          }
-          float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-          if(diff <= EPSILON)
-          {
-            continue;
-          }
-        }
-        failed = true;
-        failIndex = offset + i;
-        failOld = oldVal;
-        failNew = newVal;
-        break;
-      }
-    }
-  }
-
-  if(failed)
-  {
-    UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", failIndex, failOld, failNew));
-  }
-  REQUIRE(!failed);
+  const auto result = EvaluateNumericArrays(left, right, GetDataType<T>(), start);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
 
 /**
@@ -642,61 +604,8 @@ struct CompareArraysFunctor
 template <typename T>
 void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& right, const usize startTuple = 0, const usize component = 0)
 {
-  const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  usize tupleCount = oldDataStore.getNumberOfTuples();
-  usize componentCount = oldDataStore.getNumberOfComponents();
-  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
-  REQUIRE(startTuple < tupleCount);
-  REQUIRE(component < componentCount);
-
-  constexpr usize k_ChunkTuples = 40000;
-  const usize chunkElements = k_ChunkTuples * componentCount;
-  auto oldBuf = std::make_unique<T[]>(chunkElements);
-  auto newBuf = std::make_unique<T[]>(chunkElements);
-
-  bool failed = false;
-  usize failTuple = 0;
-  T failOld = {};
-  T failNew = {};
-
-  for(usize tStart = startTuple; tStart < tupleCount && !failed; tStart += k_ChunkTuples)
-  {
-    const usize tCount = std::min(k_ChunkTuples, tupleCount - tStart);
-    const usize elemCount = tCount * componentCount;
-    auto oldDataStoreReadResult = oldDataStore.copyIntoBuffer(tStart * componentCount, nonstd::span<T>(oldBuf.get(), elemCount));
-    SIMPLNX_RESULT_REQUIRE_VALID(oldDataStoreReadResult);
-    auto newDataStoreReadResult = newDataStore.copyIntoBuffer(tStart * componentCount, nonstd::span<T>(newBuf.get(), elemCount));
-    SIMPLNX_RESULT_REQUIRE_VALID(newDataStoreReadResult);
-
-    for(usize t = 0; t < tCount; t++)
-    {
-      const T oldVal = oldBuf[t * componentCount + component];
-      const T newVal = newBuf[t * componentCount + component];
-      if(oldVal != newVal)
-      {
-        if constexpr(std::is_floating_point_v<T>)
-        {
-          float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-          if(diff <= EPSILON)
-          {
-            continue;
-          }
-        }
-        failed = true;
-        failTuple = tStart + t;
-        failOld = oldVal;
-        failNew = newVal;
-        break;
-      }
-    }
-  }
-
-  if(failed)
-  {
-    UNSCOPED_INFO(fmt::format("tuple=: {}  component=: {}  oldValue != newValue. {} != {}", failTuple, component, failOld, failNew));
-  }
-  REQUIRE(!failed);
+  const auto result = EvaluateNumericArrays(left, right, GetDataType<T>(), startTuple, component);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
 
 /**
@@ -709,57 +618,13 @@ void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& righ
 template <typename T>
 void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
-  INFO(fmt::format("Exemplary Data Array:'{}'\n  Computed DataArray: '{}'\n   bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
-
-  const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
-  const auto& computedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  REQUIRE(exemplaryDataArray.getNumberOfTuples() == computedDataArray.getNumberOfTuples());
-
-  const auto& oldStore = exemplaryDataArray.getDataStoreRef();
-  const auto& newStore = computedDataArray.getDataStoreRef();
-  const usize totalSize = oldStore.getSize();
-
-  constexpr usize k_ChunkSize = 40000;
-  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
-  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
-
-  bool failed = false;
-  usize failIndex = 0;
-  T failOld = {};
-  T failNew = {};
-
-  for(usize offset = 0; offset < totalSize && !failed; offset += k_ChunkSize)
-  {
-    const usize count = std::min(k_ChunkSize, totalSize - offset);
-    auto oldStoreReadResult = oldStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
-    SIMPLNX_RESULT_REQUIRE_VALID(oldStoreReadResult);
-    auto newStoreReadResult = newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
-    SIMPLNX_RESULT_REQUIRE_VALID(newStoreReadResult);
-
-    for(usize i = 0; i < count; i++)
-    {
-      if(oldBuf[i] != newBuf[i])
-      {
-        float32 diff = std::fabs(static_cast<float32>(oldBuf[i] - newBuf[i]));
-        if(diff >= EPSILON)
-        {
-          failed = true;
-          failIndex = offset + i;
-          failOld = oldBuf[i];
-          failNew = newBuf[i];
-          break;
-        }
-      }
-    }
-  }
-
-  if(failed)
-  {
-    UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", failIndex, failOld, failNew));
-  }
-  REQUIRE(!failed);
+  CAPTURE(exemplaryDataPath.toString(), computedPath.toString());
+  const auto* expected = dataStructure.getDataAs<IDataArray>(exemplaryDataPath);
+  const auto* actual = dataStructure.getDataAs<IDataArray>(computedPath);
+  REQUIRE(expected != nullptr);
+  REQUIRE(actual != nullptr);
+  const auto result = EvaluateNumericArrays(*expected, *actual, GetDataType<T>(), 0, std::nullopt, NumericTolerance::Exclusive);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
 
 /**
