@@ -694,7 +694,7 @@ const DataPath k_QuatsPath = k_CellDataPath.createChildPath("Quats");
 const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
 const DataPath k_CrystalStructuresPath = k_GeomPath.createChildPath("Ensemble Data").createChildPath("CrystalStructures");
 
-void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
+static void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
 {
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
   const usize sliceSize = dimX * dimY;

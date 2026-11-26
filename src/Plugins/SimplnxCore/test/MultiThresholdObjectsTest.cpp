@@ -793,7 +793,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custo
  * @param thresholdArrayPath Threshold mask path.
  */
 template <typename T>
-void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
+static void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
 {
   auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<T>>(thresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);

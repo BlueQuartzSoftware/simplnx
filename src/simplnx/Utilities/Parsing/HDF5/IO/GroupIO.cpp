@@ -69,7 +69,7 @@ constexpr int32 k_AttributeRemovalError = -18802;
  * @return Open group identifier, or a negative HDF5 identifier on failure.
  * @pre The caller does not hold Support::ApiLock().
  */
-IdType getGroupId(IdType parentId, const std::string& groupName)
+static IdType getGroupId(IdType parentId, const std::string& groupName)
 {
   // Keep the probe and its dependent open or create operation atomic to HDF5 callers.
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());

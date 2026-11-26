@@ -285,7 +285,7 @@ const std::string k_SharedVertexListName("SharedVertexList");
 
 const int32 k_CellAttrMatrixUnusedWarning = -5555;
 
-void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom& exemplaryGeom, const ImageGeom& calculatedGeom, const std::string& exemplaryDataName)
+static void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom& exemplaryGeom, const ImageGeom& calculatedGeom, const std::string& exemplaryDataName)
 {
   UnitTest::CompareImageGeometry(&exemplaryGeom, &calculatedGeom);
 

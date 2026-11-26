@@ -41,7 +41,7 @@ const std::string k_WebServerFilterFolder = "html";
     }                                                                                                                                                                                                  \
   }
 
-void GenerateParameterList()
+static void GenerateParameterList()
 {
   ::s_ParameterMap.clear();
   ADD_PARAMETER_TRAIT(simplnx.OEMEbsdScanSelectionParameter, "3935c833-aa51-4a58-81e9-3a51972c05ea")
@@ -101,7 +101,7 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(simplnx.VectorFloat64Parameter, "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96")
 }
 
-std::string ParseScalarType(const std::string& paramType)
+static std::string ParseScalarType(const std::string& paramType)
 {
   std::string temp = nx::core::StringUtilities::replace(paramType, "simplnx.", "Scalar Value |");
   temp = nx::core::StringUtilities::replace(temp, "Parameter", "");
@@ -118,7 +118,7 @@ std::string ParseScalarType(const std::string& paramType)
 //   return temp;
 // }
 
-bool CheckScalarPrimitive(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckScalarPrimitive(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
 {
 
   static const std::set<nx::core::Uuid> scalarPrimitives = {
@@ -136,7 +136,7 @@ bool CheckScalarPrimitive(std::ostream& rstStream, const nx::core::AnyParameter&
   return false;
 }
 
-bool CheckVectorPrimitive(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckVectorPrimitive(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
 {
   static const std::set<nx::core::Uuid> vectorPrimitives = {
       nx::core::Uuid::FromString("9f5f9683-e492-4a79-8378-79d727b2356a").value(), nx::core::Uuid::FromString("bff78ff3-35ef-482a-b3b1-df8806e7f7ef").value(),
@@ -178,7 +178,7 @@ bool CheckVectorPrimitive(std::ostream& rstStream, const nx::core::AnyParameter&
  * @param paramValue
  * @return
  */
-bool CheckArraySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckArraySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
 {
   static const std::set<nx::core::Uuid> param = {nx::core::Uuid::FromString("ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b").value()};
 
@@ -217,7 +217,7 @@ bool CheckArraySelectionParameter(std::ostream& rstStream, const nx::core::AnyPa
   return false;
 }
 
-bool CheckGeometrySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckGeometrySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
 {
   static const std::set<nx::core::Uuid> param = {nx::core::Uuid::FromString("d11e0bd8-f227-4fd1-b618-b6f16b259fc8").value()};
 
@@ -255,7 +255,7 @@ bool CheckGeometrySelectionParameter(std::ostream& rstStream, const nx::core::An
  * @param rstStream
  * @param paramValue
  */
-void CheckParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static void CheckParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
 {
   std::string paramTypeName = s_ParameterMap[paramValue->uuid()];
   paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "simplnx.", "");
@@ -270,7 +270,7 @@ void CheckParameter(std::ostream& rstStream, const nx::core::AnyParameter& param
  * @param trimLine
  * @return
  */
-std::vector<std::string> ReadFile(const std::filesystem::path& filePath, bool trimLine)
+static std::vector<std::string> ReadFile(const std::filesystem::path& filePath, bool trimLine)
 {
   std::ifstream file = std::ifstream(filePath);
   std::vector<std::string> lines;
@@ -295,7 +295,7 @@ std::vector<std::string> ReadFile(const std::filesystem::path& filePath, bool tr
   return lines;
 }
 
-std::string GenerateUnderline(size_t length, char value)
+static std::string GenerateUnderline(size_t length, char value)
 {
   std::string result;
   for(size_t i = 0; i < length; ++i)
@@ -437,7 +437,7 @@ std::string MarkdownInlineToRst(const std::string& markDown, bool plainText = fa
 }
 } // namespace
 
-std::string CreateFilledString(const std::string& input_string, int max_width, char fill_value)
+static std::string CreateFilledString(const std::string& input_string, int max_width, char fill_value)
 {
   if(max_width <= 0)
   {
@@ -462,7 +462,7 @@ std::string CreateFilledString(const std::string& input_string, int max_width, c
   return output;
 }
 
-std::string MarkdownToRst(const std::string& markDown)
+static std::string MarkdownToRst(const std::string& markDown)
 {
   std::string rst = markDown;
 
@@ -515,7 +515,7 @@ std::string MarkdownToRst(const std::string& markDown)
   return rst;
 }
 
-std::string ExtractRstFilterSummary(const std::filesystem::path& docFilePath)
+static std::string ExtractRstFilterSummary(const std::filesystem::path& docFilePath)
 {
   // Open the existing doc file
   // Extract out the first paragraph of the Filter's markdown documentation after the ## Description section marker
@@ -556,7 +556,7 @@ std::string ExtractRstFilterSummary(const std::filesystem::path& docFilePath)
   return rstDescription;
 }
 
-std::vector<int32_t> FindTableColumnWidths(const Parameters& parameters)
+static std::vector<int32_t> FindTableColumnWidths(const Parameters& parameters)
 {
   int32_t maxUIDisplay = 10;
   int32_t maxPythonArg = 21;
@@ -577,7 +577,7 @@ std::vector<int32_t> FindTableColumnWidths(const Parameters& parameters)
   return {maxUIDisplay, maxPythonArg};
 }
 
-std::vector<std::string> ConvertFilterDoc(const std::filesystem::path& docFilePath)
+static std::vector<std::string> ConvertFilterDoc(const std::filesystem::path& docFilePath)
 {
   // Open the existing doc file
   // Extract out the first paragraph of the Filter's markdown documentation after the ## Description section marker
@@ -613,7 +613,7 @@ std::vector<std::string> ConvertFilterDoc(const std::filesystem::path& docFilePa
   return outputLines;
 }
 
-void GenerateMarkdownFilterParameterTable()
+static void GenerateMarkdownFilterParameterTable()
 {
   auto* filterListPtr = Application::Instance()->getFilterList();
 
@@ -730,7 +730,7 @@ void GenerateMarkdownFilterParameterTable()
 /**
  * @brief
  */
-void GeneratePythonRstFiles()
+static void GeneratePythonRstFiles()
 {
   auto* filterListPtr = Application::Instance()->getFilterList();
 
@@ -863,7 +863,7 @@ void GeneratePythonRstFiles()
  * @param path The path to the index template file
  * @return
  */
-std::string ReadIndexTemplateFile(const std::filesystem::path& path)
+static std::string ReadIndexTemplateFile(const std::filesystem::path& path)
 {
   std::ifstream file(path);
 
@@ -881,7 +881,7 @@ std::string ReadIndexTemplateFile(const std::filesystem::path& path)
 /**
  * @brief Generates the index.rst file for the sphinx docs
  */
-void GeneratePythonSphinxIndex()
+static void GeneratePythonSphinxIndex()
 {
   std::string indexTemplate;
   {

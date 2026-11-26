@@ -34,7 +34,7 @@ const std::string k_OutputGeometryPathStr = "Padded Image Geometry";
 
 /* **************************************************************************** */
 /** @brief TEST CASE 0 */
-Arguments Args_0()
+static Arguments Args_0()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -54,7 +54,7 @@ Arguments Args_0()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 1 */
-Arguments Args_1()
+static Arguments Args_1()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -74,7 +74,7 @@ Arguments Args_1()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 2 */
-Arguments Args_2()
+static Arguments Args_2()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -94,7 +94,7 @@ Arguments Args_2()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 3 */
-Arguments Args_3()
+static Arguments Args_3()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -114,7 +114,7 @@ Arguments Args_3()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 4 */
-Arguments Args_4()
+static Arguments Args_4()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -134,7 +134,7 @@ Arguments Args_4()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 5 */
-Arguments Args_5()
+static Arguments Args_5()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -154,7 +154,7 @@ Arguments Args_5()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 6 */
-Arguments Args_6()
+static Arguments Args_6()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -174,7 +174,7 @@ Arguments Args_6()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 7 */
-Arguments Args_7()
+static Arguments Args_7()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -194,7 +194,7 @@ Arguments Args_7()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 8 */
-Arguments Args_8()
+static Arguments Args_8()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -214,7 +214,7 @@ Arguments Args_8()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 9 */
-Arguments Args_9()
+static Arguments Args_9()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -234,7 +234,7 @@ Arguments Args_9()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 10 */
-Arguments Args_10()
+static Arguments Args_10()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -254,7 +254,7 @@ Arguments Args_10()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 11 */
-Arguments Args_11()
+static Arguments Args_11()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -274,7 +274,7 @@ Arguments Args_11()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 12 */
-Arguments Args_12()
+static Arguments Args_12()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -294,7 +294,7 @@ Arguments Args_12()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 13 */
-Arguments Args_13()
+static Arguments Args_13()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -314,7 +314,7 @@ Arguments Args_13()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 14 */
-Arguments Args_14()
+static Arguments Args_14()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -334,7 +334,7 @@ Arguments Args_14()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 15 */
-Arguments Args_15()
+static Arguments Args_15()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));

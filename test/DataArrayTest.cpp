@@ -1122,7 +1122,7 @@ TEST_CASE("Copy DataStore", "DataArray")
 }
 
 template <typename T>
-void TestDataArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
+static void TestDataArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
   constexpr usize index1 = 5;
   constexpr usize index2 = 6;
@@ -1259,7 +1259,7 @@ void TestDataArrayToFromString<float64>(DataStructure& datastructure, const std:
 }
 
 template <typename T>
-void TestNeighborListArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
+static void TestNeighborListArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
   constexpr usize index1 = 5;
   constexpr usize index2 = 6;

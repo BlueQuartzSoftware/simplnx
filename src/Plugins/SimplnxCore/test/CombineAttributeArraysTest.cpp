@@ -65,7 +65,7 @@ private:
 } // namespace
 
 template <typename T>
-DataStructure CreateTestDataStructure()
+static DataStructure CreateTestDataStructure()
 {
   using DataArrayType = DataArray<T>;
 
@@ -132,7 +132,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore]
 }
 
 template <typename T>
-Result<> ValidateFilterOutput(const DataStructure& dataStructure)
+static Result<> ValidateFilterOutput(const DataStructure& dataStructure)
 {
   using DataArrayType = DataArray<T>;
 

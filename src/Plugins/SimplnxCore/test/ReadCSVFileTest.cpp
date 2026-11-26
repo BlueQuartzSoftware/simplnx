@@ -105,7 +105,7 @@ uint32 ExpectedBenchmarkSignal(usize tupleIndex)
  * @param colValues Row values to repeat for each header.
  * @param headers Column names.
  */
-void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string> colValues, const std::vector<std::string>& headers)
+static void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string> colValues, const std::vector<std::string>& headers)
 {
   if(fs::exists(inputFilePath))
   {
@@ -160,7 +160,7 @@ void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string>
  * @param newGroupName Output group name.
  * @return Configured filter arguments.
  */
-Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
+static Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
                           const std::vector<std::string>& customHeaders, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
                           nonstd::span<std::string> /*values*/, const std::string& newGroupName)
 {
@@ -186,7 +186,7 @@ Arguments createArguments(const std::string& inputFilePath, usize startImportRow
 
 // Run primitive type cases through the selected algorithm scope.
 template <typename T>
-void TestCase_TestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values)
+static void TestCase_TestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values)
 {
   INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
   INFO(fmt::format("Values = {}", values))
@@ -229,7 +229,7 @@ void TestCase_TestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd::span<s
 }
 
 template <typename T>
-void TestCase_TestPrimitives_Error(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values, int32 expectedErrorCode)
+static void TestCase_TestPrimitives_Error(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
   INFO(fmt::format("Values = {}", values))
@@ -258,7 +258,7 @@ void TestCase_TestPrimitives_Error(UnitTest::AlgorithmTestScope& scope, nonstd::
   REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
 }
 
-void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
+static void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
                                      const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
                                      nonstd::span<std::string> values, int32 expectedErrorCode)
 {

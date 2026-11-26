@@ -32,7 +32,7 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertices, usize numVerts)
+static std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertices, usize numVerts)
 {
   std::array<float, 6> minMaxVerts = {std::numeric_limits<float>::max(), std::numeric_limits<float>::min(), std::numeric_limits<float>::max(),
                                       std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), std::numeric_limits<float>::min()};

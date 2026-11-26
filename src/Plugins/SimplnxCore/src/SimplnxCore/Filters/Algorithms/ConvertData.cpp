@@ -228,7 +228,7 @@ private:
  * @return Error from the selected implementation.
  */
 template <typename InputType, typename OutputType>
-Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues* inputValues, const std::atomic_bool& shouldCancel)
+static Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues* inputValues, const std::atomic_bool& shouldCancel)
 {
   const auto& inputArray = dataStructure.getDataRefAs<DataArray<InputType>>(inputValues->SelectedArrayPath);
   auto& outputArray = dataStructure.getDataRefAs<DataArray<OutputType>>(inputValues->OutputArrayName);
@@ -244,7 +244,7 @@ Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues*
  * @return Error for an unsupported target type, or the selected conversion result.
  */
 template <typename InputType>
-Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues* inputValues, const std::atomic_bool& shouldCancel)
+static Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues* inputValues, const std::atomic_bool& shouldCancel)
 {
   const auto& inputArray = dataStructure.getDataRefAs<DataArray<InputType>>(inputValues->SelectedArrayPath);
   switch(inputValues->ScalarType)

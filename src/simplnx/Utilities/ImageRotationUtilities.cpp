@@ -329,7 +329,7 @@ Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueT
 }
 
 template <class T>
-constexpr T square(T value) noexcept
+constexpr static T square(T value) noexcept
 {
   return value * value;
 }

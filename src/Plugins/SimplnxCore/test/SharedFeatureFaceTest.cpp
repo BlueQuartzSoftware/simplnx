@@ -49,7 +49,7 @@ const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceAttribute
  * @param expectedLabels Expected label pair for each boundary row, including the reserved row 0.
  * @param expectedCounts Expected triangle count for each boundary row, including the reserved row 0.
  */
-void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>& pairs, const std::vector<int32>& expectedIds, const std::vector<std::pair<int32, int32>>& expectedLabels,
+static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>& pairs, const std::vector<int32>& expectedIds, const std::vector<std::pair<int32, int32>>& expectedLabels,
                                const std::vector<int32>& expectedCounts)
 {
   DataStructure ds;

@@ -634,12 +634,12 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   return result;
 }
 
-bool isDataPath(const std::any& value)
+static bool isDataPath(const std::any& value)
 {
   return value.type() == typeid(DataPath);
 }
 
-bool attemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPaths& renamedPaths)
+static bool attemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPaths& renamedPaths)
 {
   bool pathChanged = false;
   for(const auto& renamedPath : renamedPaths)
@@ -669,7 +669,7 @@ void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
   }
 }
 
-nx::core::WarningCollection convertErrors(const nx::core::ErrorCollection& errors, const std::string& filterName)
+static nx::core::WarningCollection convertErrors(const nx::core::ErrorCollection& errors, const std::string& filterName)
 {
   if(errors.empty())
   {

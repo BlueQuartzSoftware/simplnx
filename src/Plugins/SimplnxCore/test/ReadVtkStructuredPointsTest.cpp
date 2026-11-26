@@ -32,7 +32,7 @@ const std::string k_CompressedTestDirName = k_TestDirName + ".tar.gz";
 const fs::path k_InputDirPath = fs::path(unit_test::k_TestFilesDir.view()) / k_TestDirName;
 
 template <typename T>
-void validateReadVtkStructuredPointsFilter(const DataStructure& ds, const DataPath& cellDataArrayPath, T cellDataValue, const DataPath& pointDataArrayPath, T pointDataValue)
+static void validateReadVtkStructuredPointsFilter(const DataStructure& ds, const DataPath& cellDataArrayPath, T cellDataValue, const DataPath& pointDataArrayPath, T pointDataValue)
 {
   auto& cellDataArray = ds.getDataRefAs<DataArray<T>>(cellDataArrayPath);
   REQUIRE(std::all_of(cellDataArray.begin(), cellDataArray.end(), [&cellDataValue](const auto& value) { return value == cellDataValue; }));
@@ -41,7 +41,7 @@ void validateReadVtkStructuredPointsFilter(const DataStructure& ds, const DataPa
   REQUIRE(std::all_of(pointDataArray.begin(), pointDataArray.end(), [&pointDataValue](const auto& value) { return value == pointDataValue; }));
 }
 
-Arguments createArgs(const fs::path& filePath)
+static Arguments createArgs(const fs::path& filePath)
 {
   Arguments args;
 
@@ -61,7 +61,7 @@ Arguments createArgs(const fs::path& filePath)
   return args;
 }
 
-void test_invalid_case(const fs::path& filePath, int32 expectedErrCode)
+static void test_invalid_case(const fs::path& filePath, int32 expectedErrCode)
 {
   // Configure the filter arguments.
   ReadVtkStructuredPointsFilter filter;

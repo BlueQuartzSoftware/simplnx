@@ -390,7 +390,7 @@ struct PointInfo
 
 // ----------------------------------------------------------------------------
 // Function to compute the intersection between a triangle and a plane
-Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane, float zPlane)
+static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane, float zPlane)
 {
   PointInfo p0{plane.signedDistance(v0)};
   PointInfo p1{plane.signedDistance(v1)};
@@ -592,7 +592,7 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
 using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
 using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
-inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
+inline static std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
 {
   usize v0Idx = triangleList[triangleId * 3];
   usize v1Idx = triangleList[triangleId * 3 + 1];

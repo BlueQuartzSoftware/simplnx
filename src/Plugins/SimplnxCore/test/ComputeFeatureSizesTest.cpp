@@ -89,7 +89,7 @@ constexpr float64 k_RelativeTolerance = 1.0e-6;
  * @return Reference to the required object.
  */
 template <typename T>
-T& GetRequiredDataRef(DataStructure& dataStructure, const DataPath& path)
+static T& GetRequiredDataRef(DataStructure& dataStructure, const DataPath& path)
 {
   T* dataPtr = nullptr;
   REQUIRE_NOTHROW(dataPtr = &dataStructure.getDataRefAs<T>(path));
@@ -106,7 +106,7 @@ T& GetRequiredDataRef(DataStructure& dataStructure, const DataPath& path)
  * @return Const reference to the required object.
  */
 template <typename T>
-const T& GetRequiredDataRef(const DataStructure& dataStructure, const DataPath& path)
+const static T& GetRequiredDataRef(const DataStructure& dataStructure, const DataPath& path)
 {
   const T* dataPtr = nullptr;
   REQUIRE_NOTHROW(dataPtr = &dataStructure.getDataRefAs<T>(path));
@@ -311,7 +311,7 @@ private:
  * useConfiguredStore Store selection.
  * @return The populated DataStructure.
  */
-DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKind, usize numFeatures, bool useConfiguredStore)
+static DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKind, usize numFeatures, bool useConfiguredStore)
 {
   REQUIRE(numFeatures >= 7);
   DataStructure dataStructure;
@@ -398,7 +398,7 @@ DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKin
  * @return
  * Shared output stores for behavior checks.
  */
-ObservedFeatureOutputs AddObservedFeatureOutputs(DataStructure& dataStructure, bool rejectScalarWrites)
+static ObservedFeatureOutputs AddObservedFeatureOutputs(DataStructure& dataStructure, bool rejectScalarWrites)
 {
   auto& featureData = GetRequiredDataRef<AttributeMatrix>(dataStructure, k_FeatureAMPath);
   const usize numFeatures = featureData.getNumberOfTuples();
@@ -420,7 +420,7 @@ ObservedFeatureOutputs AddObservedFeatureOutputs(DataStructure& dataStructure, b
  * @return The scanline
  * execution result.
  */
-Result<> RunFeatureOutputScanline(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
+static Result<> RunFeatureOutputScanline(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
   ComputeFeatureSizesInputValues inputValues;
   inputValues.EquivalentDiametersName = k_EquivalentDiametersName;
@@ -440,7 +440,7 @@ Result<> RunFeatureOutputScanline(DataStructure& dataStructure, const std::atomi
  *
  * @param[in] numFeatures Feature count.
  */
-void ValidateFeatureOutputFixture(const DataStructure& dataStructure, FeatureOutputGeometry geometryKind, usize numFeatures)
+static void ValidateFeatureOutputFixture(const DataStructure& dataStructure, FeatureOutputGeometry geometryKind, usize numFeatures)
 {
   const auto& numElements = GetRequiredDataRef<Int32Array>(dataStructure, k_NumElementsPath);
   const auto& volumes = GetRequiredDataRef<Float32Array>(dataStructure, k_VolumesPath);
@@ -500,7 +500,7 @@ void ValidateFeatureOutputFixture(const DataStructure& dataStructure, FeatureOut
  * @brief Creates a two-dimensional ImageGeom feature fixture.
  * @return The populated DataStructure.
  */
-DataStructure Create2DImageDataStructure()
+static DataStructure Create2DImageDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
@@ -542,7 +542,7 @@ DataStructure Create2DImageDataStructure()
  * @brief Compares two-dimensional feature sizes with analytical values.
  * @param dataStructure Contains the generated size arrays.
  */
-void Validate2DImageDataStructure(const DataStructure& dataStructure)
+static void Validate2DImageDataStructure(const DataStructure& dataStructure)
 {
   // The following values are the analytical outputs.
   // One cell has area 2.02.
@@ -567,7 +567,7 @@ void Validate2DImageDataStructure(const DataStructure& dataStructure)
  * @brief Creates a three-dimensional ImageGeom feature fixture.
  * @return The populated DataStructure.
  */
-DataStructure Create3DImageDataStructure()
+static DataStructure Create3DImageDataStructure()
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
@@ -633,7 +633,7 @@ DataStructure Create3DImageDataStructure()
  * @brief Compares three-dimensional ImageGeom feature sizes with analytical values.
  * @param dataStructure Contains the generated size arrays.
  */
-void Validate3DImageDataStructure(const DataStructure& dataStructure)
+static void Validate3DImageDataStructure(const DataStructure& dataStructure)
 {
   // The following values are the analytical outputs.
   // One cell has volume 2.268.
@@ -658,7 +658,7 @@ void Validate3DImageDataStructure(const DataStructure& dataStructure)
  * @brief Creates a nonuniform RectGridGeom feature fixture.
  * @return The populated DataStructure.
  */
-DataStructure CreateRectGridDataStructure()
+static DataStructure CreateRectGridDataStructure()
 {
   DataStructure dataStructure = {};
   RectGridGeom* rectGridGeom = RectGridGeom::Create(dataStructure, k_ImageGeomName);
@@ -737,7 +737,7 @@ DataStructure CreateRectGridDataStructure()
  * @brief Compares RectGridGeom feature sizes with analytical values.
  * @param dataStructure Contains the generated size arrays.
  */
-void ValidateRectGridDataStructure(const DataStructure& dataStructure)
+static void ValidateRectGridDataStructure(const DataStructure& dataStructure)
 {
   // The following values are the analytical outputs.
   // Feature element counts are 0 39 15 10.

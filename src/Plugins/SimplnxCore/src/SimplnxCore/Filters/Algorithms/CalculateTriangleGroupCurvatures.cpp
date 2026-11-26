@@ -135,7 +135,7 @@ CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCu
 CalculateTriangleGroupCurvatures::~CalculateTriangleGroupCurvatures() = default;
 
 // -----------------------------------------------------------------------------
-void subtractVector3d(Float64AbstractDataStore& data, double* v)
+static void subtractVector3d(Float64AbstractDataStore& data, double* v)
 {
   size_t count = data.getNumberOfTuples();
   for(size_t i = 0; i < count; ++i)

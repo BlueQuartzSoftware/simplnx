@@ -26,7 +26,7 @@
 using namespace nx::core;
 namespace fs = std::filesystem;
 
-void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+static void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
   Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {144}, {3}, parentId);
   (*verticesArray)[0] = -0.707107;
@@ -463,7 +463,7 @@ void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, 
   (*verticesArray)[431] = 0;
 }
 
-void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+static void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
   IGeometry::MeshIndexArrayType* edgesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {264}, {2}, parentId);
   (*edgesListArray)[0] = 12;
@@ -996,7 +996,7 @@ void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, Dat
   (*edgesListArray)[527] = 142;
 }
 
-void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+static void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
   IGeometry::MeshIndexArrayType* trianglesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {242}, {3}, parentId);
   (*trianglesListArray)[0] = 0;
@@ -1727,7 +1727,7 @@ void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name,
   (*trianglesListArray)[725] = 142;
 }
 
-void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+static void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
   IGeometry::MeshIndexArrayType* quadsListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {121}, {4}, parentId);
   (*quadsListArray)[0] = 0;
@@ -2216,7 +2216,7 @@ void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, Dat
   (*quadsListArray)[483] = 142;
 }
 
-void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& tetsName, DataObject::IdType parentId)
+static void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& tetsName, DataObject::IdType parentId)
 {
   Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {5}, {3}, parentId);
   (*vertListArray)[0] = -1;
@@ -2245,7 +2245,7 @@ void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string&
   (*polyListArray)[7] = 3;
 }
 
-void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& hexsName, DataObject::IdType parentId)
+static void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& hexsName, DataObject::IdType parentId)
 {
   Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {12}, {3}, parentId);
   (*vertListArray)[0] = -1;
@@ -2303,7 +2303,7 @@ void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string&
   (*polyListArray)[15] = 3;
 }
 
-void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+static void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
   Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {2}, {3}, parentId);
   (*verticesArray)[0] = -0.707107;

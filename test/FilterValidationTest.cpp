@@ -33,7 +33,7 @@ std::map<nx::core::Uuid, std::string> s_ParameterMap;
     }                                                                                                                                                                                                  \
   }
 
-void GenerateParameterList()
+static void GenerateParameterList()
 {
   ::s_ParameterMap.clear();
   ADD_PARAMETER_TRAIT(simplnx.SeparatorParameter, "e6936d18-7476-4855-9e13-e795d717c50f")

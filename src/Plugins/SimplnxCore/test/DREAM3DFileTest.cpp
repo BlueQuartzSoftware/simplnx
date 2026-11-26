@@ -1202,7 +1202,7 @@ TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM
   }
 }
 
-void CheckXdmfFile(const fs::path& dream3dPath)
+static void CheckXdmfFile(const fs::path& dream3dPath)
 {
   auto filepath = GetXdmfPath(dream3dPath);
   REQUIRE(fs::exists(filepath));

@@ -48,7 +48,7 @@ const usize zDim = 1;
 } // namespace
 
 template <typename T>
-void writeInvalidFile(const std::string& filePath, std::vector<T> values, char delimiter)
+static void writeInvalidFile(const std::string& filePath, std::vector<T> values, char delimiter)
 {
   std::ofstream data(filePath, std::ios::out /*| std::ios::trunc*/);
   // std::ofstream data(filePath, std::ios::binary);
@@ -67,7 +67,7 @@ void writeInvalidFile(const std::string& filePath, std::vector<T> values, char d
   }
 }
 
-void writeFile(const std::string& filePath, char delimiter)
+static void writeFile(const std::string& filePath, char delimiter)
 {
   std::ofstream outfile(filePath.c_str(), std::ios_base::binary);
   int32 index = 0;
@@ -86,7 +86,7 @@ void writeFile(const std::string& filePath, char delimiter)
 }
 
 template <typename T>
-void RunInvalidTest()
+static void RunInvalidTest()
 {
   const std::string inputFilePath = fmt::format("{}/TestFile1.txt", unit_test::k_BinaryTestOutputDir);
   ShapeType tupleDims = {10};
@@ -204,7 +204,7 @@ void RunInvalidTest()
 }
 
 template <typename T>
-void RunTest(char sep, int delimiter)
+static void RunTest(char sep, int delimiter)
 {
   const std::string inputFilePath = fmt::format("{}/TestFile1.txt", unit_test::k_BinaryTestOutputDir);
   writeFile(inputFilePath, sep);

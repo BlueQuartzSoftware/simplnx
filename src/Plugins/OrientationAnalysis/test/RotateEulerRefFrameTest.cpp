@@ -73,14 +73,14 @@ const std::vector<FixtureData> k_Fixtures = {
 
 // Creates a DataStructure holding a cell AttributeMatrix with one float32 3-component
 // Euler angles array of numTuples tuples, returning the array pointer.
-inline Float32Array* CreateEulerArray(DataStructure& dataStructure, usize numTuples)
+inline static Float32Array* CreateEulerArray(DataStructure& dataStructure, usize numTuples)
 {
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{numTuples});
   return UnitTest::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {numTuples}, {3}, cellData->getId());
 }
 
 // Runs RotateEulerRefFrameFilter in place on the given euler array.
-inline void RunRotateFilter(DataStructure& dataStructure, const DataPath& eulerPath, const std::array<float32, 4>& axisAngle)
+inline static void RunRotateFilter(DataStructure& dataStructure, const DataPath& eulerPath, const std::array<float32, 4>& axisAngle)
 {
   RotateEulerRefFrameFilter filter;
   Arguments args;

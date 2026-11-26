@@ -2,7 +2,7 @@
 
 namespace nx::core
 {
-void DataIOCollectionExternalSortCompileUse()
+static void DataIOCollectionExternalSortCompileUse()
 {
   DataIOCollection collection;
   ExternalSortConfig config;

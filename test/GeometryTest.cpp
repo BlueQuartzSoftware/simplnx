@@ -36,7 +36,7 @@ using namespace nx::core;
  * @brief Verifies common node geometry operations.
  * @param geom Geometry under test.
  */
-void testAbstractGeometry(IGeometry* geom)
+static void testAbstractGeometry(IGeometry* geom)
 {
   SECTION("abstract geometry")
   {
@@ -63,7 +63,7 @@ void testAbstractGeometry(IGeometry* geom)
  * @brief Verifies vertex and edge operations on a two-dimensional geometry.
  * @param geom Geometry under test.
  */
-void testGeom2D(INodeGeometry2D* geom)
+static void testGeom2D(INodeGeometry2D* geom)
 {
   SECTION("abstract geometry 2D")
   {
@@ -113,7 +113,7 @@ void testGeom2D(INodeGeometry2D* geom)
  * @brief Verifies vertex, edge, and face operations on a three-dimensional geometry.
  * @param geom Geometry under test.
  */
-void testGeom3D(INodeGeometry3D* geom)
+static void testGeom3D(INodeGeometry3D* geom)
 {
   SECTION("abstract geometry 3D")
   {
@@ -164,7 +164,7 @@ void testGeom3D(INodeGeometry3D* geom)
  * @brief Verifies dimensions and cell counts on a grid geometry.
  * @param geom Geometry under test.
  */
-void testGeomGrid(IGridGeometry* geom)
+static void testGeomGrid(IGridGeometry* geom)
 {
   SECTION("abstract geometry grid")
   {
@@ -191,7 +191,7 @@ void testGeomGrid(IGridGeometry* geom)
  * @param expectedMax Expected maximum point.
  */
 template <typename T>
-void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
+static void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
 {
   REQUIRE(bbox.isValid());
   REQUIRE(bbox.getMinPoint()[0] == Approx(expectedMin[0]));
@@ -207,7 +207,7 @@ void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMi
  * @tparam GeomType Specifies the geometry type.
  */
 template <class GeomType>
-void testNodeGeometryBoundingBox()
+static void testNodeGeometryBoundingBox()
 {
   DataStructure dataStructure;
   auto* geom = createGeom<GeomType>(dataStructure);

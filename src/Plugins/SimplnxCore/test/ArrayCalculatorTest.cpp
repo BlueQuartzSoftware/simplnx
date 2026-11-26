@@ -136,7 +136,7 @@ DataStructure CreateComponentShapeDataStructure()
 } // namespace
 
 // -----------------------------------------------------------------------------
-IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units, DataStructure& dataStructure,
+static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units, DataStructure& dataStructure,
                                                              ArrayCalculatorFilter& filter)
 {
   Arguments args;
@@ -151,7 +151,7 @@ IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& 
 }
 
 // -----------------------------------------------------------------------------
-void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition, const int* expectedNumberOfTuples = nullptr,
+static void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition, const int* expectedNumberOfTuples = nullptr,
              const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
 {
   std::cout << "  Testing equation: ==>" << equation << "<==" << std::endl;
@@ -209,7 +209,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
 }
 
 // -----------------------------------------------------------------------------
-void MultiComponentArrayCalculatorTest()
+static void MultiComponentArrayCalculatorTest()
 {
   ArrayCalculatorFilter filter;
   DataStructure dataStructure = ::createDataStructure();
@@ -343,7 +343,7 @@ void MultiComponentArrayCalculatorTest()
 }
 
 // -----------------------------------------------------------------------------
-void SingleComponentArrayCalculatorTest1()
+static void SingleComponentArrayCalculatorTest1()
 {
   SECTION("Empty Tests")
   {
@@ -851,7 +851,7 @@ void SingleComponentArrayCalculatorTest1()
 }
 
 // -----------------------------------------------------------------------------
-void SingleComponentArrayCalculatorTest2()
+static void SingleComponentArrayCalculatorTest2()
 {
   ArrayCalculatorFilter filter;
   DataStructure dataStructure = createDataStructure();

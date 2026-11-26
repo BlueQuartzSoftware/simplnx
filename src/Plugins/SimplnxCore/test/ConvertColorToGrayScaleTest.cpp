@@ -245,7 +245,7 @@ const std::vector<std::vector<uint8_t>> algorithmMap{checkDefaultLuminosityColor
                                                      checkBChannelColors};
 
 //------------------------------------------------------------------------------
-void SetDataArrayTestValues(UInt8Array* aa)
+static void SetDataArrayTestValues(UInt8Array* aa)
 {
   aa->fill(0);
   size_t index = 0;
@@ -272,7 +272,7 @@ static VertexGeom* createVertexGeometry(DataStructure& dataStructure, const std:
 }
 
 //------------------------------------------------------------------------------
-void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructure)
+static void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructure)
 {
   DataPath arrayName({m_GeomName});
   arrayName = arrayName.createChildPath(m_outputArrayPrefix + m_DataArrayName);
@@ -291,7 +291,7 @@ void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructur
 }
 
 //------------------------------------------------------------------------------
-void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::ConversionType& algorithm, const std::vector<float32>& colorWeights, const int32& colorChannel, bool shouldFail)
+static void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::ConversionType& algorithm, const std::vector<float32>& colorWeights, const int32& colorChannel, bool shouldFail)
 {
   DataStructure dataStruct;
   const std::vector<size_t> tDims{numTuples};
