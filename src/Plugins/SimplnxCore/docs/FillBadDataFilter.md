@@ -22,7 +22,7 @@ The above images show the before and after results of running this filter with a
 2. **Classify by size.**
    - Components with fewer than *Minimum Allowed Defect Size* cells are flagged as *small noise* and filled.
    - Components with at least *Minimum Allowed Defect Size* cells are kept as bad data, or optionally moved to a new phase if *Store Defects as New Phase* is enabled.
-3. **Iterative fill.** Each cell flagged for filling examines its 6 face neighbors and copies all cell-level array data from whichever neighbor's *Feature Id* is most common. The pass repeats until every flagged cell has been filled.
+3. **Iterative fill.** Each cell flagged for filling examines its 6 face neighbors and copies all cell-level array data from whichever neighbor's *Feature Id* is most common. The filter repeats this pass until it fills all flagged cells or a pass finds no good neighbor. In that case, it reports a warning and leaves the remaining flagged cells with Feature Id −1.
 
 ### Minimum Defect Size Units
 

@@ -154,6 +154,7 @@ Result<> FillBadDataBFS::operator()()
     {
       // Start a new BFS from this seed voxel to discover all connected
       // bad-data voxels in this region
+      alreadyChecked[i] = true;
       currentVisitedList.push_back(static_cast<int64>(i));
       count = 0;
       while(count < currentVisitedList.size())

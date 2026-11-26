@@ -1,3 +1,5 @@
+#include "CellDataAliasTestUtils.hpp"
+
 #include "SimplnxCore/Filters/Algorithms/ErodeDilateBadData.hpp"
 #include "SimplnxCore/Filters/ErodeDilateBadDataFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -5,7 +7,6 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -260,42 +261,14 @@ DataStructure CreateTestData()
  */
 void CheckPathIgnored(const DataStructure& dataStructure)
 {
-  const DataStructure exemplarStructure = CreateTestData();
-
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_DataPath));
-  const auto& dataStore = dataStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
-  REQUIRE_NOTHROW(exemplarStructure.getDataRefAs<Int32Array>(k_DataPath));
-  const auto& exemplarStore = exemplarStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
-
-  REQUIRE(dataStore.size() == exemplarStore.size());
-
-  for(usize i = 0; i < dataStore.size(); i++)
+  const auto* ignored = dataStructure.getDataAs<Int32Array>(k_DataPath);
+  REQUIRE(ignored != nullptr);
+  REQUIRE(ignored->getNumberOfTuples() == k_NumTuples);
+  REQUIRE(ignored->getNumberOfComponents() == 1);
+  for(usize i = 0; i < k_NumTuples; ++i)
   {
-    REQUIRE(dataStore[i] == exemplarStore[i]);
+    CHECK((*ignored)[i] == static_cast<int32>(i));
   }
-}
-
-/**
- * @brief Verifies that the filter actually modified FeatureIds. Without this, a "the ignored array was left
- * alone" assertion would also pass for a filter that never ran at all.
- */
-void CheckFeatureIdsModified(const DataStructure& dataStructure)
-{
-  const DataStructure exemplarStructure = CreateTestData();
-
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath));
-  const auto& dataStore = dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath).getDataStoreRef();
-  REQUIRE_NOTHROW(exemplarStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath));
-  const auto& exemplarStore = exemplarStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath).getDataStoreRef();
-
-  REQUIRE(dataStore.size() == exemplarStore.size());
-
-  bool anyValueChanged = false;
-  for(usize i = 0; i < dataStore.size() && !anyValueChanged; i++)
-  {
-    anyValueChanged = dataStore[i] != exemplarStore[i];
-  }
-  REQUIRE(anyValueChanged);
 }
 
 /**
@@ -327,28 +300,40 @@ void CheckOutput(const DataStructure& dataStructure, ChoicesParameter::ValueType
   }
 }
 
-void RunFilter(DataStructure& dataStructure, ChoicesParameter::ValueType operation, int32 numIterations, const DirectionType& directions, const DataPath& geometryPath, const DataPath& featureIdsPath)
+Arguments MakeErodeDilateArgs(ChoicesParameter::ValueType operation, int32 numIterations, const DirectionType& directions, const DataPath& geometryPath, const DataPath& featureIdsPath,
+                              const MultiArraySelectionParameter::ValueType& ignoredPaths = {})
 {
-  const ErodeDilateBadDataFilter filter;
   Arguments args;
 
-  // Create default Parameters for the filter.
   args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(operation));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(numIterations));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(directions[0]));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(directions[1]));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(directions[2]));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(ignoredPaths));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  return args;
+}
 
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+void RunFilter(DataStructure& dataStructure, const Arguments& args)
+{
+  const ErodeDilateBadDataFilter filter;
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+}
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+void CheckDirectionalOutputs(ChoicesParameter::ValueType operation)
+{
+  const auto directions = GENERATE(k_XDir, k_YDir, k_ZDir, k_XYDir, k_XZDir, k_YZDir, k_XYZDir);
+  const int32 iterations = GENERATE(1, 2);
+  CAPTURE(directions, iterations);
+  auto dataStructure = CreateTestData();
+  RunFilter(dataStructure, MakeErodeDilateArgs(operation, iterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath));
+  CheckOutput(dataStructure, operation, directions, iterations);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -362,28 +347,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDi
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_bad_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
-  {
-    const ErodeDilateBadDataFilter filter;
-    Arguments args;
-
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Erode));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(2));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsDataPath));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputData));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
+  RunFilter(dataStructure, MakeErodeDilateArgs(k_Erode, 2, k_XYZDir, k_InputData, k_FeatureIdsDataPath));
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -402,54 +366,14 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode) Expanded", "[SimplnxCore
 {
   UnitTest::LoadPlugins();
 
-  bool dirX = GENERATE(true, false);
-  bool dirY = GENERATE(true, false);
-  bool dirZ = GENERATE(true, false);
-  int32 numIterations = GENERATE(1, 2);
-
-  const DirectionType directions = {dirX, dirY, dirZ};
-  const ChoicesParameter::ValueType operation = nx::core::detail::k_ErodeIndex;
-
-  // At least one direction is required; preflight rejects the all-off combination. See the No Direction test.
-  if(!dirX && !dirY && !dirZ)
-  {
-    SUCCEED("at least one direction is required");
-    return;
-  }
-
-  DataStructure dataStructure = CreateTestData();
-
-  RunFilter(dataStructure, operation, numIterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
-  CheckOutput(dataStructure, operation, directions, numIterations);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  CheckDirectionalOutputs(nx::core::detail::k_ErodeIndex);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) Expanded", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
   UnitTest::LoadPlugins();
 
-  bool dirX = GENERATE(true, false);
-  bool dirY = GENERATE(true, false);
-  bool dirZ = GENERATE(true, false);
-  int32 numIterations = GENERATE(1, 2);
-
-  const DirectionType directions = {dirX, dirY, dirZ};
-  const ChoicesParameter::ValueType operation = nx::core::detail::k_DilateIndex;
-
-  // At least one direction is required; preflight rejects the all-off combination. See the No Direction test.
-  if(!dirX && !dirY && !dirZ)
-  {
-    SUCCEED("at least one direction is required");
-    return;
-  }
-
-  DataStructure dataStructure = CreateTestData();
-
-  RunFilter(dataStructure, operation, numIterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
-  CheckOutput(dataStructure, operation, directions, numIterations);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  CheckDirectionalOutputs(nx::core::detail::k_DilateIndex);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter Ignored Path", "[SimplnxCore][ErodeDilateBadDataFilter]")
@@ -457,37 +381,18 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter Ignored Path", "[SimplnxCore][E
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = CreateTestData();
-  const DirectionType directions = {true, true, true};
   const ChoicesParameter::ValueType operation = GENERATE(k_Dilate, k_Erode);
-  const int32 numIterations = 1;
+  RunFilter(dataStructure, MakeErodeDilateArgs(operation, 1, k_XYZDir, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath, {k_DataPath}));
 
-  const DataPath ignoredPath = k_DataPath;
-
-  const ErodeDilateBadDataFilter filter;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(operation));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(numIterations));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(directions[0]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(directions[1]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(directions[2]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ImageFeatureIdsPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{ignoredPath}));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-  // The ignored array must come through untouched, and the filter must have actually done work -- without
-  // the second check the first one would also pass for a filter that never ran.
   CheckPathIgnored(dataStructure);
-  CheckFeatureIdsModified(dataStructure);
+  const auto& expectedIds = operation == k_Dilate ? k_ExemplarFeatureIdsDilateXYZ1 : k_ExemplarFeatureIdsErodeXYZ1;
+  const auto* actualIds = dataStructure.getDataAs<Int32Array>(k_ImageFeatureIdsPath);
+  REQUIRE(actualIds != nullptr);
+  REQUIRE(actualIds->getSize() == expectedIds.size());
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK((*actualIds)[i] == expectedIds[i]);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -499,23 +404,10 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Preflight Feature Data Modific
   DataStructure dataStructure = CreateTestData();
 
   const ErodeDilateBadDataFilter filter;
-  Arguments args;
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Dilate));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(1));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ImageFeatureIdsPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
+  const auto args = MakeErodeDilateArgs(k_Dilate, 1, k_XYZDir, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
-  const auto& warnings = preflightResult.outputActions.warnings();
-  REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -14600; }));
-  const auto& outputValues = preflightResult.outputValues;
-  REQUIRE(std::any_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Feature Data Modification Warning"; }));
-
+  CellDataAliasTest::CheckFeatureDataWarning(preflightResult);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -529,17 +421,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Direction", "[SimplnxCore][E
   const int32 numIterations = GENERATE(1, 2);
 
   const ErodeDilateBadDataFilter filter;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(operation));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(numIterations));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(directions[0]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(directions[1]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(directions[2]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ImageFeatureIdsPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
+  const auto args = MakeErodeDilateArgs(operation, numIterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -564,17 +446,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Dimensions", "[SimplnxCore][
   imageGeom->setDimensions(SizeVec3());
 
   const ErodeDilateBadDataFilter filter;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(operation));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(numIterations));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(directions[0]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(directions[1]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(directions[2]));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_ImageFeatureIdsPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+  const auto args = MakeErodeDilateArgs(operation, numIterations, directions, geomPath, k_ImageFeatureIdsPath);
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -589,57 +461,30 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Strict Feature Ids", "[Simplnx
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
-  const DataPath geometryPath({"Strict Geometry"});
-  const DataPath cellPath = geometryPath.createChildPath("Cell Data");
-  const DataPath featureIdsPath = cellPath.createChildPath("Feature Ids");
-  const DataPath otherPath = geometryPath.createChildPath("Other Data").createChildPath("Other Values");
-  const ShapeType shape{1, 2, 2};
-  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(imageGeomPtr != nullptr);
-  imageGeomPtr->setDimensions({2, 2, 1});
-  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cell Data", shape, imageGeomPtr->getId());
-  REQUIRE(cellsPtr != nullptr);
-  imageGeomPtr->setCellData(*cellsPtr);
-  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeomPtr->getId()) != nullptr);
-  auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Data", shape, imageGeomPtr->getId());
-  REQUIRE(otherPtr != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), otherPtr->getId()) != nullptr);
+  CellDataAliasTest::BuildStrictInput(dataStructure);
 
   ErodeDilateBadDataFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(CellDataAliasTest::k_StrictGeometry));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(CellDataAliasTest::k_StrictIds));
 
   int32 expectedCode = 0;
   SECTION("Correct Cell Attribute Matrix")
   {
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{featureIdsPath}));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{CellDataAliasTest::k_StrictIds}));
   }
   SECTION("Feature Ids in another Attribute Matrix with the same tuple shape")
   {
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(otherPath));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(CellDataAliasTest::k_OtherValues));
     expectedCode = -14605;
   }
   SECTION("Ignored array in another Attribute Matrix")
   {
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{otherPath}));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{CellDataAliasTest::k_OtherValues}));
     expectedCode = -14604;
   }
   const auto result = filter.preflight(dataStructure, args);
-  if(expectedCode == 0)
-  {
-    REQUIRE(result.outputActions.valid());
-  }
-  else
-  {
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == expectedCode);
-    CHECK(result.outputActions.errors().front().message.find(otherPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
-  }
+  CellDataAliasTest::CheckStrictPreflight(result, expectedCode);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -647,52 +492,19 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Ignored Array Cell AM Alias", 
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
-  const DataPath geometryPath({"Alias Test Geometry"});
-  const DataPath cellPath = geometryPath.createChildPath("Cells");
-  const DataPath ignoredPath = cellPath.createChildPath("Ignored");
-  const DataPath aliasCellPath({"Alternate Parent", "Cells"});
-  const ShapeType shape{1, 1, 4};
-  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(imageGeomPtr != nullptr);
-  imageGeomPtr->setDimensions({4, 1, 1});
-  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", shape, imageGeomPtr->getId());
-  REQUIRE(cellsPtr != nullptr);
-  imageGeomPtr->setCellData(*cellsPtr);
-  auto* alternateParentPtr = DataGroup::Create(dataStructure, "Alternate Parent");
-  REQUIRE(alternateParentPtr != nullptr);
-  REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), alternateParentPtr->getId()));
-  REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
-  auto* idsPtr = Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
-  auto* ignoredPtr = Int32Array::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
-  REQUIRE(idsPtr != nullptr);
-  REQUIRE(ignoredPtr != nullptr);
-  const std::vector<int32> originalIds{1, 0, 0, 1};
-  for(usize index = 0; index < 4; index++)
-  {
-    (*idsPtr)[index] = originalIds[index];
-    (*ignoredPtr)[index] = static_cast<int32>(10 * (index + 1));
-  }
+  CellDataAliasTest::BuildAliasInput(dataStructure);
+
   ErodeDilateBadDataFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(aliasCellPath.createChildPath("Ids")));
-  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{aliasCellPath.createChildPath("Ignored")}));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(CellDataAliasTest::k_AliasGeometry));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(CellDataAliasTest::k_AliasCells.createChildPath("Ids")));
+  args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{CellDataAliasTest::k_AliasCells.createChildPath("Ignored")}));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(1));
   const auto preflight = filter.preflight(dataStructure, args);
-  REQUIRE(preflight.outputActions.valid());
-  for(const auto& modification : preflight.outputActions.value().modifiedActions)
-  {
-    CHECK(modification.modifiedPath != ignoredPath);
-  }
+  CellDataAliasTest::CheckAliasPreflight(preflight);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
-  bool idsChanged = false;
-  for(usize index = 0; index < 4; index++)
-  {
-    CHECK((*ignoredPtr)[index] == static_cast<int32>(10 * (index + 1)));
-    idsChanged = idsChanged || (*idsPtr)[index] != originalIds[index];
-  }
-  CHECK(idsChanged);
+  CellDataAliasTest::CheckAliasOutput(dataStructure, {0, 0, 0, 0});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

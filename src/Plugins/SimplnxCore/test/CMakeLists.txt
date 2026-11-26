@@ -18,6 +18,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AvizoWriterTest.cpp
   ArrayCalculatorTest.cpp
   ChangeAngleRepresentationTest.cpp
+  CellDataAliasTestUtils.cpp
   CombineAttributeArraysTest.cpp
   CombineNodeBasedGeometriesTest.cpp
   CombineStlFilesTest.cpp
