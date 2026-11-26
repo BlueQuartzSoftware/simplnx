@@ -120,8 +120,8 @@ IFilter::UniquePointer WriteAbaqusCrystalPlasticityFilter::clone() const
   return std::make_unique<WriteAbaqusCrystalPlasticityFilter>();
 }
 
-IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                           const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
   if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -12018); prefixResult.invalid())
@@ -189,8 +189,8 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   return {};
 }
 
-Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   WriteAbaqusCrystalPlasticityInputValues inputValues;
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);

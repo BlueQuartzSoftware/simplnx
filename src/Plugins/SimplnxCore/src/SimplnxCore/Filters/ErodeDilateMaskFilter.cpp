@@ -88,8 +88,8 @@ IFilter::UniquePointer ErodeDilateMaskFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
@@ -121,8 +121,8 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> ErodeDilateMaskFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ErodeDilateMaskFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ErodeDilateMaskInputValues inputValues;
 

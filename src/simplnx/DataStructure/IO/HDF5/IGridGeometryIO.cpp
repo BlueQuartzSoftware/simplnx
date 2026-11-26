@@ -27,7 +27,7 @@ Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructur
   return result;
 }
 
-Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type&  /*dataStructureGroup*/)
 {
   auto* geom = dataStructure.getDataAs<IGridGeometry>(dataPath);
   if(geom == nullptr)

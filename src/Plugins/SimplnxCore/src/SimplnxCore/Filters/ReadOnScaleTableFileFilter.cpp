@@ -113,8 +113,8 @@ IFilter::UniquePointer ReadOnScaleTableFileFilter::clone() const
   return std::make_unique<ReadOnScaleTableFileFilter>();
 }
 
-IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   const auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   const auto fallbackOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -192,8 +192,8 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
   return {std::move(resultOutputActions), std::move(updatedValues)};
 }
 
-Result<> ReadOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ReadOnScaleTableFileInputValues inputValues;
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);

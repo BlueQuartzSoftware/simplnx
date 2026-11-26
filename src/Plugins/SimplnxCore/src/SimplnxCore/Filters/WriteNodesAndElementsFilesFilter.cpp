@@ -92,8 +92,8 @@ IFilter::UniquePointer WriteNodesAndElementsFilesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   DataPath selectedGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
   bool writeNodeFile = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
@@ -121,8 +121,8 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   WriteNodesAndElementsFilesInputValues inputValues;
 

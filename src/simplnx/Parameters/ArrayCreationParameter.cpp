@@ -37,7 +37,7 @@ nlohmann::json ArrayCreationParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
 

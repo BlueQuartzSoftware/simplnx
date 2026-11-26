@@ -85,8 +85,8 @@ IFilter::UniquePointer ExtractComponentAsArrayFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pMoveComponentsToNewArrayValue = filterArgs.value<bool>(k_MoveComponentsToNewArray_Key);
   auto pRemoveComponentsFromArrayValue = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
@@ -144,8 +144,8 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ExtractComponentAsArrayInputValues inputValues;
 

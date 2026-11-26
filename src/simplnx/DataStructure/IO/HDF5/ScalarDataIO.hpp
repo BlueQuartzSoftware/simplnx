@@ -26,7 +26,7 @@ public:
    * @return Result<>
    */
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& scalarName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
+                    const std::optional<DataObject::IdType>& parentId, bool  /*useEmptyDataStore*/ = false) const override
   {
     auto datasetReader = parentGroup.openDataset(scalarName);
 

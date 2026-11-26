@@ -103,8 +103,8 @@ IFilter::UniquePointer RequireMinNumNeighborsFilter::clone() const
   return std::make_unique<RequireMinNumNeighborsFilter>();
 }
 
-IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto applyToSinglePhase = filterArgs.value<bool>(k_ApplyToSinglePhase_Key);
@@ -204,8 +204,8 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   RequireMinNumNeighborsInputValues inputValues;
 

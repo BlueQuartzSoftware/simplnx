@@ -147,8 +147,8 @@ IFilter::UniquePointer AlignSectionsMisorientationFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                          const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pMisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   auto pUseGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
@@ -238,8 +238,8 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   AlignSectionsMisorientationInputValues inputValues;
 

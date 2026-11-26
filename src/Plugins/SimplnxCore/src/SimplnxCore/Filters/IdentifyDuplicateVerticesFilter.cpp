@@ -73,8 +73,8 @@ IFilter::UniquePointer IdentifyDuplicateVerticesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IdentifyDuplicateVerticesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult IdentifyDuplicateVerticesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                        const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pGeomPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputGeomPath_Key);
   const auto* geom = dataStructure.getDataAs<INodeGeometry0D>(pGeomPath);
@@ -92,8 +92,8 @@ IFilter::PreflightResult IdentifyDuplicateVerticesFilter::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> IdentifyDuplicateVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> IdentifyDuplicateVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   IdentifyDuplicateVerticesInputValues inputValues;
 

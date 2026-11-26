@@ -16,7 +16,7 @@ CreateAttributeMatrixAction::CreateAttributeMatrixAction(const DataPath& path, c
 
 CreateAttributeMatrixAction::~CreateAttributeMatrixAction() noexcept = default;
 
-Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateAttributeMatrixAction: ";
   DataPath createdAttributeMatrixPath = getCreatedPath();

@@ -22,7 +22,7 @@ ImportObjectAction::ImportObjectAction(const std::shared_ptr<DataObject>& import
 
 ImportObjectAction::~ImportObjectAction() noexcept = default;
 
-Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
 {
   static constexpr StringLiteral prefix = "ImportObjectAction: ";
   const auto importData = std::shared_ptr<DataObject>(getImportObject()->shallowCopy());

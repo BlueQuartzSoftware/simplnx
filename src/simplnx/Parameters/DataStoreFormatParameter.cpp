@@ -39,7 +39,7 @@ nlohmann::json DataStoreFormatParameter::toJsonImpl(const std::any& value) const
   return GetAnyRef<ValueType>(value);
 }
 
-Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   if(!json.is_string())
   {

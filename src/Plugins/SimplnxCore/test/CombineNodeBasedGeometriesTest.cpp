@@ -214,7 +214,7 @@ void InitializeNode0DGeometry(INodeGeometry0D& geom, DataStructure& dataStructur
   usize numOfVertexComps = 3;
   InitializeNodeGeometry<INodeGeometry0D, float32>(
       geom, dataStructure, vertexDataInitOption, INodeGeometry0D::k_VertexAttributeMatrixName, INodeGeometry0D::k_SharedVertexListName, geom.getNumberOfVertices(),
-      [numOfVertexComps](const INodeGeometry0D& g) { return numOfVertexComps; }, [](INodeGeometry0D& g) { return g.getVertices(); },
+      [numOfVertexComps](const INodeGeometry0D&  /*g*/) { return numOfVertexComps; }, [](INodeGeometry0D& g) { return g.getVertices(); },
       [](INodeGeometry0D& g, const Float32Array& da) { g.setVertices(da); }, [](INodeGeometry0D& g) { return g.getVertexAttributeMatrix(); },
       [](INodeGeometry0D& g, AttributeMatrix& m) { g.setVertexAttributeMatrix(m); });
 }

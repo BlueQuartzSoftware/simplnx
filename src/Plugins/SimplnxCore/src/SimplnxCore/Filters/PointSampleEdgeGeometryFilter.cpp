@@ -100,8 +100,8 @@ IFilter::UniquePointer PointSampleEdgeGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_SampledVertexGeometryPath_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
@@ -147,8 +147,8 @@ IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> PointSampleEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> PointSampleEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   PointSampleEdgeGeometryInputValues inputs;
   inputs.ScanVectorSamplingRes = filterArgs.value<float32>(k_ScanVectorSamplingRes_Key);

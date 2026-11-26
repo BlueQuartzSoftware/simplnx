@@ -26,7 +26,7 @@ std::shared_ptr<DataObject> CopyDataObjectAction::copyData(DataStructure& dataSt
   return copy;
 }
 
-Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CopyDataObjectAction: ";
 

@@ -76,8 +76,8 @@ IFilter::UniquePointer RotateEulerRefFrameFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pRotationAxisAngleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_EulerAnglesArrayPath_Key);
@@ -103,8 +103,8 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   nx::core::RotateEulerRefFrameInputValues inputValues;
 

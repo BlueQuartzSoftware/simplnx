@@ -113,8 +113,8 @@ IFilter::UniquePointer CombineStlFilesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pStlFilesPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilesPath_Key);
   auto pTriangleDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
@@ -209,8 +209,8 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto pVertexAttributeMatrixNameValue = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
 

@@ -59,7 +59,7 @@ DataObject* GridMontage::shallowCopy()
   return new GridMontage(*this);
 }
 
-std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& copyPath)
+std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath&  /*copyPath*/)
 {
   throw std::runtime_error("GridMontage deepCopy has not been implemented.");
 }

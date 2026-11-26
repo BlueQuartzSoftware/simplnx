@@ -642,7 +642,7 @@ public:
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+                                const ExecutionContext&  /*executionContext*/) const override
   {
     try
     {
@@ -663,8 +663,8 @@ protected:
     }
   }
 
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext&  /*executionContext*/) const override
   {
     try
     {

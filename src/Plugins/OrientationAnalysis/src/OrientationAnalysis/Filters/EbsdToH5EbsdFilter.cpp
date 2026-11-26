@@ -85,8 +85,8 @@ IFilter::UniquePointer EbsdToH5EbsdFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                           const ExecutionContext& executionContext) const
+IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                           const ExecutionContext&  /*executionContext*/) const
 {
   auto generatedFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto referenceFrame = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceFrame_Key);
@@ -148,8 +148,8 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   EbsdToH5EbsdInputValues inputValues;
 

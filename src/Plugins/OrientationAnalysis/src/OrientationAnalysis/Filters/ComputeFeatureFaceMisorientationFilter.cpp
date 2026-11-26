@@ -95,8 +95,8 @@ IFilter::UniquePointer ComputeFeatureFaceMisorientationFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pAvgQuatsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
@@ -131,8 +131,8 @@ IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(c
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureFaceMisorientationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeFeatureFaceMisorientationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeFeatureFaceMisorientationInputValues inputValues;
 

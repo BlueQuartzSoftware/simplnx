@@ -90,8 +90,8 @@ IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
   return std::make_unique<ReadTextDataArrayFilter>();
 }
 
-IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto numericType = filterArgs.value<NumericType>(k_ScalarType_Key);
   auto arrayPath = filterArgs.value<DataPath>(k_DataArrayPath_Key);
@@ -147,8 +147,8 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
   return {std::move(resultOutputActions)};
 }
 
-Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ReadTextDataArrayInputValues inputValues;
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);

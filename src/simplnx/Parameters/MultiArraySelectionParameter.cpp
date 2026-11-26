@@ -48,7 +48,7 @@ nlohmann::json MultiArraySelectionParameter::toJsonImpl(const std::any& value) c
   return json;
 }
 
-Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
   if(!json.is_array())

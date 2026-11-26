@@ -405,7 +405,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Scanline propagates bulk I/O fail
   constexpr int32 k_ReadError = -73001;
   constexpr int32 k_WriteError = -73002;
 
-  auto makeValues = [](DataStructure& dataStructure, const DataPath& inputPath, const DataPath& outputPath) {
+  auto makeValues = [](DataStructure&  /*dataStructure*/, const DataPath& inputPath, const DataPath& outputPath) {
     auto threshold = std::make_shared<ArrayThreshold>();
     threshold->setArrayPath(inputPath);
     threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);

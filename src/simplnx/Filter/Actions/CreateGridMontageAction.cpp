@@ -11,7 +11,7 @@ CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, const Dim
 {
 }
 
-Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateGridMontageAction: ";
   // Check for empty Geometry DataPath

@@ -79,15 +79,15 @@ IFilter::UniquePointer WriteBinaryDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteBinaryDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteBinaryDataFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/,
+                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteBinaryDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteBinaryDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   WriteBinaryDataInputValues inputValues;
   inputValues.EndianIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Endianess_Key);

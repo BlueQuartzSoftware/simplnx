@@ -154,8 +154,8 @@ IFilter::UniquePointer CropEdgeGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto srcEdgeGeomPath = filterArgs.value<DataPath>(k_SelectedEdgeGeometryPath_Key);
   auto destEdgeGeomPath = filterArgs.value<DataPath>(k_CreatedEdgeGeometryPath_Key);
@@ -376,8 +376,8 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> CropEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CropEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   CropEdgeGeometryInputValues inputValues;
 

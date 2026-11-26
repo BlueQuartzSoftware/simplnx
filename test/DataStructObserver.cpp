@@ -18,7 +18,7 @@ DataStructObserver::DataStructObserver(DataStructure& dataStruct)
 
 DataStructObserver::~DataStructObserver() = default;
 
-void DataStructObserver::onNotify(DataStructure* target, const std::shared_ptr<AbstractDataStructureMessage>& msg)
+void DataStructObserver::onNotify(DataStructure*  /*target*/, const std::shared_ptr<AbstractDataStructureMessage>& msg)
 {
   switch(msg->getMsgType())
   {

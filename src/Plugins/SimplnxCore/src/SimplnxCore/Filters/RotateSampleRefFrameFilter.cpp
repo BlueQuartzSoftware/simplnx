@@ -187,8 +187,8 @@ IFilter::UniquePointer RotateSampleRefFrameFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -386,8 +386,8 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   RotateSampleRefFrameInputValues inputValues;
 

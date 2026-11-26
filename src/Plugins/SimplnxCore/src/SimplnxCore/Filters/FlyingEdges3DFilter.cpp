@@ -108,8 +108,8 @@ IFilter::UniquePointer FlyingEdges3DFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                            const ExecutionContext& executionContext) const
+IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                            const ExecutionContext&  /*executionContext*/) const
 {
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -145,8 +145,8 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto inputValues = CreateInputValues(filterArgs);
 

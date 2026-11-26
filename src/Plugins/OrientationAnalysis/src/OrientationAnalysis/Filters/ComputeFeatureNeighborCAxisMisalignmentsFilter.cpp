@@ -93,8 +93,8 @@ IFilter::UniquePointer ComputeFeatureNeighborCAxisMisalignmentsFilter::clone() c
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                                       const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pFindAvgMisalsValue = filterArgs.value<bool>(k_FindAvgMisals_Key);
   auto pNeighborListArrayPathValue = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
@@ -133,8 +133,8 @@ IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflig
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureNeighborCAxisMisalignmentsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
-                                                                     const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeFeatureNeighborCAxisMisalignmentsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/,
+                                                                     const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeFeatureNeighborCAxisMisalignmentsInputValues inputValues;
 

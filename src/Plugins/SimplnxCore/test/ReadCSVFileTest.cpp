@@ -162,7 +162,7 @@ void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string>
  */
 Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
                           const std::vector<std::string>& customHeaders, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
-                          nonstd::span<std::string> values, const std::string& newGroupName)
+                          nonstd::span<std::string>  /*values*/, const std::string& newGroupName)
 {
   Arguments args;
 

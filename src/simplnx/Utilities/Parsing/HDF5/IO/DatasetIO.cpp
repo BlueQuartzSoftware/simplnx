@@ -1603,7 +1603,7 @@ Result<> DatasetIO::writeSpanHyperslab(nonstd::span<const T> values, const std::
 }
 
 template <typename T>
-nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& h5Dims, const DimsType& chunkDims) const
+nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& h5Dims, const DimsType&  /*chunkDims*/) const
 {
   ChunkedDataInfo dataInfo;
   std::vector<hsize_t> h5DimsVec(h5Dims.begin(), h5Dims.end());

@@ -154,8 +154,8 @@ IFilter::UniquePointer WriteImageFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                         const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                         const ExecutionContext&  /*executionContext*/) const
 {
   auto plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
   auto filePath = filterArgs.value<fs::path>(k_FileName_Key);
@@ -338,8 +338,8 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   WriteImageInputValues inputValues;
 

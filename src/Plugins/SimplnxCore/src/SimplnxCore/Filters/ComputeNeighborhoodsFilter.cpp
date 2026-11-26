@@ -123,8 +123,8 @@ IFilter::UniquePointer ComputeNeighborhoodsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pSelectedImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pSearchRadiusTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_SearchRadiusType_Key);
@@ -218,8 +218,8 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeNeighborhoodsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeNeighborhoodsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeNeighborhoodsInputValues inputValues;
 

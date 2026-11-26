@@ -114,7 +114,7 @@ void MarkDataPathModified(const DataStructure& dataStructure, nx::core::Result<O
 }
 
 // -----------------------------------------------------------------------------
-IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath& featureIdsPath, const DataPath& numNeighborsPath,
+IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath&  /*featureIdsPath*/, const DataPath& numNeighborsPath,
                                                           nx::core::Result<OutputActions>& resultOutputActions)
 {
   constexpr int32 k_FetchChildArrayError = -5559;

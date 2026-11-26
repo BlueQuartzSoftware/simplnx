@@ -38,7 +38,7 @@ nlohmann::json AttributeMatrixSelectionParameter::toJsonImpl(const std::any& val
   return json;
 }
 
-Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
 

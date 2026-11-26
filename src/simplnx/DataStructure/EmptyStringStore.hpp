@@ -91,32 +91,32 @@ public:
     return true;
   }
 
-  reference operator[](usize index) override
+  reference operator[](usize  /*index*/) override
   {
     throw std::runtime_error("EmptyStringStore::operator[] called on placeholder store - data not loaded yet");
   }
 
-  const_reference operator[](usize index) const override
+  const_reference operator[](usize  /*index*/) const override
   {
     throw std::runtime_error("EmptyStringStore::operator[] called on placeholder store - data not loaded yet");
   }
 
-  const_reference at(usize index) const override
+  const_reference at(usize  /*index*/) const override
   {
     throw std::runtime_error("EmptyStringStore::at() called on placeholder store - data not loaded yet");
   }
 
-  const_reference getValue(usize index) const override
+  const_reference getValue(usize  /*index*/) const override
   {
     throw std::runtime_error("EmptyStringStore::getValue() called on placeholder store - data not loaded yet");
   }
 
-  void setValue(usize index, const value_type& value) override
+  void setValue(usize  /*index*/, const value_type&  /*value*/) override
   {
     throw std::runtime_error("EmptyStringStore::setValue() called on placeholder store - data not loaded yet");
   }
 
-  AbstractStringStore& operator=(const std::vector<std::string>& values) override
+  AbstractStringStore& operator=(const std::vector<std::string>&  /*values*/) override
   {
     throw std::runtime_error("EmptyStringStore::operator= called on placeholder store - data not loaded yet");
   }

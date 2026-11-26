@@ -91,7 +91,7 @@ nlohmann::json DataTypeParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> DataTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'DataTypeParameter' JSON Error: ";
   if(!json.is_number())

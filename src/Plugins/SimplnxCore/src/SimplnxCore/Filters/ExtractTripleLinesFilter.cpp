@@ -122,8 +122,8 @@ IFilter::UniquePointer ExtractTripleLinesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   auto pFaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
@@ -181,8 +181,8 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractTripleLinesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExtractTripleLinesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto pTripleLineGeometryPath = filterArgs.value<DataPath>(k_CreatedTripleLineGeometryPath_Key);
   auto pVertexDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);

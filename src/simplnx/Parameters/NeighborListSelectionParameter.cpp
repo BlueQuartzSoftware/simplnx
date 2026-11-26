@@ -67,7 +67,7 @@ nlohmann::json NeighborListSelectionParameter::toJsonImpl(const std::any& value)
   return json;
 }
 
-Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
   if(!json.is_string())
