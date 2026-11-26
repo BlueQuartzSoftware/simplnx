@@ -848,7 +848,7 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
  * @pre array is not null.
  */
 SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const ShapeType& tupleShape,
-                                                                const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
+                                                                const std::string& defaultValue, std::optional<DataObject::IdType> parentId = {});
 
 /**
  * @brief Computes minimum and maximum values for each component.
