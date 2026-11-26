@@ -25,6 +25,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -89,10 +90,10 @@ public:
    * @param componentShape Component dimensions in slowest-to-fastest order.
    * @param initValue Initial value retained for future growth; nullopt leaves initial elements unwritten.
    */
-  DataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue)
+  DataStore(ShapeType tupleShape, ShapeType componentShape, std::optional<T> initValue)
   : parent_type(initValue)
-  , m_ComponentShape(componentShape)
-  , m_TupleShape(tupleShape)
+  , m_ComponentShape(std::move(componentShape))
+  , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   {
@@ -150,8 +151,8 @@ public:
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_Data(std::move(other.m_Data))
-  , m_NumComponents(std::move(other.m_NumComponents))
-  , m_NumTuples(std::move(other.m_NumTuples))
+  , m_NumComponents(other.m_NumComponents)
+  , m_NumTuples(other.m_NumTuples)
   {
   }
 
@@ -162,7 +163,7 @@ public:
    * @param rhs Source data store.
    * @return This data store.
    */
-  DataStore& operator=(DataStore&& rhs)
+  DataStore& operator=(DataStore&& rhs) noexcept
   {
     m_ComponentShape = std::move(rhs.m_ComponentShape);
     m_TupleShape = std::move(rhs.m_TupleShape);

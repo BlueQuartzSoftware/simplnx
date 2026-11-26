@@ -4,6 +4,7 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
@@ -25,9 +26,9 @@ constexpr int64 k_InvalidType = -63900;
 constexpr int64 k_InvalidBounds = -63901;
 } // namespace
 
-CropGeometryParameter::CropGeometryParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+CropGeometryParameter::CropGeometryParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -65,7 +66,7 @@ nlohmann::json CropGeometryParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CropGeometryParameter' JSON Error: ";
   static const std::string nameDiv = name() + "/";

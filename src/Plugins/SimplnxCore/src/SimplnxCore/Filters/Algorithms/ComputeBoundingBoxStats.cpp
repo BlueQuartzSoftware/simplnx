@@ -19,7 +19,6 @@ ComputeBoundingBoxStats::ComputeBoundingBoxStats(DataStructure& dataStructure, c
 }
 
 // -----------------------------------------------------------------------------
-ComputeBoundingBoxStats::~ComputeBoundingBoxStats() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStats::operator()()

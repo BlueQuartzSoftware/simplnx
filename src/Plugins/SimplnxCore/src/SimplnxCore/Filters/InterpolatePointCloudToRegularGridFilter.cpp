@@ -129,8 +129,8 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
   auto kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
@@ -275,15 +275,16 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   return {std::move(actions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   InterpolatePointCloudToRegularGridInputValues inputValues;
 

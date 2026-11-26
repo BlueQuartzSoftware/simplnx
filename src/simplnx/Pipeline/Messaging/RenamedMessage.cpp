@@ -4,12 +4,14 @@
 
 #include <fmt/format.h>
 
+#include <utility>
+
 using namespace nx::core;
 
-RenamedMessage::RenamedMessage(Pipeline* pipeline, const std::string& newName, const std::string& oldName)
+RenamedMessage::RenamedMessage(Pipeline* pipeline, std::string newName, std::string oldName)
 : AbstractPipelineMessage(pipeline)
-, m_NewName(newName)
-, m_OldName(oldName)
+, m_NewName(std::move(newName))
+, m_OldName(std::move(oldName))
 {
 }
 

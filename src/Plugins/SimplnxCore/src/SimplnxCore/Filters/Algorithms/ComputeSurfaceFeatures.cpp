@@ -17,8 +17,6 @@ ComputeSurfaceFeatures::ComputeSurfaceFeatures(DataStructure& dataStructure, con
 {
 }
 
-ComputeSurfaceFeatures::~ComputeSurfaceFeatures() noexcept = default;
-
 Result<> ComputeSurfaceFeatures::operator()()
 {
   // Cell-scale face-neighbor reads determine whether the Scanline path is needed.

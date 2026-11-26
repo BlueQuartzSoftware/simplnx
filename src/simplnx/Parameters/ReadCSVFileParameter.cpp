@@ -30,15 +30,17 @@
 
 #include "ReadCSVFileParameter.hpp"
 
+#include <utility>
+
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
 // -----------------------------------------------------------------------------
-ReadCSVFileParameter::ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadCSVFileParameter::ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -69,7 +71,7 @@ nlohmann::json ReadCSVFileParameter::toJsonImpl(const std::any& value) const
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   return {ConvertResultTo<std::any>(ReadCSVData::ReadJson(json))};
 }

@@ -8,18 +8,19 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 using namespace nx::core;
 
 template <>
 struct fmt::formatter<nx::core::DataType>
 {
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  format_context::iterator format(const nx::core::DataType& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
   }
@@ -32,10 +33,10 @@ constexpr int32 k_Validate_AllowedType_Error = -206;
 
 namespace nx::core
 {
-NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
                                                                const AllowedTypes& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(allowedTypes)
 {
   if(allowedTypes.empty())
@@ -67,7 +68,7 @@ nlohmann::json NeighborListSelectionParameter::toJsonImpl(const std::any& value)
   return json;
 }
 
-Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
   if(!json.is_string())

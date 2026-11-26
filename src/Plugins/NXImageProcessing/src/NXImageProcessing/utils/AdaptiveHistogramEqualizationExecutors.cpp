@@ -51,7 +51,15 @@ Result<> ExecuteAdaptiveHistogramEqualizationImageFilter(DataStructure& dataStru
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::AdaptiveHistogramEqualizationExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, radius, alpha, beta, shouldCancel, messageHandler};
+  detail::AdaptiveHistogramEqualizationExecuteFn executeFn{.dataStructure = dataStructure,
+                                                           .inputArrayPath = inputArrayPath,
+                                                           .outputArrayPath = outputArrayPath,
+                                                           .dims = dims,
+                                                           .radius = radius,
+                                                           .alpha = alpha,
+                                                           .beta = beta,
+                                                           .shouldCancel = shouldCancel,
+                                                           .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

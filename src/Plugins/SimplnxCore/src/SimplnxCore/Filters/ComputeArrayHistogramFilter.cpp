@@ -145,14 +145,14 @@ IFilter::UniquePointer ComputeArrayHistogramFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
   Result<> binCountResult = ValidateNumberOfBins(pNumberOfBinsValue);
   if(binCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
   }
   auto pNewDataGroupValue = filterArgs.value<bool>(k_CreateNewDataGroup_Key);
   auto pDataGroupNameValue = filterArgs.value<DataPath>(k_DataGroupPath_Key);
@@ -173,8 +173,8 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
     if(maskArray == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(k_InvalidMaskArrayError,
-                                             fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  k_InvalidMaskArrayError, fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
     }
   }
 
@@ -201,9 +201,9 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
     if(maskArray != nullptr && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
     {
-      return {
-          MakeErrorResult<OutputActions>(k_MaskTupleCountError, fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
-                                                                            maskArrayPath.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(k_MaskTupleCountError,
+                                                              fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
+                                                                          maskArrayPath.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples()))};
     }
 
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
@@ -232,12 +232,12 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto inputValues = CreateInputValues(filterArgs);
 

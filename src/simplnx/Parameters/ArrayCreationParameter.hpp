@@ -14,7 +14,7 @@ public:
   using ValueType = DataPath;
 
   ArrayCreationParameter() = delete;
-  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~ArrayCreationParameter() override = default;
 
   ArrayCreationParameter(const ArrayCreationParameter&) = delete;
@@ -97,7 +97,7 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
 namespace SIMPLConversion

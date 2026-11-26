@@ -787,8 +787,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
     usize expectedNumFeatures;
   };
   const std::vector<SchemeExpectation> expectations = {
-      {"Face Neighbors", segment_features::k_6NeighborIndex, {1, 2, 3, 4}, 4},
-      {"All Connected Neighbors", segment_features::k_26NeighborIndex, {1, 2, 3, 1}, 3},
+      {.label = "Face Neighbors", .scheme = segment_features::k_6NeighborIndex, .expectedFeatureIds = {1, 2, 3, 4}, .expectedNumFeatures = 4},
+      {.label = "All Connected Neighbors", .scheme = segment_features::k_26NeighborIndex, .expectedFeatureIds = {1, 2, 3, 1}, .expectedNumFeatures = 3},
   };
 
   for(const auto& expectation : expectations)
@@ -830,8 +830,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
     DataType maskType;
   };
   const std::vector<MaskVariant> variants = {
-      {"bool mask", DataType::boolean},
-      {"uint8 mask", DataType::uint8},
+      {.label = "bool mask", .maskType = DataType::boolean},
+      {.label = "uint8 mask", .maskType = DataType::uint8},
   };
 
   for(const auto& variant : variants)

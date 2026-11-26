@@ -27,8 +27,8 @@ struct ORIENTATIONANALYSIS_EXPORT ReadCtfDataInputValues
   DataPath DataContainerName;
   std::string CellAttributeMatrixName;
   std::string CellEnsembleAttributeMatrixName;
-  bool DegreesToRadians;
-  bool EdaxHexagonalAlignment;
+  bool DegreesToRadians{};
+  bool EdaxHexagonalAlignment{};
 };
 
 /**
@@ -55,7 +55,7 @@ public:
   /**
    * @brief Destroys the .ctf reader.
    */
-  ~ReadCtfData() noexcept;
+  ~ReadCtfData() noexcept = default;
 
   ReadCtfData(const ReadCtfData&) = delete;
   ReadCtfData(ReadCtfData&&) noexcept = delete;

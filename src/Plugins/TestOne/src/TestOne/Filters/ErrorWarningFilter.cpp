@@ -91,8 +91,8 @@ IFilter::UniquePointer ErrorWarningFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto preflightWarning = filterArgs.value<bool>(k_PreflightWarning_Key);
   auto preflightError = filterArgs.value<bool>(k_PreflightError_Key);
@@ -102,23 +102,23 @@ nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataS
 
   if(preflightWarning)
   {
-    resultOutputActions.warnings().push_back(Warning{-666000, "Intentional preflight warning generated"});
+    resultOutputActions.warnings().push_back(Warning{.code = -666000, .message = "Intentional preflight warning generated"});
   }
   if(preflightError)
   {
-    return {MakeErrorResult<OutputActions>(-666001, "Intentional preflight error generated")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-666001, "Intentional preflight error generated")};
   }
   if(preflightException)
   {
     throw std::runtime_error("Intentional preflight runtime excption generated");
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto executeWarning = filterArgs.value<bool>(k_ExecuteWarning_Key);
   auto executeError = filterArgs.value<bool>(k_ExecuteError_Key);
@@ -128,7 +128,7 @@ nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure&  /*dataStructu
 
   if(executeWarning)
   {
-    resultActions.warnings().push_back(Warning{-666000, "Intentional execute warning generated"});
+    resultActions.warnings().push_back(Warning{.code = -666000, .message = "Intentional execute warning generated"});
   }
   if(executeError)
   {

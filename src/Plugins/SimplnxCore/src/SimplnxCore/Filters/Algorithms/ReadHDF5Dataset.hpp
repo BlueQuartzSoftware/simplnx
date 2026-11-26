@@ -41,7 +41,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadHDF5Dataset() noexcept;
+  ~ReadHDF5Dataset() noexcept = default;
 
   ReadHDF5Dataset(const ReadHDF5Dataset&) = delete;
   ReadHDF5Dataset(ReadHDF5Dataset&&) noexcept = delete;

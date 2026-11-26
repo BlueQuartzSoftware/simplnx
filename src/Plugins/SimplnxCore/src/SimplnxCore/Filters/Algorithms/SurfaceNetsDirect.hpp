@@ -39,7 +39,7 @@ public:
   /**
    * @brief Destroys the resident Surface Nets implementation.
    */
-  ~SurfaceNetsDirect() noexcept;
+  ~SurfaceNetsDirect() noexcept = default;
 
   SurfaceNetsDirect(const SurfaceNetsDirect&) = delete;
   SurfaceNetsDirect(SurfaceNetsDirect&&) noexcept = delete;

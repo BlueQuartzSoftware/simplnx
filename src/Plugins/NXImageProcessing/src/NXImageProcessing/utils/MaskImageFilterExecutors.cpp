@@ -46,7 +46,14 @@ Result<> ExecuteMaskImageFilter(DataStructure& dataStructure, const DataPath& in
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const usize numComponents = inputArray.getNumberOfComponents();
-  detail::MaskExecuteFn executeFn{dataStructure, inputArrayPath, maskArrayPath, outputArrayPath, numComponents, outsideValue, shouldCancel, messageHandler};
+  detail::MaskExecuteFn executeFn{.dataStructure = dataStructure,
+                                  .inputArrayPath = inputArrayPath,
+                                  .maskArrayPath = maskArrayPath,
+                                  .outputArrayPath = outputArrayPath,
+                                  .numComponents = numComponents,
+                                  .outsideValue = outsideValue,
+                                  .shouldCancel = shouldCancel,
+                                  .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

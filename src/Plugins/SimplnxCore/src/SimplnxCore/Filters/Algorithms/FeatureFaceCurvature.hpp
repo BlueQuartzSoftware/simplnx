@@ -24,7 +24,7 @@ struct SIMPLNXCORE_EXPORT FeatureFaceCurvatureInputValues
   DataPath surfaceMeshFaceNormalsPath;
   DataPath surfaceMeshTriangleCentroidsPath;
 
-  bool useNormalsForCurveFitting;
+  bool useNormalsForCurveFitting{};
   DataPath surfaceMeshPrincipalCurvature1sPath;
   DataPath surfaceMeshPrincipalCurvature2sPath;
   DataPath surfaceMeshPrincipalDirection1sPath;

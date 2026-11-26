@@ -10,7 +10,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
@@ -71,8 +70,8 @@ IFilter::UniquePointer RobustAutomaticThresholdFilter::clone() const
   return std::make_unique<RobustAutomaticThresholdFilter>();
 }
 
-IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                       const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputArrayPath = filterArgs.value<DataPath>(k_InputArrayPath_Key);
   auto gradientArrayPath = filterArgs.value<DataPath>(k_GradientMagnitudePath_Key);
@@ -92,8 +91,8 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
+                                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{numComponents}, createdMaskPath);
@@ -104,8 +103,8 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
   return {std::move(actions)};
 }
 
-Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RobustAutomaticThresholdInputValues inputValues;
   inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputArrayPath_Key);

@@ -145,7 +145,7 @@ Result<> RectGridGeomIO::ValidateImportedBounds(const DataStructure& dataStructu
   return {};
 }
 
-Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, const RectGridGeom& geometry, group_writer_type& parentGroup, bool importable) const
+Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, const RectGridGeom& geometry, group_writer_type& parentGroup, bool importable)
 {
   auto validation = RectGridGeom::ValidateBounds(geometry.getXBounds(), geometry.getYBounds(), geometry.getZBounds());
   if(validation.invalid())

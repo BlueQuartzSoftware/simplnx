@@ -43,7 +43,7 @@ public:
    * @param secondTuple Ignored second tuple index.
    * @return True.
    */
-  bool bothTrue(usize  /*firstTuple*/, usize  /*secondTuple*/) const override
+  bool bothTrue(usize /*firstTuple*/, usize /*secondTuple*/) const override
   {
     return true;
   }
@@ -54,7 +54,7 @@ public:
    * @param secondTuple Ignored second tuple index.
    * @return False.
    */
-  bool bothFalse(usize  /*firstTuple*/, usize  /*secondTuple*/) const override
+  bool bothFalse(usize /*firstTuple*/, usize /*secondTuple*/) const override
   {
     return false;
   }
@@ -64,7 +64,7 @@ public:
    * @param tupleIndex Ignored tuple index.
    * @return True.
    */
-  bool isTrue(usize  /*tupleIndex*/) const override
+  bool isTrue(usize /*tupleIndex*/) const override
   {
     return true;
   }
@@ -118,9 +118,9 @@ public:
  */
 struct GridBitMap
 {
-  std::vector<uint8> gridTable = {}; // Bit-packed grid incidence rows.
-  usize numPositions = 0;            // Number of positions on the indexed axis.
-  usize rowLength = 0;               // Bytes in one axis-position row.
+  std::vector<uint8> gridTable; // Bit-packed grid incidence rows.
+  usize numPositions = 0;       // Number of positions on the indexed axis.
+  usize rowLength = 0;          // Bytes in one axis-position row.
 };
 
 /**
@@ -157,7 +157,7 @@ struct GridBitMapFactory
 class HyperGridBitMap
 {
 public:
-  std::vector<std::vector<usize>> gridVoxels = {}; // Maps each occupied grid to its source tuple indices.
+  std::vector<std::vector<usize>> gridVoxels; // Maps each occupied grid to its source tuple indices.
 
   /**
    * @brief Moves the constructor-time coordinate and grid-sizing result to the caller.
@@ -755,7 +755,7 @@ struct ClusterNode
  */
 struct ClusterForest
 {
-  std::vector<ClusterNode> clusterForestNodes = {}; // State for every occupied grid.
+  std::vector<ClusterNode> clusterForestNodes; // State for every occupied grid.
 
   /**
    * @brief Creates one singleton cluster node for each occupied grid.
@@ -1279,8 +1279,6 @@ DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageH
 , m_MessageHandler(mesgHandler)
 {
 }
-
-DBSCANDirect::~DBSCANDirect() noexcept = default;
 
 Result<> DBSCANDirect::operator()()
 {

@@ -89,8 +89,8 @@ IFilter::UniquePointer BinaryContourImageFilter::clone() const
 {
   return std::make_unique<BinaryContourImageFilter>();
 }
-IFilter::PreflightResult BinaryContourImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult BinaryContourImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -102,15 +102,15 @@ IFilter::PreflightResult BinaryContourImageFilter::preflightImpl(const DataStruc
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Contour requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(),
-                                                                         inputArray.getNumberOfComponents()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Contour requires a single-component (scalar) input array, but '{}' has {} components.",
+                                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   // The Float64 foreground/background parameters are cast to the (integer) input element type by the contour
@@ -120,16 +120,16 @@ IFilter::PreflightResult BinaryContourImageFilter::preflightImpl(const DataStruc
   Result<> paramGuard = ImageProcessing::ValidateBinaryFgBgInRange(inputType, foregroundValue, backgroundValue, k_NonFiniteBinaryValue, k_BinaryValueOutOfRange, k_BinaryValueTruncated);
   if(paramGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
   }
   for(Warning& warning : paramGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> BinaryContourImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> BinaryContourImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -142,7 +142,7 @@ Result<> BinaryContourImageFilter::executeImpl(DataStructure& dataStructure, con
 
   // The factory casts fg/bg to the (integer) element type inside the type-dispatched façade; preflight has
   // already guaranteed the cast is well-defined.
-  const ImageProcessing::BinaryContourPredicateFactory predicateFactory{foregroundValue, backgroundValue};
+  const ImageProcessing::BinaryContourPredicateFactory predicateFactory{.foreground = foregroundValue, .background = backgroundValue};
 
   return ImageProcessing::ExecuteContourImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, fullyConnected, predicateFactory, shouldCancel, messageHandler);
 }

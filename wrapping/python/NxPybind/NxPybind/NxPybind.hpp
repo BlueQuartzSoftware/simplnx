@@ -257,7 +257,7 @@ public:
   }
 
   template <class T>
-  const T* addPlugin(std::shared_ptr<T> plugin)
+  const T* addPlugin(const std::shared_ptr<T>& plugin)
   {
     static_assert(std::is_base_of_v<AbstractPlugin, T>);
 
@@ -574,8 +574,7 @@ public:
   PyFilter() = delete;
 
   PyFilter(py::object object)
-  : IFilter()
-  , m_Object(std::move(object))
+  : m_Object(std::move(object))
   {
     py::gil_scoped_acquire gil;
     m_Name = m_Object.attr("name")().cast<std::string>();
@@ -642,7 +641,7 @@ public:
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext&  /*executionContext*/) const override
+                                const ExecutionContext& /*executionContext*/) const override
   {
     try
     {
@@ -656,15 +655,15 @@ protected:
       return result;
     } catch(const py::error_already_set& pyException)
     {
-      return {MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
     } catch(const std::exception& exception)
     {
-      return {MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
     }
   }
 
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext&  /*executionContext*/) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& /*executionContext*/) const override
   {
     try
     {
@@ -724,7 +723,7 @@ public:
         py::gil_scoped_acquire global_interpreter_lock;
         return std::make_unique<PyFilter>(filterType());
       };
-      plugin->addFilter(std::move(filterCreationFunc));
+      plugin->addFilter(filterCreationFunc);
     }
 
     return plugin;

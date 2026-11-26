@@ -83,8 +83,6 @@ ComputeQuaternionConjugateDirect::ComputeQuaternionConjugateDirect(DataStructure
 {
 }
 
-ComputeQuaternionConjugateDirect::~ComputeQuaternionConjugateDirect() noexcept = default;
-
 const std::atomic_bool& ComputeQuaternionConjugateDirect::getCancel()
 {
   return m_ShouldCancel;

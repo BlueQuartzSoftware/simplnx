@@ -136,7 +136,7 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::Group
   {
     return ConvertInvalidResult<DataStructure>(std::move(idResult));
   }
-  DataObject::IdType objectId = std::move(idResult.value());
+  DataObject::IdType objectId = idResult.value();
 
   m_CurrentStructure = DataStructure();
   m_CurrentStructure.setFormatResolver(std::move(resolver));
@@ -177,7 +177,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
       {
         return ConvertResult(std::move(importableResult));
       }
-      importable = std::move(importableResult.value());
+      importable = importableResult.value();
 
       if(importable == 0)
       {
@@ -190,7 +190,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
       {
         return ConvertResult(std::move(idResult));
       }
-      objectId = std::move(idResult.value());
+      objectId = idResult.value();
 
       if(getDataStructure().containsData(objectId) && parentId.has_value())
       {
@@ -217,7 +217,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
       int32 importable = 0;
       if(importableResult.valid())
       {
-        importable = std::move(importableResult.value());
+        importable = importableResult.value();
       }
 
       if(importable == 0)
@@ -229,7 +229,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
       auto objectIdResult = childObj.readScalarAttribute<DataObject::IdType>(Constants::k_ObjectIdTag);
       if(objectIdResult.valid())
       {
-        objectId = std::move(objectIdResult.value());
+        objectId = objectIdResult.value();
       }
 
       if(getDataStructure().containsData(objectId) && parentId.has_value())
@@ -290,6 +290,6 @@ std::shared_ptr<DataIOManager> DataStructureReader::getDataReader() const
 
 std::shared_ptr<IDataIO> DataStructureReader::getDataFactory(typename IDataIOManager::factory_id_type typeName) const
 {
-  return getDataReader()->getFactoryAs<IDataIO>(typeName);
+  return getDataReader()->getFactoryAs<IDataIO>(std::move(typeName));
 }
 } // namespace nx::core::HDF5

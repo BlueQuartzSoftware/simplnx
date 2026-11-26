@@ -16,7 +16,7 @@ CreateDataGroupAction::CreateDataGroupAction(const DataPath& path)
 
 CreateDataGroupAction::~CreateDataGroupAction() noexcept = default;
 
-Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateDataGroupAction: ";
   Result<LinkedPath> linkedPath = dataStructure.makePath(getCreatedPath());

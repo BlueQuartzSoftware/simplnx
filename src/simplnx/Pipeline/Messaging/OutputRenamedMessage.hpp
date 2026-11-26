@@ -24,7 +24,7 @@ public:
    * @param newNode
    * @param index
    */
-  OutputRenamedMessage(AbstractPipelineNode* pipeline, const PipelineFilter::RenamedPath& renamedOutput);
+  OutputRenamedMessage(AbstractPipelineNode* pipeline, PipelineFilter::RenamedPath renamedOutput);
 
   ~OutputRenamedMessage() noexcept override;
 

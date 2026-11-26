@@ -79,8 +79,8 @@ IFilter::UniquePointer WriteDREAM3DFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                           const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto exportFilePath = filterArgs.value<std::filesystem::path>(k_ExportFilePath);
   if(exportFilePath.empty())
@@ -100,7 +100,7 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 
 //------------------------------------------------------------------------------
 Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteDREAM3DInputValues inputValues;
   inputValues.ExportFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath);

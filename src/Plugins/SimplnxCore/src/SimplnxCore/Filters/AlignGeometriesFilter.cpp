@@ -73,8 +73,8 @@ IFilter::UniquePointer AlignGeometriesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -82,12 +82,12 @@ IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructur
   auto pMovingGeomPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pMovingGeomPath, {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AlignGeometriesInputValues inputValues;
   inputValues.AlignmentTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_AlignmentType_Key);

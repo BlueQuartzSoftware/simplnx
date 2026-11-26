@@ -30,6 +30,7 @@
 #include <mutex>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 /**
  * @namespace nx::core
@@ -337,7 +338,7 @@ SIMPLNX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueA
  * @return True if conversion succeeds.
  */
 template <typename T>
-bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
+bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>>& dataArray, const std::string& dataFormat)
 {
   if(dataArray == nullptr)
   {
@@ -396,7 +397,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
 
   const usize last = path.getLength() - 1;
 
-  std::string name = path[last];
+  const std::string& name = path[last];
   // The resolver selects the backing storage.
   auto listStore = DataStoreUtilities::CreateListStore<T>(dataStructure, path, tupleShape, mode, dataFormat);
   NeighborList<T>* neighborList = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
@@ -847,7 +848,7 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
  * @pre array is not null.
  */
 SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const ShapeType& tupleShape,
-                                                                const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
+                                                                const std::string& defaultValue, std::optional<DataObject::IdType> parentId = {});
 
 /**
  * @brief Computes minimum and maximum values for each component.
@@ -2229,17 +2230,16 @@ public:
    * @pre Source and destination arrays and grid-value arrays outlive this mapper.
    * @pre xGridValues, yGridValues, and zGridValues are not null.
    */
-  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims,
-                             const std::vector<float32>& imageGeoSpacing, const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues,
-                             const Float32Array* zGridValues)
+  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, FloatVec3 origin, SizeVec3 imageGeoDims, const std::vector<float32>& imageGeoSpacing,
+                             SizeVec3 rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues, const Float32Array* zGridValues)
   : m_ArrayType(destCellArray.getArrayType())
   , m_TaskResult(taskResult)
   , m_InputCellArray(&inputCellArray)
   , m_DestCellArray(&destCellArray)
-  , m_Origin(origin)
-  , m_ImageGeomDims(imageGeoDims)
+  , m_Origin(std::move(origin))
+  , m_ImageGeomDims(std::move(imageGeoDims))
   , m_ImageGeomSpacing(imageGeoSpacing)
-  , m_RectGridDims(rectGridDims)
+  , m_RectGridDims(std::move(rectGridDims))
   , m_XGridValues(xGridValues)
   , m_YGridValues(yGridValues)
   , m_ZGridValues(zGridValues)

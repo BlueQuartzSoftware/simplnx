@@ -115,8 +115,8 @@ IFilter::UniquePointer WriteStlFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                           const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pGroupingTypeValue = static_cast<GroupingType>(filterArgs.value<ChoicesParameter::ValueType>(k_GroupingType_Key));
   auto pOutputStlDirectoryValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
@@ -140,13 +140,13 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
       std::string ss =
           fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. Since single file was selected this means overflow files WILL be generated.",
                       triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
-      resultOutputActions.warnings().emplace_back(Warning{-27871, ss});
+      resultOutputActions.warnings().emplace_back(Warning{.code = -27871, .message = ss});
     }
     else
     {
       std::string ss = fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. This MAY cause some groups to generate overflow files.",
                                    triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
-      resultOutputActions.warnings().emplace_back(Warning{-27875, ss});
+      resultOutputActions.warnings().emplace_back(Warning{.code = -27875, .message = ss});
     }
   }
 
@@ -190,12 +190,12 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
   }
 
   // Return both the resultOutputActions via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteStlFileInputValues inputValues;
 

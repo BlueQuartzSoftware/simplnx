@@ -17,8 +17,6 @@ ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStruct
 {
 }
 
-ComputeBoundaryCellsDirect::~ComputeBoundaryCellsDirect() noexcept = default;
-
 Result<> ComputeBoundaryCellsDirect::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);

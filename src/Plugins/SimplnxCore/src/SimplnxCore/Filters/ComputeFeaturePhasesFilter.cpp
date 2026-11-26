@@ -78,8 +78,8 @@ IFilter::UniquePointer ComputeFeaturePhasesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -102,12 +102,12 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
     return MakePreflightErrorResult(-61860, "Size mismatch between cell feature indices and cell phases arrays.");
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeaturePhasesInputValues inputValues;
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);

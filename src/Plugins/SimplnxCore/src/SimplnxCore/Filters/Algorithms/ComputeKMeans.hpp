@@ -20,14 +20,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeKMeansInputValues
 {
-  uint64 InitClusters;
+  uint64 InitClusters{};
   ClusterUtilities::DistanceMetric DistanceMetric;
   bool UseMask = false;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath MeansArrayPath;
-  uint64 Seed;
+  uint64 Seed{};
 };
 
 /**
@@ -51,7 +51,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ComputeKMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeKMeansInputValues* inputValues);
-  ~ComputeKMeans() noexcept;
+  ~ComputeKMeans() noexcept = default;
 
   ComputeKMeans(const ComputeKMeans&) = delete;
   ComputeKMeans(ComputeKMeans&&) noexcept = delete;

@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT LabelTriangleGeometry
 {
 public:
   LabelTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, LabelTriangleGeometryInputValues* inputValues);
-  ~LabelTriangleGeometry() noexcept;
+  ~LabelTriangleGeometry() noexcept = default;
 
   LabelTriangleGeometry(const LabelTriangleGeometry&) = delete;
   LabelTriangleGeometry(LabelTriangleGeometry&&) noexcept = delete;

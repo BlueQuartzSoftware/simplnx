@@ -83,8 +83,8 @@ IFilter::UniquePointer CombineAttributeArraysFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   // auto normalizeDataValue = filterArgs.value<bool>(k_NormalizeData_Key);
   auto moveValuesValue = filterArgs.value<bool>(k_MoveValues_Key);
@@ -99,18 +99,18 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
 
   if(selectedDataArrayPathsValue.empty())
   {
-    return {MakeErrorResult<OutputActions>(-66005, "Please select arrays to combine")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-66005, "Please select arrays to combine")};
   }
 
   bool result = nx::core::CheckArraysAreSameType(dataStructure, selectedDataArrayPathsValue);
   if(!result)
   {
-    return {MakeErrorResult<OutputActions>(-66006, "All selected arrays must be of the same type")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-66006, "All selected arrays must be of the same type")};
   }
   result = nx::core::CheckArraysHaveSameTupleCount(dataStructure, selectedDataArrayPathsValue);
   if(!result)
   {
-    return {MakeErrorResult<OutputActions>(-66007, "All selected arrays must have the same number of tuples")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-66007, "All selected arrays must have the same number of tuples")};
   }
 
   // Figure out the total number of components
@@ -141,12 +141,12 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CombineAttributeArraysInputValues inputValues;
 

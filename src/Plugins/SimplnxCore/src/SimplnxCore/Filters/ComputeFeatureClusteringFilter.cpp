@@ -121,14 +121,14 @@ IFilter::UniquePointer ComputeFeatureClusteringFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                       const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
   Result<> binCountResult = ValidateNumberOfBins(pNumberOfBinsValue);
   if(binCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
   }
   auto pRemoveBiasedFeaturesValue = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -154,7 +154,8 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(featureDataArrays);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);
@@ -180,12 +181,12 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureClusteringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFeatureClusteringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto seed = filterArgs.value<uint64>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_SetRandomSeed_Key))

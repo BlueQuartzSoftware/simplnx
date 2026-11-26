@@ -114,8 +114,8 @@ IFilter::UniquePointer UncertainRegularGridSampleSurfaceMeshFilter::clone() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
@@ -150,12 +150,12 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> UncertainRegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> UncertainRegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                  const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_UseSeed_Key))

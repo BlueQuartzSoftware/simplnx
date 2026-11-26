@@ -18,8 +18,6 @@ NearestPointFuseRegularGrids::NearestPointFuseRegularGrids(DataStructure& dataSt
 {
 }
 
-NearestPointFuseRegularGrids::~NearestPointFuseRegularGrids() noexcept = default;
-
 const std::atomic_bool& NearestPointFuseRegularGrids::getCancel()
 {
   return m_ShouldCancel;

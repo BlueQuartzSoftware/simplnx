@@ -1,5 +1,7 @@
 #include "IterativeClosestPoint.hpp"
 
+#include <cmath>
+
 #include "nanoflann/nanoflann.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -67,7 +69,6 @@ IterativeClosestPoint::IterativeClosestPoint(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-IterativeClosestPoint::~IterativeClosestPoint() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& IterativeClosestPoint::getCancel()
@@ -129,8 +130,8 @@ Result<> IterativeClosestPoint::operator()()
 
   const usize nn = 1;
 
-  typedef Eigen::Matrix<float, 3, Eigen::Dynamic, Eigen::ColMajor> PointCloud;
-  typedef Eigen::Matrix<float, 4, 4, Eigen::ColMajor> UmeyamaTransform;
+  using PointCloud = Eigen::Matrix<float, 3, Eigen::Dynamic, Eigen::ColMajor>;
+  using UmeyamaTransform = Eigen::Matrix<float, 4, 4, Eigen::ColMajor>;
 
   UmeyamaTransform globalTransform;
   globalTransform << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
@@ -146,8 +147,8 @@ Result<> IterativeClosestPoint::operator()()
 
     for(usize j = 0; j < numMovingVerts; j++)
     {
-      usize identifier;
-      float dist;
+      usize identifier = 0;
+      float dist = NAN;
       nanoflann::KNNResultSet<float> results(nn);
       results.init(&identifier, &dist);
       index.findNeighbors(results, movingCopyPtr + (3 * j), nanoflann::SearchParams());

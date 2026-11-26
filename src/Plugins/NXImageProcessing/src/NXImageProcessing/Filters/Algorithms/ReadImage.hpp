@@ -62,7 +62,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadImage() noexcept;
+  ~ReadImage() noexcept = default;
 
   ReadImage(const ReadImage&) = delete;
   ReadImage(ReadImage&&) noexcept = delete;

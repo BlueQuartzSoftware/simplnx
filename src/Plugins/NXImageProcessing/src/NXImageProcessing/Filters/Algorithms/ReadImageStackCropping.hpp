@@ -39,11 +39,11 @@ inline Result<ZRange> ComputeCroppedZRange(const CropGeometryParameter::CropValu
     return MakeErrorResult<ZRange>(-64511, "Input file list is empty; nothing to read.");
   }
 
-  ZRange range{0, zDim - 1};
+  ZRange range{.zMin = 0, .zMax = zDim - 1};
   std::vector<Warning> warnings;
   if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
   {
-    range = {static_cast<usize>(croppingOptions.zBoundVoxels[0]), static_cast<usize>(croppingOptions.zBoundVoxels[1])};
+    range = {.zMin = static_cast<usize>(croppingOptions.zBoundVoxels[0]), .zMax = static_cast<usize>(croppingOptions.zBoundVoxels[1])};
   }
   else if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume)
   {

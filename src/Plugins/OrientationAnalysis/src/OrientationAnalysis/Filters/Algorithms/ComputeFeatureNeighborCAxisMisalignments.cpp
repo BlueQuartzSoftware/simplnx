@@ -22,8 +22,6 @@ ComputeFeatureNeighborCAxisMisalignments::ComputeFeatureNeighborCAxisMisalignmen
 {
 }
 
-ComputeFeatureNeighborCAxisMisalignments::~ComputeFeatureNeighborCAxisMisalignments() noexcept = default;
-
 Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 {
   const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();

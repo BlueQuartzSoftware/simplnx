@@ -108,8 +108,8 @@ IFilter::UniquePointer ComputeGBPDMetricBasedFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
   auto pNumSamplePtsValue = filterArgs.value<int32>(k_NumSamplPts_Key);
@@ -155,12 +155,12 @@ IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-8324, fmt::format("The phase of interest index ({}) is larger than the number of Ensembles ({})", pPhaseOfInterestValue, numEnsembles));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeGBPDMetricBasedFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeGBPDMetricBasedFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeGBPDMetricBasedInputValues inputValues;
 

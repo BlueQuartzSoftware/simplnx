@@ -425,7 +425,7 @@ Result<> SurfaceNetsScanline::operator()()
         //   [5] = (i+1, j,   k+1)   right-back-top
         //   [6] = (i+1, j+1, k+1)   right-front-top
         //   [7] = (i,   j+1, k+1)   left-front-top
-        std::array<int32, 8> cellLabels;
+        std::array<int32, 8> cellLabels{};
 
         cellLabels[0] = cornerLabel(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
         cellLabels[1] = cornerLabel(i + 1, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
@@ -1014,7 +1014,7 @@ Result<> SurfaceNetsScanline::operator()()
         return ConvertResult(std::move(quadRecord));
       if(quadRecord.value().VertexId == std::numeric_limits<uint64>::max())
         return MakeErrorResult(-62056, "SurfaceNets edge quad is missing one of its required vertices.");
-      vData[n] = {static_cast<usize>(quadRecord.value().VertexId), {0.0f, 0.0f, 0.0f}};
+      vData[n] = {.VertexId = static_cast<usize>(quadRecord.value().VertexId), .Position = {0.0f, 0.0f, 0.0f}};
     }
     const bool frontFacing = label0.value() < label1.value();
     LabelType firstLabel = label0.value() == MMSurfaceNet::Padding ? -1 : label0.value();

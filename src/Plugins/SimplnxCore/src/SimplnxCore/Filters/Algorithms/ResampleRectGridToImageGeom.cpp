@@ -19,7 +19,6 @@ ResampleRectGridToImageGeom::ResampleRectGridToImageGeom(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-ResampleRectGridToImageGeom::~ResampleRectGridToImageGeom() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ResampleRectGridToImageGeom::getCancel()

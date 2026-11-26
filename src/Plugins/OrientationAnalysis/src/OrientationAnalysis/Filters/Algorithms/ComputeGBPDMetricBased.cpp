@@ -293,8 +293,6 @@ ComputeGBPDMetricBased::ComputeGBPDMetricBased(DataStructure& dataStructure, con
 {
 }
 
-ComputeGBPDMetricBased::~ComputeGBPDMetricBased() noexcept = default;
-
 const std::atomic_bool& ComputeGBPDMetricBased::getCancel()
 {
   return m_ShouldCancel;

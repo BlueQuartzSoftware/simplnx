@@ -5,12 +5,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -37,7 +38,7 @@ nlohmann::json DataPathSelectionParameter::toJsonImpl(const std::any& value) con
   return json;
 }
 
-Result<std::any> DataPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> DataPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix("FilterParameter 'DataPathSelectionParameter' JSON Error: ");
   if(!json.is_string())

@@ -339,8 +339,6 @@ WriteLosAlamosFFT::WriteLosAlamosFFT(DataStructure& dataStructure, const IFilter
 {
 }
 
-WriteLosAlamosFFT::~WriteLosAlamosFFT() noexcept = default;
-
 const std::atomic_bool& WriteLosAlamosFFT::getCancel()
 {
   return m_ShouldCancel;
@@ -367,7 +365,8 @@ Result<> WriteLosAlamosFFT::operator()()
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
-  WriterContext context{file, m_InputValues->OutputFile, dims, cellEulerAngles, featureIds, cellPhases, m_ShouldCancel};
+  WriterContext context{
+      .File = file, .OutputPath = m_InputValues->OutputFile, .Dims = dims, .EulerAngles = cellEulerAngles, .FeatureIds = featureIds, .CellPhases = cellPhases, .ShouldCancel = m_ShouldCancel};
   Result<> writeResult = DispatchAlgorithm<WriteLosAlamosFFTDirect, WriteLosAlamosFFTScanline>({&cellEulerAngles, &featureIds, &cellPhases}, context);
   if(writeResult.invalid())
   {

@@ -5,18 +5,20 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-CreateAttributeMatrixAction::CreateAttributeMatrixAction(const DataPath& path, const ShapeType& shape)
+CreateAttributeMatrixAction::CreateAttributeMatrixAction(const DataPath& path, ShapeType shape)
 : IDataCreationAction(path)
-, m_TupleShape(shape)
+, m_TupleShape(std::move(shape))
 {
 }
 
 CreateAttributeMatrixAction::~CreateAttributeMatrixAction() noexcept = default;
 
-Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateAttributeMatrixAction: ";
   DataPath createdAttributeMatrixPath = getCreatedPath();

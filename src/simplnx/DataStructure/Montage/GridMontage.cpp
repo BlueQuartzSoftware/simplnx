@@ -22,7 +22,7 @@ GridMontage::GridMontage(const GridMontage& other)
 {
 }
 
-GridMontage::GridMontage(GridMontage&& other)
+GridMontage::GridMontage(GridMontage&& other) noexcept
 : AbstractMontage(std::move(other))
 {
 }
@@ -59,7 +59,7 @@ DataObject* GridMontage::shallowCopy()
   return new GridMontage(*this);
 }
 
-std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath&  /*copyPath*/)
+std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& /*copyPath*/)
 {
   throw std::runtime_error("GridMontage deepCopy has not been implemented.");
 }
@@ -120,17 +120,17 @@ GridTileIndex GridMontage::getTileIndex(usize col, usize row, usize depth) const
 {
   if(col >= m_ColumnCount)
   {
-    return GridTileIndex();
+    return {};
   }
   if(row >= m_RowCount)
   {
-    return GridTileIndex();
+    return {};
   }
   if(depth >= m_DepthCount)
   {
-    return GridTileIndex();
+    return {};
   }
-  return GridTileIndex(this, {col, row, depth});
+  return {this, {col, row, depth}};
 }
 
 GridTileIndex GridMontage::getTileIndex(const SizeVec3& pos) const
@@ -220,7 +220,7 @@ GridMontage::DimensionsType GridMontage::getDimensions() const
   return {m_ColumnCount, m_RowCount, m_DepthCount};
 }
 
-GridMontage::BoundsType GridMontage::getBounds() const
+GridMontage::BoundsType GridMontage::getBounds()
 {
   throw std::runtime_error("Get Bounds not implemented");
 }

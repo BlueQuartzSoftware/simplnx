@@ -267,7 +267,7 @@ inline Result<ObjectMorphologyPlaneWindow> CreateObjectMorphologyPlaneWindow(usi
   }
   const usize origin = batchBegin > halo ? batchBegin - halo : 0;
   const usize end = halo >= dimZ || batchEnd > dimZ - halo ? dimZ : batchEnd + halo;
-  return {ObjectMorphologyPlaneWindow{origin, end}};
+  return {ObjectMorphologyPlaneWindow{.origin = origin, .end = end}};
 }
 
 template <class T>
@@ -416,7 +416,7 @@ Result<> FinalizeObjectMorphologyOutputWindow(AbstractDataStore<T>& outStore, T*
   {
     return ConvertInvalidResult<void>(std::move(retainedResult));
   }
-  current = {finalEnd, oldEnd};
+  current = {.origin = finalEnd, .end = oldEnd};
   return {};
 }
 
@@ -817,11 +817,11 @@ template <class T>
 class ObjectMorphScatter
 {
 public:
-  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
-                     T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3 dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op, T objectValue,
+                     T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_BoxOffsets(boxOffsets)
   , m_Op(op)
@@ -934,11 +934,11 @@ template <class T>
 class ObjectMorphGather
 {
 public:
-  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
-                    T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = 64ULL * 1024ULL * 1024ULL)
+  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3 dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op, T objectValue,
+                    T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = 64ULL * 1024ULL * 1024ULL)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_BoxOffsets(boxOffsets)
   , m_Op(op)
@@ -1034,7 +1034,7 @@ private:
       const usize remainingDepth = m_Dims[2] - batchBegin;
       const usize batchDepth = std::min(plan.computeBatchDepth, remainingDepth);
       const usize batchEnd = batchBegin + batchDepth;
-      const detail::ObjectMorphologyPlaneWindow sourceRange{batchBegin, batchEnd};
+      const detail::ObjectMorphologyPlaneWindow sourceRange{.origin = batchBegin, .end = batchEnd};
       auto desiredInputResult = detail::CreateObjectMorphologyPlaneWindow(batchBegin, batchEnd, inputHalo, m_Dims[2]);
       if(desiredInputResult.invalid())
       {

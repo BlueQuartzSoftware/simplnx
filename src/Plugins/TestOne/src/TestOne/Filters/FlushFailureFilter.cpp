@@ -54,7 +54,7 @@ public:
   CliCompletionStore(const CliCompletionStore&) = default;
   CliCompletionStore(CliCompletionStore&&) = default;
   CliCompletionStore& operator=(const CliCompletionStore&) = delete;
-  CliCompletionStore& operator=(CliCompletionStore&&) = default;
+  CliCompletionStore& operator=(CliCompletionStore&&) noexcept = default;
 
   /**
    * @brief Reports a checked-only completion fault while leaving legacy flush harmless.

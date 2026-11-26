@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the slip-transmission metric executor.
    */
-  ~ComputeSlipTransmissionMetrics() noexcept;
+  ~ComputeSlipTransmissionMetrics() noexcept = default;
 
   ComputeSlipTransmissionMetrics(const ComputeSlipTransmissionMetrics&) = delete;
   ComputeSlipTransmissionMetrics(ComputeSlipTransmissionMetrics&&) noexcept = delete;

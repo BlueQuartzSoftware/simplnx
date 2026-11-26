@@ -45,15 +45,15 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CreateGeometryInputValues
 {
-  ChoicesParameter::ValueType ArrayHandlingIndex;
+  ChoicesParameter::ValueType ArrayHandlingIndex{};
   DataObjectNameParameter::ValueType CellAttributeMatrixName;
   VectorUInt64Parameter::ValueType Dimensions;
   DataObjectNameParameter::ValueType EdgeAttributeMatrixName;
   ArraySelectionParameter::ValueType EdgeListPath;
   DataObjectNameParameter::ValueType FaceAttributeMatrixName;
-  ChoicesParameter::ValueType GeometryTypeIndex;
+  ChoicesParameter::ValueType GeometryTypeIndex{};
   ArraySelectionParameter::ValueType HexahedralListPath;
-  ChoicesParameter::ValueType LengthUnitIndex;
+  ChoicesParameter::ValueType LengthUnitIndex{};
   VectorFloat32Parameter::ValueType Origin;
   DataGroupCreationParameter::ValueType OutputGeometryPath;
   ArraySelectionParameter::ValueType QuadrilateralListPath;
@@ -62,7 +62,7 @@ struct SIMPLNXCORE_EXPORT CreateGeometryInputValues
   ArraySelectionParameter::ValueType TriangleListPath;
   DataObjectNameParameter::ValueType VertexAttributeMatrixName;
   ArraySelectionParameter::ValueType VertexListPath;
-  BoolParameter::ValueType WarningsAsErrors;
+  BoolParameter::ValueType WarningsAsErrors{};
   ArraySelectionParameter::ValueType XBoundsPath;
   ArraySelectionParameter::ValueType YBoundsPath;
   ArraySelectionParameter::ValueType ZBoundsPath;
@@ -77,7 +77,7 @@ class SIMPLNXCORE_EXPORT CreateGeometry
 {
 public:
   CreateGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateGeometryInputValues* inputValues);
-  ~CreateGeometry() noexcept;
+  ~CreateGeometry() noexcept = default;
 
   CreateGeometry(const CreateGeometry&) = delete;
   CreateGeometry(CreateGeometry&&) noexcept = delete;

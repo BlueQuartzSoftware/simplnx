@@ -80,8 +80,8 @@ IFilter::UniquePointer CopyFeatureArrayToElementArrayFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto pSelectedFeatureArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
   const auto pFeatureIdsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
@@ -103,7 +103,8 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
@@ -119,12 +120,12 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CopyFeatureArrayToElementArrayInputValues inputValues;
   inputValues.SelectedFeatureArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);

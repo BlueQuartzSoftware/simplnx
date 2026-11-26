@@ -101,8 +101,8 @@ IFilter::UniquePointer ComputeFeatureNeighborsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto storeBoundaryCells = filterArgs.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = filterArgs.value<bool>(k_StoreSurface_Key);
@@ -118,7 +118,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, imageGeomPath, {featureIdsPath}, -24501);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
@@ -166,8 +166,8 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeatureNeighborsInputValues inputValues;
 

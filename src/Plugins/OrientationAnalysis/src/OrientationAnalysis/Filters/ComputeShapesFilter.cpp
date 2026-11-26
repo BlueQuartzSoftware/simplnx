@@ -90,8 +90,8 @@ IFilter::UniquePointer ComputeShapesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                            const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPath}, -12806);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   auto featureAttrMatrixPath = pCentroidsArrayPath.getParent();
@@ -122,7 +122,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   const AttributeMatrix* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
 
   ShapeType tupleShape = featureAttrMatrix->getShape();
@@ -154,12 +154,12 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeShapesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeShapesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeShapesInputValues inputValues;
 

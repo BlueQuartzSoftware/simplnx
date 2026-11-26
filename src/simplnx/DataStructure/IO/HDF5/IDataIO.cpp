@@ -24,7 +24,7 @@ DataObject::OptionalId IDataIO::ReadDataId(const object_reader_type& groupReader
   {
     return {};
   }
-  DataObject::IdType id = std::move(result.value());
+  DataObject::IdType id = result.value();
 
   return id;
 }
@@ -55,7 +55,7 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   return {};
 }
 
-Result<> IDataIO::finishImportingData(DataStructure&  /*dataStructure*/, const DataPath&  /*dataPath*/, const group_reader_type&  /*dataStructureGroup*/) const
+Result<> IDataIO::finishImportingData(DataStructure& /*dataStructure*/, const DataPath& /*dataPath*/, const group_reader_type& /*dataStructureGroup*/) const
 {
   return {};
 }

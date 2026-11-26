@@ -77,8 +77,8 @@ IFilter::UniquePointer TriangleCentroidFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayName_Key);
@@ -90,8 +90,8 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
-                                           fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
+                                                            fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   // Instantiate and move the action that will create the output array
   {
@@ -102,12 +102,12 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> TriangleCentroidFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> TriangleCentroidFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   TriangleCentroidInputValues inputValues;
 

@@ -22,6 +22,7 @@
 #include <mutex>
 #include <new>
 #include <string_view>
+#include <utility>
 
 /**
  * @namespace nx::core::ImageRotationUtilities
@@ -283,7 +284,7 @@ using AccumulationValueType = std::conditional_t<std::is_floating_point_v<T>, fl
  */
 template <typename T>
 inline void FindInterpolationValues(const RotateArgs& params, usize octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray,
-                                    std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, Point3Df&  /*hitVoxelCenterPoint*/)
+                                    std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, Point3Df& /*hitVoxelCenterPoint*/)
 {
   const std::array<Vector3i64, 8>& indexOffset = k_AllOctantOffsets[octant];
 
@@ -675,12 +676,11 @@ public:
    * @param transformationMatrix Maps source coordinates to output coordinates.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR& transformationMatrix,
-                                                FilterProgressCallback* filterCallback)
+  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs rotateArgs, Matrix4fR transformationMatrix, FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
-  , m_Params(rotateArgs)
-  , m_TransformationMatrix(transformationMatrix)
+  , m_Params(std::move(rotateArgs))
+  , m_TransformationMatrix(std::move(transformationMatrix))
   , m_FilterCallback(filterCallback)
   {
   }
@@ -1042,11 +1042,11 @@ public:
    * @param sliceBySlice Preserves the destination Z index when true.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
+  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
                                          FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
-  , m_Params(args)
+  , m_Params(std::move(args))
   , m_TransformationMatrix(transformationMatrix)
   , m_SliceBySlice(sliceBySlice)
   , m_FilterCallback(filterCallback)

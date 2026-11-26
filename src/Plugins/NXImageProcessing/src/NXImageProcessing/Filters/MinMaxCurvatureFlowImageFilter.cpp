@@ -64,8 +64,8 @@ IFilter::UniquePointer MinMaxCurvatureFlowImageFilter::clone() const
   return std::make_unique<MinMaxCurvatureFlowImageFilter>();
 }
 
-IFilter::PreflightResult MinMaxCurvatureFlowImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                       const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult MinMaxCurvatureFlowImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -77,11 +77,11 @@ IFilter::PreflightResult MinMaxCurvatureFlowImageFilter::preflightImpl(const Dat
   // unlike CurvatureFlow, the min/max threshold comparison requires a floating-point pixel type.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::FloatingScalar, ImageProcessing::SameAsInput>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
-Result<> MinMaxCurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> MinMaxCurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

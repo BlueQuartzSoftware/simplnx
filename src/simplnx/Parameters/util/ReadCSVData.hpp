@@ -389,7 +389,7 @@ public:
   usize headersLine = 1;
   HeaderMode headerMode = HeaderMode::CUSTOM;
   ShapeType tupleDims = {1};
-  std::vector<char> delimiters = {};
+  std::vector<char> delimiters;
   bool consecutiveDelimiters = false;
 };
 } // namespace nx::core

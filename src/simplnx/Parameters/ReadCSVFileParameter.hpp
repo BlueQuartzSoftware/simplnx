@@ -43,7 +43,7 @@ public:
   using ValueType = ReadCSVData;
 
   ReadCSVFileParameter() = delete;
-  ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~ReadCSVFileParameter() override = default;
 
   ReadCSVFileParameter(const ReadCSVFileParameter&) = delete;

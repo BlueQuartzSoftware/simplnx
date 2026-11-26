@@ -5,13 +5,15 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace nx::core
 {
-CopyDataObjectAction::CopyDataObjectAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths)
+CopyDataObjectAction::CopyDataObjectAction(DataPath path, const DataPath& newPath, const std::vector<DataPath>& allCreatedPaths)
 : IDataCreationAction(newPath)
-, m_Path(path)
+, m_Path(std::move(path))
 , m_NewPath(newPath)
 , m_AllCreatedPaths(allCreatedPaths)
 {
@@ -26,7 +28,7 @@ std::shared_ptr<DataObject> CopyDataObjectAction::copyData(DataStructure& dataSt
   return copy;
 }
 
-Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CopyDataObjectAction: ";
 

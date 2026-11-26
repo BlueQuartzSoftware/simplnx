@@ -289,7 +289,8 @@ public:
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
                         const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore,
                         const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow)
-  : m_InputStore(inputStore)
+  : m_Range(std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second)))
+  , m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
   , m_BinRangesStore(binRangesStore)
@@ -298,7 +299,6 @@ public:
   , m_Mask(mask)
   , m_Overflow(overflow)
   {
-    m_Range = std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second));
   }
 
   /**

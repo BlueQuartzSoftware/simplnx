@@ -20,7 +20,7 @@ AbstractMontage::AbstractMontage(const AbstractMontage& other)
 {
 }
 
-AbstractMontage::AbstractMontage(AbstractMontage&& other)
+AbstractMontage::AbstractMontage(AbstractMontage&& other) noexcept
 : BaseGroup(std::move(other))
 , m_Collection(std::move(other.m_Collection))
 {
@@ -61,7 +61,7 @@ std::vector<std::string> AbstractMontage::getGeometryNames() const
   return names;
 }
 
-std::vector<LinkedPath> AbstractMontage::getLinkedPaths() const
+std::vector<LinkedPath> AbstractMontage::getLinkedPaths()
 {
   std::vector<LinkedPath> linkedPaths;
   return linkedPaths;

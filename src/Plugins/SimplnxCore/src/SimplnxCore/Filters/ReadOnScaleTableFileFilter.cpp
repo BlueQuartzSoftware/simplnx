@@ -113,8 +113,8 @@ IFilter::UniquePointer ReadOnScaleTableFileFilter::clone() const
   return std::make_unique<ReadOnScaleTableFileFilter>();
 }
 
-IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   const auto fallbackOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -123,13 +123,13 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
   {
     auto& error = result.errors().front();
     error.message = fmt::format("Invalid Fallback Origin for '{}'. {}", inputFile.string(), error.message);
-    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
   }
   if(auto result = ImageGeom::ValidateSpacing(FloatVec3(fallbackSpacing)); result.invalid())
   {
     auto& error = result.errors().front();
     error.message = fmt::format("Invalid Fallback Spacing for '{}'. {}", inputFile.string(), error.message);
-    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   std::error_code fileError;
@@ -149,7 +149,7 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
     auto headerResult = ReadOnScaleTableFile::ReadHeader(inputFile);
     if(headerResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(headerResult))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(headerResult))};
     }
     cachedHeader = std::move(headerResult.value());
     cachedHeader.TimeStamp = writeTime;
@@ -189,11 +189,11 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
                                        "meters\nMaterial names: {}",
                                        firstBounds[0], lastBounds[0], cachedHeader.BoundsCounts[0], cachedHeader.BoundsCounts[0] - 1, firstBounds[1], lastBounds[1], cachedHeader.BoundsCounts[1],
                                        cachedHeader.BoundsCounts[1] - 1, firstBounds[2], lastBounds[2], cachedHeader.BoundsCounts[2], cachedHeader.BoundsCounts[2] - 1, cachedHeader.NameCount)});
-  return {std::move(resultOutputActions), std::move(updatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(updatedValues)};
 }
 
-Result<> ReadOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadOnScaleTableFileInputValues inputValues;
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);

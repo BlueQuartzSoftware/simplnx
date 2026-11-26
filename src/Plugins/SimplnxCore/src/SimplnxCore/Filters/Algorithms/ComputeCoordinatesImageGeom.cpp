@@ -111,8 +111,8 @@ public:
 private:
   usize m_XCells = 0;
   usize m_YCells = 0;
-  FloatVec3 m_Spacing = {};
-  FloatVec3 m_Origin = {};
+  FloatVec3 m_Spacing;
+  FloatVec3 m_Origin;
   float32* m_Coordinates = nullptr;
   int32* m_Indices = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -342,8 +342,6 @@ ComputeCoordinatesImageGeom::ComputeCoordinatesImageGeom(DataStructure& dataStru
 , m_MessageHandler(mesgHandler)
 {
 }
-
-ComputeCoordinatesImageGeom::~ComputeCoordinatesImageGeom() noexcept = default;
 
 Result<> ComputeCoordinatesImageGeom::operator()()
 {

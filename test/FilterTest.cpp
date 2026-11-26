@@ -127,8 +127,8 @@ protected:
    * @brief Reports a valid preflight so execute() reaches executeImpl.
    * @return An empty preflight result.
    */
-  PreflightResult preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                const ExecutionContext&  /*executionContext*/) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     return {};
   }
@@ -153,8 +153,8 @@ protected:
    * @brief Throws so the caller can observe how execute() handles an escaped exception.
    * @throws std::runtime_error Always.
    */
-  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                       const ExecutionContext&  /*executionContext*/) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     throw std::runtime_error(k_ThrowMessage.str());
   }
@@ -178,8 +178,8 @@ protected:
    * @brief Throws a non-std::exception type.
    * @throws NonStandardException Always.
    */
-  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                       const ExecutionContext&  /*executionContext*/) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     throw NonStandardException{};
   }
@@ -214,8 +214,8 @@ protected:
    * @brief Raises the cancellation flag and reports a storage error.
    * @return An error carrying k_ExecuteErrorCode.
    */
-  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                       const ExecutionContext&  /*executionContext*/) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     if(m_CancelFlag != nullptr)
     {
@@ -264,8 +264,8 @@ protected:
    * @param executionContext Unused.
    * @return Preflight data for cancellation-precedence tests.
    */
-  PreflightResult preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                const ExecutionContext&  /*executionContext*/) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     m_CancelFlag->store(true);
 
@@ -274,8 +274,8 @@ protected:
     {
       result = MakeErrorResult<OutputActions>(k_PreflightErrorCode, "The controlled preflight operation failed");
     }
-    result.warnings().push_back(Warning{k_PreflightWarningCode, "The controlled preflight warning"});
-    return {std::move(result), {{k_PreflightValueName.str(), k_PreflightValueText.str()}}};
+    result.warnings().push_back(Warning{.code = k_PreflightWarningCode, .message = "The controlled preflight warning"});
+    return {.outputActions = std::move(result), .outputValues = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
   }
 
   /**
@@ -288,8 +288,8 @@ protected:
    * @param executionContext Unused.
    * @return A valid result.
    */
-  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                       const ExecutionContext&  /*executionContext*/) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     (*m_ExecutionCount)++;
     return {};
@@ -324,11 +324,11 @@ public:
    * @return An error
    * and warning that identify this action.
    */
-  Result<> apply(DataStructure&  /*dataStructure*/, Mode  /*mode*/) const override
+  Result<> apply(DataStructure& /*dataStructure*/, Mode /*mode*/) const override
   {
     (*m_InvocationCount)++;
     Result<> result = MakeErrorResult(k_DeferredErrorCode, "The controlled deferred action failed");
-    result.warnings().push_back(Warning{k_DeferredWarningCode, "The controlled deferred warning"});
+    result.warnings().push_back(Warning{.code = k_DeferredWarningCode, .message = "The controlled deferred warning"});
     return result;
   }
 
@@ -367,7 +367,7 @@ public:
    * @param mode Supplies the action mode.
    * @return A valid result.
    */
-  Result<> apply(DataStructure&  /*dataStructure*/, Mode  /*mode*/) const override
+  Result<> apply(DataStructure& /*dataStructure*/, Mode /*mode*/) const override
   {
     (*m_InvocationCount)++;
     return {};
@@ -434,15 +434,15 @@ protected:
    * @param executionContext Unused.
    * @return Deferred action, warning, and output value for the execution test.
    */
-  PreflightResult preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                const ExecutionContext&  /*executionContext*/) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     OutputActions actions;
     actions.appendDeferredAction(std::make_unique<FailingDeferredAction>(m_FailingInvocationCount));
     actions.appendDeferredAction(std::make_unique<RecordingDeferredAction>(m_FollowingInvocationCount));
     Result<OutputActions> result{std::move(actions)};
-    result.warnings().push_back(Warning{k_PreflightWarningCode, "The controlled preflight warning"});
-    return {std::move(result), {{k_PreflightValueName.str(), k_PreflightValueText.str()}}};
+    result.warnings().push_back(Warning{.code = k_PreflightWarningCode, .message = "The controlled preflight warning"});
+    return {.outputActions = std::move(result), .outputValues = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
   }
 
   /**
@@ -455,8 +455,8 @@ protected:
    * @param executionContext Unused.
    * @return A valid result.
    */
-  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                       const ExecutionContext&  /*executionContext*/) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     return {};
   }

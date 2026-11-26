@@ -87,8 +87,8 @@ IFilter::UniquePointer SigmoidImageFilter::clone() const
 {
   return std::make_unique<SigmoidImageFilter>();
 }
-IFilter::PreflightResult SigmoidImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                           const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult SigmoidImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -96,10 +96,10 @@ IFilter::PreflightResult SigmoidImageFilter::preflightImpl(const DataStructure& 
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> SigmoidImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> SigmoidImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -110,7 +110,7 @@ Result<> SigmoidImageFilter::executeImpl(DataStructure& dataStructure, const Arg
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
 
-  const SigmoidOperation operation{alpha, beta, outputMaximum, outputMinimum};
+  const SigmoidOperation operation{.alpha = alpha, .beta = beta, .outputMaximum = outputMaximum, .outputMinimum = outputMinimum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

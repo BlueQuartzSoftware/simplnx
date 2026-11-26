@@ -8,13 +8,14 @@
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>
+#include <utility>
 
 namespace nx::core
 {
-DynamicTableParameter::DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const DynamicTableInfo& tableInfo)
+DynamicTableParameter::DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, DynamicTableInfo tableInfo)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
-, m_TableInfo(tableInfo)
+, m_DefaultValue(std::move(defaultValue))
+, m_TableInfo(std::move(tableInfo))
 {
   auto result = m_TableInfo.validate(m_DefaultValue);
   if(result.invalid())
@@ -53,7 +54,7 @@ nlohmann::json DynamicTableParameter::toJsonImpl(const std::any& value) const
   return DynamicTableInfo::WriteData(table);
 }
 
-Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   return {ConvertResultTo<std::any>(DynamicTableInfo::ReadData(json))};
 }

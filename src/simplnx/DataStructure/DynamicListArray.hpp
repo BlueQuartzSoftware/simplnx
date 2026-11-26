@@ -100,10 +100,10 @@ public:
    * object. The caller is responsible for deleting the created DynamicListArray.
    * @param other The DynamicListArray to move from
    */
-  DynamicListArray(DynamicListArray&& other)
+  DynamicListArray(DynamicListArray&& other) noexcept
   : DataObject(std::move(other))
   , m_Array(std::move(other.m_Array))
-  , m_Size(std::move(other.m_Size))
+  , m_Size(other.m_Size)
   {
   }
 

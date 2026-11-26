@@ -17,13 +17,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT AddBadDataInputValues
 {
-  bool PoissonNoise;
-  float32 PoissonVolFraction;
-  bool BoundaryNoise;
-  float32 BoundaryVolFraction;
+  bool PoissonNoise{};
+  float32 PoissonVolFraction{};
+  bool BoundaryNoise{};
+  float32 BoundaryVolFraction{};
   DataPath GBEuclideanDistancesArrayPath;
   DataPath ImageGeometryPath;
-  uint64 SeedValue;
+  uint64 SeedValue{};
 };
 
 /**
@@ -51,7 +51,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   AddBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AddBadDataInputValues* inputValues);
-  ~AddBadData() noexcept;
+  ~AddBadData() noexcept = default;
 
   AddBadData(const AddBadData&) = delete;
   AddBadData(AddBadData&&) noexcept = delete;

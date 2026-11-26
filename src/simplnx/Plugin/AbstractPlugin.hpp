@@ -93,7 +93,7 @@ public:
   }
 
 protected:
-  AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor);
+  AbstractPlugin(IdType identifier, std::string name, std::string description, std::string vendor);
 
   /**
    * @brief Registers a filter factory.
@@ -102,7 +102,7 @@ protected:
    *
    * The method creates one filter to obtain and validate its UUID.
    */
-  void addFilter(FilterCreationFunc filterFunc);
+  void addFilter(const FilterCreationFunc& filterFunc);
 
   void addDataIOManager(const IOManagerPointer& ioManager);
 
@@ -113,7 +113,7 @@ protected:
    *
    * Application owns the shared Preferences instance.
    */
-  void addDefaultValue(std::string keyName, const nlohmann::json& value);
+  void addDefaultValue(std::string keyName, const nlohmann::json& value) const;
 
 private:
   IdType m_Id;

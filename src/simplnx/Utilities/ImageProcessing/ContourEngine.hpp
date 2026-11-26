@@ -279,7 +279,7 @@ struct ContourPlaneBody
     // A radius-1 connectivity neighborhood with the center excluded holds at most k_MaxRadius1Neighbors, so
     // gather into a fixed-capacity, per-worker stack buffer -- no per-voxel heap allocation, and thread-safe
     // because it is local to this call.
-    std::array<T, k_MaxRadius1Neighbors> neighbors;
+    std::array<T, k_MaxRadius1Neighbors> neighbors{};
 
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
@@ -331,7 +331,7 @@ struct ContourRollingPlaneBody
   {
     const int64 dimXi = static_cast<int64>(dimX);
     const int64 dimYi = static_cast<int64>(dimY);
-    std::array<T, k_MaxRadius1Neighbors> neighbors;
+    std::array<T, k_MaxRadius1Neighbors> neighbors{};
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
       const usize x = tuple % dimX;
@@ -381,7 +381,7 @@ struct Contour2DBlockBody
   {
     const int64 dimXi = static_cast<int64>(dimX);
     const int64 dimYi = static_cast<int64>(dimY);
-    std::array<T, k_MaxRadius1Neighbors> neighbors;
+    std::array<T, k_MaxRadius1Neighbors> neighbors{};
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
       const usize localX = tuple % outputWidth;

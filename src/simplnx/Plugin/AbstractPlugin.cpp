@@ -8,14 +8,15 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
-AbstractPlugin::AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor)
+AbstractPlugin::AbstractPlugin(IdType identifier, std::string name, std::string description, std::string vendor)
 : m_Id(identifier)
-, m_Name(name)
-, m_Description(description)
-, m_Vendor(vendor)
+, m_Name(std::move(name))
+, m_Description(std::move(description))
+, m_Vendor(std::move(vendor))
 {
 }
 
@@ -66,7 +67,7 @@ IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType i
   return m_InitializerMap.at(identifier)();
 }
 
-void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
+void AbstractPlugin::addFilter(const FilterCreationFunc& filterFunc)
 {
   IFilter::UniquePointer filter = filterFunc();
   if(filter == nullptr)
@@ -97,8 +98,8 @@ void AbstractPlugin::addDataIOManager(const IOManagerPointer& ioManager)
   m_IOManagers.push_back(ioManager);
 }
 
-void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& value)
+void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& value) const
 {
   Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
-  preferences->addDefaultValues(getName(), keyName, value);
+  preferences->addDefaultValues(getName(), std::move(keyName), value);
 }

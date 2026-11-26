@@ -92,8 +92,8 @@ IFilter::UniquePointer WriteNodesAndElementsFilesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   DataPath selectedGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
   bool writeNodeFile = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
@@ -105,24 +105,24 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
 
   if(!writeNodeFile && !writeElementFile)
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
-                                           "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
+                                                            "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
   }
 
   auto& selectedGeometry = dataStructure.getDataRefAs<IGeometry>(selectedGeometryPath);
   if(selectedGeometry.getGeomType() == IGeometry::Type::Vertex && writeElementFile)
   {
-    return {MakeErrorResult<OutputActions>(
-        to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
-        "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a different geometry with a type other than Vertex.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
+                                                            "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a "
+                                                            "different geometry with a type other than Vertex.")};
   }
 
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteNodesAndElementsFilesInputValues inputValues;
 

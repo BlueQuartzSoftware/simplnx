@@ -404,8 +404,6 @@ ComputeFeatureSizesScanline::ComputeFeatureSizesScanline(DataStructure& dataStru
 {
 }
 
-ComputeFeatureSizesScanline::~ComputeFeatureSizesScanline() noexcept = default;
-
 Result<> ComputeFeatureSizesScanline::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;

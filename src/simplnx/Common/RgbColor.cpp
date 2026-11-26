@@ -1,5 +1,7 @@
 #include "RgbColor.hpp"
 
+#include <cmath>
+
 namespace nx::core
 {
 namespace RgbColor
@@ -76,9 +78,9 @@ void GetColorTable(int numColors, std::vector<float>& colorsOut)
     int currColorBin = static_cast<int>(pos / nodeStepSize);
     const float currFraction = (pos / nodeStepSize) - static_cast<float>(currColorBin);
 
-    float r;
-    float g;
-    float b;
+    float r = NAN;
+    float g = NAN;
+    float b = NAN;
     currColorBin = std::min(currColorBin, maxNodeIndex);
     // currColorBin + 1 causes this to step out of color[] bounds when currColorBin == (numColorNodes - 1)
     if(i < numColors - 1)

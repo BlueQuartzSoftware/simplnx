@@ -40,7 +40,7 @@ struct SizeGBCD
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDInputValues
 {
-  float32 GBCDRes;
+  float32 GBCDRes{};
   DataPath TriangleGeometryPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath SurfaceMeshFaceNormalsArrayPath;
@@ -77,7 +77,7 @@ public:
   /**
    * @brief Destroys the GBCD executor.
    */
-  ~ComputeGBCD() noexcept;
+  ~ComputeGBCD() noexcept = default;
 
   ComputeGBCD(const ComputeGBCD&) = delete;
   ComputeGBCD(ComputeGBCD&&) noexcept = delete;

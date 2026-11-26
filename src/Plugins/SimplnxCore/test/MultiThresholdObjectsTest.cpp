@@ -12,6 +12,8 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <cmath>
+
 #include <array>
 #include <catch2/catch.hpp>
 #include <chrono>
@@ -405,7 +407,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Scanline propagates bulk I/O fail
   constexpr int32 k_ReadError = -73001;
   constexpr int32 k_WriteError = -73002;
 
-  auto makeValues = [](DataStructure&  /*dataStructure*/, const DataPath& inputPath, const DataPath& outputPath) {
+  auto makeValues = [](DataStructure& /*dataStructure*/, const DataPath& inputPath, const DataPath& outputPath) {
     auto threshold = std::make_shared<ArrayThreshold>();
     threshold->setArrayPath(inputPath);
     threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
@@ -692,9 +694,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out 
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
 
-  float64 trueValue;
-  float64 falseValue;
-  int32 code;
+  float64 trueValue = NAN;
+  float64 falseValue = NAN;
+  int32 code = 0;
 
   SECTION("True Value < Minimum")
   {
@@ -752,7 +754,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custo
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
 
-  int32 code;
+  int32 code = 0;
 
   SECTION("Custom True Value")
   {

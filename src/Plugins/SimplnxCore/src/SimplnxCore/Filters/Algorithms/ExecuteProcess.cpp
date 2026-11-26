@@ -25,7 +25,6 @@ ExecuteProcess::ExecuteProcess(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-ExecuteProcess::~ExecuteProcess() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExecuteProcess::getCancel()
@@ -70,7 +69,8 @@ Result<> ExecuteProcess::operator()()
   auto args = reproc::arguments(arguments);
 
   reproc::process process;
-  reproc::stop_actions stop = {{reproc::stop::terminate, reproc::milliseconds(m_InputValues->Timeout)}, {reproc::stop::kill, reproc::milliseconds(m_InputValues->Timeout)}};
+  reproc::stop_actions stop = {.first = {.action = reproc::stop::terminate, .timeout = reproc::milliseconds(m_InputValues->Timeout)},
+                               .second = {.action = reproc::stop::kill, .timeout = reproc::milliseconds(m_InputValues->Timeout)}};
   reproc::options options;
   options.stop = stop;
   // reproc sends stderr to the parent by default; a pipe lets both drain modes write it to the log.

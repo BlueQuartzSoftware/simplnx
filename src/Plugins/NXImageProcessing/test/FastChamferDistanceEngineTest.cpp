@@ -468,7 +468,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: deterministic", "[NXIma
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: fused output negation is exact", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  for(const SizeVec3 dims : {SizeVec3{7, 6, 5}, SizeVec3{9, 8, 1}})
+  for(const SizeVec3& dims : {SizeVec3{7, 6, 5}, SizeVec3{9, 8, 1}})
   {
     const usize valueCount = dims[0] * dims[1] * dims[2];
     std::vector<float32> field(valueCount, 51.0f);

@@ -131,8 +131,8 @@ IFilter::UniquePointer SignedMaurerDistanceMapImageFilter::clone() const
 {
   return std::make_unique<SignedMaurerDistanceMapImageFilter>();
 }
-IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                           const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -148,7 +148,7 @@ IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true, PredictMaurerChunkHint(inputArray, imageGeom.getDimensions()));
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   // The Float64 BackgroundValue is cast to the (integer) input element type at execute; a non-finite or out-of-range
@@ -159,16 +159,16 @@ IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const
   Result<> backgroundGuard = ImageProcessing::ValidateBackgroundInRange(inputType, backgroundValue, k_NonFiniteBackgroundValue, k_BackgroundValueOutOfRange, k_BackgroundValueTruncated);
   if(backgroundGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(backgroundGuard), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(backgroundGuard), OutputActions{})};
   }
   for(Warning& warning : backgroundGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> SignedMaurerDistanceMapImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> SignedMaurerDistanceMapImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

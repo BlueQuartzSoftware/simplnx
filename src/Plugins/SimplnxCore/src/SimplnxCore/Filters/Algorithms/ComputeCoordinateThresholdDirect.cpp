@@ -184,8 +184,6 @@ ComputeCoordinateThresholdDirect::ComputeCoordinateThresholdDirect(DataStructure
 {
 }
 
-ComputeCoordinateThresholdDirect::~ComputeCoordinateThresholdDirect() noexcept = default;
-
 Result<> ComputeCoordinateThresholdDirect::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);

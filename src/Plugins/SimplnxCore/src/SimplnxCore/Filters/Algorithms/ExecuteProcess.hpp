@@ -15,8 +15,8 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ExecuteProcessInputValues
 {
   StringParameter::ValueType Arguments;
-  bool Blocking;
-  int32 Timeout;
+  bool Blocking{};
+  int32 Timeout{};
   FileSystemPathParameter::ValueType LogFile;
 };
 
@@ -27,7 +27,7 @@ class SIMPLNXCORE_EXPORT ExecuteProcess
 {
 public:
   ExecuteProcess(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExecuteProcessInputValues* inputValues);
-  ~ExecuteProcess() noexcept;
+  ~ExecuteProcess() noexcept = default;
 
   ExecuteProcess(const ExecuteProcess&) = delete;
   ExecuteProcess(ExecuteProcess&&) noexcept = delete;

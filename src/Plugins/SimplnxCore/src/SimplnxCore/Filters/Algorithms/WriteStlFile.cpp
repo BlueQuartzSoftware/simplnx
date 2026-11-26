@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <iterator>
 #include <unordered_map>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -59,13 +60,13 @@ public:
     return {m_AtomicFilesList.size() - 1};
   }
 
-  std::vector<AtomicFile> m_AtomicFilesList = {};
+  std::vector<AtomicFile> m_AtomicFilesList;
 
 private:
   fs::path m_InputPath;
 
-  LimitBoundAtomicFile(const fs::path& inputPath)
-  : m_InputPath(inputPath)
+  LimitBoundAtomicFile(fs::path inputPath)
+  : m_InputPath(std::move(inputPath))
   {
   }
 };
@@ -282,12 +283,12 @@ public:
    * @param startValue Specifies the first triangle.
    * @param shouldCancel Stops before later triangles when true.
    */
-  SingleOutWrapper(WriteStlFile* filter, const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+  SingleOutWrapper(WriteStlFile* filter, fs::path path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
                    const IGeometry::MeshIndexType startValue, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
-  , m_Path(path)
+  , m_Path(std::move(path))
   , m_EndValue(endValue)
-  , m_Header(header)
+  , m_Header(std::move(header))
   , m_Triangles(triangles)
   , m_Vertices(vertices)
   , m_StartValue(startValue)
@@ -375,7 +376,7 @@ public:
    * @param maxTriangles Limits triangles in one file.
    * @param shouldCancel Stops before later triangles when true.
    */
-  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const std::string header, const TriStore& triangles, const VertexStore& vertices,
+  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const std::string& header, const TriStore& triangles, const VertexStore& vertices,
                         const Int32AbstractDataStore& featureIds, const int32 featureId, const std::vector<usize>& triangleIndices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_LimitBoundAtomicFile(limitBoundAtomicFile)

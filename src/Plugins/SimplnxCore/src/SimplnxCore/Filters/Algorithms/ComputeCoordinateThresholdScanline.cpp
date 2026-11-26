@@ -96,8 +96,6 @@ ComputeCoordinateThresholdScanline::ComputeCoordinateThresholdScanline(DataStruc
 {
 }
 
-ComputeCoordinateThresholdScanline::~ComputeCoordinateThresholdScanline() noexcept = default;
-
 Result<> ComputeCoordinateThresholdScanline::operator()()
 {
   std::function<uint8(float32, float32, float32)> isInBounds;

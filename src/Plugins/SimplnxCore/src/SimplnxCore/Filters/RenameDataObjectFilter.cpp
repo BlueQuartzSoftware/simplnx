@@ -84,15 +84,16 @@ IFilter::UniquePointer RenameDataObjectFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto allowOverwrite = filterArgs.value<bool>(k_AllowOverwrite_Key);
   auto dataGroupPath = filterArgs.value<DataPath>(k_SourceDataObjectPath_Key);
   auto newName = filterArgs.value<std::string>(k_NewName_Key);
   if(!DataObject::IsValidName(newName))
   {
-    return {MakeErrorResult<OutputActions>(k_InvalidNewName, fmt::format("New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", newName, dataGroupPath.toString()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(k_InvalidNewName, fmt::format("New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", newName, dataGroupPath.toString()))};
   }
 
   auto action = std::make_unique<RenameDataAction>(dataGroupPath, newName, allowOverwrite);
@@ -103,8 +104,8 @@ IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> RenameDataObjectFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+Result<> RenameDataObjectFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

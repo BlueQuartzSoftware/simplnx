@@ -114,7 +114,6 @@ BadDataNeighborOrientationCheckScanline::BadDataNeighborOrientationCheckScanline
 }
 
 // -----------------------------------------------------------------------------
-BadDataNeighborOrientationCheckScanline::~BadDataNeighborOrientationCheckScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheckScanline::operator()()

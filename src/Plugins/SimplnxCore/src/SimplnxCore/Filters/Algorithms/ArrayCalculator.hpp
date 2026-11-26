@@ -234,7 +234,7 @@ public:
    *
    * The parser copies selectedGroupPath and infixEquation.
    */
-  ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, const std::atomic_bool& shouldCancel);
+  ArrayCalculatorParser(const DataStructure& dataStructure, DataPath selectedGroupPath, std::string infixEquation, const std::atomic_bool& shouldCancel);
   /**
    * @brief Destroys the equation parser.
    */
@@ -325,7 +325,7 @@ public:
   /**
    * @brief Destroys the calculator algorithm.
    */
-  ~ArrayCalculator() noexcept;
+  ~ArrayCalculator() noexcept = default;
 
   ArrayCalculator(const ArrayCalculator&) = delete;
   ArrayCalculator(ArrayCalculator&&) noexcept = delete;

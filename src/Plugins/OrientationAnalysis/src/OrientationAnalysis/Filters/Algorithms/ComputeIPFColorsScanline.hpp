@@ -42,7 +42,7 @@ public:
   /**
    * @brief Destroys the scanline IPF color executor.
    */
-  ~ComputeIPFColorsScanline() noexcept;
+  ~ComputeIPFColorsScanline() noexcept = default;
 
   ComputeIPFColorsScanline(const ComputeIPFColorsScanline&) = delete;
   ComputeIPFColorsScanline(ComputeIPFColorsScanline&&) = delete;

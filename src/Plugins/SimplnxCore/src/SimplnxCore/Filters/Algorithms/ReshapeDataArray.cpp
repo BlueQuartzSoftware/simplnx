@@ -12,7 +12,6 @@ ReshapeDataArray::ReshapeDataArray(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-ReshapeDataArray::~ReshapeDataArray() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReshapeDataArray::getCancel()

@@ -21,8 +21,6 @@ ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-ReadHDF5Dataset::~ReadHDF5Dataset() noexcept = default;
-
 Result<> ReadHDF5Dataset::operator()()
 {
   auto pSelectedAttributeMatrixValue = m_InputValues->ImportHdf5Object.parent;
@@ -52,7 +50,7 @@ Result<> ReadHDF5Dataset::operator()()
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
     auto h5TypeResult = datasetReader.getDataType();
-    const auto type = std::move(h5TypeResult.value());
+    const auto type = h5TypeResult.value();
     switch(type)
     {
     case DataType::float32: {

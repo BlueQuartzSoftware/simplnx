@@ -41,7 +41,7 @@ Result<> IdentifyDuplicateVertices::operator()()
   }
 
   // Leverage ordering assumptions to speed up duplicate checks
-  std::array<IGeometry::MeshIndexType, 3> offset;
+  std::array<IGeometry::MeshIndexType, 3> offset{};
   switch(sortedVerticesList.axis)
   {
   case MeshingUtilities::AxialAlignment::X: {

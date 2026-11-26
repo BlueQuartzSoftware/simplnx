@@ -256,7 +256,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: FromSIMPLJs
   };
   const Result<Arguments> result = LaplacianRecursiveGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<float64>(LaplacianFilter::k_Sigma_Key) == 2.5);
   REQUIRE(args.value<bool>(LaplacianFilter::k_NormalizeAcrossScale_Key) == true);
   REQUIRE(args.value<DataPath>(LaplacianFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));

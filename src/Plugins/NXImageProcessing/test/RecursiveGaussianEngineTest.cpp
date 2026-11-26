@@ -295,7 +295,7 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: checkpointed true 2D Y pa
   std::atomic_bool shouldCancel{false};
   ImageProcessing::detail::GaussianTemporaryStore<Checkpoint> checkpoints(std::move(checkpointBackend), shouldCancel);
   std::vector<float32> actual(field.size(), 0.0f);
-  const RecursiveGaussianPlaneAxis pass{1, 2.25, 0.75, 1, true};
+  const RecursiveGaussianPlaneAxis pass{.axis = 1, .sigma = 2.25, .spacing = 0.75, .order = 1, .normalizeAcrossScale = true};
   auto sink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> values) -> Result<> {
     for(usize row = 0; row < rowCount; ++row)
     {
@@ -326,8 +326,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: overwide true 2D XY and Y
 
   SECTION("X then Y")
   {
-    const RecursiveGaussianPlaneAxis first{0, 1.75, 0.8, 1, true};
-    const RecursiveGaussianPlaneAxis second{1, 2.25, 1.2, 0, false};
+    const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.75, .spacing = 0.8, .order = 1, .normalizeAcrossScale = true};
+    const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 2.25, .spacing = 1.2, .order = 0, .normalizeAcrossScale = false};
     const std::vector<float32> expected = RunPlaneCascade(field, dims, first, second);
     DataStore<float32> work(ShapeType{1, kDimY, kDimX}, ShapeType{1}, 0.0f);
     auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(ImageProcessing::detail::RecursiveGaussian2DCheckpoint), checkpointCount, plan.coreCols);
@@ -347,8 +347,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: overwide true 2D XY and Y
 
   SECTION("Y then X")
   {
-    const RecursiveGaussianPlaneAxis first{1, 1.75, 0.8, 1, true};
-    const RecursiveGaussianPlaneAxis second{0, 2.25, 1.2, 0, false};
+    const RecursiveGaussianPlaneAxis first{.axis = 1, .sigma = 1.75, .spacing = 0.8, .order = 1, .normalizeAcrossScale = true};
+    const RecursiveGaussianPlaneAxis second{.axis = 0, .sigma = 2.25, .spacing = 1.2, .order = 0, .normalizeAcrossScale = false};
     const std::vector<float32> expected = RunPlaneCascade(field, dims, first, second);
     DataStore<float32> work(ShapeType{1, kDimY, kDimX}, ShapeType{1}, 0.0f);
     auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(ImageProcessing::detail::RecursiveGaussian2DCheckpoint), checkpointCount, plan.coreCols);
@@ -437,8 +437,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade
   }
 
   const uint32 secondAxis = 1u - firstAxis;
-  const RecursiveGaussianPlaneAxis first{firstAxis, 1.75, firstAxis == 0 ? 0.6 : 1.4, firstOrder, true};
-  const RecursiveGaussianPlaneAxis second{secondAxis, 2.25, secondAxis == 0 ? 0.8 : 1.7, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = firstAxis, .sigma = 1.75, .spacing = firstAxis == 0 ? 0.6 : 1.4, .order = firstOrder, .normalizeAcrossScale = true};
+  const RecursiveGaussianPlaneAxis second{.axis = secondAxis, .sigma = 2.25, .spacing = secondAxis == 0 ? 0.8 : 1.7, .order = 0, .normalizeAcrossScale = false};
 
   DataStore<T> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{});
   for(usize i = 0; i < field.size(); ++i)
@@ -469,8 +469,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade honors c
 {
   const SizeVec3 dims{7, 9, 3};
   DataStore<float32> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 2.0f);
-  const RecursiveGaussianPlaneAxis first{0, 1.5, 0.75, 1, false};
-  const RecursiveGaussianPlaneAxis second{1, 2.0, 1.25, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.5, .spacing = 0.75, .order = 1, .normalizeAcrossScale = false};
+  const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 2.0, .spacing = 1.25, .order = 0, .normalizeAcrossScale = false};
   IFilter::MessageHandler messageHandler{};
 
   SECTION("pre-cancelled")
@@ -509,8 +509,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade material
     field[i] = std::sin(static_cast<double>(i) * 0.73) * 1000000.0 + static_cast<double>(i * i) * 0.01;
   }
 
-  const RecursiveGaussianPlaneAxis first{0, 1.37, 0.7, 1, true};
-  const RecursiveGaussianPlaneAxis second{1, 2.11, 1.3, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.37, .spacing = 0.7, .order = 1, .normalizeAcrossScale = true};
+  const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 2.11, .spacing = 1.3, .order = 0, .normalizeAcrossScale = false};
   const std::vector<float32> materialized = RunPlaneCascade(field, dims, first, second);
 
   const auto firstCoefficients = ImageProcessing::detail::ComputeRecursiveGaussianCoefficients(first.sigma, first.spacing, first.order, first.normalizeAcrossScale);
@@ -552,8 +552,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade rejects 
 {
   const SizeVec3 dims = GENERATE(SizeVec3{3, 9, 1}, SizeVec3{7, 3, 2});
   DataStore<float32> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 2.0f);
-  const RecursiveGaussianPlaneAxis first{0, 1.5, 1.0, 0, false};
-  const RecursiveGaussianPlaneAxis second{1, 1.5, 1.0, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.5, .spacing = 1.0, .order = 0, .normalizeAcrossScale = false};
+  const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 1.5, .spacing = 1.0, .order = 0, .normalizeAcrossScale = false};
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   usize sinkCalls = 0;
@@ -578,7 +578,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: postprocessing planner al
   {
     const Result<ImageProcessing::detail::PointwiseBatchPlan> result = ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(
         k_TotalValues, sizeof(float32), ImageProcessing::detail::k_PointwiseTargetScratchBytes,
-        {{IDataStore::StoreType::OutOfCore, tupleShape, 1, "input"}, {IDataStore::StoreType::OutOfCore, tupleShape, 1, "output", ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+        {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "input"},
+         {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
     REQUIRE(result.valid());
     REQUIRE(result.value().alignmentValues == k_PlaneValues);
     REQUIRE(result.value().batchValues == 62 * k_PlaneValues);
@@ -588,10 +589,14 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: postprocessing planner al
 
   SECTION("two float32 buffers")
   {
-    const Result<ImageProcessing::detail::PointwiseBatchPlan> result = ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(
-        k_TotalValues, sizeof(float32) * 2, ImageProcessing::detail::k_PointwiseTargetScratchBytes,
-        {{IDataStore::StoreType::OutOfCore, tupleShape, 1, "accumulator", ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
-         {IDataStore::StoreType::OutOfCore, tupleShape, 1, "derivative"}});
+    const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
+        ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(k_TotalValues, sizeof(float32) * 2, ImageProcessing::detail::k_PointwiseTargetScratchBytes,
+                                                                         {{.storeType = IDataStore::StoreType::OutOfCore,
+                                                                           .tupleShape = tupleShape,
+                                                                           .numComponents = 1,
+                                                                           .name = "accumulator",
+                                                                           .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
+                                                                          {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "derivative"}});
     REQUIRE(result.valid());
     REQUIRE(result.value().alignmentValues == k_PlaneValues);
     REQUIRE(result.value().batchValues == 31 * k_PlaneValues);
@@ -601,10 +606,14 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: postprocessing planner al
 
   SECTION("one complete slab is the minimum")
   {
-    const Result<ImageProcessing::detail::PointwiseBatchPlan> result = ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(
-        k_TotalValues, sizeof(float32) * 2, 0,
-        {{IDataStore::StoreType::OutOfCore, tupleShape, 1, "accumulator", ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
-         {IDataStore::StoreType::OutOfCore, tupleShape, 1, "derivative"}});
+    const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
+        ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(k_TotalValues, sizeof(float32) * 2, 0,
+                                                                         {{.storeType = IDataStore::StoreType::OutOfCore,
+                                                                           .tupleShape = tupleShape,
+                                                                           .numComponents = 1,
+                                                                           .name = "accumulator",
+                                                                           .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
+                                                                          {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "derivative"}});
     REQUIRE(result.valid());
     REQUIRE(result.value().alignmentValues == k_PlaneValues);
     REQUIRE(result.value().batchValues == k_PlaneValues);

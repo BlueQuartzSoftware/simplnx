@@ -57,7 +57,7 @@ public:
   /**
    * @brief Destroys the silhouette dispatcher.
    */
-  ~Silhouette() noexcept;
+  ~Silhouette() noexcept = default;
 
   Silhouette(const Silhouette&) = delete;
   Silhouette(Silhouette&&) noexcept = delete;

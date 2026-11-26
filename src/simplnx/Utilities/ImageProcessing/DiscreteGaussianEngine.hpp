@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/ImageProcessing/GaussianTemporaryStore.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <cmath>
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
 
@@ -145,13 +146,13 @@ inline DiscreteGaussianStoragePlan SelectDiscreteGaussianStoragePlan(IDataStore:
 {
   if(inputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {true, true, std::move(inputDataFormat)};
+    return {.useFusedPlanePass = true, .useTemporaryRecordStore = true, .workingDataFormat = std::move(inputDataFormat)};
   }
   if(outputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {true, true, std::move(outputDataFormat)};
+    return {.useFusedPlanePass = true, .useTemporaryRecordStore = true, .workingDataFormat = std::move(outputDataFormat)};
   }
-  return {forceFusedPlanePass, false, std::move(inputDataFormat)};
+  return {.useFusedPlanePass = forceFusedPlanePass, .useTemporaryRecordStore = false, .workingDataFormat = std::move(inputDataFormat)};
 }
 
 // Verbatim port of itk::GaussianOperator's modified-Bessel functions (all double).
@@ -172,7 +173,7 @@ inline double ModifiedBesselI0(double y)
 inline double ModifiedBesselI1(double y)
 {
   const double d = std::abs(y);
-  double accumulator;
+  double accumulator = NAN;
   if(d < 3.75)
   {
     double m = y / 3.75;

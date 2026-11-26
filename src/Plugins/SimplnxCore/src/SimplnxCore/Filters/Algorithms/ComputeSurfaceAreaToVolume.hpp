@@ -18,7 +18,7 @@ struct SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolumeInputValues
   DataPath FeatureIdsArrayPath;
   DataPath NumCellsArrayPath;
   DataPath SurfaceAreaVolumeRatioArrayName;
-  bool CalculateSphericity;
+  bool CalculateSphericity{};
   DataPath SphericityArrayName;
   DataPath InputImageGeometry;
 };
@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeSurfaceAreaToVolume() noexcept;
+  ~ComputeSurfaceAreaToVolume() noexcept = default;
 
   ComputeSurfaceAreaToVolume(const ComputeSurfaceAreaToVolume&) = delete;
   ComputeSurfaceAreaToVolume(ComputeSurfaceAreaToVolume&&) noexcept = delete;

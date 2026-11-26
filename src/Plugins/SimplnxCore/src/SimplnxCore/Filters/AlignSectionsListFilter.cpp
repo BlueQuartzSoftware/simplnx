@@ -17,7 +17,6 @@
 
 #include <filesystem>
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace nx::core
@@ -95,8 +94,8 @@ IFilter::UniquePointer AlignSectionsListFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pUseFileValue = filterArgs.value<ChoicesParameter::ValueType>(k_InputArrayType_Key);
   auto pSelectedImageGeometryPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
@@ -134,12 +133,12 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
   // Cell Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeom.getCellDataPath(), {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AlignSectionsListInputValues inputValues;
 

@@ -6,16 +6,17 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 template <>
 struct fmt::formatter<nx::core::Error>
 {
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  format_context::iterator format(const nx::core::Error& error, format_context& ctx) const
+  static format_context::iterator format(const nx::core::Error& error, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "Error({}, {})", error.code, error.message);
   }
@@ -23,10 +24,10 @@ struct fmt::formatter<nx::core::Error>
 
 namespace nx::core
 {
-ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const Choices& choices)
+ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices choices)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
-, m_Choices(choices)
+, m_Choices(std::move(choices))
 {
 }
 
@@ -53,7 +54,7 @@ nlohmann::json ChoicesParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
   if(!json.is_number())

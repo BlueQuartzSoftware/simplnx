@@ -44,9 +44,9 @@ const std::vector<float32> k_HedmSampleTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 struct ORIENTATIONANALYSIS_EXPORT EbsdToH5EbsdInputValues
 {
 
-  Float32Parameter::ValueType ZSpacing;
-  ChoicesParameter::ValueType StackingOrder;
-  ChoicesParameter::ValueType ReferenceFrame;
+  Float32Parameter::ValueType ZSpacing{};
+  ChoicesParameter::ValueType StackingOrder{};
+  ChoicesParameter::ValueType ReferenceFrame{};
   FileSystemPathParameter::ValueType OutputPath;
   GeneratedFileListParameter::ValueType InputFileListInfo;
 };
@@ -58,7 +58,7 @@ class ORIENTATIONANALYSIS_EXPORT EbsdToH5Ebsd
 {
 public:
   EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EbsdToH5EbsdInputValues* inputValues);
-  ~EbsdToH5Ebsd() noexcept;
+  ~EbsdToH5Ebsd() noexcept = default;
 
   EbsdToH5Ebsd(const EbsdToH5Ebsd&) = delete;
   EbsdToH5Ebsd(EbsdToH5Ebsd&&) noexcept = delete;

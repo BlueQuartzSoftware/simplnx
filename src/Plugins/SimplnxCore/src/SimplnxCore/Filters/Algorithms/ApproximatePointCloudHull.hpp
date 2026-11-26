@@ -17,7 +17,7 @@ struct SIMPLNXCORE_EXPORT ApproximatePointCloudHullInputValues
 {
   VectorFloat32Parameter::ValueType GridResolution;
   GeometrySelectionParameter::ValueType InputVertexGeometryPath;
-  UInt64Parameter::ValueType MinEmptyNeighbors;
+  UInt64Parameter::ValueType MinEmptyNeighbors{};
   DataGroupCreationParameter::ValueType OutputVertexGeometryPath;
 };
 
@@ -30,7 +30,7 @@ class SIMPLNXCORE_EXPORT ApproximatePointCloudHull
 {
 public:
   ApproximatePointCloudHull(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ApproximatePointCloudHullInputValues* inputValues);
-  ~ApproximatePointCloudHull() noexcept;
+  ~ApproximatePointCloudHull() noexcept = default;
 
   ApproximatePointCloudHull(const ApproximatePointCloudHull&) = delete;
   ApproximatePointCloudHull(ApproximatePointCloudHull&&) noexcept = delete;

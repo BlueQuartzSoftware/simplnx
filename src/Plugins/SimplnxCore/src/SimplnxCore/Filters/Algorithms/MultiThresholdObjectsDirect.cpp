@@ -214,8 +214,6 @@ MultiThresholdObjectsDirect::MultiThresholdObjectsDirect(DataStructure& dataStru
 {
 }
 
-MultiThresholdObjectsDirect::~MultiThresholdObjectsDirect() noexcept = default;
-
 Result<> MultiThresholdObjectsDirect::operator()()
 {
   auto thresholdsObject = m_InputValues->ArrayThresholdsObject;

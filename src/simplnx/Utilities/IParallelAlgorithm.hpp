@@ -56,7 +56,7 @@ public:
 
 protected:
   IParallelAlgorithm();
-  ~IParallelAlgorithm();
+  ~IParallelAlgorithm() = default;
 
 private:
 #ifdef SIMPLNX_ENABLE_MULTICORE

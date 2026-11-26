@@ -23,11 +23,11 @@ struct SIMPLNXCORE_EXPORT CropEdgeGeometryInputValues
   DataPath destEdgeGeomPath;
   std::vector<float32> minCoords;
   std::vector<float32> maxCoords;
-  bool removeOriginalGeometry;
-  bool cropXDim;
-  bool cropYDim;
-  bool cropZDim;
-  uint64 boundaryIntersectionBehavior;
+  bool removeOriginalGeometry{};
+  bool cropXDim{};
+  bool cropYDim{};
+  bool cropZDim{};
+  uint64 boundaryIntersectionBehavior{};
   BoolParameter::ValueType clearFeatureAttributeMatrix = false;
   BoolParameter::ValueType renumberFeatures = false;
   AttributeMatrixSelectionParameter::ValueType featureAttributeMatrixPath;
@@ -41,7 +41,7 @@ class SIMPLNXCORE_EXPORT CropEdgeGeometry
 {
 public:
   CropEdgeGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, CropEdgeGeometryInputValues* inputValues);
-  ~CropEdgeGeometry() noexcept;
+  ~CropEdgeGeometry() noexcept = default;
 
   CropEdgeGeometry(const CropEdgeGeometry&) = delete;
   CropEdgeGeometry(CropEdgeGeometry&&) noexcept = delete;

@@ -10,6 +10,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <utility>
 
 namespace nx::core
 {
@@ -43,23 +44,23 @@ Result<> InitializeBounds(Float32Array& array)
 }
 } // namespace
 
-CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, usize xBoundTuples, usize yBoundTuples, usize zBoundTuples, const std::string& cellAttributeMatrixName,
-                                                           const std::string& xBoundsName, const std::string& yBoundsName, const std::string& zBoundsName)
+CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, usize xBoundTuples, usize yBoundTuples, usize zBoundTuples, std::string cellAttributeMatrixName,
+                                                           std::string xBoundsName, std::string yBoundsName, std::string zBoundsName)
 : IDataCreationAction(path)
 , m_NumXBoundTuples(xBoundTuples)
 , m_NumYBoundTuples(yBoundTuples)
 , m_NumZBoundTuples(zBoundTuples)
-, m_CellDataName(cellAttributeMatrixName)
-, m_XBoundsArrayName(xBoundsName)
-, m_YBoundsArrayName(yBoundsName)
-, m_ZBoundsArrayName(zBoundsName)
+, m_CellDataName(std::move(cellAttributeMatrixName))
+, m_XBoundsArrayName(std::move(xBoundsName))
+, m_YBoundsArrayName(std::move(yBoundsName))
+, m_ZBoundsArrayName(std::move(zBoundsName))
 {
 }
 
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath,
-                                                           const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType)
+                                                           std::string cellAttributeMatrixName, const ArrayHandlingType& arrayType)
 : IDataCreationAction(path)
-, m_CellDataName(cellAttributeMatrixName)
+, m_CellDataName(std::move(cellAttributeMatrixName))
 , m_XBoundsArrayName(inputXBoundsPath.getTargetName())
 , m_YBoundsArrayName(inputYBoundsPath.getTargetName())
 , m_ZBoundsArrayName(inputZBoundsPath.getTargetName())
@@ -256,8 +257,8 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
 
 IDataAction::UniquePointer CreateRectGridGeometryAction::clone() const
 {
-  auto action = std::unique_ptr<CreateRectGridGeometryAction>(
-      new CreateRectGridGeometryAction(getCreatedPath(), m_NumXBoundTuples, m_NumYBoundTuples, m_NumZBoundTuples, m_CellDataName, m_XBoundsArrayName, m_YBoundsArrayName, m_ZBoundsArrayName));
+  auto action = std::make_unique<CreateRectGridGeometryAction>(getCreatedPath(), m_NumXBoundTuples, m_NumYBoundTuples, m_NumZBoundTuples, m_CellDataName, m_XBoundsArrayName, m_YBoundsArrayName,
+                                                               m_ZBoundsArrayName);
   action->m_InputXBounds = m_InputXBounds;
   action->m_InputYBounds = m_InputYBounds;
   action->m_InputZBounds = m_InputZBounds;

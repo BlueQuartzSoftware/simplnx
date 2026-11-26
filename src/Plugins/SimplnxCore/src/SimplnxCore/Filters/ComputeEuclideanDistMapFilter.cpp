@@ -101,8 +101,8 @@ IFilter::UniquePointer ComputeEuclideanDistMapFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pCalcManhattanDistValue = filterArgs.value<bool>(k_CalcManhattanDist_Key);
   auto pCalculateDistToBoundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPathValue}, -12805);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
@@ -126,7 +126,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   const auto* cellDataArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(nullptr == cellDataArray)
   {
-    return {MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
   }
 
   ShapeType tupleShape = cellDataArray->getIDataStore()->getTupleShape();
@@ -138,10 +138,10 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
 
   if(!pCalculateDistToBoundaries && !pCalculateDistToTripleLines && !pCalculateDistToQuadPoints)
   {
-    return {MakeErrorResult<OutputActions>(
-        -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, or Calculate "
-                            "Distance to Quadruple Points.",
-                            pFeatureIdsArrayPathValue.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, or Calculate "
+                                    "Distance to Quadruple Points.",
+                                    pFeatureIdsArrayPathValue.toString()))};
   }
 
   // Create the GBDistancesArray
@@ -169,12 +169,12 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeEuclideanDistMapInputValues inputValues;
 

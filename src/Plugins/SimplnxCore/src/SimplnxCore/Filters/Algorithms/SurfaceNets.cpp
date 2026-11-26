@@ -23,8 +23,6 @@ SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-SurfaceNets::~SurfaceNets() noexcept = default;
-
 const std::atomic_bool& SurfaceNets::getCancel()
 {
   return m_ShouldCancel;

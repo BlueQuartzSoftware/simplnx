@@ -20,11 +20,11 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT WriteStatsGenOdfAngleFileInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
-  float32 Weight;
-  int32 Sigma;
-  ChoicesParameter::ValueType Delimiter;
-  bool ConvertToDegrees;
-  bool UseMask;
+  float32 Weight{};
+  int32 Sigma{};
+  ChoicesParameter::ValueType Delimiter{};
+  bool ConvertToDegrees{};
+  bool UseMask{};
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath MaskArrayPath;
@@ -54,7 +54,7 @@ public:
    * @pre All arguments outlive this writer.
    */
   WriteStatsGenOdfAngleFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteStatsGenOdfAngleFileInputValues* inputValues);
-  ~WriteStatsGenOdfAngleFile() noexcept;
+  ~WriteStatsGenOdfAngleFile() noexcept = default;
 
   WriteStatsGenOdfAngleFile(const WriteStatsGenOdfAngleFile&) = delete;
   WriteStatsGenOdfAngleFile(WriteStatsGenOdfAngleFile&&) noexcept = delete;

@@ -27,21 +27,21 @@ struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
   ArraySelectionParameter::ValueType FeatureIdsPath;
   VectorUInt64Parameter::ValueType MinVoxel;
   VectorUInt64Parameter::ValueType MaxVoxel;
-  BoolParameter::ValueType ClearFeatureAttributeMatrix;
-  BoolParameter::ValueType RenumberFeatures;
+  BoolParameter::ValueType ClearFeatureAttributeMatrix{};
+  BoolParameter::ValueType RenumberFeatures{};
   AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
-  BoolParameter::ValueType RemoveOriginalGeometry;
-  BoolParameter::ValueType CropXDim;
-  BoolParameter::ValueType CropYDim;
-  BoolParameter::ValueType CropZDim;
+  BoolParameter::ValueType RemoveOriginalGeometry{};
+  BoolParameter::ValueType CropXDim{};
+  BoolParameter::ValueType CropYDim{};
+  BoolParameter::ValueType CropZDim{};
 
   // Preflight computes these inclusive voxel indices.
-  uint64 XMin;
-  uint64 XMax;
-  uint64 YMin;
-  uint64 YMax;
-  uint64 ZMin;
-  uint64 ZMax;
+  uint64 XMin{};
+  uint64 XMax{};
+  uint64 YMin{};
+  uint64 YMax{};
+  uint64 ZMin{};
+  uint64 ZMax{};
 };
 
 /**
@@ -67,7 +67,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   CropImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CropImageGeometryInputValues* inputValues);
-  ~CropImageGeometry() noexcept;
+  ~CropImageGeometry() noexcept = default;
 
   CropImageGeometry(const CropImageGeometry&) = delete;
   CropImageGeometry(CropImageGeometry&&) noexcept = delete;

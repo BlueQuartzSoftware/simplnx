@@ -20,7 +20,7 @@ class PipelineFilter;
 struct SIMPLNXCORE_EXPORT WriteDREAM3DInputValues
 {
   FileSystemPathParameter::ValueType ExportFilePath;
-  BoolParameter::ValueType WriteXdmfFile;
+  BoolParameter::ValueType WriteXdmfFile{};
   /// Master on/off switch for HDF5 gzip compression of DataArray / NeighborList datasets.
   bool UseCompression = true;
   /// Gzip/deflate level in [1, 9]; ignored when UseCompression is false.
@@ -37,7 +37,7 @@ class SIMPLNXCORE_EXPORT WriteDREAM3D
 {
 public:
   WriteDREAM3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteDREAM3DInputValues* inputValues);
-  ~WriteDREAM3D() noexcept;
+  ~WriteDREAM3D() noexcept = default;
 
   WriteDREAM3D(const WriteDREAM3D&) = delete;
   WriteDREAM3D(WriteDREAM3D&&) noexcept = delete;

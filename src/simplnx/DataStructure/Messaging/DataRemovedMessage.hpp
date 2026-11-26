@@ -29,7 +29,7 @@ public:
    * @param identifier
    * @param name
    */
-  DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& name);
+  DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string name);
 
   /**
    * @brief Creates a copy of the target DataRemovedMessage.

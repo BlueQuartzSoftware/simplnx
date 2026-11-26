@@ -34,7 +34,8 @@ struct SyntheticFeatureData
   DataPath eqDiamPath;
 };
 
-SyntheticFeatureData BuildSyntheticFeatures(usize numFeatures, const std::vector<std::array<float32, 3>>& centroidValues, const std::vector<float32>& eqDiamValues, SizeVec3 dims, FloatVec3 spacing)
+SyntheticFeatureData BuildSyntheticFeatures(usize numFeatures, const std::vector<std::array<float32, 3>>& centroidValues, const std::vector<float32>& eqDiamValues, const SizeVec3& dims,
+                                            const FloatVec3& spacing)
 {
   SyntheticFeatureData out;
   out.imageGeomPath = DataPath({"Data Container"});

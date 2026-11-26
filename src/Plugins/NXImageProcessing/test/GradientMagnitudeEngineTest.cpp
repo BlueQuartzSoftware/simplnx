@@ -549,7 +549,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and 
 
   SECTION("one-cell-wide and one-cell-tall images preserve clamped boundaries")
   {
-    for(const SizeVec3 dims : {SizeVec3{1, 17, 1}, SizeVec3{19, 1, 1}})
+    for(const SizeVec3& dims : {SizeVec3{1, 17, 1}, SizeVec3{19, 1, 1}})
     {
       const usize valueCount = dims[0] * dims[1];
       std::vector<float64> field(valueCount);

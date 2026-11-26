@@ -34,7 +34,7 @@ class SIMPLNXCORE_EXPORT ReadStlFile
 {
 public:
   ReadStlFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadStlFileInputValues* inputValues);
-  ~ReadStlFile() noexcept;
+  ~ReadStlFile() noexcept = default;
 
   ReadStlFile(const ReadStlFile&) = delete;
   ReadStlFile(ReadStlFile&&) noexcept = delete;

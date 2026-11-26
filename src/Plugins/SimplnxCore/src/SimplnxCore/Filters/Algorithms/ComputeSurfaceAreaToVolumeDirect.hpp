@@ -36,7 +36,7 @@ public:
   /**
    * @brief Destroys the non-owning in-memory algorithm.
    */
-  ~ComputeSurfaceAreaToVolumeDirect() noexcept;
+  ~ComputeSurfaceAreaToVolumeDirect() noexcept = default;
 
   ComputeSurfaceAreaToVolumeDirect(const ComputeSurfaceAreaToVolumeDirect&) = delete;
   ComputeSurfaceAreaToVolumeDirect(ComputeSurfaceAreaToVolumeDirect&&) noexcept = delete;

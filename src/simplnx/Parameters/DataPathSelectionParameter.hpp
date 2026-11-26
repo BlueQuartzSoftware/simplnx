@@ -15,7 +15,7 @@ public:
   using ValueType = DataPath;
 
   DataPathSelectionParameter() = delete;
-  DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~DataPathSelectionParameter() override = default;
 
   DataPathSelectionParameter(const DataPathSelectionParameter&) = delete;
@@ -103,7 +103,7 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 } // namespace nx::core
 

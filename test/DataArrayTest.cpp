@@ -1283,7 +1283,7 @@ void TestNeighborListArrayToFromString(DataStructure& datastructure, const std::
   REQUIRE(maxStr == maxCompareStr);
   REQUIRE(neighborListArray->setValueFromString(index5, 0, minStr));
   REQUIRE(neighborListArray->setValueFromString(index6, 0, maxStr));
-  bool ok;
+  bool ok = false;
   // std::cout << "NeighborListArray<T>\n\tmin : " << neighborListArray->getValue(index5, 0, ok) << " == " << minVal << "\n\tmax : " << neighborListArray->getValue(index6, 0, ok) << " == " << maxVal
   //<< "\n";
   REQUIRE(neighborListArray->getValue(index5, 0, ok) == minVal);
@@ -1345,7 +1345,7 @@ void TestNeighborListArrayToFromString<float32>(DataStructure& datastructure, co
   // std::cout << "NeighborListArray<float32>\n\tlowest : " << neighborListFloat32->getValue(index6) << " == " << lowestVal << "\n\tmin : " << neighborListFloat32->getValue(index7) << " == " << minVal
   //<< "\n\tmax : " << neighborListFloat32->getValue(index8) << " == " << maxVal << "\n\tinf : " << neighborListFloat32->getValue(index9) << " == " << infVal << "\n\tnan : " <<
   // neighborListFloat32->getValue(index10) << " == " << nanVal << "\n";
-  bool ok;
+  bool ok = false;
   REQUIRE(neighborListFloat32->getValue(index6, 0, ok) == lowestVal);
   REQUIRE(ok);
   REQUIRE(neighborListFloat32->getValue(index7, 0, ok) == minVal);
@@ -1410,7 +1410,7 @@ void TestNeighborListArrayToFromString<float64>(DataStructure& datastructure, co
   // std::cout << "NeighborListArray<float64>\n\tlowest : " << neighborListFloat64->getValue(index6) << " == " << lowestVal << "\n\tmin : " << neighborListFloat64->getValue(index7) << " == " << minVal
   //<< "\n\tmax : " << neighborListFloat64->getValue(index8) << " == " << maxVal << "\n\tinf : " << neighborListFloat64->getValue(index9) << " == " << infVal << "\n\tnan : " <<
   // neighborListFloat64->getValue(index10) << " == " << nanVal << "\n";
-  bool ok;
+  bool ok = false;
   REQUIRE(neighborListFloat64->getValue(index6, 0, ok) == lowestVal);
   REQUIRE(ok);
   REQUIRE(neighborListFloat64->getValue(index7, 0, ok) == minVal);

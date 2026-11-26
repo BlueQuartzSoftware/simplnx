@@ -100,8 +100,8 @@ IFilter::UniquePointer OtsuMultipleThresholdsImageFilter::clone() const
 {
   return std::make_unique<OtsuMultipleThresholdsImageFilter>();
 }
-IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                          const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -114,24 +114,24 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
   // set, which would silently classify every voxel into a single (labelOffset-valued) class.
   if(numberOfThresholds == 0 || numberOfThresholds >= numberOfHistogramBins)
   {
-    return {
-        MakeErrorResult<OutputActions>(-8311, fmt::format("NumberOfThresholds ({}) must be >= 1 and < NumberOfHistogramBins ({}).", static_cast<uint32>(numberOfThresholds), numberOfHistogramBins))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -8311, fmt::format("NumberOfThresholds ({}) must be >= 1 and < NumberOfHistogramBins ({}).", static_cast<uint32>(numberOfThresholds), numberOfHistogramBins))};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(),
-                                                              inputArray.getNumberOfComponents()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.",
+                                                                               selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   // Output is a uint8 label image regardless of the (numeric) input element type.
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -143,7 +143,8 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
   auto valleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key);
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
 
-  const OtsuOperation operation{numberOfHistogramBins, numberOfThresholds, labelOffset, valleyEmphasis, returnBinMidpoint};
+  const OtsuOperation operation{
+      .numBins = numberOfHistogramBins, .numThresholds = numberOfThresholds, .labelOffset = labelOffset, .valleyEmphasis = valleyEmphasis, .returnBinMidpoint = returnBinMidpoint};
   return ImageProcessing::ExecuteHistogramImageFilter<ImageProcessing::AllNumeric>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

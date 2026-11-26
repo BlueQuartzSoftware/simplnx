@@ -343,7 +343,7 @@ public:
     // Registering under a new name would add a manager that nothing can remove.
     if(m_Original != nullptr)
     {
-      m_Replaced = m_Collection.addIOManager(std::move(replacement)).valid();
+      m_Replaced = m_Collection.addIOManager(replacement).valid();
     }
   }
 

@@ -23,7 +23,7 @@ struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsToVertexGeometryInputValues
   ebsdlib::orientations::Type InputOrientationType;
   DataPath InputOrientationArrayPath;
   std::vector<DataPath> DataPathCopySources;
-  bool ConvertToFundamentalZone;
+  bool ConvertToFundamentalZone{};
   DataPath CellPhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath OutputVertexGeometryPath;

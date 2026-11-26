@@ -110,8 +110,6 @@ RobustAutomaticThreshold::RobustAutomaticThreshold(DataStructure& dataStructure,
 {
 }
 
-RobustAutomaticThreshold::~RobustAutomaticThreshold() noexcept = default;
-
 Result<> RobustAutomaticThreshold::operator()()
 {
   const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);

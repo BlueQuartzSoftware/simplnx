@@ -154,7 +154,7 @@ protected:
    * @param columnName Specifies the column name for diagnostics.
    * @param columnIndex Specifies the token position in each input row.
    */
-  AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex);
+  AbstractDataParser(IArray& array, std::string columnName, usize columnIndex);
 
 private:
   IArray& m_Array;

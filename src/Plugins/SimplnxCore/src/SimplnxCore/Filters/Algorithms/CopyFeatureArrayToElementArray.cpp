@@ -17,8 +17,6 @@ CopyFeatureArrayToElementArray::CopyFeatureArrayToElementArray(DataStructure& da
 {
 }
 
-CopyFeatureArrayToElementArray::~CopyFeatureArrayToElementArray() noexcept = default;
-
 Result<> CopyFeatureArrayToElementArray::operator()()
 {
   if(m_InputValues->SelectedFeatureArrayPaths.empty())

@@ -99,8 +99,8 @@ IFilter::UniquePointer ReadStlFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                          const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -180,12 +180,12 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure&  
   // the appropriate methods. (None to store for this filter... yet)
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadStlFileInputValues inputValues;
 

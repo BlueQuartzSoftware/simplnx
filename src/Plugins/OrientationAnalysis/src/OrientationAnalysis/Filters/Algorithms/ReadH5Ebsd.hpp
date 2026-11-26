@@ -37,7 +37,7 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5EbsdInputValues
   int32 startSlice = 0;
   int32 endSlice = 0;
   int32 eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-  std::vector<std::string> hdf5DataPaths = {};
+  std::vector<std::string> hdf5DataPaths;
   bool useRecommendedTransform = {true};
   DataPath dataContainerPath;
   DataPath cellAttributeMatrixPath;
@@ -72,7 +72,7 @@ public:
    * @pre All arguments outlive this importer.
    */
   ReadH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5EbsdInputValues* inputValues);
-  ~ReadH5Ebsd() noexcept;
+  ~ReadH5Ebsd() noexcept = default;
 
   ReadH5Ebsd(const ReadH5Ebsd&) = delete;
   ReadH5Ebsd(ReadH5Ebsd&&) = delete;

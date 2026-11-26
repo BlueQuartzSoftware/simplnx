@@ -22,7 +22,7 @@ public:
   using AllowedTypes = std::set<AllowedType>;
 
   GeometrySelectionParameter() = delete;
-  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes);
   ~GeometrySelectionParameter() override = default;
 
   GeometrySelectionParameter(const GeometrySelectionParameter&) = delete;
@@ -116,8 +116,8 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
 };
 
 namespace SIMPLConversion

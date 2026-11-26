@@ -111,7 +111,7 @@ protected:
                        const ExecutionContext& executionContext) const override;
 
 private:
-  int32 m_InstanceId;
+  int32 m_InstanceId{};
 };
 } // namespace nx::core
 

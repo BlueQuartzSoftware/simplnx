@@ -1,5 +1,7 @@
 #include "TooltipRowItem.hpp"
 
+#include <utility>
+
 using namespace nx::core;
 
 TooltipRowItem::TooltipRowItem()
@@ -7,16 +9,16 @@ TooltipRowItem::TooltipRowItem()
 {
 }
 
-TooltipRowItem::TooltipRowItem(const std::string& title)
+TooltipRowItem::TooltipRowItem(std::string title)
 : m_Type(Type::Title)
-, m_Title(title)
+, m_Title(std::move(title))
 {
 }
 
-TooltipRowItem::TooltipRowItem(const std::string& title, const std::string& value)
+TooltipRowItem::TooltipRowItem(std::string title, std::string value)
 : m_Type(Type::Value)
-, m_Title(title)
-, m_Value(value)
+, m_Title(std::move(title))
+, m_Value(std::move(value))
 {
 }
 
@@ -28,7 +30,7 @@ TooltipRowItem::TooltipRowItem(const TooltipRowItem& other)
 }
 
 TooltipRowItem::TooltipRowItem(TooltipRowItem&& other) noexcept
-: m_Type(std::move(other.m_Type))
+: m_Type(other.m_Type)
 , m_Title(std::move(other.m_Title))
 , m_Value(std::move(other.m_Value))
 {
@@ -61,7 +63,7 @@ TooltipRowItem& TooltipRowItem::operator=(const TooltipRowItem& rhs)
 
 TooltipRowItem& TooltipRowItem::operator=(TooltipRowItem&& rhs) noexcept
 {
-  m_Type = std::move(rhs.m_Type);
+  m_Type = rhs.m_Type;
   m_Title = std::move(rhs.m_Title);
   m_Value = std::move(rhs.m_Value);
   return *this;

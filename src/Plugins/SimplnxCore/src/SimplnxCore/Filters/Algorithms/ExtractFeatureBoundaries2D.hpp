@@ -58,7 +58,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ExtractFeatureBoundaries2D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExtractFeatureBoundaries2DInputValues* inputValues);
-  ~ExtractFeatureBoundaries2D() noexcept;
+  ~ExtractFeatureBoundaries2D() noexcept = default;
 
   ExtractFeatureBoundaries2D(const ExtractFeatureBoundaries2D&) = delete;
   ExtractFeatureBoundaries2D(ExtractFeatureBoundaries2D&&) noexcept = delete;

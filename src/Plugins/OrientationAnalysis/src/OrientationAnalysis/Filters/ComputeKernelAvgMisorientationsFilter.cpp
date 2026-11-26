@@ -93,8 +93,8 @@ IFilter::UniquePointer ComputeKernelAvgMisorientationsFilter::clone() const
   return std::make_unique<ComputeKernelAvgMisorientationsFilter>();
 }
 
-IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pKernelSizeValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_KernelSize_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -106,7 +106,7 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, {pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -67205); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   PreflightResult preflightResult;
@@ -124,11 +124,11 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return actions and updated preflight values.
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
-Result<> ComputeKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeKernelAvgMisorientationsInputValues inputValues;
 

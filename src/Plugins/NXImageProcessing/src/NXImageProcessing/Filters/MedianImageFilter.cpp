@@ -85,8 +85,8 @@ IFilter::UniquePointer MedianImageFilter::clone() const
 {
   return std::make_unique<MedianImageFilter>();
 }
-IFilter::PreflightResult MedianImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                          const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult MedianImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -96,14 +96,14 @@ IFilter::PreflightResult MedianImageFilter::preflightImpl(const DataStructure& d
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(
-        -8300, fmt::format("Median requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -8300, fmt::format("Median requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> MedianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> MedianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

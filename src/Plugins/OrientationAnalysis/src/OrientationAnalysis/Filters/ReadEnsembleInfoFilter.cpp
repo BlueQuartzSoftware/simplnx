@@ -85,8 +85,8 @@ IFilter::UniquePointer ReadEnsembleInfoFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key).string();
   auto pDataContainerNameValue = filterArgs.value<DataPath>(k_ParentGroupPath_Key);
@@ -132,12 +132,12 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
   auto phaseTypesAction = std::make_unique<CreateArrayAction>(DataType::uint32, tupleDims, std::vector<usize>{1}, phaseTypesPath);
   resultOutputActions.value().appendAction(std::move(phaseTypesAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadEnsembleInfoInputValues inputValues;
 

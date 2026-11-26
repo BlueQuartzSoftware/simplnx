@@ -16,7 +16,7 @@ public:
   using ValueType = uint64;
 
   ChoicesParameter() = delete;
-  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const Choices& choices);
+  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices choices);
   ~ChoicesParameter() override = default;
 
   ChoicesParameter(const ChoicesParameter&) = delete;
@@ -106,7 +106,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
-  Choices m_Choices = {};
+  Choices m_Choices;
 };
 
 namespace SIMPLConversion

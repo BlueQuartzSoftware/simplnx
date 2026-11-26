@@ -119,8 +119,8 @@ IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometryFilter::clone(
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                          const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   auto internalTrianglesGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -138,13 +138,13 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   if(triangleGeom.getVertices() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
   }
 
   if(triangleGeom.getFaces() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not a Shared Face List");
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
   }
 
   // Only the array the selected criterion needs is validated for matching tuple counts.
@@ -199,7 +199,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
-      return {MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
+      return {.outputActions = MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
     }
 
     DataType type = targetDataArray->getDataType();
@@ -224,7 +224,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
-      return {MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
+      return {.outputActions = MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
     }
 
     DataType type = targetDataArray->getDataType();
@@ -244,8 +244,8 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/,
-                                                                        const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                        const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractInternalSurfacesFromTriangleGeometryInputValues inputValues;
   inputValues.CopyTriangleArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyTrianglePaths_Key);

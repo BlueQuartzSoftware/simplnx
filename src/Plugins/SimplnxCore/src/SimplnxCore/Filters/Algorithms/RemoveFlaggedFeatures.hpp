@@ -27,8 +27,8 @@ enum class Functionality : uint64
  */
 struct SIMPLNXCORE_EXPORT RemoveFlaggedFeaturesInputValues
 {
-  bool FillRemovedFeatures;
-  uint64 ExtractFeatures;
+  bool FillRemovedFeatures{};
+  uint64 ExtractFeatures{};
   DataPath FeatureIdsArrayPath;
   DataPath FlaggedFeaturesArrayPath;
   DataPath ImageGeometryPath;
@@ -65,7 +65,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~RemoveFlaggedFeatures() noexcept;
+  ~RemoveFlaggedFeatures() noexcept = default;
 
   RemoveFlaggedFeatures(const RemoveFlaggedFeatures&) = delete;
   RemoveFlaggedFeatures(RemoveFlaggedFeatures&&) noexcept = delete;

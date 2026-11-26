@@ -18,7 +18,7 @@ public:
   using AllowedTypes = std::set<DataType>;
 
   NeighborListSelectionParameter() = delete;
-  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes);
   ~NeighborListSelectionParameter() override = default;
 
   NeighborListSelectionParameter(const NeighborListSelectionParameter&) = delete;
@@ -112,8 +112,8 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
 };
 
 } // namespace nx::core

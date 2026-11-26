@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the scanline distance-map algorithm.
    */
-  ~ComputeEuclideanDistMapScanline() noexcept;
+  ~ComputeEuclideanDistMapScanline() noexcept = default;
 
   ComputeEuclideanDistMapScanline(const ComputeEuclideanDistMapScanline&) = delete;
   ComputeEuclideanDistMapScanline(ComputeEuclideanDistMapScanline&&) noexcept = delete;

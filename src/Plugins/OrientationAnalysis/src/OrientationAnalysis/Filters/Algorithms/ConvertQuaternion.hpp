@@ -23,8 +23,8 @@ struct ORIENTATIONANALYSIS_EXPORT ConvertQuaternionInputValues
 {
   DataPath QuaternionDataArrayPath;
   DataPath OutputDataArrayPath;
-  bool DeleteOriginalData;
-  ChoicesParameter::ValueType ConversionType;
+  bool DeleteOriginalData{};
+  ChoicesParameter::ValueType ConversionType{};
 };
 
 /**
@@ -51,7 +51,7 @@ public:
   /**
    * @brief Destroys the quaternion conversion executor.
    */
-  ~ConvertQuaternion() noexcept;
+  ~ConvertQuaternion() noexcept = default;
 
   ConvertQuaternion(const ConvertQuaternion&) = delete;
   ConvertQuaternion(ConvertQuaternion&&) noexcept = delete;

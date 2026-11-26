@@ -291,8 +291,8 @@ void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom&
 
   REQUIRE_NOTHROW(exemplaryGeom.getCellDataRef());
   REQUIRE_NOTHROW(calculatedGeom.getCellDataRef());
-  auto exemplaryAM = exemplaryGeom.getCellDataRef();
-  auto calculatedAM = calculatedGeom.getCellDataRef();
+  const auto& exemplaryAM = exemplaryGeom.getCellDataRef();
+  const auto& calculatedAM = calculatedGeom.getCellDataRef();
   REQUIRE(exemplaryAM.getShape() == calculatedAM.getShape());
 
   const DataPath exemplarPath({exemplaryGeom.getName(), k_Cell_Data, exemplaryDataName});

@@ -35,7 +35,7 @@ public:
   using ValueType = CropValues;
 
   CropGeometryParameter() = delete;
-  CropGeometryParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  CropGeometryParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~CropGeometryParameter() override = default;
 
   CropGeometryParameter(const CropGeometryParameter&) = delete;

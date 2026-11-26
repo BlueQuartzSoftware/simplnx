@@ -17,12 +17,12 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT SurfaceNetsInputValues
 {
-  bool ApplySmoothing;        ///< When true, run iterative relaxation smoothing on mesh vertices
-  bool RepairTriangleWinding; ///< When true, run winding repair on the output triangle mesh
-  ChoicesParameter::ValueType BoundingBoxSkinMode;
-  int32 SmoothingIterations;    ///< Number of smoothing iterations to perform
-  float32 MaxDistanceFromVoxel; ///< Maximum distance a vertex can move from its voxel center during smoothing
-  float32 RelaxationFactor;     ///< Blending factor for neighbor-averaging during smoothing (0..1)
+  bool ApplySmoothing{};        ///< When true, run iterative relaxation smoothing on mesh vertices
+  bool RepairTriangleWinding{}; ///< When true, run winding repair on the output triangle mesh
+  ChoicesParameter::ValueType BoundingBoxSkinMode{};
+  int32 SmoothingIterations{};    ///< Number of smoothing iterations to perform
+  float32 MaxDistanceFromVoxel{}; ///< Maximum distance a vertex can move from its voxel center during smoothing
+  float32 RelaxationFactor{};     ///< Blending factor for neighbor-averaging during smoothing (0..1)
 
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
@@ -72,7 +72,7 @@ public:
   /**
    * @brief Destroys the Surface Nets dispatcher.
    */
-  ~SurfaceNets() noexcept;
+  ~SurfaceNets() noexcept = default;
 
   SurfaceNets(const SurfaceNets&) = delete;
   SurfaceNets(SurfaceNets&&) noexcept = delete;

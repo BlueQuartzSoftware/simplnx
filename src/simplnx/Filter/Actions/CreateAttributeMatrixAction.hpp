@@ -20,7 +20,7 @@ public:
    * @param path The path where the AttributeMatrix will be created
    * @param shape The tuple shape of the AttributeMatrix
    */
-  CreateAttributeMatrixAction(const DataPath& path, const ShapeType& shape);
+  CreateAttributeMatrixAction(const DataPath& path, ShapeType shape);
 
   ~CreateAttributeMatrixAction() noexcept override;
 

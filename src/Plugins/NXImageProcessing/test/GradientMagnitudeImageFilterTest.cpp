@@ -126,7 +126,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: FromSIMPLJson", "[NX
   };
   const Result<Arguments> result = GradientMagnitudeImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<bool>(GradMagFilter::k_UseImageSpacing_Key) == true);
   REQUIRE(args.value<DataPath>(GradMagFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
   REQUIRE(args.value<DataPath>(GradMagFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));

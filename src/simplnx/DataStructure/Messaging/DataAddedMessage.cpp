@@ -18,7 +18,7 @@ DataAddedMessage::DataAddedMessage(const DataAddedMessage& other)
 
 DataAddedMessage::DataAddedMessage(DataAddedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
-, m_Id(std::move(other.m_Id))
+, m_Id(other.m_Id)
 {
 }
 

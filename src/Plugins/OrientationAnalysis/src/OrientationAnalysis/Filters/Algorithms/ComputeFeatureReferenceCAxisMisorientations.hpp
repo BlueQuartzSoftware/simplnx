@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the feature-reference c-axis executor.
    */
-  ~ComputeFeatureReferenceCAxisMisorientations() noexcept;
+  ~ComputeFeatureReferenceCAxisMisorientations() noexcept = default;
 
   ComputeFeatureReferenceCAxisMisorientations(const ComputeFeatureReferenceCAxisMisorientations&) = delete;
   ComputeFeatureReferenceCAxisMisorientations(ComputeFeatureReferenceCAxisMisorientations&&) noexcept = delete;

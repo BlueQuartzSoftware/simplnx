@@ -5,12 +5,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -37,7 +38,7 @@ nlohmann::json ArrayCreationParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
 

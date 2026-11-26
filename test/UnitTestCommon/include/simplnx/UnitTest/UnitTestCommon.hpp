@@ -2,6 +2,7 @@
 
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 
+#include "MD5/MD5.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -32,7 +33,6 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "MD5/MD5.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -97,7 +97,7 @@ inline constexpr bool k_IsLvalueResult = IsResult_v<std::remove_cvref_t<T>> && s
 #define SIMPLNX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_VALID requires an lvalue Result<T>");                                                                                           \
+    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_VALID requires an lvalue Result<T>");                                                                        \
     auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
     SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
     REQUIRE(simplnxCheckedResult.valid());                                                                                                                                                             \
@@ -111,7 +111,7 @@ inline constexpr bool k_IsLvalueResult = IsResult_v<std::remove_cvref_t<T>> && s
 #define SIMPLNX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_INVALID requires an lvalue Result<T>");                                                                                         \
+    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_INVALID requires an lvalue Result<T>");                                                                      \
     auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
     SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
     REQUIRE(simplnxCheckedResult.invalid());                                                                                                                                                           \

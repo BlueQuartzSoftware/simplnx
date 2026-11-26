@@ -75,8 +75,8 @@ IFilter::UniquePointer CreateFeatureArrayFromElementArrayFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   const auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -103,12 +103,12 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CreateFeatureArrayFromElementArrayInputValues inputValues;
   inputValues.SelectedCellArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SelectedCellArrayPath_Key);

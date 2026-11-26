@@ -101,7 +101,7 @@ std::string ExpectedRecord(usize tupleIndex)
   return fmt::format("{} {} {} {} {} {} {} {}", eulerValues[0], eulerValues[1], eulerValues[2], x + 1, y + 1, z + 1, ExpectedFeatureId(tupleIndex), ExpectedPhase(tupleIndex));
 }
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 

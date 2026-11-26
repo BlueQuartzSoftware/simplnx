@@ -22,10 +22,10 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ComputeFeatureClusteringInputValues
 {
   DataPath ImageGeometryPath;
-  int32 NumberOfBins;
-  int32 PhaseNumber;
-  bool RemoveBiasedFeatures;
-  uint64 SeedValue; ///< Seeds the deterministic random reference distribution.
+  int32 NumberOfBins{};
+  int32 PhaseNumber{};
+  bool RemoveBiasedFeatures{};
+  uint64 SeedValue{}; ///< Seeds the deterministic random reference distribution.
   DataPath FeaturePhasesArrayPath;
   DataPath CentroidsArrayPath;
   DataPath BiasedFeaturesArrayPath;
@@ -73,7 +73,7 @@ public:
   /**
    * @brief Destroys the feature-clustering algorithm.
    */
-  ~ComputeFeatureClustering() noexcept;
+  ~ComputeFeatureClustering() noexcept = default;
 
   ComputeFeatureClustering(const ComputeFeatureClustering&) = delete;
   ComputeFeatureClustering(ComputeFeatureClustering&&) noexcept = delete;

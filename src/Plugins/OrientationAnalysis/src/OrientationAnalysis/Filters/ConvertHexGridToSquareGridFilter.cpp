@@ -116,8 +116,8 @@ IFilter::UniquePointer ConvertHexGridToSquareGridFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pUseMultipleFilesValue = filterArgs.value<bool>(k_MultipleFiles_Key);
   auto pInputFileListInfoValue = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
@@ -181,15 +181,15 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     s_HeaderCache[m_InstanceId].preflightReturnString = preflightString.str();
   }
 
-  preflightUpdatedValues.emplace_back(PreflightValue{"Suggested Spacing", s_HeaderCache[m_InstanceId].preflightReturnString});
+  preflightUpdatedValues.emplace_back(PreflightValue{.name = "Suggested Spacing", .value = s_HeaderCache[m_InstanceId].preflightReturnString});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertHexGridToSquareGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ConvertHexGridToSquareGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConvertHexGridToSquareGridInputValues inputValues;
 

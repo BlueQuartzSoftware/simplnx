@@ -31,23 +31,23 @@ class CreateGeometry2DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& faceAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedFacesName)
+  CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, std::string vertexAttributeMatrixName, std::string faceAttributeMatrixName, std::string sharedVerticesName,
+                         std::string sharedFacesName)
   : IDataCreationAction(geometryPath)
   , m_NumFaces(numFaces)
   , m_NumVertices(numVertices)
-  , m_VertexDataName(vertexAttributeMatrixName)
-  , m_FaceDataName(faceAttributeMatrixName)
-  , m_SharedVerticesName(sharedVerticesName)
-  , m_SharedFacesName(sharedFacesName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
+  , m_FaceDataName(std::move(faceAttributeMatrixName))
+  , m_SharedVerticesName(std::move(sharedVerticesName))
+  , m_SharedFacesName(std::move(sharedFacesName))
   {
   }
 
-  CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& faceAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, std::string vertexAttributeMatrixName,
+                         std::string faceAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
-  , m_VertexDataName(vertexAttributeMatrixName)
-  , m_FaceDataName(faceAttributeMatrixName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
+  , m_FaceDataName(std::move(faceAttributeMatrixName))
   , m_SharedVerticesName(inputVerticesArrayPath.getTargetName())
   , m_SharedFacesName(inputFacesArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)

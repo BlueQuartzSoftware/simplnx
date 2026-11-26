@@ -57,7 +57,6 @@ LabelTriangleGeometry::LabelTriangleGeometry(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-LabelTriangleGeometry::~LabelTriangleGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& LabelTriangleGeometry::getCancel()

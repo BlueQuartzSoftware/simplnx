@@ -6,14 +6,14 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                   AllowedComponentShapes requiredComps)
+ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
-, m_DefaultValue(defaultValue)
-, m_RequiredComponentShapes(requiredComps)
+, m_DefaultValue(std::move(defaultValue))
+, m_RequiredComponentShapes(std::move(requiredComps))
 {
 }
 
@@ -40,7 +40,7 @@ nlohmann::json ArrayThresholdsParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
   auto thresholds = ArrayThresholdSet::FromJson(json);
@@ -142,7 +142,7 @@ Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStruct
   return {};
 }
 
-Result<std::any> ArrayThresholdsParameter::resolve(DataStructure&  /*dataStructure*/, const std::any&  /*value*/) const
+Result<std::any> ArrayThresholdsParameter::resolve(DataStructure& /*dataStructure*/, const std::any& /*value*/) const
 {
   return {};
 }

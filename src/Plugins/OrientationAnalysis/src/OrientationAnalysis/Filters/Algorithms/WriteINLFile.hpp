@@ -52,7 +52,7 @@ public:
    */
   WriteINLFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteINLFileInputValues* inputValues);
 
-  ~WriteINLFile() noexcept;
+  ~WriteINLFile() noexcept = default;
 
   WriteINLFile(const WriteINLFile&) = delete;
   WriteINLFile(WriteINLFile&&) noexcept = delete;

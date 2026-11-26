@@ -50,7 +50,7 @@ public:
    */
   ComputeBoundaryElementFractions(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                   ComputeBoundaryElementFractionsInputValues* inputValues);
-  ~ComputeBoundaryElementFractions() noexcept;
+  ~ComputeBoundaryElementFractions() noexcept = default;
 
   ComputeBoundaryElementFractions(const ComputeBoundaryElementFractions&) = delete;
   ComputeBoundaryElementFractions(ComputeBoundaryElementFractions&&) noexcept = delete;

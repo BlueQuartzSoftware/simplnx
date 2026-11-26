@@ -395,7 +395,6 @@ SharedFeatureFace::SharedFeatureFace(DataStructure& dataStructure, const IFilter
 }
 
 // -----------------------------------------------------------------------------
-SharedFeatureFace::~SharedFeatureFace() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& SharedFeatureFace::getCancel()

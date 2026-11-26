@@ -21,15 +21,15 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ReadGrainMapper3DInputValues
 {
   std::filesystem::path InputFile;
-  bool ReadDctData;
+  bool ReadDctData{};
   DataPath DctImageGeometryPath;
   std::string DctCellAttributeMatrixName;
   std::string DctCellEnsembleAttributeMatrixName;
-  bool ConvertPhaseData;
-  bool ConvertOrientationData;
-  bool ConvertIPFColors;
+  bool ConvertPhaseData{};
+  bool ConvertOrientationData{};
+  bool ConvertIPFColors{};
 
-  bool ReadAbsorptionData;
+  bool ReadAbsorptionData{};
   DataPath AbsorptionImageGeometryPath;
   std::string AbsorptionCellAttributeMatrixName;
 };

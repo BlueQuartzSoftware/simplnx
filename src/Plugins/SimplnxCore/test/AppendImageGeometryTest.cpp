@@ -213,7 +213,7 @@ void appendGeometries(DataStructure& dataStructure, const DataPath& destinationP
 
   if(newGeometryPathOpt.has_value())
   {
-    auto newGeometryPath = newGeometryPathOpt.value();
+    const auto& newGeometryPath = newGeometryPathOpt.value();
     // rename the cell data attribute matrix for easier comparison with exemplar data
     RenameDataObjectFilter renameFilter;
     Arguments renameArgs;

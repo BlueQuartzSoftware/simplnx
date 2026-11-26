@@ -43,7 +43,7 @@ public:
   /**
    * @brief Destroys the feature-face misorientation executor.
    */
-  ~ComputeFeatureFaceMisorientation() noexcept;
+  ~ComputeFeatureFaceMisorientation() noexcept = default;
 
   ComputeFeatureFaceMisorientation(const ComputeFeatureFaceMisorientation&) = delete;
   ComputeFeatureFaceMisorientation(ComputeFeatureFaceMisorientation&&) noexcept = delete;

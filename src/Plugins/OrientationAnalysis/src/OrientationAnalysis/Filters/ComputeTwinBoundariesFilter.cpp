@@ -106,8 +106,8 @@ IFilter::UniquePointer ComputeTwinBoundariesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFindCoherence = filterArgs.value<BoolParameter::ValueType>(k_FindCoherence_Key);
   auto pBoundariesArrayTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_BoundariesArrayType_Key);
@@ -148,12 +148,12 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
       {-93214, "Finding the twin boundaries requires Cubic-Low m-3 or Cubic-High m-3m type crystal structures. Make sure your data is of one of these two types."});
 
   // Return both the resultOutputActions via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeTwinBoundariesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeTwinBoundariesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeTwinBoundariesInputValues inputValues;
 

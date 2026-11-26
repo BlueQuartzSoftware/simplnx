@@ -94,8 +94,8 @@ IFilter::UniquePointer ThresholdImageFilter::clone() const
   return std::make_unique<ThresholdImageFilter>();
 }
 
-IFilter::PreflightResult ThresholdImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ThresholdImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -104,11 +104,11 @@ IFilter::PreflightResult ThresholdImageFilter::preflightImpl(const DataStructure
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
-Result<> ThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -118,7 +118,7 @@ Result<> ThresholdImageFilter::executeImpl(DataStructure& dataStructure, const A
   auto upper = filterArgs.value<float64>(k_Upper_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
 
-  const ThresholdOperation operation{lower, upper, outsideValue};
+  const ThresholdOperation operation{.lower = lower, .upper = upper, .outsideValue = outsideValue};
 
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }

@@ -78,8 +78,8 @@ IFilter::UniquePointer RodriguesConvertorFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pRodriguesDataArrayPathValue = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
   auto pOutputDataArrayPathValue = pRodriguesDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
@@ -102,12 +102,12 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RodriguesConvertorInputValues inputValues;
 

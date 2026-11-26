@@ -30,23 +30,23 @@ class CreateGeometry1DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& edgeAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedEdgesName)
+  CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, std::string vertexAttributeMatrixName, std::string edgeAttributeMatrixName, std::string sharedVerticesName,
+                         std::string sharedEdgesName)
   : IDataCreationAction(geometryPath)
   , m_NumEdges(numEdges)
   , m_NumVertices(numVertices)
-  , m_VertexDataName(vertexAttributeMatrixName)
-  , m_EdgeDataName(edgeAttributeMatrixName)
-  , m_SharedVerticesName(sharedVerticesName)
-  , m_SharedEdgesName(sharedEdgesName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
+  , m_EdgeDataName(std::move(edgeAttributeMatrixName))
+  , m_SharedVerticesName(std::move(sharedVerticesName))
+  , m_SharedEdgesName(std::move(sharedEdgesName))
   {
   }
 
-  CreateGeometry1DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputEdgesArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& edgeAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateGeometry1DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputEdgesArrayPath, std::string vertexAttributeMatrixName,
+                         std::string edgeAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
-  , m_VertexDataName(vertexAttributeMatrixName)
-  , m_EdgeDataName(edgeAttributeMatrixName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
+  , m_EdgeDataName(std::move(edgeAttributeMatrixName))
   , m_SharedVerticesName(inputVerticesArrayPath.getTargetName())
   , m_SharedEdgesName(inputEdgesArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)

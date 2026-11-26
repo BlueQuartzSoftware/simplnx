@@ -80,8 +80,8 @@ IFilter::UniquePointer FillBadDataFilter::clone() const
   return std::make_unique<FillBadDataFilter>();
 }
 
-IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                          const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pMinAllowedDefectSizeValue = filterArgs.value<int32>(k_MinAllowedDefectSize_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -93,7 +93,7 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, featureIdsPath, -16501, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   if(storeAsNewPhase)
@@ -101,14 +101,14 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
     auto phasesResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, cellPhasesPath, -16502, "Cell Phases");
     if(phasesResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(phasesResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(phasesResult), {})};
     }
   }
 
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -16503, "Attribute Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
@@ -126,18 +126,18 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
 
   std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
                                            "level data should be rerun to ensure accurate final results from your pipeline.";
-  preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
-  resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
+  preflightUpdatedValues.emplace_back(PreflightValue{.name = "Feature Data Modification Warning", .value = featureModificationWarning});
+  resultOutputActions.warnings().push_back(Warning{.code = -14600, .message = featureModificationWarning});
 
   // Report arrays that the filter modifies in place.
   // Cell Data arrays are modified.
   AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, ignoredDataArrayPaths);
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
-Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   FillBadDataInputValues inputValues;
 

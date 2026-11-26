@@ -108,8 +108,8 @@ IFilter::UniquePointer FlyingEdges3DFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                            const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -118,13 +118,13 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
   if(dataStructure.getDataAs<IDataArray>(pContouringArrayPath) == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(k_InvalidInputArrayError,
-                                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pContouringArrayPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pContouringArrayPath.toString()))};
   }
 
   if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, k_CellTupleCountError); result.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -141,12 +141,12 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{static_cast<usize>(1)}, std::vector<usize>{static_cast<usize>(3)}, vertexNormalsPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto inputValues = CreateInputValues(filterArgs);
 

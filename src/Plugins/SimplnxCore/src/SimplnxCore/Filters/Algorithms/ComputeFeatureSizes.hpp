@@ -30,7 +30,7 @@ struct SIMPLNXCORE_EXPORT ComputeFeatureSizesInputValues
   ArraySelectionParameter::ValueType FeatureIdsPath;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
   DataObjectNameParameter::ValueType NumElementsName;
-  BoolParameter::ValueType SaveElementSizes; ///< True to retain generated geometry element sizes.
+  BoolParameter::ValueType SaveElementSizes{}; ///< True to retain generated geometry element sizes.
   DataObjectNameParameter::ValueType VolumesName;
 };
 
@@ -66,7 +66,7 @@ public:
   /**
    * @brief Destroys the feature-size dispatcher.
    */
-  ~ComputeFeatureSizes() noexcept;
+  ~ComputeFeatureSizes() noexcept = default;
 
   ComputeFeatureSizes(const ComputeFeatureSizes&) = delete;
   ComputeFeatureSizes(ComputeFeatureSizes&&) noexcept = delete;

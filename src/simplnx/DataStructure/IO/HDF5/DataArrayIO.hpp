@@ -164,7 +164,7 @@ public:
     {
       return ConvertResult(std::move(typeResult));
     }
-    const auto type = std::move(typeResult.value());
+    const auto type = typeResult.value();
     switch(type)
     {
     case DataType::float32:

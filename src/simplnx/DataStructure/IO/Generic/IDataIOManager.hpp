@@ -17,6 +17,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nx::core::HDF5
@@ -132,7 +133,7 @@ public:
    * @param typeName DataObject factory identifier.
    * @return Shared factory, or null when typeName is not registered.
    */
-  factory_ptr getFactory(factory_id_type typeName) const;
+  factory_ptr getFactory(const factory_id_type& typeName) const;
 
   /**
    * @brief Returns a registered factory cast to a selected type.

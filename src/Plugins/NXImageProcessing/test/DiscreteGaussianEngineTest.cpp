@@ -12,6 +12,7 @@
 #include <limits>
 #include <numeric>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -25,8 +26,8 @@ usize FlatIndex(usize x, usize y, usize z, usize dimX, usize dimY)
 }
 
 template <class T>
-std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, std::vector<float64> variance, uint32 maxKernelWidth, std::vector<float64> maxError, bool useSpacing, FloatVec3 spacing,
-                     const DiscreteGaussianPassOptions& options = {})
+std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, const std::vector<float64>& variance, uint32 maxKernelWidth, const std::vector<float64>& maxError, bool useSpacing,
+                     FloatVec3 spacing, const DiscreteGaussianPassOptions& options = {})
 {
   DataStore<T> inStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   for(usize i = 0; i < field.size(); ++i)
@@ -36,7 +37,7 @@ std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, 
   DataStore<T> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ApplyDiscreteGaussian<T>(inStore, outStore, SizeVec3{dx, dy, dz}, variance, maxKernelWidth, maxError, useSpacing, spacing, shouldCancel, messageHandler, options);
+  const Result<> r = ApplyDiscreteGaussian<T>(inStore, outStore, SizeVec3{dx, dy, dz}, variance, maxKernelWidth, maxError, useSpacing, std::move(spacing), shouldCancel, messageHandler, options);
   REQUIRE(r.valid());
   std::vector<T> out(field.size());
   for(usize i = 0; i < out.size(); ++i)

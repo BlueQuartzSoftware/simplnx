@@ -31,23 +31,23 @@ class CreateGeometry3DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  CreateGeometry3DAction(const DataPath& geometryPath, size_t numCells, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& cellAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedCellsName)
+  CreateGeometry3DAction(const DataPath& geometryPath, size_t numCells, size_t numVertices, std::string vertexAttributeMatrixName, std::string cellAttributeMatrixName, std::string sharedVerticesName,
+                         std::string sharedCellsName)
   : IDataCreationAction(geometryPath)
   , m_NumCells(numCells)
   , m_NumVertices(numVertices)
-  , m_VertexDataName(vertexAttributeMatrixName)
-  , m_CellDataName(cellAttributeMatrixName)
-  , m_SharedVerticesName(sharedVerticesName)
-  , m_SharedCellsName(sharedCellsName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
+  , m_CellDataName(std::move(cellAttributeMatrixName))
+  , m_SharedVerticesName(std::move(sharedVerticesName))
+  , m_SharedCellsName(std::move(sharedCellsName))
   {
   }
 
-  CreateGeometry3DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputCellsArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateGeometry3DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputCellsArrayPath, std::string vertexAttributeMatrixName,
+                         std::string cellAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
-  , m_VertexDataName(vertexAttributeMatrixName)
-  , m_CellDataName(cellAttributeMatrixName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
+  , m_CellDataName(std::move(cellAttributeMatrixName))
   , m_SharedVerticesName(inputVerticesArrayPath.getTargetName())
   , m_SharedCellsName(inputCellsArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)

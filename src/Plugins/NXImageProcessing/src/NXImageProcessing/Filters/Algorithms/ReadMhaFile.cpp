@@ -226,8 +226,6 @@ ReadMhaFile::ReadMhaFile(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-ReadMhaFile::~ReadMhaFile() noexcept = default;
-
 Result<> ReadMhaFile::operator()()
 {
   auto metadataResult = mhd::ReadMetaImageHeader(m_InputValues->InputFilePath);

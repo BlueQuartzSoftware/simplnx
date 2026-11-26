@@ -25,8 +25,8 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
 {
   int ScalarTolerance = 0;
-  bool UseMask;
-  bool RandomizeFeatureIds;
+  bool UseMask{};
+  bool RandomizeFeatureIds{};
   bool IsPeriodic = false;
   SegmentFeatures::NeighborScheme NeighborScheme;
   DataPath ImageGeometryPath;

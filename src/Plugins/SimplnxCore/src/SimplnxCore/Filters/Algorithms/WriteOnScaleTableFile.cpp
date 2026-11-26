@@ -287,8 +287,6 @@ WriteOnScaleTableFile::WriteOnScaleTableFile(DataStructure& dataStructure, const
 {
 }
 
-WriteOnScaleTableFile::~WriteOnScaleTableFile() noexcept = default;
-
 Result<> WriteOnScaleTableFile::operator()()
 {
   const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->InputGeometryPath);

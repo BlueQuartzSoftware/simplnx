@@ -98,8 +98,8 @@ IFilter::UniquePointer ComputeFaceIPFColoringFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pSurfaceMeshFaceNormalsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
@@ -117,7 +117,8 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(triangleArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto faceLabels = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
@@ -131,7 +132,8 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   tupleValidityCheck = dataStructure.validateNumberOfTuples(imageArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pFirstFaceIPFColorsArrayNameValue);
@@ -142,12 +144,12 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   auto secondAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(secondAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFaceIPFColoringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFaceIPFColoringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFaceIPFColoringInputValues inputValues;
 

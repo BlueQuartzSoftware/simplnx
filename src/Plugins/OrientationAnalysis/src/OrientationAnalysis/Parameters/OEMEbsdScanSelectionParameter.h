@@ -35,7 +35,7 @@ public:
   {
     fs::path inputFilePath;
     uint32_t stackingOrder = RefFrameZDir::k_LowtoHigh;
-    std::list<std::string> scanNames = {};
+    std::list<std::string> scanNames;
   };
 
   using ExtensionsType = std::unordered_set<std::string>;
@@ -55,9 +55,9 @@ public:
    * @param helpText The help text that should be displayed to a user
    * @param defaultValue The default value for the parameter
    */
-  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
                                 /* const AllowedManufacturers& allowedManufacturers, */
-                                const EbsdReaderType& readerType, const ExtensionsType& extensionsType);
+                                const EbsdReaderType& readerType, ExtensionsType extensionsType);
 
   ~OEMEbsdScanSelectionParameter() override = default;
 
@@ -142,7 +142,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
-  ExtensionsType m_AvailableExtensions = {};
+  ExtensionsType m_AvailableExtensions;
   EbsdReaderType m_ReaderType = {};
 };
 } // namespace nx::core

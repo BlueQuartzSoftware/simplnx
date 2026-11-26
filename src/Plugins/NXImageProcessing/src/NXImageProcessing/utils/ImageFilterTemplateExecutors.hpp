@@ -14,6 +14,7 @@
 #include <array>
 #include <atomic>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -94,7 +95,7 @@ struct BoxNeighborhoodExecuteFn
   const DataPath& inputArrayPath;
   const DataPath& outputArrayPath;
   SizeVec3 dims;
-  std::array<usize, 3> radius;
+  std::array<usize, 3> radius{};
   const OperationT& operation;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
@@ -194,7 +195,7 @@ struct AxisProjectionExecuteFn
   const DataPath& inputArrayPath;
   const DataPath& outputArrayPath;
   SizeVec3 dims;
-  usize projDim;
+  usize projDim{};
   const ReduceFn& reduce;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
@@ -227,8 +228,8 @@ struct FiniteDifferenceExecuteFn
   SizeVec3 dims;
   FloatVec3 spacing;
   F fn;
-  float64 timeStep;
-  uint32 numberOfIterations;
+  float64 timeStep{};
+  uint32 numberOfIterations{};
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
 
@@ -392,7 +393,7 @@ Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::FiniteDifferenceExecuteFn<F> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler};
+  detail::FiniteDifferenceExecuteFn<F> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, std::move(fn), timeStep, numberOfIterations, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

@@ -24,8 +24,6 @@ QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMes
 {
 }
 
-QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
-
 Result<> QuickSurfaceMesh::operator()()
 {
   std::vector<const IArray*> targets;

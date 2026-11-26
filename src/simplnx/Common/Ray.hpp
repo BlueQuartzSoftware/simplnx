@@ -30,7 +30,6 @@ public:
    */
   Ray()
   : m_Origin()
-  , m_Angle()
   , m_Length(0)
   {
   }
@@ -41,8 +40,8 @@ public:
    * @param ang
    * @param length
    */
-  Ray(const PointType& origin, ZXZEulerType ang, LengthType length)
-  : m_Origin(origin)
+  Ray(PointType origin, ZXZEulerType ang, LengthType length)
+  : m_Origin(std::move(origin))
   , m_Angle(std::move(ang))
   , m_Length(length)
   {
@@ -150,7 +149,7 @@ public:
    * @param length
    * @return PointType
    */
-  PointType getPointAtDist(LengthType  /*length*/) const
+  PointType getPointAtDist(LengthType /*length*/) const
   {
     throw std::runtime_error("Ray.hpp: PointType getPointAtDist(LengthType length) const is not implemented.");
   }
@@ -243,8 +242,8 @@ public:
    */
   CachedRay(const typename Ray<T>::PointType& origin, typename Ray<T>::ZXZEulerType ang, typename Ray<T>::LengthType length)
   : Ray<T>(origin, std::move(ang), length)
+  , m_Endpoint(this->calculateEndpoint())
   {
-    m_Endpoint = this->calculateEndpoint();
   }
 
   /**

@@ -85,8 +85,8 @@ IFilter::UniquePointer EbsdToH5EbsdFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                           const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto generatedFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto referenceFrame = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceFrame_Key);
@@ -144,12 +144,12 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
   preflightUpdatedValues.push_back({"Reference Type Notes", description.str()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   EbsdToH5EbsdInputValues inputValues;
 

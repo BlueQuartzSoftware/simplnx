@@ -121,7 +121,7 @@ public:
    *                       Must outlive the call to `operator()`.
    */
   ReadNIfTIFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadNIfTIFileInputValues* inputValues);
-  ~ReadNIfTIFile() noexcept;
+  ~ReadNIfTIFile() noexcept = default;
 
   ReadNIfTIFile(const ReadNIfTIFile&) = delete;
   ReadNIfTIFile(ReadNIfTIFile&&) noexcept = delete;

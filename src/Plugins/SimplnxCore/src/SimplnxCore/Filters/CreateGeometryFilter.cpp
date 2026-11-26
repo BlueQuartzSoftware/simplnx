@@ -177,8 +177,8 @@ IFilter::UniquePointer CreateGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pGeometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
@@ -216,12 +216,12 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
     if(spacingValidation.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
     }
     auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
     if(originValidation.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(originValidation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(originValidation))};
     }
 
     std::stringstream ss;
@@ -257,9 +257,10 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     usize zTuples = zBounds.getNumberOfTuples();
     if(xTuples < 2 || yTuples < 2 || zTuples < 2)
     {
-      return {nonstd::make_unexpected(
-          std::vector<Error>{Error{-9844, fmt::format("One of the bounds arrays has a size less than two; all sizes must be at least two\nX Bounds Size: {}\nY Bounds Size: {}\nZ Bounds Size: {}\n",
-                                                      xBounds.getNumberOfTuples(), yBounds.getNumberOfTuples(), zBounds.getNumberOfTuples())}})};
+      return {nonstd::make_unexpected(std::vector<Error>{
+          Error{.code = -9844,
+                .message = fmt::format("One of the bounds arrays has a size less than two; all sizes must be at least two\nX Bounds Size: {}\nY Bounds Size: {}\nZ Bounds Size: {}\n",
+                                       xBounds.getNumberOfTuples(), yBounds.getNumberOfTuples(), zBounds.getNumberOfTuples())}})};
     }
 
     auto createRectGridGeometryAction = std::make_unique<CreateRectGridGeometryAction>(pGeometryPath, pXBoundsPath, pYBoundsPath, pZBoundsPath, pCellAMName, ArrayHandlingType{pArrayHandling});
@@ -308,12 +309,12 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CreateGeometryInputValues inputValues;
   inputValues.GeometryTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);

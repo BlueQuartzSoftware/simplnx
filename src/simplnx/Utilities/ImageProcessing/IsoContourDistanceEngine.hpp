@@ -26,6 +26,7 @@
 #include <new>
 #include <optional>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -138,7 +139,7 @@ inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3& dims, uint64 grantB
   const usize usefulBytes = dims[2] * (planeInputBytes + planeOutputBytes);
   if(grantBytes >= usefulBytes)
   {
-    return {dims[2], dims[2], dims[2] * planeInputBytes, dims[2] * planeOutputBytes};
+    return {.corePlanes = dims[2], .inputPlanes = dims[2], .inputBytes = dims[2] * planeInputBytes, .outputBytes = dims[2] * planeOutputBytes};
   }
 
   const uint64 haloBytes = uint64{4} * planeInputBytes;
@@ -146,7 +147,7 @@ inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3& dims, uint64 grantB
   const usize quotient = grantBytes > haloBytes ? static_cast<usize>((grantBytes - haloBytes) / bytesPerCorePlane) : 0;
   const usize corePlanes = std::clamp(std::max<usize>(1, quotient), usize{1}, dims[2] - 1);
   const usize inputPlanes = std::min(dims[2], corePlanes + 4);
-  return {corePlanes, inputPlanes, inputPlanes * planeInputBytes, corePlanes * planeOutputBytes};
+  return {.corePlanes = corePlanes, .inputPlanes = inputPlanes, .inputBytes = inputPlanes * planeInputBytes, .outputBytes = corePlanes * planeOutputBytes};
 }
 
 /** @brief Gives the maximum value count in one direct-route plane group. */
@@ -327,10 +328,10 @@ public:
                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_IsoContour2DResidentLimit)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_LevelSet(static_cast<RealT>(levelSetValue))
   , m_FarValue(static_cast<float32>(farValue))
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   , m_ResidentLimit2D(residentLimit2D)
@@ -1026,7 +1027,7 @@ template <class T>
 Result<> ApplyIsoContourDistance(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, float64 levelSetValue, float64 farValue, FloatVec3 spacing,
                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  IsoContourDistance<T> engine(inStore, outStore, dims, levelSetValue, farValue, spacing, shouldCancel, messageHandler);
+  IsoContourDistance<T> engine(inStore, outStore, dims, levelSetValue, farValue, std::move(spacing), shouldCancel, messageHandler);
   return engine();
 }
 } // namespace nx::core::ImageProcessing

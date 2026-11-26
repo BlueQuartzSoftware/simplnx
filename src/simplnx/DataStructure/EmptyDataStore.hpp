@@ -14,6 +14,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -234,7 +235,7 @@ public:
    * @return Does not return.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  value_type getValue(usize  /*index*/) const override
+  value_type getValue(usize /*index*/) const override
   {
     throw std::runtime_error("EmptyDataStore::getValue() is not implemented");
   }
@@ -245,7 +246,7 @@ public:
    * @param value Value to store.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void setValue(usize  /*index*/, value_type  /*value*/) override
+  void setValue(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::setValue() is not implemented");
   }
@@ -313,7 +314,7 @@ public:
    * @return Does not return.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  value_type at(usize  /*index*/) const override
+  value_type at(usize /*index*/) const override
   {
     throw std::runtime_error("EmptyDataStore::at() is not implemented");
   }
@@ -324,7 +325,7 @@ public:
    * @param value Value to add.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void add(usize  /*index*/, value_type  /*value*/) override
+  void add(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::add() is not implemented");
   }
@@ -335,7 +336,7 @@ public:
    * @param value Value to subtract.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void sub(usize  /*index*/, value_type  /*value*/) override
+  void sub(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::sub() is not implemented");
   }
@@ -346,7 +347,7 @@ public:
    * @param value Multiplier.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void mul(usize  /*index*/, value_type  /*value*/) override
+  void mul(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::mul() is not implemented");
   }
@@ -357,7 +358,7 @@ public:
    * @param value Divisor.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void div(usize  /*index*/, value_type  /*value*/) override
+  void div(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::div() is not implemented");
   }
@@ -368,7 +369,7 @@ public:
    * @param value Divisor.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void rem(usize  /*index*/, value_type  /*value*/) override
+  void rem(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::rem() is not implemented");
   }
@@ -379,7 +380,7 @@ public:
    * @param value Operand.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void bitwiseAND(usize  /*index*/, value_type  /*value*/) override
+  void bitwiseAND(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::bitwiseAND() is not implemented");
   }
@@ -390,7 +391,7 @@ public:
    * @param value Operand.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void bitwiseOR(usize  /*index*/, value_type  /*value*/) override
+  void bitwiseOR(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::bitwiseOR() is not implemented");
   }
@@ -401,7 +402,7 @@ public:
    * @param value Operand.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void bitwiseXOR(usize  /*index*/, value_type  /*value*/) override
+  void bitwiseXOR(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::bitwiseXOR() is not implemented");
   }
@@ -412,7 +413,7 @@ public:
    * @param value Shift count.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void bitwiseLShift(usize  /*index*/, value_type  /*value*/) override
+  void bitwiseLShift(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::bitwiseLShift() is not implemented");
   }
@@ -423,7 +424,7 @@ public:
    * @param value Shift count.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void bitwiseRShift(usize  /*index*/, value_type  /*value*/) override
+  void bitwiseRShift(usize /*index*/, value_type /*value*/) override
   {
     throw std::runtime_error("EmptyDataStore::bitwiseRShift() is not implemented");
   }
@@ -433,7 +434,7 @@ public:
    * @param index Flat value index.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void byteSwap(usize  /*index*/) override
+  void byteSwap(usize /*index*/) override
   {
     throw std::runtime_error("EmptyDataStore::byteSwap() is not implemented");
   }
@@ -444,7 +445,7 @@ public:
    * @param index2 Second flat value index.
    * @throws std::runtime_error Always, because this store has no values.
    */
-  void swap(usize  /*index1*/, usize  /*index2*/) override
+  void swap(usize /*index1*/, usize /*index2*/) override
   {
     throw std::runtime_error("EmptyDataStore::swap() is not implemented");
   }
@@ -491,7 +492,7 @@ public:
    * @param outputStream Destination stream.
    * @return Error code and message because this store has no values.
    */
-  std::pair<int32, std::string> writeBinaryFile(std::ostream&  /*outputStream*/) const override
+  std::pair<int32, std::string> writeBinaryFile(std::ostream& /*outputStream*/) const override
   {
     return {-10175, fmt::format("EmptyDataStore cannot read or write files")};
   }
@@ -501,7 +502,7 @@ public:
    * @param dataset HDF5 dataset to read.
    * @return Error because this store has no values.
    */
-  Result<> readHdf5(const HDF5::DatasetIO&  /*dataset*/) override
+  Result<> readHdf5(const HDF5::DatasetIO& /*dataset*/) override
   {
     return MakeErrorResult(-42350, "Cannot read data into an EmptyDataStore");
   }
@@ -511,7 +512,7 @@ public:
    * @param dataset HDF5 dataset to write.
    * @return Error because this store has no values.
    */
-  Result<> writeHdf5(HDF5::DatasetIO&  /*dataset*/) const override
+  Result<> writeHdf5(HDF5::DatasetIO& /*dataset*/) const override
   {
     return MakeErrorResult(-42350, "Cannot write data from an EmptyDataStore");
   }
@@ -524,9 +525,9 @@ private:
   {
   };
 
-  EmptyDataStore(ValidatedConstruction, const ShapeType& tupleShape, const ShapeType& componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
-  : m_ComponentShape(componentShape)
-  , m_TupleShape(tupleShape)
+  EmptyDataStore(ValidatedConstruction, ShapeType tupleShape, ShapeType componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
+  : m_ComponentShape(std::move(componentShape))
+  , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(componentCount)
   , m_NumTuples(tupleCount)
   , m_DataFormat(std::move(dataFormat))

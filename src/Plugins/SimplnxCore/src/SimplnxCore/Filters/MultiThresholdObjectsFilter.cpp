@@ -1,5 +1,7 @@
 #include "MultiThresholdObjectsFilter.hpp"
 
+#include <cmath>
+
 #include "SimplnxCore/Filters/Algorithms/MultiThresholdObjects.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
@@ -52,8 +54,8 @@ struct CheckCustomValueInBounds
   template <typename T>
   Result<> operator()(float64 customValue)
   {
-    float64 minValue;
-    float64 maxValue;
+    float64 minValue = NAN;
+    float64 maxValue = NAN;
     if constexpr(std::is_floating_point_v<T>)
     {
       // Floating Point Types
@@ -141,8 +143,8 @@ IFilter::UniquePointer MultiThresholdObjectsFilter::clone() const
 }
 
 // -----------------------------------------------------------------------------
-IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto thresholdsObject = filterArgs.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
   auto maskArrayName = filterArgs.value<std::string>(k_CreatedDataName_Key);
@@ -178,7 +180,7 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
   Result<> componentIndicesResult = CheckComponentIndicesInThresholds(thresholdsObject, dataStructure);
   if(componentIndicesResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(componentIndicesResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentIndicesResult))};
   }
 
   if(maskArrayType == DataType::boolean)
@@ -225,8 +227,8 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
 }
 
 // -----------------------------------------------------------------------------
-Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   MultiThresholdObjectsInputValues inputValues;
   inputValues.ArrayThresholdsObject = filterArgs.value<ArrayThresholdsParameter::ValueType>(k_ArrayThresholdsObject_Key);

@@ -93,6 +93,7 @@
 #include <string_view>
 
 #include <filesystem>
+#include <utility>
 
 using namespace nx::core;
 using namespace nx::core::NxPybind;
@@ -114,7 +115,7 @@ struct fmt::formatter<nx::core::Error>
    * @param ctx Format-string parse context.
    * @return Iterator at the start of the unconsumed specification.
    */
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
@@ -125,7 +126,7 @@ struct fmt::formatter<nx::core::Error>
    * @param ctx Destination format context.
    * @return Iterator after the formatted text.
    */
-  format_context::iterator format(const nx::core::Error& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::Error& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "Error(code={}, message='{}')", value.code, value.message);
   }
@@ -190,7 +191,7 @@ struct fmt::formatter<nx::core::Warning>
    * @param ctx Format-string parse context.
    * @return Iterator at the start of the unconsumed specification.
    */
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
@@ -201,7 +202,7 @@ struct fmt::formatter<nx::core::Warning>
    * @param ctx Destination format context.
    * @return Iterator after the formatted text.
    */
-  format_context::iterator format(const nx::core::Warning& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::Warning& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "Warning(code={}, message='{}')", value.code, value.message);
   }
@@ -291,7 +292,7 @@ static void BindVec2(py::module_& m, const char* name)
   py::class_<Vec>(m, name)
       .def(py::init<>())
       .def(py::init<T, T>())
-      .def(py::init([](py::sequence s) {
+      .def(py::init([](const py::sequence& s) {
         if(py::len(s) != 2)
           throw py::type_error("Expected length-2 sequence");
         return Vec{s[0].cast<T>(), s[1].cast<T>()};
@@ -333,7 +334,7 @@ auto BindDataStore(py::handle scope, const char* name)
 {
   py::class_<DataStore<T>, AbstractDataStore<T>, std::shared_ptr<DataStore<T>>> dataStore(scope, name);
   dataStore.def(py::init<const ShapeType&, const ShapeType&, std::optional<T>>(), "tuple_shape"_a, "component_shape"_a, "init_value"_a = std::optional<T>{});
-  dataStore.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  dataStore.def_property_readonly_static("dtype", []([[maybe_unused]] const py::object& self) { return py::dtype::of<T>(); });
   dataStore.def(
       "npview",
       [](DataStore<T>& dataStore_) {
@@ -367,7 +368,7 @@ template <class T>
 auto BindDataArray(py::handle scope, const char* name)
 {
   py::class_<DataArray<T>, IDataArray, std::shared_ptr<DataArray<T>>> dataArray(scope, name);
-  dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] const py::object& self) { return py::dtype::of<T>(); });
   dataArray.def(
       "npview",
       [](DataArray<T>& dataArray_) {
@@ -419,7 +420,7 @@ auto BindNeighborList(py::handle scope, const char* name)
   using NeighborListType = NeighborList<T>;
 
   auto neighborList = py::class_<NeighborListType, INeighborList, std::shared_ptr<NeighborListType>>(scope, name);
-  neighborList.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  neighborList.def_property_readonly_static("dtype", []([[maybe_unused]] const py::object& self) { return py::dtype::of<T>(); });
   neighborList.def("get_list", &NeighborListType::getList, "grain_id"_a);
   neighborList.def("set_list", py::overload_cast<int32, const typename NeighborListType::VectorType&>(&NeighborListType::setList), "grain_id"_a, "neighbor_list"_a);
   neighborList.def(
@@ -682,7 +683,7 @@ public:
    * @param target Unused Python reload target argument.
    * @return An importlib specification, or Python None when fullname is not registered.
    */
-  py::object findSpec(const std::string& fullname, py::object  /*path*/, py::object  /*target*/) const
+  py::object findSpec(const std::string& fullname, const py::object& /*path*/, const py::object& /*target*/) const
   {
     if(!containsModule(fullname))
     {
@@ -1001,8 +1002,8 @@ PYBIND11_MODULE(simplnx, mod)
   parameters.def("insert", py::overload_cast<Parameters::Separator>(&Parameters::insert));
   parameters.def("insert_linkable_parameter", &PyInsertLinkableParameter<BoolParameter>);
   parameters.def("insert_linkable_parameter", &PyInsertLinkableParameter<ChoicesParameter>);
-  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, BoolParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
-  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, ChoicesParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
+  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, BoolParameter::ValueType value) { self.linkParameters(std::move(groupKey), childKey, value); });
+  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, ChoicesParameter::ValueType value) { self.linkParameters(std::move(groupKey), childKey, value); });
   parameters.def("__getitem__", [](Parameters& self, std::string_view key) { return self.at(key).get(); }, py::return_value_policy::reference_internal);
 
   py::class_<IArrayThreshold, std::shared_ptr<IArrayThreshold>> iArrayThreshold(mod, "IArrayThreshold");
@@ -1032,7 +1033,7 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<ArrayThresholdSet, IArrayThreshold, std::shared_ptr<ArrayThresholdSet>> arrayThresholdSet(mod, "ArrayThresholdSet");
   arrayThresholdSet.def(py::init<>());
   arrayThresholdSet.def_property("thresholds", &ArrayThresholdSet::getArrayThresholds, &ArrayThresholdSet::setArrayThresholds);
-  arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet&  /*self*/) { return "ArrayThresholdSet()"; });
+  arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet& /*self*/) { return "ArrayThresholdSet()"; });
 
   py::class_<ReadCSVData> readCSVData(mod, "ReadCSVDataParameter");
 
@@ -1051,7 +1052,7 @@ PYBIND11_MODULE(simplnx, mod)
   readCSVData.def_readwrite("tuple_dims", &ReadCSVData::tupleDims);
   readCSVData.def_readwrite("delimiters", &ReadCSVData::delimiters);
   readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutiveDelimiters);
-  readCSVData.def("__repr__", [](const ReadCSVData&  /*self*/) { return "ReadCSVDataParameter()"; });
+  readCSVData.def("__repr__", [](const ReadCSVData& /*self*/) { return "ReadCSVDataParameter()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
@@ -1599,7 +1600,7 @@ PYBIND11_MODULE(simplnx, mod)
   importHdf5DatasetInfo.def_readwrite("parent", &ReadHDF5DatasetParameter::ValueType::parent);
   importHdf5DatasetInfo.def_readwrite("input_file", &ReadHDF5DatasetParameter::ValueType::inputFile);
   importHdf5DatasetInfo.def_readwrite("datasets", &ReadHDF5DatasetParameter::ValueType::datasets);
-  importHdf5DatasetInfo.def("__repr__", [](const ReadHDF5DatasetParameter::ValueType&  /*self*/) { return "ReadHDF5DatasetParameter.ValueType()"; });
+  importHdf5DatasetInfo.def("__repr__", [](const ReadHDF5DatasetParameter::ValueType& /*self*/) { return "ReadHDF5DatasetParameter.ValueType()"; });
 
   py::enum_<GeneratedFileListParameter::Ordering> generatedFileListOrdering(generatedFileListParameter, "Ordering");
   generatedFileListOrdering.value("LowToHigh", GeneratedFileListParameter::Ordering::LowToHigh);
@@ -1629,7 +1630,7 @@ PYBIND11_MODULE(simplnx, mod)
   dream3dImportData.def_readwrite("file_path", &Dream3dImportParameter::ImportData::FilePath);
   dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::DataPaths);
   dream3dImportData.def_readwrite("path_import_policy", &Dream3dImportParameter::ImportData::ImportPolicy);
-  dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData&  /*self*/) { return "Dream3dImportParameter.ImportData()"; });
+  dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData& /*self*/) { return "Dream3dImportParameter.ImportData()"; });
 
   auto arraySelectionParameterDataLocation = py::enum_<ArraySelectionParameter::DataLocation>(arraySelectionParameter, "DataLocation");
   arraySelectionParameterDataLocation.value("Any", ArraySelectionParameter::DataLocation::Any);
@@ -1779,15 +1780,17 @@ PYBIND11_MODULE(simplnx, mod)
 
   filterMessage.def(py::init<>());
   filterMessage.def(py::init<IFilter::Message::Type, const std::string&>());
-  filterMessage.def(py::init([](IFilter::Message::Type type, std::string message, int32 progress) { return IFilter::Message{type, std::move(message), progress}; }), "type"_a, "message"_a,
-                    "progress"_a);
+  filterMessage.def(py::init([](IFilter::Message::Type type, std::string message, int32 progress) { return IFilter::Message{.type = type, .message = std::move(message), .progress = progress}; }),
+                    "type"_a, "message"_a, "progress"_a);
   filterMessage.def_readwrite("type", &IFilter::Message::type);
   filterMessage.def_readwrite("message", &IFilter::Message::message);
   filterMessage.def_readwrite("progress", &IFilter::Message::progress);
 
   // Progress information now lives on Message itself, so ProgressMessage is no longer a distinct
   // type. This factory keeps the IFilter.ProgressMessage(message, progress) call shape working.
-  filter.def_static("ProgressMessage", [](std::string message, int32 progress) { return IFilter::Message{IFilter::Message::Type::Progress, std::move(message), progress}; }, "message"_a, "progress"_a);
+  filter.def_static(
+      "ProgressMessage", [](std::string message, int32 progress) { return IFilter::Message{.type = IFilter::Message::Type::Progress, .message = std::move(message), .progress = progress}; },
+      "message"_a, "progress"_a);
 
   py::class_<IFilter::MessageHandler> messageHandler(filter, "MessageHandler");
   messageHandler.def(py::init<>());

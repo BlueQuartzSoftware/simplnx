@@ -97,8 +97,8 @@ IFilter::UniquePointer ReadAngDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                          const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -115,11 +115,11 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure&  
   int32_t err = reader.readHeaderOnly();
   if(err < 0)
   {
-    return {MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
+    return {.outputActions = MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
   }
   if(reader.getGrid().empty())
   {
-    return {MakeErrorResult<OutputActions>(-19501, fmt::format("Input file '{}' is missing the GRID header key.", pInputFileValue.string()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-19501, fmt::format("Input file '{}' is missing the GRID header key.", pInputFileValue.string()))};
   }
 
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
@@ -129,7 +129,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure&  
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
   if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
@@ -219,16 +219,16 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure&  
 
   if(reader.getGrid() == "HexGrid")
   {
-    return {MakeErrorResult<OutputActions>(-19500, "Ang file has HexGrid. AngReader ONLY knows how to read SquareGrid"), std::move(preflightUpdatedValues)};
+    return {.outputActions = MakeErrorResult<OutputActions>(-19500, "Ang file has HexGrid. AngReader ONLY knows how to read SquareGrid"), .outputValues = std::move(preflightUpdatedValues)};
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadAngDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadAngDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadAngDataInputValues inputValues;
   inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;

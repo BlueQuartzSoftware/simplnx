@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the stateless CSV reader.
    */
-  ~ReadCSVFile() noexcept;
+  ~ReadCSVFile() noexcept = default;
 
   ReadCSVFile(const ReadCSVFile&) = delete;
   ReadCSVFile(ReadCSVFile&&) noexcept = delete;
@@ -77,9 +77,9 @@ public:
    * @param msgHandler Receives five-percent progress updates.
    * @return Open, seek, parse, flush, or destination-write error, or success after cancellation.
    */
-  Result<> readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, const std::vector<std::string>& columnHeaders, const std::vector<CSVType>& columnDataTypes,
-                    const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const ShapeType& tupleDims, const std::vector<char>& delimiters, bool consecutiveDelimiters,
-                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler);
+  static Result<> readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, const std::vector<std::string>& columnHeaders,
+                           const std::vector<CSVType>& columnDataTypes, const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const ShapeType& tupleDims,
+                           const std::vector<char>& delimiters, bool consecutiveDelimiters, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler);
 
   /**
    * @brief Reads column headers from one file row, then parses data rows.

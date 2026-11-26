@@ -81,23 +81,23 @@ IFilter::UniquePointer WriteSPParksSitesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto geometryPath = filterArgs.value<DataPath>(k_ImageGeomPath);
   auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -77453); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteSPParksSitesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> WriteSPParksSitesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())

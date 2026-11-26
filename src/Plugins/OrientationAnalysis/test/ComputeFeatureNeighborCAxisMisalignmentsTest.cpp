@@ -217,7 +217,7 @@ FixtureData BuildRealisticMicrostructure()
   {
     for(usize x = 0; x < 10; ++x)
     {
-      int32 fid;
+      int32 fid = 0;
       if(y < 4)
       {
         if(x < 3)

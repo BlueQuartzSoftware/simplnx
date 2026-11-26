@@ -14,9 +14,9 @@ namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT CreateAMScanPathsInputValues
 {
-  float32 StripeWidth;
-  float32 HatchSpacing;
-  float32 SliceHatchRotationAngle;
+  float32 StripeWidth{};
+  float32 HatchSpacing{};
+  float32 SliceHatchRotationAngle{};
   DataPath CADSliceDataContainerName;
   DataPath CADSliceIdsArrayPath;
   DataPath CADRegionIdsArrayPath;
@@ -35,7 +35,7 @@ class SIMPLNXCORE_EXPORT CreateAMScanPaths
 {
 public:
   CreateAMScanPaths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateAMScanPathsInputValues* inputValues);
-  ~CreateAMScanPaths() noexcept;
+  ~CreateAMScanPaths() noexcept = default;
 
   CreateAMScanPaths(const CreateAMScanPaths&) = delete;
   CreateAMScanPaths(CreateAMScanPaths&&) noexcept = delete;

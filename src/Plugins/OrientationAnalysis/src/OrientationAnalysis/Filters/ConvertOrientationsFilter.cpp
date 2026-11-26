@@ -86,16 +86,16 @@ IFilter::UniquePointer ConvertOrientationsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto outputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
 
   if(inputType == outputType)
   {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
-                                           fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
+    return {.outputActions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
+                                                            fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
@@ -104,8 +104,8 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
   if(inputCompShape.size() > 1)
   {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
-                                           fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
+                                                            fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float>, float>;
   auto representationNames = OrientationConverterType::GetOrientationTypeStrings<std::vector<std::string>>();
@@ -116,7 +116,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
     std::stringstream message;
     message << "Number of components for input array is not correct for input representation type. " << representationNames[static_cast<size_t>(inputType)] << " should have "
             << representationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
+    return {.outputActions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
@@ -132,8 +132,8 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConvertOrientationsInputValues inputValues;
   // Replace the keys below with the variables from the header.

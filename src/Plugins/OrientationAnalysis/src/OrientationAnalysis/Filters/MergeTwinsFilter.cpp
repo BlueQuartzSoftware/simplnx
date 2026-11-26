@@ -118,8 +118,8 @@ IFilter::UniquePointer MergeTwinsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                         const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pContiguousNeighborListArrayPathValue = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -174,12 +174,12 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_UseSeed_Key))

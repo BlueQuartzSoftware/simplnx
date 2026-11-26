@@ -476,8 +476,6 @@ ComputeKMedoidsScanline::ComputeKMedoidsScanline(DataStructure& dataStructure, c
 {
 }
 
-ComputeKMedoidsScanline::~ComputeKMedoidsScanline() noexcept = default;
-
 void ComputeKMedoidsScanline::updateProgress(const std::string& message)
 {
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, message);

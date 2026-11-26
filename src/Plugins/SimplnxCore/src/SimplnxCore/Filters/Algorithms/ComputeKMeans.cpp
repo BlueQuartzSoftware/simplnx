@@ -18,7 +18,6 @@ ComputeKMeans::ComputeKMeans(DataStructure& dataStructure, const IFilter::Messag
 }
 
 // -----------------------------------------------------------------------------
-ComputeKMeans::~ComputeKMeans() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeKMeans::getCancel()

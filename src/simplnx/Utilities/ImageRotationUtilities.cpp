@@ -209,7 +209,7 @@ Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueT
 
   for(int64_t rowIndex = 0; rowIndex < 4; rowIndex++)
   {
-    std::vector<double> row = tableData[rowIndex];
+    const std::vector<double>& row = tableData[rowIndex];
     for(int64_t colIndex = 0; colIndex < 4; colIndex++)
     {
       transformationMatrix(rowIndex, colIndex) = static_cast<float>(row[colIndex]);

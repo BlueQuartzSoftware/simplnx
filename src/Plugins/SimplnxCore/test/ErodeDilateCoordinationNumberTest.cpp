@@ -630,12 +630,12 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Shared Store Aliase
     bool ignoresOriginal;
     bool ignoresAlias;
   };
-  const std::array<AliasCase, 6> aliasCases = {{{"Selected scalar and component aliases", false, false, false},
-                                                {"Selected FeatureIds and selected alias", true, false, false},
-                                                {"Ignored FeatureIds and selected alias", true, true, false},
-                                                {"Selected FeatureIds and ignored alias", true, false, true},
-                                                {"FeatureIds and alias both ignored", true, true, true},
-                                                {"Selected scalar and ignored alias", false, false, true}}};
+  const std::array<AliasCase, 6> aliasCases = {{{.name = "Selected scalar and component aliases", .aliasesFeatureIds = false, .ignoresOriginal = false, .ignoresAlias = false},
+                                                {.name = "Selected FeatureIds and selected alias", .aliasesFeatureIds = true, .ignoresOriginal = false, .ignoresAlias = false},
+                                                {.name = "Ignored FeatureIds and selected alias", .aliasesFeatureIds = true, .ignoresOriginal = true, .ignoresAlias = false},
+                                                {.name = "Selected FeatureIds and ignored alias", .aliasesFeatureIds = true, .ignoresOriginal = false, .ignoresAlias = true},
+                                                {.name = "FeatureIds and alias both ignored", .aliasesFeatureIds = true, .ignoresOriginal = true, .ignoresAlias = true},
+                                                {.name = "Selected scalar and ignored alias", .aliasesFeatureIds = false, .ignoresOriginal = false, .ignoresAlias = true}}};
 
   for(const auto& aliasCase : aliasCases)
   {

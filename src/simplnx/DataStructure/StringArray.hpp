@@ -51,7 +51,8 @@ public:
    * When tupleShape represents nonzero tuples, an empty initial value set must
    * replace its store before value access. A zero-tuple array is valid.
    */
-  static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId = {});
+  static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, const collection_type& strings,
+                                       const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Imports an array with an object identifier.
@@ -232,9 +233,9 @@ public:
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);
-  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, collection_type strings);
+  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, const collection_type& strings);
   StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store);
-  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, collection_type strings);
+  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, const collection_type& strings);
 
 private:
   std::shared_ptr<AbstractStringStore> m_Strings = nullptr;

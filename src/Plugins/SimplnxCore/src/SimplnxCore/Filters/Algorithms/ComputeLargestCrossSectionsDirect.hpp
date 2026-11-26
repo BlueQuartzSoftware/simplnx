@@ -33,7 +33,7 @@ public:
   /**
    * @brief Destroys the non-owning in-memory algorithm.
    */
-  ~ComputeLargestCrossSectionsDirect() noexcept;
+  ~ComputeLargestCrossSectionsDirect() noexcept = default;
 
   ComputeLargestCrossSectionsDirect(const ComputeLargestCrossSectionsDirect&) = delete;
   ComputeLargestCrossSectionsDirect(ComputeLargestCrossSectionsDirect&&) noexcept = delete;

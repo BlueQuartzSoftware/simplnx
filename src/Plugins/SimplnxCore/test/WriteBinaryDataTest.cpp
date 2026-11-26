@@ -177,7 +177,7 @@ private:
     m_FillValue = std::vector<T>{a, b, c};
   }
 
-  std::vector<char> readIn(fs::path filePath)
+  std::vector<char> readIn(const fs::path& filePath)
   {
     std::ifstream file(filePath.string(), std::ios_base::binary);
 

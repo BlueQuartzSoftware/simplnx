@@ -10,15 +10,14 @@
 using namespace nx::core;
 
 DataStructObserver::DataStructObserver(DataStructure& dataStruct)
-: AbstractDataStructureObserver()
-, m_DataStructure(dataStruct)
+: m_DataStructure(dataStruct)
 {
   startObservingStructure(&dataStruct);
 }
 
 DataStructObserver::~DataStructObserver() = default;
 
-void DataStructObserver::onNotify(DataStructure*  /*target*/, const std::shared_ptr<AbstractDataStructureMessage>& msg)
+void DataStructObserver::onNotify(DataStructure* /*target*/, const std::shared_ptr<AbstractDataStructureMessage>& msg)
 {
   switch(msg->getMsgType())
   {

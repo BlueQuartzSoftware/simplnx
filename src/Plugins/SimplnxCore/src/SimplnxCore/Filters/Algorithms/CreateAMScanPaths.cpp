@@ -193,8 +193,8 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
 
     for(size_t edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
     {
-      Eigen::Vector3f p1 = rotatedVertices[edges[edgeIdx * 2]];
-      Eigen::Vector3f p2 = rotatedVertices[edges[edgeIdx * 2 + 1]];
+      const Eigen::Vector3f& p1 = rotatedVertices[edges[edgeIdx * 2]];
+      const Eigen::Vector3f& p2 = rotatedVertices[edges[edgeIdx * 2 + 1]];
       Eigen::Vector3f inter;
       if(lineSegmentHorizontalIntersect(p1, p2, lineY, inter))
       {
@@ -206,8 +206,8 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
 
     for(size_t i = 0; i + 1 < intersections.size(); i++)
     {
-      Eigen::Vector3f startPt = intersections[i];
-      Eigen::Vector3f endPt = intersections[i + 1];
+      const Eigen::Vector3f& startPt = intersections[i];
+      const Eigen::Vector3f& endPt = intersections[i + 1];
 
       if(startPt == endPt)
       {
@@ -259,7 +259,7 @@ void extractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INod
     usize oldV0 = edges[2 * i];
     usize oldV1 = edges[2 * i + 1];
 
-    usize newV0;
+    usize newV0 = 0;
     auto itV0 = vertexMap.find(oldV0);
     if(itV0 == vertexMap.end())
     {
@@ -274,7 +274,7 @@ void extractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INod
       newV0 = itV0->second;
     }
 
-    usize newV1;
+    usize newV1 = 0;
     auto itV1 = vertexMap.find(oldV1);
     if(itV1 == vertexMap.end())
     {
@@ -335,8 +335,6 @@ CreateAMScanPaths::CreateAMScanPaths(DataStructure& dataStructure, const IFilter
 , m_MessageHandler(mesgHandler)
 {
 }
-
-CreateAMScanPaths::~CreateAMScanPaths() noexcept = default;
 
 const std::atomic_bool& CreateAMScanPaths::getCancel()
 {

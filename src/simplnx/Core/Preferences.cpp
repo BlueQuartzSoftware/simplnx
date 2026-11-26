@@ -86,8 +86,8 @@ struct OocSizeKeys
  */
 std::array<OocSizeKeys, 2> oocSizeKeys()
 {
-  return {OocSizeKeys{std::string(Preferences::k_LargeDataSize_Key), std::string(Preferences::k_LargeDataSizeGB_Key)},
-          OocSizeKeys{std::string(Preferences::k_LargeDataStructureSize_Key), std::string(Preferences::k_LargeDataStructureSizeGB_Key)}};
+  return {OocSizeKeys{.bytesKey = std::string(Preferences::k_LargeDataSize_Key), .gbKey = std::string(Preferences::k_LargeDataSizeGB_Key)},
+          OocSizeKeys{.bytesKey = std::string(Preferences::k_LargeDataStructureSize_Key), .gbKey = std::string(Preferences::k_LargeDataStructureSizeGB_Key)}};
 }
 
 /**
@@ -336,8 +336,8 @@ std::filesystem::path getHomeDirectory()
 #ifdef _WIN32
   return getenv("USERPROFILE");
 #else
-  const char* homedir;
-  if((homedir = getenv("HOME")) == NULL)
+  const char* homedir = nullptr;
+  if((homedir = getenv("HOME")) == nullptr)
   {
     homedir = getpwuid(getuid())->pw_dir;
   }
@@ -407,14 +407,14 @@ void Preferences::setDefaultValues()
   m_DefaultValues[k_AutoRangeComputation_Key] = k_AutoRangeComputationDefault;
 }
 
-void Preferences::addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value)
+void Preferences::addDefaultValues(const std::string& pluginName, std::string valueName, const nlohmann::json& value)
 {
   auto& pluginGroup = m_DefaultValues[k_Plugin_Key];
   if(!pluginGroup.contains(pluginName))
   {
     pluginGroup[pluginName] = nlohmann::json::object();
   }
-  pluginGroup[pluginName][valueName] = value;
+  pluginGroup[pluginName][std::move(valueName)] = value;
 }
 
 void Preferences::clear()
@@ -508,7 +508,7 @@ nlohmann::json Preferences::pluginValue(const std::string& pluginName, const std
 
   return {};
 }
-nlohmann::json Preferences::defaultPluginValue(const std::string&  /*pluginName*/, const std::string& valueName) const
+nlohmann::json Preferences::defaultPluginValue(const std::string& /*pluginName*/, const std::string& valueName) const
 {
   if(m_DefaultValues[k_Plugin_Key].contains(valueName))
   {

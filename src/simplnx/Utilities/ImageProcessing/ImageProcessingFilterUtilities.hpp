@@ -241,7 +241,8 @@ inline Result<> ValidateOneValueInRange(float64 value, const char* label, int32 
   }
   if(truncated != value)
   {
-    result.warnings().push_back(Warning{truncatedWarnCode, fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
+    result.warnings().push_back(
+        Warning{.code = truncatedWarnCode, .message = fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
   }
   return result;
 }
@@ -364,7 +365,9 @@ struct ScalarValueRangeGuard
  */
 inline Result<> ValidateBinaryFgBgInRange(DataType inputType, float64 foreground, float64 background, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
-  return IntegerOnly::dispatch(inputType, detail::BinaryFgBgRangeGuard{foreground, background, nonFiniteCode, outOfRangeCode, truncatedWarnCode});
+  return IntegerOnly::dispatch(
+      inputType, detail::BinaryFgBgRangeGuard{
+                     .foregroundValue = foreground, .backgroundValue = background, .nonFiniteCode = nonFiniteCode, .outOfRangeCode = outOfRangeCode, .truncatedWarnCode = truncatedWarnCode});
 }
 
 /**
@@ -379,7 +382,9 @@ inline Result<> ValidateBinaryFgBgInRange(DataType inputType, float64 foreground
  */
 inline Result<> ValidateBackgroundInRange(DataType inputType, float64 background, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
-  return IntegerOnly::dispatch(inputType, detail::SingleValueRangeGuard{background, "Background Value", nonFiniteCode, outOfRangeCode, truncatedWarnCode});
+  return IntegerOnly::dispatch(
+      inputType,
+      detail::SingleValueRangeGuard{.value = background, .label = "Background Value", .nonFiniteCode = nonFiniteCode, .outOfRangeCode = outOfRangeCode, .truncatedWarnCode = truncatedWarnCode});
 }
 
 /**
@@ -474,9 +479,10 @@ inline void AppendUnstableTimeStepWarning(Result<OutputActions>& actions, float6
   if(timeStep > stableBound)
   {
     actions.warnings().push_back(
-        Warning{warningCode, fmt::format("Time Step ({}) exceeds the stable time step for this image ({}, = min filtered-axis spacing {} / 2^(ImageDimension+1) with ImageDimension={}); the "
-                                         "anisotropic diffusion may be numerically unstable. This is a non-fatal warning (matching ITK), not an error.",
-                                         timeStep, stableBound, minSpacing, effDim)});
+        Warning{.code = warningCode,
+                .message = fmt::format("Time Step ({}) exceeds the stable time step for this image ({}, = min filtered-axis spacing {} / 2^(ImageDimension+1) with ImageDimension={}); the "
+                                       "anisotropic diffusion may be numerically unstable. This is a non-fatal warning (matching ITK), not an error.",
+                                       timeStep, stableBound, minSpacing, effDim)});
   }
 }
 
@@ -493,7 +499,8 @@ inline void AppendUnstableTimeStepWarning(Result<OutputActions>& actions, float6
  */
 inline Result<> ValidateScalarValueForType(DataType inputType, float64 value, const char* label, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
-  return AllNumeric::dispatch(inputType, detail::ScalarValueRangeGuard{value, label, nonFiniteCode, outOfRangeCode, truncatedWarnCode});
+  return AllNumeric::dispatch(inputType,
+                              detail::ScalarValueRangeGuard{.value = value, .label = label, .nonFiniteCode = nonFiniteCode, .outOfRangeCode = outOfRangeCode, .truncatedWarnCode = truncatedWarnCode});
 }
 
 /**
@@ -554,10 +561,11 @@ inline Result<OutputActions> ValidateWatershedFitsInMemory(DataType inputType, u
   if(inputIsOutOfCore)
   {
     Result<OutputActions> result;
-    result.warnings().push_back(Warning{warningCode, fmt::format("Morphological watershed is a global algorithm and cannot process out-of-core: it will load its working "
-                                                                 "set (~{:.1f} GB) into memory to run, even though the input data is stored out-of-core. (The output labels "
-                                                                 "are still written to out-of-core storage.)",
-                                                                 workingSetGB)});
+    result.warnings().push_back(Warning{.code = warningCode,
+                                        .message = fmt::format("Morphological watershed is a global algorithm and cannot process out-of-core: it will load its working "
+                                                               "set (~{:.1f} GB) into memory to run, even though the input data is stored out-of-core. (The output labels "
+                                                               "are still written to out-of-core storage.)",
+                                                               workingSetGB)});
     return result;
   }
   return {};
@@ -790,9 +798,10 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
     }
     if(!discarded.empty())
     {
-      result.warnings().push_back(Warning{-8343, fmt::format("Perform In-Place replaces Image Geometry '{}' with the collapsed projection. The following other data object(s), including their "
-                                                             "contents, will be discarded: {}. Disable 'Perform In-Place' to keep the original geometry.",
-                                                             imageGeomPath.toString(), discarded)});
+      result.warnings().push_back(Warning{.code = -8343,
+                                          .message = fmt::format("Perform In-Place replaces Image Geometry '{}' with the collapsed projection. The following other data object(s), including their "
+                                                                 "contents, will be discarded: {}. Disable 'Perform In-Place' to keep the original geometry.",
+                                                                 imageGeomPath.toString(), discarded)});
     }
   }
 

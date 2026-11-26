@@ -111,7 +111,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadImageStack() noexcept;
+  ~ReadImageStack() noexcept = default;
 
   ReadImageStack(const ReadImageStack&) = delete;
   ReadImageStack(ReadImageStack&&) noexcept = delete;

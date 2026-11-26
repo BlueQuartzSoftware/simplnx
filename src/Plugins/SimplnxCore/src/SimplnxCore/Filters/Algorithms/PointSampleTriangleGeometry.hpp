@@ -60,8 +60,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT PointSampleTriangleGeometryInputs
 {
-  int32 pNumberOfSamples;
-  bool pUseMask;
+  int32 pNumberOfSamples{};
+  bool pUseMask{};
   DataPath pTriangleGeometry;
   DataPath pTriangleAreasArrayPath;
   DataPath pMaskArrayPath;
@@ -69,7 +69,7 @@ struct SIMPLNXCORE_EXPORT PointSampleTriangleGeometryInputs
   DataPath pVertexGeometryPath;
   DataPath pVertexGroupDataPath;
   MultiArraySelectionParameter::ValueType pCreatedDataArrayPaths;
-  uint64 Seed;
+  uint64 Seed{};
 };
 
 /**
@@ -80,7 +80,7 @@ class SIMPLNXCORE_EXPORT PointSampleTriangleGeometry
 
 public:
   PointSampleTriangleGeometry(DataStructure& dataStructure, PointSampleTriangleGeometryInputs* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~PointSampleTriangleGeometry() noexcept;
+  ~PointSampleTriangleGeometry() noexcept = default;
 
   PointSampleTriangleGeometry(const PointSampleTriangleGeometry&) = delete;
   PointSampleTriangleGeometry(PointSampleTriangleGeometry&&) noexcept = delete;

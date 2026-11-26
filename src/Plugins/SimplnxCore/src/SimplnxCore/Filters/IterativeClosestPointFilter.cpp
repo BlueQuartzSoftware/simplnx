@@ -83,8 +83,8 @@ IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto movingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
   auto numIterations = filterArgs.value<uint64>(k_NumIterations_Key);
@@ -93,7 +93,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   if(numIterations < 1)
   {
     auto ss = fmt::format("Must perform at least 1 iteration. Current value: {}", numIterations);
-    return {MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformArrayPath);
@@ -108,12 +108,12 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, movingVertexPath, {});
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   IterativeClosestPointInputValues inputValues;
 

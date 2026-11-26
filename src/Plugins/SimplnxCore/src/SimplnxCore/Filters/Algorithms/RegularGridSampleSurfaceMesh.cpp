@@ -1,5 +1,7 @@
 #include "RegularGridSampleSurfaceMesh.hpp"
 
+#include <cmath>
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -13,6 +15,7 @@
 #include <limits>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 using namespace nx::core;
 
@@ -144,8 +147,8 @@ public:
   , m_YDim(yDim)
   , m_NumTriangles(numTriangles)
   , m_NumFaceLabelComps(numFaceLabelComps)
-  , m_Origin(origin)
-  , m_Spacing(spacing)
+  , m_Origin(std::move(origin))
+  , m_Spacing(std::move(spacing))
   , m_FacesBuffer(facesBuffer)
   , m_VerticesBuffer(verticesBuffer)
   , m_FaceLabelsBuffer(faceLabelsBuffer)
@@ -186,7 +189,7 @@ public:
                                        Point3Df{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
                                        Point3Df{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
 
-      float32 ex1, ey1, ex2, ey2;
+      float32 ex1 = NAN, ey1 = NAN, ex2 = NAN, ey2 = NAN;
       if(sliceTriangleAtZ(verts, zCoord, ex1, ey1, ex2, ey2))
       {
         edges.push_back({ex1, ey1, ex2, ey2, t});
@@ -204,7 +207,7 @@ public:
       intersections.clear();
       for(const auto& edge : edges)
       {
-        float32 eYMin, eYMax;
+        float32 eYMin = NAN, eYMax = NAN;
         if(edge.y1 < edge.y2)
         {
           eYMin = edge.y1;
@@ -455,7 +458,7 @@ struct ZSliceFunctor
     }
 
     // Precompute Z bounds so each worker rejects nonintersecting triangles quickly.
-    messageHandler.sendMessage({IFilter::Message::Type::Info, "Preprocessing triangle data..."});
+    messageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Preprocessing triangle data..."});
 
     std::vector<TriangleZRange> triZRanges(numTriangles);
     for(usize t = 0; t < numTriangles; t++)
@@ -478,7 +481,7 @@ struct ZSliceFunctor
     }
 
     // Schedule Z slices while the borrowed mesh buffers remain alive.
-    messageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
+    messageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
 
     // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
     CopyFromArray::ParallelTaskResult taskResult;
@@ -508,8 +511,6 @@ RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataSt
 , m_MessageHandler(mesgHandler)
 {
 }
-
-RegularGridSampleSurfaceMesh::~RegularGridSampleSurfaceMesh() noexcept = default;
 
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {

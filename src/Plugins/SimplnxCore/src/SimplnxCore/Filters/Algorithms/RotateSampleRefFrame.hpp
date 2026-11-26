@@ -20,13 +20,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RotateSampleRefFrameInputValues
 {
-  bool SliceBySlice;
-  ChoicesParameter::ValueType RotationRepresentationIndex;
+  bool SliceBySlice{};
+  ChoicesParameter::ValueType RotationRepresentationIndex{};
   DataPath SourceGeometryPath;
   DataPath DestGeometryPath;
   VectorFloat32Parameter::ValueType RotationAxisAngle;
   DynamicTableParameter::ValueType RotationMatrixTable;
-  bool KeepInputGeometryOrigin;
+  bool KeepInputGeometryOrigin{};
   BoolParameter::ValueType ClearFeatureAttributeMatrix = false;
   AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrix;
 };
@@ -66,7 +66,7 @@ public:
   /**
    * @brief Destroys the sample-reference rotation algorithm.
    */
-  ~RotateSampleRefFrame() noexcept;
+  ~RotateSampleRefFrame() noexcept = default;
 
   RotateSampleRefFrame(const RotateSampleRefFrame&) = delete;
   RotateSampleRefFrame(RotateSampleRefFrame&&) noexcept = delete;

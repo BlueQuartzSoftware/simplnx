@@ -32,8 +32,8 @@ struct ORIENTATIONANALYSIS_EXPORT ReadChannel5DataInputValues
   DataPath DataContainerName;
   std::string CellAttributeMatrixName;
   std::string CellEnsembleAttributeMatrixName;
-  bool EdaxHexagonalAlignment;
-  bool CreateCompatibleArrays;
+  bool EdaxHexagonalAlignment{};
+  bool CreateCompatibleArrays{};
 };
 
 /**
@@ -93,7 +93,7 @@ public:
   /**
    * @brief Destroys the Channel 5 reader.
    */
-  ~ReadChannel5Data() noexcept;
+  ~ReadChannel5Data() noexcept = default;
 
   ReadChannel5Data(const ReadChannel5Data&) = delete;
   ReadChannel5Data(ReadChannel5Data&&) = delete;

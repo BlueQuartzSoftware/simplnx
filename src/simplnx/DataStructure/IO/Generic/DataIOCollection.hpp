@@ -112,7 +112,7 @@ public:
    * The manager format name is the map key. Debug builds assert that no more
    * than one manager finalizes deferred imports.
    */
-  Result<> addIOManager(std::shared_ptr<IDataIOManager> manager);
+  Result<> addIOManager(const std::shared_ptr<IDataIOManager>& manager);
 
   /**
    * @brief Returns a manager for one format name.

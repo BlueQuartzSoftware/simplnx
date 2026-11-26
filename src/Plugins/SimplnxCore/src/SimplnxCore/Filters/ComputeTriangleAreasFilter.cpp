@@ -90,8 +90,8 @@ IFilter::UniquePointer ComputeTriangleAreasFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
@@ -105,8 +105,8 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
-                                           fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
+                                                            fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   {
     DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
@@ -114,12 +114,12 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);

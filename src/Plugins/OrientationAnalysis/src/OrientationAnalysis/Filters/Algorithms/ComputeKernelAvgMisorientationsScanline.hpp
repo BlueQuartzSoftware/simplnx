@@ -92,7 +92,7 @@ public:
   /**
    * @brief Destroys the scanline KAM executor.
    */
-  ~ComputeKernelAvgMisorientationsScanline() noexcept;
+  ~ComputeKernelAvgMisorientationsScanline() noexcept = default;
 
   ComputeKernelAvgMisorientationsScanline(const ComputeKernelAvgMisorientationsScanline&) = delete;
   ComputeKernelAvgMisorientationsScanline(ComputeKernelAvgMisorientationsScanline&&) noexcept = delete;

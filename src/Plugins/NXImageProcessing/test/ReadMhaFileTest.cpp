@@ -271,7 +271,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: parse scalar 2D header (compre
 
   const auto result = mhd::ReadMetaImageHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.nDims == 2);
   REQUIRE(md.dataType == DataType::uint8);
   REQUIRE(md.componentCount == 1);
@@ -296,7 +296,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: parse 3D multi-component raw h
                    {});
   const auto result = mhd::ReadMetaImageHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.nDims == 3);
   REQUIRE(md.dimensions == std::array<usize, 3>{5, 4, 3});
   REQUIRE(md.componentCount == 2);
@@ -314,7 +314,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: big-endian flag sets byteSwapR
                    {});
   const auto result = mhd::ReadMetaImageHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   // On the (little-endian) CI/dev host, a big-endian file requires a swap.
   const bool hostIsLittle = (nx::core::checkEndian() == nx::core::endian::little);
   REQUIRE(md.byteSwapRequired == hostIsLittle);
@@ -342,7 +342,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: detached .mhd resolves sibling
   }
   const auto result = mhd::ReadMetaImageHeader(mhd);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.detached == true);
   REQUIRE(md.dataStartOffset == 0);
   REQUIRE(md.dataFilePath.filename() == fs::path("vol_detached.raw"));

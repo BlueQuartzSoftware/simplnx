@@ -23,7 +23,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeFZQuaternionsInputValues
   ArraySelectionParameter::ValueType InputQuatsArrayPath;
   ArraySelectionParameter::ValueType MaskArrayPath;
   DataObjectNameParameter::ValueType OutputFzQuatsArrayName;
-  BoolParameter::ValueType UseMask;
+  BoolParameter::ValueType UseMask{};
 };
 
 /**
@@ -51,7 +51,7 @@ public:
   /**
    * @brief Destroys the fundamental-zone quaternion executor.
    */
-  ~ComputeFZQuaternions() noexcept;
+  ~ComputeFZQuaternions() noexcept = default;
 
   ComputeFZQuaternions(const ComputeFZQuaternions&) = delete;
   ComputeFZQuaternions(ComputeFZQuaternions&&) noexcept = delete;

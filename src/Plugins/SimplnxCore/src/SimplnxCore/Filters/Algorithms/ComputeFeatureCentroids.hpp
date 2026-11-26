@@ -52,7 +52,7 @@ public:
   /**
    * @brief Destroys the feature-centroid algorithm.
    */
-  ~ComputeFeatureCentroids() noexcept;
+  ~ComputeFeatureCentroids() noexcept = default;
 
   ComputeFeatureCentroids(const ComputeFeatureCentroids&) = delete;
   ComputeFeatureCentroids(ComputeFeatureCentroids&&) noexcept = delete;

@@ -18,6 +18,7 @@
 #include <functional>
 #include <mutex>
 #include <optional>
+#include <utility>
 
 using namespace nx::core;
 
@@ -110,8 +111,8 @@ class ComputeDistanceMapImpl
   T* m_DistBuf = nullptr;
   AbstractDataStore<T>* m_OutputStore = nullptr;
   usize m_TotalVoxels = 0;
-  SizeVec3 m_Dims = {};
-  FloatVec3 m_Spacing = {};
+  SizeVec3 m_Dims;
+  FloatVec3 m_Spacing;
 
 public:
   /**
@@ -139,8 +140,8 @@ public:
   , m_DistBuf(distBuf)
   , m_OutputStore(outputStore)
   , m_TotalVoxels(totalVoxels)
-  , m_Dims(dims)
-  , m_Spacing(spacing)
+  , m_Dims(std::move(dims))
+  , m_Spacing(std::move(spacing))
   , m_TaskResult(taskResult)
   , m_ShouldCancel(shouldCancel)
   , m_ReportProgress(reportProgress)
@@ -396,8 +397,6 @@ ComputeEuclideanDistMap::ComputeEuclideanDistMap(DataStructure& dataStructure, c
 , m_MessageHandler(mesgHandler)
 {
 }
-
-ComputeEuclideanDistMap::~ComputeEuclideanDistMap() noexcept = default;
 
 /**
  * @brief Computes direct distance maps with full-volume resident buffers.

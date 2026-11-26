@@ -25,7 +25,7 @@ class SIMPLNXCORE_EXPORT ComputeTriangleGeomCentroids
 {
 public:
   ComputeTriangleGeomCentroids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeTriangleGeomCentroidsInputValues* inputValues);
-  ~ComputeTriangleGeomCentroids() noexcept;
+  ~ComputeTriangleGeomCentroids() noexcept = default;
 
   ComputeTriangleGeomCentroids(const ComputeTriangleGeomCentroids&) = delete;
   ComputeTriangleGeomCentroids(ComputeTriangleGeomCentroids&&) noexcept = delete;

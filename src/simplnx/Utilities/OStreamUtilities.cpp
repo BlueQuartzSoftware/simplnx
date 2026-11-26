@@ -9,6 +9,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <utility>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -357,9 +358,9 @@ public:
    * @param iDataArray Supplies the array and must outlive this writer.
    * @param delimiter Specifies the copied quote or delimiter text.
    */
-  StringTupleWriter(const StringArray& iDataArray, const std::string& delimiter)
+  StringTupleWriter(const StringArray& iDataArray, std::string delimiter)
   : m_DataArray(dynamic_cast<const StringArray&>(iDataArray))
-  , m_Delimiter(delimiter)
+  , m_Delimiter(std::move(delimiter))
   {
   }
   ~StringTupleWriter() override = default;

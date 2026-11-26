@@ -7,6 +7,8 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace
@@ -25,9 +27,9 @@ Result<> DoCopy(IDataArray* inputDataArray, DataStructure& dataStructure, DataPa
 
 namespace nx::core
 {
-CopyArrayInstanceAction::CopyArrayInstanceAction(const DataPath& selectedDataPath, const DataPath& createdDataPath)
+CopyArrayInstanceAction::CopyArrayInstanceAction(DataPath selectedDataPath, const DataPath& createdDataPath)
 : IDataCreationAction(createdDataPath)
-, m_SelectedDataPath(selectedDataPath)
+, m_SelectedDataPath(std::move(selectedDataPath))
 {
 }
 

@@ -51,7 +51,7 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
 struct ReadNiftiHeaderCache
 {
   std::string inputFile;
-  fs::file_time_type timeStamp{};
+  fs::file_time_type timeStamp;
   nx::core::nifti::NiftiMetadata metadata;
   bool useAffineIfPresent{true};
 };
@@ -162,8 +162,8 @@ IFilter::UniquePointer ReadNIfTIFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                            const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pUseAffineIfPresent = filterArgs.value<bool>(k_UseAffineIfPresent_Key);
@@ -178,7 +178,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   if(!fs::exists(pInputFilePath))
   {
-    return {MakeErrorResult<OutputActions>(-34710, fmt::format("Input NIfTI file does not exist: '{}'", pInputFilePath.string()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-34710, fmt::format("Input NIfTI file does not exist: '{}'", pInputFilePath.string()))};
   }
 
   // Check the cache under the lock; copy the metadata out so the rest of
@@ -202,7 +202,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     auto metadataResult = nifti::ReadNiftiHeader(pInputFilePath, pUseAffineIfPresent);
     if(metadataResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
     }
     md = std::move(metadataResult).value();
 
@@ -220,7 +220,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
   if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
@@ -237,7 +237,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(tmpActionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
     }
 
     const DataPath croppedGeomPath({pImageGeomPath.getTargetName() + "_cropped"});
@@ -251,7 +251,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
@@ -291,39 +291,41 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   if(md.affineHasFlip)
   {
-    resultOutputActions.warnings().push_back(
-        Warning{k_IgnoredAxisDirectionWarning,
-                fmt::format("NIfTI file '{}' contains negative direction values. This filter uses positive spacing and does not preserve these directions. The loaded image may have a different "
-                            "orientation. Voxels are loaded in their stored order.",
-                            md.filePath)});
+    resultOutputActions.warnings().push_back(Warning{
+        .code = k_IgnoredAxisDirectionWarning,
+        .message = fmt::format("NIfTI file '{}' contains negative direction values. This filter uses positive spacing and does not preserve these directions. The loaded image may have a different "
+                               "orientation. Voxels are loaded in their stored order.",
+                               md.filePath)});
   }
   if(md.affineHasRotation)
   {
     resultOutputActions.warnings().push_back(Warning{
-        -34750, fmt::format("NIfTI file '{}' contains a non-trivial rotation in its {} transform. The ImageGeom in simplnx is axis-aligned; the rotation component has been dropped and only the "
-                            "spacing and origin were extracted. Voxels will be loaded in their stored orientation.",
-                            md.filePath, (md.sformCode > 0 ? "sform" : "qform"))});
+        .code = -34750,
+        .message = fmt::format("NIfTI file '{}' contains a non-trivial rotation in its {} transform. The ImageGeom in simplnx is axis-aligned; the rotation component has been dropped and only the "
+                               "spacing and origin were extracted. Voxels will be loaded in their stored orientation.",
+                               md.filePath, (md.sformCode > 0 ? "sform" : "qform"))});
   }
   if(pApplyScaling && md.componentCount == 1 && std::isfinite(md.sclSlope) && md.sclSlope != 0.0f && !std::isfinite(md.sclInter))
   {
-    resultOutputActions.warnings().push_back(Warning{-34752, fmt::format("NIfTI file '{}' scaling intercept is not finite; 0 is used for the intercept.", md.filePath)});
+    resultOutputActions.warnings().push_back(Warning{.code = -34752, .message = fmt::format("NIfTI file '{}' scaling intercept is not finite; 0 is used for the intercept.", md.filePath)});
   }
   if(md.niftiDatatype == NIFTI_TYPE_RGB24 || md.niftiDatatype == NIFTI_TYPE_RGBA32)
   {
     if(pApplyScaling && std::isfinite(md.sclSlope) && (md.sclSlope != 0.0f && (md.sclSlope != 1.0f || (std::isfinite(md.sclInter) && md.sclInter != 0.0f))))
     {
       resultOutputActions.warnings().push_back(Warning{
-          -34751, fmt::format("NIfTI file '{}' has datatype {} with a scaling transform. Per the NIfTI-1 specification, scaling is not applied to RGB24/RGBA32 data; voxels were copied verbatim.",
-                              md.filePath, (md.niftiDatatype == NIFTI_TYPE_RGB24 ? "RGB24" : "RGBA32"))});
+          .code = -34751,
+          .message = fmt::format("NIfTI file '{}' has datatype {} with a scaling transform. Per the NIfTI-1 specification, scaling is not applied to RGB24/RGBA32 data; voxels were copied verbatim.",
+                                 md.filePath, (md.niftiDatatype == NIFTI_TYPE_RGB24 ? "RGB24" : "RGBA32"))});
     }
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadNIfTIFileInputValues inputValues;
   inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
@@ -339,7 +341,7 @@ Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Ar
 }
 
 //------------------------------------------------------------------------------
-Result<Arguments> ReadNIfTIFileFilter::FromSIMPLJson(const nlohmann::json&  /*json*/)
+Result<Arguments> ReadNIfTIFileFilter::FromSIMPLJson(const nlohmann::json& /*json*/)
 {
   Arguments args = ReadNIfTIFileFilter().getDefaultArguments();
   // New filter in simplnx; no SIMPL v6 equivalent.

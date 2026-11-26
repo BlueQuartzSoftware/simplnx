@@ -71,8 +71,8 @@ IFilter::UniquePointer BlackTopHatImageFilter::clone() const
 {
   return std::make_unique<BlackTopHatImageFilter>();
 }
-IFilter::PreflightResult BlackTopHatImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult BlackTopHatImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -82,28 +82,28 @@ IFilter::PreflightResult BlackTopHatImageFilter::preflightImpl(const DataStructu
   const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
   if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
   }
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& layoutInputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(auto layoutResult = ImageProcessing::ValidateMorphologyLayout(imageGeom.getDimensions(), kernelRadius, filterArgs.value<bool>(k_SafeBorder_Key), GetDataTypeSize(layoutInputArray.getDataType()));
      layoutResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(
-        -8420, fmt::format("Black Top Hat requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -8420, fmt::format("Black Top Hat requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> BlackTopHatImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> BlackTopHatImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

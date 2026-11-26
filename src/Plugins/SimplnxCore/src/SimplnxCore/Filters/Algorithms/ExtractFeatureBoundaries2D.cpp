@@ -492,7 +492,6 @@ ExtractFeatureBoundaries2D::ExtractFeatureBoundaries2D(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-ExtractFeatureBoundaries2D::~ExtractFeatureBoundaries2D() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractFeatureBoundaries2D::getCancel() const

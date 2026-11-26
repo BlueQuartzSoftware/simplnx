@@ -16,8 +16,6 @@ WriteImage::WriteImage(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-WriteImage::~WriteImage() noexcept = default;
-
 Result<> WriteImage::operator()()
 {
   const auto& imageArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.imageDataArrayPath);

@@ -20,7 +20,7 @@ struct SIMPLNXCORE_EXPORT NearestPointFuseRegularGridsInputValues
   DataPath SamplingGeometryPath;
   DataPath ReferenceCellAttributeMatrixPath;
   DataPath SamplingCellAttributeMatrixPath;
-  float64 fillValue;
+  float64 fillValue{};
 };
 
 /**
@@ -45,7 +45,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~NearestPointFuseRegularGrids() noexcept;
+  ~NearestPointFuseRegularGrids() noexcept = default;
 
   NearestPointFuseRegularGrids(const NearestPointFuseRegularGrids&) = delete;
   NearestPointFuseRegularGrids(NearestPointFuseRegularGrids&&) noexcept = delete;

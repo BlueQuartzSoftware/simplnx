@@ -457,7 +457,6 @@ ExtractInternalSurfacesFromTriangleGeometry::ExtractInternalSurfacesFromTriangle
 }
 
 // -----------------------------------------------------------------------------
-ExtractInternalSurfacesFromTriangleGeometry::~ExtractInternalSurfacesFromTriangleGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()

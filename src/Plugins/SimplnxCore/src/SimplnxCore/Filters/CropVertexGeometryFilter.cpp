@@ -78,8 +78,8 @@ IFilter::UniquePointer CropVertexGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto croppedGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -107,21 +107,21 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     if(xDimError)
     {
       std::string ss = fmt::format("X Max ({}) is equal to X Min ({}). There would be no points remaining in the geometry.", xMax, xMin);
-      errors.push_back(Error{-58550, std::move(ss)});
+      errors.push_back(Error{.code = -58550, .message = std::move(ss)});
     }
     if(yDimError)
     {
       std::string ss = fmt::format("Y Max ({}) is equal to Y Min ({}). There would be no points remaining in the geometry.", yMax, yMin);
-      errors.push_back(Error{-58551, std::move(ss)});
+      errors.push_back(Error{.code = -58551, .message = std::move(ss)});
     }
     if(zDimError)
     {
       std::string ss = fmt::format("Z Max ({}) is equal to Z Min ({}). There would be no points remaining in the geometry.", zMax, zMin);
-      errors.push_back(Error{-58552, std::move(ss)});
+      errors.push_back(Error{.code = -58552, .message = std::move(ss)});
     }
     if(xDimError || yDimError || zDimError)
     {
-      return PreflightResult{{nonstd::make_unexpected(errors)}};
+      return PreflightResult{.outputActions = {nonstd::make_unexpected(errors)}};
     }
   }
 
@@ -133,28 +133,29 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     if(xDimError)
     {
       std::string ss = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-      errors.push_back(Error{-58553, std::move(ss)});
+      errors.push_back(Error{.code = -58553, .message = std::move(ss)});
     }
     if(yDimError)
     {
       std::string ss = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-      errors.push_back(Error{-58554, std::move(ss)});
+      errors.push_back(Error{.code = -58554, .message = std::move(ss)});
     }
     if(zDimError)
     {
       std::string ss = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-      errors.push_back(Error{-58555, std::move(ss)});
+      errors.push_back(Error{.code = -58555, .message = std::move(ss)});
     }
     if(xDimError || yDimError || zDimError)
     {
-      return PreflightResult{{nonstd::make_unexpected(errors)}};
+      return PreflightResult{.outputActions = {nonstd::make_unexpected(errors)}};
     }
   }
 
   auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
   if(vertexAM == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())), {}};
+    return {.outputActions = MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())),
+            .outputValues = {}};
   }
   auto tupleShape = vertexAM->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
@@ -177,8 +178,8 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CropVertexGeometryInputValues inputValues;
   inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);

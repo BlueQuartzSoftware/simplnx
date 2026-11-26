@@ -94,8 +94,8 @@ IFilter::UniquePointer ScalarSegmentFeaturesFilter::clone() const
   return std::make_unique<ScalarSegmentFeaturesFilter>();
 }
 
-IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputDataPath = filterArgs.value<DataPath>(k_InputArrayPathKey);
   auto featureIdsName = filterArgs.value<std::string>(k_FeatureIdsName_Key);
@@ -114,7 +114,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, gridGeomPath, cellArrayPaths, -654); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto& gridGeometry = dataStructure.getDataRefAs<IGridGeometry>(gridGeomPath);
@@ -131,12 +131,12 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 // -----------------------------------------------------------------------------
-Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ScalarSegmentFeaturesInputValues inputValues;
 

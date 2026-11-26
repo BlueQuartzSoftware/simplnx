@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~MultiThresholdObjects() noexcept;
+  ~MultiThresholdObjects() noexcept = default;
 
   MultiThresholdObjects(const MultiThresholdObjects&) = delete;
   MultiThresholdObjects(MultiThresholdObjects&&) noexcept = delete;

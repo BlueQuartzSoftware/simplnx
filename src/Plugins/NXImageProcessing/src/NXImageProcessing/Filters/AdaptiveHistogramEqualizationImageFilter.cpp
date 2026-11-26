@@ -80,8 +80,8 @@ IFilter::UniquePointer AdaptiveHistogramEqualizationImageFilter::clone() const
 {
   return std::make_unique<AdaptiveHistogramEqualizationImageFilter>();
 }
-IFilter::PreflightResult AdaptiveHistogramEqualizationImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult AdaptiveHistogramEqualizationImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -91,14 +91,16 @@ IFilter::PreflightResult AdaptiveHistogramEqualizationImageFilter::preflightImpl
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Adaptive Histogram Equalization requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                         selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Adaptive Histogram Equalization requires a single-component (scalar) input array, but '{}' has {} components.",
+                                                                             selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
-  return {.outputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath)};
+  return {.outputActions =
+              ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath)};
 }
-Result<> AdaptiveHistogramEqualizationImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> AdaptiveHistogramEqualizationImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

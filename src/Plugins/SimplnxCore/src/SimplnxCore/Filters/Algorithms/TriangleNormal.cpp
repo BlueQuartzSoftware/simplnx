@@ -16,7 +16,6 @@ TriangleNormal::TriangleNormal(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-TriangleNormal::~TriangleNormal() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> TriangleNormal::operator()()

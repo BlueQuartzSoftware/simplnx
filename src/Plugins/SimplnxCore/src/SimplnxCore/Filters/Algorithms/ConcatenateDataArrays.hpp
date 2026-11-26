@@ -28,9 +28,9 @@ struct is_allowed_array_type<StringArray> : std::true_type
 };
 
 template <typename ArrayType>
-typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type ConcatenateArraysImpl(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths,
-                                                                                                       const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler,
-                                                                                                       const std::atomic_bool& shouldCancel)
+Result<> ConcatenateArraysImpl(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler,
+                               const std::atomic_bool& shouldCancel)
+requires is_allowed_array_type<ArrayType>::value
 {
   auto& outputDataArray = dataStructure.getDataRefAs<ArrayType>(outputArrayPath);
   usize destTupleOffset = 0;
@@ -92,7 +92,7 @@ class SIMPLNXCORE_EXPORT ConcatenateDataArrays
 {
 public:
   ConcatenateDataArrays(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ConcatenateDataArraysInputValues* inputValues);
-  ~ConcatenateDataArrays() noexcept;
+  ~ConcatenateDataArrays() noexcept = default;
 
   ConcatenateDataArrays(const ConcatenateDataArrays&) = delete;
   ConcatenateDataArrays(ConcatenateDataArrays&&) noexcept = delete;

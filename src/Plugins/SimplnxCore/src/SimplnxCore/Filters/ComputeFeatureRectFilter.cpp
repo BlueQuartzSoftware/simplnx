@@ -74,8 +74,8 @@ IFilter::UniquePointer ComputeFeatureRectFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pFeatureDataAttributeMatrixPathValue = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
@@ -95,9 +95,10 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
     const auto& dim = tDims[i];
     if(dim > std::numeric_limits<uint32>::max())
     {
-      return {MakeErrorResult<OutputActions>(
-          -2000, fmt::format("Data Object at '{}': Dimension {} has a value of {}, which is larger than the maximum uint32 value ({}).  Please contact BlueQuartz Software for further information.",
-                             featureRectArrayPath.toString(), i + 1, dim, std::numeric_limits<uint32>::max()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -2000,
+                  fmt::format("Data Object at '{}': Dimension {} has a value of {}, which is larger than the maximum uint32 value ({}).  Please contact BlueQuartz Software for further information.",
+                              featureRectArrayPath.toString(), i + 1, dim, std::numeric_limits<uint32>::max()))};
     }
   }
 
@@ -107,12 +108,12 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeatureRectInputValues inputValues;
 

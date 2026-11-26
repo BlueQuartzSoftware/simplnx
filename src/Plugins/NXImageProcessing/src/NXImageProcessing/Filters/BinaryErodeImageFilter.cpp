@@ -93,8 +93,8 @@ IFilter::UniquePointer BinaryErodeImageFilter::clone() const
 {
   return std::make_unique<BinaryErodeImageFilter>();
 }
-IFilter::PreflightResult BinaryErodeImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult BinaryErodeImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -106,27 +106,27 @@ IFilter::PreflightResult BinaryErodeImageFilter::preflightImpl(const DataStructu
   const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
   if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
   }
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& layoutInputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(auto layoutResult = ImageProcessing::ValidateMorphologyLayout(imageGeom.getDimensions(), kernelRadius, false, GetDataTypeSize(layoutInputArray.getDataType())); layoutResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Erode requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(),
-                                                                         inputArray.getNumberOfComponents()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Erode requires a single-component (scalar) input array, but '{}' has {} components.",
+                                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   // The Float64 foreground/background parameters are cast to the (integer) input element type by the binary
@@ -136,16 +136,16 @@ IFilter::PreflightResult BinaryErodeImageFilter::preflightImpl(const DataStructu
   Result<> paramGuard = ImageProcessing::ValidateBinaryFgBgInRange(inputType, foregroundValue, backgroundValue, k_NonFiniteBinaryValue, k_BinaryValueOutOfRange, k_BinaryValueTruncated);
   if(paramGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
   }
   for(Warning& warning : paramGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> BinaryErodeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> BinaryErodeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

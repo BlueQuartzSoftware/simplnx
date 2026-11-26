@@ -228,8 +228,6 @@ ReadNrrdFile::ReadNrrdFile(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-ReadNrrdFile::~ReadNrrdFile() noexcept = default;
-
 Result<> ReadNrrdFile::operator()()
 {
   auto metadataResult = nrrd::ReadNrrdHeader(m_InputValues->InputFilePath);

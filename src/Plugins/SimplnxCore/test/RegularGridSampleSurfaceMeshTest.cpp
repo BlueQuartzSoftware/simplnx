@@ -703,7 +703,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Touching and overlap
   geom->setFaceAttributeMatrix(*faceData);
   auto* labels = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {36}, {1}), faceData->getId());
   // All boxes have y in [0,1] and z in [0,3]. Each row samples y = z = 0.5.
-  std::array<std::array<float32, 3>, 3> boxes;
+  std::array<std::array<float32, 3>, 3> boxes{};
   std::vector<int32> expected;
   SECTION("Touching parts with B entry before A exit")
   {

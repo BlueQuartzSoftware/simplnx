@@ -14,15 +14,15 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT LaplacianSmoothingInputValues
 {
   DataPath pTriangleGeometryDataPath;
-  int32 pIterationSteps;
-  float32 pLambda;
-  bool pUseTaubinSmoothing;
-  float32 pMuFactor;
-  float32 pTripleLineLambda;
-  float32 pQuadPointLambda;
-  float32 pSurfacePointLambda;
-  float32 pSurfaceTripleLineLambda;
-  float32 pSurfaceQuadPointLambda;
+  int32 pIterationSteps{};
+  float32 pLambda{};
+  bool pUseTaubinSmoothing{};
+  float32 pMuFactor{};
+  float32 pTripleLineLambda{};
+  float32 pQuadPointLambda{};
+  float32 pSurfacePointLambda{};
+  float32 pSurfaceTripleLineLambda{};
+  float32 pSurfaceQuadPointLambda{};
   DataPath pSurfaceMeshNodeTypeArrayPath;
 };
 
@@ -33,7 +33,7 @@ class SIMPLNXCORE_EXPORT LaplacianSmoothing
 {
 public:
   LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~LaplacianSmoothing() noexcept;
+  ~LaplacianSmoothing() noexcept = default;
 
   LaplacianSmoothing(const LaplacianSmoothing&) = delete;
   LaplacianSmoothing(LaplacianSmoothing&&) noexcept = delete;

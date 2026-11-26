@@ -18,7 +18,6 @@ ComputeSchmids::ComputeSchmids(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-ComputeSchmids::~ComputeSchmids() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeSchmids::getCancel() const

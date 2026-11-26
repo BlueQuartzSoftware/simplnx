@@ -40,14 +40,14 @@ public:
    * @brief Constructs a Title row with the specified string
    * @param title
    */
-  TooltipRowItem(const std::string& title);
+  TooltipRowItem(std::string title);
 
   /**
    * @brief Constructs a Value row with the specified name and value.
    * @param title
    * @param value
    */
-  TooltipRowItem(const std::string& title, const std::string& value);
+  TooltipRowItem(std::string title, std::string value);
 
   /**
    * @brief Copy constructor

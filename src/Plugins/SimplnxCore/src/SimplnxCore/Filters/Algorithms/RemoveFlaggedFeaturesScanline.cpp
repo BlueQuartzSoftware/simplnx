@@ -550,8 +550,6 @@ RemoveFlaggedFeaturesScanline::RemoveFlaggedFeaturesScanline(DataStructure& data
 {
 }
 
-RemoveFlaggedFeaturesScanline::~RemoveFlaggedFeaturesScanline() noexcept = default;
-
 Result<> RemoveFlaggedFeaturesScanline::operator()()
 {
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
@@ -710,9 +708,10 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
       {
         listed += ", ...";
       }
-      result.warnings().push_back(Warning{k_EmptyFeatureSkippedWarning, fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
-                                                                                    "them. Feature ID(s): {}",
-                                                                                    emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
+      result.warnings().push_back(Warning{.code = k_EmptyFeatureSkippedWarning,
+                                          .message = fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
+                                                                 "them. Feature ID(s): {}",
+                                                                 emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
     }
 
     Result<> cropResult = cropTaskResult.takeResult();
@@ -768,9 +767,10 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
       {
         if(path == m_InputValues->FeatureIdsArrayPath)
         {
-          result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
-                                                                                              "cannot be ignored, so it was removed from the ignore list.",
-                                                                                              path.toString())});
+          result.warnings().push_back(Warning{.code = k_FeatureIdsCannotBeIgnoredWarning,
+                                              .message = fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
+                                                                     "cannot be ignored, so it was removed from the ignore list.",
+                                                                     path.toString())});
           continue;
         }
         ignoredPaths.push_back(path);

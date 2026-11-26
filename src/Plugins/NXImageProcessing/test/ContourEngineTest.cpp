@@ -625,8 +625,8 @@ TEST_CASE("NXImageProcessing::ContourEngine: over-capacity neighbor offsets are 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  const std::vector<SEOffset> tooMany(k_MaxRadius1Neighbors + 1, SEOffset{1, 0, 0});
-  const BinaryContourPredicate<int32> predicate{1, 0};
+  const std::vector<SEOffset> tooMany(k_MaxRadius1Neighbors + 1, SEOffset{.dx = 1, .dy = 0, .dz = 0});
+  const BinaryContourPredicate<int32> predicate{.foreground = 1, .background = 0};
   const Result<> result = ApplyContour<int32>(inStore, outStore, SizeVec3{2, 2, 2}, tooMany, predicate, shouldCancel, messageHandler);
   REQUIRE(result.invalid());
 }
@@ -741,7 +741,7 @@ TEST_CASE("NXImageProcessing::ContourEngine: bounded 2D blocks and tiles preserv
   const std::vector<int32> binary = contour_test::MakeContourPattern<int32>(dimX, dimY, dimZ, /*foreground=*/1, /*background=*/0);
   const std::vector<int32> labels = contour_test::MakeMultiLabelContourPattern<int32>(dimX, dimY, dimZ);
   const std::vector<SEOffset> offsets = MakeContourNeighborOffsets(/*fullyConnected=*/true);
-  const BinaryContourPredicate<int32> binaryPredicate{/*foreground=*/1, /*background=*/0};
+  const BinaryContourPredicate<int32> binaryPredicate{/*foreground=*/.foreground = 1, /*background=*/.background = 0};
   const LabelContourPredicate<int32> labelPredicate{/*background=*/0};
   const std::vector<int32> expectedBinary = contour_test::ContourGatherOracle<int32>(binary, dimX, dimY, dimZ, offsets, binaryPredicate);
   const std::vector<int32> expectedLabels = contour_test::ContourGatherOracle<int32>(labels, dimX, dimY, dimZ, offsets, labelPredicate);
@@ -753,7 +753,8 @@ TEST_CASE("NXImageProcessing::ContourEngine: bounded 2D blocks and tiles preserv
     usize maximumReadValues;
     usize maximumWriteValues;
   };
-  const std::array<TransferCase, 2> transferCases = {{{"full-width row blocks", 216, 36, 18}, {"overwide X tiles", 56, 4, 2}}};
+  const std::array<TransferCase, 2> transferCases = {{{.label = "full-width row blocks", .targetBytes = 216, .maximumReadValues = 36, .maximumWriteValues = 18},
+                                                      {.label = "overwide X tiles", .targetBytes = 56, .maximumReadValues = 4, .maximumWriteValues = 2}}};
 
   for(const TransferCase& transferCase : transferCases)
   {
@@ -788,7 +789,8 @@ TEST_CASE("NXImageProcessing::RadiusOneStencil2D: fixed output preserves block o
     bool fullWidth;
     usize maximumReadValues;
   };
-  const std::array<FixedOutputCase, 2> fixedOutputCases = {{{"full-width row blocks", 216, true, 45}, {"overwide X tiles", 56, false, 4}}};
+  const std::array<FixedOutputCase, 2> fixedOutputCases = {{{.label = "full-width row blocks", .inputAllowanceBytes = 216, .fullWidth = true, .maximumReadValues = 45},
+                                                            {.label = "overwide X tiles", .inputAllowanceBytes = 56, .fullWidth = false, .maximumReadValues = 4}}};
 
   for(const FixedOutputCase& fixedOutputCase : fixedOutputCases)
   {

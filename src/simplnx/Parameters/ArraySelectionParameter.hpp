@@ -30,7 +30,7 @@ public:
   };
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes,
                           AllowedComponentShapes requiredComps = {}, DataLocation location = DataLocation::Any);
   ~ArraySelectionParameter() override = default;
 
@@ -149,9 +149,9 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
+  AllowedComponentShapes m_RequiredComponentShapes;
   DataLocation m_Location = DataLocation::Any;
 };
 

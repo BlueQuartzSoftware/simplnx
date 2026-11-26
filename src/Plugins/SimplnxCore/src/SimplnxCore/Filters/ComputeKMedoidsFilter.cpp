@@ -104,8 +104,8 @@ IFilter::UniquePointer ComputeKMedoidsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInitClustersValue = filterArgs.value<uint64>(k_InitClusters_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
@@ -165,12 +165,12 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeKMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeKMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_UseSeed_Key))

@@ -34,8 +34,8 @@ struct SIMPLNXCORE_EXPORT ComputeFeatureNeighborsInputValues
   DataPath NeighborListPath;
   DataPath NumberOfNeighborsPath;
   DataPath SharedSurfaceAreaListPath;
-  BoolParameter::ValueType StoreBoundaryCells;
-  BoolParameter::ValueType StoreSurfaceFeatures;
+  BoolParameter::ValueType StoreBoundaryCells{};
+  BoolParameter::ValueType StoreSurfaceFeatures{};
   DataPath SurfaceFeaturesPath;
 };
 
@@ -69,7 +69,7 @@ public:
   /**
    * @brief Destroys the feature-neighbor dispatcher.
    */
-  ~ComputeFeatureNeighbors() noexcept;
+  ~ComputeFeatureNeighbors() noexcept = default;
 
   ComputeFeatureNeighbors(const ComputeFeatureNeighbors&) = delete;
   ComputeFeatureNeighbors(ComputeFeatureNeighbors&&) noexcept = delete;

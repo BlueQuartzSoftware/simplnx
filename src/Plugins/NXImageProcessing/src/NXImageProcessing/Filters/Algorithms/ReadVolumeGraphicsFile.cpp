@@ -23,7 +23,6 @@ ReadVolumeGraphicsFile::ReadVolumeGraphicsFile(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ReadVolumeGraphicsFile::~ReadVolumeGraphicsFile() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReadVolumeGraphicsFile::getCancel()

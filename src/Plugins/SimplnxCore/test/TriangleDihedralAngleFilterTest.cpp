@@ -460,7 +460,7 @@ struct DihedralFixture
   DihedralFixture& operator=(const DihedralFixture&) = default;
   DihedralFixture& operator=(DihedralFixture&&) = default;
 
-  Arguments arguments() const
+  static Arguments arguments()
   {
     Arguments args;
     args.insertOrAssign(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key, std::make_any<DataPath>(k_DihedralGeometryPath));
@@ -603,14 +603,62 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: block transfer contracts", "[Simp
     int32 contextCode;
     const char* contextMessage;
   };
-  const std::array<ContractCase, 7> cases = {
-      {{"complete", DihedralStoreRole::Angles, false, 0, 5, k_DihedralBlockFaces + 1, 0, ""},
-       {"vertex read", DihedralStoreRole::Vertices, false, 1, 1, 0, -65820, "Error reading vertex coordinates for triangle dihedral angle calculation."},
-       {"first face read", DihedralStoreRole::Faces, false, 1, 2, 0, -65821, "Error reading connectivity for triangle dihedral angle calculation at triangle 0 (262144 triangles)."},
-       {"tail face read", DihedralStoreRole::Faces, false, 2, 4, k_DihedralBlockFaces, -65821, "Error reading connectivity for triangle dihedral angle calculation at triangle 262144 (1 triangles)."},
-       {"first output write", DihedralStoreRole::Angles, true, 1, 3, 0, -65822, "Error writing dihedral angles at triangle 0 (262144 triangles)."},
-       {"tail output write", DihedralStoreRole::Angles, true, 2, 5, k_DihedralBlockFaces, -65822, "Error writing dihedral angles at triangle 262144 (1 triangles)."},
-       {"cancel after first block", DihedralStoreRole::Angles, false, 0, 3, k_DihedralBlockFaces, 0, ""}}};
+  const std::array<ContractCase, 7> cases = {{{.name = "complete",
+                                               .failingRole = DihedralStoreRole::Angles,
+                                               .failingWrite = false,
+                                               .failingCall = 0,
+                                               .traceLength = 5,
+                                               .completedFaces = k_DihedralBlockFaces + 1,
+                                               .contextCode = 0,
+                                               .contextMessage = ""},
+                                              {.name = "vertex read",
+                                               .failingRole = DihedralStoreRole::Vertices,
+                                               .failingWrite = false,
+                                               .failingCall = 1,
+                                               .traceLength = 1,
+                                               .completedFaces = 0,
+                                               .contextCode = -65820,
+                                               .contextMessage = "Error reading vertex coordinates for triangle dihedral angle calculation."},
+                                              {.name = "first face read",
+                                               .failingRole = DihedralStoreRole::Faces,
+                                               .failingWrite = false,
+                                               .failingCall = 1,
+                                               .traceLength = 2,
+                                               .completedFaces = 0,
+                                               .contextCode = -65821,
+                                               .contextMessage = "Error reading connectivity for triangle dihedral angle calculation at triangle 0 (262144 triangles)."},
+                                              {.name = "tail face read",
+                                               .failingRole = DihedralStoreRole::Faces,
+                                               .failingWrite = false,
+                                               .failingCall = 2,
+                                               .traceLength = 4,
+                                               .completedFaces = k_DihedralBlockFaces,
+                                               .contextCode = -65821,
+                                               .contextMessage = "Error reading connectivity for triangle dihedral angle calculation at triangle 262144 (1 triangles)."},
+                                              {.name = "first output write",
+                                               .failingRole = DihedralStoreRole::Angles,
+                                               .failingWrite = true,
+                                               .failingCall = 1,
+                                               .traceLength = 3,
+                                               .completedFaces = 0,
+                                               .contextCode = -65822,
+                                               .contextMessage = "Error writing dihedral angles at triangle 0 (262144 triangles)."},
+                                              {.name = "tail output write",
+                                               .failingRole = DihedralStoreRole::Angles,
+                                               .failingWrite = true,
+                                               .failingCall = 2,
+                                               .traceLength = 5,
+                                               .completedFaces = k_DihedralBlockFaces,
+                                               .contextCode = -65822,
+                                               .contextMessage = "Error writing dihedral angles at triangle 262144 (1 triangles)."},
+                                              {.name = "cancel after first block",
+                                               .failingRole = DihedralStoreRole::Angles,
+                                               .failingWrite = false,
+                                               .failingCall = 0,
+                                               .traceLength = 3,
+                                               .completedFaces = k_DihedralBlockFaces,
+                                               .contextCode = 0,
+                                               .contextMessage = ""}}};
   const auto& contract = cases[caseIndex];
   CAPTURE(scenario, contract.name);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -624,7 +672,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: block transfer contracts", "[Simp
   state.failingWrite = contract.failingWrite;
   state.failingCall = contract.failingCall;
   state.cancelAfterFirstWrite = caseIndex == 6;
-  TriangleDihedralAngleInputValues inputValues{k_DihedralGeometryPath, "Angles"};
+  TriangleDihedralAngleInputValues inputValues{.InputTriangleGeometryPath = k_DihedralGeometryPath, .SurfaceMeshTriangleDihedralAnglesArrayName = "Angles"};
   const IFilter::MessageHandler messages{};
   DihedralTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleDihedralAngle(fixture.dataStructure, messages, state.shouldCancel, &inputValues)(); });
@@ -645,11 +693,11 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: block transfer contracts", "[Simp
     CHECK(result.errors()[1].message == contract.contextMessage);
   }
   CHECK(state.shouldCancel.load() == state.cancelAfterFirstWrite);
-  const std::array<DihedralTransfer, 5> expected = {{{DihedralStoreRole::Vertices, false, 0, 33},
-                                                     {DihedralStoreRole::Faces, false, 0, 786432},
-                                                     {DihedralStoreRole::Angles, true, 0, 262144},
-                                                     {DihedralStoreRole::Faces, false, 786432, 3},
-                                                     {DihedralStoreRole::Angles, true, 262144, 1}}};
+  const std::array<DihedralTransfer, 5> expected = {{{.role = DihedralStoreRole::Vertices, .write = false, .start = 0, .count = 33},
+                                                     {.role = DihedralStoreRole::Faces, .write = false, .start = 0, .count = 786432},
+                                                     {.role = DihedralStoreRole::Angles, .write = true, .start = 0, .count = 262144},
+                                                     {.role = DihedralStoreRole::Faces, .write = false, .start = 786432, .count = 3},
+                                                     {.role = DihedralStoreRole::Angles, .write = true, .start = 262144, .count = 1}}};
   REQUIRE(calls.size() == contract.traceLength);
   for(usize callIndex = 0; callIndex < calls.size(); ++callIndex)
   {
@@ -677,7 +725,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: early exit controls", "[SimplnxCo
   scope.requireExpectedStore(*fixture.facesPtr);
   scope.requireExpectedStore(*outputPtr);
   state.shouldCancel = preCancelled;
-  TriangleDihedralAngleInputValues inputValues{k_DihedralGeometryPath, "Angles"};
+  TriangleDihedralAngleInputValues inputValues{.InputTriangleGeometryPath = k_DihedralGeometryPath, .SurfaceMeshTriangleDihedralAnglesArrayName = "Angles"};
   const IFilter::MessageHandler messages{};
   DihedralTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleDihedralAngle(fixture.dataStructure, messages, state.shouldCancel, &inputValues)(); });

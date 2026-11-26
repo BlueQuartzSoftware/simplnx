@@ -19,7 +19,6 @@ ComputeTriangleGeomCentroids::ComputeTriangleGeomCentroids(DataStructure& dataSt
 }
 
 // -----------------------------------------------------------------------------
-ComputeTriangleGeomCentroids::~ComputeTriangleGeomCentroids() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeTriangleGeomCentroids::getCancel()
@@ -111,7 +110,7 @@ Result<> ComputeTriangleGeomCentroids::operator()()
         {
           // Use MessageHandler::sendMessage (which guards against an empty callback) rather than
           // invoking m_Callback directly, which throws std::bad_function_call when no handler is installed.
-          m_MessageHandler.sendMessage(IFilter::Message{IFilter::Message::Type::Info, fmt::format("Feature ID {} may be periodic. Manual review may be necessary.", i)});
+          m_MessageHandler.sendMessage(IFilter::Message{.type = IFilter::Message::Type::Info, .message = fmt::format("Feature ID {} may be periodic. Manual review may be necessary.", i)});
         }
       }
     }

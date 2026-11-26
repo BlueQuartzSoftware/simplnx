@@ -66,7 +66,7 @@ public:
   /**
    * @brief Destroys the KAM dispatcher.
    */
-  ~ComputeKernelAvgMisorientations() noexcept;
+  ~ComputeKernelAvgMisorientations() noexcept = default;
 
   ComputeKernelAvgMisorientations(const ComputeKernelAvgMisorientations&) = delete;
   ComputeKernelAvgMisorientations(ComputeKernelAvgMisorientations&&) noexcept = delete;

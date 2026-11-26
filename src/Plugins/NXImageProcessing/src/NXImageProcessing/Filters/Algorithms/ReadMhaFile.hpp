@@ -42,7 +42,7 @@ class NXIMAGEPROCESSING_EXPORT ReadMhaFile
 {
 public:
   ReadMhaFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadMhaFileInputValues* inputValues);
-  ~ReadMhaFile() noexcept;
+  ~ReadMhaFile() noexcept = default;
 
   ReadMhaFile(const ReadMhaFile&) = delete;
   ReadMhaFile(ReadMhaFile&&) noexcept = delete;

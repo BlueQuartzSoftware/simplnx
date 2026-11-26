@@ -25,8 +25,6 @@ ComputeFeatureRect::ComputeFeatureRect(DataStructure& dataStructure, const IFilt
 {
 }
 
-ComputeFeatureRect::~ComputeFeatureRect() noexcept = default;
-
 const std::atomic_bool& ComputeFeatureRect::getCancel()
 {
   return m_ShouldCancel;

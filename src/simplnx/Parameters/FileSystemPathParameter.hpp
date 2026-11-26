@@ -44,7 +44,7 @@ public:
    * @param pathType
    * @param acceptAllExtensions
    */
-  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType& extensionsType, PathType pathType,
+  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, ExtensionsType extensionsType, PathType pathType,
                           bool acceptAllExtensions = false);
 
   ~FileSystemPathParameter() override = default;

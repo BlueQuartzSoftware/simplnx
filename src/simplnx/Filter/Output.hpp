@@ -9,6 +9,7 @@
 #include <nonstd/span.hpp>
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace nx::core
@@ -70,8 +71,8 @@ public:
    * @brief Constructs an IDataCreationAction that takes a DataPath specifying the path to be created.
    * @param createdPath
    */
-  IDataCreationAction(const DataPath& createdPath)
-  : m_CreatedPath(createdPath)
+  IDataCreationAction(DataPath createdPath)
+  : m_CreatedPath(std::move(createdPath))
   {
   }
   ~IDataCreationAction() noexcept override = default;
@@ -131,9 +132,9 @@ struct SIMPLNX_EXPORT DataObjectModification
  */
 struct SIMPLNX_EXPORT OutputActions
 {
-  std::vector<AnyDataAction> actions = {};
-  std::vector<AnyDataAction> deferredActions = {};
-  std::vector<DataObjectModification> modifiedActions = {};
+  std::vector<AnyDataAction> actions;
+  std::vector<AnyDataAction> deferredActions;
+  std::vector<DataObjectModification> modifiedActions;
 
   OutputActions() = default;
 
@@ -176,7 +177,7 @@ struct SIMPLNX_EXPORT OutputActions
    */
   void appendDataObjectModificationNotification(const DataPath& dataPath, DataObjectModification::ModifiedType modifiedType)
   {
-    modifiedActions.push_back(DataObjectModification{dataPath, modifiedType});
+    modifiedActions.push_back(DataObjectModification{.modifiedPath = dataPath, .modifiedType = modifiedType});
   }
 
   /**

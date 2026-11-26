@@ -153,7 +153,7 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
   }
 
   std::array<std::unique_ptr<T[]>, kTransferPageCount> pages;
-  std::array<usize, kTransferPageCount> pageStarts;
+  std::array<usize, kTransferPageCount> pageStarts{};
   pageStarts.fill(std::numeric_limits<usize>::max());
   std::array<usize, kTransferPageCount> pageUse{};
   usize useCounter = 0;
@@ -422,7 +422,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
   const usize facesPerRun = std::min(kTransferFaceRun, std::max(usize{1}, kTransferPageValues / valuesPerFace));
   std::array<std::unique_ptr<K[]>, kTransferPageCount> idPages;
   std::array<std::unique_ptr<T[]>, kTransferPageCount> valuePages;
-  std::array<usize, kTransferPageCount> idStarts, valueStarts, idUse{}, valueUse{};
+  std::array<usize, kTransferPageCount> idStarts{}, valueStarts{}, idUse{}, valueUse{};
   usize idUseCounter = 0;
   usize valueUseCounter = 0;
   idStarts.fill(kInvalid);

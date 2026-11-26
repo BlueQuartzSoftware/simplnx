@@ -19,7 +19,7 @@ public:
   using AllowedTypes = std::set<BaseGroup::GroupType>;
 
   DataGroupSelectionParameter() = delete;
-  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes);
   ~DataGroupSelectionParameter() override = default;
 
   DataGroupSelectionParameter(const DataGroupSelectionParameter&) = delete;
@@ -113,8 +113,8 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
 };
 
 namespace SIMPLConversion

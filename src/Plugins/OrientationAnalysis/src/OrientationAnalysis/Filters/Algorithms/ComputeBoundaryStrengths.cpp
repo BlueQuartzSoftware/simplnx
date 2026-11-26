@@ -7,6 +7,7 @@
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
+#include <cmath>
 
 using namespace nx::core;
 
@@ -21,7 +22,6 @@ ComputeBoundaryStrengths::ComputeBoundaryStrengths(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-ComputeBoundaryStrengths::~ComputeBoundaryStrengths() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeBoundaryStrengths::getCancel()
@@ -47,7 +47,7 @@ Result<> ComputeBoundaryStrengths::operator()()
 
   const usize numTriangles = surfaceMeshFaceLabelsArrayRef.getNumberOfTuples();
 
-  float32 mPrime_1, mPrime_2, F1_1, F1_2, F1spt_1, F1spt_2, F7_1, F7_2;
+  float32 mPrime_1 = NAN, mPrime_2 = NAN, F1_1 = NAN, F1_2 = NAN, F1spt_1 = NAN, F1spt_2 = NAN, F7_1 = NAN, F7_2 = NAN;
 
   nx::core::Vec3<float64> LD = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
   LD = LD.normalize();
@@ -101,7 +101,7 @@ Result<> ComputeBoundaryStrengths::operator()()
                                              "[0, {}).",
                                              m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, feature1PhaseIdx, faceIdx, orientationOps.size(), orientationOps.size()));
         }
-        ebsdlib::LaueOps::Pointer laueClass = orientationOps[currentLaueIndex];
+        const ebsdlib::LaueOps::Pointer& laueClass = orientationOps[currentLaueIndex];
         mPrime_1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD.data()));
         mPrime_2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD.data()));
         F1_1 = static_cast<float32>(laueClass->getF1(q1, q2, LD.data(), true));

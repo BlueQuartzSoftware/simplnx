@@ -21,20 +21,20 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
 {
-  ChoicesParameter::ValueType RangeType;
+  ChoicesParameter::ValueType RangeType{};
   VectorInt32Parameter::ValueType Range;
-  bool FindLength;
-  bool FindMin;
-  bool FindMax;
-  bool FindMean;
-  bool FindMedian;
-  bool FindMode;
-  bool FindStdDeviation;
-  bool FindSummation;
-  bool UseMask;
-  bool ComputeByIndex;
-  bool StandardizeData;
-  bool FindNumUniqueValues;
+  bool FindLength{};
+  bool FindMin{};
+  bool FindMax{};
+  bool FindMean{};
+  bool FindMedian{};
+  bool FindMode{};
+  bool FindStdDeviation{};
+  bool FindSummation{};
+  bool UseMask{};
+  bool ComputeByIndex{};
+  bool StandardizeData{};
+  bool FindNumUniqueValues{};
   DataPath SelectedArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath MaskArrayPath;

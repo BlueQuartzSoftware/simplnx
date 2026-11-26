@@ -122,7 +122,7 @@ FileIO FileIO::AppendFile(const std::filesystem::path& filepath)
 }
 
 FileIO::FileIO(const std::filesystem::path& filepath, hid_t fileId)
-: GroupIO()
+
 {
   setFilePath(filepath);
   setId(fileId);

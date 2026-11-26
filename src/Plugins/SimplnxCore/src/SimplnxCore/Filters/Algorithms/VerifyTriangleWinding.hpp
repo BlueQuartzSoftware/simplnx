@@ -34,7 +34,7 @@ struct SIMPLNXCORE_EXPORT VerifyTriangleWindingInputValues
 {
   DataPath TargetGeometryPath;
   DataPath LabelsPath;
-  bool RepairNormals;
+  bool RepairNormals{};
   DataPath TriangleNormalsPath;
 };
 

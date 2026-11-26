@@ -41,7 +41,7 @@ public:
   /**
    * @brief Destroys the non-owning bulk-I/O algorithm.
    */
-  ~ComputeSurfaceAreaToVolumeScanline() noexcept;
+  ~ComputeSurfaceAreaToVolumeScanline() noexcept = default;
 
   ComputeSurfaceAreaToVolumeScanline(const ComputeSurfaceAreaToVolumeScanline&) = delete;
   ComputeSurfaceAreaToVolumeScanline(ComputeSurfaceAreaToVolumeScanline&&) noexcept = delete;

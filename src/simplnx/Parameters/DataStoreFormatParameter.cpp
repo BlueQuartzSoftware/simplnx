@@ -5,6 +5,7 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace
 {
@@ -13,9 +14,9 @@ constexpr nx::core::int64 k_BadFormatCode = -780;
 
 namespace nx::core
 {
-DataStoreFormatParameter::DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+DataStoreFormatParameter::DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -39,7 +40,7 @@ nlohmann::json DataStoreFormatParameter::toJsonImpl(const std::any& value) const
   return GetAnyRef<ValueType>(value);
 }
 
-Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   if(!json.is_string())
   {
@@ -63,7 +64,7 @@ typename DataStoreFormatParameter::ValueType DataStoreFormatParameter::defaultSt
   return m_DefaultValue;
 }
 
-typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues() const
+typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues()
 {
   const auto displayNames = Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
   AvailableValuesType result;
@@ -75,7 +76,7 @@ typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter:
   return result;
 }
 
-std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames() const
+std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames()
 {
   return Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
 }

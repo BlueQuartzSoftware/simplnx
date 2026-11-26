@@ -109,8 +109,8 @@ IFilter::UniquePointer SliceTriangleGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSliceRangeValue = filterArgs.value<ChoicesParameter::ValueType>(k_SliceRange_Key);
   auto pZStartValue = filterArgs.value<float32>(k_Zstart_Key);
@@ -177,12 +177,12 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   SliceTriangleGeometryInputValues inputValues;
 
@@ -201,7 +201,8 @@ Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
   auto result = SliceTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid() && dataStructure.getDataRefAs<TriangleGeom>(inputValues.CADDataContainerName).getNumberOfFaces() == 0)
   {
-    result.warnings().push_back(Warning{-62105, fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.CADDataContainerName.toString())});
+    result.warnings().push_back(
+        Warning{.code = -62105, .message = fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.CADDataContainerName.toString())});
   }
   return result;
 }

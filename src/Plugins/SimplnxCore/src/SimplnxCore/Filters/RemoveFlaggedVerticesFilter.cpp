@@ -100,8 +100,8 @@ IFilter::UniquePointer RemoveFlaggedVerticesFilter::clone() const
   return std::make_unique<RemoveFlaggedVerticesFilter>();
 }
 
-IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto reducedVertexPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -151,7 +151,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     const AttributeMatrix* selectedCellDataPtr = inputVertexGeom.getVertexAttributeMatrix();
     if(selectedCellDataPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5751, fmt::format("'{}' must have cell data attribute matrix", vertexGeomPath.toString()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-5751, fmt::format("'{}' must have cell data attribute matrix", vertexGeomPath.toString()))};
     }
     const std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(vertexGeomPath.createChildPath(cellDataName));
@@ -190,7 +190,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(renumberFeatures)
     {
@@ -250,11 +250,11 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
-Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RemoveFlaggedVerticesInputValues inputValues;
   inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);

@@ -130,8 +130,8 @@ IFilter::UniquePointer DBSCANFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                     const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto pEpsilonValue = filterArgs.value<float32>(k_Epsilon_Key);
   const auto pMinPointsValue = filterArgs.value<int32>(k_MinPoints_Key);
@@ -183,12 +183,12 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   const bool useMask = filterArgs.value<bool>(k_UseMask_Key);
   const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);

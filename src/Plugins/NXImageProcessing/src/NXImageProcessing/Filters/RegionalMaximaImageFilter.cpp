@@ -84,8 +84,8 @@ IFilter::UniquePointer RegionalMaximaImageFilter::clone() const
 {
   return std::make_unique<RegionalMaximaImageFilter>();
 }
-IFilter::PreflightResult RegionalMaximaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RegionalMaximaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -101,7 +101,7 @@ IFilter::PreflightResult RegionalMaximaImageFilter::preflightImpl(const DataStru
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   // The Float64 foreground/background are written into the uint32 output; that narrowing is UNDEFINED for a
@@ -109,12 +109,12 @@ IFilter::PreflightResult RegionalMaximaImageFilter::preflightImpl(const DataStru
   Result<> fgGuard = ImageProcessing::ValidateScalarValueForType(DataType::uint32, foregroundValue, "Foreground Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(fgGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(fgGuard), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(fgGuard), OutputActions{})};
   }
   Result<> bgGuard = ImageProcessing::ValidateScalarValueForType(DataType::uint32, backgroundValue, "Background Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(bgGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(bgGuard), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(bgGuard), OutputActions{})};
   }
   for(Warning& warning : fgGuard.warnings())
   {
@@ -124,10 +124,10 @@ IFilter::PreflightResult RegionalMaximaImageFilter::preflightImpl(const DataStru
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> RegionalMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RegionalMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

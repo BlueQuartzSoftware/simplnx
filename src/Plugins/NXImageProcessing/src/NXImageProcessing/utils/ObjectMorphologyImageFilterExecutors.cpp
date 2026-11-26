@@ -62,7 +62,17 @@ Result<> ExecuteObjectMorphologyImageFilter(DataStructure& dataStructure, const 
   }
 
   const std::vector<SEOffset> boxOffsets = detail::MakeFullBoxNeighborOffsets();
-  detail::ObjectMorphologyExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, boxOffsets, op, objectValue, backgroundValue, shouldCancel, messageHandler};
+  detail::ObjectMorphologyExecuteFn executeFn{.dataStructure = dataStructure,
+                                              .inputArrayPath = inputArrayPath,
+                                              .outputArrayPath = outputArrayPath,
+                                              .dims = dims,
+                                              .se = se,
+                                              .boxOffsets = boxOffsets,
+                                              .op = op,
+                                              .objectValue = objectValue,
+                                              .backgroundValue = backgroundValue,
+                                              .shouldCancel = shouldCancel,
+                                              .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

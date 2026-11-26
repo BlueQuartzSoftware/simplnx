@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the binary feature-phase algorithm.
    */
-  ~ComputeFeaturePhasesBinary() noexcept;
+  ~ComputeFeaturePhasesBinary() noexcept = default;
 
   ComputeFeaturePhasesBinary(const ComputeFeaturePhasesBinary&) = delete;
   ComputeFeaturePhasesBinary(ComputeFeaturePhasesBinary&&) noexcept = delete;

@@ -231,7 +231,7 @@ bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::s
   using VertT = INodeGeometry0D::SharedVertexList::value_type;
 
   // Leverage ordering assumptions to speed up duplicate checks
-  std::array<IGeometry::MeshIndexType, 3> offset;
+  std::array<IGeometry::MeshIndexType, 3> offset{};
 
   switch(sortedVertices.axis)
   {

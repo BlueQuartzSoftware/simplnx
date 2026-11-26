@@ -7,8 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
-
-namespace fs = std::filesystem;
+#include <utility>
 
 namespace nx::core
 {
@@ -24,9 +23,9 @@ constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
 } // namespace
 
 //-----------------------------------------------------------------------------
-EnsembleInfoParameter::EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+EnsembleInfoParameter::EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -56,7 +55,7 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
   for(const auto& vector : table)
   {
     nlohmann::json cols;
-    for(auto cell : vector)
+    for(const auto& cell : vector)
     {
       cols.push_back(cell);
     }
@@ -66,7 +65,7 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
 

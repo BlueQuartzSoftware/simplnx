@@ -24,7 +24,7 @@ struct SIMPLNXCORE_EXPORT ExtractInternalSurfacesFromTriangleGeometryInputValues
   MultiArraySelectionParameter::ValueType CopyTriangleArrayPaths;
   MultiArraySelectionParameter::ValueType CopyVertexArrayPaths;
   GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
-  uint64 CriterionMode;
+  uint64 CriterionMode{};
   VectorInt8Parameter::ValueType NodeTypeRange;
   ArraySelectionParameter::ValueType NodeTypesPath;
   DataPath FaceLabelsPath;
@@ -59,7 +59,7 @@ public:
    */
   ExtractInternalSurfacesFromTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                               ExtractInternalSurfacesFromTriangleGeometryInputValues* inputValues);
-  ~ExtractInternalSurfacesFromTriangleGeometry() noexcept;
+  ~ExtractInternalSurfacesFromTriangleGeometry() noexcept = default;
 
   ExtractInternalSurfacesFromTriangleGeometry(const ExtractInternalSurfacesFromTriangleGeometry&) = delete;
   ExtractInternalSurfacesFromTriangleGeometry(ExtractInternalSurfacesFromTriangleGeometry&&) noexcept = delete;

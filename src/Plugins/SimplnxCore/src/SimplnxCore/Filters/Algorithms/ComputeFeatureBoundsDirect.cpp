@@ -343,8 +343,6 @@ ComputeFeatureBoundsDirect::ComputeFeatureBoundsDirect(DataStructure& dataStruct
 {
 }
 
-ComputeFeatureBoundsDirect::~ComputeFeatureBoundsDirect() noexcept = default;
-
 Result<> ComputeFeatureBoundsDirect::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
@@ -362,7 +360,7 @@ Result<> ComputeFeatureBoundsDirect::operator()()
   std::vector<float32> bounds;
   if(geom.getGeomType() == IGeometry::Type::Image && inMemoryFeatureIds != nullptr)
   {
-    ImageBoundsResult imageBounds = ComputeImageBounds(static_cast<const ImageGeom&>(geom), inMemoryFeatureIds->data(), featureAM.getNumberOfTuples());
+    ImageBoundsResult imageBounds = ComputeImageBounds(dynamic_cast<const ImageGeom&>(geom), inMemoryFeatureIds->data(), featureAM.getNumberOfTuples());
     numFeatures = imageBounds.numFeatures;
     bounds = std::move(imageBounds.bounds);
   }

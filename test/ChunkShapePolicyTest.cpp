@@ -11,10 +11,10 @@ TEST_CASE("ChunkShapePolicy: caller storage matches independent shapes", "[Chunk
 {
   const auto regime = GENERATE(ChunkShapeRegime::BundleOuterSlabs, ChunkShapeRegime::PinSlowestDim);
   const ShapeType dims{64, 2048, 512};
-  const ShapeType originalDims = dims;
+  const ShapeType& originalDims = dims;
   std::array<usize, 4> output{73, 73, 73, 73};
   std::array<usize, 4> scratch{91, 91, 91, 91};
-  const ChunkShapeOptions options{k_TargetChunkBytes, regime};
+  const ChunkShapeOptions options{.targetBytes = k_TargetChunkBytes, .regime = regime};
   REQUIRE(ComputeChunkShapeInto(dims, 1, 4, options, output, scratch));
   CHECK(output == std::array<usize, 4>{1, 512, 512, 73});
   CHECK(scratch.back() == 91);
@@ -63,7 +63,7 @@ ShapeType ComputeAndCheckScratch(const ShapeType& dimensions, usize components, 
 
 TEST_CASE("ChunkShapePolicy: BundleOuterSlabs regime", "[ChunkShapePolicy]")
 {
-  const ChunkShapeOptions opts{k_TargetChunkBytes, ChunkShapeRegime::BundleOuterSlabs};
+  const ChunkShapeOptions opts{.targetBytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
 
   SECTION("3D large slice (one slice >= target -> pin dim0, band dim1)")
   {
@@ -114,7 +114,7 @@ TEST_CASE("ChunkShapePolicy: BundleOuterSlabs regime", "[ChunkShapePolicy]")
 
 TEST_CASE("ChunkShapePolicy: PinSlowestDim regime", "[ChunkShapePolicy]")
 {
-  const ChunkShapeOptions opts{k_TargetChunkBytes, ChunkShapeRegime::PinSlowestDim};
+  const ChunkShapeOptions opts{.targetBytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::PinSlowestDim};
 
   SECTION("rank>=3 (pin dim0 to 1, band dim1)")
   {

@@ -214,7 +214,7 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: FromSIMPLJ
   };
   const Result<Arguments> result = SignedDanielssonDistanceMapImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<bool>(SignedDanielssonFilter::k_InsideIsPositive_Key) == true);
   REQUIRE(args.value<bool>(SignedDanielssonFilter::k_SquaredDistance_Key) == true);
   REQUIRE(args.value<bool>(SignedDanielssonFilter::k_UseImageSpacing_Key) == true);

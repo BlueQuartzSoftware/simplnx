@@ -152,8 +152,8 @@ IFilter::UniquePointer RegularGridSampleSurfaceMeshFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                           const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pTriangleGeometryPathValue = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
@@ -179,18 +179,19 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   const auto* faceAttributeMatrixPtr = triangleGeom.getFaceAttributeMatrix();
   if(faceAttributeMatrixPtr == nullptr || !IsChildOfAttributeMatrix(dataStructure, pSurfaceMeshFaceLabelsArrayPathValue, *faceAttributeMatrixPtr))
   {
-    return {MakeErrorResult<OutputActions>(-11803, fmt::format("The **Face Labels/Part Numbers** DataArray '{}' must belong to the Face Data Attribute Matrix of **Triangle Geometry** '{}'. "
-                                                               "Select a Triangle Geometry with a Face Data Attribute Matrix and a DataArray from that Attribute Matrix.",
-                                                               pSurfaceMeshFaceLabelsArrayPathValue.toString(), pTriangleGeometryPathValue.toString()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-11803, fmt::format("The **Face Labels/Part Numbers** DataArray '{}' must belong to the Face Data Attribute Matrix of **Triangle Geometry** '{}'. "
+                                                                   "Select a Triangle Geometry with a Face Data Attribute Matrix and a DataArray from that Attribute Matrix.",
+                                                                   pSurfaceMeshFaceLabelsArrayPathValue.toString(), pTriangleGeometryPathValue.toString()))};
   }
 
   if(geometryOptionIndex == GeometryOption::Create)
   {
     if(!(std::isfinite(pSpacingValue[0]) && pSpacingValue[0] > 0.0F) || !(std::isfinite(pSpacingValue[1]) && pSpacingValue[1] > 0.0F) || !(std::isfinite(pSpacingValue[2]) && pSpacingValue[2] > 0.0F))
     {
-      return {MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "
-                                                                 "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
-                                                                 pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "
+                                                                                  "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
+                                                                                  pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
     }
 
     tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
@@ -226,12 +227,12 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RegularGridSampleSurfaceMeshInputValues inputValues;
 

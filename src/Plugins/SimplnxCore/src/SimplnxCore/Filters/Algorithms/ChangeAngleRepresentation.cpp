@@ -197,8 +197,6 @@ ChangeAngleRepresentation::ChangeAngleRepresentation(DataStructure& dataStructur
 {
 }
 
-ChangeAngleRepresentation::~ChangeAngleRepresentation() noexcept = default;
-
 Result<> ChangeAngleRepresentation::operator()()
 {
   auto& angles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AnglesArrayPath);

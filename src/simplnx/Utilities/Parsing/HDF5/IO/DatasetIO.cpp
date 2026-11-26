@@ -504,8 +504,9 @@ Result<nx::core::DataType> DatasetIO::getDataType() const
     result = {DataType::uint64};
     break;
   default:
-    result = {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datat set is not a supported type for "
-                                                                       "importing. Please select a different data set"}})};
+    result = {nonstd::make_unexpected(std::vector<Error>{Error{.code = -20012,
+                                                               .message = "The selected datat set is not a supported type for "
+                                                                          "importing. Please select a different data set"}})};
     break;
   }
   return result;
@@ -900,7 +901,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         std::vector<unsigned long long> countVec(count->begin(), count->end());
         if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startData.data(), NULL, countVec.data(), NULL) < 0)
 #else
-        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, count->data(), NULL) < 0)
+        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), nullptr, count->data(), nullptr) < 0)
 #endif
         {
           errorCode = -1003;
@@ -919,7 +920,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         std::vector<unsigned long long> startData(start->begin(), start->end());
         if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startData.data(), NULL, countRemaining.data(), NULL) < 0)
 #else
-        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, countRemaining.data(), NULL) < 0)
+        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), nullptr, countRemaining.data(), nullptr) < 0)
 #endif
         {
           errorCode = -1004;
@@ -934,7 +935,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         std::vector<unsigned long long> countVec(count->begin(), count->end());
         if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), NULL, countVec.data(), NULL) < 0)
 #else
-        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), NULL, count->data(), NULL) < 0)
+        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), nullptr, count->data(), nullptr) < 0)
 #endif
         {
           errorCode = -1005;
@@ -956,7 +957,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         }
         else
         {
-          hid_t memSpaceId = H5Screate_simple(memDims.size(), memDims.data(), NULL);
+          hid_t memSpaceId = H5Screate_simple(memDims.size(), memDims.data(), nullptr);
           if(memSpaceId < 0)
           {
             errorCode = -1007;
@@ -1603,7 +1604,7 @@ Result<> DatasetIO::writeSpanHyperslab(nonstd::span<const T> values, const std::
 }
 
 template <typename T>
-nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& h5Dims, const DimsType&  /*chunkDims*/) const
+nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& h5Dims, const DimsType& /*chunkDims*/) const
 {
   ChunkedDataInfo dataInfo;
   std::vector<hsize_t> h5DimsVec(h5Dims.begin(), h5Dims.end());
@@ -1656,7 +1657,7 @@ hid_t DatasetIO::CreateH5DatasetChunkProperties(const DimsType& chunkDims)
   return cparms;
 }
 
-nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const
+nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo)
 {
   // herr_t error = H5Pclose(datasetInfo.transferProp);
   // if(error < 0)
@@ -1741,10 +1742,10 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
           }
 
           // Select hyperslab
-          error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShapeVec.data(), NULL);
+          error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), nullptr, chunkShapeVec.data(), nullptr);
 
           // Create memory dataspace for the hyperslab
-          const hid_t memspaceId = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
+          const hid_t memspaceId = H5Screate_simple(rank, chunkShapeVec.data(), nullptr);
 
           // Read hyperslab from the dataset
           error = H5Dread(h5Id, HdfTypeForPrimitive<T>(), memspaceId, dataspaceId, H5P_DEFAULT, data);
@@ -1824,10 +1825,10 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
       // Open chunk handles permit one leaf lock around selection, write, and cleanup.
       {
         const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, trueChunkShapeVec.data(), NULL);
+        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), nullptr, trueChunkShapeVec.data(), nullptr);
 
         // Create memory dataspace for the hyperslab
-        hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
+        hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), nullptr);
 
         if(chunkShape != trueChunkDims)
         {
@@ -1887,7 +1888,7 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
     const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
 
     /* create a string data type */
-    hid_t typeId;
+    hid_t typeId = 0;
     if((typeId = H5Tcopy(H5T_C_S1)) >= 0)
     {
       size_t size = text.size() + 1;
@@ -1896,7 +1897,7 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
         if(H5Tset_strpad(typeId, H5T_STR_NULLTERM) >= 0)
         {
           /* Create the data space for the dataset. */
-          hid_t dataspaceId;
+          hid_t dataspaceId = 0;
           if((dataspaceId = H5Screate(H5S_SCALAR)) >= 0)
           {
             /* Create or open the dataset. */
@@ -2073,8 +2074,8 @@ std::string DatasetIO::getFilterName() const
     const int numFilters = H5Pget_nfilters(cpListId);
     for(int j = 0; j < numFilters; ++j)
     {
-      unsigned int flags;
-      unsigned int filterConfig;
+      unsigned int flags = 0;
+      unsigned int filterConfig = 0;
       size_t cdNElements = 0;
       char name[1024];
       H5Z_filter_t filter = H5Pget_filter2(cpListId, j, &flags, &cdNElements, nullptr, std::size(name) / sizeof(*name), name, &filterConfig);

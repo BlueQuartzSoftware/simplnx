@@ -32,7 +32,7 @@ public:
   /**
    * @brief Destroys the non-owning partitioner.
    */
-  ~PartitionGeometryScanline() noexcept;
+  ~PartitionGeometryScanline() noexcept = default;
 
   PartitionGeometryScanline(const PartitionGeometryScanline&) = delete;
   PartitionGeometryScanline(PartitionGeometryScanline&&) noexcept = delete;

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <string>
 #include <system_error>
+#include <utility>
 
 #ifdef _WIN32
 #include <io.h>
@@ -315,9 +316,9 @@ Result<> FlushParsersImpl(const ParsersVector& dataParsers)
 }
 } // namespace
 
-AbstractDataParser::AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex)
+AbstractDataParser::AbstractDataParser(IArray& array, std::string columnName, usize columnIndex)
 : m_Array(array)
-, m_ColumnName(columnName)
+, m_ColumnName(std::move(columnName))
 , m_ColumnIndex(columnIndex)
 {
 }

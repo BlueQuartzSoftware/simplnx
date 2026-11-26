@@ -36,7 +36,7 @@ enum class GroupingType : ChoicesParameter::ValueType
  */
 struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
 {
-  ChoicesParameter::ValueType GroupingType;
+  ChoicesParameter::ValueType GroupingType{};
   FileSystemPathParameter::ValueType OutputStlFile;
   FileSystemPathParameter::ValueType OutputStlDirectory;
   StringParameter::ValueType OutputStlPrefix;

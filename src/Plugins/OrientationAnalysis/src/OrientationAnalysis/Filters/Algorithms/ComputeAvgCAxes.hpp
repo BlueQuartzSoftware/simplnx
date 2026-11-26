@@ -51,7 +51,7 @@ public:
   /**
    * @brief Destroys the average c-axis executor.
    */
-  ~ComputeAvgCAxes() noexcept;
+  ~ComputeAvgCAxes() noexcept = default;
 
   ComputeAvgCAxes(const ComputeAvgCAxes&) = delete;
   ComputeAvgCAxes(ComputeAvgCAxes&&) noexcept = delete;

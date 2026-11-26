@@ -17,9 +17,9 @@
 
 namespace nx::core
 {
-StringParameter::StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+StringParameter::StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -46,7 +46,7 @@ nlohmann::json StringParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> StringParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> StringParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'StringParameter' JSON Error: ";
   if(!json.is_string())

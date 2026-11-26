@@ -24,7 +24,7 @@ NormalizeImageInputValues CreateInputValues(const Arguments& filterArgs)
 {
   const auto inputPath = filterArgs.value<DataPath>(NormalizeImageFilter::k_InputImageDataPath_Key);
   const auto outputName = filterArgs.value<DataObjectNameParameter::ValueType>(NormalizeImageFilter::k_OutputImageArrayName_Key);
-  return {inputPath, inputPath.replaceName(outputName)};
+  return {.InputArrayPath = inputPath, .OutputArrayPath = inputPath.replaceName(outputName)};
 }
 } // namespace
 
@@ -71,24 +71,24 @@ IFilter::UniquePointer NormalizeImageFilter::clone() const
 {
   return std::make_unique<NormalizeImageFilter>();
 }
-IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   const auto inputValues = CreateInputValues(filterArgs);
   // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
   if(dataStructure.getDataAs<IDataArray>(inputValues.InputArrayPath) == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(k_InvalidInputArrayError,
-                                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.InputArrayPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.InputArrayPath.toString()))};
   }
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(
       dataStructure, inputValues.InputArrayPath, imageGeomPath, inputValues.OutputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> NormalizeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> NormalizeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   const auto inputValues = CreateInputValues(filterArgs);
   return NormalizeImage(dataStructure, messageHandler, shouldCancel, &inputValues)();

@@ -59,7 +59,6 @@ ReadEnsembleInfo::ReadEnsembleInfo(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-ReadEnsembleInfo::~ReadEnsembleInfo() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReadEnsembleInfo::getCancel()

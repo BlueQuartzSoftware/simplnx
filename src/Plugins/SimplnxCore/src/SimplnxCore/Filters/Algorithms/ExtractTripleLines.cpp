@@ -299,8 +299,6 @@ ExtractTripleLines::ExtractTripleLines(DataStructure& dataStructure, const IFilt
 {
 }
 
-ExtractTripleLines::~ExtractTripleLines() noexcept = default;
-
 Result<> ExtractTripleLines::operator()()
 {
   if((m_InputValues->SourceNodeTypes == nullptr) != (m_InputValues->DestinationNodeTypes == nullptr))

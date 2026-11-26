@@ -224,8 +224,8 @@ protected:
 
   static Result<> DataCheckDimensionality(const INodeGeometry0D& geometry);
 
-  Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
-                                                                const DataPath& attrMatrixPath) const;
+  static Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
+                                                                       const DataPath& attrMatrixPath);
 };
 } // namespace nx::core
 

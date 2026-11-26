@@ -26,7 +26,6 @@ BadDataNeighborOrientationCheckWorklist::BadDataNeighborOrientationCheckWorklist
 }
 
 // -----------------------------------------------------------------------------
-BadDataNeighborOrientationCheckWorklist::~BadDataNeighborOrientationCheckWorklist() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheckWorklist::operator()()

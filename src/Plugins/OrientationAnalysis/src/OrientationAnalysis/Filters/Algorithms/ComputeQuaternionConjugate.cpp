@@ -17,8 +17,6 @@ ComputeQuaternionConjugate::ComputeQuaternionConjugate(DataStructure& dataStruct
 {
 }
 
-ComputeQuaternionConjugate::~ComputeQuaternionConjugate() noexcept = default;
-
 const std::atomic_bool& ComputeQuaternionConjugate::getCancel()
 {
   return m_ShouldCancel;

@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <fstream>
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
@@ -26,7 +25,6 @@ WriteLAMMPSFile::WriteLAMMPSFile(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-WriteLAMMPSFile::~WriteLAMMPSFile() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& WriteLAMMPSFile::getCancel()

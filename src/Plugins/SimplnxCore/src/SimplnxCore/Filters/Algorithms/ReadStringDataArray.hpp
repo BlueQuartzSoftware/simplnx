@@ -22,8 +22,8 @@ const ChoicesParameter::ValueType k_NewLineIndex = 5;
 struct SIMPLNXCORE_EXPORT ReadStringDataArrayInputValues
 {
   FileSystemPathParameter::ValueType inputFileValue;
-  usize skipLineCount;
-  usize delimiterIndex;
+  usize skipLineCount{};
+  usize delimiterIndex{};
   DataPath outputArrayPath;
   std::string dataFormat;
 };
@@ -32,7 +32,7 @@ class SIMPLNXCORE_EXPORT ReadStringDataArray
 {
 public:
   ReadStringDataArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadStringDataArrayInputValues* inputValues);
-  ~ReadStringDataArray() noexcept;
+  ~ReadStringDataArray() noexcept = default;
 
   ReadStringDataArray(const ReadStringDataArray&) = delete;
   ReadStringDataArray(ReadStringDataArray&&) noexcept = delete;

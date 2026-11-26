@@ -22,8 +22,8 @@ struct SIMPLNXCORE_EXPORT FileCache
 {
   fs::path inputFile;
   std::vector<DataArrayMetadata> dataArrays;
-  usize vertexAttrMatTupleCount;
-  usize cellAttrMatTupleCount;
+  usize vertexAttrMatTupleCount{};
+  usize cellAttrMatTupleCount{};
   fs::file_time_type timeStamp;
 
   void flush()

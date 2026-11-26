@@ -68,7 +68,8 @@ struct BinaryIntegerParamGuard
       }
       if(truncated != value)
       {
-        result.warnings().push_back(Warning{k_BinaryValueTruncated, fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
+        result.warnings().push_back(
+            Warning{.code = k_BinaryValueTruncated, .message = fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
       }
     }
     return result;
@@ -153,8 +154,8 @@ IFilter::UniquePointer BinaryProjectionImageFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -173,7 +174,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   // BinaryReduce casts the Float64 foreground/background parameters to the input element type. For an
@@ -183,22 +184,22 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   if(ImageProcessing::GetIntegerScalarTypes().count(inputType) != 0)
   {
-    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{foregroundValue, backgroundValue});
+    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foregroundValue = foregroundValue, .backgroundValue = backgroundValue});
     if(paramGuard.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
     }
     for(Warning& warning : paramGuard.warnings())
     {
       resultOutputActions.warnings().push_back(std::move(warning));
     }
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> BinaryProjectionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> BinaryProjectionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

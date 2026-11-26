@@ -138,7 +138,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: FromSIMPLJson", "[N
   };
   const Result<Arguments> result = IsoContourDistanceImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<float64>(IsoFilter::k_LevelSetValue_Key) == 3.5);
   REQUIRE(args.value<float64>(IsoFilter::k_FarValue_Key) == 7.0);
   REQUIRE(args.value<DataPath>(IsoFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));

@@ -21,8 +21,8 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeCoordinateThresholdInputValues
 {
-  ChoicesParameter::ValueType ShapeType;
-  bool Invert;
+  ChoicesParameter::ValueType ShapeType{};
+  bool Invert{};
   VectorFloat32Parameter::ValueType MinCoord;   ///< Stores rectangular minimum x, y, and z coordinates.
   VectorFloat32Parameter::ValueType MaxCoord;   ///< Stores rectangular maximum x, y, and z coordinates.
   VectorFloat32Parameter::ValueType SphereInfo; ///< Stores sphere center x, y, z and radius.
@@ -59,7 +59,7 @@ public:
   /**
    * @brief Destroys the coordinate-threshold algorithm.
    */
-  ~ComputeCoordinateThreshold() noexcept;
+  ~ComputeCoordinateThreshold() noexcept = default;
 
   ComputeCoordinateThreshold(const ComputeCoordinateThreshold&) = delete;
   ComputeCoordinateThreshold(ComputeCoordinateThreshold&&) noexcept = delete;

@@ -38,7 +38,7 @@ public:
   /**
    * @brief Destroys the non-owning algorithm.
    */
-  ~RemoveFlaggedFeaturesScanline() noexcept;
+  ~RemoveFlaggedFeaturesScanline() noexcept = default;
 
   RemoveFlaggedFeaturesScanline(const RemoveFlaggedFeaturesScanline&) = delete;
   RemoveFlaggedFeaturesScanline(RemoveFlaggedFeaturesScanline&&) noexcept = delete;

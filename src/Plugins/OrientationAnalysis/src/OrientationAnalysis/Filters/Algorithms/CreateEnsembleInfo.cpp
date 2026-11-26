@@ -48,7 +48,6 @@ CreateEnsembleInfo::CreateEnsembleInfo(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-CreateEnsembleInfo::~CreateEnsembleInfo() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CreateEnsembleInfo::getCancel()

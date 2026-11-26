@@ -24,7 +24,7 @@ AttributeMatrix::AttributeMatrix(DataStructure& dataStructure, std::string name,
 
 AttributeMatrix::AttributeMatrix(const AttributeMatrix&) = default;
 
-AttributeMatrix::AttributeMatrix(AttributeMatrix&&) = default;
+AttributeMatrix::AttributeMatrix(AttributeMatrix&&) noexcept = default;
 
 AttributeMatrix::~AttributeMatrix() noexcept = default;
 

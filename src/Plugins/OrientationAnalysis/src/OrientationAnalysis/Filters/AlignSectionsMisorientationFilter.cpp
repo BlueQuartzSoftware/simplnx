@@ -18,7 +18,6 @@
 
 #include <filesystem>
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
@@ -147,8 +146,8 @@ IFilter::UniquePointer AlignSectionsMisorientationFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                          const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pMisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   auto pUseGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
@@ -192,7 +191,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   }
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, cellArrayPaths, -68072); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
@@ -234,12 +233,12 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AlignSectionsMisorientationInputValues inputValues;
 

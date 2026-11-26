@@ -34,8 +34,8 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ComputeSchmidsInputValues
 {
   VectorFloat32Parameter::ValueType LoadingDirection;
-  bool StoreAngleComponents;
-  bool OverrideSystem;
+  bool StoreAngleComponents{};
+  bool OverrideSystem{};
   VectorFloat32Parameter::ValueType SlipPlane;
   VectorFloat32Parameter::ValueType SlipDirection;
   DataPath FeaturePhasesArrayPath;
@@ -55,7 +55,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeSchmids
 {
 public:
   ComputeSchmids(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ComputeSchmidsInputValues* inputValues);
-  ~ComputeSchmids() noexcept;
+  ~ComputeSchmids() noexcept = default;
 
   ComputeSchmids(const ComputeSchmids&) = delete;
   ComputeSchmids(ComputeSchmids&&) noexcept = delete;

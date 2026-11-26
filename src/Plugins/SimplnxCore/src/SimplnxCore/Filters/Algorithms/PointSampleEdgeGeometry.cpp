@@ -140,7 +140,6 @@ PointSampleEdgeGeometry::PointSampleEdgeGeometry(DataStructure& dataStructure, P
 }
 
 // -----------------------------------------------------------------------------
-PointSampleEdgeGeometry::~PointSampleEdgeGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> PointSampleEdgeGeometry::operator()()

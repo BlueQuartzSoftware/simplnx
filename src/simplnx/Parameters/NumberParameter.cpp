@@ -43,7 +43,7 @@ nlohmann::json NumberParameter<T>::toJsonImpl(const std::any& value) const
 }
 
 template <class T>
-Result<std::any> NumberParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> NumberParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'NumberParameter' JSON Error: ";
   if(!json.is_number())
@@ -80,7 +80,7 @@ Result<> NumberParameter<T>::validate(const std::any& value) const
 }
 
 template <class T>
-Result<> NumberParameter<T>::validateNumber(ValueType  /*value*/) const
+Result<> NumberParameter<T>::validateNumber(ValueType /*value*/) const
 {
   return {};
 }

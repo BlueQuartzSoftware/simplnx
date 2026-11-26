@@ -4,14 +4,16 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace nx::core
 {
-UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path, bool centerOrigin)
+UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, DataPath path, bool centerOrigin)
 : m_Origin(origin)
 , m_Spacing(spacing)
-, m_Path(path)
+, m_Path(std::move(path))
 , m_CenterOrigin(centerOrigin)
 {
 }
@@ -49,7 +51,7 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*
     const SizeVec3 dims = image->getDimensions();
     const BoundingBox3Df bounds(std::array<float32, 6>{origin[0], origin[1], origin[2], origin[0] + dims[0] * spacing[0], origin[1] + dims[1] * spacing[1], origin[2] + dims[2] * spacing[2]});
     const Point3Df center = bounds.center();
-    const Point3Df min = bounds.getMinPoint();
+    const Point3Df& min = bounds.getMinPoint();
     for(usize axis = 0; axis < 3; ++axis)
     {
       origin[axis] -= center[axis] - min[axis];

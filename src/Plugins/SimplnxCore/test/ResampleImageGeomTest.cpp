@@ -569,7 +569,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Invalid Parameters", "[SimplnxCore][R
   DataPath destNewGrainDataPath = destGeomPath.createChildPath("NewGrain Data");
   DataPath destPhaseDataPath = destGeomPath.createChildPath("Phase Data");
 
-  int errCode;
+  int errCode = 0;
   SECTION("Spacing")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));

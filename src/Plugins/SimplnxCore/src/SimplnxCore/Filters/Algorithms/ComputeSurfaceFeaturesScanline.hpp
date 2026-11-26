@@ -36,7 +36,7 @@ public:
   /**
    * @brief Destroys the non-owning bulk-I/O algorithm.
    */
-  ~ComputeSurfaceFeaturesScanline() noexcept;
+  ~ComputeSurfaceFeaturesScanline() noexcept = default;
 
   ComputeSurfaceFeaturesScanline(const ComputeSurfaceFeaturesScanline&) = delete;
   ComputeSurfaceFeaturesScanline(ComputeSurfaceFeaturesScanline&&) noexcept = delete;

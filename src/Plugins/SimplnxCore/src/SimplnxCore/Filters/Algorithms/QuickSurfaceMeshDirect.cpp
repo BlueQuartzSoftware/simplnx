@@ -190,8 +190,6 @@ QuickSurfaceMeshDirect::QuickSurfaceMeshDirect(DataStructure& dataStructure, con
   generator.seed(k_Seed);
 }
 
-QuickSurfaceMeshDirect::~QuickSurfaceMeshDirect() noexcept = default;
-
 Result<> QuickSurfaceMeshDirect::operator()()
 {
   const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();

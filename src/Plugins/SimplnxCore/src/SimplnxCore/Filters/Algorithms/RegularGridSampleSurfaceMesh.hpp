@@ -57,7 +57,7 @@ public:
   /**
    * @brief Destroys the non-owning sampler.
    */
-  ~RegularGridSampleSurfaceMesh() noexcept;
+  ~RegularGridSampleSurfaceMesh() noexcept = default;
 
   RegularGridSampleSurfaceMesh(const RegularGridSampleSurfaceMesh&) = delete;
   RegularGridSampleSurfaceMesh(RegularGridSampleSurfaceMesh&&) noexcept = delete;

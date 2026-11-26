@@ -6,12 +6,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-CreateColorMapParameter::CreateColorMapParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+CreateColorMapParameter::CreateColorMapParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -38,7 +39,7 @@ nlohmann::json CreateColorMapParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> CreateColorMapParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> CreateColorMapParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CreateColorMapParameter' JSON Error: ";
   if(!json.empty() && !json.is_string())

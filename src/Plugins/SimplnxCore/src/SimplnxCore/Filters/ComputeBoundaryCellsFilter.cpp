@@ -84,8 +84,8 @@ IFilter::UniquePointer ComputeBoundaryCellsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -102,21 +102,22 @@ IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStr
   const usize numCells = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath).getNumberOfCells();
   if(numFeatureIds != numCells)
   {
-    return {MakeErrorResult<OutputActions>(
-        -5320,
-        fmt::format("The selected Image geometry '{}' and feature ids array '{}' have mismatching number of elements. Make sure the selected feature ids was created for the selected Image geometry.",
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -5320,
+                fmt::format(
+                    "The selected Image geometry '{}' and feature ids array '{}' have mismatching number of elements. Make sure the selected feature ids was created for the selected Image geometry.",
                     pImageGeometryPath.toString(), pFeatureIdsArrayPathValue.toString()))};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::int8, featureIds.getTupleShape(), std::vector<usize>{1}, boundaryCellsArrayPath);
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeBoundaryCellsInputValues inputValues;
 

@@ -19,7 +19,7 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceMisorientationsInputValues
 {
-  ChoicesParameter::ValueType ReferenceOrientation;
+  ChoicesParameter::ValueType ReferenceOrientation{};
   DataPath FeatureAttributeMatrixPath;
   DataPath FeatureIdsArrayPath;
   DataPath CellPhasesArrayPath;
@@ -57,7 +57,7 @@ public:
   /**
    * @brief Destroys the feature-reference misorientation executor.
    */
-  ~ComputeFeatureReferenceMisorientations() noexcept;
+  ~ComputeFeatureReferenceMisorientations() noexcept = default;
 
   ComputeFeatureReferenceMisorientations(const ComputeFeatureReferenceMisorientations&) = delete;
   ComputeFeatureReferenceMisorientations(ComputeFeatureReferenceMisorientations&&) noexcept = delete;

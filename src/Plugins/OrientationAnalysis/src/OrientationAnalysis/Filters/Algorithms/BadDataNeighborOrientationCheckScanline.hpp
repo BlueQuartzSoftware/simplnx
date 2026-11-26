@@ -45,7 +45,7 @@ public:
   /**
    * @brief Destroys the scanline bad-data executor.
    */
-  ~BadDataNeighborOrientationCheckScanline() noexcept;
+  ~BadDataNeighborOrientationCheckScanline() noexcept = default;
 
   BadDataNeighborOrientationCheckScanline(const BadDataNeighborOrientationCheckScanline&) = delete;
   BadDataNeighborOrientationCheckScanline(BadDataNeighborOrientationCheckScanline&&) noexcept = delete;

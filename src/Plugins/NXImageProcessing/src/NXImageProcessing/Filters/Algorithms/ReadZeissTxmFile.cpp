@@ -10,7 +10,6 @@
 #include "oless/pole.h"
 
 using namespace nx::core;
-namespace fs = std::filesystem;
 
 namespace read_zeiss_txm
 {
@@ -236,7 +235,6 @@ ReadZeissTxmFile::ReadZeissTxmFile(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-ReadZeissTxmFile::~ReadZeissTxmFile() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReadZeissTxmFile::getCancel() const

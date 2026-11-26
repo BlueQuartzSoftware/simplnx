@@ -20,8 +20,6 @@ ComputeFeatureNeighborsScanline::ComputeFeatureNeighborsScanline(DataStructure& 
 {
 }
 
-ComputeFeatureNeighborsScanline::~ComputeFeatureNeighborsScanline() noexcept = default;
-
 Result<> ComputeFeatureNeighborsScanline::operator()()
 {
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();

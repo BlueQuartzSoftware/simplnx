@@ -26,12 +26,12 @@ struct LateWitness
   LateWitness& operator=(const LateWitness&) = default;
 
   // Rvalues copy the path so the source keeps its shutdown check.
-  LateWitness(LateWitness&& other)
+  LateWitness(LateWitness&& other) noexcept
   : LateWitness(static_cast<const LateWitness&>(other))
   {
   }
 
-  LateWitness& operator=(LateWitness&& other)
+  LateWitness& operator=(LateWitness&& other) noexcept
   {
     return *this = static_cast<const LateWitness&>(other);
   }

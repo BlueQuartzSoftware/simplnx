@@ -54,7 +54,7 @@ public:
    * @brief Move constructor.
    * @param other The TriangleGeom to move from
    */
-  TriangleGeom(TriangleGeom&& other) = default;
+  TriangleGeom(TriangleGeom&& other) noexcept = default;
 
   ~TriangleGeom() noexcept override = default;
 

@@ -1,5 +1,7 @@
 #include "GroupMicroTextureRegions.hpp"
 
+#include <cmath>
+
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -394,7 +396,7 @@ Result<bool> GroupMicroTextureRegions::determineGrouping(int32 referenceFeatureI
           ebsdlib::Quaternion<float32>(m_AvgQuatsCache[index + 0], m_AvgQuatsCache[index + 1], m_AvgQuatsCache[index + 2], m_AvgQuatsCache[index + 3]).toOrientationMatrix().toGMatrix().transpose();
       ebsdlib::Matrix3X1F c2 = (g2t * cAxis).normalize();
 
-      float32 w;
+      float32 w = NAN;
       if(m_InputValues->UseRunningAverage)
       {
         w = m_AvgCAxes.cosTheta(c2);

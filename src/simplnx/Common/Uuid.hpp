@@ -177,7 +177,7 @@ struct SIMPLNX_EXPORT Uuid
     static thread_local std::uniform_int_distribution<> dis2(8, 11);
 
     std::stringstream ss;
-    int i;
+    int i = 0;
     ss << std::hex;
     for(i = 0; i < 8; i++)
     {

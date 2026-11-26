@@ -47,9 +47,9 @@ struct InjectedFailure
   const char* message;
 };
 
-constexpr InjectedFailure k_TriangleReadFailure{Transfer::ReadTriangles, -95251, "Injected triangle winding connectivity read refusal."};
-constexpr InjectedFailure k_IdReadFailure{Transfer::ReadIds, -95252, "Injected triangle winding ID read refusal."};
-constexpr InjectedFailure k_TriangleWriteFailure{Transfer::WriteTriangles, -95253, "Injected triangle winding connectivity write refusal."};
+constexpr InjectedFailure k_TriangleReadFailure{.operation = Transfer::ReadTriangles, .code = -95251, .message = "Injected triangle winding connectivity read refusal."};
+constexpr InjectedFailure k_IdReadFailure{.operation = Transfer::ReadIds, .code = -95252, .message = "Injected triangle winding ID read refusal."};
+constexpr InjectedFailure k_TriangleWriteFailure{.operation = Transfer::WriteTriangles, .code = -95253, .message = "Injected triangle winding connectivity write refusal."};
 
 struct TransferTrace
 {
@@ -152,16 +152,58 @@ struct WindingCase
 };
 
 constexpr std::array<WindingCase, 4> k_TransferCases{{
-    {"successful control", nullptr, false, false, 3, &k_RepairedTriangles, &k_RepairedTriangles},
-    {"connectivity read refusal", &k_TriangleReadFailure, false, false, 1, &k_InputTriangles, nullptr},
-    {"ID read refusal", &k_IdReadFailure, false, false, 2, &k_InputTriangles, nullptr},
-    {"connectivity write refusal", &k_TriangleWriteFailure, false, false, 3, &k_InputTriangles, &k_RepairedTriangles},
+    {.name = "successful control",
+     .failure = nullptr,
+     .preCancelled = false,
+     .cancelAfterFeature = false,
+     .expectedCalls = 3,
+     .expectedStoredTriangles = &k_RepairedTriangles,
+     .expectedWrittenTriangles = &k_RepairedTriangles},
+    {.name = "connectivity read refusal",
+     .failure = &k_TriangleReadFailure,
+     .preCancelled = false,
+     .cancelAfterFeature = false,
+     .expectedCalls = 1,
+     .expectedStoredTriangles = &k_InputTriangles,
+     .expectedWrittenTriangles = nullptr},
+    {.name = "ID read refusal",
+     .failure = &k_IdReadFailure,
+     .preCancelled = false,
+     .cancelAfterFeature = false,
+     .expectedCalls = 2,
+     .expectedStoredTriangles = &k_InputTriangles,
+     .expectedWrittenTriangles = nullptr},
+    {.name = "connectivity write refusal",
+     .failure = &k_TriangleWriteFailure,
+     .preCancelled = false,
+     .cancelAfterFeature = false,
+     .expectedCalls = 3,
+     .expectedStoredTriangles = &k_InputTriangles,
+     .expectedWrittenTriangles = &k_RepairedTriangles},
 }};
 
 constexpr std::array<WindingCase, 3> k_CancellationCases{{
-    {"pre-cancelled control", nullptr, true, false, 3, &k_InputTriangles, &k_InputTriangles},
-    {"cancellation after feature 1", nullptr, false, true, 3, &k_PartialTriangles, &k_PartialTriangles},
-    {"write refusal after feature 1 cancellation", &k_TriangleWriteFailure, false, true, 3, &k_InputTriangles, &k_PartialTriangles},
+    {.name = "pre-cancelled control",
+     .failure = nullptr,
+     .preCancelled = true,
+     .cancelAfterFeature = false,
+     .expectedCalls = 3,
+     .expectedStoredTriangles = &k_InputTriangles,
+     .expectedWrittenTriangles = &k_InputTriangles},
+    {.name = "cancellation after feature 1",
+     .failure = nullptr,
+     .preCancelled = false,
+     .cancelAfterFeature = true,
+     .expectedCalls = 3,
+     .expectedStoredTriangles = &k_PartialTriangles,
+     .expectedWrittenTriangles = &k_PartialTriangles},
+    {.name = "write refusal after feature 1 cancellation",
+     .failure = &k_TriangleWriteFailure,
+     .preCancelled = false,
+     .cancelAfterFeature = true,
+     .expectedCalls = 3,
+     .expectedStoredTriangles = &k_InputTriangles,
+     .expectedWrittenTriangles = &k_PartialTriangles},
 }};
 
 /**
@@ -228,7 +270,9 @@ void CheckWindingCase(bool useFaceLabels, const WindingCase& windingCase)
     REQUIRE(trace.rejectedCalls[0] == windingCase.failure->operation);
   }
 
-  const std::array<TransferCall, 3> expectedTransfers{{{Transfer::ReadTriangles, 0, 12}, {Transfer::ReadIds, 0, inputIds.size()}, {Transfer::WriteTriangles, 0, 12}}};
+  const std::array<TransferCall, 3> expectedTransfers{{{.operation = Transfer::ReadTriangles, .offset = 0, .values = 12},
+                                                       {.operation = Transfer::ReadIds, .offset = 0, .values = inputIds.size()},
+                                                       {.operation = Transfer::WriteTriangles, .offset = 0, .values = 12}}};
   REQUIRE(trace.calls.size() == windingCase.expectedCalls);
   REQUIRE(windingCase.expectedCalls <= expectedTransfers.size());
   for(usize callIdx = 0; callIdx < windingCase.expectedCalls; ++callIdx)

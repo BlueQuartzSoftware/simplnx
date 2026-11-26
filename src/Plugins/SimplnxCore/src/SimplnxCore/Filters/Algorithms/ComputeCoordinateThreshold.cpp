@@ -269,8 +269,6 @@ ComputeCoordinateThreshold::ComputeCoordinateThreshold(DataStructure& dataStruct
 {
 }
 
-ComputeCoordinateThreshold::~ComputeCoordinateThreshold() noexcept = default;
-
 Result<> ComputeCoordinateThreshold::operator()()
 {
   const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);

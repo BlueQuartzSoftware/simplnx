@@ -719,7 +719,7 @@ public:
       }
       for(usize j = 0; j != m_NY - 1; ++j)
       {
-        usize xl, xr;
+        usize xl = 0, xr = 0;
         calcTrimValues(xl, xr, j, k);
 
         // ge0 belongs to this cube row. Neighbor rows own ge1 through ge3.
@@ -794,7 +794,7 @@ public:
   [[nodiscard]] Result<> pass3()
   {
     // Convert row triangle counts to deterministic starting offsets.
-    usize tmp;
+    usize tmp = 0;
     usize triAccum = 0;
     for(usize k = 0; k != m_NZ - 1; ++k)
     {
@@ -899,7 +899,7 @@ public:
       }
       for(usize j = 0; j != m_NY - 1; ++j)
       {
-        usize xl, xr;
+        usize xl = 0, xr = 0;
         calcTrimValues(xl, xr, j, k);
 
         if(xl == xr)
@@ -1137,7 +1137,7 @@ private:
   // Advancing one cube row loads at most one new slice.
   static constexpr usize k_MaxResidentSlices = 4;
   mutable std::array<std::vector<T>, k_MaxResidentSlices> m_SliceBuffers;
-  mutable std::array<int64, k_MaxResidentSlices> m_SliceBufferZ;
+  mutable std::array<int64, k_MaxResidentSlices> m_SliceBufferZ{};
   mutable Result<> m_ReadResult;
 
   /**

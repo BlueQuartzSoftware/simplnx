@@ -29,7 +29,7 @@ public:
 
   EnsembleInfoParameter() = delete;
 
-  EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
 
   ~EnsembleInfoParameter() override = default;
 
@@ -92,7 +92,7 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
 namespace SIMPLConversion

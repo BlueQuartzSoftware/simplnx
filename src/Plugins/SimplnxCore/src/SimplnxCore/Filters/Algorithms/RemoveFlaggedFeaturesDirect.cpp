@@ -96,8 +96,8 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
   auto progressIncrement = dims[2] / 100;
   usize progressCounter = 0;
-  int32 featureName;
-  int64 kStride, jStride;
+  int32 featureName = 0;
+  int64 kStride = 0, jStride = 0;
   for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
   {
     if(shouldCancel)
@@ -246,7 +246,7 @@ usize FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vecto
   const usize totalPoints = featureIds.getNumberOfTuples();
   usize filledCellCount = 0;
 
-  int32 featureName, neighbor;
+  int32 featureName = 0, neighbor = 0;
   for(usize j = 0; j < totalPoints; j++)
   {
     if(shouldCancel)
@@ -288,8 +288,6 @@ RemoveFlaggedFeaturesDirect::RemoveFlaggedFeaturesDirect(DataStructure& dataStru
 , m_MessageHandler(mesgHandler)
 {
 }
-
-RemoveFlaggedFeaturesDirect::~RemoveFlaggedFeaturesDirect() noexcept = default;
 
 Result<> RemoveFlaggedFeaturesDirect::operator()()
 {
@@ -449,9 +447,10 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       {
         listed += ", ...";
       }
-      result.warnings().push_back(Warning{k_EmptyFeatureSkippedWarning, fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
-                                                                                    "them. Feature ID(s): {}",
-                                                                                    emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
+      result.warnings().push_back(Warning{.code = k_EmptyFeatureSkippedWarning,
+                                          .message = fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
+                                                                 "them. Feature ID(s): {}",
+                                                                 emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
     }
 
     Result<> cropResult = cropTaskResult.takeResult();
@@ -503,9 +502,10 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       {
         if(path == m_InputValues->FeatureIdsArrayPath)
         {
-          result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
-                                                                                              "cannot be ignored, so it was removed from the ignore list.",
-                                                                                              path.toString())});
+          result.warnings().push_back(Warning{.code = k_FeatureIdsCannotBeIgnoredWarning,
+                                              .message = fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
+                                                                     "cannot be ignored, so it was removed from the ignore list.",
+                                                                     path.toString())});
           continue;
         }
         ignoredPaths.push_back(path);

@@ -19,8 +19,8 @@ public:
   using AllowedComponentShapes = std::vector<ShapeType>;
 
   MultiArraySelectionParameter() = delete;
-  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                               const AllowedDataTypes& allowedDataTypes, AllowedComponentShapes requiredComps = {});
+  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes, AllowedDataTypes allowedDataTypes,
+                               AllowedComponentShapes requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;
@@ -126,10 +126,10 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
-  AllowedDataTypes m_AllowedDataTypes = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
+  AllowedDataTypes m_AllowedDataTypes;
+  AllowedComponentShapes m_RequiredComponentShapes;
 };
 
 namespace SIMPLConversion

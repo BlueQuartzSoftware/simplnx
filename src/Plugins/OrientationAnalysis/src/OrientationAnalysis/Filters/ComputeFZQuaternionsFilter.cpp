@@ -93,8 +93,8 @@ IFilter::UniquePointer ComputeFZQuaternionsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -106,8 +106,8 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
   const auto& quatArray = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
   if(phaseData.getNumberOfTuples() != quatArray.getNumberOfTuples())
   {
-    return {MakeErrorResult<OutputActions>(-49001,
-                                           fmt::format("Quaternion and Phase Arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), phaseData.getNumberOfTuples()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -49001, fmt::format("Quaternion and Phase Arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), phaseData.getNumberOfTuples()))};
   }
 
   if(pUseGoodVoxelsValue)
@@ -115,8 +115,8 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
     const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(pGoodVoxelsArrayPathValue);
     if(maskArray.getNumberOfTuples() != quatArray.getNumberOfTuples())
     {
-      return {MakeErrorResult<OutputActions>(-49002,
-                                             fmt::format("Quaternion and Mask arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), maskArray.getNumberOfTuples()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -49002, fmt::format("Quaternion and Mask arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), maskArray.getNumberOfTuples()))};
     }
   }
 
@@ -128,12 +128,12 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
       std::make_unique<CreateArrayAction>(nx::core::DataType::float32, quatArray.getDataStore()->getTupleShape(), quatArray.getDataStore()->getComponentShape(), pFZQuatsArrayPathValue, "", "0.0");
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
 
   ComputeFZQuaternionsInputValues inputValues;

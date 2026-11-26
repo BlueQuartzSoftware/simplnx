@@ -3,24 +3,25 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace nx::core
 {
-CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
-                                                     IGeometry::LengthUnit units)
+CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing, std::string cellAttributeMatrixName, IGeometry::LengthUnit units)
 : IDataCreationAction(path)
-, m_Dims(dims)
-, m_Origin(origin)
-, m_Spacing(spacing)
+, m_Dims(std::move(dims))
+, m_Origin(std::move(origin))
+, m_Spacing(std::move(spacing))
 , m_Units(units)
-, m_CellDataName(cellAttributeMatrixName)
+, m_CellDataName(std::move(cellAttributeMatrixName))
 {
 }
 
 CreateImageGeometryAction::~CreateImageGeometryAction() noexcept = default;
 
-Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateImageGeometryAction: ";
   // Check for empty Geometry DataPath

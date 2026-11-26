@@ -313,8 +313,6 @@ CreateColorMapDirect::CreateColorMapDirect(DataStructure& dataStructure, const I
 {
 }
 
-CreateColorMapDirect::~CreateColorMapDirect() noexcept = default;
-
 Result<> CreateColorMapDirect::operator()()
 {
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);

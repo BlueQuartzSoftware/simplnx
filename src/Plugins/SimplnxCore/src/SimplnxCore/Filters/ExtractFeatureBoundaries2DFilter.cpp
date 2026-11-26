@@ -95,8 +95,8 @@ IFilter::UniquePointer ExtractFeatureBoundaries2DFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputImageGeometryPathValue = filterArgs.value<DataPath>(k_InputImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -107,7 +107,7 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
 
   if(auto result = ValidateCellTupleCount(dataStructure, pInputImageGeometryPathValue, {pFeatureIdsArrayPathValue}, -1019); result.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   PreflightResult preflightResult;
@@ -119,7 +119,7 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   SizeVec3 dims = imageGeom.getDimensions();
   if(dims.getZ() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-1001, fmt::format("Input image geometry must have a Z dimension of 1. Current Z dimension is {}", dims.getZ()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-1001, fmt::format("Input image geometry must have a Z dimension of 1. Current Z dimension is {}", dims.getZ()))};
   }
 
   // Estimate the maximum number of edges:
@@ -140,12 +140,12 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
                                                                          INodeGeometry1D::k_EdgeAttributeMatrixName, INodeGeometry0D::k_SharedVertexListName, INodeGeometry1D::k_SharedEdgeListName);
   resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractFeatureBoundaries2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ExtractFeatureBoundaries2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractFeatureBoundaries2DInputValues inputValues;
 

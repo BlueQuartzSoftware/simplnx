@@ -55,7 +55,7 @@ public:
    * and one tuple per triangle. Node Types, if supplied, have one tuple per source vertex.
    */
   ExtractTripleLines(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ExtractTripleLinesInputValues* inputValues);
-  ~ExtractTripleLines() noexcept;
+  ~ExtractTripleLines() noexcept = default;
 
   ExtractTripleLines(const ExtractTripleLines&) = delete;
   ExtractTripleLines(ExtractTripleLines&&) noexcept = delete;

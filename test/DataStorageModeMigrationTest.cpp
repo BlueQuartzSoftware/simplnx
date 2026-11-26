@@ -416,7 +416,7 @@ TEST_CASE("Preferences validates OOC size values without mutation", "[Core][Pref
 {
   for(const auto& key : k_ThresholdKeys)
   {
-    for(const nlohmann::json value : {nlohmann::json(int64{0}), nlohmann::json(int64{17}), nlohmann::json(uint64{0}), nlohmann::json(uint64{17}), nlohmann::json(std::numeric_limits<uint64>::max())})
+    for(const nlohmann::json& value : {nlohmann::json(int64{0}), nlohmann::json(int64{17}), nlohmann::json(uint64{0}), nlohmann::json(uint64{17}), nlohmann::json(std::numeric_limits<uint64>::max())})
     {
       DYNAMIC_SECTION(key << "=" << value.dump() << " type=" << static_cast<int>(value.type()))
       {
@@ -452,8 +452,9 @@ TEST_CASE("Preferences names nonfinite OOC thresholds without changing values", 
     double number;
     const char* description;
   };
-  const std::array<NonfiniteCase, 3> values = {
-      {{std::numeric_limits<double>::quiet_NaN(), "NaN"}, {std::numeric_limits<double>::infinity(), "+Infinity"}, {-std::numeric_limits<double>::infinity(), "-Infinity"}}};
+  const std::array<NonfiniteCase, 3> values = {{{.number = std::numeric_limits<double>::quiet_NaN(), .description = "NaN"},
+                                                {.number = std::numeric_limits<double>::infinity(), .description = "+Infinity"},
+                                                {.number = -std::numeric_limits<double>::infinity(), .description = "-Infinity"}}};
   for(const auto& key : k_ThresholdKeys)
   {
     for(const auto& nonfinite : values)

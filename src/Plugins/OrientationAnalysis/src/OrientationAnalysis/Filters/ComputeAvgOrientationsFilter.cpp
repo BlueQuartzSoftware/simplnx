@@ -127,8 +127,8 @@ IFilter::UniquePointer ComputeAvgOrientationsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pCellFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -153,8 +153,8 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   // Require at least one averaging method before execution.
   if(!pUseRodriguesAverage_Key && !pUseVonMisesFisher && !pUseWatson)
   {
-    return {
-        MakeErrorResult<OutputActions>(-54673, "No averaging method is enabled. Enable at least one of: 'Compute Rodrigues Average', 'Compute von Mises-Fisher Average', 'Compute Watson Average'.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -54673, "No averaging method is enabled. Enable at least one of: 'Compute Rodrigues Average', 'Compute von Mises-Fisher Average', 'Compute Watson Average'.")};
   }
 
   Result<OutputActions> resultOutputActions;
@@ -169,7 +169,8 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& cellFeatAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
@@ -221,12 +222,12 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {resultOutputActions};
+  return {.outputActions = resultOutputActions};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeAvgOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeAvgOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeAvgOrientationsInputValues inputValues;
 

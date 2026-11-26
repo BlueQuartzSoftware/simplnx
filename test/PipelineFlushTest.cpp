@@ -92,7 +92,7 @@ public:
   NumericCompletionStore(const NumericCompletionStore&) = default;
   NumericCompletionStore(NumericCompletionStore&&) = default;
   NumericCompletionStore& operator=(const NumericCompletionStore&) = delete;
-  NumericCompletionStore& operator=(NumericCompletionStore&&) = default;
+  NumericCompletionStore& operator=(NumericCompletionStore&&) noexcept = default;
 
   /**
    * @brief Counts a legacy call without returning checked diagnostics.
@@ -417,7 +417,7 @@ public:
   ~SnapshotGroup() override = default;
 
   // Rvalues retain the source topology and shared fault control through the copy contract.
-  SnapshotGroup(SnapshotGroup&& other)
+  SnapshotGroup(SnapshotGroup&& other) noexcept
   : SnapshotGroup(static_cast<const SnapshotGroup&>(other))
   {
   }
@@ -477,15 +477,15 @@ struct CompletionTrace
    */
   CompletionTrace(Pipeline& pipeline, PipelineFilter* firstNode)
   {
-    connections.push_back(pipeline.getPipelineRunStateSignal().connect([this](AbstractPipelineNode*, RunState state) { pipelineStates.push_back(state); }));
-    connections.push_back(pipeline.getCancelledSignal().connect([this]() { ++cancelledCalls; }));
-    connections.push_back(pipeline.getFilterFaultDetailSignal().connect(
+    connections.emplace_back(pipeline.getPipelineRunStateSignal().connect([this](AbstractPipelineNode*, RunState state) { pipelineStates.push_back(state); }));
+    connections.emplace_back(pipeline.getCancelledSignal().connect([this]() { ++cancelledCalls; }));
+    connections.emplace_back(pipeline.getFilterFaultDetailSignal().connect(
         [this](AbstractPipelineNode*, int32 index, const WarningCollection& warnings, const ErrorCollection& errors) { rootDetails.push_back({index, warnings, errors}); }));
     if(firstNode != nullptr)
     {
-      connections.push_back(firstNode->getFilterRunStateSignal().connect([this](AbstractPipelineNode*, int32, RunState state) { nodeStates.push_back(state); }));
-      connections.push_back(firstNode->getFilterUpdateSignal().connect([this](AbstractPipelineNode*, int32, const std::string& message) { updates.push_back(message); }));
-      connections.push_back(firstNode->getFilterFaultDetailSignal().connect(
+      connections.emplace_back(firstNode->getFilterRunStateSignal().connect([this](AbstractPipelineNode*, int32, RunState state) { nodeStates.push_back(state); }));
+      connections.emplace_back(firstNode->getFilterUpdateSignal().connect([this](AbstractPipelineNode*, int32, const std::string& message) { updates.push_back(message); }));
+      connections.emplace_back(firstNode->getFilterFaultDetailSignal().connect(
           [this](AbstractPipelineNode*, int32 index, const WarningCollection& warnings, const ErrorCollection& errors) { nodeDetails.push_back({index, warnings, errors}); }));
     }
   }
@@ -642,7 +642,7 @@ TEST_CASE("PipelineFlush retains execute diagnostics and fails before later filt
     fixture.firstControl->result.warnings().push_back({k_FilterWarning, "execute-warning-sentinel"});
     if(originalError)
     {
-      fixture.firstControl->result.m_Expected = nonstd::make_unexpected(ErrorCollection{{k_FilterError, "execute-error-sentinel"}});
+      fixture.firstControl->result.m_Expected = nonstd::make_unexpected(ErrorCollection{{.code = k_FilterError, .message = "execute-error-sentinel"}});
     }
     fixture.flushControl->result = MakeErrorResult(k_FlushError, "backing.h5:/values: terminal-flush-sentinel");
     fixture.flushControl->result.warnings().push_back({k_FlushWarning, "flush-warning-sentinel"});

@@ -1102,7 +1102,6 @@ ComputeBoundingBoxStatsScanline::ComputeBoundingBoxStatsScanline(DataStructure& 
 }
 
 // -----------------------------------------------------------------------------
-ComputeBoundingBoxStatsScanline::~ComputeBoundingBoxStatsScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStatsScanline::operator()()

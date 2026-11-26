@@ -21,11 +21,11 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT GroupMicroTextureRegionsInputValues
 {
-  bool UseNonContiguousNeighbors;
+  bool UseNonContiguousNeighbors{};
   DataPath NonContiguousNeighborListArrayPath;
   DataPath ContiguousNeighborListArrayPath;
-  bool UseRunningAverage;
-  float32 CAxisTolerance;
+  bool UseRunningAverage{};
+  float32 CAxisTolerance{};
   DataPath FeatureIdsArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath VolumesArrayPath;
@@ -34,8 +34,8 @@ struct ORIENTATIONANALYSIS_EXPORT GroupMicroTextureRegionsInputValues
   DataPath NewCellFeatureAttributeMatrixName;
   DataPath CellParentIdsArrayName;
   DataPath FeatureParentIdsArrayName;
-  bool RandomizeParentIds;
-  uint64 SeedValue;
+  bool RandomizeParentIds{};
+  uint64 SeedValue{};
 };
 
 /**
@@ -104,8 +104,8 @@ private:
 
   usize m_NumTuples = 0;
   ebsdlib::Matrix3X1F m_AvgCAxes = {0.0f, 0.0f, 0.0f};
-  std::mt19937_64 m_Generator = {};
-  std::uniform_real_distribution<float32> m_Distribution = {};
+  std::mt19937_64 m_Generator;
+  std::uniform_real_distribution<float32> m_Distribution;
 
   Int32Array& m_FeaturePhases;
   Int32Array& m_FeatureParentIds;

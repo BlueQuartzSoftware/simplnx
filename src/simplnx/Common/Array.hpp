@@ -1555,9 +1555,9 @@ using Matrix3X1d = Vec3<float64>;
 
 // Free operator* functions for scalar * Vec3 with mixed types
 template <typename T1, typename T2>
-auto operator*(const T1& scalar, const Vec3<T2>& v) -> Vec3<typename std::common_type<T1, T2>::type>
+auto operator*(const T1& scalar, const Vec3<T2>& v) -> Vec3<std::common_type_t<T1, T2>>
 {
-  using ResultType = typename std::common_type<T1, T2>::type;
+  using ResultType = std::common_type_t<T1, T2>;
   return Vec3<ResultType>(static_cast<ResultType>(v[0]) * static_cast<ResultType>(scalar), static_cast<ResultType>(v[1]) * static_cast<ResultType>(scalar),
                           static_cast<ResultType>(v[2]) * static_cast<ResultType>(scalar));
 }

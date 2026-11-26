@@ -19,6 +19,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <utility>
 
 #if SIMPLNX_EMBED_PYTHON
 #include "NxPythonEmbed/NxPythonEmbed.hpp"
@@ -139,7 +140,7 @@ public:
    * @return This stream.
    */
   template <typename T>
-  CliStream& operator<<(T value)
+  CliStream& operator<<(const T& value)
   {
     std::cout << value;
     if(m_LogStream.is_open())
@@ -199,7 +200,7 @@ struct Argument
    */
   Argument(ArgumentType targetType, std::string targetValue = "")
   : type(targetType)
-  , value(targetValue)
+  , value(std::move(targetValue))
   {
   }
 };

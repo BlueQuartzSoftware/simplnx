@@ -7,6 +7,8 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <cmath>
+
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -181,7 +183,7 @@ ArrayThresholdSet CreateSingleThreshold(const DataPath& arrayPath, ArrayThreshol
  * @param dataStructure
  * @param thresholdSet ThresholdSet to use for the MultiThresholdObjectsFilter
  */
-void RunThresholdSetTest(DataStructure& dataStructure, ArrayThresholdSet thresholdSet)
+void RunThresholdSetTest(DataStructure& dataStructure, const ArrayThresholdSet& thresholdSet)
 {
   const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -978,9 +980,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - 
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
 
-  float64 trueValue;
-  float64 falseValue;
-  int32 code;
+  float64 trueValue = NAN;
+  float64 falseValue = NAN;
+  int32 code = 0;
 
   SECTION("True Value < Minimum")
   {
@@ -1042,7 +1044,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Boolean C
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
 
-  int32 code;
+  int32 code = 0;
 
   SECTION("Custom True Value")
   {

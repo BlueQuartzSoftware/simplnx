@@ -19,10 +19,10 @@ struct SIMPLNXCORE_EXPORT ComputeArrayHistogramInputValues
   int32 NumberOfBins = 0;
   float64 MinRange = 0.0;
   float64 MaxRange = 0.0;
-  MultiArraySelectionParameter::ValueType SelectedArrayPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedBinRangeDataPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedHistogramCountsDataPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedBinMostPopulatedDataPaths = {};
+  MultiArraySelectionParameter::ValueType SelectedArrayPaths;
+  MultiArraySelectionParameter::ValueType CreatedBinRangeDataPaths;
+  MultiArraySelectionParameter::ValueType CreatedHistogramCountsDataPaths;
+  MultiArraySelectionParameter::ValueType CreatedBinMostPopulatedDataPaths;
   std::optional<MultiArraySelectionParameter::ValueType> CreatedBinModalRangesDataPaths;
   std::optional<DataPath> MaskPath;
 };
@@ -54,7 +54,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ComputeArrayHistogramInputValues* inputValues);
-  ~ComputeArrayHistogram() noexcept;
+  ~ComputeArrayHistogram() noexcept = default;
 
   ComputeArrayHistogram(const ComputeArrayHistogram&) = delete;
   ComputeArrayHistogram(ComputeArrayHistogram&&) noexcept = delete;

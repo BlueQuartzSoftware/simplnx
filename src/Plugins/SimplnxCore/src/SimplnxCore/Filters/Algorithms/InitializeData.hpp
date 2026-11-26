@@ -96,10 +96,10 @@ struct SIMPLNXCORE_EXPORT InitializeDataInputValues
   std::vector<std::string> stringValues;
   std::vector<std::string> startValues;
   std::vector<std::string> stepValues;
-  uint64 seed;
+  uint64 seed{};
   std::vector<std::string> randBegin;
   std::vector<std::string> randEnd;
-  bool standardizeSeed;
+  bool standardizeSeed{};
 };
 
 /**
@@ -231,7 +231,7 @@ public:
   /**
    * @brief Destroys the complete-array generator.
    */
-  ~InitializeData() noexcept;
+  ~InitializeData() noexcept = default;
 
   InitializeData(const InitializeData&) = delete;
   InitializeData(InitializeData&&) noexcept = delete;

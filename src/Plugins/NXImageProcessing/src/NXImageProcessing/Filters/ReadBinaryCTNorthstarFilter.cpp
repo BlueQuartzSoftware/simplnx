@@ -397,8 +397,8 @@ IFilter::UniquePointer ReadBinaryCTNorthstarFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputHeaderFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -411,20 +411,20 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
 
   if(!fs::exists(pInputHeaderFileValue))
   {
-    return {MakeErrorResult<OutputActions>(-38701, "The input header file does not exist")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-38701, "The input header file does not exist")};
   }
 
   const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
   auto result = ReadHeaderMetaData(pInputHeaderFileValue, overrides);
   if(result.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   ImageGeometryInfo geometryInfo = result.value().second;
   if(auto geometryResult = overrides.apply(pInputHeaderFileValue, geometryInfo.Origin, geometryInfo.Spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   ImageGeometryInfo importedGeometryInfo;
@@ -455,34 +455,34 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   {
     if(pStartVoxelCoordValue[0] > pEndVoxelCoordValue[0])
     {
-      return {MakeErrorResult<OutputActions>(-38712, fmt::format("Starting X Voxel > Ending X Voxel ({} > {})", pStartVoxelCoordValue[0], pEndVoxelCoordValue[0]))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-38712, fmt::format("Starting X Voxel > Ending X Voxel ({} > {})", pStartVoxelCoordValue[0], pEndVoxelCoordValue[0]))};
     }
     if(pStartVoxelCoordValue[1] > pEndVoxelCoordValue[1])
     {
-      return {MakeErrorResult<OutputActions>(-38713, fmt::format("Starting Y Voxel > Ending Y Voxel ({} > {})", pStartVoxelCoordValue[1], pEndVoxelCoordValue[1]))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-38713, fmt::format("Starting Y Voxel > Ending Y Voxel ({} > {})", pStartVoxelCoordValue[1], pEndVoxelCoordValue[1]))};
     }
     if(pStartVoxelCoordValue[2] > pEndVoxelCoordValue[2])
     {
-      return {MakeErrorResult<OutputActions>(-38714, fmt::format("Starting Z Voxel > Ending Z Voxel ({} > {})", pStartVoxelCoordValue[2], pEndVoxelCoordValue[2]))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-38714, fmt::format("Starting Z Voxel > Ending Z Voxel ({} > {})", pStartVoxelCoordValue[2], pEndVoxelCoordValue[2]))};
     }
 
     if(pStartVoxelCoordValue[0] < 0 || pStartVoxelCoordValue[1] < 0 || pStartVoxelCoordValue[2] < 0)
     {
-      return {MakeErrorResult<OutputActions>(-38715, fmt::format("Start Voxel < ZERO ({}, {}, {})", pStartVoxelCoordValue[0], pStartVoxelCoordValue[1], pStartVoxelCoordValue[2]))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-38715, fmt::format("Start Voxel < ZERO ({}, {}, {})", pStartVoxelCoordValue[0], pStartVoxelCoordValue[1], pStartVoxelCoordValue[2]))};
     }
 
     std::vector<usize> origDims = geometryInfo.Dimensions;
     if(pEndVoxelCoordValue[0] >= origDims[0])
     {
-      return {MakeErrorResult<OutputActions>(-38716, fmt::format("Ending X Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[0], origDims[0] - 1))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-38716, fmt::format("Ending X Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[0], origDims[0] - 1))};
     }
     if(pEndVoxelCoordValue[1] >= origDims[1])
     {
-      return {MakeErrorResult<OutputActions>(-38717, fmt::format("Ending Y Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[1], origDims[1] - 1))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-38717, fmt::format("Ending Y Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[1], origDims[1] - 1))};
     }
     if(pEndVoxelCoordValue[2] >= origDims[2])
     {
-      return {MakeErrorResult<OutputActions>(-38718, fmt::format("Ending Z Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[2], origDims[2] - 1))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-38718, fmt::format("Ending Z Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[2], origDims[2] - 1))};
     }
   }
 
@@ -491,9 +491,10 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   {
     if(!fs::exists(dataFilePair.first))
     {
-      return {MakeErrorResult<OutputActions>(-38704, fmt::format("The input binary CT file: {} could not be found in the path: {}. The input binary CT file name was obtained from the provided "
-                                                                 "header.  Please ensure the file is in the same path as the header and the name has not been altered.",
-                                                                 dataFilePair.first.string(), pInputHeaderFileValue.parent_path().string()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-38704, fmt::format("The input binary CT file: {} could not be found in the path: {}. The input binary CT file name was obtained from the provided "
+                                                                     "header.  Please ensure the file is in the same path as the header and the name has not been altered.",
+                                                                     dataFilePair.first.string(), pInputHeaderFileValue.parent_path().string()))};
     }
   }
 
@@ -524,12 +525,12 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   }
 
   // Return output actions and preflight updated values
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadBinaryCTNorthstarInputValues inputValues;
 

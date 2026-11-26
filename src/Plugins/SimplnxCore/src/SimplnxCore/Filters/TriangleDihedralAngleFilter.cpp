@@ -82,8 +82,8 @@ IFilter::UniquePointer TriangleDihedralAngleFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
   auto pMinDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
@@ -95,7 +95,8 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   const AttributeMatrix* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
   }
 
   // Instantiate and move the action that will create the output array
@@ -107,12 +108,12 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   TriangleDihedralAngleInputValues inputValues;
   inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TGeometryDataPath_Key);

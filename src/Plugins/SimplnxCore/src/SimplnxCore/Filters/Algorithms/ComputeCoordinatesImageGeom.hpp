@@ -20,7 +20,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeCoordinatesImageGeomInputValues
 {
-  ChoicesParameter::ValueType CoordinateOption;
+  ChoicesParameter::ValueType CoordinateOption{};
   DataPath ImageGeomPath;
   DataPath CoordArrayPath;
   DataPath IndexArrayPath;
@@ -52,7 +52,7 @@ public:
   /**
    * @brief Destroys the ImageGeom coordinate algorithm.
    */
-  ~ComputeCoordinatesImageGeom() noexcept;
+  ~ComputeCoordinatesImageGeom() noexcept = default;
 
   ComputeCoordinatesImageGeom(const ComputeCoordinatesImageGeom&) = delete;
   ComputeCoordinatesImageGeom(ComputeCoordinatesImageGeom&&) noexcept = delete;

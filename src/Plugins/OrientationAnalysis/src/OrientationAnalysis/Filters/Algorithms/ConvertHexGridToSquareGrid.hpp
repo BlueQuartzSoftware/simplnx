@@ -17,7 +17,7 @@ namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGridInputValues
 {
-  bool MultiFile;
+  bool MultiFile{};
   VectorFloat32Parameter::ValueType XYSpacing;
   FileSystemPathParameter::ValueType InputPath;
   FileSystemPathParameter::ValueType OutputPath;
@@ -32,7 +32,7 @@ class ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGrid
 {
 public:
   ConvertHexGridToSquareGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ConvertHexGridToSquareGridInputValues* inputValues);
-  ~ConvertHexGridToSquareGrid() noexcept;
+  ~ConvertHexGridToSquareGrid() noexcept = default;
 
   ConvertHexGridToSquareGrid(const ConvertHexGridToSquareGrid&) = delete;
   ConvertHexGridToSquareGrid(ConvertHexGridToSquareGrid&&) noexcept = delete;

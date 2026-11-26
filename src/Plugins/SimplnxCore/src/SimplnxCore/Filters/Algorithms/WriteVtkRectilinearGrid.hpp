@@ -20,7 +20,7 @@ class IDataArray;
 struct SIMPLNXCORE_EXPORT WriteVtkRectilinearGridInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
-  bool WriteBinaryFile;
+  bool WriteBinaryFile{};
   DataPath ImageGeometryPath;
   MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
 };
@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteVtkRectilinearGrid() noexcept;
+  ~WriteVtkRectilinearGrid() noexcept = default;
 
   WriteVtkRectilinearGrid(const WriteVtkRectilinearGrid&) = delete;
   WriteVtkRectilinearGrid(WriteVtkRectilinearGrid&&) noexcept = delete;

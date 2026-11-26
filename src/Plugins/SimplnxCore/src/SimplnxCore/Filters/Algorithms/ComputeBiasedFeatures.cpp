@@ -17,7 +17,6 @@ ComputeBiasedFeatures::ComputeBiasedFeatures(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ComputeBiasedFeatures::~ComputeBiasedFeatures() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeBiasedFeatures::getCancel()

@@ -28,8 +28,6 @@
 
 using namespace nx::core;
 
-namespace fs = std::filesystem;
-
 namespace
 {
 /**
@@ -169,7 +167,8 @@ Result<> ReadNrrdBackend(DataStructure& dataStructure, const ReadImageInputValue
   nrrdInputs.CellAttributeMatrixName = inputValues.cellDataName;
   nrrdInputs.ImageDataArrayName = inputValues.imageDataArrayPath.getTargetName();
   nrrdInputs.CroppingOptions = inputValues.croppingOptions;
-  nrrdInputs.GeometryOverrides = {inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt, inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
+  nrrdInputs.GeometryOverrides = {.Origin = inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt,
+                                  .Spacing = inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
   nrrdInputs.Processing = inputValues.originSpacingProcessing;
   nrrdInputs.CenterOrigin = inputValues.centerOrigin;
 
@@ -240,8 +239,8 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     {
       FloatVec3 srcOrigin = metadata.origin.value_or(FloatVec3{0.0F, 0.0F, 0.0F});
       FloatVec3 srcSpacing = metadata.spacing.value_or(FloatVec3{1.0F, 1.0F, 1.0F});
-      const ImageIO::GeometryOverrides overrides{inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt,
-                                                 inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
+      const ImageIO::GeometryOverrides overrides{.Origin = inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt,
+                                                 .Spacing = inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
       const SizeVec3 srcDims{metadata.width, metadata.height, inputValues.readSinglePageOnly ? usize{1} : metadata.numPages};
       if(auto result = ImageIO::ResolveCropGeometry(inputFilePath, overrides, inputValues.originSpacingProcessing, inputValues.centerOrigin, srcDims, srcOrigin, srcSpacing); result.invalid())
       {
@@ -429,7 +428,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   {
     std::string warningMessage = fmt::format("Image file '{}' has {} pages; reading only the first page (page 0).", inputFilePath.string(), metadata.numPages);
     messageHandler.sendMessage(IFilter::Message::Type::Warning, warningMessage);
-    readResult.warnings().push_back(Warning{-2005, std::move(warningMessage)});
+    readResult.warnings().push_back(Warning{.code = -2005, .message = std::move(warningMessage)});
   }
 
   return readResult;
@@ -443,8 +442,6 @@ ReadImage::ReadImage(DataStructure& dataStructure, const IFilter::MessageHandler
 , m_MessageHandler(mesgHandler)
 {
 }
-
-ReadImage::~ReadImage() noexcept = default;
 
 Result<> ReadImage::operator()()
 {

@@ -5,38 +5,39 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include <mutex>
+#include <utility>
 
 namespace nx::core::HDF5
 {
 ObjectIO::ObjectIO() = default;
 
-ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
+ObjectIO::ObjectIO(hid_t parentId, std::string objectName)
 : m_ParentId(parentId)
-, m_ObjectName(objectName)
+, m_ObjectName(std::move(objectName))
 {
 }
 
-ObjectIO::ObjectIO(const std::filesystem::path& filepath, const std::string& objectName)
-: m_FilePath(filepath)
-, m_ObjectName(objectName)
+ObjectIO::ObjectIO(std::filesystem::path filepath, std::string objectName)
+: m_FilePath(std::move(filepath))
+, m_ObjectName(std::move(objectName))
 {
 }
 
 ObjectIO::ObjectIO(ObjectIO&& other) noexcept
 : m_FilePath(std::move(other.m_FilePath))
 , m_ObjectName(std::move(other.m_ObjectName))
-, m_ParentId(std::move(other.m_ParentId))
-, m_Id(std::move(other.m_Id))
+, m_ParentId(other.m_ParentId)
+, m_Id(other.m_Id)
 {
   other.m_Id = -1;
 }
 
 ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
 {
-  m_Id = std::move(other.m_Id);
+  m_Id = other.m_Id;
   m_FilePath = std::move(other.m_FilePath);
   m_ObjectName = std::move(other.m_ObjectName);
-  m_ParentId = std::move(other.m_ParentId);
+  m_ParentId = other.m_ParentId;
 
   other.m_Id = -1;
   return *this;
@@ -77,7 +78,7 @@ std::string ObjectIO::getObjectPath() const
   return path;
 }
 
-std::string ObjectIO::getParentName() const
+std::string ObjectIO::getParentName()
 {
   return "";
 }
@@ -165,8 +166,8 @@ void ObjectIO::moveObj(ObjectIO&& rhs) noexcept
 {
   m_FilePath = std::move(rhs.m_FilePath);
   m_ObjectName = std::move(rhs.m_ObjectName);
-  m_ParentId = std::move(rhs.m_ParentId);
-  m_Id = std::move(rhs.m_Id);
+  m_ParentId = rhs.m_ParentId;
+  m_Id = rhs.m_Id;
 }
 
 usize ObjectIO::getNumAttributes() const
@@ -209,7 +210,7 @@ std::string ObjectIO::getAttributeNameByIndex(int64 idx) const
   return GetNameFromBuffer(buffer);
 }
 
-void ObjectIO::deleteAttribute(const std::string& name)
+void ObjectIO::deleteAttribute(const std::string& name) const
 {
   // getId() self-locks; resolve it before the leaf-locked existence-check + delete.
   const hid_t selfId = getId();
@@ -345,7 +346,7 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
   return H5Aexists(selfId, attributeName.c_str()) > 0;
 }
 
-usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
+usize ObjectIO::getNumElementsInAttribute(hid_t attribId)
 {
   // getTypeFromId() self-locks, so retain the local HDF5 handles across the
   // lock boundary and call it without holding the non-recursive ApiLock.

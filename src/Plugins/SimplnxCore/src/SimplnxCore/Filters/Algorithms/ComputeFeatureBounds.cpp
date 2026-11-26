@@ -16,8 +16,6 @@ ComputeFeatureBounds::ComputeFeatureBounds(DataStructure& dataStructure, const I
 {
 }
 
-ComputeFeatureBounds::~ComputeFeatureBounds() noexcept = default;
-
 Result<> ComputeFeatureBounds::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);

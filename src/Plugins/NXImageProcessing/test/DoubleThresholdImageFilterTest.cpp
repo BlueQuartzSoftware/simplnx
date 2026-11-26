@@ -39,9 +39,9 @@ struct ThreshCase
 // wide-band component stays outside. The third case is degenerate: the narrow band equals the wide band ({60}).
 // See MakeDoubleThresholdField for the gray levels that each band selects.
 const std::array<ThreshCase, 3> k_ThreshCases = {{
-    {"grow-from-narrow-seed", 10.0, 40.0, 80.0, 120.0}, // narrow [40,80] -> {60}; wide [10,120] -> {60,100}
-    {"grow-from-mask-only", 10.0, 90.0, 115.0, 120.0},  // narrow [90,115] -> {100}; wide [10,120] -> {60,100}
-    {"degenerate-all-equal", 60.0, 60.0, 60.0, 60.0},   // narrow == wide == {60}
+    {.label = "grow-from-narrow-seed", .t1 = 10.0, .t2 = 40.0, .t3 = 80.0, .t4 = 120.0}, // narrow [40,80] -> {60}; wide [10,120] -> {60,100}
+    {.label = "grow-from-mask-only", .t1 = 10.0, .t2 = 90.0, .t3 = 115.0, .t4 = 120.0},  // narrow [90,115] -> {100}; wide [10,120] -> {60,100}
+    {.label = "degenerate-all-equal", .t1 = 60.0, .t2 = 60.0, .t3 = 60.0, .t4 = 60.0},   // narrow == wide == {60}
 }};
 
 // Sets the geometry, input, and output keys plus the seven double-threshold parameters on the Arguments. The helper

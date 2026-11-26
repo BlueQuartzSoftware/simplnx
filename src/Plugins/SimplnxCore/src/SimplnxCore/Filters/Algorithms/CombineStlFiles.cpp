@@ -70,7 +70,6 @@ CombineStlFiles::CombineStlFiles(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-CombineStlFiles::~CombineStlFiles() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CombineStlFiles::getCancel()

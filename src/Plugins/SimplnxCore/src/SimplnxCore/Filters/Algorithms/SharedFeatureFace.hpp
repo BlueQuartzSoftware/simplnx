@@ -18,7 +18,7 @@ struct SIMPLNXCORE_EXPORT SharedFeatureFaceInputValues
   DataPath GrainBoundaryAttributeMatrixPath;
   DataPath FeatureFaceLabelsArrayPath;
   DataPath FeatureFaceNumTrianglesArrayPath;
-  bool ShouldRandomizeFeatureIds;
+  bool ShouldRandomizeFeatureIds{};
 };
 
 /**
@@ -28,7 +28,7 @@ class SIMPLNXCORE_EXPORT SharedFeatureFace
 {
 public:
   SharedFeatureFace(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SharedFeatureFaceInputValues* inputValues);
-  ~SharedFeatureFace() noexcept;
+  ~SharedFeatureFace() noexcept = default;
 
   SharedFeatureFace(const SharedFeatureFace&) = delete;
   SharedFeatureFace(SharedFeatureFace&&) noexcept = delete;

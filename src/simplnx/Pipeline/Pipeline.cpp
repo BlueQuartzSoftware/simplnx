@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
@@ -65,9 +66,8 @@ nlohmann::json CreatePipelineJson(std::string_view name, nlohmann::json filterAr
 }
 } // namespace
 
-Pipeline::Pipeline(ExecutionContext executionContext, const std::string& name, FilterList* filterList)
-: AbstractPipelineNode()
-, m_Name(name)
+Pipeline::Pipeline(ExecutionContext executionContext, std::string name, FilterList* filterList)
+: m_Name(std::move(name))
 , m_FilterList(filterList)
 , m_ExecutionContext(std::move(executionContext))
 {
@@ -79,8 +79,7 @@ Pipeline::Pipeline(const std::string& name, FilterList* filterList)
 }
 
 Pipeline::Pipeline(const Pipeline& other)
-: AbstractPipelineNode()
-, m_Name(other.m_Name)
+: m_Name(other.m_Name)
 , m_Collection(other.m_Collection)
 , m_FilterList(other.m_FilterList)
 , m_ExecutionContext(other.m_ExecutionContext)
@@ -90,10 +89,9 @@ Pipeline::Pipeline(const Pipeline& other)
 }
 
 Pipeline::Pipeline(Pipeline&& other) noexcept
-: AbstractPipelineNode()
-, m_Name(std::move(other.m_Name))
+: m_Name(std::move(other.m_Name))
 , m_Collection(std::move(other.m_Collection))
-, m_FilterList(std::move(other.m_FilterList))
+, m_FilterList(other.m_FilterList)
 , m_ExecutionContext(std::move(other.m_ExecutionContext))
 {
   setDisabled(other.isDisabled());
@@ -122,7 +120,7 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
 {
   m_Name = std::move(rhs.m_Name);
   m_Collection = std::move(rhs.m_Collection);
-  m_FilterList = std::move(rhs.m_FilterList);
+  m_FilterList = rhs.m_FilterList;
   setDisabled(rhs.isDisabled());
   resetCollectionParent();
   return *this;
@@ -284,13 +282,13 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
   return returnValue;
 }
 
-bool Pipeline::preflightFrom(index_type index, const std::atomic_bool&  /*shouldCancel*/)
+bool Pipeline::preflightFrom(index_type index, const std::atomic_bool& /*shouldCancel*/)
 {
   RenamedPaths renamedPaths;
   return preflightFrom(index, renamedPaths);
 }
 
-bool Pipeline::preflightFrom(index_type index, RenamedPaths&  /*renamedPaths*/, const std::atomic_bool& shouldCancel)
+bool Pipeline::preflightFrom(index_type index, RenamedPaths& /*renamedPaths*/, const std::atomic_bool& shouldCancel)
 {
   if(index == 0)
   {
@@ -615,7 +613,7 @@ bool Pipeline::contains(AbstractPipelineNode* node) const
 
 bool Pipeline::contains(IFilter* filter) const
 {
-  for(auto node : *this)
+  for(const auto& node : *this)
   {
     auto filterNode = dynamic_cast<PipelineFilter*>(node.get());
     if(filterNode == nullptr)
@@ -759,7 +757,7 @@ std::unique_ptr<AbstractPipelineNode> Pipeline::deepCopy() const
 {
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
   pipelineCopy->setDisabled(isDisabled());
-  for(auto childNode : *this)
+  for(const auto& childNode : *this)
   {
     pipelineCopy->push_back(childNode->deepCopy());
   }

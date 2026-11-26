@@ -104,8 +104,8 @@ IFilter::UniquePointer RemoveFlaggedEdgesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_InputEdgeGeometryPath_Key);
   auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
@@ -146,7 +146,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(!selectedEdgeArrays.empty() && nullptr == srcEdgeAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5651, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions = MakeErrorResult<OutputActions>(-5651, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
     }
@@ -154,7 +154,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(nullptr == srcEdgeAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5652, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions = MakeErrorResult<OutputActions>(-5652, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -176,7 +176,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(!selectedVertexArrays.empty() && nullptr == srcVertexAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5653, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions = MakeErrorResult<OutputActions>(-5653, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
@@ -184,7 +184,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(nullptr == srcVertexAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5654, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions = MakeErrorResult<OutputActions>(-5654, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -198,12 +198,12 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RemoveFlaggedEdgesInputValues inputValues;
 

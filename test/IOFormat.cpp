@@ -196,7 +196,7 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
       return shouldCancel ? MakeErrorResult(-7001, "cancelled") : Result<>{};
     }
 
-    Result<uint64> read(uint64  /*recordOffset*/, uint64 recordCount, nonstd::span<std::byte> records, const std::atomic_bool& shouldCancel) const override
+    Result<uint64> read(uint64 /*recordOffset*/, uint64 recordCount, nonstd::span<std::byte> records, const std::atomic_bool& shouldCancel) const override
     {
       if(shouldCancel)
       {

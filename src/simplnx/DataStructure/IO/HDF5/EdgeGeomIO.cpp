@@ -43,7 +43,7 @@ Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_
   return {};
 }
 
-Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type&  /*dataStructureGroup*/) const
+Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& /*dataStructureGroup*/) const
 {
   auto* geometry = dataStructure.getDataAs<EdgeGeom>(dataPath);
   if(geometry == nullptr)
@@ -54,7 +54,7 @@ Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const Dat
   return {};
 }
 
-Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
+Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroupWriter, bool importable)
 {
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
   auto result = INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);

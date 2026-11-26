@@ -32,7 +32,7 @@ struct IsIntegerType
   }
 };
 
-void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims, const DataPath& outputAMPath)
+void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& filterArgs, const ShapeType& tupleDims, const DataPath& outputAMPath)
 {
   auto calculateLength = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateLength_Key);
   auto calculateMin = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMin_Key);
@@ -232,8 +232,8 @@ IFilter::UniquePointer ComputeBoundingBoxStatsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pCalculateLengthValue = filterArgs.value<bool>(k_CalculateLength_Key);
   auto pCalculateMinValue = filterArgs.value<bool>(k_CalculateMin_Key);
@@ -254,7 +254,7 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pInputArrayPathValue}, -59204);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   FloatVec3 imageGeomSpacing = dataStructure.getDataAs<ImageGeom>(pGeometryPathValue)->getSpacing();
@@ -303,12 +303,12 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   CreateCompatibleArrays(resultOutputActions, dataStructure, filterArgs, unifiedBoundsPtr->getTupleShape(), outputAMPath);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeBoundingBoxStatsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeBoundingBoxStatsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeBoundingBoxStatsInputValues inputValues;
 

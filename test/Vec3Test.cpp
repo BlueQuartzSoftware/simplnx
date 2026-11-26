@@ -80,7 +80,7 @@ TEST_CASE("Vec3 Constructors")
   SECTION("Copy constructor")
   {
     Vec3<float32> original(1.0f, 2.0f, 3.0f);
-    Vec3<float32> copy(original);
+    const Vec3<float32>& copy(original);
     REQUIRE(copy[0] == 1.0f);
     REQUIRE(copy[1] == 2.0f);
     REQUIRE(copy[2] == 3.0f);

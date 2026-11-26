@@ -155,7 +155,7 @@ TEST_CASE("SimplnxCore::Image Contouring FlyingEdges3D: Geometry cell tuple coun
     REQUIRE(result.outputActions.errors().size() == 1);
     const auto& errorRef = result.outputActions.errors()[0];
     REQUIRE(errorRef.code == -10510);
-    const DataPath expectedPath = inputPath;
+    const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;
     REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);

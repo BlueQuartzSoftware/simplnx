@@ -15,8 +15,8 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
 {
-  bool useMask;
-  uint64 interpolationTechnique;
+  bool useMask{};
+  uint64 interpolationTechnique{};
   DataPath vertexGeomPath;
   DataPath imageGeomPath;
   std::vector<DataPath> interpolatedDataPaths;
@@ -25,12 +25,12 @@ struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
   std::vector<float32> sigmas;
   DataPath maskDataPath;
 
-  bool findLength;
-  bool findMin;
-  bool findMax;
-  bool findMean;
-  bool findStdDeviation;
-  bool findSummation;
+  bool findLength{};
+  bool findMin{};
+  bool findMax{};
+  bool findMean{};
+  bool findStdDeviation{};
+  bool findSummation{};
 
   std::string lengthSuffix;
   std::string minSuffix;
@@ -67,7 +67,7 @@ public:
   /**
    * @brief Destroys the non-owning interpolation algorithm.
    */
-  ~InterpolatePointCloudToRegularGrid() noexcept;
+  ~InterpolatePointCloudToRegularGrid() noexcept = default;
 
   InterpolatePointCloudToRegularGrid(const InterpolatePointCloudToRegularGrid&) = delete;
   InterpolatePointCloudToRegularGrid(InterpolatePointCloudToRegularGrid&&) noexcept = delete;

@@ -93,8 +93,8 @@ IFilter::UniquePointer ComputeFeatureNeighborCAxisMisalignmentsFilter::clone() c
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                       const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFindAvgMisalsValue = filterArgs.value<bool>(k_FindAvgMisals_Key);
   auto pNeighborListArrayPathValue = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
@@ -110,7 +110,8 @@ IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflig
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pNeighborListArrayPathValue, pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue});
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-1560, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-1560, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
@@ -129,12 +130,12 @@ IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflig
 
   preflightUpdatedValues.push_back(
       {"Crystal Symmetry Warning:", "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure at least 1 phase is of this type."});
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureNeighborCAxisMisalignmentsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/,
-                                                                     const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFeatureNeighborCAxisMisalignmentsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                     const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeatureNeighborCAxisMisalignmentsInputValues inputValues;
 

@@ -89,8 +89,8 @@ IFilter::UniquePointer ComputeMomentInvariants2DFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                        const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pFeatureIdsArrayPathValue}, -9511);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   const DataPath omega1Path = pFeatureAttributeMatrixPathValue.createChildPath(pOmega1ArrayNameValue);
@@ -144,12 +144,12 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeMomentInvariants2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeMomentInvariants2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeMomentInvariants2DInputValues inputValues;
 

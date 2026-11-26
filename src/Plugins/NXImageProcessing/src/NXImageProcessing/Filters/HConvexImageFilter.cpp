@@ -83,8 +83,8 @@ IFilter::UniquePointer HConvexImageFilter::clone() const
 {
   return std::make_unique<HConvexImageFilter>();
 }
-IFilter::PreflightResult HConvexImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                           const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult HConvexImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -96,23 +96,24 @@ IFilter::PreflightResult HConvexImageFilter::preflightImpl(const DataStructure& 
   // value; reject it here so the offset is always well-defined.
   if(!std::isfinite(height))
   {
-    return {MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Convex requires a finite Height, but the supplied value was {}.", height))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Convex requires a finite Height, but the supplied value was {}.", height))};
   }
   // A negative Height has no meaning here and would push the internal (input - Height) HMaxima marker ABOVE the
   // mask, violating reconstruction-by-dilation's marker<=mask precondition (ITK throws). Require Height >= 0; 0 is
   // a valid no-op.
   if(height < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Convex requires a non-negative Height, but the supplied value was {}.", height))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Convex requires a non-negative Height, but the supplied value was {}.", height))};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
-  return {.outputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                        /*requireScalar=*/true)};
+  return {.outputActions =
+              ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                            /*requireScalar=*/true)};
 }
-Result<> HConvexImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> HConvexImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

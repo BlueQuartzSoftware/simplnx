@@ -28,9 +28,9 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeAvgOrientationsInputValues
   DataPath cellQuatsArrayPath;
   DataPath crystalStructuresArrayPath;
 
-  bool useRodriguesAverage;
-  bool useVonMisesAverage;
-  bool useWatsonAverage;
+  bool useRodriguesAverage{};
+  bool useVonMisesAverage{};
+  bool useWatsonAverage{};
   DataPath avgQuatsArrayPath;
   DataPath avgEulerAnglesArrayPath;
 

@@ -12,13 +12,13 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT MapPointCloudToRegularGridInputValues
 {
-  bool UseMask;
+  bool UseMask{};
   DataPath ImageGeomPath;
   DataPath MaskArrayPath;
   DataPath VertexGeomPath;
   DataPath VoxelIndicesPath;
-  uint64 OutOfBoundsValue;
-  ChoicesParameter::ValueType OutOfBoundsHandling;
+  uint64 OutOfBoundsValue{};
+  ChoicesParameter::ValueType OutOfBoundsHandling{};
 };
 
 /**
@@ -28,7 +28,7 @@ class SIMPLNXCORE_EXPORT MapPointCloudToRegularGrid
 {
 public:
   MapPointCloudToRegularGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MapPointCloudToRegularGridInputValues* inputValues);
-  ~MapPointCloudToRegularGrid() noexcept;
+  ~MapPointCloudToRegularGrid() noexcept = default;
 
   MapPointCloudToRegularGrid(const MapPointCloudToRegularGrid&) = delete;
   MapPointCloudToRegularGrid(MapPointCloudToRegularGrid&&) noexcept = delete;

@@ -52,7 +52,6 @@ PointSampleTriangleGeometry::PointSampleTriangleGeometry(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-PointSampleTriangleGeometry::~PointSampleTriangleGeometry() noexcept = default;
 
 Result<> PointSampleTriangleGeometry::operator()()
 {

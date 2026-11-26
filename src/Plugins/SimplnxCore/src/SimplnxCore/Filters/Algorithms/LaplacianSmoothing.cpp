@@ -575,8 +575,6 @@ LaplacianSmoothing::LaplacianSmoothing(DataStructure& dataStructure, LaplacianSm
 {
 }
 
-LaplacianSmoothing::~LaplacianSmoothing() noexcept = default;
-
 Result<> LaplacianSmoothing::operator()()
 {
   auto* nodeGeom2D = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);

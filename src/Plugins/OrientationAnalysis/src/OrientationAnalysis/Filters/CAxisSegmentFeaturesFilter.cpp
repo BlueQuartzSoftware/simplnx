@@ -111,8 +111,8 @@ IFilter::UniquePointer CAxisSegmentFeaturesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -121,7 +121,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   auto tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   if(tolerance == 0.0F)
   {
-    return {MakeErrorResult<OutputActions>(-655, "Misorientation Tolerance cannot equal zero.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-655, "Misorientation Tolerance cannot equal zero.")};
   }
 
   // Validate the Grid Geometry
@@ -147,7 +147,8 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // The cell arrays must have one tuple per geometry cell.
@@ -155,8 +156,8 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
   if(quats.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
   {
-    return {MakeErrorResult<OutputActions>(-652, fmt::format("The selected cell arrays have {} tuples but the selected geometry '{}' has {} cells.", quats.getNumberOfTuples(), gridGeomPath.toString(),
-                                                             inputGridGeom->getNumberOfCells()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-652, fmt::format("The selected cell arrays have {} tuples but the selected geometry '{}' has {} cells.", quats.getNumberOfTuples(),
+                                                                              gridGeomPath.toString(), inputGridGeom->getNumberOfCells()))};
   }
 
   // Use the cell AttributeMatrix shape for FeatureIds.
@@ -164,8 +165,9 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(inputCellDataPath);
   if(cellDataAM.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
   {
-    return {MakeErrorResult<OutputActions>(-653, fmt::format("The geometry's cell AttributeMatrix '{}' has {} tuples but the selected geometry '{}' has {} cells.", inputCellDataPath.toString(),
-                                                             cellDataAM.getNumberOfTuples(), gridGeomPath.toString(), inputGridGeom->getNumberOfCells()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-653, fmt::format("The geometry's cell AttributeMatrix '{}' has {} tuples but the selected geometry '{}' has {} cells.", inputCellDataPath.toString(),
+                                                                 cellDataAM.getNumberOfTuples(), gridGeomPath.toString(), inputGridGeom->getNumberOfCells()))};
   }
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellDataAM.getShape(), std::vector<usize>{1}, featureIdsPath);
 
@@ -180,12 +182,12 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  return {resultOutputActions, preflightUpdatedValues};
+  return {.outputActions = resultOutputActions, .outputValues = preflightUpdatedValues};
 }
 
 //------------------------------------------------------------------------------
-Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CAxisSegmentFeaturesInputValues inputValues;
 

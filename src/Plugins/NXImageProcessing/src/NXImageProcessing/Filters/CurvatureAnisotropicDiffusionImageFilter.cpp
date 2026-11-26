@@ -68,8 +68,8 @@ IFilter::UniquePointer CurvatureAnisotropicDiffusionImageFilter::clone() const
   return std::make_unique<CurvatureAnisotropicDiffusionImageFilter>();
 }
 
-IFilter::PreflightResult CurvatureAnisotropicDiffusionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CurvatureAnisotropicDiffusionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -92,11 +92,11 @@ IFilter::PreflightResult CurvatureAnisotropicDiffusionImageFilter::preflightImpl
     ImageProcessing::AppendUnstableTimeStepWarning(resultOutputActions, timeStep, imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
-Result<> CurvatureAnisotropicDiffusionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CurvatureAnisotropicDiffusionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -114,8 +114,9 @@ Result<> CurvatureAnisotropicDiffusionImageFilter::executeImpl(DataStructure& da
   // ITK-fidelity defaults (false/0.0) since this filter (matching the legacy wrapper) never exposes them.
   return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureAnisoFn, ImageProcessing::FloatingScalar>(
       dataStructure, imageGeomPath, selectedInputArray, outputArrayPath,
-      ImageProcessing::detail::CurvatureAnisoFn{/*m_K=*/0.0, /*conductance=*/conductanceParameter,
-                                                /*interval=*/conductanceScalingUpdateInterval},
+      ImageProcessing::detail::CurvatureAnisoFn{/*m_K=*/.m_K = 0.0,
+                                                /*conductance=*/.conductance = conductanceParameter,
+                                                /*interval=*/.interval = conductanceScalingUpdateInterval},
       timeStep, numberOfIterations, shouldCancel, messageHandler);
 }
 } // namespace nx::core

@@ -15,7 +15,7 @@ public:
   using ValueType = std::vector<DataPath>;
 
   MultiPathSelectionParameter() = delete;
-  MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~MultiPathSelectionParameter() override = default;
 
   MultiPathSelectionParameter(const MultiPathSelectionParameter&) = delete;
@@ -103,7 +103,7 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
 namespace SIMPLConversion

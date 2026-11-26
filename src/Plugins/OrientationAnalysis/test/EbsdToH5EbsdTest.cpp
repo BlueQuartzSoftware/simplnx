@@ -55,7 +55,7 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
 
   std::vector<hsize_t> dims;
   H5T_class_t classType;
-  size_t sizeType;
+  size_t sizeType = 0;
   herr_t err = H5Lite::getDatasetInfo(exemplarFileId, datasetPath, dims, classType, sizeType);
   size_t totalElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<size_t>(1), std::multiplies<>());
 
@@ -135,9 +135,9 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
   Operator function for H5Ovisit.  This function prints the
   name and type of the object passed to it.
  ************************************************************/
-herr_t VisitorFunction(hid_t locId, const char* name, const H5O_info_t* info, void*  /*operatorData*/)
+herr_t VisitorFunction(hid_t locId, const char* name, const H5O_info_t* info, void* /*operatorData*/)
 {
-  herr_t status;
+  herr_t status = 0;
 
   switch(info->type)
   {
@@ -195,7 +195,15 @@ const std::string k_InputPath = fmt::format("{}/Small_IN100", unit_test::k_TestF
 const std::string k_FilePrefix = "Slice_";
 const std::string k_FileSuffix;
 const std::string k_FileExtension = ".ang";
-GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex, k_IncrementIndex, k_PaddingDigits, k_Ordering, k_InputPath, k_FilePrefix, k_FileSuffix, k_FileExtension};
+GeneratedFileListParameter::ValueType k_FileListInfo = {.startIndex = k_StartIndex,
+                                                        .endIndex = k_EndIndex,
+                                                        .incrementIndex = k_IncrementIndex,
+                                                        .paddingDigits = k_PaddingDigits,
+                                                        .ordering = k_Ordering,
+                                                        .inputPath = k_InputPath,
+                                                        .filePrefix = k_FilePrefix,
+                                                        .fileSuffix = k_FileSuffix,
+                                                        .fileExtension = k_FileExtension};
 
 } // namespace
 

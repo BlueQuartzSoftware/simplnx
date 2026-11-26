@@ -38,7 +38,7 @@ public:
   /**
    * @brief Destroys the direct ImageGeom mask algorithm.
    */
-  ~ComputeCoordinateThresholdDirect() noexcept;
+  ~ComputeCoordinateThresholdDirect() noexcept = default;
 
   ComputeCoordinateThresholdDirect(const ComputeCoordinateThresholdDirect&) = delete;
   ComputeCoordinateThresholdDirect(ComputeCoordinateThresholdDirect&&) noexcept = delete;

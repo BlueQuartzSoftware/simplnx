@@ -26,7 +26,7 @@ public:
   };
 
   CalculatorParameter() = delete;
-  CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~CalculatorParameter() override = default;
 
   CalculatorParameter(const CalculatorParameter&) = delete;

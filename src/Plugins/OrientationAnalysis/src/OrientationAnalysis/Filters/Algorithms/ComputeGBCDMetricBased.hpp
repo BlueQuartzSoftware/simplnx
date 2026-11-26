@@ -14,14 +14,14 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDMetricBasedInputValues
 {
-  int32 PhaseOfInterest;
+  int32 PhaseOfInterest{};
   VectorFloat32Parameter::ValueType MisorientationRotation;
-  ChoicesParameter::ValueType ChosenLimitDists;
-  int32 NumSamplPts;
-  bool ExcludeTripleLines;
+  ChoicesParameter::ValueType ChosenLimitDists{};
+  int32 NumSamplPts{};
+  bool ExcludeTripleLines{};
   FileSystemPathParameter::ValueType DistOutputFile;
   FileSystemPathParameter::ValueType ErrOutputFile;
-  bool SaveRelativeErr;
+  bool SaveRelativeErr{};
   DataPath NodeTypesArrayPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath SurfaceMeshFaceNormalsArrayPath;
@@ -42,7 +42,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeGBCDMetricBased
 {
 public:
   ComputeGBCDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBCDMetricBasedInputValues* inputValues);
-  ~ComputeGBCDMetricBased() noexcept;
+  ~ComputeGBCDMetricBased() noexcept = default;
 
   ComputeGBCDMetricBased(const ComputeGBCDMetricBased&) = delete;
   ComputeGBCDMetricBased(ComputeGBCDMetricBased&&) noexcept = delete;
@@ -59,7 +59,7 @@ public:
 
   static constexpr int k_NumberResolutionChoices = 7;
   static constexpr float k_ResolutionChoices[k_NumberResolutionChoices][2] = {{3.0f, 7.0f}, {5.0f, 5.0f}, {5.0f, 7.0f}, {5.0f, 8.0f},
-                                                                                     {6.0f, 7.0f}, {7.0f, 7.0f}, {8.0f, 8.0f}}; // { for misorient., for planes }
+                                                                              {6.0f, 7.0f}, {7.0f, 7.0f}, {8.0f, 8.0f}}; // { for misorient., for planes }
 
 private:
   DataStructure& m_DataStructure;

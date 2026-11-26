@@ -19,15 +19,15 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ComputeBoundingBoxStatsInputValues
 {
   // Options
-  bool CalculateLength;
-  bool CalculateMin;
-  bool CalculateMax;
-  bool CalculateSummation;
-  bool CalculateMean;
-  bool CalculateMedian;
-  bool CalculateMode;
-  bool CalculateNumUniqueValues;
-  bool CalculateStdDev;
+  bool CalculateLength{};
+  bool CalculateMin{};
+  bool CalculateMax{};
+  bool CalculateSummation{};
+  bool CalculateMean{};
+  bool CalculateMedian{};
+  bool CalculateMode{};
+  bool CalculateNumUniqueValues{};
+  bool CalculateStdDev{};
 
   // Input
   DataPath GeometryPath;
@@ -68,7 +68,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ComputeBoundingBoxStats(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundingBoxStatsInputValues* inputValues);
-  ~ComputeBoundingBoxStats() noexcept;
+  ~ComputeBoundingBoxStats() noexcept = default;
 
   ComputeBoundingBoxStats(const ComputeBoundingBoxStats&) = delete;
   ComputeBoundingBoxStats(ComputeBoundingBoxStats&&) noexcept = delete;

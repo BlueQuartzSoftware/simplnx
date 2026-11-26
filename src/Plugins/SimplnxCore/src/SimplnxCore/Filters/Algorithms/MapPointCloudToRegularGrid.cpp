@@ -112,7 +112,6 @@ MapPointCloudToRegularGrid::MapPointCloudToRegularGrid(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-MapPointCloudToRegularGrid::~MapPointCloudToRegularGrid() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& MapPointCloudToRegularGrid::getCancel()

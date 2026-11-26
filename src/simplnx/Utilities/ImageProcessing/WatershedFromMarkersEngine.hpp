@@ -71,7 +71,7 @@ inline std::vector<WsNeighborOffset> BuildWatershedOffsets(int effDim, bool full
         {
           continue; // face connectivity: only axial neighbors
         }
-        offsets.push_back(WsNeighborOffset{ox, oy, oz});
+        offsets.push_back(WsNeighborOffset{.dx = ox, .dy = oy, .dz = oz});
       }
     }
   }
@@ -158,7 +158,7 @@ private:
 
 template <class TInput, bool SplitBucketState, bool PackedCombinedState, bool PackedResidentStatusState>
 Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
-                                               bool markWatershedLine, bool fullyConnected, uint32  /*borderSentinel*/, const std::atomic_bool& shouldCancel,
+                                               bool markWatershedLine, bool fullyConnected, uint32 /*borderSentinel*/, const std::atomic_bool& shouldCancel,
                                                std::unique_ptr<ITemporaryRecordStore> voxelRecordStore, std::unique_ptr<ITemporaryRecordStore> queueRecordStore,
                                                const detail::WatershedExternalMemoryPlan<TInput>& plan, const IFilter::MessageHandler& messageHandler = {})
 {

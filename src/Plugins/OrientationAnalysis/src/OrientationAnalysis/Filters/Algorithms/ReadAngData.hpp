@@ -53,7 +53,7 @@ public:
   /**
    * @brief Destroys the .ang reader.
    */
-  ~ReadAngData() noexcept;
+  ~ReadAngData() noexcept = default;
 
   ReadAngData(const ReadAngData&) = delete;
   ReadAngData(ReadAngData&&) = delete;

@@ -19,10 +19,10 @@ struct SIMPLNXCORE_EXPORT ComputeMomentInvariants2DInputValues
   DataPath ImageGeometryPath;
   DataPath FeatureIdsArrayPath;
   DataPath FeatureRectArrayPath;
-  bool NormalizeMomentInvariants;
+  bool NormalizeMomentInvariants{};
   DataPath Omega1ArrayPath;
   DataPath Omega2ArrayPath;
-  bool SaveCentralMoments;
+  bool SaveCentralMoments{};
   DataPath CentralMomentsArrayPath;
 };
 
@@ -59,7 +59,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeMomentInvariants2D() noexcept;
+  ~ComputeMomentInvariants2D() noexcept = default;
 
   ComputeMomentInvariants2D(const ComputeMomentInvariants2D&) = delete;
   ComputeMomentInvariants2D(ComputeMomentInvariants2D&&) noexcept = delete;

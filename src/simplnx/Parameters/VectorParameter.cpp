@@ -11,10 +11,10 @@
 namespace nx::core
 {
 template <class T>
-VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names)
+VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, NamesType names)
 : VectorParameterBase(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
-, m_Names(names)
+, m_Names(std::move(names))
 {
   if(m_DefaultValue.size() != m_Names.size())
   {
@@ -67,7 +67,7 @@ nlohmann::json VectorParameter<T>::toJsonImpl(const std::any& value) const
 }
 
 template <class T>
-Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'VectorParameter' JSON Error: ";
 

@@ -30,7 +30,7 @@ class SIMPLNXCORE_EXPORT ResampleRectGridToImageGeom
 {
 public:
   ResampleRectGridToImageGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ResampleRectGridToImageGeomInputValues* inputValues);
-  ~ResampleRectGridToImageGeom() noexcept;
+  ~ResampleRectGridToImageGeom() noexcept = default;
 
   ResampleRectGridToImageGeom(const ResampleRectGridToImageGeom&) = delete;
   ResampleRectGridToImageGeom(ResampleRectGridToImageGeom&&) noexcept = delete;

@@ -437,7 +437,6 @@ ComputeFaceIPFColoring::ComputeFaceIPFColoring(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ComputeFaceIPFColoring::~ComputeFaceIPFColoring() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> ComputeFaceIPFColoring::operator()()

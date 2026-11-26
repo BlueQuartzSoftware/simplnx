@@ -111,7 +111,7 @@ public:
   LocaleGuard& operator=(const LocaleGuard&) = delete;
   LocaleGuard& operator=(LocaleGuard&&) noexcept = delete;
 
-  bool set(const char* localeName)
+  static bool set(const char* localeName)
   {
     return std::setlocale(LC_ALL, localeName) != nullptr;
   }

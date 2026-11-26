@@ -13,7 +13,7 @@ constexpr StringLiteral k_ValueKey = "value";
 constexpr StringLiteral k_VersionKey = "version";
 } // namespace
 
-std::any IParameter::construct(const Arguments& args, const ExecutionContext&  /*executionContext*/) const
+std::any IParameter::construct(const Arguments& args, const ExecutionContext& /*executionContext*/) const
 {
   return args.at(name());
 }
@@ -34,7 +34,7 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
   VersionType version = 1;
   if(json.contains(k_VersionKey))
   {
-    nlohmann::json versionJson = json[k_VersionKey];
+    const nlohmann::json& versionJson = json[k_VersionKey];
     if(!versionJson.is_number_unsigned())
     {
       return MakeErrorResult<std::any>(-2, fmt::format("{}: Parameter key '{}' is not an unsigned integer", name(), k_VersionKey));
@@ -44,7 +44,7 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
   }
   else
   {
-    warnings.push_back(Warning{-1, fmt::format("{}: Parameter key '{}' does not exist. Assuming version={}. To fix this, save the pipeline file.", name(), k_VersionKey, version)});
+    warnings.push_back(Warning{.code = -1, .message = fmt::format("{}: Parameter key '{}' does not exist. Assuming version={}. To fix this, save the pipeline file.", name(), k_VersionKey, version)});
   }
 
   nlohmann::json valueJson;
@@ -54,7 +54,7 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
   }
   else
   {
-    warnings.push_back(Warning{-2, fmt::format("{}: Parameter key '{}' does not exist. Assuming json is the current json object", name(), k_ValueKey, version)});
+    warnings.push_back(Warning{.code = -2, .message = fmt::format("{}: Parameter key '{}' does not exist. Assuming json is the current json object", name(), k_ValueKey, version)});
     valueJson = json;
   }
 

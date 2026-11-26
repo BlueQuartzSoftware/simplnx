@@ -18,13 +18,13 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT WriteNodesAndElementsFilesInputValues
 {
   DataPath SelectedGeometryPath;
-  bool WriteNodeFile;
-  bool NumberNodes;
-  bool IncludeNodeFileHeader;
+  bool WriteNodeFile{};
+  bool NumberNodes{};
+  bool IncludeNodeFileHeader{};
   fs::path NodeFilePath;
-  bool WriteElementFile;
-  bool NumberElements;
-  bool IncludeElementFileHeader;
+  bool WriteElementFile{};
+  bool NumberElements{};
+  bool IncludeElementFileHeader{};
   fs::path ElementFilePath;
 };
 
@@ -35,7 +35,7 @@ class SIMPLNXCORE_EXPORT WriteNodesAndElementsFiles
 {
 public:
   WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteNodesAndElementsFilesInputValues* inputValues);
-  ~WriteNodesAndElementsFiles() noexcept;
+  ~WriteNodesAndElementsFiles() noexcept = default;
 
   WriteNodesAndElementsFiles(const WriteNodesAndElementsFiles&) = delete;
   WriteNodesAndElementsFiles(WriteNodesAndElementsFiles&&) noexcept = delete;

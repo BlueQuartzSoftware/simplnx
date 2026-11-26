@@ -351,7 +351,7 @@ Arguments CreateLabelFixture(DataStructure& dataStructure, bool incidence, bool 
 
 Result<> RunLabel(DataStructure& dataStructure, bool cancelled)
 {
-  LabelTriangleGeometryInputValues inputs{k_MeshGeomPath, k_RegionIdsPath, k_MeshFeaturePath, k_TriangleCountPath};
+  LabelTriangleGeometryInputValues inputs{.TriangleGeomPath = k_MeshGeomPath, .RegionIdsPath = k_RegionIdsPath, .TriangleAMPath = k_MeshFeaturePath, .NumTrianglesPath = k_TriangleCountPath};
   const std::atomic_bool cancel = cancelled;
   return LabelTriangleGeometry(dataStructure, {}, cancel, &inputs)();
 }

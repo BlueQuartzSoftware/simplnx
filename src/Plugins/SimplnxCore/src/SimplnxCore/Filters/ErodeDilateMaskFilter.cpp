@@ -88,8 +88,8 @@ IFilter::UniquePointer ErodeDilateMaskFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
@@ -97,7 +97,7 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pMaskArrayPathValue}, -14702);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   // The erode/dilate loop runs NumIterations times, so a value below 1 performs no passes and returns
@@ -105,10 +105,10 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
   // this guard restores that behavior so a mistyped iteration count is reported to the user.
   if(pNumIterationsValue < 1)
   {
-    return {MakeErrorResult<OutputActions>(k_InvalidNumIterationsError,
-                                           fmt::format("Number of Iterations ({}) must be at least 1. Erode/Dilate Mask performs one erode or dilate pass per iteration, so a value less than 1 "
-                                                       "would leave the mask array '{}' unmodified.",
-                                                       pNumIterationsValue, pMaskArrayPathValue.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                k_InvalidNumIterationsError, fmt::format("Number of Iterations ({}) must be at least 1. Erode/Dilate Mask performs one erode or dilate pass per iteration, so a value less than 1 "
+                                                         "would leave the mask array '{}' unmodified.",
+                                                         pNumIterationsValue, pMaskArrayPathValue.toString()))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -117,12 +117,12 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
   // Mask array is going to be modified
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, pMaskArrayPathValue);
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ErodeDilateMaskFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ErodeDilateMaskFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ErodeDilateMaskInputValues inputValues;
 

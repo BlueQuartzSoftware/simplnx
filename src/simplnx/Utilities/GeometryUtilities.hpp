@@ -162,8 +162,9 @@ T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const
  *
  * The function updates connectivity before it resizes associated AttributeMatrix objects.
  */
-template <class GeometryType = INodeGeometry1D, class = std::enable_if_t<std::is_base_of<INodeGeometry1D, GeometryType>::value>>
+template <class GeometryType = INodeGeometry1D>
 Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scaleFactor = std::nullopt)
+requires std::is_base_of<INodeGeometry1D, GeometryType>::value
 {
   usize numXBins = 100;
   usize numYBins = 100;
@@ -174,15 +175,15 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   SharedVertList& vertices = geom.getVertices()->getDataStoreRef();
 
   INodeGeometry1D::MeshIndexArrayType* cells = nullptr;
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     cells = geom.getPolyhedra();
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     cells = geom.getFaces();
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     cells = geom.getEdges();
   }
@@ -201,8 +202,8 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   auto boundingBox = geom.getBoundingBox();
-  auto minPoint = boundingBox.getMinPoint();
-  auto maxPoint = boundingBox.getMaxPoint();
+  const auto& minPoint = boundingBox.getMinPoint();
+  const auto& maxPoint = boundingBox.getMaxPoint();
   float32 stepX = (maxPoint.getX() - minPoint.getX()) / numXBins;
   float32 stepY = (maxPoint.getY() - minPoint.getY()) / numYBins;
   float32 stepZ = (maxPoint.getZ() - minPoint.getZ()) / numZBins;
@@ -289,19 +290,19 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   // Update the triangle nodes to reflect the unique ids
-  IGeometry::MeshIndexType nCells;
+  IGeometry::MeshIndexType nCells = 0;
   usize nVerticesPerCell = 0;
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     nCells = geom.getNumberOfPolyhedra();
     nVerticesPerCell = geom.getNumberOfVerticesPerCell();
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     nCells = geom.getNumberOfFaces();
     nVerticesPerCell = geom.getNumberOfVerticesPerFace();
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     nCells = geom.getNumberOfEdges();
     nVerticesPerCell = geom.getNumberOfVerticesPerEdge();
@@ -321,7 +322,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
     }
   }
 
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     auto resizeResult = geom.getPolyhedraAttributeMatrix()->resizeTuples({geom.getNumberOfPolyhedra()});
     if(resizeResult.invalid())
@@ -329,7 +330,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
       return resizeResult;
     }
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     auto resizeResult = geom.getFaceAttributeMatrix()->resizeTuples({geom.getNumberOfFaces()});
     if(resizeResult.invalid())
@@ -337,7 +338,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
       return resizeResult;
     }
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     auto resizeResult = geom.getEdgeAttributeMatrix()->resizeTuples({geom.getNumberOfEdges()});
     if(resizeResult.invalid())

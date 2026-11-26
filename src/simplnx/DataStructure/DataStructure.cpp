@@ -213,7 +213,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
 
     for(usize i = 1; i < path.getLength(); i++)
     {
-      std::string name = path[i];
+      const std::string& name = path[i];
       data = (*parent)[name];
       pathIds.push_back(data->getId());
 
@@ -223,7 +223,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
     return LinkedPath(this, pathIds);
   } catch(const std::exception& e)
   {
-    return LinkedPath();
+    return {};
   }
 }
 
@@ -365,7 +365,7 @@ DataObject* DataStructure::getData(const DataPath& path)
     {
       return nullptr;
     }
-    auto* groupObject = static_cast<BaseGroup*>(targetObject);
+    auto* groupObject = dynamic_cast<BaseGroup*>(targetObject);
     DataObject* childObject = (*groupObject)[path[index]];
     if(childObject == nullptr)
     {
@@ -444,7 +444,7 @@ const DataObject* DataStructure::getData(const DataPath& path) const
     {
       return nullptr;
     }
-    const auto* groupObject = static_cast<const BaseGroup*>(targetObject);
+    const auto* groupObject = dynamic_cast<const BaseGroup*>(targetObject);
     const DataObject* childObject = (*groupObject)[path[index]];
     if(childObject == nullptr)
     {
@@ -525,7 +525,7 @@ bool DataStructure::removeData(DataObject::IdType identifier)
   return removeData(data);
 }
 
-void DataStructure::setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject)
+void DataStructure::setData(DataObject::IdType identifier, const std::shared_ptr<DataObject>& dataObject)
 {
   if(dataObject == nullptr)
   {
@@ -1334,8 +1334,8 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
 {
   m_DataObjects = std::move(rhs.m_DataObjects);
   m_RootGroup = std::move(rhs.m_RootGroup);
-  m_IsValid = std::move(rhs.m_IsValid);
-  m_NextId = std::move(rhs.m_NextId);
+  m_IsValid = rhs.m_IsValid;
+  m_NextId = rhs.m_NextId;
   m_FormatResolver = std::move(rhs.m_FormatResolver);
 
   applyAllDataStructure();
@@ -1579,7 +1579,7 @@ Result<> DataStructure::transferDataArraysOoc()
 
     if(!ConvertIDataArray(dataArrayPtr, resolvedFormat))
     {
-      result.warnings().emplace_back(Warning{-3570, fmt::format("Cannot convert DataArray: '{}' to out-of-core", dataArrayPtr->getName())});
+      result.warnings().emplace_back(Warning{.code = -3570, .message = fmt::format("Cannot convert DataArray: '{}' to out-of-core", dataArrayPtr->getName())});
     }
   }
 

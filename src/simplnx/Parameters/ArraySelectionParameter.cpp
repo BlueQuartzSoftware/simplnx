@@ -14,6 +14,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 using namespace nx::core;
 
@@ -24,12 +25,12 @@ template <>
  */
 struct fmt::formatter<nx::core::DataType>
 {
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  format_context::iterator format(const nx::core::DataType& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
   }
@@ -37,12 +38,12 @@ struct fmt::formatter<nx::core::DataType>
 
 namespace nx::core
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes,
                                                  AllowedComponentShapes requiredComps, DataLocation location)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(allowedTypes)
-, m_RequiredComponentShapes(requiredComps)
+, m_RequiredComponentShapes(std::move(requiredComps))
 , m_Location(location)
 {
   if(allowedTypes.empty())
@@ -74,7 +75,7 @@ nlohmann::json ArraySelectionParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())

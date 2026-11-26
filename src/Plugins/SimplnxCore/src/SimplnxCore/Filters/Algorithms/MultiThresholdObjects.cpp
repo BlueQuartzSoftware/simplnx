@@ -20,8 +20,6 @@ MultiThresholdObjects::MultiThresholdObjects(DataStructure& dataStructure, const
 {
 }
 
-MultiThresholdObjects::~MultiThresholdObjects() noexcept = default;
-
 Result<> MultiThresholdObjects::operator()()
 {
   auto thresholdsObject = m_InputValues->ArrayThresholdsObject;

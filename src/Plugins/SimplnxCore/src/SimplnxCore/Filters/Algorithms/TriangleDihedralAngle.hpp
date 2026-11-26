@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT TriangleDihedralAngle
 {
 public:
   TriangleDihedralAngle(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, TriangleDihedralAngleInputValues* inputValues);
-  ~TriangleDihedralAngle() noexcept;
+  ~TriangleDihedralAngle() noexcept = default;
 
   TriangleDihedralAngle(const TriangleDihedralAngle&) = delete;
   TriangleDihedralAngle(TriangleDihedralAngle&&) noexcept = delete;

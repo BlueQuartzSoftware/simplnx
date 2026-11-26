@@ -452,7 +452,7 @@ TEST_CASE("ExternalEquivalence compresses a 4096-node chain without resident pat
   auto* spy = store.get();
   for(uint64 label = 0; label < k_Count; ++label)
   {
-    const ExternalEquivalence::Node node = {label == 0 ? 0 : label - 1, label == 0 ? k_Count : 1};
+    const ExternalEquivalence::Node node = {.parent = label == 0 ? 0 : label - 1, .size = label == 0 ? k_Count : 1};
     std::memcpy(spy->m_Bytes.data() + label * sizeof(node), &node, sizeof(node));
   }
   auto equivalenceResult = ExternalEquivalence::Create(std::move(store), 64, 2);
@@ -492,8 +492,8 @@ TEST_CASE("ExternalEquivalence propagates backing-store failures and size overfl
   SIMPLNX_RESULT_REQUIRE_INVALID(failedStoreWriteFindResult);
 
   auto overflowStore = std::make_unique<SpyTemporaryRecordStore>(2, sizeof(ExternalEquivalence::Node), 1);
-  const ExternalEquivalence::Node firstNode{0, std::numeric_limits<uint64>::max()};
-  const ExternalEquivalence::Node secondNode{1, 1};
+  const ExternalEquivalence::Node firstNode{.parent = 0, .size = std::numeric_limits<uint64>::max()};
+  const ExternalEquivalence::Node secondNode{.parent = 1, .size = 1};
   std::memcpy(overflowStore->m_Bytes.data(), &firstNode, sizeof(firstNode));
   std::memcpy(overflowStore->m_Bytes.data() + sizeof(firstNode), &secondNode, sizeof(secondNode));
   auto overflowEquivalence = ExternalEquivalence::Create(std::move(overflowStore), 1, 2);

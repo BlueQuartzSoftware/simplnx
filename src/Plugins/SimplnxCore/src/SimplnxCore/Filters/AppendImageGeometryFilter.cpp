@@ -102,8 +102,8 @@ IFilter::UniquePointer AppendImageGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputGeometriesPathsValue = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
   auto pDestinationGeometryPathValue = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
@@ -158,7 +158,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     if(inputUnits != destUnits)
     {
       resultOutputActions.warnings().push_back(
-          Warning{-8310, fmt::format("Input units ({}) not equal to Destination units ({}).", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits))});
+          Warning{.code = -8310, .message = fmt::format("Input units ({}) not equal to Destination units ({}).", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits))});
     }
 
     switch(pDirection)
@@ -340,12 +340,12 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     preflightUpdatedValues.push_back({"Appended Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin, destGeometry.getUnits())});
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AppendImageGeometryInputValues inputValues;
 

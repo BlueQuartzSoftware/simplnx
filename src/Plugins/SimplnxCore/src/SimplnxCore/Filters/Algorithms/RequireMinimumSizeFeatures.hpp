@@ -19,13 +19,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RequireMinimumSizeFeaturesInputValues
 {
-  BoolParameter::ValueType ApplySinglePhase;
+  BoolParameter::ValueType ApplySinglePhase{};
   ArraySelectionParameter::ValueType FeatureIdsPath;
   ArraySelectionParameter::ValueType FeaturePhasesPath;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  Int64Parameter::ValueType MinAllowedFeaturesSize;
+  Int64Parameter::ValueType MinAllowedFeaturesSize{};
   ArraySelectionParameter::ValueType FeatureNumCellsPath;
-  Int32Parameter::ValueType PhaseNumber;
+  Int32Parameter::ValueType PhaseNumber{};
 };
 
 /**
@@ -61,7 +61,7 @@ public:
   /**
    * @brief Destroys the minimum-size removal algorithm.
    */
-  ~RequireMinimumSizeFeatures() noexcept;
+  ~RequireMinimumSizeFeatures() noexcept = default;
 
   RequireMinimumSizeFeatures(const RequireMinimumSizeFeatures&) = delete;
   RequireMinimumSizeFeatures(RequireMinimumSizeFeatures&&) noexcept = delete;
@@ -89,7 +89,7 @@ protected:
    *
    * Sibling arrays update sequentially. Feature IDs update last.
    */
-  Result<> assignBadVoxels(SizeVec3 dimensions);
+  Result<> assignBadVoxels(const SizeVec3& dimensions);
 
   /**
    * @brief Selects active features and applies their compacted IDs to cells.

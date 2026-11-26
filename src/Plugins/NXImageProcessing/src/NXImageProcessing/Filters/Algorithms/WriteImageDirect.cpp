@@ -325,7 +325,6 @@ WriteImageDirect::WriteImageDirect(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-WriteImageDirect::~WriteImageDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> WriteImageDirect::operator()()

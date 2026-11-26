@@ -9,6 +9,7 @@
 #include <fmt/ranges.h>
 
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
@@ -20,11 +21,11 @@ constexpr StringLiteral k_ScanNames = "scan_names";
 } // namespace
 
 //-----------------------------------------------------------------------------
-OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                             const EbsdReaderType& readerType, const ExtensionsType& extensionsType)
+OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
+                                                             const EbsdReaderType& readerType, ExtensionsType extensionsType)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
-, m_AvailableExtensions(extensionsType)
+, m_DefaultValue(std::move(defaultValue))
+, m_AvailableExtensions(std::move(extensionsType))
 , m_ReaderType(readerType)
 {
 }
@@ -83,7 +84,7 @@ nlohmann::json OEMEbsdScanSelectionParameter::toJsonImpl(const std::any& value) 
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'OEMEbsdScanSelectionParameter' Error: ";
 
@@ -148,7 +149,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::jso
     {
       if(name.empty())
       {
-        errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name)});
+        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name)});
         continue;
       }
       scanNames.push_back(name);

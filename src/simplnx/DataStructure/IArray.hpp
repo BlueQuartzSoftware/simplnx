@@ -23,7 +23,7 @@ public:
 
   IArray() = delete;
   IArray(const IArray&) = default;
-  IArray(IArray&&) = default;
+  IArray(IArray&&) noexcept = default;
 
   IArray& operator=(const IArray&) = delete;
   IArray& operator=(IArray&&) noexcept = delete;

@@ -72,15 +72,15 @@ nx::core::IFilter::UniquePointer TestFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::PreflightResult TestFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/,
-                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+nx::core::IFilter::PreflightResult TestFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-nx::core::Result<> TestFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                           const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+nx::core::Result<> TestFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

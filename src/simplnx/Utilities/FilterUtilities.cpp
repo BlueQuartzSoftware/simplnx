@@ -102,19 +102,20 @@ void AppendDataObjectModifications(const DataStructure& dataStructure, std::vect
 
   for(const auto& child : result.value())
   {
-    modifiedActions.push_back(DataObjectModification{child, DataObjectModification::ModifiedType::Modified, dataStructure.getDataRef(child).getDataObjectType()});
+    modifiedActions.push_back(
+        DataObjectModification{.modifiedPath = child, .modifiedType = DataObjectModification::ModifiedType::Modified, .dataObjectType = dataStructure.getDataRef(child).getDataObjectType()});
   }
 }
 
 // -----------------------------------------------------------------------------
 void MarkDataPathModified(const DataStructure& dataStructure, nx::core::Result<OutputActions>& resultOutputActions, const DataPath& targetDataPath)
 {
-  resultOutputActions.value().modifiedActions.push_back(
-      DataObjectModification{targetDataPath, DataObjectModification::ModifiedType::Modified, dataStructure.getDataRef(targetDataPath).getDataObjectType()});
+  resultOutputActions.value().modifiedActions.push_back(DataObjectModification{
+      .modifiedPath = targetDataPath, .modifiedType = DataObjectModification::ModifiedType::Modified, .dataObjectType = dataStructure.getDataRef(targetDataPath).getDataObjectType()});
 }
 
 // -----------------------------------------------------------------------------
-IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath&  /*featureIdsPath*/, const DataPath& numNeighborsPath,
+IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath& /*featureIdsPath*/, const DataPath& numNeighborsPath,
                                                           nx::core::Result<OutputActions>& resultOutputActions)
 {
   constexpr int32 k_FetchChildArrayError = -5559;
@@ -128,8 +129,8 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
   auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, DataObject::Type::NeighborList);
   if(!result.has_value())
   {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{
+        Error{.code = k_FetchChildArrayError, .message = fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
   }
   std::vector<DataPath> featureNeighborListArrays = result.value();
   for(const auto& featureNeighborList : featureNeighborListArrays)
@@ -147,7 +148,7 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
   // caller, and it silently defeats any test that asserts merely that the warning list is non-empty.
   if(!featureNeighborListArrays.empty())
   {
-    resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+    resultOutputActions.warnings().push_back(Warning{.code = k_NeighborListRemoval, .message = ss});
   }
   return {};
 }

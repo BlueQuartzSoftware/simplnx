@@ -25,8 +25,6 @@ ComputeBoundaryElementFractions::ComputeBoundaryElementFractions(DataStructure& 
 {
 }
 
-ComputeBoundaryElementFractions::~ComputeBoundaryElementFractions() noexcept = default;
-
 Result<> ComputeBoundaryElementFractions::operator()()
 {
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);

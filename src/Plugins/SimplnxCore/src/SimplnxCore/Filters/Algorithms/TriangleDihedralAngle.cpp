@@ -324,7 +324,6 @@ TriangleDihedralAngle::TriangleDihedralAngle(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-TriangleDihedralAngle::~TriangleDihedralAngle() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> TriangleDihedralAngle::operator()()

@@ -43,7 +43,7 @@ class NXIMAGEPROCESSING_EXPORT ReadNrrdFile
 {
 public:
   ReadNrrdFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadNrrdFileInputValues* inputValues);
-  ~ReadNrrdFile() noexcept;
+  ~ReadNrrdFile() noexcept = default;
 
   ReadNrrdFile(const ReadNrrdFile&) = delete;
   ReadNrrdFile(ReadNrrdFile&&) noexcept = delete;

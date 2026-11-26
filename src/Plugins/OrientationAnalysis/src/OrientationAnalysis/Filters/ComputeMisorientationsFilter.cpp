@@ -19,7 +19,6 @@
 
 #include <filesystem>
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
@@ -118,8 +117,8 @@ IFilter::UniquePointer ComputeMisorientationsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputPath1 = filterArgs.value<DataPath>(k_InputOrientationArrayPath1_Key);
   auto inputPath2 = filterArgs.value<DataPath>(k_InputOrientationArrayPath2_Key);
@@ -138,7 +137,8 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
     auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
     if(!tupleValidityCheck)
     {
-      return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
     }
   }
 
@@ -156,8 +156,8 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeMisorientationsInputValues inputValues;
 

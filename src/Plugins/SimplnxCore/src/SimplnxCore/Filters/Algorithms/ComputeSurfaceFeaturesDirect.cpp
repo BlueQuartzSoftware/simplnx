@@ -233,8 +233,6 @@ ComputeSurfaceFeaturesDirect::ComputeSurfaceFeaturesDirect(DataStructure& dataSt
 {
 }
 
-ComputeSurfaceFeaturesDirect::~ComputeSurfaceFeaturesDirect() noexcept = default;
-
 Result<> ComputeSurfaceFeaturesDirect::operator()()
 {
   const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;

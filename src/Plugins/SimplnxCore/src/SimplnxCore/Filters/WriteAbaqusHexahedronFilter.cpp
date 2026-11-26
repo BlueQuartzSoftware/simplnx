@@ -102,8 +102,8 @@ IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto geometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -111,18 +111,18 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
   if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
   }
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -1124); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
   if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -1122); prefixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
   }
 
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -135,15 +135,15 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
 
   if(auto targetsResult = AbaqusElementSets::validateOutputTargets(pOutputPathValue, prefix, -1123); targetsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
   }
 
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteAbaqusHexahedronInputValues inputValues;
 

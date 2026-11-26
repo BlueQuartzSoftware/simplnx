@@ -79,8 +79,8 @@ IFilter::UniquePointer WriteLAMMPSFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pVertexGeomPathValue = filterArgs.value<DataPath>(k_VertexGeomPath);
   auto pAtomLabelsPathValue = filterArgs.value<DataPath>(k_AtomLabelsPath_Key);
@@ -99,8 +99,8 @@ IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteLAMMPSFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> WriteLAMMPSFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())

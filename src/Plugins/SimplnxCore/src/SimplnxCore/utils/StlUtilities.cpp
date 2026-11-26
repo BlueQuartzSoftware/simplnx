@@ -221,7 +221,7 @@ void StlUtilities::ConvertAsciiToBinaryStl(const std::filesystem::path& inputPat
   // Read ASCII STL and store triangles
   std::vector<Triangle> triangles;
   std::string line;
-  Triangle tri;
+  Triangle tri{};
 
   while(std::getline(asciiFile, line))
   {

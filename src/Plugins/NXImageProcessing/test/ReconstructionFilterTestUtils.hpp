@@ -264,7 +264,7 @@ inline ReconParamSetter HeightAndFullyConnectedParamSetter()
 /// type + radius + preserveIntensities, and takes FullyConnected from the grid config (height is unused). The
 /// stored any types match exactly what the filter reads (ChoicesParameter::ValueType, std::vector<uint32>, bool).
 template <class NewFilterT>
-inline ReconParamSetter SEReconParamSetter(ChoicesParameter::ValueType kernelType, std::vector<uint32> kernelRadius, bool preserveIntensities)
+inline ReconParamSetter SEReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, bool preserveIntensities)
 {
   return [kernelType, kernelRadius, preserveIntensities](Arguments& args, bool fullyConnected, float64 /*height*/) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(kernelType));
@@ -277,7 +277,7 @@ inline ReconParamSetter SEReconParamSetter(ChoicesParameter::ValueType kernelTyp
 /// Parameter setter for the binary reconstruction filters (BinaryOpeningByReconstruction): captures the kernel type
 /// + radius + foreground + background, and takes FullyConnected from the grid config (height unused).
 template <class NewFilterT>
-inline ReconParamSetter BinaryReconParamSetter(ChoicesParameter::ValueType kernelType, std::vector<uint32> kernelRadius, float64 foreground, float64 background)
+inline ReconParamSetter BinaryReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, float64 foreground, float64 background)
 {
   return [kernelType, kernelRadius, foreground, background](Arguments& args, bool fullyConnected, float64 /*height*/) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(kernelType));

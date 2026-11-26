@@ -29,8 +29,6 @@
 
 #include <filesystem>
 
-namespace fs = std::filesystem;
-
 using namespace nx::core;
 
 namespace
@@ -175,8 +173,8 @@ IFilter::UniquePointer ReadImageStackFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
@@ -204,7 +202,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
   if(files.empty())
   {
-    return {MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
   }
 
   DataStructure tmpDs;
@@ -279,7 +277,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     Result<> actionsResult = resultOutputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
   }
 
@@ -338,7 +336,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     Result<> actionsResult = resultOutputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     pathsToDelete.push_back(currentImageGeomPath);
@@ -376,7 +374,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     Result<> actionsResult = grayscaleImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     resultOutputActions = MergeOutputActionResults(resultOutputActions, grayscaleImageResult.outputActions);
@@ -414,12 +412,12 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
   preflightUpdatedValues.push_back({"Output Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(outputDims, outputSpacing, outputOrigin, outputUnits)});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadImageStackFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadImageStackFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
 

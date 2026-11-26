@@ -43,8 +43,8 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
   }
   auto warnings = std::move(writeResult.warnings());
 
-  const auto tupleShape = dataStore.getTupleShape();
-  const auto componentShape = dataStore.getComponentShape();
+  const auto& tupleShape = dataStore.getTupleShape();
+  const auto& componentShape = dataStore.getComponentShape();
   auto shapeResult = datasetWriter.writeVectorAttribute(IOConstants::k_TupleShapeTag, tupleShape);
   if(shapeResult.invalid())
   {
@@ -127,10 +127,11 @@ inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(con
   {
     Result<std::shared_ptr<AbstractDataStore<T>>> result;
     result.warnings() = std::move(warnings);
-    result.warnings().push_back(Warning{-89200, fmt::format("Unable to read dataset '{}' at path '{}': the file contains {} elements but the shape "
-                                                            "attributes indicate {} elements. This typically means the dataset is an out-of-core placeholder whose "
-                                                            "data is not stored inline; reading its full contents requires an out-of-core-enabled build.",
-                                                            datasetReader.getName(), datasetReader.getObjectPath(), physicalElements, expectedElements)});
+    result.warnings().push_back(Warning{.code = -89200,
+                                        .message = fmt::format("Unable to read dataset '{}' at path '{}': the file contains {} elements but the shape "
+                                                               "attributes indicate {} elements. This typically means the dataset is an out-of-core placeholder whose "
+                                                               "data is not stored inline; reading its full contents requires an out-of-core-enabled build.",
+                                                               datasetReader.getName(), datasetReader.getObjectPath(), physicalElements, expectedElements)});
     return result;
   }
 

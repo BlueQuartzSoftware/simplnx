@@ -18,7 +18,6 @@ DBSCAN::DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesg
 }
 
 // -----------------------------------------------------------------------------
-DBSCAN::~DBSCAN() noexcept = default;
 
 Result<> DBSCAN::operator()()
 {

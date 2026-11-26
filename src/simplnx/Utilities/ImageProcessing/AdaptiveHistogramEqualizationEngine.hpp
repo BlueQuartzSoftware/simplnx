@@ -427,7 +427,7 @@ inline Result<AdaptiveHistogramEqualizationRingBandPlan> ReserveAdaptiveHistogra
   auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
   usize planesPerBand = perBandUnitBytes == 0 ? usize{1} : std::max<usize>(usize{1}, reservation.sizeBytes() / perBandUnitBytes);
   planesPerBand = std::min(planesPerBand, std::max<usize>(dimZ, usize{1}));
-  return {AdaptiveHistogramEqualizationRingBandPlan{std::move(reservation), planesPerBand}};
+  return {AdaptiveHistogramEqualizationRingBandPlan{.reservation = std::move(reservation), .planesPerBand = planesPerBand}};
 }
 
 inline bool TryComputeAdaptiveHistogramEqualization2DLayout(usize inputRows, usize inputColumns, usize outputColumns, usize valueBytes, usize outputAllocationValues, usize fixedScratchBytes,

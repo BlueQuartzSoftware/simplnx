@@ -299,7 +299,7 @@ public:
    * @brief Checks released inner payload state while the worker's error mutex is held.
    * @pre Local result and ticket scopes have already unwound.
    */
-  void observeExceptionAggregation() noexcept;
+  void observeExceptionAggregation() const noexcept;
   LegacyPayloadTaskScopeForTesting(const LegacyPayloadTaskScopeForTesting&) = delete;
   LegacyPayloadTaskScopeForTesting(LegacyPayloadTaskScopeForTesting&&) = delete;
   LegacyPayloadTaskScopeForTesting& operator=(const LegacyPayloadTaskScopeForTesting&) = delete;

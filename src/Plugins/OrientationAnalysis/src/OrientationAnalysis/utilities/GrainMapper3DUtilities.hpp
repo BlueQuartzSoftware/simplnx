@@ -70,17 +70,17 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId);
 class ORIENTATIONANALYSIS_EXPORT GrainMapperReader
 {
 public:
-  explicit GrainMapperReader(const std::string& filePath, bool readDctData, bool readAbsorptionData);
+  explicit GrainMapperReader(std::string filePath, bool readDctData, bool readAbsorptionData);
   ~GrainMapperReader();
 
-  typedef struct
+  using GrainMapperPhase = struct
   {
     std::string Name;
     int32_t SpaceGroup;
     std::vector<double> UnitCell; //  ABC, Alpha, Beta, Gamma
     std::string UniversalHermannMauguin;
     int32_t PhaseIndex;
-  } GrainMapperPhase;
+  };
 
   nx::core::Result<> readHeaderOnly();
 
@@ -97,7 +97,7 @@ public:
 
   std::vector<std::string> getDctDatasetNames() const;
   std::map<std::string, nx::core::DataType> getNameToDataTypeMap() const;
-  std::map<std::string, size_t> getNameToCompDimMap() const;
+  static std::map<std::string, size_t> getNameToCompDimMap();
   std::vector<GrainMapperPhase> getPhaseVector() const;
   herr_t readPhaseInfo(hid_t parentId);
   herr_t findAvailableDctDatasets(hid_t parentId);
@@ -112,10 +112,10 @@ private:
   bool m_ReadDctData = false;
   bool m_ReadAbsorptionData = false;
 
-  std::string m_ErrorMessage = {};
-  std::string m_FileName = {};
-  std::string m_HDF5Path = {};
-  std::string m_OINAVersion = {};
+  std::string m_ErrorMessage;
+  std::string m_FileName;
+  std::string m_HDF5Path;
+  std::string m_OINAVersion;
 
   std::vector<size_t> m_LabDctDimensions;
   std::vector<double> m_LabDctSpacing = {1.0, 1.0, 1.0};

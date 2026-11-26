@@ -1072,7 +1072,7 @@ Result<> finishImportingLegacyDataArray(DataStructure& dataStructure, const HDF5
   auto dataTypeResult = dataSetIO.getDataType();
   if(dataTypeResult.invalid())
   {
-    auto errors = dataTypeResult.errors();
+    const auto& errors = dataTypeResult.errors();
     return MakeErrorResult(errors[0].code, errors[0].message);
   }
   auto dataType = std::move(dataTypeResult.value());
@@ -1171,7 +1171,7 @@ Result<UInt64Array*> readLegacyNodeConnectivityList(DataStructure& dataStructure
  */
 template <typename T>
 Result<> createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const nx::core::HDF5::GroupIO& parentReader, const nx::core::HDF5::DatasetIO& datasetReader,
-                                  const ShapeType&  /*tupleDims*/, bool preflight = false)
+                                  const ShapeType& /*tupleDims*/, bool preflight = false)
 {
   // Preflight reads shape metadata but no list values.
   std::vector<Warning> warnings;
@@ -1771,7 +1771,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   }
 
   auto childrenResult = MergeResults(daResults);
-  uint32 amType;
+  uint32 amType = 0;
   auto amTypeResult = amGroupReader.readScalarAttribute<uint32>("AttributeMatrixType");
   if(amTypeResult.invalid())
   {
@@ -2139,7 +2139,7 @@ Result<DataObject*> readLegacyImageGeom(DataStructure& dataStructure, const nx::
           k_InvalidSpacingCount, fmt::format("Legacy image geometry '{}' in '{}' requires three spacing values. Found {}.", name, geomGroup.getFilePath().string(), spacing.size()));
     }
 
-    return {DREAM3D::ImageGeometryMetadata{FloatVec3(origin), FloatVec3(spacing)}};
+    return {DREAM3D::ImageGeometryMetadata{.origin = FloatVec3(origin), .spacing = FloatVec3(spacing)}};
   };
   auto metadata = DREAM3D::detail::ImportImageMetadata(*geom, geomGroup.getFilePath(), readMetadata(), deferredImageMetadata);
   return ConvertResultTo<DataObject*>(std::move(metadata), geom);
@@ -2244,7 +2244,7 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
   return result;
 }
 
-Result<> finishImportingLegacyImageGeom(DataStructure&  /*dataStructure*/, IGeometry* geometry, const HDF5::GroupIO&  /*geometryReader*/)
+Result<> finishImportingLegacyImageGeom(DataStructure& /*dataStructure*/, IGeometry* geometry, const HDF5::GroupIO& /*geometryReader*/)
 {
   auto* imageGeom = dynamic_cast<ImageGeom*>(geometry);
   if(imageGeom == nullptr)
@@ -2255,7 +2255,7 @@ Result<> finishImportingLegacyImageGeom(DataStructure&  /*dataStructure*/, IGeom
   return {};
 }
 
-Result<> finishImportingLegacyEdgeGeom(DataStructure&  /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+Result<> finishImportingLegacyEdgeGeom(DataStructure& /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
 {
   auto* edgeGeom = dynamic_cast<EdgeGeom*>(geometryPtr);
   if(edgeGeom == nullptr)
@@ -2267,7 +2267,7 @@ Result<> finishImportingLegacyEdgeGeom(DataStructure&  /*dataStructure*/, IGeome
   return {};
 }
 
-Result<> finishImportingLegacyHexGeom(DataStructure&  /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+Result<> finishImportingLegacyHexGeom(DataStructure& /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
 {
   auto* hexGeom = dynamic_cast<HexahedralGeom*>(geometryPtr);
   if(hexGeom == nullptr)
@@ -2279,7 +2279,7 @@ Result<> finishImportingLegacyHexGeom(DataStructure&  /*dataStructure*/, IGeomet
   return {};
 }
 
-Result<> finishImportingLegacyQuadGeom(DataStructure&  /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+Result<> finishImportingLegacyQuadGeom(DataStructure& /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
 {
   auto* quadGeom = dynamic_cast<QuadGeom*>(geometryPtr);
   if(quadGeom == nullptr)
@@ -2291,7 +2291,7 @@ Result<> finishImportingLegacyQuadGeom(DataStructure&  /*dataStructure*/, IGeome
   return {};
 }
 
-Result<> finishImportingLegacyRectGridGeom(DataStructure&  /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+Result<> finishImportingLegacyRectGridGeom(DataStructure& /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
 {
   auto* rectGridGeom = dynamic_cast<RectGridGeom*>(geometryPtr);
   if(rectGridGeom == nullptr)
@@ -2311,7 +2311,7 @@ Result<> finishImportingLegacyRectGridGeom(DataStructure&  /*dataStructure*/, IG
   return {};
 }
 
-Result<> finishImportingLegacyTetrahedralGeom(DataStructure&  /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+Result<> finishImportingLegacyTetrahedralGeom(DataStructure& /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
 {
   auto* tetrahedralGeom = dynamic_cast<TetrahedralGeom*>(geometryPtr);
   if(tetrahedralGeom == nullptr)
@@ -2323,7 +2323,7 @@ Result<> finishImportingLegacyTetrahedralGeom(DataStructure&  /*dataStructure*/,
   return {};
 }
 
-Result<> finishImportingLegacyTriangleGeom(DataStructure&  /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+Result<> finishImportingLegacyTriangleGeom(DataStructure& /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
 {
   auto* triangleGeom = dynamic_cast<TriangleGeom*>(geometryPtr);
   if(triangleGeom == nullptr)
@@ -2335,7 +2335,7 @@ Result<> finishImportingLegacyTriangleGeom(DataStructure&  /*dataStructure*/, IG
   return {};
 }
 
-Result<> finishImportingLegacyVertexGeom(DataStructure&  /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+Result<> finishImportingLegacyVertexGeom(DataStructure& /*dataStructure*/, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
 {
   auto* vertexGeom = dynamic_cast<VertexGeom*>(geometryPtr);
   if(vertexGeom == nullptr)
@@ -2349,7 +2349,7 @@ Result<> finishImportingLegacyVertexGeom(DataStructure&  /*dataStructure*/, IGeo
 
 Result<> finishImportingLegacyDataContainer(DataStructure& dataStructure, const HDF5::GroupIO& parentReader, const DataPath& dataPath)
 {
-  std::string dcName = dataPath[0];
+  const std::string& dcName = dataPath[0];
   auto dcGroup = parentReader.openGroup(dcName);
 
   // Check for geometry
@@ -3373,7 +3373,7 @@ Result<DataStructure> LoadDataStructureWithHandler(const fs::path& filePath, con
 
   DataStructure dataStructure;
   // Install storage policy before any finalizer selects array stores.
-  dataStructure.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(std::move(resolver));
   for(const auto& objectPath : allPaths)
   {
     auto objectResult = LoadDataObjectFromHDF5(importStructure, dataStructure, objectPath, dataFileReader, useDeferredLoad);

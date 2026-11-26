@@ -95,8 +95,8 @@ IFilter::UniquePointer RequireMinimumSizeFeaturesFilter::clone() const
   return std::make_unique<RequireMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto featurePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
@@ -108,13 +108,13 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeomPath, featureIdsPath, -5562, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   auto featureAttributeMatrixResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeomPath, featureNumCellsPath.getParent(), -5563, "Feature Num. Cells", featureNumCellsPath);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -126,7 +126,7 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   if(minAllowedFeatureSize < 0)
   {
     std::string ss = fmt::format("The minimum Feature size ({}) must be 0 or positive", minAllowedFeatureSize);
-    return {MakeErrorResult<OutputActions>(-k_BadMinAllowedFeatureSize, ss)};
+    return {.outputActions = MakeErrorResult<OutputActions>(-k_BadMinAllowedFeatureSize, ss)};
   }
 
   dataArrayPaths.push_back(featureNumCellsPath);
@@ -164,12 +164,12 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
-Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RequireMinimumSizeFeaturesInputValues inputValues;
 

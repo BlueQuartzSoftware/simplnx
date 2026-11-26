@@ -15,7 +15,6 @@ ConcatenateDataArrays::ConcatenateDataArrays(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ConcatenateDataArrays::~ConcatenateDataArrays() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ConcatenateDataArrays::getCancel()

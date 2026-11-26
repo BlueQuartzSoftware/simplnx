@@ -33,7 +33,7 @@ public:
   /**
    * @brief Destroys the non-owning evaluator.
    */
-  ~MultiThresholdObjectsDirect() noexcept;
+  ~MultiThresholdObjectsDirect() noexcept = default;
 
   MultiThresholdObjectsDirect(const MultiThresholdObjectsDirect&) = delete;
   MultiThresholdObjectsDirect(MultiThresholdObjectsDirect&&) noexcept = delete;

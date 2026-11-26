@@ -27,6 +27,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -109,7 +110,7 @@ inline Result<FastChamferResidentMemoryAllocation> ReserveFastChamferResidentWor
     return ConvertInvalidResult<FastChamferResidentMemoryAllocation>(std::move(requiredResult));
   }
   auto reservation = ReserveWorkingMemory(requiredResult.value(), requiredResult.value());
-  return {FastChamferResidentMemoryAllocation{std::move(reservation), requiredResult.value()}};
+  return {FastChamferResidentMemoryAllocation{.reservation = std::move(reservation), .requiredBytes = requiredResult.value()}};
 }
 
 inline bool Chamfer2DFullWidthPeak(usize columns, usize rows, usize& peak)
@@ -246,7 +247,7 @@ public:
   FastChamferDistance(AbstractDataStore<float32>& store, SizeVec3 dims, float32 maxDist, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                       usize residentLimit2D = detail::k_Chamfer2DResidentLimit, bool negateOutput = false, usize rowGroupRows = detail::k_ChamferRowGroupRows)
   : m_Store(store)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_MaxDist(maxDist)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
@@ -409,7 +410,7 @@ private:
     }
   }
 
-  Result<std::unique_ptr<ITemporaryRecordStore>> CreateScratchStore(const TemporaryRecordStoreConfig& config, std::string_view context)
+  static Result<std::unique_ptr<ITemporaryRecordStore>> CreateScratchStore(const TemporaryRecordStoreConfig& config, std::string_view context)
   {
     try
     {
@@ -517,7 +518,7 @@ private:
     return {};
   }
 
-  void Propagate2DForward(float32* block, usize nx, usize sourceRows, usize loadedRows)
+  void Propagate2DForward(float32* block, usize nx, usize sourceRows, usize loadedRows) const
   {
     const float32 w0 = detail::k_ChamferWeights[0];
     const float32 w1 = detail::k_ChamferWeights[1];
@@ -554,7 +555,7 @@ private:
     }
   }
 
-  void Propagate2DBackward(float32* block, usize nx, usize firstSourceRow, usize loadedRows)
+  void Propagate2DBackward(float32* block, usize nx, usize firstSourceRow, usize loadedRows) const
   {
     const float32 w0 = detail::k_ChamferWeights[0];
     const float32 w1 = detail::k_ChamferWeights[1];

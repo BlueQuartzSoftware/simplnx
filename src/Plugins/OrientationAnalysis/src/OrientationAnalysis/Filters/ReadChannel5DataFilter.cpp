@@ -106,8 +106,8 @@ IFilter::UniquePointer ReadChannel5DataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -125,11 +125,13 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   {
     if(!std::filesystem::exists(crcPath))
     {
-      return {MakeErrorResult<OutputActions>(-66500, fmt::format("Matching .crc file does not exist. '{}' ", crcPath.string())), {}};
+      return {.outputActions = MakeErrorResult<OutputActions>(-66500, fmt::format("Matching .crc file does not exist. '{}' ", crcPath.string())), .outputValues = {}};
     }
   } catch(std::exception& e)
   {
-    return {MakeErrorResult<OutputActions>(-66501, fmt::format("Attempting to figure out if '{}' exists threw a std::exception. Please report this to the developers.", crcPath.string())), {}};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-66501, fmt::format("Attempting to figure out if '{}' exists threw a std::exception. Please report this to the developers.", crcPath.string())),
+            .outputValues = {}};
   }
 
   // Read the CPR file to gather the Geometry information and what arrays are present in the file.
@@ -140,7 +142,7 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   int32_t err = reader.readHeaderOnly();
   if(err < 0)
   {
-    return {MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
+    return {.outputActions = MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
   }
 
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
@@ -150,7 +152,7 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
   if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   // These variables should be updated with the latest data generated for each variable during preflight.
@@ -267,12 +269,12 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadChannel5DataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadChannel5DataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadChannel5DataInputValues inputValues;
   inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;

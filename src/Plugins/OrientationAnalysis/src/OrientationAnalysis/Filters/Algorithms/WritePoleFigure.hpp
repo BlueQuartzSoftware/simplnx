@@ -30,30 +30,30 @@ const std::string k_MetaDataName("MetaData");
 struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
 {
   StringParameter::ValueType Title;
-  ChoicesParameter::ValueType GenerationAlgorithm;
-  int32 LambertSize;
-  int32 NumColors;
-  float32 DiscreteMarkerRadius;
-  ChoicesParameter::ValueType ImageFormat;
-  ChoicesParameter::ValueType ImageLayout;
+  ChoicesParameter::ValueType GenerationAlgorithm{};
+  int32 LambertSize{};
+  int32 NumColors{};
+  float32 DiscreteMarkerRadius{};
+  ChoicesParameter::ValueType ImageFormat{};
+  ChoicesParameter::ValueType ImageLayout{};
   FileSystemPathParameter::ValueType OutputPath;
   StringParameter::ValueType ImagePrefix;
-  int32 ImageSize;
-  bool UseMask;
+  int32 ImageSize{};
+  bool UseMask{};
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath MaskArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath MaterialNameArrayPath;
 
-  bool SaveAsImageGeometry;
-  bool WriteImageToDisk;
+  bool SaveAsImageGeometry{};
+  bool WriteImageToDisk{};
   DataPath OutputImageGeometryPath;
 
-  bool SaveIntensityData;
-  bool NormalizeToMRD;
+  bool SaveIntensityData{};
+  bool NormalizeToMRD{};
 
-  bool FlipFinalImage;
+  bool FlipFinalImage{};
   DataPath IntensityGeometryDataPath;
   std::string IntensityPlot1Name;
   std::string IntensityPlot2Name;
@@ -90,7 +90,7 @@ public:
    * @pre All arguments outlive this generator.
    */
   WritePoleFigure(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WritePoleFigureInputValues* inputValues);
-  ~WritePoleFigure() noexcept;
+  ~WritePoleFigure() noexcept = default;
 
   WritePoleFigure(const WritePoleFigure&) = delete;
   WritePoleFigure(WritePoleFigure&&) noexcept = delete;

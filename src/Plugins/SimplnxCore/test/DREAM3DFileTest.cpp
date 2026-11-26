@@ -1069,7 +1069,7 @@ struct GeometryTestCase
  * @return A test case with build and concrete-type verification callables.
  */
 template <typename GeomType>
-GeometryTestCase MakeGeometryTestCase(std::string typeName, std::function<GeomType*(DataStructure&, const std::string&, const std::optional<DataObject::IdType>&)> builder)
+GeometryTestCase MakeGeometryTestCase(std::string typeName, const std::function<GeomType*(DataStructure&, const std::string&, const std::optional<DataObject::IdType>&)>& builder)
 {
   GeometryTestCase testCase;
   testCase.typeName = std::move(typeName);

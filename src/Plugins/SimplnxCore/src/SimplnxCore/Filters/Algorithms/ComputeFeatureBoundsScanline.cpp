@@ -293,8 +293,6 @@ ComputeFeatureBoundsScanline::ComputeFeatureBoundsScanline(DataStructure& dataSt
 {
 }
 
-ComputeFeatureBoundsScanline::~ComputeFeatureBoundsScanline() noexcept = default;
-
 Result<> ComputeFeatureBoundsScanline::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();

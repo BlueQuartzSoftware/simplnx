@@ -47,7 +47,7 @@ public:
    */
   WriteOnScaleTableFile(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, WriteOnScaleTableFileInputValues* inputValues);
 
-  ~WriteOnScaleTableFile() noexcept;
+  ~WriteOnScaleTableFile() noexcept = default;
 
   WriteOnScaleTableFile(const WriteOnScaleTableFile&) = delete;
   WriteOnScaleTableFile(WriteOnScaleTableFile&&) noexcept = delete;

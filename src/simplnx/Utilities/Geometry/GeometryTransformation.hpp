@@ -53,8 +53,8 @@ struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
 {
   DataPath SelectedGeometryPath;
 
-  ChoicesParameter::ValueType TransformationSelection;
-  ChoicesParameter::ValueType InterpolationSelection;
+  ChoicesParameter::ValueType TransformationSelection{};
+  ChoicesParameter::ValueType InterpolationSelection{};
 
   DataPath ComputedTransformationMatrix;
   DynamicTableParameter::ValueType ManualMatrixTableData;
@@ -65,11 +65,11 @@ struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
   DataPath CellAttributeMatrixPath;
   bool ClearFeatureAttributeMatrix = false;
   bool RenumberFeatures = false;
-  DataPath FeatureAttributeMatrixPath = {};
-  DataPath FeatureIdsPath = {};
+  DataPath FeatureAttributeMatrixPath;
+  DataPath FeatureIdsPath;
   DataPath TransformMatrixPath;
-  bool RemoveOriginalGeometry;
-  bool TranslateGeometryToGlobalOrigin;
+  bool RemoveOriginalGeometry{};
+  bool TranslateGeometryToGlobalOrigin{};
   bool SaveTransformMatrix = false;
 };
 
@@ -104,7 +104,7 @@ public:
   /**
    * @brief Destroys the geometry transformation algorithm.
    */
-  ~ApplyTransformationToGeometry() noexcept;
+  ~ApplyTransformationToGeometry() noexcept = default;
 
   ApplyTransformationToGeometry(const ApplyTransformationToGeometry&) = delete;
   ApplyTransformationToGeometry(ApplyTransformationToGeometry&&) noexcept = delete;

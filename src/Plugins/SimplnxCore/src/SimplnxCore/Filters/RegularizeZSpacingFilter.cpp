@@ -41,7 +41,7 @@ nx::core::DataPath RebasePath(const nx::core::DataPath& path, const nx::core::Da
   auto pathVector = path.getPathVector();
   std::vector<std::string> newVector = newPrefix.getPathVector();
   newVector.insert(newVector.end(), pathVector.begin() + static_cast<std::ptrdiff_t>(oldPrefix.getLength()), pathVector.end());
-  return nx::core::DataPath(newVector);
+  return {newVector};
 }
 } // namespace
 
@@ -134,8 +134,8 @@ IFilter::UniquePointer RegularizeZSpacingFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
@@ -165,7 +165,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
   Result<std::vector<float32>> zBoundsResult = ReadZBoundsFile(inputFile, origZDim + 1);
   if(zBoundsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(zBoundsResult)), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(zBoundsResult)), {})};
   }
   const std::vector<float32> zBoundValues = zBoundsResult.value();
 
@@ -265,14 +265,14 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(renumberFeatures)
     {
       auto locationResult = ValidateArrayInGeometryCellData(dataStructure, srcImagePath, featureIdsArrayPath, -67433, "Cell Feature Ids");
       if(locationResult.invalid())
       {
-        return {ConvertResultTo<OutputActions>(std::move(locationResult), {})};
+        return {.outputActions = ConvertResultTo<OutputActions>(std::move(locationResult), {})};
       }
       const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
       if(featureIds.getNumberOfTuples() != srcImageGeom.getNumberOfCells())
@@ -331,12 +331,12 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom.getCellDataPath(), {});
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
 Result<> RegularizeZSpacingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RegularizeZSpacingInputValues inputValues;
 

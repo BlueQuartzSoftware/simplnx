@@ -6,12 +6,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -38,7 +39,7 @@ nlohmann::json AttributeMatrixSelectionParameter::toJsonImpl(const std::any& val
   return json;
 }
 
-Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
 

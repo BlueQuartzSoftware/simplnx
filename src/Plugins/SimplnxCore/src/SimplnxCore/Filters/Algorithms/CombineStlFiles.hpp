@@ -20,13 +20,13 @@ struct SIMPLNXCORE_EXPORT CombineStlFilesInputValues
   DataPath FaceNormalsArrayName;
 
   DataPath PartNumberIndexArrayPath;
-  bool CreatePartNumbers;
+  bool CreatePartNumbers{};
 
   DataPath FaceLabelIndexArrayPath;
-  bool CreateFaceLabels;
+  bool CreateFaceLabels{};
 
   DataPath VertexFileIndexArrayPath;
-  bool LabelVertices;
+  bool LabelVertices{};
 
   DataObjectNameParameter::ValueType CellFeatureAttributeMatrixName;
   DataObjectNameParameter::ValueType ActiveArrayName;
@@ -42,7 +42,7 @@ class SIMPLNXCORE_EXPORT CombineStlFiles
 {
 public:
   CombineStlFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineStlFilesInputValues* inputValues);
-  ~CombineStlFiles() noexcept;
+  ~CombineStlFiles() noexcept = default;
 
   CombineStlFiles(const CombineStlFiles&) = delete;
   CombineStlFiles(CombineStlFiles&&) noexcept = delete;

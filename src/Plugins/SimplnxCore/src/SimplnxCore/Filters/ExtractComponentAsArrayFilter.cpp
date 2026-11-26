@@ -85,8 +85,8 @@ IFilter::UniquePointer ExtractComponentAsArrayFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pMoveComponentsToNewArrayValue = filterArgs.value<bool>(k_MoveComponentsToNewArray_Key);
   auto pRemoveComponentsFromArrayValue = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
@@ -103,12 +103,13 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   const usize selectedArrayComp = selectedArray.getNumberOfComponents();
   if(selectedArrayComp < 2)
   {
-    return {MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
   }
   if(selectedArrayComp < pCompNumberValue)
   {
-    return {MakeErrorResult<OutputActions>(
-        -45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ", pCompNumberValue, 0, (selectedArrayComp - 1)))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ",
+                                                                   pCompNumberValue, 0, (selectedArrayComp - 1)))};
   }
 
   if(pMoveComponentsToNewArrayValue)
@@ -140,12 +141,12 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractComponentAsArrayInputValues inputValues;
 

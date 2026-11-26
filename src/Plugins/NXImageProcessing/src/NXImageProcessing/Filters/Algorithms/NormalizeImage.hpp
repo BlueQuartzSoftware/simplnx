@@ -32,7 +32,7 @@ public:
    * @pre All referenced arguments outlive this executor.
    */
   NormalizeImage(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const NormalizeImageInputValues* inputValues);
-  ~NormalizeImage() noexcept;
+  ~NormalizeImage() noexcept = default;
   NormalizeImage(const NormalizeImage&) = delete;
   NormalizeImage(NormalizeImage&&) noexcept = delete;
   NormalizeImage& operator=(const NormalizeImage&) = delete;

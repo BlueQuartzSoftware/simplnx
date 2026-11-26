@@ -16,8 +16,6 @@ CreateColorMap::CreateColorMap(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-CreateColorMap::~CreateColorMap() noexcept = default;
-
 const std::atomic_bool& CreateColorMap::getCancel()
 {
   return m_ShouldCancel;

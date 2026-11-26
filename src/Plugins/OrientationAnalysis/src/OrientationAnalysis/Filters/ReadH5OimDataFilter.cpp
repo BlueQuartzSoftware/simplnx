@@ -23,7 +23,6 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 
@@ -97,8 +96,8 @@ IFilter::UniquePointer ReadH5OimDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                            const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
@@ -206,12 +205,12 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadH5OimDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadH5OimDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadH5DataInputValues inputValues;
 

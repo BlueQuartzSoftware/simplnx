@@ -330,7 +330,7 @@ bool DoesRayIntersectBox(const nx::core::CachedRay<T>& ray, const nx::core::Boun
  * @return bool
  */
 template <typename T>
-bool IsPointInTriangle3D(const nx::core::Point3D<T>&  /*p0*/, const nx::core::Point3D<T>&  /*p1*/, const nx::core::Point3D<T>&  /*p2*/, const nx::core::Point3D<T>&  /*point*/)
+bool IsPointInTriangle3D(const nx::core::Point3D<T>& /*p0*/, const nx::core::Point3D<T>& /*p1*/, const nx::core::Point3D<T>& /*p2*/, const nx::core::Point3D<T>& /*point*/)
 {
   throw std::runtime_error("GeometryMath::IsPointInTriangle3D() is not implemented");
 }
@@ -391,7 +391,7 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
  * @return bool
  */
 template <typename T>
-uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>&  /*ray*/, const nx::core::Point3D<T>&  /*origin*/, T  /*radius*/, std::vector<Point3D<T>>&  /*intersections*/)
+uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>& /*ray*/, const nx::core::Point3D<T>& /*origin*/, T /*radius*/, std::vector<Point3D<T>>& /*intersections*/)
 {
   throw std::runtime_error("GeometryMath::FindRayIntersectionsWithSphere() is not implemented");
 }
@@ -403,7 +403,7 @@ uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>&  /*ray*/, const nx:
  * @return float
  */
 template <typename T>
-T GetLengthOfRayInBox(const nx::core::Ray<T>&  /*ray*/, const nx::core::BoundingBox3D<T>&  /*box*/)
+T GetLengthOfRayInBox(const nx::core::Ray<T>& /*ray*/, const nx::core::BoundingBox3D<T>& /*box*/)
 {
   throw std::runtime_error("GeometryMath::GetLengthOfRayInBox() is not implemented");
 }
@@ -423,7 +423,7 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INod
  * @return nx::core::BoundingBox<float32>
  */
 template <typename T>
-nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom&  /*triangleGeom*/, T faceId, std::vector<usize>& verts)
+nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& /*triangleGeom*/, T faceId, std::vector<usize>& verts)
 {
   // Unavoidable branch to verify integrity of subsequent function
   // specifically because this an exposed function, however, the
@@ -514,8 +514,8 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& tr
   for(const auto& id : faceIds)
   {
     auto bounds = FindBoundingBoxOfFace(cache, triangleGeom, id, verts);
-    Point3Df min = bounds.getMinPoint();
-    Point3Df max = bounds.getMaxPoint();
+    const Point3Df& min = bounds.getMinPoint();
+    const Point3Df& max = bounds.getMaxPoint();
 
     if(min[0] < ll[0])
     {
@@ -844,7 +844,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
   {
     crossings = 0;
 
-    std::array<T, 3> eulerAngles;
+    std::array<T, 3> eulerAngles{};
 
     float rand1 = distribution(generator);
     float rand2 = distribution(generator);

@@ -55,7 +55,7 @@ inline ReconOffsets MakeReconstructionOffsets(bool fullyConnected)
         {
           continue; // face connectivity: exactly one axis nonzero
         }
-        const ReconOffset off{dx, dy, dz};
+        const ReconOffset off{.dx = dx, .dy = dy, .dz = dz};
         result.all.push_back(off);
         const bool isPrevious = (dz < 0) || (dz == 0 && dy < 0) || (dz == 0 && dy == 0 && dx < 0);
         if(isPrevious)

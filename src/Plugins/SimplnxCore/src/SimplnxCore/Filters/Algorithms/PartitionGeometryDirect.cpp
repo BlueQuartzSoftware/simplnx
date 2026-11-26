@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -76,9 +77,9 @@ public:
    * @param outOfBoundsValue Supplies IDs for exterior cells.
    * @param shouldCancel Stops active ranges when true.
    */
-  PartitionImageGeometryImpl(const SizeVec3& inputDimensions, const std::vector<usize>& xPartitionIndices, const std::vector<usize>& yPartitionIndices, const std::vector<usize>& zPartitionIndices,
+  PartitionImageGeometryImpl(SizeVec3 inputDimensions, const std::vector<usize>& xPartitionIndices, const std::vector<usize>& yPartitionIndices, const std::vector<usize>& zPartitionIndices,
                              int32* partitionIds, int startingPartitionId, int outOfBoundsValue, const std::atomic_bool& shouldCancel)
-  : m_InputDimensions(inputDimensions)
+  : m_InputDimensions(std::move(inputDimensions))
   , m_XPartitionIndices(xPartitionIndices)
   , m_YPartitionIndices(yPartitionIndices)
   , m_ZPartitionIndices(zPartitionIndices)
@@ -334,8 +335,6 @@ PartitionGeometryDirect::PartitionGeometryDirect(DataStructure& dataStructure, c
 {
 }
 
-PartitionGeometryDirect::~PartitionGeometryDirect() noexcept = default;
-
 const std::atomic_bool& PartitionGeometryDirect::getCancel()
 {
   return m_ShouldCancel;
@@ -426,7 +425,7 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
   auto* inMemoryPartitionIdsStore = dynamic_cast<Int32DataStore*>(&partitionIdsStore);
   if(inputGeometry.getGeomType() == IGeometry::Type::Image && inMemoryPartitionIdsStore != nullptr)
   {
-    const auto& imageGeom = static_cast<const ImageGeom&>(inputGeometry);
+    const auto& imageGeom = dynamic_cast<const ImageGeom&>(inputGeometry);
     const SizeVec3 partitionDimensions = psImageGeom.getDimensions();
     const FloatVec3 inputOrigin = imageGeom.getOrigin();
     const FloatVec3 inputSpacing = imageGeom.getSpacing();

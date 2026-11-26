@@ -90,8 +90,8 @@ IFilter::UniquePointer SilhouetteFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                         const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
@@ -123,12 +123,12 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> SilhouetteFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> SilhouetteFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   SilhouetteInputValues inputValues;
 

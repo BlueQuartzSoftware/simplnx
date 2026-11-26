@@ -97,8 +97,8 @@ IFilter::UniquePointer ReadH5EbsdFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                         const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pReadH5EbsdFilterValue = filterArgs.value<ReadH5EbsdFileParameter::ValueType>(k_ReadH5EbsdParameter_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -116,7 +116,8 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure&  /
   {
     // This really should have been hit during the parameter validation... but just in case.
     preflightUpdatedValues.push_back({"ERROR:", fmt::format("Could not read input file {}", pReadH5EbsdFilterValue.inputFilePath)});
-    return {MakeErrorResult<OutputActions>(-67500, fmt::format("Could not read input file '{}'", pReadH5EbsdFilterValue.inputFilePath)), std::move(preflightUpdatedValues)};
+    return {.outputActions = MakeErrorResult<OutputActions>(-67500, fmt::format("Could not read input file '{}'", pReadH5EbsdFilterValue.inputFilePath)),
+            .outputValues = std::move(preflightUpdatedValues)};
   }
 
   std::vector<int64_t> dims = {0, 0, 0};
@@ -132,7 +133,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure&  /
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
   if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pReadH5EbsdFilterValue.inputFilePath, origin, spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(imageGeomPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue));
@@ -170,7 +171,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure&  /
   }
   else
   {
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
   }
 
   std::set<std::string> m_SelectedArrayNames;
@@ -224,9 +225,9 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure&  /
   tupleDims = {static_cast<size_t>(reader->getNumPhases() + 1)};
   if(tupleDims[0] == 0)
   {
-    return {MakeErrorResult<OutputActions>(-67501,
-                                           fmt::format("H5EBSD File: Number of phases is ZERO. This should not have happened. Please check the source data.", pReadH5EbsdFilterValue.inputFilePath)),
-            std::move(preflightUpdatedValues)};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -67501, fmt::format("H5EBSD File: Number of phases is ZERO. This should not have happened. Please check the source data.", pReadH5EbsdFilterValue.inputFilePath)),
+            .outputValues = std::move(preflightUpdatedValues)};
   }
 
   // Create the Ensemble AttributeMatrix
@@ -272,12 +273,12 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure&  /
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

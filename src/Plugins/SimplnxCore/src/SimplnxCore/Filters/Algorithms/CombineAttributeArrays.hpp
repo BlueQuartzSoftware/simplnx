@@ -47,7 +47,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   CombineAttributeArrays(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineAttributeArraysInputValues* inputValues);
-  ~CombineAttributeArrays() noexcept;
+  ~CombineAttributeArrays() noexcept = default;
 
   CombineAttributeArrays(const CombineAttributeArrays&) = delete;
   CombineAttributeArrays(CombineAttributeArrays&&) noexcept = delete;

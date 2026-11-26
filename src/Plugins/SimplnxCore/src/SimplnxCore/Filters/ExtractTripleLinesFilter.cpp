@@ -122,8 +122,8 @@ IFilter::UniquePointer ExtractTripleLinesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   auto pFaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
@@ -146,16 +146,18 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
   // past the end of one of them, so check here where the user still gets an actionable message.
   if(faceLabels.getNumberOfTuples() != triangleGeom.getNumberOfFaces())
   {
-    return {MakeErrorResult<OutputActions>(-57402, fmt::format("Face Labels array '{}' has {} tuples but Triangle Geometry '{}' has {} faces. They must match.", pFaceLabelsArrayPath.toString(),
-                                                               faceLabels.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfFaces()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-57402, fmt::format("Face Labels array '{}' has {} tuples but Triangle Geometry '{}' has {} faces. They must match.", pFaceLabelsArrayPath.toString(),
+                                                                   faceLabels.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfFaces()))};
   }
   if(copyNodeTypes)
   {
     const auto& nodeTypes = dataStructure.getDataRefAs<IDataArray>(pNodeTypesArrayPath);
     if(nodeTypes.getNumberOfTuples() != triangleGeom.getNumberOfVertices())
     {
-      return {MakeErrorResult<OutputActions>(-57403, fmt::format("Node Types array '{}' has {} tuples but Triangle Geometry '{}' has {} vertices. They must match.", pNodeTypesArrayPath.toString(),
-                                                                 nodeTypes.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfVertices()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-57403, fmt::format("Node Types array '{}' has {} tuples but Triangle Geometry '{}' has {} vertices. They must match.", pNodeTypesArrayPath.toString(),
+                                                                     nodeTypes.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfVertices()))};
     }
   }
 
@@ -177,12 +179,12 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
     resultOutputActions.value().appendAction(std::move(createNodeTypesAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractTripleLinesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ExtractTripleLinesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto pTripleLineGeometryPath = filterArgs.value<DataPath>(k_CreatedTripleLineGeometryPath_Key);
   auto pVertexDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);

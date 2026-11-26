@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 #include <memory>
+#include <utility>
 
 // fmt >= 8.0.0
 #if FMT_VERSION >= 80000
@@ -50,8 +51,9 @@ bool UnloadSharedLibrary(void* handle)
 #endif
 }
 
-template <class Func, class = std::enable_if_t<is_function_ptr_v<Func>>>
+template <class Func>
 Func ImportFunction(void* handle, const char* funcName)
+requires(is_function_ptr_v<Func>)
 {
 #if defined(_WIN32)
   return reinterpret_cast<Func>(GetProcAddress(reinterpret_cast<HINSTANCE>(handle), funcName));
@@ -87,8 +89,8 @@ auto GetErrorMessage()
 }
 } // namespace
 
-PluginLoader::PluginLoader(const std::filesystem::path& path)
-: m_Path(path)
+PluginLoader::PluginLoader(std::filesystem::path path)
+: m_Path(std::move(path))
 , m_Plugin(nullptr)
 {
   loadPlugin();

@@ -199,8 +199,6 @@ CreateColorMapScanline::CreateColorMapScanline(DataStructure& dataStructure, con
 {
 }
 
-CreateColorMapScanline::~CreateColorMapScanline() noexcept = default;
-
 Result<> CreateColorMapScanline::operator()()
 {
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);

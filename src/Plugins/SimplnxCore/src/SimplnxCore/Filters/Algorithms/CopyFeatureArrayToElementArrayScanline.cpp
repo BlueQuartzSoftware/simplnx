@@ -107,8 +107,6 @@ CopyFeatureArrayToElementArrayScanline::CopyFeatureArrayToElementArrayScanline(D
 {
 }
 
-CopyFeatureArrayToElementArrayScanline::~CopyFeatureArrayToElementArrayScanline() noexcept = default;
-
 Result<> CopyFeatureArrayToElementArrayScanline::operator()()
 {
   if(m_InputValues->SelectedFeatureArrayPaths.empty())

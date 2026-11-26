@@ -71,7 +71,7 @@ public:
    * montage.
    * @param other
    */
-  GridMontage(GridMontage&& other);
+  GridMontage(GridMontage&& other) noexcept;
 
   ~GridMontage() override;
 
@@ -227,7 +227,7 @@ public:
    * @brief Returns the geometry bounds in 3D.
    * @return BoundsType
    */
-  BoundsType getBounds() const;
+  static BoundsType getBounds();
 
 protected:
   /**

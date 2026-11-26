@@ -590,8 +590,8 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         const auto originB = geomB->getOrigin();
         REQUIRE(originA.valid());
         REQUIRE(originB.valid());
-        const auto originAVec = originA.value();
-        const auto originBVec = originB.value();
+        const auto& originAVec = originA.value();
+        const auto& originBVec = originB.value();
         REQUIRE(std::fabs(originAVec[0] - originBVec[0]) <= UnitTest::EPSILON);
         REQUIRE(std::fabs(originAVec[1] - originBVec[1]) <= UnitTest::EPSILON);
         REQUIRE(std::fabs(originAVec[2] - originBVec[2]) <= UnitTest::EPSILON);

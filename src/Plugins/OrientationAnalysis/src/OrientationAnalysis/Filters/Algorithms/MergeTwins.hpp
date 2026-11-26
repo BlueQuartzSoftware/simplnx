@@ -21,8 +21,8 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
 {
   DataPath ContiguousNeighborListArrayPath;
-  float32 AxisTolerance;
-  float32 AngleTolerance;
+  float32 AxisTolerance{};
+  float32 AngleTolerance{};
   DataPath FeaturePhasesArrayPath;
   DataPath AvgQuatsArrayPath;
   DataPath FeatureIdsArrayPath;
@@ -31,7 +31,7 @@ struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
   DataPath NewCellFeatureAttributeMatrixPath;
   DataPath FeatureParentIdsArrayPath;
   DataPath ActiveArrayPath;
-  uint64 Seed;
+  uint64 Seed{};
   bool RandomizeParentIds = false;
 };
 
@@ -86,8 +86,8 @@ private:
 
   std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 
-  std::mt19937_64 m_Generator = {};
-  std::uniform_real_distribution<float32> m_Distribution = {};
+  std::mt19937_64 m_Generator;
+  std::uniform_real_distribution<float32> m_Distribution;
 
   /**
    * @brief Groups connected twin features.

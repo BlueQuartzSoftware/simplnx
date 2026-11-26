@@ -540,7 +540,7 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: Erode with BackgroundValue
     {
       for(usize x = 0; x < dimX; ++x)
       {
-        int32 value;
+        int32 value = 0;
         if((((x / 4) + (y / 4) + (z / 4)) % 2) == 0)
         {
           value = objectValue;

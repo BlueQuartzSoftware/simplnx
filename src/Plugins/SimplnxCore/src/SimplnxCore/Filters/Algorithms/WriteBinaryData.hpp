@@ -19,7 +19,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT WriteBinaryDataInputValues
 {
-  ChoicesParameter::ValueType EndianIndex;
+  ChoicesParameter::ValueType EndianIndex{};
   StringParameter::ValueType FileExtension;
   MultiArraySelectionParameter::ValueType InputDataArrayPaths;
   FileSystemPathParameter::ValueType OutputPath;
@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteBinaryData() noexcept;
+  ~WriteBinaryData() noexcept = default;
 
   WriteBinaryData(const WriteBinaryData&) = delete;
   WriteBinaryData(WriteBinaryData&&) noexcept = delete;

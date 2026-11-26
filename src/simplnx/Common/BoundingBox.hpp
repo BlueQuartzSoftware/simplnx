@@ -5,6 +5,7 @@
 #include "simplnx/Common/Array.hpp"
 
 #include <nonstd/span.hpp>
+#include <utility>
 
 namespace nx::core
 {
@@ -60,8 +61,8 @@ public:
    * @param upperRight
    */
   BoundingBox(PointType lowerLeft, PointType upperRight)
-  : m_Lower(lowerLeft)
-  , m_Upper(upperRight)
+  : m_Lower(std::move(lowerLeft))
+  , m_Upper(std::move(upperRight))
   {
   }
 
@@ -70,8 +71,9 @@ public:
    * The format is min X, min Y, min Z, max X, max Y, max Z.
    * @param arr
    */
-  template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT, Point3D<ValueType>>::value>>
+  template <class PointT = PointType>
   explicit BoundingBox(nonstd::span<const ValueType, 6> arr)
+  requires(std::is_same_v<PointT, Point3D<ValueType>>)
   : m_Lower(Point3D<ValueType>(arr[0], arr[1], arr[2]))
   , m_Upper(Point3D<ValueType>(arr[3], arr[4], arr[5]))
   {
@@ -82,8 +84,9 @@ public:
    * The format is min X, min Y, max X, max Y.
    * @param arr
    */
-  template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT, Point2D<ValueType>>::value>>
+  template <class PointT = PointType>
   explicit BoundingBox(nonstd::span<const ValueType, 4> arr)
+  requires(std::is_same_v<PointT, Point2D<ValueType>>)
   : m_Lower(Point2D<ValueType>(arr[0], arr[1]))
   , m_Upper(Point2D<ValueType>(arr[2], arr[3]))
   {

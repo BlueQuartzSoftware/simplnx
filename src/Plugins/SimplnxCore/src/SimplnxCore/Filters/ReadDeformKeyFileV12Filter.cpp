@@ -97,8 +97,8 @@ IFilter::UniquePointer ReadDeformKeyFileV12Filter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pQuadGeomPathValue = filterArgs.value<DataPath>(k_QuadGeomPath_Key);
@@ -171,12 +171,12 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadDeformKeyFileV12InputValues inputValues;
 

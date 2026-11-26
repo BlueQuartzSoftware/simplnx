@@ -13,11 +13,11 @@ struct SIMPLNXCORE_EXPORT ComputeGroupingDensityInputValues
 {
   DataPath VolumesPath;
   DataPath ContiguousNLPath;
-  bool UseNonContiguousNeighbors;
+  bool UseNonContiguousNeighbors{};
   DataPath NonContiguousNLPath;
   DataPath ParentIdsPath;
   DataPath ParentVolumesPath;
-  bool FindCheckedFeatures;
+  bool FindCheckedFeatures{};
   DataPath CheckedFeaturesPath;
   DataPath GroupingDensitiesPath;
 };

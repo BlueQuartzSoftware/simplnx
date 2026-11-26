@@ -29,8 +29,6 @@ ComputeQuaternionConjugateScanline::ComputeQuaternionConjugateScanline(DataStruc
 {
 }
 
-ComputeQuaternionConjugateScanline::~ComputeQuaternionConjugateScanline() noexcept = default;
-
 Result<> ComputeQuaternionConjugateScanline::operator()()
 {
   const auto& input = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuaternionDataArrayPath);

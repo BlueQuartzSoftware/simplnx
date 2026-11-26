@@ -6,12 +6,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-MultiPathSelectionParameter::MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+MultiPathSelectionParameter::MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -42,7 +43,7 @@ nlohmann::json MultiPathSelectionParameter::toJsonImpl(const std::any& value) co
   return json;
 }
 
-Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
   if(!json.is_array())
@@ -64,7 +65,7 @@ Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json&
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
+      errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
       continue;
     }
     paths.push_back(std::move(*path));
@@ -111,13 +112,13 @@ Result<> MultiPathSelectionParameter::validatePaths(const DataStructure& dataStr
 
     if(path.empty())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
+      errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Empty_Value, .message = fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
     const DataObject* object = dataStructure.getData(path);
     if(object == nullptr)
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
+      errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Does_Not_Exist, .message = fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
   }
@@ -173,7 +174,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
 
     if(attributeMatrixNameResult.value().empty() == false)
     {
-      dataPath = dataPath.createChildPath(std::move(attributeMatrixNameResult.value()));
+      dataPath = dataPath.createChildPath(attributeMatrixNameResult.value());
 
       // Data Array Name is optional — an AttributeMatrixSelectionFilterParameter does not include it.
       if(json.contains(k_DataArrayNameKey))
@@ -186,7 +187,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
 
         if(dataArrayNameResult.value().empty() == false)
         {
-          dataPath = dataPath.createChildPath(std::move(dataArrayNameResult.value()));
+          dataPath = dataPath.createChildPath(dataArrayNameResult.value());
         }
       }
     }

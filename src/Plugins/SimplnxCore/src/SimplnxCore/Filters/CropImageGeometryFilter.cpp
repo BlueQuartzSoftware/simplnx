@@ -161,8 +161,8 @@ IFilter::UniquePointer CropImageGeometryFilter::clone() const
 {
   return std::make_unique<CropImageGeometryFilter>();
 }
-IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   ImageGeometryCropOptions options;
   options.inputImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -184,12 +184,12 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
 
   ImageGeometryCropBounds bounds;
   IFilter::PreflightResult result = PreflightImageGeometryCrop(dataStructure, options, bounds);
-  s_HeaderCache[m_InstanceId] = {bounds.xMin, bounds.xMax, bounds.yMax, bounds.yMin, bounds.zMax, bounds.zMin};
+  s_HeaderCache[m_InstanceId] = {.xMin = bounds.xMin, .xMax = bounds.xMax, .yMax = bounds.yMax, .yMin = bounds.yMin, .zMax = bounds.zMax, .zMin = bounds.zMin};
   return result;
 }
 
-Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CropImageGeometryInputValues inputValues;
 

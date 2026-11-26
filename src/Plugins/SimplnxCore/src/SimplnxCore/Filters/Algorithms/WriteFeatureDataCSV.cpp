@@ -20,7 +20,6 @@ WriteFeatureDataCSV::WriteFeatureDataCSV(DataStructure& dataStructure, const IFi
 }
 
 // -----------------------------------------------------------------------------
-WriteFeatureDataCSV::~WriteFeatureDataCSV() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> WriteFeatureDataCSV::operator()()

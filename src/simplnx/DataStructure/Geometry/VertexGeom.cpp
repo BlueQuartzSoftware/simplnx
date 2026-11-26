@@ -23,7 +23,7 @@ VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name, IdType im
 
 VertexGeom::VertexGeom(const VertexGeom&) = default;
 
-VertexGeom::VertexGeom(VertexGeom&&) = default;
+VertexGeom::VertexGeom(VertexGeom&&) noexcept = default;
 
 VertexGeom::~VertexGeom() noexcept = default;
 

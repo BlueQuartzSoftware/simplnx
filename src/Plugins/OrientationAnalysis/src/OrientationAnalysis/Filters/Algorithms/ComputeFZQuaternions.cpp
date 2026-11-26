@@ -534,8 +534,6 @@ ComputeFZQuaternions::ComputeFZQuaternions(DataStructure& dataStructure, const I
 {
 }
 
-ComputeFZQuaternions::~ComputeFZQuaternions() noexcept = default;
-
 Result<> ComputeFZQuaternions::operator()()
 {
   const auto& phaseArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);

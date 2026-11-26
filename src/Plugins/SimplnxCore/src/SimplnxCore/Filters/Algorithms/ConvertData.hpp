@@ -45,7 +45,7 @@ public:
   /**
    * @brief Destroys the non-owning conversion dispatcher.
    */
-  ~ConvertData() noexcept;
+  ~ConvertData() noexcept = default;
 
   ConvertData(const ConvertData&) = delete;
   ConvertData(ConvertData&&) noexcept = delete;

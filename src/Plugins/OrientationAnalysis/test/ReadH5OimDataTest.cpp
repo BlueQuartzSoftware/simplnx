@@ -115,7 +115,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Scan Stacking Order", "[Ori
     }
   }
 
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {inputFile, RefFrameZDir::k_LowtoHigh, {k_ScanName_2, k_ScanName_1, k_ScanName_3}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = inputFile, .stackingOrder = RefFrameZDir::k_LowtoHigh, .scanNames = {k_ScanName_2, k_ScanName_1, k_ScanName_3}};
   std::vector<int32> expectedScans;
   // For N selected scans, selection index i occupies Z slice i (Low to High)
   // or N-1-i (High to Low). Thus [2,1,3] becomes [2,1,3] or [3,1,2] in Z.
@@ -170,7 +170,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Acquisition Coordinates", "
   UnitTest::LoadPlugins();
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files_v3.tar.gz", "7_read_oem_ebsd_h5_files_v3");
   const auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/EdaxOIMData.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName_1}};
   SECTION("Single scan")
   {
     scanSelections.scanNames = {k_ScanName_1};
@@ -213,7 +213,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Single Scan", "[Orientation
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/EdaxOIMData.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName_1}};
 
   args.insertOrAssign(ReadH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
   args.insertOrAssign(ReadH5OimDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
@@ -263,7 +263,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Multi Scan", "[OrientationA
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/EdaxOIMData.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1, k_ScanName_2, k_ScanName_3}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName_1, k_ScanName_2, k_ScanName_3}};
 
   args.insertOrAssign(ReadH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
   args.insertOrAssign(ReadH5OimDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
@@ -315,7 +315,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: InValid Filter Execution", 
   args.insertOrAssign(ReadH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/EdaxOIMData.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName_1}};
 
   SECTION("Invalid Z Spacing")
   {

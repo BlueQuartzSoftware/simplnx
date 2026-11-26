@@ -27,7 +27,9 @@ constexpr int32 k_ObjectValueTruncated = -8523;
 
 // The standard live-parity configurations: 3D uniform + 3D non-cubic radius on a multi-object/edge-touching
 // image, plus a genuinely 2D (Z=1) image. Annulus is excluded from live parity (empty legacy kernel).
-const std::vector<omt::ObjCase> k_ParityConfigs = {{"3D r{1,1,1}", {1, 1, 1}, 12, 12, 12}, {"3D r{2,1,1}", {2, 1, 1}, 12, 12, 12}, {"2D Z=1 r{2,2,0}", {2, 2, 0}, 20, 16, 1}};
+const std::vector<omt::ObjCase> k_ParityConfigs = {{.label = "3D r{1,1,1}", .radius = {1, 1, 1}, .dimX = 12, .dimY = 12, .dimZ = 12},
+                                                   {.label = "3D r{2,1,1}", .radius = {2, 1, 1}, .dimX = 12, .dimY = 12, .dimZ = 12},
+                                                   {.label = "2D Z=1 r{2,2,0}", .radius = {2, 2, 0}, .dimX = 20, .dimY = 16, .dimZ = 1}};
 } // namespace
 
 // -----------------------------------------------------------------------------

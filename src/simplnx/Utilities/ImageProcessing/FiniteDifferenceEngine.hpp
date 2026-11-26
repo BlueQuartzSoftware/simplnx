@@ -110,7 +110,7 @@ inline FiniteDifferenceInteriorRange CreateFiniteDifferenceInteriorRange(usize d
   {
     return {};
   }
-  return {unsignedRadius, dimension - unsignedRadius};
+  return {.begin = unsignedRadius, .end = dimension - unsignedRadius};
 }
 
 struct FiniteDifferenceResidentMemoryAllocation
@@ -271,7 +271,7 @@ inline FiniteDifference2DBufferPlan BuildFiniteDifference2DBufferPlan(usize nx, 
 // Curvature-flow update functor (radius 1, no global data). See the Parity model (itkCurvatureFlowFunction).
 struct CurvatureFlowFn
 {
-  int64 radius() const
+  static int64 radius()
   {
     return 1;
   }
@@ -597,7 +597,7 @@ struct GradientAnisoFn
   bool gradientMagnitudeFixed = false;
   double fixedAvgGradMagSq = 0.0;
 
-  int64 radius() const
+  static int64 radius()
   {
     return 1;
   }
@@ -705,7 +705,7 @@ struct CurvatureAnisoFn
   bool gradientMagnitudeFixed = false;
   double fixedAvgGradMagSq = 0.0;
 
-  int64 radius() const
+  static int64 radius()
   {
     return 1;
   }
@@ -1808,7 +1808,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
 }
 
 template <class T, class F, class Real>
-Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::array<double, 3>& sc, F fn, float64 timeStep,
+Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::array<double, 3>& sc, const F& fn, float64 timeStep,
                                      uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D)
 {
   const usize nx = dims[0];

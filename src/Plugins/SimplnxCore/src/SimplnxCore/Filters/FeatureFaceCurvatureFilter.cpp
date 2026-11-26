@@ -118,8 +118,8 @@ IFilter::UniquePointer FeatureFaceCurvatureFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto triangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
   auto surfaceMeshPrincipalCurvature1Path = filterArgs.value<DataPath>(k_PrincipalCurvature1Path_Key);
@@ -206,12 +206,12 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> FeatureFaceCurvatureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> FeatureFaceCurvatureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   FeatureFaceCurvatureInputValues inputValues;
 

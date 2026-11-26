@@ -1,5 +1,7 @@
 #include "IDataIOManager.hpp"
 
+#include <utility>
+
 #include "simplnx/DataStructure/AbstractStringStore.hpp"
 
 namespace nx::core
@@ -12,7 +14,7 @@ IDataIOManager::factory_collection IDataIOManager::getFactories() const
   return m_FactoryCollection;
 }
 
-IDataIOManager::factory_ptr IDataIOManager::getFactory(factory_id_type typeName) const
+IDataIOManager::factory_ptr IDataIOManager::getFactory(const factory_id_type& typeName) const
 {
   if(m_FactoryCollection.find(typeName) == m_FactoryCollection.end())
   {
@@ -38,7 +40,7 @@ IDataIOManager::DataStoreCreateFnc IDataIOManager::dataStoreCreationFnc(const st
 
 void IDataIOManager::addDataStoreCreationFnc(const std::string& type, DataStoreCreateFnc creationFnc)
 {
-  m_DataStoreCreationMap[type] = creationFnc;
+  m_DataStoreCreationMap[type] = std::move(creationFnc);
 }
 
 bool IDataIOManager::hasListStoreCreationFnc(const std::string& type) const
@@ -53,7 +55,7 @@ IDataIOManager::ListStoreCreateFnc IDataIOManager::listStoreCreationFnc(const st
 
 void IDataIOManager::addListStoreCreationFnc(const std::string& type, ListStoreCreateFnc creationFnc)
 {
-  m_ListStoreCreationMap[type] = creationFnc;
+  m_ListStoreCreationMap[type] = std::move(creationFnc);
 }
 
 bool IDataIOManager::hasStringStoreCreationFnc(const std::string& type) const

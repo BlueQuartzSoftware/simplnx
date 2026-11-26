@@ -46,7 +46,7 @@ class SIMPLNXCORE_EXPORT CropVertexGeometry
 {
 public:
   CropVertexGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CropVertexGeometryInputValues* inputValues);
-  ~CropVertexGeometry() noexcept;
+  ~CropVertexGeometry() noexcept = default;
 
   CropVertexGeometry(const CropVertexGeometry&) = delete;
   CropVertexGeometry(CropVertexGeometry&&) noexcept = delete;

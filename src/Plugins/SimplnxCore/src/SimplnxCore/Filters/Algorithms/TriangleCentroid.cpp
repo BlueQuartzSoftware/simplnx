@@ -65,7 +65,6 @@ TriangleCentroid::TriangleCentroid(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-TriangleCentroid::~TriangleCentroid() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& TriangleCentroid::getCancel()

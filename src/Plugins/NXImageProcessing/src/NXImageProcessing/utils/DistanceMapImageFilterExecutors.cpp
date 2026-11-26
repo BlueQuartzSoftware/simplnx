@@ -243,8 +243,17 @@ Result<> ExecuteSignedMaurerDistanceMapImageFilter(DataStructure& dataStructure,
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::SignedMaurerDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims,         insideIsPositive, squaredDistance,
-                                                     useSpacing,    spacing,        backgroundValue, shouldCancel, messageHandler};
+  detail::SignedMaurerDistanceMapExecuteFn executeFn{.dataStructure = dataStructure,
+                                                     .inputArrayPath = inputArrayPath,
+                                                     .outputArrayPath = outputArrayPath,
+                                                     .dims = dims,
+                                                     .insideIsPositive = insideIsPositive,
+                                                     .squaredDistance = squaredDistance,
+                                                     .useSpacing = useSpacing,
+                                                     .spacing = spacing,
+                                                     .backgroundValue = backgroundValue,
+                                                     .shouldCancel = shouldCancel,
+                                                     .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -258,7 +267,16 @@ Result<> ExecuteDanielssonDistanceMapImageFilter(DataStructure& dataStructure, c
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::DanielssonDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, inputIsBinary, squaredDistance, useSpacing, spacing, shouldCancel, messageHandler};
+  detail::DanielssonDistanceMapExecuteFn executeFn{.dataStructure = dataStructure,
+                                                   .inputArrayPath = inputArrayPath,
+                                                   .outputArrayPath = outputArrayPath,
+                                                   .dims = dims,
+                                                   .inputIsBinary = inputIsBinary,
+                                                   .squaredDistance = squaredDistance,
+                                                   .useSpacing = useSpacing,
+                                                   .spacing = spacing,
+                                                   .shouldCancel = shouldCancel,
+                                                   .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -273,7 +291,16 @@ Result<> ExecuteSignedDanielssonDistanceMapImageFilter(DataStructure& dataStruct
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::SignedDanielssonDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, insideIsPositive, squaredDistance, useSpacing, spacing, shouldCancel, messageHandler};
+  detail::SignedDanielssonDistanceMapExecuteFn executeFn{.dataStructure = dataStructure,
+                                                         .inputArrayPath = inputArrayPath,
+                                                         .outputArrayPath = outputArrayPath,
+                                                         .dims = dims,
+                                                         .insideIsPositive = insideIsPositive,
+                                                         .squaredDistance = squaredDistance,
+                                                         .useSpacing = useSpacing,
+                                                         .spacing = spacing,
+                                                         .shouldCancel = shouldCancel,
+                                                         .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -287,7 +314,15 @@ Result<> ExecuteIsoContourDistanceImageFilter(DataStructure& dataStructure, cons
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::IsoContourDistanceExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, levelSetValue, farValue, spacing, shouldCancel, messageHandler};
+  detail::IsoContourDistanceExecuteFn executeFn{.dataStructure = dataStructure,
+                                                .inputArrayPath = inputArrayPath,
+                                                .outputArrayPath = outputArrayPath,
+                                                .dims = dims,
+                                                .levelSetValue = levelSetValue,
+                                                .farValue = farValue,
+                                                .spacing = spacing,
+                                                .shouldCancel = shouldCancel,
+                                                .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -301,7 +336,15 @@ Result<> ExecuteApproximateSignedDistanceMapImageFilter(DataStructure& dataStruc
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::ApproximateSignedDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, insideValue, outsideValue, spacing, shouldCancel, messageHandler};
+  detail::ApproximateSignedDistanceMapExecuteFn executeFn{.dataStructure = dataStructure,
+                                                          .inputArrayPath = inputArrayPath,
+                                                          .outputArrayPath = outputArrayPath,
+                                                          .dims = dims,
+                                                          .insideValue = insideValue,
+                                                          .outsideValue = outsideValue,
+                                                          .spacing = spacing,
+                                                          .shouldCancel = shouldCancel,
+                                                          .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

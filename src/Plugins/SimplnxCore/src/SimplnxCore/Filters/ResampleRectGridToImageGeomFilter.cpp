@@ -86,8 +86,8 @@ IFilter::UniquePointer ResampleRectGridToImageGeomFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                          const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pRectilinearGridPathValue = filterArgs.value<DataPath>(k_RectilinearGridPath_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
@@ -107,7 +107,8 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   if(pDimensionsValue[0] < 0)
@@ -196,12 +197,12 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   createdGeometryDesc << dims[0] << " Voxels\n" << dims[1] << " Voxels\n" << dims[2] << " Voxels\n";
   preflightUpdatedValues.push_back({"Created Image Geometry Info", createdGeometryDesc.str()});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ResampleRectGridToImageGeomInputValues inputValues;
 

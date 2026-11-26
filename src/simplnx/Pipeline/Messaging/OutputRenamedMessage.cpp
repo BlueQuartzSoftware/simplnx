@@ -1,10 +1,12 @@
 #include "simplnx/Pipeline/Messaging/OutputRenamedMessage.hpp"
 
+#include <utility>
+
 using namespace nx::core;
 
-OutputRenamedMessage::OutputRenamedMessage(AbstractPipelineNode* pipeline, const PipelineFilter::RenamedPath& renamedOutput)
+OutputRenamedMessage::OutputRenamedMessage(AbstractPipelineNode* pipeline, PipelineFilter::RenamedPath renamedOutput)
 : AbstractPipelineMessage(pipeline)
-, m_RenamedPath(renamedOutput)
+, m_RenamedPath(std::move(renamedOutput))
 {
 }
 

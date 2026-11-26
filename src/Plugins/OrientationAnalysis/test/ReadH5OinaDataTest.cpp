@@ -252,11 +252,12 @@ fs::path WriteH5OinaFixture(const std::string& fileName, const std::vector<ScanS
 // angles are 90/90/120 degrees written as radians, which is what an H5OINA file
 // carries; the third angle differs from the second so a gamma slot that echoed
 // beta would be visible.
-const PhaseSpec k_HexPhase{"Hex Phase A", k_LaueHexagonalHigh, 194, {2.5F, 2.5F, 4.0F}, {1.5707964F, 1.5707964F, 2.0943952F}};
+const PhaseSpec k_HexPhase{.name = "Hex Phase A", .laueGroup = k_LaueHexagonalHigh, .spaceGroup = 194, .latticeDimensions = {2.5F, 2.5F, 4.0F}, .latticeAngles = {1.5707964F, 1.5707964F, 2.0943952F}};
 // Hexagonal low: Laue group 8 -> CrystalStructure Hexagonal_Low (6/m).
-const PhaseSpec k_HexLowPhase{"Hex Phase Low", k_LaueHexagonalLow, 175, {2.5F, 2.5F, 4.0F}, {1.5707964F, 1.5707964F, 2.0943952F}};
+const PhaseSpec k_HexLowPhase{
+    .name = "Hex Phase Low", .laueGroup = k_LaueHexagonalLow, .spaceGroup = 175, .latticeDimensions = {2.5F, 2.5F, 4.0F}, .latticeAngles = {1.5707964F, 1.5707964F, 2.0943952F}};
 // Cubic: Laue group 11 -> CrystalStructure Cubic_High (1).
-const PhaseSpec k_CubicPhase{"Cubic Phase B", k_LaueCubicHigh, 225, {3.5F, 3.5F, 3.5F}, {1.5707964F, 1.5707964F, 1.5707964F}};
+const PhaseSpec k_CubicPhase{.name = "Cubic Phase B", .laueGroup = k_LaueCubicHigh, .spaceGroup = 225, .latticeDimensions = {3.5F, 3.5F, 3.5F}, .latticeAngles = {1.5707964F, 1.5707964F, 1.5707964F}};
 
 //------------------------------------------------------------------------------
 // Fixture A: one scan "1", 3 x 2 cells, XStep 0.25 / YStep 0.5, two phases.
@@ -430,7 +431,7 @@ Arguments MakeArgs(const fs::path& inputFile, const std::list<std::string>& scan
                    uint32 stackingOrder = RefFrameZDir::k_LowtoHigh)
 {
   Arguments args;
-  const OEMEbsdScanSelectionParameter::ValueType scanSelections = {inputFile, stackingOrder, scanNames};
+  const OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = inputFile, .stackingOrder = stackingOrder, .scanNames = scanNames};
   args.insertOrAssign(ReadH5OinaDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
   args.insertOrAssign(ReadH5OinaDataFilter::k_ZSpacing_Key, std::make_any<float32>(zSpacing));
   args.insertOrAssign(ReadH5OinaDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0F)));

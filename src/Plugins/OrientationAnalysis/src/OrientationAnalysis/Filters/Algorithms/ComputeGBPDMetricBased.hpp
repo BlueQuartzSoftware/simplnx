@@ -12,13 +12,13 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBPDMetricBasedInputValues
 {
-  int32 PhaseOfInterest;
-  float64 LimitDist;
-  int32 NumSamplPts;
-  bool ExcludeTripleLines;
+  int32 PhaseOfInterest{};
+  float64 LimitDist{};
+  int32 NumSamplPts{};
+  bool ExcludeTripleLines{};
   FileSystemPathParameter::ValueType DistOutputFile;
   FileSystemPathParameter::ValueType ErrOutputFile;
-  bool SaveRelativeErr;
+  bool SaveRelativeErr{};
   DataPath NodeTypesArrayPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath SurfaceMeshFaceNormalsArrayPath;
@@ -39,7 +39,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeGBPDMetricBased
 {
 public:
   ComputeGBPDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBPDMetricBasedInputValues* inputValues);
-  ~ComputeGBPDMetricBased() noexcept;
+  ~ComputeGBPDMetricBased() noexcept = default;
 
   ComputeGBPDMetricBased(const ComputeGBPDMetricBased&) = delete;
   ComputeGBPDMetricBased(ComputeGBPDMetricBased&&) noexcept = delete;

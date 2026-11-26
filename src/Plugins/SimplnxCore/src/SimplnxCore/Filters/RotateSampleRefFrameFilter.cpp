@@ -187,8 +187,8 @@ IFilter::UniquePointer RotateSampleRefFrameFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -211,7 +211,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     auto validation = ImageRotationUtilities::ValidateRotationAxisAngle(pRotationValue, "Rotation Axis-Angle");
     if(validation.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
 
     rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
@@ -339,7 +339,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     // Ignore every path to the Feature AM, including selections through another parent.
     const auto featureAmPaths = srcCellFeatureData->getDataPaths();
@@ -383,11 +383,11 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
-Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RotateSampleRefFrameInputValues inputValues;
 

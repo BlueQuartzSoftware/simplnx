@@ -28,8 +28,6 @@ RequireMinNumNeighbors::RequireMinNumNeighbors(DataStructure& dataStructure, con
 {
 }
 
-RequireMinNumNeighbors::~RequireMinNumNeighbors() noexcept = default;
-
 Result<> RequireMinNumNeighbors::operator()()
 {
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
@@ -65,7 +63,7 @@ Result<> RequireMinNumNeighbors::operator()()
   }
 
   // Mark removed cells and compact surviving IDs in one cell pass.
-  Error errorReturn = {0, ""};
+  Error errorReturn = {.code = 0, .message = ""};
   Result<std::vector<bool>> activeObjectsResult = removeFeaturesUnderNeighborThreshold(featureIds, numNeighbors, totalPoints, errorReturn);
   if(activeObjectsResult.invalid())
   {
@@ -82,7 +80,7 @@ Result<> RequireMinNumNeighbors::operator()()
   }
 
   auto numInactiveObjects = std::count(activeObjects.begin(), activeObjects.end(), false);
-  m_MessageHandler.sendMessage({nx::core::IFilter::Message::Type::Info, fmt::format("Removing {} features", numInactiveObjects)});
+  m_MessageHandler.sendMessage({.type = nx::core::IFilter::Message::Type::Info, .message = fmt::format("Removing {} features", numInactiveObjects)});
 
   // Fill negative cells after compaction so filled cells inherit compact IDs.
   Result<> assignResult = assignBadVoxels(imageGeom.getDimensions(), totalFeatures);
@@ -168,7 +166,7 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
   }
   if(!valid)
   {
-    errorReturn = Error{-55569, "The minimum number of neighbors is larger than the Feature with the most neighbors.  All Features would be removed"};
+    errorReturn = Error{.code = -55569, .message = "The minimum number of neighbors is larger than the Feature with the most neighbors.  All Features would be removed"};
     return {std::move(activeObjects)};
   }
 
@@ -198,8 +196,9 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
 
       if(oldId >= 0 && static_cast<usize>(oldId) >= totalFeatures)
       {
-        errorReturn = Error{
-            -55567, fmt::format("Feature ID '{}' in array '{}' is outside the valid range [0, {}). The array may have been modified.", oldId, m_InputValues->FeatureIdsPath.toString(), totalFeatures)};
+        errorReturn = Error{.code = -55567,
+                            .message = fmt::format("Feature ID '{}' in array '{}' is outside the valid range [0, {}). The array may have been modified.", oldId,
+                                                   m_InputValues->FeatureIdsPath.toString(), totalFeatures)};
         return {std::move(activeObjects)};
       }
 
@@ -222,7 +221,7 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
   return {std::move(activeObjects)};
 }
 
-Result<> RequireMinNumNeighbors::assignBadVoxels(SizeVec3 dimensions, usize totalFeatures)
+Result<> RequireMinNumNeighbors::assignBadVoxels(const SizeVec3& dimensions, usize totalFeatures)
 {
   return FillBadVoxels(m_DataStructure, m_InputValues->FeatureIdsPath, dimensions, m_InputValues->IgnoredVoxelArrayPaths, totalFeatures, m_MessageHandler, m_ShouldCancel);
 }

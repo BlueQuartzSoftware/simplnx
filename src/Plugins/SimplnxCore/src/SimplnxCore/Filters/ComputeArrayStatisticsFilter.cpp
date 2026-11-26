@@ -53,7 +53,7 @@ struct IsIntegerType
  * Per-index output uses the supplied tuple dimensions. Standardized output
  * retains the input tuple count.
  */
-OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims)
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, const ShapeType& tupleDims)
 {
   auto findLength = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key);
   auto findMin = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindMin_Key);
@@ -319,8 +319,8 @@ IFilter::UniquePointer ComputeArrayStatisticsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFindLengthValue = filterArgs.value<bool>(k_FindLength_Key);
   auto pFindMinValue = filterArgs.value<bool>(k_FindMin_Key);
@@ -345,7 +345,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   if(!pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindModeValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue && !pFindNumUniqueValuesValue)
   {
-    return {ConvertResultTo<OutputActions>(MakeWarningVoidResult(-57200, "No statistics have been selected, so this filter will perform no operations"), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(MakeWarningVoidResult(-57200, "No statistics have been selected, so this filter will perform no operations"), {})};
   }
 
   std::vector<DataPath> inputDataArrayPaths;
@@ -457,12 +457,12 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, tupleDims).actions;
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeArrayStatisticsInputValues inputValues;
 

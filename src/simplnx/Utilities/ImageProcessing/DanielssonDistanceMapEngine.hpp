@@ -30,6 +30,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -80,16 +81,16 @@ void ForEachAxisVisit(int64 n, Function&& function)
 {
   if(n <= 1)
   {
-    function(AxisVisit{0, 0});
+    function(AxisVisit{.coord = 0, .pull = 0});
     return;
   }
   for(int64 index = 1; index < n; ++index)
   {
-    function(AxisVisit{index, -1});
+    function(AxisVisit{.coord = index, .pull = -1});
   }
   for(int64 index = n - 2; index >= 0; --index)
   {
-    function(AxisVisit{index, 1});
+    function(AxisVisit{.coord = index, .pull = 1});
   }
 }
 
@@ -931,10 +932,10 @@ public:
                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
@@ -1108,7 +1109,7 @@ public:
   , m_Out(outStore)
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_ResidentLimit2D(residentLimit)
   , m_ProgressThrottle(progressThrottle)
@@ -1759,10 +1760,10 @@ public:
                          usize visitArrayLimit = detail::k_DanielssonVisitArrayLimit, usize residentPrefixPlanes = 0, detail::DanielssonVectorTransferStats* transferStats = nullptr)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   , m_ResidentLimit2D(residentLimit2D)
@@ -2068,10 +2069,10 @@ public:
                                   const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
@@ -2145,7 +2146,7 @@ private:
  */
 template <class T>
 Result<> ApplyDanielssonDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, bool /*inputIsBinary*/, bool squaredDistance, bool useSpacing,
-                                    FloatVec3 spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                                    const FloatVec3& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   if(std::max({dims[0], dims[1], dims[2]}) > detail::k_DanielssonMaxDimension)
   {

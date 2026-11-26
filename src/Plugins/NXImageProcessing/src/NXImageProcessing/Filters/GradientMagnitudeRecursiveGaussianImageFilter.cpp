@@ -67,8 +67,8 @@ IFilter::UniquePointer GradientMagnitudeRecursiveGaussianImageFilter::clone() co
   return std::make_unique<GradientMagnitudeRecursiveGaussianImageFilter>();
 }
 
-IFilter::PreflightResult GradientMagnitudeRecursiveGaussianImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult GradientMagnitudeRecursiveGaussianImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -82,31 +82,31 @@ IFilter::PreflightResult GradientMagnitudeRecursiveGaussianImageFilter::prefligh
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   if(Result<> dimCheck = ImageProcessing::ValidateSeparableImageDims(imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianTooFewPixels); dimCheck.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(dimCheck), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(dimCheck), OutputActions{})};
   }
 
   auto sigma = filterArgs.value<float64>(k_Sigma_Key);
   if(Result<> sigmaCheck = ImageProcessing::ValidatePositiveSigma(sigma, ImageProcessing::k_RecursiveGaussianNonPositiveSigma); sigmaCheck.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
   }
 
   if(Result<> spacingCheck = ImageProcessing::ValidatePositiveSpacing(imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSpacing, 1e-8);
      spacingCheck.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
-Result<> GradientMagnitudeRecursiveGaussianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> GradientMagnitudeRecursiveGaussianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                    const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

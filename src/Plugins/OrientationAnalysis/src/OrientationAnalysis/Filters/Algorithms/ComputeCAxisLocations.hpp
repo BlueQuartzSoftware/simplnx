@@ -49,7 +49,7 @@ public:
   /**
    * @brief Destroys the c-axis location executor.
    */
-  ~ComputeCAxisLocations() noexcept;
+  ~ComputeCAxisLocations() noexcept = default;
 
   ComputeCAxisLocations(const ComputeCAxisLocations&) = delete;
   ComputeCAxisLocations(ComputeCAxisLocations&&) noexcept = delete;

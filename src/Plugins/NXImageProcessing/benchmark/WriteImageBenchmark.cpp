@@ -307,8 +307,10 @@ OocCounters ReadOocCounters(const AbstractDataStore<T>& store)
 
 OocCounters SubtractCounters(const OocCounters& after, const OocCounters& before)
 {
-  return {after.returnedExtentReads - before.returnedExtentReads, after.callerExtentReads - before.callerExtentReads, after.chunkCacheMisses - before.chunkCacheMisses,
-          after.metadataBatches - before.metadataBatches};
+  return {.returnedExtentReads = after.returnedExtentReads - before.returnedExtentReads,
+          .callerExtentReads = after.callerExtentReads - before.callerExtentReads,
+          .chunkCacheMisses = after.chunkCacheMisses - before.chunkCacheMisses,
+          .metadataBatches = after.metadataBatches - before.metadataBatches};
 }
 
 template <typename T>
@@ -386,7 +388,7 @@ Arguments CreateWriterArguments(IFilter& filter, usize plane, const fs::path& ou
 }
 
 template <typename T>
-Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, const Uuid& writerUuid, std::string writerName, std::string caseName, usize plane, std::string extension,
+Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, const Uuid& writerUuid, std::string writerName, std::string caseName, usize plane, const std::string& extension,
                           bool createColorTable)
 {
   IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(writerUuid);

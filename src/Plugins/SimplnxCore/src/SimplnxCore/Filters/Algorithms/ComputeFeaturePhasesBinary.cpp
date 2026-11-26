@@ -177,8 +177,6 @@ ComputeFeaturePhasesBinary::ComputeFeaturePhasesBinary(DataStructure& dataStruct
 {
 }
 
-ComputeFeaturePhasesBinary::~ComputeFeaturePhasesBinary() noexcept = default;
-
 Result<> ComputeFeaturePhasesBinary::operator()()
 {
   const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);

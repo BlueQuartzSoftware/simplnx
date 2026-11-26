@@ -950,8 +950,6 @@ ComputeEuclideanDistMapScanline::ComputeEuclideanDistMapScanline(DataStructure& 
 {
 }
 
-ComputeEuclideanDistMapScanline::~ComputeEuclideanDistMapScanline() noexcept = default;
-
 Result<> ComputeEuclideanDistMapScanline::operator()()
 {
   if(m_InputValues->CalcManhattanDist)

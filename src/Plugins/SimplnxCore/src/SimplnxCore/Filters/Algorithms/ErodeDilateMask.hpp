@@ -28,11 +28,11 @@ static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
  */
 struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 {
-  ChoicesParameter::ValueType Operation;
-  int32 NumIterations;
-  bool XDirOn;
-  bool YDirOn;
-  bool ZDirOn;
+  ChoicesParameter::ValueType Operation{};
+  int32 NumIterations{};
+  bool XDirOn{};
+  bool YDirOn{};
+  bool ZDirOn{};
   DataPath MaskArrayPath;
   DataPath InputImageGeometry;
 };
@@ -62,7 +62,7 @@ public:
    */
   ErodeDilateMask(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateMaskInputValues* inputValues);
 
-  ~ErodeDilateMask() noexcept;
+  ~ErodeDilateMask() noexcept = default;
 
   ErodeDilateMask(const ErodeDilateMask&) = delete;
   ErodeDilateMask(ErodeDilateMask&&) noexcept = delete;

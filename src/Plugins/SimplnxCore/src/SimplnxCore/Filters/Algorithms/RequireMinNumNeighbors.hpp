@@ -18,10 +18,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RequireMinNumNeighborsInputValues
 {
-  bool ApplyToSinglePhase;
+  bool ApplyToSinglePhase{};
   DataPath FeaturePhasesPath;
-  uint64 PhaseNumber;
-  uint64 MinNumNeighbors;
+  uint64 PhaseNumber{};
+  uint64 MinNumNeighbors{};
   DataPath ImageGeomPath;
   DataPath FeatureIdsPath;
   DataPath NumNeighborsPath;
@@ -62,7 +62,7 @@ public:
   /**
    * @brief Destroys the neighbor-count removal algorithm.
    */
-  ~RequireMinNumNeighbors() noexcept;
+  ~RequireMinNumNeighbors() noexcept = default;
 
   RequireMinNumNeighbors(const RequireMinNumNeighbors&) = delete;
   RequireMinNumNeighbors(RequireMinNumNeighbors&&) noexcept = delete;
@@ -101,7 +101,7 @@ private:
    *
    * Nonignored sibling arrays update sequentially. Feature IDs update last.
    */
-  Result<> assignBadVoxels(SizeVec3 dimensions, usize totalFeatures);
+  Result<> assignBadVoxels(const SizeVec3& dimensions, usize totalFeatures);
 
   DataStructure& m_DataStructure;
   const RequireMinNumNeighborsInputValues* m_InputValues = nullptr;

@@ -430,8 +430,6 @@ ComputeFeatureSizesDirect::ComputeFeatureSizesDirect(DataStructure& dataStructur
 {
 }
 
-ComputeFeatureSizesDirect::~ComputeFeatureSizesDirect() noexcept = default;
-
 Result<> ComputeFeatureSizesDirect::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;

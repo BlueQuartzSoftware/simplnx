@@ -94,8 +94,8 @@ IFilter::UniquePointer IntensityWindowingImageFilter::clone() const
 {
   return std::make_unique<IntensityWindowingImageFilter>();
 }
-IFilter::PreflightResult IntensityWindowingImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult IntensityWindowingImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -103,10 +103,10 @@ IFilter::PreflightResult IntensityWindowingImageFilter::preflightImpl(const Data
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
-Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -117,7 +117,7 @@ Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const IntensityWindowingOperation operation{windowMinimum, windowMaximum, outputMinimum, outputMaximum};
+  const IntensityWindowingOperation operation{.windowMinimum = windowMinimum, .windowMaximum = windowMaximum, .outputMinimum = outputMinimum, .outputMaximum = outputMaximum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

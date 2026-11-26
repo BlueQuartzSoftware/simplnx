@@ -1,12 +1,12 @@
 #include "ComputeVertexToTriangleDistances.hpp"
 
+#include "RTree/RTree.hpp"
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-#include "RTree/RTree.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
@@ -237,7 +237,7 @@ public:
    * @param reportProgress Reports completed items through the synchronized callback.
    */
   ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
-                                       Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree,
+                                       Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType& rtree,
                                        float32 initialSearchHalfExtent, const std::function<void(usize)>& reportProgress)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)

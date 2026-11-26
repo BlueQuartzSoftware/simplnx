@@ -21,7 +21,6 @@ ComputeSlipTransmissionMetrics::ComputeSlipTransmissionMetrics(DataStructure& da
 }
 
 // -----------------------------------------------------------------------------
-ComputeSlipTransmissionMetrics::~ComputeSlipTransmissionMetrics() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeSlipTransmissionMetrics::getCancel()

@@ -386,8 +386,6 @@ QuickSurfaceMeshScanline::QuickSurfaceMeshScanline(DataStructure& dataStructure,
   generator.seed(k_Seed);
 }
 
-QuickSurfaceMeshScanline::~QuickSurfaceMeshScanline() noexcept = default;
-
 Result<> QuickSurfaceMeshScanline::operator()()
 {
   const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
@@ -1106,7 +1104,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
   return {};
 }
 
-Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCount, MeshIndexType triangleCount, usize  /*numFeatures*/)
+Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCount, MeshIndexType triangleCount, usize /*numFeatures*/)
 {
   if(m_ShouldCancel)
   {

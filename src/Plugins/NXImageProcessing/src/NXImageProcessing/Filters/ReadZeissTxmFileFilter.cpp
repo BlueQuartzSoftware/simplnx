@@ -134,8 +134,8 @@ IFilter::VersionType ReadZeissTxmFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_TxmInputFilePath_Key);
   auto pNewImageGeometryPathValue = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -167,7 +167,7 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
     Result<ZeissTxmHeaderMetadata> metadataResult = ReadHeaderMetaData(pInputFilePathValue.string());
     if(metadataResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
     }
     metadata = metadataResult.value();
 
@@ -179,7 +179,7 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   }
   if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePathValue, metadata.Origin, metadata.Spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(metadata.Dimensions, metadata.Spacing, metadata.Origin, metadata.Units)});
 
@@ -216,7 +216,7 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
   if(tmpActionsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
   }
 
   if(pCroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
@@ -233,7 +233,7 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
     Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     auto croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
@@ -266,12 +266,12 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
 
   preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, metadata.Units)});
 
-  return {std::move(resultOutputActions), preflightUpdatedValues};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = preflightUpdatedValues};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadZeissTxmFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadZeissTxmFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadZeissTxmFileInputValues inputValues;
   inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);

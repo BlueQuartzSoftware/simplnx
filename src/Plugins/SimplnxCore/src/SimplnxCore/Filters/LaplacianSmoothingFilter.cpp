@@ -94,8 +94,8 @@ IFilter::UniquePointer LaplacianSmoothingFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
@@ -104,12 +104,12 @@ IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStruc
   // Inform users that the geometry vertex coordinates are going to be modified in place
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriangleGeomPath, {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   nx::core::LaplacianSmoothingInputValues inputValues;
 

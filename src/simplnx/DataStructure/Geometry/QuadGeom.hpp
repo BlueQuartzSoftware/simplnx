@@ -51,7 +51,7 @@ public:
    * @brief Move constructor.
    * @param other The QuadGeom to move from
    */
-  QuadGeom(QuadGeom&& other) = default;
+  QuadGeom(QuadGeom&& other) noexcept = default;
 
   ~QuadGeom() noexcept override = default;
 

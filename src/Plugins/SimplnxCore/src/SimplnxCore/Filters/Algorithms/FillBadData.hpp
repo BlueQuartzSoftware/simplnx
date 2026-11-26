@@ -17,8 +17,8 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT FillBadDataInputValues
 {
-  int32 minAllowedDefectSizeValue;
-  bool storeAsNewPhase;
+  int32 minAllowedDefectSizeValue{};
+  bool storeAsNewPhase{};
   DataPath featureIdsArrayPath;
   DataPath cellPhasesArrayPath;
   std::vector<DataPath> ignoredDataArrayPaths;
@@ -51,7 +51,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
-  ~FillBadData() noexcept;
+  ~FillBadData() noexcept = default;
 
   FillBadData(const FillBadData&) = delete;
   FillBadData(FillBadData&&) noexcept = delete;

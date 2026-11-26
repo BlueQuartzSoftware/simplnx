@@ -1,14 +1,16 @@
 #include "DataRenamedMessage.hpp"
 
+#include <utility>
+
 #include "simplnx/DataStructure/DataStructure.hpp"
 
 using namespace nx::core;
 
-DataRenamedMessage::DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& oldName, const std::string& newName)
+DataRenamedMessage::DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string oldName, std::string newName)
 : AbstractDataStructureMessage(dataStructure)
 , m_Id(identifier)
-, m_OldName(oldName)
-, m_NewName(newName)
+, m_OldName(std::move(oldName))
+, m_NewName(std::move(newName))
 {
 }
 
@@ -22,7 +24,7 @@ DataRenamedMessage::DataRenamedMessage(const DataRenamedMessage& other)
 
 DataRenamedMessage::DataRenamedMessage(DataRenamedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
-, m_Id(std::move(other.m_Id))
+, m_Id(other.m_Id)
 , m_OldName(std::move(other.m_OldName))
 , m_NewName(std::move(other.m_NewName))
 {

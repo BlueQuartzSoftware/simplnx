@@ -151,7 +151,7 @@ public:
 
   private:
     usize m_Size = 0;
-    HeadersListType m_Headers = {};
+    HeadersListType m_Headers;
   };
 
   /**

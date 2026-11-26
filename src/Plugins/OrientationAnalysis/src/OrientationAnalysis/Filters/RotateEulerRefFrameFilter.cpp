@@ -76,8 +76,8 @@ IFilter::UniquePointer RotateEulerRefFrameFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pRotationAxisAngleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_EulerAnglesArrayPath_Key);
@@ -91,20 +91,21 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
       std::sqrt(pRotationAxisAngleValue[0] * pRotationAxisAngleValue[0] + pRotationAxisAngleValue[1] * pRotationAxisAngleValue[1] + pRotationAxisAngleValue[2] * pRotationAxisAngleValue[2]);
   if(axisMagnitude < std::numeric_limits<float32>::epsilon())
   {
-    return {MakeErrorResult<OutputActions>(-96200, fmt::format("Rotation axis <{}, {}, {}> has zero length. The ijk components must define a non-zero direction.", pRotationAxisAngleValue[0],
-                                                               pRotationAxisAngleValue[1], pRotationAxisAngleValue[2]))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-96200, fmt::format("Rotation axis <{}, {}, {}> has zero length. The ijk components must define a non-zero direction.",
+                                                                                pRotationAxisAngleValue[0], pRotationAxisAngleValue[1], pRotationAxisAngleValue[2]))};
   }
 
-  resultOutputActions.value().modifiedActions.emplace_back(
-      DataObjectModification{pCellEulerAnglesArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
+  resultOutputActions.value().modifiedActions.emplace_back(DataObjectModification{.modifiedPath = pCellEulerAnglesArrayPathValue,
+                                                                                  .modifiedType = DataObjectModification::ModifiedType::Modified,
+                                                                                  .dataObjectType = dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   nx::core::RotateEulerRefFrameInputValues inputValues;
 

@@ -103,7 +103,7 @@ public:
   ClearFeatureAttributeMatrixAction& operator=(const ClearFeatureAttributeMatrixAction&) = delete;
   ClearFeatureAttributeMatrixAction& operator=(ClearFeatureAttributeMatrixAction&&) noexcept = delete;
 
-  Result<> apply(DataStructure& dataStructure, Mode  /*mode*/) const override
+  Result<> apply(DataStructure& dataStructure, Mode /*mode*/) const override
   {
     ClearFeatureAttributeMatrix(dataStructure, m_Path);
     return {};
@@ -174,7 +174,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   auto validation = ValidateTransformationParameters(dataStructure, inputValues);
   if(validation.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
   }
   const auto pTransformationMatrixTypeValue = inputValues.TransformationSelection;
   const auto& tableData = inputValues.ManualMatrixTableData;
@@ -276,7 +276,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(renumberFeatures)
     {
@@ -307,9 +307,9 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
       if(featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1)
       {
-        return {MakeErrorResult<OutputActions>(
-            -67455,
-            fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.", featureIdsPath.toString()))};
+        return {.outputActions = MakeErrorResult<OutputActions>(
+                    -67455, fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.",
+                                        featureIdsPath.toString()))};
       }
       const auto& featureIds = *featureIdsPtr;
       if(featureIds.getNumberOfTuples() != *elementCount)
@@ -362,8 +362,9 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     {
     case detail::k_NoTransformIdx: // No-Op
     {
-      resultOutputActions.warnings().push_back(Warning{82001, clearFeatureAttributeMatrix ? "No spatial transformation has been selected. Feature Attribute Matrix options still apply." :
-                                                                                            "No transformation has been selected. This filter will NOT modify any data."});
+      resultOutputActions.warnings().push_back(Warning{.code = 82001,
+                                                       .message = clearFeatureAttributeMatrix ? "No spatial transformation has been selected. Feature Attribute Matrix options still apply." :
+                                                                                                "No transformation has been selected. This filter will NOT modify any data."});
       transformationMatrixDesc = "No transformation matrix selected.";
       break;
     }
@@ -378,11 +379,11 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       const usize numTableCols = tableData[0].size();
       if(numTableRows != 4)
       {
-        return {MakeErrorResult<OutputActions>(-82002, "Manually entered transformation matrix must have exactly 4 rows")};
+        return {.outputActions = MakeErrorResult<OutputActions>(-82002, "Manually entered transformation matrix must have exactly 4 rows")};
       }
       if(numTableCols != 4)
       {
-        return {MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
+        return {.outputActions = MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
       }
       transformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(tableData);
       if(pTranslateGeometryToGlobalOrigin)
@@ -448,7 +449,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     }
     if(imageGeomInterpolationError)
     {
-      return {MakeErrorResult<OutputActions>(-82006, errorMessage.str())};
+      return {.outputActions = MakeErrorResult<OutputActions>(-82006, errorMessage.str())};
     }
 
     std::vector<std::string> selectedCellArrayNames = srcCellAttrMatrixPtr->getDataMap().getNames();
@@ -464,8 +465,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         const auto* strArrayPtr = dataStructure.getDataAs<StringArray>(dataArrayPath);
         if(nullptr != strArrayPtr)
         {
-          resultOutputActions.warnings().push_back(
-              Warning{82009, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on String Arrays", dataArrayPath.toString())});
+          resultOutputActions.warnings().push_back(Warning{
+              .code = 82009, .message = fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on String Arrays", dataArrayPath.toString())});
           continue;
         }
 
@@ -473,15 +474,15 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         if(nullptr != boolArrayPtr)
         {
           resultOutputActions.warnings().push_back(
-              Warning{82010, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on Bool Arrays", dataArrayPath.toString())});
+              Warning{.code = 82010, .message = fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on Bool Arrays", dataArrayPath.toString())});
           continue;
         }
 
         const auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataArrayPath);
         if(nullptr != neighborListPtr)
         {
-          resultOutputActions.warnings().push_back(
-              Warning{82011, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on NeighborList Arrays", dataArrayPath.toString())});
+          resultOutputActions.warnings().push_back(Warning{
+              .code = 82011, .message = fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on NeighborList Arrays", dataArrayPath.toString())});
           continue;
         }
         selectedCellArrayNames.emplace_back(arrayName);
@@ -564,7 +565,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         const AttributeMatrix* selectedCellDataPtr = selectedImageGeom.getCellData();
         if(selectedCellDataPtr == nullptr)
         {
-          return {MakeErrorResult<OutputActions>(-5581, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+          return {.outputActions = MakeErrorResult<OutputActions>(-5581, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
         }
         const std::string cellDataName = selectedCellDataPtr->getName();
         ignorePaths.push_back(srcImagePath.createChildPath(cellDataName)); // This prevents a later copy attempt.
@@ -642,8 +643,9 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     // An image geometry was not chosen, so throw a warning communicating to the user that the cell attribute matrix will not be used
     if(!pCellAttributeMatrixPath.getTargetName().empty())
     {
-      auto warning = Warning{-5555, fmt::format("The selected geometry is not an 'Image Geometry'. NO interpolation is performed on the data. The 'Cell Attribute Matrix' DataPath can be empty.",
-                                                pCellAttributeMatrixPath.getTargetName())};
+      auto warning = Warning{.code = -5555,
+                             .message = fmt::format("The selected geometry is not an 'Image Geometry'. NO interpolation is performed on the data. The 'Cell Attribute Matrix' DataPath can be empty.",
+                                                    pCellAttributeMatrixPath.getTargetName())};
       resultOutputActions.warnings().push_back(warning);
     }
 
@@ -661,12 +663,13 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   {
     if(transformMatrixDataPath.empty())
     {
-      return {MakeErrorResult<OutputActions>(-5588, fmt::format("The DataPath for the saved Transformation Matrix is empty. Please select or set a DataPath to save the transformation matrix into."))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -5588, fmt::format("The DataPath for the saved Transformation Matrix is empty. Please select or set a DataPath to save the transformation matrix into."))};
     }
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformMatrixDataPath));
   }
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
@@ -680,7 +683,6 @@ ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-ApplyTransformationToGeometry::~ApplyTransformationToGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ApplyTransformationToGeometry::getCancel()

@@ -27,7 +27,7 @@ Result<DataPath> FindParentGeometry(const DataPath& path, const DataStructure& d
   const DataPath parentPath = path.getParent();
   if(parentPath.empty())
   {
-    return {{nonstd::make_unexpected(ErrorCollection{Error{-25740, "Unable to find a Triangle Geometry on the supplied path"}})}};
+    return {{nonstd::make_unexpected(ErrorCollection{Error{.code = -25740, .message = "Unable to find a Triangle Geometry on the supplied path"}})}};
   }
 
   return FindParentGeometry(parentPath, dataStructure);
@@ -103,8 +103,8 @@ IFilter::UniquePointer VerifyTriangleWindingFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pLabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
   Result<DataPath> targetGeomResult = ::FindParentGeometry(pLabelsPath, dataStructure);
@@ -140,7 +140,7 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
       }
 
       resultOutputActions.value().appendDataObjectModificationNotification(pNormalsArrayPath, DataObjectModification::ModifiedType::Modified);
-      return {std::move(resultOutputActions)};
+      return {.outputActions = std::move(resultOutputActions)};
     }
     const auto* existingObjectPtr = dataStructure.getDataAs<DataObject>(pNormalsArrayPath);
     if(existingObjectPtr != nullptr)
@@ -149,7 +149,7 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
       resultOutputActions.value().appendAction(
           std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
       resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
-      return {std::move(resultOutputActions)};
+      return {.outputActions = std::move(resultOutputActions)};
     }
   }
 
@@ -157,8 +157,8 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   VerifyTriangleWindingInputValues inputValues;
 

@@ -579,9 +579,9 @@ inline MaurerLineChunk GetMaurerLineChunk(usize index, usize lineLength, usize b
   const usize regularEnd = regularRemainder == 1 && lineLength > blockValues ? lineLength - (blockValues + 1) : lineLength - regularRemainder;
   if(index >= regularEnd)
   {
-    return {regularEnd, lineLength - regularEnd};
+    return {.begin = regularEnd, .count = lineLength - regularEnd};
   }
-  return {(index / blockValues) * blockValues, blockValues};
+  return {.begin = (index / blockValues) * blockValues, .count = blockValues};
 }
 
 // itk::SignedMaurerDistanceMapImageFilter::Remove -- the lower-envelope domination test. Parabola (x2,d2) hides the
@@ -1158,12 +1158,12 @@ struct Maurer3DSlabParameters
 {
   SizeVec3 dims;
   T backgroundValue;
-  bool insideIsPositive;
-  bool squaredDistance;
-  bool useSpacing;
+  bool insideIsPositive{};
+  bool squaredDistance{};
+  bool useSpacing{};
   FloatVec3 spacing;
-  usize maxYRows;
-  usize workerCount;
+  usize maxYRows{};
+  usize workerCount{};
 };
 
 /**
@@ -1688,12 +1688,12 @@ public:
                        FloatVec3 spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Bg(backgroundValue)
   , m_InsidePos(insideIsPositive)
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
@@ -1890,12 +1890,12 @@ public:
                      usize max3DYRows = 0, usize max3DWorkers = 1)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Bg(backgroundValue)
   , m_InsidePos(insideIsPositive)
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   , m_ResidentLimit2D(residentLimit2D)
@@ -2548,12 +2548,12 @@ public:
                               FloatVec3 spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Bg(backgroundValue)
   , m_InsidePos(insideIsPositive)
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
@@ -2638,7 +2638,7 @@ private:
  */
 template <class T>
 Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, T backgroundValue, bool insideIsPositive, bool squaredDistance,
-                                      bool useSpacing, FloatVec3 spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
+                                      bool useSpacing, const FloatVec3& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                       const IFilter::MessageHandler& messageHandler)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)

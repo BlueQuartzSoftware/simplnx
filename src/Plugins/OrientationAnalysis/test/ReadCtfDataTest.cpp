@@ -245,22 +245,28 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
   };
 
   const std::vector<ConversionCase> cases = {
-      {"Degrees, No Hex Alignment", false, false, {0.125F, 0.25F, 0.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 7.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
+      {.name = "Degrees, No Hex Alignment",
+       .degreesToRadians = false,
+       .edaxHexagonalAlignment = false,
+       .expectedEulerAngles = {0.125F, 0.25F, 0.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 7.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
       // 0.375 + 30 = 30.375 and 7.125 + 30 = 37.125 are exact in float32.
-      {"Degrees, Hex Alignment", false, true, {0.125F, 0.25F, 30.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 37.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
+      {.name = "Degrees, Hex Alignment",
+       .degreesToRadians = false,
+       .edaxHexagonalAlignment = true,
+       .expectedEulerAngles = {0.125F, 0.25F, 30.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 37.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
       // These values distinguish double-intermediate conversion from direct float32 arithmetic.
-      {"Radians, No Hex Alignment",
-       true,
-       false,
-       {0.0021816615F, 0.004363323F, 0.006544985F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.12435471F, 0.058904864F,
-        0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
+      {.name = "Radians, No Hex Alignment",
+       .degreesToRadians = true,
+       .edaxHexagonalAlignment = false,
+       .expectedEulerAngles = {0.0021816615F, 0.004363323F, 0.006544985F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.12435471F,
+                               0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
       // Points 0/3 (hex): float32(float64(30.375) * pi/180) = 0.53014374,
       //                   float32(float64(37.125) * pi/180) = 0.6479535 (float32 arithmetic: 0.64795345).
-      {"Radians, Hex Alignment",
-       true,
-       true,
-       {0.0021816615F, 0.004363323F, 0.53014374F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.6479535F, 0.058904864F, 0.11780973F,
-        0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
+      {.name = "Radians, Hex Alignment",
+       .degreesToRadians = true,
+       .edaxHexagonalAlignment = true,
+       .expectedEulerAngles = {0.0021816615F, 0.004363323F, 0.53014374F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.6479535F,
+                               0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
   };
 
   for(const ConversionCase& conversionCase : cases)
@@ -315,9 +321,9 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: 3D Multi-Slice CTF", "[Orient
     float32 expectedZSpacing;
   };
   const std::vector<SliceCase> cases = {
-      {"ZStep 0.75", "ZCells\t2\nZStep\t0.75\n", 0.75F},
+      {.name = "ZStep 0.75", .extraHeaderLines = "ZCells\t2\nZStep\t0.75\n", .expectedZSpacing = 0.75F},
       // A ZCells key without a usable ZStep (0) falls back to a slice thickness of 1.
-      {"ZStep absent", "ZCells\t2\n", 1.0F},
+      {.name = "ZStep absent", .extraHeaderLines = "ZCells\t2\n", .expectedZSpacing = 1.0F},
   };
 
   for(const SliceCase& sliceCase : cases)

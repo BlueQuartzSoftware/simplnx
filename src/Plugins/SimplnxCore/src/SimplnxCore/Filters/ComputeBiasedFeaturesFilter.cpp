@@ -86,8 +86,8 @@ IFilter::UniquePointer ComputeBiasedFeaturesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pCalcByPhaseValue = filterArgs.value<bool>(k_CalcByPhase_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
@@ -108,7 +108,8 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& surfaceFeaturesMaskArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceFeaturesArrayPathValue);
@@ -116,12 +117,12 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
       std::make_unique<CreateArrayAction>(DataType::boolean, surfaceFeaturesMaskArray.getTupleShape(), std::vector<usize>{1}, pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue));
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeBiasedFeaturesInputValues inputValues;
 

@@ -15,8 +15,6 @@
 #include <cmath>
 #include <filesystem>
 
-namespace fs = std::filesystem;
-
 using namespace nx::core;
 
 namespace
@@ -67,8 +65,6 @@ WriteGBCDGMTFile::WriteGBCDGMTFile(DataStructure& dataStructure, const IFilter::
 , m_MessageHandler(mesgHandler)
 {
 }
-
-WriteGBCDGMTFile::~WriteGBCDGMTFile() noexcept = default;
 
 const std::atomic_bool& WriteGBCDGMTFile::getCancel()
 {
@@ -172,7 +168,7 @@ Result<> WriteGBCDGMTFile::operator()()
     return ConvertResult(std::move(ioResult));
   }
 
-  const ebsdlib::LaueOps::Pointer orientOps = orientationOps[crystalStructure];
+  const ebsdlib::LaueOps::Pointer& orientOps = orientationOps[crystalStructure];
 
   const int32 nSym = orientOps->getNumSymOps();
 

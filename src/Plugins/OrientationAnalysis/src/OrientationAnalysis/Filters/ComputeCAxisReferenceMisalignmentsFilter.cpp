@@ -116,14 +116,14 @@ IFilter::UniquePointer ComputeCAxisReferenceMisalignmentsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const ComputeCAxisReferenceMisalignmentsInputValues inputValues = CreateInputValues(filterArgs);
   Result<> validationResult = ComputeCAxisReferenceMisalignments::ValidateInputs(dataStructure, inputValues);
   if(validationResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(validationResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(validationResult), {})};
   }
   std::vector<std::pair<std::string_view, DataPath>> inputPaths = {
       {"Input Quaternions", inputValues.QuatsArrayPath}, {"Phases", inputValues.PhasesArrayPath}, {"Crystal Structures", inputValues.CrystalStructuresArrayPath}};
@@ -135,10 +135,10 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
   {
     if(inputValues.OutputArrayPath == inputRef.second)
     {
-      return {MakeErrorResult<OutputActions>(ComputeCAxisReferenceMisalignments::k_OutputPathCollisionError,
-                                             fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
-                                                         "name that no input array uses.",
-                                                         inputValues.OutputArrayPath.toString(), inputRef.first, inputValues.OutputArrayPath.getTargetName()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(ComputeCAxisReferenceMisalignments::k_OutputPathCollisionError,
+                                                              fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
+                                                                          "name that no input array uses.",
+                                                                          inputValues.OutputArrayPath.toString(), inputRef.first, inputValues.OutputArrayPath.getTargetName()))};
     }
   }
   const auto& quatsRef = dataStructure.getDataRefAs<Float32Array>(inputValues.QuatsArrayPath);
@@ -148,8 +148,8 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeCAxisReferenceMisalignmentsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeCAxisReferenceMisalignmentsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   const ComputeCAxisReferenceMisalignmentsInputValues inputValues = CreateInputValues(filterArgs);
   return ComputeCAxisReferenceMisalignments(dataStructure, messageHandler, shouldCancel, &inputValues)();

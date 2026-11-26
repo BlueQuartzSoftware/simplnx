@@ -51,7 +51,7 @@ public:
   /**
    * @brief Destroys the automatic-threshold algorithm.
    */
-  ~RobustAutomaticThreshold() noexcept;
+  ~RobustAutomaticThreshold() noexcept = default;
 
   RobustAutomaticThreshold(const RobustAutomaticThreshold&) = delete;
   RobustAutomaticThreshold(RobustAutomaticThreshold&&) noexcept = delete;

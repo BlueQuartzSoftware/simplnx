@@ -75,7 +75,7 @@ public:
   /**
    * @brief Destroys the scanline meshing algorithm.
    */
-  ~QuickSurfaceMeshScanline() noexcept;
+  ~QuickSurfaceMeshScanline() noexcept = default;
 
   QuickSurfaceMeshScanline(const QuickSurfaceMeshScanline&) = delete;
   QuickSurfaceMeshScanline(QuickSurfaceMeshScanline&&) noexcept = delete;

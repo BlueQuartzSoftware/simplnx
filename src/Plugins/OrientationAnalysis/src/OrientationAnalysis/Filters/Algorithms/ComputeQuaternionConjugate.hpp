@@ -17,7 +17,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugateInputValues
 {
   DataPath QuaternionDataArrayPath;
   DataPath OutputDataArrayPath;
-  bool DeleteOriginalData;
+  bool DeleteOriginalData{};
 };
 
 /**
@@ -43,7 +43,7 @@ public:
   /**
    * @brief Destroys the quaternion-conjugation dispatcher.
    */
-  ~ComputeQuaternionConjugate() noexcept;
+  ~ComputeQuaternionConjugate() noexcept = default;
 
   ComputeQuaternionConjugate(const ComputeQuaternionConjugate&) = delete;
   ComputeQuaternionConjugate(ComputeQuaternionConjugate&&) noexcept = delete;

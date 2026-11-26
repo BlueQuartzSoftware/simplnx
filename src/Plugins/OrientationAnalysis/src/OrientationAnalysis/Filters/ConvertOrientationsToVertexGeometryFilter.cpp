@@ -16,7 +16,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace nx::core
@@ -104,8 +103,8 @@ IFilter::UniquePointer ConvertOrientationsToVertexGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputRepType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto inputOrientationsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
@@ -131,7 +130,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     std::stringstream message;
     message << "Number of components for input array is not correct for input representation type. " << representationNames[static_cast<usize>(inputRepType)] << " should have "
             << representationElementCount[static_cast<usize>(inputRepType)] << " components but the selected input array has " << inputCompShape[0];
-    return {MakeErrorResult<OutputActions>(-1003, message.str())};
+    return {.outputActions = MakeErrorResult<OutputActions>(-1003, message.str())};
   }
 
   if(convertToFundamentalZone)
@@ -139,8 +138,8 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     const auto& phaseData = dataStructure.getDataRefAs<Int32Array>(cellPhasesArrayPath);
     if(phaseData.getNumberOfTuples() != inputOrientationsArray.getNumberOfTuples())
     {
-      return {MakeErrorResult<OutputActions>(
-          -49001, fmt::format("Orientation and Phase Arrays must have the same number of tuples. '{} != {}'", inputOrientationsArray.getNumberOfTuples(), phaseData.getNumberOfTuples()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -49001, fmt::format("Orientation and Phase Arrays must have the same number of tuples. '{} != {}'", inputOrientationsArray.getNumberOfTuples(), phaseData.getNumberOfTuples()))};
     }
   }
 
@@ -160,8 +159,9 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     auto components = sourceDataArray.getComponentShape();
     if(numTuples != inputOrientationsArray.getNumberOfTuples())
     {
-      return {MakeErrorResult<OutputActions>(-1004, fmt::format("Array at path {} only has {} tuples, but it MUST have {} tuples to be copied into output vertex attribute matrix at path {}!",
-                                                                sourceDataPath.toString(), numTuples, inputOrientationsArray.getNumberOfTuples(), vertexAttrMatrixPath.toString()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-1004, fmt::format("Array at path {} only has {} tuples, but it MUST have {} tuples to be copied into output vertex attribute matrix at path {}!",
+                                                                    sourceDataPath.toString(), numTuples, inputOrientationsArray.getNumberOfTuples(), vertexAttrMatrixPath.toString()))};
     }
 
     // We are using the CreateArrayAction here instead of the CopyArrayAction because the
@@ -173,12 +173,12 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertOrientationsToVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ConvertOrientationsToVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConvertOrientationsToVertexGeometryInputValues inputValues;
 

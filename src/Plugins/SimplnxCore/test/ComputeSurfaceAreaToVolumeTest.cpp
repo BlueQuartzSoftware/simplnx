@@ -460,7 +460,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: rejects non-DataArray 
     {
       strings.push_back(std::to_string(value));
     }
-    auto* stringsPtr = StringArray::CreateWithValues(dataStructure, malformedName, parentPtr->getShape(), std::move(strings), parentPtr->getId());
+    auto* stringsPtr = StringArray::CreateWithValues(dataStructure, malformedName, parentPtr->getShape(), strings, parentPtr->getId());
     REQUIRE(stringsPtr != nullptr);
   }
   else

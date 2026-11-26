@@ -31,14 +31,14 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT WriteASCIIDataInputValues
 {
-  ChoicesParameter::ValueType DelimiterIndex;
+  ChoicesParameter::ValueType DelimiterIndex{};
   StringParameter::ValueType FileExtension;
-  ChoicesParameter::ValueType HeaderOptionIndex;
+  ChoicesParameter::ValueType HeaderOptionIndex{};
   MultiArraySelectionParameter::ValueType InputDataArrayPaths;
-  Int32Parameter::ValueType MaxValPerLine;
+  Int32Parameter::ValueType MaxValPerLine{};
   FileSystemPathParameter::ValueType OutputDir;
   FileSystemPathParameter::ValueType OutputPath;
-  ChoicesParameter::ValueType OutputStyleIndex;
+  ChoicesParameter::ValueType OutputStyleIndex{};
 };
 
 /**
@@ -50,7 +50,7 @@ class SIMPLNXCORE_EXPORT WriteASCIIData
 {
 public:
   WriteASCIIData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteASCIIDataInputValues* inputValues);
-  ~WriteASCIIData() noexcept;
+  ~WriteASCIIData() noexcept = default;
 
   WriteASCIIData(const WriteASCIIData&) = delete;
   WriteASCIIData(WriteASCIIData&&) noexcept = delete;

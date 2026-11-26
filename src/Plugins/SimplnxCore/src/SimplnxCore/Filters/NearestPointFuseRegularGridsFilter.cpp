@@ -91,8 +91,8 @@ IFilter::UniquePointer NearestPointFuseRegularGridsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                           const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSamplingGeometryPathValue = filterArgs.value<DataPath>(k_SamplingGeometryPath_Key);
   auto pReferenceGeometryPathValue = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
@@ -108,9 +108,9 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
     const usize cellCount = dataStructure.getDataRefAs<ImageGeom>(geometryPath).getNumberOfCells();
     if(tupleCount != cellCount)
     {
-      return {MakeErrorResult<OutputActions>(-5565,
-                                             fmt::format("**{}** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.",
-                                                         parameterName, matrixPath.toString(), tupleCount, geometryPath.toString(), cellCount))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -5565, fmt::format("**{}** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.", parameterName,
+                                     matrixPath.toString(), tupleCount, geometryPath.toString(), cellCount))};
     }
   }
 
@@ -159,12 +159,12 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   //    }
   //  }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   NearestPointFuseRegularGridsInputValues inputValues;
 

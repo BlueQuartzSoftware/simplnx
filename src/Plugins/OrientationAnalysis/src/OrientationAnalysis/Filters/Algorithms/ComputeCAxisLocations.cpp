@@ -22,8 +22,6 @@ ComputeCAxisLocations::ComputeCAxisLocations(DataStructure& dataStructure, const
 {
 }
 
-ComputeCAxisLocations::~ComputeCAxisLocations() noexcept = default;
-
 const std::atomic_bool& ComputeCAxisLocations::getCancel()
 {
   return m_ShouldCancel;

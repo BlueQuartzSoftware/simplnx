@@ -9,6 +9,8 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace
@@ -102,8 +104,8 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
 
 namespace nx::core
 {
-DeleteDataAction::DeleteDataAction(const DataPath& path, DeleteDataAction::DeleteType type)
-: m_Path(path)
+DeleteDataAction::DeleteDataAction(DataPath path, DeleteDataAction::DeleteType type)
+: m_Path(std::move(path))
 , m_Type(type)
 {
 }

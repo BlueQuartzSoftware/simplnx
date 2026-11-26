@@ -95,8 +95,8 @@ IFilter::UniquePointer WriteOnScaleTableFileFilter::clone() const
   return std::make_unique<WriteOnScaleTableFileFilter>();
 }
 
-IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   Result<OutputActions> resultOutputActions;
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -132,7 +132,8 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   }
   if(phaseNames->getNumberOfTuples() == 0)
   {
-    resultOutputActions.warnings().push_back(Warning{-12038, fmt::format("The phase names StringArray '{}' has 0 tuples. Every name will be written as 'Phase_<id>'.", phaseNamesPath.toString())});
+    resultOutputActions.warnings().push_back(
+        Warning{.code = -12038, .message = fmt::format("The phase names StringArray '{}' has 0 tuples. Every name will be written as 'Phase_<id>'.", phaseNamesPath.toString())});
   }
 
   const SizeVec3 dimensions = geometry.getDimensions();
@@ -143,11 +144,11 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
                                                 geometryPath.toString(), StringUtilities::formatDimensions3D(dimensions)));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
-Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteOnScaleTableFileInputValues inputValues;
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);

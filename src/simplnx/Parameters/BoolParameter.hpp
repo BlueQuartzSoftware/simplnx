@@ -72,7 +72,7 @@ public:
    * @param associatedValue The value under which the grouped parameter is active.
    * @return
    */
-  bool checkActive(const std::any& parameterValue, const std::any& associatedValue) const;
+  static bool checkActive(const std::any& parameterValue, const std::any& associatedValue);
 
 protected:
   /**

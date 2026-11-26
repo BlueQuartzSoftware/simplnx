@@ -96,8 +96,8 @@ IFilter::UniquePointer WriteStatsGenOdfAngleFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                        const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWeightValue = filterArgs.value<float32>(k_Weight_Key);
@@ -131,15 +131,16 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const Da
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-9402, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-9402, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteStatsGenOdfAngleFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> WriteStatsGenOdfAngleFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteStatsGenOdfAngleFileInputValues inputValues;
 

@@ -94,15 +94,15 @@ IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone()
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto geometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto inputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, k_TupleCountMismatchError); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   {
     if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, k_ComparisonNotInCellDataError, "Input Comparison Array"); cellDataResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
     }
   }
 
@@ -127,12 +127,12 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/,
-                                                                       const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                       const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReplaceElementAttributesWithNeighborValuesInputValues inputValues;
 

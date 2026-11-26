@@ -19,11 +19,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT IdentifySampleInputValues
 {
-  BoolParameter::ValueType FillHoles;
+  BoolParameter::ValueType FillHoles{};
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
   ArraySelectionParameter::ValueType MaskArrayPath;
-  BoolParameter::ValueType SliceBySlice;
-  ChoicesParameter::ValueType SliceBySlicePlaneIndex;
+  BoolParameter::ValueType SliceBySlice{};
+  ChoicesParameter::ValueType SliceBySlicePlaneIndex{};
 };
 
 /**
@@ -51,7 +51,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   IdentifySample(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, IdentifySampleInputValues* inputValues);
-  ~IdentifySample() noexcept;
+  ~IdentifySample() noexcept = default;
 
   IdentifySample(const IdentifySample&) = delete;
   IdentifySample(IdentifySample&&) noexcept = delete;

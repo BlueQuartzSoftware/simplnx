@@ -11,16 +11,14 @@
 namespace nx::core
 {
 StringStore::StringStore(const ShapeType& tupleShape)
-: AbstractStringStore()
-, m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
+: m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
 , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
 , m_Data(m_NumTuples)
 {
 }
 
 StringStore::StringStore(std::vector<std::string> strings, const ShapeType& tupleShape)
-: AbstractStringStore()
-, m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
+: m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
 , m_NumTuples(strings.size())
 , m_Data(std::move(strings))
 {

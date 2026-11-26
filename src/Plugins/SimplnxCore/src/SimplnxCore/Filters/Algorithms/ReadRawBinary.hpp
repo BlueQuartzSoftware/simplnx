@@ -22,8 +22,8 @@ struct SIMPLNXCORE_EXPORT ReadRawBinaryInputValues
   FileSystemPathParameter::ValueType inputFileValue;
   NumericType scalarTypeValue;
   ShapeType componentDimsValue;
-  ChoicesParameter::ValueType endianValue;
-  uint64 skipHeaderBytesValue;
+  ChoicesParameter::ValueType endianValue{};
+  uint64 skipHeaderBytesValue{};
   DataPath createdAttributeArrayPathValue;
 };
 
@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadRawBinary() noexcept;
+  ~ReadRawBinary() noexcept = default;
 
   ReadRawBinary(const ReadRawBinary&) = delete;
   ReadRawBinary(ReadRawBinary&&) noexcept = delete;

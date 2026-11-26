@@ -41,7 +41,7 @@ public:
   /**
    * @brief Destroys the scanline GBCD pole-figure executor.
    */
-  ~ComputeGBCDPoleFigureScanline() noexcept;
+  ~ComputeGBCDPoleFigureScanline() noexcept = default;
 
   ComputeGBCDPoleFigureScanline(const ComputeGBCDPoleFigureScanline&) = delete;
   ComputeGBCDPoleFigureScanline(ComputeGBCDPoleFigureScanline&&) noexcept = delete;

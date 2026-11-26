@@ -22,11 +22,11 @@ constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
 
 struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 {
-  ChoicesParameter::ValueType SliceRange;
-  float32 Zstart;
-  float32 Zend;
-  float32 SliceResolution;
-  bool HaveRegionIds;
+  ChoicesParameter::ValueType SliceRange{};
+  float32 Zstart{};
+  float32 Zend{};
+  float32 SliceResolution{};
+  bool HaveRegionIds{};
   DataPath CADDataContainerName;
   DataPath RegionIdArrayPath;
   DataGroupCreationParameter::ValueType SliceDataContainerName;
@@ -44,7 +44,7 @@ class SIMPLNXCORE_EXPORT SliceTriangleGeometry
 {
 public:
   SliceTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SliceTriangleGeometryInputValues* inputValues);
-  ~SliceTriangleGeometry() noexcept;
+  ~SliceTriangleGeometry() noexcept = default;
 
   SliceTriangleGeometry(const SliceTriangleGeometry&) = delete;
   SliceTriangleGeometry(SliceTriangleGeometry&&) noexcept = delete;

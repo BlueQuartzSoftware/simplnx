@@ -36,7 +36,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeMisorientationsInputValues
   DataPath InputOrientationPath1;
   DataPath InputOrientationPath2;
   VectorFloat32Parameter::ValueType ReferenceOrientation;
-  ChoicesParameter::ValueType ComputationType;
+  ChoicesParameter::ValueType ComputationType{};
   DataPath InputPhasesArrayPath;
   DataPath OutputMisorientationsPath;
   DataPath InputCrystalStructuresArrayPath;
@@ -65,7 +65,7 @@ public:
   /**
    * @brief Destroys the misorientation executor.
    */
-  ~ComputeMisorientations() noexcept;
+  ~ComputeMisorientations() noexcept = default;
 
   ComputeMisorientations(const ComputeMisorientations&) = delete;
   ComputeMisorientations(ComputeMisorientations&&) noexcept = delete;

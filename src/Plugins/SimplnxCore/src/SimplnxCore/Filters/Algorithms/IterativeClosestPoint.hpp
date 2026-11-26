@@ -11,8 +11,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT IterativeClosestPointInputValues
 {
-  bool ApplyTransformation;
-  uint64 NumIterations;
+  bool ApplyTransformation{};
+  uint64 NumIterations{};
   DataPath MovingVertexPath;
   DataPath TargetVertexPath;
   DataPath TransformArrayPath;
@@ -25,7 +25,7 @@ class SIMPLNXCORE_EXPORT IterativeClosestPoint
 {
 public:
   IterativeClosestPoint(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, IterativeClosestPointInputValues* inputValues);
-  ~IterativeClosestPoint() noexcept;
+  ~IterativeClosestPoint() noexcept = default;
 
   IterativeClosestPoint(const IterativeClosestPoint&) = delete;
   IterativeClosestPoint(IterativeClosestPoint&&) noexcept = delete;

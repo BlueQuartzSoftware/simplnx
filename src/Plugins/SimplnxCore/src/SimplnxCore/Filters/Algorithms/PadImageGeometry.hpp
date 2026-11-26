@@ -23,13 +23,13 @@ struct SIMPLNXCORE_EXPORT PadImageGeometryInputValues
   VectorInt32Parameter::ValueType XMinMax;
   VectorInt32Parameter::ValueType YMinMax;
   VectorInt32Parameter::ValueType ZMinMax;
-  bool PadInX;
-  bool PadInY;
-  bool PadInZ;
-  int32 DefaultFillValue;
-  bool UpdateOrigin;
+  bool PadInX{};
+  bool PadInY{};
+  bool PadInZ{};
+  int32 DefaultFillValue{};
+  bool UpdateOrigin{};
   DataPath AttributeMatrixPath;
-  bool RemoveOriginalGeometry;
+  bool RemoveOriginalGeometry{};
 };
 
 /**
@@ -41,7 +41,7 @@ class SIMPLNXCORE_EXPORT PadImageGeometry
 {
 public:
   PadImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, PadImageGeometryInputValues* inputValues);
-  ~PadImageGeometry() noexcept;
+  ~PadImageGeometry() noexcept = default;
 
   PadImageGeometry(const PadImageGeometry&) = delete;
   PadImageGeometry(PadImageGeometry&&) noexcept = delete;

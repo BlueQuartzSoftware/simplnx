@@ -11,6 +11,7 @@
 
 #include <fmt/core.h>
 
+#include <memory>
 #include <utility>
 
 namespace nx::core
@@ -35,12 +36,12 @@ public:
    * @param sharedVertexListName Name of the vertex coordinate array.
    * @param units Length unit of the vertex coordinates. The default is Meter. Use Unspecified when the coordinates are not lengths.
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName,
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, std::string vertexAttributeMatrixName, std::string sharedVertexListName,
                              IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
-  , m_VertexDataName(vertexAttributeMatrixName)
-  , m_SharedVertexListName(sharedVertexListName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
+  , m_SharedVertexListName(std::move(sharedVertexListName))
   , m_Units(units)
   {
   }
@@ -53,10 +54,10 @@ public:
    * @param arrayType Copy, Move, or Reference handling of the input array.
    * @param units Length unit of the vertex coordinates. The default is Meter. Use Unspecified when the coordinates are not lengths.
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
+  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, std::string vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
                              IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
-  , m_VertexDataName(vertexAttributeMatrixName)
+  , m_VertexDataName(std::move(vertexAttributeMatrixName))
   , m_SharedVertexListName(inputVerticesArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)
   , m_ArrayHandlingType(arrayType)
@@ -184,7 +185,7 @@ public:
 
   UniquePointer clone() const override
   {
-    auto action = std::unique_ptr<CreateVertexGeometryAction>(new CreateVertexGeometryAction(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName, m_Units));
+    auto action = std::make_unique<CreateVertexGeometryAction>(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName, m_Units);
     action->m_InputVertices = m_InputVertices;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
     return action;

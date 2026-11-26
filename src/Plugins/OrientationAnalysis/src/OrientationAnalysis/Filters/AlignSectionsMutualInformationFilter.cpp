@@ -19,7 +19,6 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 
@@ -135,8 +134,8 @@ IFilter::UniquePointer AlignSectionsMutualInformationFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -179,7 +178,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   }
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, cellArrayPaths, -3543); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   // Handle Array Creation
@@ -209,12 +208,12 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   // Cell Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPathValue.getParent(), {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignSectionsMutualInformationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> AlignSectionsMutualInformationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AlignSectionsMutualInformationInputValues inputValues;
 

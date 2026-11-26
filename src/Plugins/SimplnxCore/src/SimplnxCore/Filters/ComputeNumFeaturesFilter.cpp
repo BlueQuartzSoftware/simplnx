@@ -79,8 +79,8 @@ IFilter::UniquePointer ComputeNumFeaturesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
@@ -95,12 +95,12 @@ IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStruc
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellEnsembleData.getShape(), std::vector<usize>{1}, pNumFeaturesArrayPathValue);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);

@@ -88,27 +88,27 @@ IFilter::UniquePointer IdentifySampleFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   const auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, {goodVoxelsArrayPath}, -45463); result.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, goodVoxelsArrayPath);
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   IdentifySampleInputValues inputValues;
   inputValues.FillHoles = filterArgs.value<bool>(k_FillHoles_Key);

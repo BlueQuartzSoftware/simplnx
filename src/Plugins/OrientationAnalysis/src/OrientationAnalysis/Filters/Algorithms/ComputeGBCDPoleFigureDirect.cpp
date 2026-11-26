@@ -8,8 +8,7 @@
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
-
-namespace fs = std::filesystem;
+#include <utility>
 
 using namespace nx::core;
 
@@ -36,12 +35,12 @@ private:
   const std::vector<float32>& m_MisorientationRotation;
 
 public:
-  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, const ebsdlib::LaueOps::Pointer& orientOps, const std::vector<float32>& gbcdDeltasArray,
+  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, ebsdlib::LaueOps::Pointer orientOps, const std::vector<float32>& gbcdDeltasArray,
                             const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const float64* gbcdPtr, int32 phaseOfInterest,
                             const std::vector<float32>& misorientationRotation)
   : m_PoleFigure(poleFigurePtr)
   , m_Dimensions(dimensions)
-  , m_OrientOps(orientOps)
+  , m_OrientOps(std::move(orientOps))
   , m_GbcdDeltas(gbcdDeltasArray)
   , m_GbcdLimits(gbcdLimitsArray)
   , m_GbcdSizes(gbcdSizesArray)
@@ -255,7 +254,6 @@ ComputeGBCDPoleFigureDirect::ComputeGBCDPoleFigureDirect(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-ComputeGBCDPoleFigureDirect::~ComputeGBCDPoleFigureDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeGBCDPoleFigureDirect::getCancel()
@@ -347,7 +345,7 @@ Result<> ComputeGBCDPoleFigureDirect::operator()()
   gbcdDeltas[3] = (gbcdLimits[8] - gbcdLimits[3]) / static_cast<float32>(gbcdSizes[3]);
   gbcdDeltas[4] = (gbcdLimits[9] - gbcdLimits[4]) / static_cast<float32>(gbcdSizes[4]);
 
-  ebsdlib::LaueOps::Pointer orientOps = orientationOps[currentLaueIndex];
+  const ebsdlib::LaueOps::Pointer& orientOps = orientationOps[currentLaueIndex];
 
   int32 xPoints = m_InputValues->OutputImageDimension;
   int32 yPoints = m_InputValues->OutputImageDimension;

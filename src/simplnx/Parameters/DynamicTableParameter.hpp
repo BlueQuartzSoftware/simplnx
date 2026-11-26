@@ -19,7 +19,7 @@ public:
   using ValueType = DynamicTableInfo::TableDataType;
 
   DynamicTableParameter() = delete;
-  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const DynamicTableInfo& tableInfo);
+  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, DynamicTableInfo tableInfo);
   DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const DynamicTableInfo& tableInfo);
   ~DynamicTableParameter() override = default;
 
@@ -97,7 +97,7 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
   DynamicTableInfo m_TableInfo;
 };
 

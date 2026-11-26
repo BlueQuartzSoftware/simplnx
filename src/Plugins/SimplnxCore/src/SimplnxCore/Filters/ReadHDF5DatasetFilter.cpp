@@ -76,8 +76,8 @@ IFilter::UniquePointer ReadHDF5DatasetFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
@@ -149,7 +149,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     auto componentDimensions = ConvertDimensions(cDimsStr, fmt::format("Component for dataset '{}'", datasetPath), ZeroDimensionPolicy::Reject, -20010);
     if(componentDimensions.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
     }
     ShapeType cDims = std::move(componentDimensions.value());
 
@@ -166,7 +166,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       auto tupleDimensions = ConvertDimensions(tDimsStr, fmt::format("Tuple for dataset '{}'", datasetPath), ZeroDimensionPolicy::Allow, -20012);
       if(tupleDimensions.invalid())
       {
-        return {ConvertInvalidResult<OutputActions>(std::move(tupleDimensions))};
+        return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleDimensions))};
       }
       tDims = std::move(tupleDimensions.value());
     }
@@ -178,12 +178,12 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     auto tupleCount = ComputeDimensionProduct(tDims, fmt::format("Tuple for dataset '{}'", datasetPath));
     if(tupleCount.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
     }
     auto componentCount = ComputeDimensionProduct(cDims, fmt::format("Component for dataset '{}'", datasetPath));
     if(componentCount.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(componentCount))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentCount))};
     }
     const usize numOfTuples = tupleCount.value();
     const usize totalComponents = componentCount.value();
@@ -229,7 +229,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     Result<DataType> typeResult = datasetReader.getDataType();
     if(typeResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(typeResult))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(typeResult))};
     }
     DataType dataType = typeResult.value();
     auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
@@ -237,12 +237,12 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
   } // End For Loop over dataset import info list
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadHDF5DatasetInputValues inputValues;
   inputValues.ImportHdf5Object = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);

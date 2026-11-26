@@ -89,8 +89,8 @@ IFilter::UniquePointer SetImageGeomOriginScalingFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                        const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
@@ -116,7 +116,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     auto validation = GeometryUtilities::ValidateFiniteVector(origin, "Origin", k_OriginDomain);
     if(validation.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
     originVec = {origin[0], origin[1], origin[2]};
     optOrigin = originVec;
@@ -127,7 +127,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     auto validation = GeometryUtilities::ValidatePositiveFiniteVector(spacing, "Spacing", k_SpacingDomain);
     if(validation.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
     spacingVec = {spacing[0], spacing[1], spacing[2]};
     optSpacing = spacingVec;
@@ -143,7 +143,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     const BoundingBox3Df bounds(
         std::array<float32, 6>{originVec[0], originVec[1], originVec[2], originVec[0] + dims[0] * spacingVec[0], originVec[1] + dims[1] * spacingVec[1], originVec[2] + dims[2] * spacingVec[2]});
     const auto center = bounds.center();
-    const auto min = bounds.getMinPoint();
+    const auto& min = bounds.getMinPoint();
     for(usize axis = 0; axis < 3; ++axis)
     {
       const float32 result = originVec[axis] - (center[axis] - min[axis]);
@@ -165,12 +165,12 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   preflightUpdatedValues.push_back(
       {"Image Geometry [After Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), spacingVec, originVec, srcImageGeom->getUnits())});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> SetImageGeomOriginScalingFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+Result<> SetImageGeomOriginScalingFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/,
+                                                      const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

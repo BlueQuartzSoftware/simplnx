@@ -83,7 +83,7 @@ class SIMPLNXCORE_EXPORT ReshapeDataArray
 {
 public:
   ReshapeDataArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReshapeDataArrayInputValues* inputValues);
-  ~ReshapeDataArray() noexcept;
+  ~ReshapeDataArray() noexcept = default;
 
   ReshapeDataArray(const ReshapeDataArray&) = delete;
   ReshapeDataArray(ReshapeDataArray&&) noexcept = delete;

@@ -109,8 +109,8 @@ IFilter::UniquePointer PointSampleTriangleGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                          const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   auto pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
@@ -155,7 +155,9 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     const DataObject* maskArray = dataStructure.getData(pMaskArrayPath);
     if(nullptr == maskArray)
     {
-      Error result = {-500, fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};
+      Error result = {.code = -500,
+                      .message =
+                          fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};
       errors.push_back(result);
     }
   }
@@ -171,12 +173,12 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_UseSeed_Key))

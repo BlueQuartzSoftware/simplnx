@@ -170,7 +170,8 @@ void CheckControl(CopyFault fault, bool matchIdentity, bool installObserver)
   const auto restoreInitial = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(initial); });
   REQUIRE(initial.callback == nullptr);
   {
-    const IdentifySampleSliceObserverForTesting installed = installObserver ? IdentifySampleSliceObserverForTesting{&counters, &LogicalCounters::Observe} : IdentifySampleSliceObserverForTesting{};
+    const IdentifySampleSliceObserverForTesting installed =
+        installObserver ? IdentifySampleSliceObserverForTesting{.context = &counters, .callback = &LogicalCounters::Observe} : IdentifySampleSliceObserverForTesting{};
     const auto previous = SetIdentifySampleSliceObserverForTesting(installed);
     const auto restore = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(previous); });
     REQUIRE(previous.callback == nullptr);
@@ -278,11 +279,11 @@ TEST_CASE("IdentifySample observation restores nested observers and isolates thr
 {
   LogicalCounters outer;
   LogicalCounters inner;
-  const auto initial = SetIdentifySampleSliceObserverForTesting({&outer, &LogicalCounters::Observe});
+  const auto initial = SetIdentifySampleSliceObserverForTesting({.context = &outer, .callback = &LogicalCounters::Observe});
   const auto restoreInitial = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(initial); });
   REQUIRE(initial.callback == nullptr);
   {
-    const auto prior = SetIdentifySampleSliceObserverForTesting({&inner, &LogicalCounters::Observe});
+    const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &inner, .callback = &LogicalCounters::Observe});
     const auto restorePrior = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
     REQUIRE(prior.context == &outer);
     REQUIRE(prior.callback == &LogicalCounters::Observe);
@@ -295,7 +296,7 @@ TEST_CASE("IdentifySample observation restores nested observers and isolates thr
   });
   worker.join();
   REQUIRE(childWasNull.load());
-  const auto current = SetIdentifySampleSliceObserverForTesting({&outer, &LogicalCounters::Observe});
+  const auto current = SetIdentifySampleSliceObserverForTesting({.context = &outer, .callback = &LogicalCounters::Observe});
   REQUIRE(current.context == &outer);
   REQUIRE(current.callback == &LogicalCounters::Observe);
 }
@@ -346,7 +347,7 @@ TEST_CASE("IdentifySample positive headroom batches YZ transfers", "[.IdentifySa
       const IFilter::MessageHandler messages;
       IdentifySampleCCL algorithm(data, messages, cancel, &inputs);
       {
-        const auto prior = SetIdentifySampleSliceObserverForTesting({&counters, &LogicalCounters::Observe});
+        const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &counters, .callback = &LogicalCounters::Observe});
         const auto restore = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
         REQUIRE(prior.callback == nullptr);
         const auto result = algorithm();

@@ -10,6 +10,8 @@
 
 #include <fmt/format.h>
 
+#include <utility>
+
 using namespace nx::core;
 using namespace H5Support;
 
@@ -67,10 +69,10 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId)
   }
 }
 
-GrainMapperReader::GrainMapperReader(const std::string& filePath, bool readDctData, bool readAbsorptionData)
+GrainMapperReader::GrainMapperReader(std::string filePath, bool readDctData, bool readAbsorptionData)
 : m_ReadDctData(readDctData)
 , m_ReadAbsorptionData(readAbsorptionData)
-, m_FileName(filePath)
+, m_FileName(std::move(filePath))
 {
   m_NameToDataTypeMap = {{GM3DConst::k_CompletenessName, DataType::float32}, {GM3DConst::k_GrainIdName, DataType::int32},      {GM3DConst::k_MaskName, DataType::uint8},
                          {GM3DConst::k_PhaseIdName, DataType::uint8},        {GM3DConst::k_RodriguesName, DataType::float32},  {GM3DConst::k_EulerZXZName, DataType::float32},
@@ -135,7 +137,7 @@ std::map<std::string, DataType> GrainMapperReader::getNameToDataTypeMap() const
   return m_NameToDataTypeMap;
 }
 
-std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap() const
+std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap()
 {
   return GrainMapper3DUtilities::k_NameToCompDimMap;
 }
@@ -184,7 +186,7 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
   // up with the actual dimensions of the HDF5 data set.
   std::vector<hsize_t> dims;
   H5T_class_t classType;
-  size_t sizeType;
+  size_t sizeType = 0;
   H5Lite::getDatasetInfo(labDctGid, "Data/Completeness", dims, classType, sizeType);
   // Note that we need to flip the order of dimensions from ZYX to XYZ
   m_LabDctDimensions = {static_cast<size_t>(dims[2]), static_cast<size_t>(dims[1]), static_cast<size_t>(dims[0])};

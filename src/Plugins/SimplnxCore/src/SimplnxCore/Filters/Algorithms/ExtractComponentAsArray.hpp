@@ -18,9 +18,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ExtractComponentAsArrayInputValues
 {
-  bool MoveComponentsToNewArray;
-  bool RemoveComponentsFromArray;
-  int32 CompNumber;
+  bool MoveComponentsToNewArray{};
+  bool RemoveComponentsFromArray{};
+  int32 CompNumber{};
   DataPath TempArrayPath;
   DataPath BaseArrayPath;
   DataPath NewArrayPath;
@@ -50,7 +50,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ExtractComponentAsArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExtractComponentAsArrayInputValues* inputValues);
-  ~ExtractComponentAsArray() noexcept;
+  ~ExtractComponentAsArray() noexcept = default;
 
   ExtractComponentAsArray(const ExtractComponentAsArray&) = delete;
   ExtractComponentAsArray(ExtractComponentAsArray&&) noexcept = delete;

@@ -95,8 +95,8 @@ IFilter::UniquePointer BadDataNeighborOrientationCheckFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -125,19 +125,19 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pMaskArrayPathValue}, -6810); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
-  resultOutputActions.value().modifiedActions.emplace_back(
-      DataObjectModification{pMaskArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pMaskArrayPathValue)->getDataObjectType()});
+  resultOutputActions.value().modifiedActions.emplace_back(DataObjectModification{
+      .modifiedPath = pMaskArrayPathValue, .modifiedType = DataObjectModification::ModifiedType::Modified, .dataObjectType = dataStructure.getData(pMaskArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> BadDataNeighborOrientationCheckFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> BadDataNeighborOrientationCheckFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   BadDataNeighborOrientationCheckInputValues inputValues;
 

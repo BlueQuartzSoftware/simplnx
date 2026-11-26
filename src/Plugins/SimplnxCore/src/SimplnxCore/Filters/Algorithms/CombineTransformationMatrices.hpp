@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT CombineTransformationMatrices
 {
 public:
   CombineTransformationMatrices(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineTransformationMatricesInputValues* inputValues);
-  ~CombineTransformationMatrices() noexcept;
+  ~CombineTransformationMatrices() noexcept = default;
 
   CombineTransformationMatrices(const CombineTransformationMatrices&) = delete;
   CombineTransformationMatrices(CombineTransformationMatrices&&) noexcept = delete;

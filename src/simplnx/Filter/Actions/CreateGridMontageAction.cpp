@@ -1,17 +1,19 @@
 #include "simplnx/Filter/Actions/CreateGridMontageAction.hpp"
+
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
+#include <utility>
 
 namespace nx::core
 {
-CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing)
+CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing)
 : IDataCreationAction(path)
-, m_Dims(dims)
-, m_Origin(origin)
-, m_Spacing(spacing)
+, m_Dims(std::move(dims))
+, m_Origin(std::move(origin))
+, m_Spacing(std::move(spacing))
 {
 }
 
-Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateGridMontageAction: ";
   // Check for empty Geometry DataPath

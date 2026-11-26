@@ -12,8 +12,7 @@ std::unique_ptr<PlaceholderFilter> PlaceholderFilter::Create(nlohmann::json json
 PlaceholderFilter::PlaceholderFilter() = default;
 
 PlaceholderFilter::PlaceholderFilter(nlohmann::json json)
-: AbstractPipelineFilter()
-, m_Json(std::move(json))
+: m_Json(std::move(json))
 {
   // Raw fallback JSON can contain an invalid flag; keep that payload without rejecting the placeholder.
   const auto disabledIter = m_Json.find(k_IsDisabledKey.str());
@@ -25,17 +24,17 @@ PlaceholderFilter::PlaceholderFilter(nlohmann::json json)
 
 PlaceholderFilter::~PlaceholderFilter() noexcept = default;
 
-bool PlaceholderFilter::preflight(DataStructure&  /*dataStructure*/, const std::atomic_bool&  /*shouldCancel*/)
+bool PlaceholderFilter::preflight(DataStructure& /*dataStructure*/, const std::atomic_bool& /*shouldCancel*/)
 {
   return true;
 }
 
-bool PlaceholderFilter::preflight(DataStructure&  /*dataStructure*/, RenamedPaths&  /*renamedPaths*/, const std::atomic_bool&  /*shouldCancel*/, bool  /*allowRenaming*/)
+bool PlaceholderFilter::preflight(DataStructure& /*dataStructure*/, RenamedPaths& /*renamedPaths*/, const std::atomic_bool& /*shouldCancel*/, bool /*allowRenaming*/)
 {
   return true;
 }
 
-bool PlaceholderFilter::execute(DataStructure&  /*dataStructure*/, const std::atomic_bool&  /*shouldCancel*/)
+bool PlaceholderFilter::execute(DataStructure& /*dataStructure*/, const std::atomic_bool& /*shouldCancel*/)
 {
   return true;
 }

@@ -23,11 +23,11 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDPoleFigureInputValues
 {
-  int32 PhaseOfInterest;
+  int32 PhaseOfInterest{};
   VectorFloat32Parameter::ValueType MisorientationRotation;
   DataPath GBCDArrayPath;
   DataPath CrystalStructuresArrayPath;
-  int32 OutputImageDimension;
+  int32 OutputImageDimension{};
   DataPath ImageGeometryPath;
   std::string CellAttributeMatrixName;
   std::string CellIntensityArrayName;
@@ -67,7 +67,7 @@ public:
   /**
    * @brief Destroys the direct GBCD pole-figure executor.
    */
-  ~ComputeGBCDPoleFigureDirect() noexcept;
+  ~ComputeGBCDPoleFigureDirect() noexcept = default;
 
   ComputeGBCDPoleFigureDirect(const ComputeGBCDPoleFigureDirect&) = delete;
   ComputeGBCDPoleFigureDirect(ComputeGBCDPoleFigureDirect&&) noexcept = delete;

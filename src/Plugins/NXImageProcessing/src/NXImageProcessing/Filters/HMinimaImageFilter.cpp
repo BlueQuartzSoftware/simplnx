@@ -84,8 +84,8 @@ IFilter::UniquePointer HMinimaImageFilter::clone() const
 {
   return std::make_unique<HMinimaImageFilter>();
 }
-IFilter::PreflightResult HMinimaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                           const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult HMinimaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -97,23 +97,24 @@ IFilter::PreflightResult HMinimaImageFilter::preflightImpl(const DataStructure& 
   // value; reject it here so the offset is always well-defined.
   if(!std::isfinite(height))
   {
-    return {MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Minima requires a finite Height, but the supplied value was {}.", height))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Minima requires a finite Height, but the supplied value was {}.", height))};
   }
   // A negative Height has no meaning (no regional minimum has negative depth) and would push the (input + Height)
   // marker BELOW the mask, violating reconstruction-by-erosion's marker>=mask precondition (ITK throws). Require
   // Height >= 0; 0 is a valid no-op.
   if(height < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Minima requires a non-negative Height, but the supplied value was {}.", height))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Minima requires a non-negative Height, but the supplied value was {}.", height))};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
-  return {.outputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                        /*requireScalar=*/true)};
+  return {.outputActions =
+              ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                            /*requireScalar=*/true)};
 }
-Result<> HMinimaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> HMinimaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

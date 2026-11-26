@@ -116,8 +116,8 @@ void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemp
   auto resultCellArrayPath = resultGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(resultCellArrayPath));
-  auto exemplaryCellArray = dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath);
-  auto resultCellArray = dataStructure.getDataRefAs<UInt32Array>(resultCellArrayPath);
+  const auto& exemplaryCellArray = dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath);
+  const auto& resultCellArray = dataStructure.getDataRefAs<UInt32Array>(resultCellArrayPath);
   UnitTest::CompareDataArrays<uint32>(exemplaryCellArray, resultCellArray);
 }
 } // namespace

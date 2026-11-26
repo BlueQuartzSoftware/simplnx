@@ -52,7 +52,7 @@ void CheckGrant(ScopeT& scope, DataStructure& data, usize width, usize partialBy
     auto occupied = budget.reserveWorkingMemory(capacity - headroom);
     REQUIRE(occupied.sizeBytes() == capacity - headroom);
     {
-      const auto prior = SetIdentifySampleSliceObserverForTesting({&counters, &LogicalCounters::Observe});
+      const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &counters, .callback = &LogicalCounters::Observe});
       const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
       REQUIRE(prior.callback == nullptr);
       IdentifySampleFilter filter;

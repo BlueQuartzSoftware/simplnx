@@ -127,7 +127,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse scalar 3D header", "[NXImageP
 
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.dataType == DataType::int16);
   REQUIRE(md.componentCount == 1);
   REQUIRE(md.spatialDim == 3);
@@ -153,7 +153,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[NXImagePr
                std::vector<uint8_t>(5 * 4, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.spatialDim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{5, 4, 1});
   REQUIRE(md.componentCount == 1);
@@ -169,7 +169,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse RGB/vector component axis", "
                std::vector<uint8_t>(3 * 8 * 6, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.componentCount == 3);
   REQUIRE(md.spatialDim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{8, 6, 1}); // X=8, Y=6, Z=1
@@ -186,7 +186,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation",
                std::vector<uint8_t>(4 * 4 * 4 * 2, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.affineHasRotation);          // permutation is not axis-aligned
   REQUIRE(md.spacing[0] == Approx(2.0f)); // ||(0,-2,0)||
   REQUIRE(md.spacing[2] == Approx(2.5f)); // ||(2.5,0,0)||
@@ -586,8 +586,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_raw.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: detached_raw.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: detached_raw.rawdata");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "detached_raw.rawdata", raw);
     readAndCheck(hdr);
   }
@@ -595,8 +595,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_gz.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: gzip");
-    lines.push_back("data file: detached_gz.rawdata.gz");
+    lines.emplace_back("encoding: gzip");
+    lines.emplace_back("data file: detached_gz.rawdata.gz");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "detached_gz.rawdata.gz", GzipCompress(raw));
     readAndCheck(hdr);
   }
@@ -604,8 +604,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_spaces.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: my scan data.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: my scan data.rawdata");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "my scan data.rawdata", raw);
     readAndCheck(hdr);
   }
@@ -613,8 +613,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_list.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: LIST");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: LIST");
     WriteNhdrHeaderOnly(hdr, lines);
     const auto result = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(result.invalid());
@@ -624,8 +624,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_missing.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: does_not_exist_zzz.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: does_not_exist_zzz.rawdata");
     WriteNhdrHeaderOnly(hdr, lines);
     const auto result = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(result.invalid());

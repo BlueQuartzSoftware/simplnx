@@ -15,8 +15,6 @@
 #include <algorithm>
 #include <filesystem>
 
-namespace fs = std::filesystem;
-
 using namespace nx::core;
 
 namespace
@@ -389,7 +387,6 @@ CombineNodeBasedGeometries::CombineNodeBasedGeometries(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-CombineNodeBasedGeometries::~CombineNodeBasedGeometries() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CombineNodeBasedGeometries::getCancel()

@@ -393,8 +393,6 @@ WriteAbaqusCrystalPlasticity::WriteAbaqusCrystalPlasticity(DataStructure& dataSt
 {
 }
 
-WriteAbaqusCrystalPlasticity::~WriteAbaqusCrystalPlasticity() noexcept = default;
-
 Result<> WriteAbaqusCrystalPlasticity::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);

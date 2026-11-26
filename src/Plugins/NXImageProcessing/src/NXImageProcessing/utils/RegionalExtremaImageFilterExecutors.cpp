@@ -148,7 +148,14 @@ Result<> ExecuteValuedRegionalExtremaImageFilter(DataStructure& dataStructure, c
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::ValuedRegionalExtremaExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, op, fullyConnected, shouldCancel, messageHandler};
+  detail::ValuedRegionalExtremaExecuteFn executeFn{.dataStructure = dataStructure,
+                                                   .inputArrayPath = inputArrayPath,
+                                                   .outputArrayPath = outputArrayPath,
+                                                   .dims = dims,
+                                                   .op = op,
+                                                   .fullyConnected = fullyConnected,
+                                                   .shouldCancel = shouldCancel,
+                                                   .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -162,7 +169,17 @@ Result<> ExecuteRegionalExtremaImageFilter(DataStructure& dataStructure, const D
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::RegionalExtremaExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, op, fullyConnected, foreground, background, flatIsExtremum, shouldCancel, messageHandler};
+  detail::RegionalExtremaExecuteFn executeFn{.dataStructure = dataStructure,
+                                             .inputArrayPath = inputArrayPath,
+                                             .outputArrayPath = outputArrayPath,
+                                             .dims = dims,
+                                             .op = op,
+                                             .fullyConnected = fullyConnected,
+                                             .foreground = foreground,
+                                             .background = background,
+                                             .flatIsExtremum = flatIsExtremum,
+                                             .shouldCancel = shouldCancel,
+                                             .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

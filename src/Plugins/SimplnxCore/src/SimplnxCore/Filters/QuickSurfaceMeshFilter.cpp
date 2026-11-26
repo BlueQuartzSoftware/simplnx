@@ -129,8 +129,8 @@ IFilter::UniquePointer QuickSurfaceMeshFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pGridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -158,7 +158,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, pGridGeomDataPath, pFeatureIdsArrayPathValue, -76532, "Cell Feature Ids");
     if(featureIdsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
     }
   }
 
@@ -202,7 +202,8 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     const IDataArray* elementArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
     if(elementArray->getNumberOfTuples() != elementTupleCount)
     {
-      return {MakeErrorResult<OutputActions>(-76531, fmt::format("Cannot copy element data at path '{}'. DataArray does not have the correct tuple count.", selectedDataPath.toString()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-76531, fmt::format("Cannot copy element data at path '{}'. DataArray does not have the correct tuple count.", selectedDataPath.toString()))};
     }
 
     DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
@@ -229,12 +230,12 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     }
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   nx::core::QuickSurfaceMeshInputValues inputValues;
 

@@ -17,7 +17,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeVectorColorsInputValues
 {
-  bool UseMask;
+  bool UseMask{};
   DataPath VectorsArrayPath;
   DataPath MaskArrayPath;
   DataPath CellVectorColorsArrayPath;
@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the non-owning vector-color algorithm.
    */
-  ~ComputeVectorColors() noexcept;
+  ~ComputeVectorColors() noexcept = default;
 
   ComputeVectorColors(const ComputeVectorColors&) = delete;
   ComputeVectorColors(ComputeVectorColors&&) noexcept = delete;

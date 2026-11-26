@@ -35,7 +35,7 @@ const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContain
 const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
 const std::string k_PartNumberName = "Part Number";
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -136,12 +136,12 @@ BinaryStl ReadBinaryStl(const fs::path& path)
 
 // Hand-derived cross products: t0 and t1 = (-1.5, -2, 6), t2 = (-3.5, -2, 6).
 // Side 1 swaps the last two vertices and negates the unit normal.
-const StlTriangle k_T0Forward{{-3.0f / 13, -4.0f / 13, 12.0f / 13}, {0, 0, 0, 2, 0, 0.5f, 0, 3, 1}};
-const StlTriangle k_T0Reverse{{3.0f / 13, 4.0f / 13, -12.0f / 13}, {0, 0, 0, 0, 3, 1, 2, 0, 0.5f}};
-const StlTriangle k_T1Forward{{-3.0f / 13, -4.0f / 13, 12.0f / 13}, {2, 0, 0.5f, 2, 3, 1.5f, 0, 3, 1}};
-const StlTriangle k_T1Reverse{{3.0f / 13, 4.0f / 13, -12.0f / 13}, {2, 0, 0.5f, 0, 3, 1, 2, 3, 1.5f}};
-const StlTriangle k_T2Forward{{-7.0f / std::sqrt(209.0f), -4.0f / std::sqrt(209.0f), 12.0f / std::sqrt(209.0f)}, {2, 0, 0.5f, 4, 1, 2, 2, 3, 1.5f}};
-const StlTriangle k_T2Reverse{{7.0f / std::sqrt(209.0f), 4.0f / std::sqrt(209.0f), -12.0f / std::sqrt(209.0f)}, {2, 0, 0.5f, 2, 3, 1.5f, 4, 1, 2}};
+const StlTriangle k_T0Forward{.normal = {-3.0f / 13, -4.0f / 13, 12.0f / 13}, .vertices = {0, 0, 0, 2, 0, 0.5f, 0, 3, 1}};
+const StlTriangle k_T0Reverse{.normal = {3.0f / 13, 4.0f / 13, -12.0f / 13}, .vertices = {0, 0, 0, 0, 3, 1, 2, 0, 0.5f}};
+const StlTriangle k_T1Forward{.normal = {-3.0f / 13, -4.0f / 13, 12.0f / 13}, .vertices = {2, 0, 0.5f, 2, 3, 1.5f, 0, 3, 1}};
+const StlTriangle k_T1Reverse{.normal = {3.0f / 13, 4.0f / 13, -12.0f / 13}, .vertices = {2, 0, 0.5f, 0, 3, 1, 2, 3, 1.5f}};
+const StlTriangle k_T2Forward{.normal = {-7.0f / std::sqrt(209.0f), -4.0f / std::sqrt(209.0f), 12.0f / std::sqrt(209.0f)}, .vertices = {2, 0, 0.5f, 4, 1, 2, 2, 3, 1.5f}};
+const StlTriangle k_T2Reverse{.normal = {7.0f / std::sqrt(209.0f), 4.0f / std::sqrt(209.0f), -12.0f / std::sqrt(209.0f)}, .vertices = {2, 0, 0.5f, 2, 3, 1.5f, 4, 1, 2}};
 
 void RequireStl(const fs::path& path, const std::string& header, const std::vector<StlTriangle>& expectedTriangles)
 {
@@ -232,13 +232,13 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
     exemplarEntryCount++;
 
     bool found = false;
-    const fs::path targetPath = exemplarDirectoryEntry.path();
+    const fs::path& targetPath = exemplarDirectoryEntry.path();
     auto exemplarFileContents = readIn(targetPath);
     std::string exemplarMD5Hash = nx::core::UnitTest::ComputeMD5Hash(exemplarFileContents);
 
     for(const auto& computedDirectoryEntry : fs::directory_iterator(computedDirPath))
     {
-      fs::path currentPath = computedDirectoryEntry.path();
+      const fs::path& currentPath = computedDirectoryEntry.path();
       if(currentPath.filename() == targetPath.filename())
       {
         found = true;

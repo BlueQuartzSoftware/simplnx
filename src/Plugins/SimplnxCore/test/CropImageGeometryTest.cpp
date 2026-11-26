@@ -38,6 +38,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <typeinfo>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -70,7 +71,7 @@ public:
    * @param initValue Initial value for all elements.
    */
   CropProbeStore(ShapeType tupleShape, ShapeType componentShape, bool resident, T initValue = T{})
-  : DataStore<T>(tupleShape, componentShape, initValue)
+  : DataStore<T>(std::move(tupleShape), std::move(componentShape), initValue)
   , m_Resident(resident)
   {
   }
