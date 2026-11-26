@@ -31,9 +31,9 @@ namespace
 fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/label_triangle_geometry_test.dream3d", nx::core::unit_test::k_TestFilesDir));
 fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/data_to_generate_test/combined_stls.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-static constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
-static constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
-static constexpr StringLiteral k_RegionIdsName = "Region Ids";
+constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
+constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
+constexpr StringLiteral k_RegionIdsName = "Region Ids";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
 const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(k_RegionIdsName);

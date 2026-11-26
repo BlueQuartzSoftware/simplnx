@@ -43,7 +43,7 @@ constexpr usize k_VertexCompCount = 3;
 constexpr usize k_FaceTupleCount = 4;
 constexpr usize k_FaceCompCount = 3;
 
-static const IGeometry::SharedVertexList* createVertexList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedVertexList* createVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {
   auto *dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_VertexTupleCount}, std::vector<usize>{k_VertexCompCount}, 0.0f);
@@ -52,7 +52,7 @@ static const IGeometry::SharedVertexList* createVertexList(IGeometry& geom, cons
   return dynamic_cast<IGeometry::SharedVertexList*>(dataArr);
 }
 
-static const IGeometry::SharedFaceList* createFaceList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedFaceList* createFaceList(IGeometry& geom, const DataObject::IdType parentId)
 {
   auto *dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
