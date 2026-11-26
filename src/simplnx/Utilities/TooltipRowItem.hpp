@@ -113,7 +113,7 @@ public:
 protected:
 private:
   Type m_Type = Type::Spacer;
-  std::string m_Title = "";
-  std::string m_Value = "";
+  std::string m_Title;
+  std::string m_Value;
 };
 } // namespace nx::core

@@ -37,7 +37,7 @@ TEST_CASE("StringInterpretationUtilities::Convert handles fractional Boolean tex
 
 TEST_CASE("Simplnx::StringUtilities::Split Test", "[Simplnx][StringUtilities]")
 {
-  std::string emptyInput = "";
+  std::string emptyInput;
   std::string noDelimiterInput = "ThisIsABaselineTest";
 
   std::vector<std::string> result;

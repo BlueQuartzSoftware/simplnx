@@ -68,7 +68,7 @@ private:
   fs::path m_ExemplarsPath = fs::path("");
   fs::path m_TestOutput = fs::path("");
   std::vector<T> m_FillValue = std::vector<T>{};
-  std::string m_SingleFileName = "";
+  std::string m_SingleFileName;
 
   void setMemb()
   {

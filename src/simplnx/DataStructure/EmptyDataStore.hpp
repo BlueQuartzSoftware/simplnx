@@ -556,6 +556,6 @@ private:
   ShapeType m_TupleShape;
   usize m_NumComponents = {0};
   usize m_NumTuples = {0};
-  std::string m_DataFormat = "";
+  std::string m_DataFormat;
 };
 } // namespace nx::core

@@ -310,9 +310,9 @@ void DatasetTest(ReadHDF5DatasetFilter& filter, const std::list<ReadHDF5DatasetP
   if(dsetInfoList.size() > 1)
   {
     std::string statusMessage = "Starting Multiple Dataset Test: ";
-    std::string dsetPathsStr = "";
-    std::string cDimsVectorStr = "";
-    std::string tDimsStr = "";
+    std::string dsetPathsStr;
+    std::string cDimsVectorStr;
+    std::string tDimsStr;
     for(const auto& info : dsetInfoList)
     {
       dsetPathsStr.append(info.dataSetPath + "\n");

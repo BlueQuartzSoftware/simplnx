@@ -62,6 +62,6 @@ public:
 private:
   DataType m_Type;
   ShapeType m_TupleShape;
-  std::string m_DataFormat = "";
+  std::string m_DataFormat;
 };
 } // namespace nx::core
