@@ -1348,11 +1348,11 @@ TEST_CASE("SimplnxCore::PartitionGeometry: Advanced numeric domain regression", 
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
   CAPTURE(row);
-  DataStructure ds;
+  DataStructure dataStructure;
   if(row == 3 || row == 4)
   {
-    CreateVertexTupleValidationInput(ds, 4);
-    auto* geomPtr = ds.getDataAs<VertexGeom>(k_SelectedTupleGeometryPath);
+    CreateVertexTupleValidationInput(dataStructure, 4);
+    auto* geomPtr = dataStructure.getDataAs<VertexGeom>(k_SelectedTupleGeometryPath);
     REQUIRE(geomPtr != nullptr);
     auto resized = geomPtr->getVerticesRef().resizeTuples({4});
     SIMPLNX_RESULT_REQUIRE_VALID(resized);
@@ -1364,7 +1364,7 @@ TEST_CASE("SimplnxCore::PartitionGeometry: Advanced numeric domain regression", 
   }
   else
   {
-    CreateCellTupleValidationInput(ds, row == 5 || row == 7, 8);
+    CreateCellTupleValidationInput(dataStructure, row == 5 || row == 7, 8);
   }
   auto args = CreateCellTupleValidationArguments(1);
   if(row == 3 || row == 4)
@@ -1377,7 +1377,7 @@ TEST_CASE("SimplnxCore::PartitionGeometry: Advanced numeric domain regression", 
   args.insertOrAssign(PartitionGeometryFilter::k_CellLength_Key, values[row]);
   args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridOrigin_Key, VectorFloat32Parameter::ValueType{row >= 6 ? nan : 0, 0, 0});
   PartitionGeometryFilter filter;
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == (row == 4 ? -3003 : row >= 6 ? -86015 : -86014));
   CHECK(result.outputActions.errors()[0].message.find(row >= 6 ? "Partition Grid Origin" : "Cell Length") != std::string::npos);
@@ -1390,8 +1390,8 @@ TEST_CASE("SimplnxCore::PartitionGeometry: Inactive advanced parameters and exis
   const auto row = GENERATE(0, 1, 2);
   CAPTURE(scenario, row);
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  CreateCellTupleValidationInput(ds, false, 8);
+  DataStructure dataStructure;
+  CreateCellTupleValidationInput(dataStructure, false, 8);
   auto args = CreateCellTupleValidationArguments(row == 0 ? 0 : 1);
   args.insertOrAssign(PartitionGeometryFilter::k_CellLength_Key, row == 0 ? VectorFloat32Parameter::ValueType{0, 0, 0} :
                                                                  row == 1 ? VectorFloat32Parameter::ValueType{-1, 1, 1} :
@@ -1402,17 +1402,17 @@ TEST_CASE("SimplnxCore::PartitionGeometry: Inactive advanced parameters and exis
   args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridFeatureIDsName_Key, std::string("Ids"));
   args.insertOrAssign(PartitionGeometryFilter::k_StartingFeatureID_Key, int32{1});
   PartitionGeometryFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   if(row == 0)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-    auto result = scope.executeFilter(filter, ds, args);
+    auto result = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     // Each unit cube is one partition. IDs start at 1 and X varies fastest.
     const std::array<int32, 8> expectedIds = {1, 2, 3, 4, 5, 6, 7, 8};
-    const auto* idsPtr = ds.getDataAs<Int32Array>(k_SelectedTupleMatrixPath.createChildPath("PartitionIds"));
-    const auto* gridPtr = ds.getDataAs<ImageGeom>(DataPath({"ValidationPartitionGrid"}));
-    const auto* gridIdsPtr = ds.getDataAs<Int32Array>(DataPath({"ValidationPartitionGrid", "Cells", "Ids"}));
+    const auto* idsPtr = dataStructure.getDataAs<Int32Array>(k_SelectedTupleMatrixPath.createChildPath("PartitionIds"));
+    const auto* gridPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"ValidationPartitionGrid"}));
+    const auto* gridIdsPtr = dataStructure.getDataAs<Int32Array>(DataPath({"ValidationPartitionGrid", "Cells", "Ids"}));
     REQUIRE(idsPtr != nullptr);
     REQUIRE(gridPtr != nullptr);
     REQUIRE(gridIdsPtr != nullptr);
@@ -1429,7 +1429,7 @@ TEST_CASE("SimplnxCore::PartitionGeometry: Inactive advanced parameters and exis
       CHECK((*idsPtr)[index] == expectedIds[index]);
       CHECK((*gridIdsPtr)[index] == expectedIds[index]);
     }
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
   else
   {

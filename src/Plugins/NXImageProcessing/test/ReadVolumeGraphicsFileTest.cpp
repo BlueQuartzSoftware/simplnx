@@ -268,8 +268,8 @@ unit = mm
   if(resolution == "1e40 3 4")
   {
     args.insertOrAssign(ImageIO::k_ChangeOrigin, true);
-    DataStructure ds;
-    const auto strict = filter.preflight(ds, args);
+    DataStructure dataStructure;
+    const auto strict = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
     const auto& diagnostic = strict.outputActions.errors().front();
     INFO(diagnostic.message);

@@ -40,16 +40,16 @@ std::vector<T> MakeSolidRectField(usize dimX, usize dimY)
 
 // Sets the geometry, input, and output keys on the Arguments. The filter has no algorithm parameters. The helper
 // runs preflight and execute, and requires that both steps succeed.
-void RunThinning(IFilter& filter, DataStructure& ds, const DataPath& inputPath, const std::string& outputName = "Output")
+void RunThinning(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
   args.insertOrAssign(BtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
   args.insertOrAssign(BtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(BtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace
@@ -65,44 +65,44 @@ TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: preflight guards", "[NX
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
     BtFilterType filter;
     Arguments args;
     args.insertOrAssign(BtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
     args.insertOrAssign(BtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
     args.insertOrAssign(BtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("float input rejected")
   {
-    DataStructure ds;
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, std::vector<float32>(36, 1.0f));
+    DataStructure dataStructure;
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 1.0f));
     const DataPath geomPath = inputPath.getParent().getParent();
     BtFilterType filter;
     Arguments args;
     args.insertOrAssign(BtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
     args.insertOrAssign(BtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
     args.insertOrAssign(BtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
   }
   SECTION("scalar integer input creates a SameAsInput output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<uint8> field = MakeSolidRectField<uint8>(15, 15);
-    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 15, 15, 1, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 15, 15, 1, field);
     BtFilterType filter;
-    RunThinning(filter, ds, inputPath);
+    RunThinning(filter, dataStructure, inputPath);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 

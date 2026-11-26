@@ -712,16 +712,16 @@ std::vector<float32> ReadOutput(const RecordingOutputStore& outputStore, usize v
 std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize dy, usize dz, int32 bg, bool insideIsPositive, bool squared)
 {
   const int64 nX = static_cast<int64>(dx);
-  const int64 nY = static_cast<int64>(dy);
-  const int64 nZ = static_cast<int64>(dz);
-  const int64 wzLo = (nZ == 1) ? 0 : -1;
-  const int64 wzHi = (nZ == 1) ? 0 : 1;
+  const int64 ny = static_cast<int64>(dy);
+  const int64 nz = static_cast<int64>(dz);
+  const int64 wzLo = (nz == 1) ? 0 : -1;
+  const int64 wzHi = (nz == 1) ? 0 : 1;
   auto at = [&](int64 x, int64 y, int64 z) { return in[FlatIndex(static_cast<usize>(x), static_cast<usize>(y), static_cast<usize>(z), dx, dy)]; };
 
   std::vector<std::array<int64, 3>> feats;
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       for(int64 x = 0; x < nX; ++x)
       {
@@ -743,7 +743,7 @@ std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize 
               const int64 ax = x + wx;
               const int64 ay = y + wy;
               const int64 az = z + wz;
-              if(ax < 0 || ay < 0 || az < 0 || ax >= nX || ay >= nY || az >= nZ)
+              if(ax < 0 || ay < 0 || az < 0 || ax >= nX || ay >= ny || az >= nz)
               {
                 continue; // ITK BinaryContour ignores out-of-bounds neighbors.
               }
@@ -763,9 +763,9 @@ std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize 
   }
 
   std::vector<float32> out(dx * dy * dz);
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       for(int64 x = 0; x < nX; ++x)
       {

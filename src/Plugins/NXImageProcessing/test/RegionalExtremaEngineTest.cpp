@@ -67,8 +67,8 @@ std::vector<T> RegionalExtremaOracle(const std::vector<T>& input, usize dimX, us
     }
   }
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   auto at = [&](int64 x, int64 y, int64 z) { return input[FlatIndex(static_cast<usize>(x), static_cast<usize>(y), static_cast<usize>(z), dimX, dimY)]; };
 
   std::vector<char> mark(input.size(), 0);
@@ -77,9 +77,9 @@ std::vector<T> RegionalExtremaOracle(const std::vector<T>& input, usize dimX, us
   {
     changed = false;
     const std::vector<char> snap = mark;
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
-      for(int64 y = 0; y < nY; ++y)
+      for(int64 y = 0; y < ny; ++y)
       {
         for(int64 x = 0; x < nX; ++x)
         {
@@ -95,7 +95,7 @@ std::vector<T> RegionalExtremaOracle(const std::vector<T>& input, usize dimX, us
             const int64 qx = x + o[0];
             const int64 qy = y + o[1];
             const int64 qz = z + o[2];
-            if(qx < 0 || qx >= nX || qy < 0 || qy >= nY || qz < 0 || qz >= nZ)
+            if(qx < 0 || qx >= nX || qy < 0 || qy >= ny || qz < 0 || qz >= nz)
             {
               continue;
             }

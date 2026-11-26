@@ -1729,54 +1729,54 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested 
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
-  DataStructure ds;
-  BuildFixture(ds, FixtureSpec{.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, true, false, true}});
-  const auto* sourceFeaturesPtr = ds.getDataAs<AttributeMatrix>(k_FlaggedFeaturesPath.getParent());
+  DataStructure dataStructure;
+  BuildFixture(dataStructure, FixtureSpec{.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, true, false, true}});
+  const auto* sourceFeaturesPtr = dataStructure.getDataAs<AttributeMatrix>(k_FlaggedFeaturesPath.getParent());
   REQUIRE(sourceFeaturesPtr != nullptr);
-  auto* nestedPtr = DataGroup::Create(ds, "Nested", ds.getData(k_ImageGeomPath)->getId());
+  auto* nestedPtr = DataGroup::Create(dataStructure, "Nested", dataStructure.getData(k_ImageGeomPath)->getId());
   REQUIRE(nestedPtr != nullptr);
-  REQUIRE(ds.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
-  auto* ensemblePtr = AttributeMatrix::Create(ds, "Ensemble", {2}, nestedPtr->getId());
+  REQUIRE(dataStructure.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
+  auto* ensemblePtr = AttributeMatrix::Create(dataStructure, "Ensemble", {2}, nestedPtr->getId());
   REQUIRE(ensemblePtr != nullptr);
-  auto* phasesPtr = UnitTest::CreateTestDataArray<int32>(ds, "Phases", {2}, {1}, ensemblePtr->getId());
+  auto* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {2}, {1}, ensemblePtr->getId());
   REQUIRE(phasesPtr != nullptr);
   (*phasesPtr)[0] = 42;
   (*phasesPtr)[1] = 99;
   RemoveFlaggedFeaturesFilter filter;
-  auto result = scope.executeFilter(filter, ds, MakeArgs(operation, false));
+  auto result = scope.executeFilter(filter, dataStructure, MakeArgs(operation, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   for(const auto feature : {1, 3})
   {
     const DataPath output({fmt::format("{}-{}", k_NewImgGeomPrefix, feature)});
-    REQUIRE(ds.getDataAs<ImageGeom>(output) != nullptr);
-    CHECK(ds.getData(output.createChildPath(k_CellFeatureData)) == nullptr);
-    CHECK(ds.getData(output.createChildPath("Nested").createChildPath(k_CellFeatureData)) == nullptr);
-    const auto* outputPhasesPtr = ds.getDataAs<Int32Array>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
+    REQUIRE(dataStructure.getDataAs<ImageGeom>(output) != nullptr);
+    CHECK(dataStructure.getData(output.createChildPath(k_CellFeatureData)) == nullptr);
+    CHECK(dataStructure.getData(output.createChildPath("Nested").createChildPath(k_CellFeatureData)) == nullptr);
+    const auto* outputPhasesPtr = dataStructure.getDataAs<Int32Array>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
     REQUIRE(outputPhasesPtr != nullptr);
     CHECK((*outputPhasesPtr)[0] == 42);
     CHECK((*outputPhasesPtr)[1] == 99);
   }
-  CHECK(ds.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeaturesPtr);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  CHECK(dataStructure.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeaturesPtr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction rejects Feature AM registered as vertex data", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
   const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
-  DataStructure ds;
-  BuildFixture(ds, FixtureSpec{.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, true, false, true}});
-  const auto* sourceFeaturesPtr = ds.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+  DataStructure dataStructure;
+  BuildFixture(dataStructure, FixtureSpec{.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, true, false, true}});
+  const auto* sourceFeaturesPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
   REQUIRE(sourceFeaturesPtr != nullptr);
-  auto* nestedPtr = VertexGeom::Create(ds, "Nested Mesh", ds.getData(k_ImageGeomPath)->getId());
+  auto* nestedPtr = VertexGeom::Create(dataStructure, "Nested Mesh", dataStructure.getData(k_ImageGeomPath)->getId());
   REQUIRE(nestedPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, VertexGeom::k_SharedVertexListName, {4}, {3}, nestedPtr->getId());
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {4}, {3}, nestedPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   nestedPtr->setVertices(*verticesPtr);
-  REQUIRE(ds.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
+  REQUIRE(dataStructure.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
   nestedPtr->setVertexAttributeMatrix(*sourceFeaturesPtr);
 
   RemoveFlaggedFeaturesFilter filter;
-  const auto result = filter.preflight(ds, MakeArgs(operation, false));
+  const auto result = filter.preflight(dataStructure, MakeArgs(operation, false));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors().front().code == -67460);

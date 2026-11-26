@@ -466,13 +466,13 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Whole Component Dimen
 TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension RED component product", "[SimplnxCore][CreateDataArrayAdvanced][DimensionRed]")
 {
   CreateDataArrayAdvancedFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
   // (2^32 + 1) * (2^32 - 1) * (2^32 - 1) * (2^32 + 1) = (2^64 - 1)^2, wraps to 1.
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_CompDims_Key,
                       std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967297.0, 4294967295.0, 4294967295.0, 4294967297.0}}));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == -79001);
 }
@@ -492,14 +492,14 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension fixed-only tuples and
     for(const auto& [value, expectedCode] : cases)
     {
       CAPTURE(value, expectedCode);
-      DataStructure ds;
+      DataStructure dataStructure;
       auto args = filter.getDefaultArguments();
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
-      auto result = filter.preflight(ds, args);
+      auto result = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
       REQUIRE(result.outputActions.errors()[0].code == expectedCode);
       REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
@@ -510,8 +510,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension fixed-only tuples and
   {
     const usize count = GENERATE(usize{0}, usize{2});
     const bool useDimensions = GENERATE(false, true);
-    DataStructure ds;
-    REQUIRE(AttributeMatrix::Create(ds, "Parent", {count}) != nullptr);
+    DataStructure dataStructure;
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Parent", {count}) != nullptr);
     auto args = filter.getDefaultArguments();
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
@@ -519,27 +519,27 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension fixed-only tuples and
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_AdvancedOptions_Key, std::make_any<bool>(useDimensions));
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(path));
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
-    auto result = filter.preflight(ds, args);
+    auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    auto applied = result.outputActions.value().applyAll(ds, IDataAction::Mode::Preflight);
+    auto applied = result.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    REQUIRE_NOTHROW(ds.getDataRefAs<IArray>(path));
-    REQUIRE(ds.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(path));
+    REQUIRE(dataStructure.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension tuple product overflow", "[SimplnxCore][CreateDataArrayAdvanced]")
 {
   CreateDataArrayAdvancedFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == -79001);
   REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
@@ -551,12 +551,12 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension component boundaries 
   const uint64 mode = GENERATE(uint64{0}, uint64{1}, uint64{3});
   CAPTURE(value, mode);
   CreateDataArrayAdvancedFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitType_Key, std::make_any<uint64>(mode));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == (value == std::ldexp(1.0, 63) ? -79006 : -79000));
   REQUIRE(result.outputActions.errors()[0].message.find(value == std::ldexp(1.0, 63) ? "preview storage capacity" : "index 0") != std::string::npos);

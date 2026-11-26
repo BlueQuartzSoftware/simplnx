@@ -920,10 +920,10 @@ Arguments MakeReadImageNrrdArgs(const fs::path& inputFile, const DataPath& geomP
 }
 
 template <typename T>
-void RequireNrrdArrayEquals(const DataStructure& ds, const DataPath& arrPath, const std::vector<T>& expected)
+void RequireNrrdArrayEquals(const DataStructure& dataStructure, const DataPath& arrPath, const std::vector<T>& expected)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(arrPath));
-  const auto& store = ds.getDataRefAs<DataArray<T>>(arrPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(arrPath));
+  const auto& store = dataStructure.getDataRefAs<DataArray<T>>(arrPath).getDataStoreRef();
   REQUIRE(store.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
   {
@@ -964,22 +964,22 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD scalar 3D round trip (raw + 
                     "endian: little", gzip ? "encoding: gzip" : "encoding: raw", "space origin: (-1,2,3.5)"},
                    gzip ? GzipCompress(raw) : raw);
 
-      DataStructure ds;
+      DataStructure dataStructure;
       ReadImageFilter filter;
       const Arguments args = MakeReadImageNrrdArgs(p, geomPath, amName, arrName);
-      const auto preflight = filter.preflight(ds, args);
+      const auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-      const auto execute = filter.execute(ds, args);
+      const auto execute = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
-      const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
       REQUIRE(geom.getDimensions()[0] == 4);
       REQUIRE(geom.getDimensions()[1] == 3);
       REQUIRE(geom.getDimensions()[2] == 2);
       REQUIRE(geom.getSpacing()[0] == Approx(0.5f));
       REQUIRE(geom.getOrigin()[2] == Approx(3.5f));
-      RequireNrrdArrayEquals<int16_t>(ds, arrPath, voxels);
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      RequireNrrdArrayEquals<int16_t>(dataStructure, arrPath, voxels);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -1005,17 +1005,17 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round tr
 
   const DataPath geomPath({"NRRD BE"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData");
   // Bind results to locals: SIMPLNX_RESULT_REQUIRE_VALID evaluates its argument
   // multiple times, and preflight()/execute() mutate `ds` (they apply their
   // create-actions), so passing the calls inline would re-run them.
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, voxels);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", "[NXImageProcessing][ReadImageFilter]")
@@ -1036,21 +1036,21 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip"
 
   const DataPath geomPath({"NRRD RGB"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData");
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const auto& arr = ds.getDataRefAs<DataArray<uint8_t>>(arrPath);
+  const auto& arr = dataStructure.getDataRefAs<DataArray<uint8_t>>(arrPath);
   REQUIRE(arr.getNumberOfComponents() == 3);
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == 4);
   REQUIRE(geom.getDimensions()[1] == 3);
   REQUIRE(geom.getDimensions()[2] == 1);
-  RequireNrrdArrayEquals<uint8_t>(ds, arrPath, voxels);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  RequireNrrdArrayEquals<uint8_t>(dataStructure, arrPath, voxels);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD permuted directions emits warning -35750", "[NXImageProcessing][ReadImageFilter]")
@@ -1061,10 +1061,10 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD permuted directions emits wa
                {"NRRD0004", "type: unsigned char", "dimension: 3", "space: left-posterior-superior", "sizes: 2 2 2", "space directions: (0,-2,0) (0,0,-2) (2.5,0,0)", "kinds: domain domain domain",
                 "encoding: raw", "space origin: (0,0,0)"},
                std::vector<uint8_t>(8, 0));
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, DataPath({"NRRD Perm"}), "Cell Data", "ImageData");
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   bool found = false;
   for(const auto& w : preflight.outputActions.warnings())
@@ -1100,15 +1100,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
 
   const DataPath geomPath({"NRRD Crop"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData", crop);
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == 3);
   REQUIRE(geom.getDimensions()[1] == 3);
   REQUIRE(geom.getDimensions()[2] == 2);
@@ -1124,7 +1124,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
       }
     }
   }
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, expected);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, expected);
 }
 
 // PhysicalSubvolume crop path. This is the one place preflight (delegating to
@@ -1163,15 +1163,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
 
   const DataPath geomPath({"NRRD PhysCrop"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData", crop);
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == 3);
   REQUIRE(geom.getDimensions()[1] == 3);
   REQUIRE(geom.getDimensions()[2] == 2);
@@ -1191,7 +1191,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
       }
     }
   }
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, expected);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, expected);
 }
 
 // Regression for the physical-crop preflight/execute divergence: an out-of-range physical
@@ -1226,19 +1226,19 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamp
 
   const DataPath geomPath({"NRRD PhysCropOOB"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData", crop);
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == k_X);
   REQUIRE(geom.getDimensions()[1] == k_Y);
   REQUIRE(geom.getDimensions()[2] == k_Z);
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, voxels);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD rejects missing file and bad encoding", "[NXImageProcessing][ReadImageFilter]")
@@ -1246,19 +1246,19 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD rejects missing file and bad
   UnitTest::LoadPlugins();
   SECTION("missing file")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     ReadImageFilter filter;
     const Arguments args = MakeReadImageNrrdArgs(ReadImageOutputDir() / "does_not_exist_987.nrrd", DataPath({"X"}), "Cell Data", "ImageData");
-    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).outputActions.invalid());
   }
   SECTION("ascii encoding")
   {
     const fs::path p = ReadImageOutputDir() / "bad_ascii.nrrd";
     WriteNrrdRaw(p, {"NRRD0004", "type: short", "dimension: 2", "sizes: 2 2", "encoding: ascii"}, {});
-    DataStructure ds;
+    DataStructure dataStructure;
     ReadImageFilter filter;
     const Arguments args = MakeReadImageNrrdArgs(p, DataPath({"X"}), "Cell Data", "ImageData");
-    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).outputActions.invalid());
   }
 }
 
@@ -1388,15 +1388,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate re
 
   const DataPath geomPath({"NRRD MultiBuf"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData");
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  RequireNrrdArrayEquals<int32_t>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<int32_t>(dataStructure, arrPath, voxels);
 }
 
 // =============================================================================
@@ -1641,11 +1641,11 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: postprocessed override rescues ph
   const ReadImageFilter filter;
   UnitTest::RequireBadReaderMetadata(filter, args, file, true);
   UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  DataStructure ds;
-  const auto result = filter.execute(ds, args);
+  DataStructure dataStructure;
+  const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  UnitTest::RequireReaderGeometry(ds, geometry, {4, -3, 8}, {2, 3, 4});
-  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(ds, geometry.createChildPath("Cell Data").createChildPath("Pixels"));
+  UnitTest::RequireReaderGeometry(dataStructure, geometry, {4, -3, 8}, {2, 3, 4});
+  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(dataStructure, geometry.createChildPath("Cell Data").createChildPath("Pixels"));
   REQUIRE(pixels.getSize() == 1);
   CHECK(pixels[0] == 22);
 }

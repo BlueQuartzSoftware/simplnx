@@ -750,11 +750,11 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibilit
         // Complex type (FloatVec3p1FilterParameterConverter) - verified by successful pipeline loading
       }
       CHECK(args.value<DataPath>(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      DataStructure ds;
-      CreateSequentialImageGeom(ds, "DataContainer", {2, 3, 1});
-      REQUIRE(ds.getDataAs<AttributeMatrix>(DataPath({"DataContainer", "Cell Feature Data"})) == nullptr);
-      CHECK(pipeline.preflight(ds, false));
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      DataStructure dataStructure;
+      CreateSequentialImageGeom(dataStructure, "DataContainer", {2, 3, 1});
+      REQUIRE(dataStructure.getDataAs<AttributeMatrix>(DataPath({"DataContainer", "Cell Feature Data"})) == nullptr);
+      CHECK(pipeline.preflight(dataStructure, false));
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -867,12 +867,12 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Axis domain regression", "[Simplnx
 {
   const auto row = GENERATE(0, 1);
   CAPTURE(row);
-  DataStructure ds;
-  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
   auto args =
       MakeAxisAngleArgs(k_InputPath, k_OutputPath, row == 0 ? VectorFloat32Parameter::ValueType{0, 0, 0, 90} : VectorFloat32Parameter::ValueType{0, 0, 1, std::numeric_limits<float32>::quiet_NaN()});
   RotateSampleRefFrameFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
   REQUIRE(pre.outputActions.errors()[0].code == (row == 0 ? -86052 : -86053));
 }
@@ -880,54 +880,54 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Large axis regression", "[SimplnxC
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
   auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 1e20f, 90});
   RotateSampleRefFrameFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-  auto result = scope.executeFilter(filter, ds, args);
+  auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{4, 1, 5, 2, 6, 3});
+  CHECK(ReadOutputValues(dataStructure, k_OutputPath) == std::vector<int32>{4, 1, 5, 2, 6, 3});
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Execute invalid axis preserves arrays", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  DataStructure ds;
-  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
   auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 1, 90});
   RotateSampleRefFrameFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-  auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+  auto applied = pre.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
-  auto* destPtr = ds.getDataAs<Int32Array>(DataPath({"Output", "CellData", "Values"}));
+  auto* destPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Output", "CellData", "Values"}));
   REQUIRE(destPtr != nullptr);
   destPtr->fill(99);
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
   args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, DataPath({"RejectedOutput"}));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   CHECK(result.result.errors()[0].code == -86052);
-  CHECK_FALSE(ds.containsData(DataPath({"RejectedOutput"})));
-  CHECK(ReadOutputValues(ds, k_InputPath) == std::vector<int32>{1, 2, 3, 4, 5, 6});
-  CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{99, 99, 99, 99, 99, 99});
+  CHECK_FALSE(dataStructure.containsData(DataPath({"RejectedOutput"})));
+  CHECK(ReadOutputValues(dataStructure, k_InputPath) == std::vector<int32>{1, 2, 3, 4, 5, 6});
+  CHECK(ReadOutputValues(dataStructure, k_OutputPath) == std::vector<int32>{99, 99, 99, 99, 99, 99});
 }
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Inactive axis-angle values", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
   auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 0, std::numeric_limits<float32>::quiet_NaN()});
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, ChoicesParameter::ValueType{1});
   Eigen::Matrix3f matrix;
   matrix << -1, 0, 0, 0, -1, 0, 0, 0, 1;
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, ConvertMatrixToTable(matrix));
   RotateSampleRefFrameFilter filter;
-  auto result = scope.executeFilter(filter, ds, args);
+  auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{6, 5, 4, 3, 2, 1});
+  CHECK(ReadOutputValues(dataStructure, k_OutputPath) == std::vector<int32>{6, 5, 4, 3, 2, 1});
 }
 
 namespace
@@ -935,41 +935,41 @@ namespace
 // A half turn reverses {1,1,3,3} to {3,3,1,1}; membership and counts stay fixed.
 DataStructure CreateFeatureRotateFixture()
 {
-  DataStructure ds;
-  auto* geomPtr = ImageGeom::Create(ds, "Input");
+  DataStructure dataStructure;
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({2, 2, 1});
   REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellsPtr = AttributeMatrix::Create(ds, k_CellDataName, {1, 2, 2}, geomPtr->getId());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, {1, 2, 2}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(ds, "FeatureIds", cellsPtr->getShape(), {1}, cellsPtr->getId());
+  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellsPtr->getShape(), {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   (*idsPtr)[0] = 1;
   (*idsPtr)[1] = 1;
   (*idsPtr)[2] = 3;
   (*idsPtr)[3] = 3;
-  auto* featuresPtr = AttributeMatrix::Create(ds, "Cell Feature Data", {2, 2}, geomPtr->getId());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Cell Feature Data", {2, 2}, geomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
-  auto* countsPtr = UnitTest::CreateTestDataArray<int32>(ds, "NumElements", featuresPtr->getShape(), {1}, featuresPtr->getId());
+  auto* countsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", featuresPtr->getShape(), {1}, featuresPtr->getId());
   REQUIRE(countsPtr != nullptr);
   (*countsPtr)[0] = 0;
   (*countsPtr)[1] = 2;
   (*countsPtr)[2] = 0;
   (*countsPtr)[3] = 2;
-  auto* neighborsPtr = NeighborList<int32>::Create(ds, "NeighborList", featuresPtr->getShape(), featuresPtr->getId());
+  auto* neighborsPtr = NeighborList<int32>::Create(dataStructure, "NeighborList", featuresPtr->getShape(), featuresPtr->getId());
   REQUIRE(neighborsPtr != nullptr);
   neighborsPtr->setList(1, std::vector<int32>{3});
   neighborsPtr->setList(3, std::vector<int32>{1});
-  REQUIRE(StringArray::CreateWithValues(ds, "Names", featuresPtr->getShape(), {"Background", "One", "Unused", "Three"}, featuresPtr->getId()) != nullptr);
-  auto* ensemblePtr = AttributeMatrix::Create(ds, "Cell Ensemble Data", {2}, geomPtr->getId());
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", featuresPtr->getShape(), {"Background", "One", "Unused", "Three"}, featuresPtr->getId()) != nullptr);
+  auto* ensemblePtr = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", {2}, geomPtr->getId());
   REQUIRE(ensemblePtr != nullptr);
-  auto* structuresPtr = UnitTest::CreateTestDataArray<uint32>(ds, "CrystalStructures", {2}, {1}, ensemblePtr->getId());
+  auto* structuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensemblePtr->getId());
   REQUIRE(structuresPtr != nullptr);
   (*structuresPtr)[0] = 999;
   (*structuresPtr)[1] = 1;
-  return ds;
+  return dataStructure;
 }
 
 Arguments MakeFeatureRotateArgs(bool clear)
@@ -980,9 +980,9 @@ Arguments MakeFeatureRotateArgs(bool clear)
   return args;
 }
 
-void CheckRotatedFeatureCellsAndEnsemble(const DataStructure& ds, const DataPath& geomPath)
+void CheckRotatedFeatureCellsAndEnsemble(const DataStructure& dataStructure, const DataPath& geomPath)
 {
-  const auto* idsPtr = ds.getDataAs<Int32Array>(geomPath.createChildPath(k_CellDataName).createChildPath("FeatureIds"));
+  const auto* idsPtr = dataStructure.getDataAs<Int32Array>(geomPath.createChildPath(k_CellDataName).createChildPath("FeatureIds"));
   REQUIRE(idsPtr != nullptr);
   REQUIRE(idsPtr->getNumberOfTuples() == 4);
   const std::vector<int32> expected = {3, 3, 1, 1};
@@ -990,32 +990,32 @@ void CheckRotatedFeatureCellsAndEnsemble(const DataStructure& ds, const DataPath
   {
     CHECK((*idsPtr)[i] == expected[i]);
   }
-  const auto* ensemblePtr = ds.getDataAs<AttributeMatrix>(geomPath.createChildPath("Cell Ensemble Data"));
+  const auto* ensemblePtr = dataStructure.getDataAs<AttributeMatrix>(geomPath.createChildPath("Cell Ensemble Data"));
   REQUIRE(ensemblePtr != nullptr);
   CHECK(ensemblePtr->getShape() == ShapeType{2});
   CHECK(ensemblePtr->getSize() == 1);
-  const auto* structuresPtr = ds.getDataAs<UInt32Array>(geomPath.createChildPath("Cell Ensemble Data").createChildPath("CrystalStructures"));
+  const auto* structuresPtr = dataStructure.getDataAs<UInt32Array>(geomPath.createChildPath("Cell Ensemble Data").createChildPath("CrystalStructures"));
   REQUIRE(structuresPtr != nullptr);
   REQUIRE(structuresPtr->getNumberOfTuples() == 2);
   CHECK((*structuresPtr)[0] == 999);
   CHECK((*structuresPtr)[1] == 1);
 }
 
-void CheckUnchangedFeatureData(const DataStructure& ds, const DataPath& geomPath)
+void CheckUnchangedFeatureData(const DataStructure& dataStructure, const DataPath& geomPath)
 {
   const auto path = geomPath.createChildPath("Cell Feature Data");
-  const auto* amPtr = ds.getDataAs<AttributeMatrix>(path);
+  const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(path);
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{2, 2});
   CHECK(amPtr->getSize() == 3);
-  const auto* countsPtr = ds.getDataAs<Int32Array>(path.createChildPath("NumElements"));
+  const auto* countsPtr = dataStructure.getDataAs<Int32Array>(path.createChildPath("NumElements"));
   REQUIRE(countsPtr != nullptr);
   REQUIRE(countsPtr->getNumberOfTuples() == 4);
   const std::vector<int32> expectedCounts = {0, 2, 0, 2};
-  const auto* neighborsPtr = ds.getDataAs<NeighborList<int32>>(path.createChildPath("NeighborList"));
+  const auto* neighborsPtr = dataStructure.getDataAs<NeighborList<int32>>(path.createChildPath("NeighborList"));
   REQUIRE(neighborsPtr != nullptr);
   const std::vector<std::vector<int32>> expectedNeighbors = {{}, {3}, {}, {1}};
-  const auto* namesPtr = ds.getDataAs<StringArray>(path.createChildPath("Names"));
+  const auto* namesPtr = dataStructure.getDataAs<StringArray>(path.createChildPath("Names"));
   REQUIRE(namesPtr != nullptr);
   const std::vector<std::string> expectedNames = {"Background", "One", "Unused", "Three"};
   for(usize i = 0; i < 4; ++i)
@@ -1026,9 +1026,9 @@ void CheckUnchangedFeatureData(const DataStructure& ds, const DataPath& geomPath
   }
 }
 
-void CheckClearedFeatureData(const DataStructure& ds, const DataPath& geomPath)
+void CheckClearedFeatureData(const DataStructure& dataStructure, const DataPath& geomPath)
 {
-  const auto* amPtr = ds.getDataAs<AttributeMatrix>(geomPath.createChildPath("Cell Feature Data"));
+  const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(geomPath.createChildPath("Cell Feature Data"));
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{2, 2});
   CHECK(amPtr->getNumberOfTuples() == 4);

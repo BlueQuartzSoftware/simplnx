@@ -52,14 +52,14 @@ TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: hand-computed 
   // reconstruct from.
   pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Bright;
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   OpeningByReconstructionImageFilter filter;
-  rt::RunReconstructionFilter<OpeningByReconstructionImageFilter>(filter, ds, inputPath, BallSetter(/*preserveIntensities=*/false), /*fullyConnected=*/false, /*height=*/0.0);
+  rt::RunReconstructionFilter<OpeningByReconstructionImageFilter>(filter, dataStructure, inputPath, BallSetter(/*preserveIntensities=*/false), /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
   REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Background); // isolated dot removed
   REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Bright);     // square center preserved
@@ -98,9 +98,9 @@ TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: hand-computed 
   }
   pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Bright; // isolated 1-voxel dot -- smaller than the SE, removed
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   OpeningByReconstructionImageFilter filter;
   Arguments args;
@@ -109,18 +109,18 @@ TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: hand-computed 
   args.insertOrAssign(OpeningByReconstructionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   BallSetter(/*preserveIntensities=*/false)(args, /*fullyConnected=*/false, /*height=*/0.0);
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Background); // isolated dot removed
   REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Bright);     // square center preserved
   REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Bright);     // square corner regrown
   REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Background); // untouched background
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][OpeningByReconstructionImageFilter]")

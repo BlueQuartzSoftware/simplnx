@@ -103,22 +103,22 @@ Arguments BinaryPhaseArguments(const ComputeFeaturePhasesBinaryFilter& filter, c
 }
 
 template <typename T>
-void CreateBinaryPhaseInputs(DataStructure& ds, bool featureMask, usize maskTuples = 6)
+void CreateBinaryPhaseInputs(DataStructure& dataStructure, bool featureMask, usize maskTuples = 6)
 {
-  auto* containerPtr = DataGroup::Create(ds, "Container");
+  auto* containerPtr = DataGroup::Create(dataStructure, "Container");
   REQUIRE(containerPtr != nullptr);
-  auto* cellsPtr = AttributeMatrix::Create(ds, "Cells", {6}, containerPtr->getId());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", {6}, containerPtr->getId());
   REQUIRE(cellsPtr != nullptr);
-  auto* featuresPtr = AttributeMatrix::Create(ds, "Features", {2, 2}, containerPtr->getId());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {2, 2}, containerPtr->getId());
   REQUIRE(featuresPtr != nullptr);
   const std::array<int32, 6> ids = {0, 1, 2, 1, 2, 1};
-  auto* idArrayPtr = UnitTest::CreateTestDataArray<int32>(ds, "Ids", {6}, {1}, cellsPtr->getId());
+  auto* idArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", {6}, {1}, cellsPtr->getId());
   auto copyIdsResult = idArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(ids.data(), ids.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyIdsResult);
   if(featureMask)
   {
     const std::array<T, 4> values = {static_cast<T>(0), static_cast<T>(1), static_cast<T>(1), static_cast<T>(0)};
-    auto* maskPtr = UnitTest::CreateTestDataArray<T>(ds, "Mask", {2, 2}, {1}, featuresPtr->getId());
+    auto* maskPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "Mask", {2, 2}, {1}, featuresPtr->getId());
     auto copyMaskResult = maskPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const T>(values.data(), values.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(copyMaskResult);
     // Invalid values and a different tuple count must be ignored in Feature-mask mode.
@@ -126,9 +126,9 @@ void CreateBinaryPhaseInputs(DataStructure& ds, bool featureMask, usize maskTupl
   }
   else
   {
-    auto* maskAmPtr = AttributeMatrix::Create(ds, "Mask Cells", {maskTuples}, containerPtr->getId());
+    auto* maskAmPtr = AttributeMatrix::Create(dataStructure, "Mask Cells", {maskTuples}, containerPtr->getId());
     REQUIRE(maskAmPtr != nullptr);
-    auto* maskPtr = UnitTest::CreateTestDataArray<T>(ds, "Mask", {maskTuples}, {1}, maskAmPtr->getId());
+    auto* maskPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "Mask", {maskTuples}, {1}, maskAmPtr->getId());
     if(maskTuples == 6)
     {
       const std::array<T, 6> values = {static_cast<T>(1), static_cast<T>(1), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1), static_cast<T>(0)};
@@ -138,9 +138,9 @@ void CreateBinaryPhaseInputs(DataStructure& ds, bool featureMask, usize maskTupl
   }
 }
 
-void CheckBinaryPhases(const DataStructure& ds, const std::array<int32, 4>& expected)
+void CheckBinaryPhases(const DataStructure& dataStructure, const std::array<int32, 4>& expected)
 {
-  const auto* outputPtr = ds.getDataAs<Int32Array>(DataPath({"Container", "Features", "Phases"}));
+  const auto* outputPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Container", "Features", "Phases"}));
   REQUIRE(outputPtr != nullptr);
   CHECK(outputPtr->getTupleShape() == ShapeType{2, 2});
   CHECK(outputPtr->getNumberOfComponents() == 1);
@@ -148,35 +148,35 @@ void CheckBinaryPhases(const DataStructure& ds, const std::array<int32, 4>& expe
   auto readResult = outputPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   CHECK(actual == expected);
-  CHECK(ds.getData(DataPath({"Container", "Cells", "Phases"})) == nullptr);
+  CHECK(dataStructure.getData(DataPath({"Container", "Cells", "Phases"})) == nullptr);
 }
 } // namespace
 
 TEMPLATE_TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Cell mask hand oracle", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter]", bool, uint8)
 {
   UnitTest::LoadPlugins();
-  DataStructure ds;
-  CreateBinaryPhaseInputs<TestType>(ds, false);
+  DataStructure dataStructure;
+  CreateBinaryPhaseInputs<TestType>(dataStructure, false);
   ComputeFeaturePhasesBinaryFilter filter;
   auto args = BinaryPhaseArguments(filter, DataPath({"Container", "Mask Cells", "Mask"}));
-  auto preflightResult = filter.preflight(ds, args).outputActions;
+  auto preflightResult = filter.preflight(dataStructure, args).outputActions;
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult);
-  auto executeResult = filter.execute(ds, args).result;
+  auto executeResult = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
   // Feature 0 is true. Feature 1 ends false. Feature 2 ends true. Feature 3 is unreferenced.
-  CheckBinaryPhases(ds, {1, 0, 1, 0});
-  CHECK(ds.getData(DataPath({"Container", "Cell Ensemble Data"})) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  CheckBinaryPhases(dataStructure, {1, 0, 1, 0});
+  CHECK(dataStructure.getData(DataPath({"Container", "Cell Ensemble Data"})) == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Feature mask hand oracle", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter]", bool, uint8)
 {
   UnitTest::LoadPlugins();
-  DataStructure ds;
-  CreateBinaryPhaseInputs<TestType>(ds, true);
+  DataStructure dataStructure;
+  CreateBinaryPhaseInputs<TestType>(dataStructure, true);
   if constexpr(std::is_same_v<TestType, uint8>)
   {
-    auto* maskPtr = ds.getDataAs<UInt8Array>(DataPath({"Container", "Features", "Mask"}));
+    auto* maskPtr = dataStructure.getDataAs<UInt8Array>(DataPath({"Container", "Features", "Mask"}));
     REQUIRE(maskPtr != nullptr);
     const std::array<uint8, 4> values = {0, 2, 255, 0};
     auto copyMaskResult = maskPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(values.data(), values.size()));
@@ -187,37 +187,37 @@ TEMPLATE_TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Feature mask 
   DataPath maskPath({"Container", "Features", "Mask"});
   if(alias)
   {
-    auto* aliasGroupPtr = DataGroup::Create(ds, "Alias");
+    auto* aliasGroupPtr = DataGroup::Create(dataStructure, "Alias");
     REQUIRE(aliasGroupPtr != nullptr);
-    auto* featuresPtr = ds.getDataAs<AttributeMatrix>(DataPath({"Container", "Features"}));
+    auto* featuresPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Container", "Features"}));
     REQUIRE(featuresPtr != nullptr);
-    REQUIRE(ds.setAdditionalParent(featuresPtr->getId(), aliasGroupPtr->getId()));
+    REQUIRE(dataStructure.setAdditionalParent(featuresPtr->getId(), aliasGroupPtr->getId()));
     maskPath = DataPath({"Alias", "Features", "Mask"});
   }
   auto args = BinaryPhaseArguments(filter, maskPath);
   args.insertOrAssign(ComputeFeaturePhasesBinaryFilter::k_CreateCellEnsembleAM_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeFeaturePhasesBinaryFilter::k_CellEnsembleAMName_Key, std::make_any<std::string>("Ensembles"));
-  auto preflightResult = filter.preflight(ds, args).outputActions;
+  auto preflightResult = filter.preflight(dataStructure, args).outputActions;
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult);
-  auto executeResult = filter.execute(ds, args).result;
+  auto executeResult = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
-  CheckBinaryPhases(ds, {0, 1, 1, 0});
-  const auto* ensemblePtr = ds.getDataAs<AttributeMatrix>(DataPath({"Container", "Ensembles"}));
+  CheckBinaryPhases(dataStructure, {0, 1, 1, 0});
+  const auto* ensemblePtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Container", "Ensembles"}));
   REQUIRE(ensemblePtr != nullptr);
   CHECK(ensemblePtr->getShape() == ShapeType{2});
-  CHECK(ds.getData(DataPath({"Ensembles"})) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  CHECK(dataStructure.getData(DataPath({"Ensembles"})) == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Cell mask tuple mismatch", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter]")
 {
   UnitTest::LoadPlugins();
   const usize maskTuples = GENERATE(5, 7);
-  DataStructure ds;
-  CreateBinaryPhaseInputs<uint8>(ds, false, maskTuples);
+  DataStructure dataStructure;
+  CreateBinaryPhaseInputs<uint8>(dataStructure, false, maskTuples);
   ComputeFeaturePhasesBinaryFilter filter;
   auto args = BinaryPhaseArguments(filter, DataPath({"Container", "Mask Cells", "Mask"}));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors()[0].code == -53802);
@@ -227,16 +227,16 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Feature Id range", "[S
 {
   UnitTest::LoadPlugins();
   const int32 invalidId = GENERATE(-1, 4);
-  DataStructure ds;
-  CreateBinaryPhaseInputs<bool>(ds, false);
-  auto* idsPtr = ds.getDataAs<Int32Array>(DataPath({"Container", "Cells", "Ids"}));
+  DataStructure dataStructure;
+  CreateBinaryPhaseInputs<bool>(dataStructure, false);
+  auto* idsPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Container", "Cells", "Ids"}));
   REQUIRE(idsPtr != nullptr);
   idsPtr->setValue(5, invalidId);
   ComputeFeaturePhasesBinaryFilter filter;
   auto args = BinaryPhaseArguments(filter, DataPath({"Container", "Mask Cells", "Mask"}));
-  auto preflightResult = filter.preflight(ds, args).outputActions;
+  auto preflightResult = filter.preflight(dataStructure, args).outputActions;
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult);
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
   CHECK(result.result.errors()[0].code == -53801);
@@ -245,18 +245,18 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Feature Id range", "[S
 TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Equal counts in different matrices use Cell mode", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds;
-  CreateBinaryPhaseInputs<uint8>(ds, false);
-  auto* cellsPtr = ds.getDataAs<AttributeMatrix>(DataPath({"Container", "Cells"}));
-  auto* maskCellsPtr = ds.getDataAs<AttributeMatrix>(DataPath({"Container", "Mask Cells"}));
+  DataStructure dataStructure;
+  CreateBinaryPhaseInputs<uint8>(dataStructure, false);
+  auto* cellsPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Container", "Cells"}));
+  auto* maskCellsPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Container", "Mask Cells"}));
   REQUIRE(cellsPtr != nullptr);
   REQUIRE(maskCellsPtr != nullptr);
   auto resizeResult = cellsPtr->resizeTuples({4});
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   resizeResult = maskCellsPtr->resizeTuples({4});
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
-  auto* idsPtr = ds.getDataAs<Int32Array>(DataPath({"Container", "Cells", "Ids"}));
-  auto* maskPtr = ds.getDataAs<UInt8Array>(DataPath({"Container", "Mask Cells", "Mask"}));
+  auto* idsPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Container", "Cells", "Ids"}));
+  auto* maskPtr = dataStructure.getDataAs<UInt8Array>(DataPath({"Container", "Mask Cells", "Mask"}));
   REQUIRE(idsPtr != nullptr);
   REQUIRE(maskPtr != nullptr);
   const std::array<int32, 4> idValues = {2, 1, 2, 0};
@@ -268,13 +268,13 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Equal counts in differ
   ComputeFeaturePhasesBinaryFilter filter;
   auto args = BinaryPhaseArguments(filter, DataPath({"Container", "Mask Cells", "Mask"}));
   args.insertOrAssign(ComputeFeaturePhasesBinaryFilter::k_CreateCellEnsembleAM_Key, std::make_any<bool>(true));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  CheckBinaryPhases(ds, {1, 1, 0, 0});
-  const auto* ensemblePtr = ds.getDataAs<AttributeMatrix>(DataPath({"Container", "Cell Ensemble Data"}));
+  CheckBinaryPhases(dataStructure, {1, 1, 0, 0});
+  const auto* ensemblePtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Container", "Cell Ensemble Data"}));
   REQUIRE(ensemblePtr != nullptr);
   CHECK(ensemblePtr->getShape() == ShapeType{2});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Empty and chunk-boundary masks", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter]")
@@ -282,14 +282,14 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Empty and chunk-bounda
   UnitTest::LoadPlugins();
   const bool featureMask = GENERATE(false, true);
   const usize tupleCount = GENERATE(usize(0), usize(1'000'001));
-  DataStructure ds;
-  CreateBinaryPhaseInputs<uint8>(ds, featureMask);
+  DataStructure dataStructure;
+  CreateBinaryPhaseInputs<uint8>(dataStructure, featureMask);
   const DataPath maskAMPath = featureMask ? DataPath({"Container", "Features"}) : DataPath({"Container", "Mask Cells"});
-  auto* maskAmPtr = ds.getDataAs<AttributeMatrix>(maskAMPath);
+  auto* maskAmPtr = dataStructure.getDataAs<AttributeMatrix>(maskAMPath);
   REQUIRE(maskAmPtr != nullptr);
   auto resizeResult = maskAmPtr->resizeTuples({tupleCount});
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
-  auto* maskPtr = ds.getDataAs<UInt8Array>(maskAMPath.createChildPath("Mask"));
+  auto* maskPtr = dataStructure.getDataAs<UInt8Array>(maskAMPath.createChildPath("Mask"));
   REQUIRE(maskPtr != nullptr);
   maskPtr->fill(255);
   if(tupleCount > 0)
@@ -298,11 +298,11 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Empty and chunk-bounda
   }
   if(!featureMask)
   {
-    auto* cellsPtr = ds.getDataAs<AttributeMatrix>(DataPath({"Container", "Cells"}));
+    auto* cellsPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Container", "Cells"}));
     REQUIRE(cellsPtr != nullptr);
     resizeResult = cellsPtr->resizeTuples({tupleCount});
     SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
-    auto* idsPtr = ds.getDataAs<Int32Array>(DataPath({"Container", "Cells", "Ids"}));
+    auto* idsPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Container", "Cells", "Ids"}));
     REQUIRE(idsPtr != nullptr);
     idsPtr->fill(1);
     if(tupleCount > 0)
@@ -312,15 +312,15 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Empty and chunk-bounda
   }
   ComputeFeaturePhasesBinaryFilter filter;
   auto args = BinaryPhaseArguments(filter, maskAMPath.createChildPath("Mask"));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   if(!featureMask)
   {
-    CheckBinaryPhases(ds, tupleCount == 0 ? std::array<int32, 4>{0, 0, 0, 0} : std::array<int32, 4>{1, 0, 0, 0});
+    CheckBinaryPhases(dataStructure, tupleCount == 0 ? std::array<int32, 4>{0, 0, 0, 0} : std::array<int32, 4>{1, 0, 0, 0});
   }
   else
   {
-    const auto* outputPtr = ds.getDataAs<Int32Array>(DataPath({"Container", "Features", "Phases"}));
+    const auto* outputPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Container", "Features", "Phases"}));
     REQUIRE(outputPtr != nullptr);
     CHECK(outputPtr->getNumberOfTuples() == tupleCount);
     if(tupleCount > 0)
@@ -331,5 +331,5 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Empty and chunk-bounda
       CHECK(boundary == std::array<int32, 2>{1, 0});
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

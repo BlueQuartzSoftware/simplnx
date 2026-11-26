@@ -19,8 +19,8 @@ TEST_CASE("NXImageProcessing::BinaryContourImageFilter: Preflight rejects non-fi
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = contour_test::BuildBinaryContourImage<uint8>(ds, 8, 8, 8, uint8{1}, uint8{0}); // uint8 input, range [0, 255]
+  DataStructure dataStructure;
+  const DataPath inputPath = contour_test::BuildBinaryContourImage<uint8>(dataStructure, 8, 8, 8, uint8{1}, uint8{0}); // uint8 input, range [0, 255]
 
   const auto makeArgs = [&](float64 fg, float64 bg) {
     Arguments args;
@@ -36,15 +36,15 @@ TEST_CASE("NXImageProcessing::BinaryContourImageFilter: Preflight rejects non-fi
   BinaryContourImageFilter filter;
 
   // Foreground out of uint8 range (255 max) -> undefined cast -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(99999.0, 0.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0, 0.0)).outputActions.valid());
   // Background out of range on the negative side -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(1.0, -5.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, -5.0)).outputActions.valid());
   // Non-finite (NaN) foreground -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).outputActions.valid());
   // Non-finite (Inf) background -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(1.0, std::numeric_limits<float64>::infinity())).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, std::numeric_limits<float64>::infinity())).outputActions.valid());
   // In-range integer values still preflight cleanly.
-  auto preflightResult = filter.preflight(ds, makeArgs(1.0, 0.0));
+  auto preflightResult = filter.preflight(dataStructure, makeArgs(1.0, 0.0));
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 }
 

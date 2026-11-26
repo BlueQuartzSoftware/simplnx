@@ -15,7 +15,7 @@ using namespace nx::core;
 TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Computed-expected (Annulus + Box zero-radius)", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   using morph_test::KernelType;
-  auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); };
+  auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); };
   const auto setParams = morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>();
   constexpr auto k_KErode = ImageProcessing::MorphOp::Erode;
 
@@ -48,7 +48,7 @@ TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Computed-expected (Annu
 TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   morph_test::RunMorphologyEmptySEPassthrough<GrayscaleErodeImageFilter, float32>(
-      [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); }, 12, 12, 12,
+      [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); }, 12, 12, 12,
       morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>());
 }
 
@@ -74,9 +74,9 @@ TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Ramp computed-expected 
   constexpr int64 k_Ry = 1;
   constexpr int64 k_Rz = 1;
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   GrayscaleErodeImageFilter filter;
   Arguments args;
@@ -87,11 +87,11 @@ TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Ramp computed-expected 
   args.insertOrAssign(GrayscaleErodeImageFilter::k_KernelRadius_Key,
                       std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   const usize numSlots = k_D * k_D * k_D;
@@ -138,7 +138,7 @@ TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Ramp computed-expected 
     UNSCOPED_INFO("slot=" << badSlot << " got=" << badGot << " expected=" << badExp);
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

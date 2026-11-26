@@ -595,8 +595,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale: Origin_And_Sp
   const std::string kSelectedAttrMatrixName = "Cell Data";
   const DataPath kSelectedAttrMatrixPath = DataPath({kSelectedImageGeomName, kSelectedAttrMatrixName});
 
-  DataStructure ds;
-  ImageGeom* geomPtr = ImageGeom::Create(ds, "Image Geometry");
+  DataStructure dataStructure;
+  ImageGeom* geomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
 
   Vec3<float32> origin = {51.0F, 23.0F, -64.0F};
   Vec3<float32> spacing = {3.0F, 5.0F, 8.0F};
@@ -611,7 +611,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale: Origin_And_Sp
   }
   REQUIRE(geomPtr->setOrigin(origin).valid());
   REQUIRE(geomPtr->setSpacing(spacing).valid());
-  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(ds, "Cell Data", {}, geomPtr->getId());
+  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {}, geomPtr->getId());
 
   const ApplyTransformationToGeometryFilter filter;
   Arguments args;
@@ -625,11 +625,11 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale: Origin_And_Sp
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(0));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   Vec3<float32> newOrigin = {1.0f, 1.0f, 1.0f};
@@ -639,7 +639,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale: Origin_And_Sp
   REQUIRE(geomPtr->getOrigin() == newOrigin);
   REQUIRE(geomPtr->getSpacing() == newSpacing);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -1250,19 +1250,19 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: SIMPL Backwards Com
 
 namespace
 {
-ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
+ImageGeom* MakeValidationImage(DataStructure& dataStructure, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
 {
-  auto* geomPtr = ImageGeom::Create(ds, "ValidationImage");
+  auto* geomPtr = ImageGeom::Create(dataStructure, "ValidationImage");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions(dims);
   REQUIRE(geomPtr->setSpacing(spacing).valid());
   REQUIRE(geomPtr->setOrigin(origin).valid());
-  auto* cellsPtr = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geomPtr->getId());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", {dims[2], dims[1], dims[0]}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, DataPath({"ValidationImage", "Cells", "Samples"}), {dims[2], dims[1], dims[0]}, {1});
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ValidationImage", "Cells", "Samples"}), {dims[2], dims[1], dims[0]}, {1});
   REQUIRE(store != nullptr);
-  auto* samplesPtr = Int32Array::Create(ds, "Samples", store, cellsPtr->getId());
+  auto* samplesPtr = Int32Array::Create(dataStructure, "Samples", store, cellsPtr->getId());
   REQUIRE(samplesPtr != nullptr);
   for(usize index = 0; index < samplesPtr->getNumberOfTuples(); ++index)
   {
@@ -1274,11 +1274,11 @@ ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 
 
 namespace
 {
-VertexGeom* MakeValidationVertices(DataStructure& ds)
+VertexGeom* MakeValidationVertices(DataStructure& dataStructure)
 {
-  auto* geomPtr = VertexGeom::Create(ds, "ValidationVertices");
+  auto* geomPtr = VertexGeom::Create(dataStructure, "ValidationVertices");
   REQUIRE(geomPtr != nullptr);
-  auto* coordsPtr = Float32Array::CreateWithStore<Float32DataStore>(ds, "Vertices", {4}, {3}, geomPtr->getId());
+  auto* coordsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {4}, {3}, geomPtr->getId());
   REQUIRE(coordsPtr != nullptr);
   const std::array<float32, 12> values = {1, 2, 3, -1, 0, 2, 2, -3, 1, 0, 1, -2};
   for(usize idx = 0; idx < values.size(); ++idx)
@@ -1306,14 +1306,14 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Parameter domain regressi
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8);
   CAPTURE(row);
   const bool image = row < 3 || row == 5;
-  DataStructure ds;
+  DataStructure dataStructure;
   if(image)
   {
-    MakeValidationImage(ds);
+    MakeValidationImage(dataStructure);
   }
   else
   {
-    MakeValidationVertices(ds);
+    MakeValidationVertices(dataStructure);
   }
   const usize type = row < 4 ? 5 : row < 6 ? 4 : 3;
   auto args = ValidationTransformArgs(type, image);
@@ -1325,7 +1325,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Parameter domain regressi
                                   ApplyTransformationToGeometryFilter::k_Rotation_Key,
                       values[row]);
   ApplyTransformationToGeometryFilter filter;
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   const std::array<int32, 9> codes = {-86004, -86004, -86004, -86003, -86002, -86002, -86052, -86051, -86053};
   REQUIRE(result.outputActions.errors()[0].code == codes[row]);
@@ -1336,15 +1336,15 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Result domain regression"
 {
   const auto row = GENERATE(0, 1, 2);
   CAPTURE(row);
-  DataStructure ds;
-  auto* geomPtr = MakeValidationImage(ds, {1, 1, 1}, {row == 0 ? 2.0f : row == 1 ? 0.25f : 1.0f, 1, 1}, {row == 2 ? 3e38f : 0, 0, 0});
+  DataStructure dataStructure;
+  auto* geomPtr = MakeValidationImage(dataStructure, {1, 1, 1}, {row == 0 ? 2.0f : row == 1 ? 0.25f : 1.0f, 1, 1}, {row == 2 ? 3e38f : 0, 0, 0});
   const auto oldSpacing = geomPtr->getSpacing();
   const auto oldOrigin = geomPtr->getOrigin();
   auto args = ValidationTransformArgs(row == 2 ? 4 : 5, true);
   args.insertOrAssign(row == 2 ? ApplyTransformationToGeometryFilter::k_Translation_Key : ApplyTransformationToGeometryFilter::k_Scale_Key,
                       VectorFloat32Parameter::ValueType{row == 1 ? std::numeric_limits<float32>::denorm_min() : 3e38f, row == 2 ? 0.0f : 1.0f, row == 2 ? 0.0f : 1.0f});
   ApplyTransformationToGeometryFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
   REQUIRE_FALSE(pre.outputActions.warnings().empty());
   const auto& preflightWarning = pre.outputActions.warnings().front();
@@ -1360,12 +1360,12 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Result domain regression"
   }
   const int32 expectedCode = row == 2 ? -1557 : -1556;
   const std::string expectedValue = row == 1 ? "Received 0." : "Received inf.";
-  DataStructure preflightDs = ds;
+  DataStructure preflightDs = dataStructure;
   const auto preflightActionResult = pre.outputActions.value().applyRegular(preflightDs, IDataAction::Mode::Preflight);
   const auto& preflightGeom = preflightDs.getDataRefAs<ImageGeom>(DataPath({"ValidationImage"}));
   CHECK(preflightGeom.getSpacing() == oldSpacing);
   CHECK(preflightGeom.getOrigin() == oldOrigin);
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   for(const auto* failurePtr : std::array<const Result<>*, 2>{&preflightActionResult, &result.result})
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(*failurePtr);
@@ -1383,26 +1383,26 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects invalid p
 {
   const auto row = GENERATE(0, 1, 2);
   CAPTURE(row);
-  DataStructure ds;
+  DataStructure dataStructure;
   if(row == 0)
   {
-    MakeValidationImage(ds);
+    MakeValidationImage(dataStructure);
   }
   else
   {
-    MakeValidationVertices(ds);
+    MakeValidationVertices(dataStructure);
   }
   auto args = ValidationTransformArgs(row == 0 ? 5 : row == 1 ? 4 : 3, row == 0);
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, VectorFloat32Parameter::ValueType{0, 1, 1});
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::quiet_NaN(), 0, 0});
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
   ApplyTransformationToGeometryFilter filter;
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors()[0].code == (row == 0 ? -86004 : row == 1 ? -86002 : -86052));
   if(row != 0)
   {
-    auto* geomPtr = ds.getDataAs<VertexGeom>(DataPath({"ValidationVertices"}));
+    auto* geomPtr = dataStructure.getDataAs<VertexGeom>(DataPath({"ValidationVertices"}));
     const std::array<float32, 12> expected = {1, 2, 3, -1, 0, 2, 2, -3, 1, 0, 1, -2};
     for(usize index = 0; index < expected.size(); ++index)
     {
@@ -1413,12 +1413,12 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects invalid p
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Large axis vertex regression", "[SimplnxCore][ApplyTransformationToGeometryFilter][NumericDomainRed]")
 {
   const float32 magnitude = GENERATE(1.0f, 1e20f);
-  DataStructure ds;
-  auto* geomPtr = MakeValidationVertices(ds);
+  DataStructure dataStructure;
+  auto* geomPtr = MakeValidationVertices(dataStructure);
   auto args = ValidationTransformArgs(3, false);
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, magnitude, 90});
   ApplyTransformationToGeometryFilter filter;
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const std::array<float32, 12> expected = {-2, 1, 3, 0, -1, 2, 3, 2, 1, -1, 0, -2};
   for(usize index = 0; index < expected.size(); ++index)
@@ -1430,14 +1430,14 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Large axis vertex regress
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector lengths and image rotation", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   const auto row = GENERATE(0, 1, 2);
-  DataStructure ds;
+  DataStructure dataStructure;
   if(row == 2)
   {
-    MakeValidationImage(ds);
+    MakeValidationImage(dataStructure);
   }
   else
   {
-    MakeValidationVertices(ds);
+    MakeValidationVertices(dataStructure);
   }
   auto args = ValidationTransformArgs(row == 0 ? 4 : row == 1 ? 5 : 3, row == 2);
   if(row == 2)
@@ -1455,28 +1455,28 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector le
     auto validArgs = ValidationTransformArgs(3, true);
     validArgs.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 1, 90});
     ApplyTransformationToGeometryFilter filter;
-    auto pre = filter.preflight(ds, validArgs);
+    auto pre = filter.preflight(dataStructure, validArgs);
     SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-    auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+    auto applied = pre.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    auto* destinationPtr = ds.getDataAs<ImageGeom>(DataPath({".ValidationImage"}));
+    auto* destinationPtr = dataStructure.getDataAs<ImageGeom>(DataPath({".ValidationImage"}));
     REQUIRE(destinationPtr != nullptr);
     destinationDims = destinationPtr->getDimensions();
     destinationOrigin = destinationPtr->getOrigin();
-    auto* samplesPtr = ds.getDataAs<Int32Array>(DataPath({".ValidationImage", "Cells", "Samples"}));
+    auto* samplesPtr = dataStructure.getDataAs<Int32Array>(DataPath({".ValidationImage", "Cells", "Samples"}));
     REQUIRE(samplesPtr != nullptr);
     samplesPtr->fill(99);
     auto invalidArgs = ValidationTransformArgs(3, true);
     for(const auto& values : std::vector<VectorFloat32Parameter::ValueType>{{0, 0, 0, 90}, {std::numeric_limits<float32>::quiet_NaN(), 0, 1, 90}, {0, 0, 1, std::numeric_limits<float32>::infinity()}})
     {
       invalidArgs.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, values);
-      auto rejected = filter.preflight(ds, invalidArgs);
+      auto rejected = filter.preflight(dataStructure, invalidArgs);
       SIMPLNX_RESULT_REQUIRE_INVALID(rejected.outputActions);
       CHECK(rejected.outputActions.errors()[0].code == (values[0] != values[0] ? -86051 : values[3] != 90 ? -86053 : -86052));
     }
   }
   ApplyTransformationToGeometryFilter filter;
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
   CHECK(result.result.errors()[0].code == (row == 2 ? -86052 : -1));
@@ -1484,7 +1484,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector le
   {
     INFO("Malformed active parameter: " << (row == 0 ? "Translation" : "Scale"));
     CHECK(result.result.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
-    auto* geomPtr = ds.getDataAs<VertexGeom>(DataPath({"ValidationVertices"}));
+    auto* geomPtr = dataStructure.getDataAs<VertexGeom>(DataPath({"ValidationVertices"}));
     const std::array<float32, 12> expected = {1, 2, 3, -1, 0, 2, 2, -3, 1, 0, 1, -2};
     for(usize index = 0; index < expected.size(); ++index)
     {
@@ -1493,13 +1493,13 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector le
   }
   else
   {
-    CHECK(ds.getDataAs<ImageGeom>(DataPath({"ValidationImage"}))->getOrigin() == FloatVec3{0, 0, 0});
-    auto* destinationPtr = ds.getDataAs<ImageGeom>(DataPath({".ValidationImage"}));
+    CHECK(dataStructure.getDataAs<ImageGeom>(DataPath({"ValidationImage"}))->getOrigin() == FloatVec3{0, 0, 0});
+    auto* destinationPtr = dataStructure.getDataAs<ImageGeom>(DataPath({".ValidationImage"}));
     REQUIRE(destinationPtr != nullptr);
     CHECK(destinationPtr->getDimensions() == destinationDims);
     CHECK(destinationPtr->getOrigin() == destinationOrigin);
-    auto* sourceSamplesPtr = ds.getDataAs<Int32Array>(DataPath({"ValidationImage", "Cells", "Samples"}));
-    auto* destinationSamplesPtr = ds.getDataAs<Int32Array>(DataPath({".ValidationImage", "Cells", "Samples"}));
+    auto* sourceSamplesPtr = dataStructure.getDataAs<Int32Array>(DataPath({"ValidationImage", "Cells", "Samples"}));
+    auto* destinationSamplesPtr = dataStructure.getDataAs<Int32Array>(DataPath({".ValidationImage", "Cells", "Samples"}));
     REQUIRE(sourceSamplesPtr != nullptr);
     REQUIRE(destinationSamplesPtr != nullptr);
     for(usize index = 0; index < 8; ++index)
@@ -1512,17 +1512,17 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector le
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Finite extremes and inactive vectors", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5);
-  DataStructure ds;
+  DataStructure dataStructure;
   const bool image = row < 3 || row == 5;
   ImageGeom* geomPtr = nullptr;
   VertexGeom* verticesPtr = nullptr;
   if(image)
   {
-    geomPtr = MakeValidationImage(ds, {1, 1, 1}, {row == 5 ? 0.25f : 1.0f, 1, 1});
+    geomPtr = MakeValidationImage(dataStructure, {1, 1, 1}, {row == 5 ? 0.25f : 1.0f, 1, 1});
   }
   else
   {
-    verticesPtr = MakeValidationVertices(ds);
+    verticesPtr = MakeValidationVertices(dataStructure);
   }
   auto args = ValidationTransformArgs(row == 2 || row == 5 ? 4 : 5, image);
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
@@ -1533,10 +1533,10 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Finite extremes and inact
                                                                                                           1, 1});
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, VectorFloat32Parameter::ValueType{row == 2 ? 2e38f : 1.0f, 0, 0});
   ApplyTransformationToGeometryFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
   CHECK(std::none_of(pre.outputActions.warnings().begin(), pre.outputActions.warnings().end(), [](const Warning& warning) { return warning.code <= -86000 && warning.code >= -86069; }));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   if(row == 0)
   {
@@ -1595,9 +1595,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Pipeline stand-in metadat
   }
   for(bool execute : {false, true})
   {
-    DataStructure ds;
-    MakeValidationImage(ds, row == 0 ? SizeVec3{1, 1, 1} : SizeVec3{10, 1, 1}, row == 0 ? FloatVec3{2, 1, 1} : FloatVec3{1, 1, 1});
-    auto* matrixPtr = Float32Array::CreateWithStore<Float32DataStore>(ds, "Matrix", {1}, {16});
+    DataStructure dataStructure;
+    MakeValidationImage(dataStructure, row == 0 ? SizeVec3{1, 1, 1} : SizeVec3{10, 1, 1}, row == 0 ? FloatVec3{2, 1, 1} : FloatVec3{1, 1, 1});
+    auto* matrixPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Matrix", {1}, {16});
     REQUIRE(matrixPtr != nullptr);
     const std::array<float32, 16> values =
         row == 0 ? std::array<float32, 16>{0.5f, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1} : std::array<float32, 16>{0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
@@ -1607,7 +1607,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Pipeline stand-in metadat
     }
     if(!execute)
     {
-      REQUIRE_FALSE(pipeline.preflight(ds, false));
+      REQUIRE_FALSE(pipeline.preflight(dataStructure, false));
       const auto* downstreamPtr = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
       REQUIRE(downstreamPtr != nullptr);
       const auto errors = downstreamPtr->getErrors();
@@ -1617,8 +1617,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Pipeline stand-in metadat
     }
     else
     {
-      REQUIRE(algorithmScope.execute([&] { return pipeline.execute(ds, false); }));
-      auto* geomPtr = ds.getDataAs<ImageGeom>(DataPath({"ValidationImage"}));
+      REQUIRE(algorithmScope.execute([&] { return pipeline.execute(dataStructure, false); }));
+      auto* geomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"ValidationImage"}));
       REQUIRE(geomPtr != nullptr);
       if(row == 0)
       {
@@ -1639,32 +1639,32 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Principal rotation contro
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  MakeValidationImage(ds);
+  DataStructure dataStructure;
+  MakeValidationImage(dataStructure);
   auto args = ValidationTransformArgs(3, true);
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 1, 90});
   ApplyTransformationToGeometryFilter filter;
-  auto result = scope.executeFilter(filter, ds, args);
+  auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  auto* geomPtr = ds.getDataAs<ImageGeom>(DataPath({"ValidationImage"}));
+  auto* geomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"ValidationImage"}));
   REQUIRE(geomPtr != nullptr);
   CHECK(geomPtr->getDimensions() == SizeVec3{2, 2, 2});
-  auto* samplesPtr = ds.getDataAs<Int32Array>(DataPath({"ValidationImage", "Cells", "Samples"}));
+  auto* samplesPtr = dataStructure.getDataAs<Int32Array>(DataPath({"ValidationImage", "Cells", "Samples"}));
   REQUIRE(samplesPtr != nullptr);
   const std::array<int32, 8> expected = {3, 1, 4, 2, 7, 5, 8, 6};
   for(usize index = 0; index < expected.size(); ++index)
   {
     CHECK((*samplesPtr)[index] == expected[index]);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Selected vector preflight validation", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
-  DataStructure ds;
-  MakeValidationImage(ds);
-  MakeValidationVertices(ds);
+  DataStructure dataStructure;
+  MakeValidationImage(dataStructure);
+  MakeValidationVertices(dataStructure);
   ApplyTransformationToGeometryInputValues input{};
   input.SelectedGeometryPath = DataPath({row == 6 || row == 7 ? "ValidationVertices" : "ValidationImage"});
   input.TransformationSelection = row < 3 ? 4 : row < 8 ? 5 : row < 11 ? 3 : 0;
@@ -1694,7 +1694,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Selected vector preflight
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, input.Rotation);
   if(row == 12)
   {
-    auto* matrixPtr = Float32Array::CreateWithStore<Float32DataStore>(ds, "Matrix", {16}, {1});
+    auto* matrixPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Matrix", {16}, {1});
     REQUIRE(matrixPtr != nullptr);
     matrixPtr->fill(0);
     for(usize index = 0; index < 16; index += 5)
@@ -1704,7 +1704,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Selected vector preflight
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, DataPath({"Matrix"}));
   }
   ApplyTransformationToGeometryFilter filter;
-  auto result = filter.preflight(ds, args).outputActions;
+  auto result = filter.preflight(dataStructure, args).outputActions;
   const std::array<int32, 15> codes = {-1, -86002, 0, -1, -86004, -86004, -86003, 0, -1, -86052, 0, 0, 0, 0, 0};
   if(codes[row] == 0)
   {
@@ -1727,15 +1727,15 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Preflight accepts one mal
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5);
   CAPTURE(row);
-  DataStructure ds;
-  MakeValidationVertices(ds);
+  DataStructure dataStructure;
+  MakeValidationVertices(dataStructure);
   auto args = ValidationTransformArgs(row < 2 ? 4 : row < 4 ? 5 : 3, false);
   const auto malformedKey = row == 0 || row == 5 ? ApplyTransformationToGeometryFilter::k_Scale_Key :
                             row == 1 || row == 3 ? ApplyTransformationToGeometryFilter::k_Rotation_Key :
                                                    ApplyTransformationToGeometryFilter::k_Translation_Key;
   args.insertOrAssign(malformedKey, VectorFloat32Parameter::ValueType{});
   ApplyTransformationToGeometryFilter filter;
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
 }
 
@@ -1774,14 +1774,14 @@ private:
 // Three cells or vertices carry sparse IDs 1, 3, 5. Feature data has a non-flat shape.
 DataStructure CreateTransformFeatureFixture(bool node = false)
 {
-  DataStructure ds;
-  ds.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
+  DataStructure dataStructure;
+  dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
   IGeometry* geomPtr = nullptr;
   if(node)
   {
-    auto* verticesPtr = VertexGeom::Create(ds, "Geometry");
+    auto* verticesPtr = VertexGeom::Create(dataStructure, "Geometry");
     REQUIRE(verticesPtr != nullptr);
-    auto* coordsPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {3}, {3}, verticesPtr->getId());
+    auto* coordsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, verticesPtr->getId());
     REQUIRE(coordsPtr != nullptr);
     coordsPtr->fill(0);
     (*coordsPtr)[3] = 1;
@@ -1791,14 +1791,14 @@ DataStructure CreateTransformFeatureFixture(bool node = false)
   }
   else
   {
-    auto* imagePtr = ImageGeom::Create(ds, "Geometry");
+    auto* imagePtr = ImageGeom::Create(dataStructure, "Geometry");
     REQUIRE(imagePtr != nullptr);
     imagePtr->setDimensions({3, 1, 1});
     REQUIRE(imagePtr->setOrigin({0, 0, 0}).valid());
     REQUIRE(imagePtr->setSpacing({1, 1, 1}).valid());
     geomPtr = imagePtr;
   }
-  auto* elementsPtr = AttributeMatrix::Create(ds, "Element Data", node ? ShapeType{3} : ShapeType{1, 1, 3}, geomPtr->getId());
+  auto* elementsPtr = AttributeMatrix::Create(dataStructure, "Element Data", node ? ShapeType{3} : ShapeType{1, 1, 3}, geomPtr->getId());
   REQUIRE(elementsPtr != nullptr);
   if(node)
   {
@@ -1808,32 +1808,32 @@ DataStructure CreateTransformFeatureFixture(bool node = false)
   {
     dynamic_cast<ImageGeom*>(geomPtr)->setCellData(*elementsPtr);
   }
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(ds, "FeatureIds", elementsPtr->getShape(), {1}, elementsPtr->getId());
+  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", elementsPtr->getShape(), {1}, elementsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   (*idsPtr)[0] = 1;
   (*idsPtr)[1] = 3;
   (*idsPtr)[2] = 5;
-  auto* featuresPtr = AttributeMatrix::Create(ds, "Feature Data", ShapeType{2, 3}, geomPtr->getId());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2, 3}, geomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
-  auto* valuesPtr = UnitTest::CreateTestDataArray<int32>(ds, "Values", featuresPtr->getShape(), {1}, featuresPtr->getId());
+  auto* valuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", featuresPtr->getShape(), {1}, featuresPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   for(usize i = 0; i < 6; ++i)
   {
     (*valuesPtr)[i] = static_cast<int32>(10 + i);
   }
-  REQUIRE(StringArray::CreateWithValues(ds, "Names", ShapeType{2, 3}, {"zero", "one", "two", "three", "four", "five"}, featuresPtr->getId()) != nullptr);
-  auto* neighborsPtr = NeighborList<int32>::Create(ds, "Neighbors", ShapeType{2, 3}, featuresPtr->getId());
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{2, 3}, {"zero", "one", "two", "three", "four", "five"}, featuresPtr->getId()) != nullptr);
+  auto* neighborsPtr = NeighborList<int32>::Create(dataStructure, "Neighbors", ShapeType{2, 3}, featuresPtr->getId());
   REQUIRE(neighborsPtr != nullptr);
   neighborsPtr->setList(1, std::vector<int32>{3});
   neighborsPtr->setList(3, std::vector<int32>{1, 5});
   neighborsPtr->setList(5, std::vector<int32>{3});
-  auto* ensemblePtr = AttributeMatrix::Create(ds, "Ensemble", ShapeType{2}, geomPtr->getId());
+  auto* ensemblePtr = AttributeMatrix::Create(dataStructure, "Ensemble", ShapeType{2}, geomPtr->getId());
   REQUIRE(ensemblePtr != nullptr);
-  auto* phasesPtr = UnitTest::CreateTestDataArray<int32>(ds, "Phases", {2}, {1}, ensemblePtr->getId());
+  auto* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {2}, {1}, ensemblePtr->getId());
   REQUIRE(phasesPtr != nullptr);
   (*phasesPtr)[0] = 42;
   (*phasesPtr)[1] = 99;
-  return ds;
+  return dataStructure;
 }
 
 Arguments MakeTransformFeatureArgs(bool clear, bool renumber, uint64 transform = 3, bool node = false)
@@ -1853,28 +1853,28 @@ Arguments MakeTransformFeatureArgs(bool clear, bool renumber, uint64 transform =
   return args;
 }
 
-void CheckTransformFeatureData(const DataStructure& ds, bool clear, const ShapeType& shape)
+void CheckTransformFeatureData(const DataStructure& dataStructure, bool clear, const ShapeType& shape)
 {
-  const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+  const auto* featuresPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
   REQUIRE(featuresPtr != nullptr);
   CHECK(featuresPtr->getShape() == shape);
   CHECK(featuresPtr->getSize() == (clear ? 0 : 3));
   if(!clear)
   {
-    const auto* valuesPtr = ds.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath("Values"));
+    const auto* valuesPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath("Values"));
     REQUIRE(valuesPtr != nullptr);
     for(usize i = 0; i < 6; ++i)
     {
       CHECK((*valuesPtr)[i] == static_cast<int32>(10 + i));
     }
-    const auto* namesPtr = ds.getDataAs<StringArray>(k_FeatureAMPath.createChildPath("Names"));
+    const auto* namesPtr = dataStructure.getDataAs<StringArray>(k_FeatureAMPath.createChildPath("Names"));
     REQUIRE(namesPtr != nullptr);
     const std::array<std::string, 6> expectedNames = {"zero", "one", "two", "three", "four", "five"};
     for(usize i = 0; i < expectedNames.size(); ++i)
     {
       CHECK((*namesPtr)[i] == expectedNames[i]);
     }
-    const auto* neighborsPtr = ds.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath("Neighbors"));
+    const auto* neighborsPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath("Neighbors"));
     REQUIRE(neighborsPtr != nullptr);
     CHECK(neighborsPtr->getList(0).empty());
     CHECK(neighborsPtr->getList(1) == std::vector<int32>{3});
@@ -1883,13 +1883,13 @@ void CheckTransformFeatureData(const DataStructure& ds, bool clear, const ShapeT
     CHECK(neighborsPtr->getList(4).empty());
     CHECK(neighborsPtr->getList(5) == std::vector<int32>{3});
   }
-  const auto* phasesPtr = ds.getDataAs<Int32Array>(DataPath({"Geometry", "Ensemble", "Phases"}));
+  const auto* phasesPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Geometry", "Ensemble", "Phases"}));
   REQUIRE(phasesPtr != nullptr);
   REQUIRE(phasesPtr->getNumberOfTuples() == 2);
   CHECK((*phasesPtr)[0] == 42);
   CHECK((*phasesPtr)[1] == 99);
-  CHECK(ds.getData(DataPath({".Geometry"})) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  CHECK(dataStructure.getData(DataPath({".Geometry"})) == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

@@ -410,20 +410,20 @@ DataPath ImageDataPath()
 // exercised directly. The cell AttributeMatrix tuple dims are [Z, Y, X].
 DataStructure BuildNrrdTarget(DataType dataType, const std::array<usize, 3>& destDims, usize comp)
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   const CreateImageGeometryAction::DimensionType dims = {destDims[0], destDims[1], destDims[2]};
   const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
   auto geomAction = CreateImageGeometryAction(k_GeomPath, dims, origin, spacing, k_CellDataName);
-  REQUIRE(geomAction.apply(ds, IDataAction::Mode::Execute).valid());
+  REQUIRE(geomAction.apply(dataStructure, IDataAction::Mode::Execute).valid());
 
   const std::vector<usize> tupleDims = {destDims[2], destDims[1], destDims[0]}; // [Z, Y, X]
   auto arrayAction = CreateArrayAction(dataType, tupleDims, {comp}, ImageDataPath());
-  REQUIRE(arrayAction.apply(ds, IDataAction::Mode::Execute).valid());
-  return ds;
+  REQUIRE(arrayAction.apply(dataStructure, IDataAction::Mode::Execute).valid());
+  return dataStructure;
 }
 
-Result<> RunReadNrrdFile(DataStructure& ds, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
+Result<> RunReadNrrdFile(DataStructure& dataStructure, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
 {
   ReadNrrdFileInputValues inputValues;
   inputValues.InputFilePath = inputFile;
@@ -434,7 +434,7 @@ Result<> RunReadNrrdFile(DataStructure& ds, const fs::path& inputFile, const Cro
 
   const IFilter::MessageHandler messageHandler{};
   const std::atomic_bool shouldCancel{false};
-  ReadNrrdFile algorithm(ds, messageHandler, shouldCancel, &inputValues);
+  ReadNrrdFile algorithm(dataStructure, messageHandler, shouldCancel, &inputValues);
   return algorithm();
 }
 } // namespace
@@ -450,10 +450,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: scalar 3D streams X-fastest [Z,Y,X]"
   const fs::path p = NrrdOutputDir() / "algo_scalar3d.nrrd";
   WriteNrrdRaw(p, {"NRRD0004", "type: short", "dimension: 3", "sizes: 4 3 2", "kinds: domain domain domain", "endian: little", "encoding: raw"}, ToBytes(fileValues));
 
-  DataStructure ds = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
-  REQUIRE(RunReadNrrdFile(ds, p).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadNrrdFile(dataStructure, p).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   REQUIRE(store.getNumberOfComponents() == 1);
   // No cropping => destination tuple order equals file order, so store[i] == fileValues[i].
@@ -487,10 +487,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[N
   const fs::path p = NrrdOutputDir() / "algo_bigendian.nrrd";
   WriteNrrdRaw(p, {"NRRD0004", "type: short", "dimension: 3", "sizes: 4 3 2", "kinds: domain domain domain", "endian: big", "encoding: raw"}, data);
 
-  DataStructure ds = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
-  REQUIRE(RunReadNrrdFile(ds, p).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadNrrdFile(dataStructure, p).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
   for(usize i = 0; i < logical.size(); i++)
   {
     REQUIRE(store.getValue(i) == logical[i]);
@@ -509,10 +509,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: RGB component axis interleaves compo
   WriteNrrdRaw(p, {"NRRD0004", "type: unsigned char", "dimension: 3", "space dimension: 2", "sizes: 3 4 2", "space directions: none (1,0) (0,1)", "kinds: vector domain domain", "encoding: raw"},
                fileValues);
 
-  DataStructure ds = BuildNrrdTarget(DataType::uint8, {k_X, k_Y, 1}, k_Comp);
-  REQUIRE(RunReadNrrdFile(ds, p).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::uint8, {k_X, k_Y, 1}, k_Comp);
+  REQUIRE(RunReadNrrdFile(dataStructure, p).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<uint8>>(ImageDataPath()).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<uint8>>(ImageDataPath()).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == k_X * k_Y);
   REQUIRE(store.getNumberOfComponents() == k_Comp);
   // Component axis is fastest in the file (comp, X, Y) which already matches the
@@ -544,10 +544,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the 
   crop.zBoundVoxels = {1, 1};
 
   // Cropped extent is X=2, Y=2, Z=1.
-  DataStructure ds = BuildNrrdTarget(DataType::int16, {2, 2, 1}, 1);
-  REQUIRE(RunReadNrrdFile(ds, p, crop).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {2, 2, 1}, 1);
+  REQUIRE(RunReadNrrdFile(dataStructure, p, crop).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
   // Destination order z=1,y=0,x=1..2 then z=1,y=1,x=1..2; file pos = (z*Y + y)*X + x.
   const std::vector<int16_t> expected = {13, 14, 17, 18};
   REQUIRE(store.getNumberOfTuples() == expected.size());
@@ -572,9 +572,9 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
     auto mdResult = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(mdResult.valid());
     REQUIRE(mdResult.value().detached == true);
-    DataStructure ds = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
-    REQUIRE(RunReadNrrdFile(ds, hdr).valid());
-    const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+    DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+    REQUIRE(RunReadNrrdFile(dataStructure, hdr).valid());
+    const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
     REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
     for(usize i = 0; i < voxels.size(); i++)
     {

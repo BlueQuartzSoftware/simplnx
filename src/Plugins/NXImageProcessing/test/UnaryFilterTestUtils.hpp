@@ -31,20 +31,20 @@ using namespace nx::core;
  *        and `step` lets domain-restricted ops (Acos/Asin need [-1,1], Log/Sqrt need >=0) get in-range data.
  */
 template <class T>
-inline DataPath BuildRampImage(DataStructure& ds, usize dim, double startValue = 0.0, double step = 1.0)
+inline DataPath BuildRampImage(DataStructure& dataStructure, usize dim, double startValue = 0.0, double step = 1.0)
 {
   const ShapeType cellShape = {dim, dim, dim};
-  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
   imageGeomPtr->setDimensions({dim, dim, dim});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
   const usize total = ref.getSize();
@@ -74,21 +74,21 @@ inline DataPath BuildRampImage(DataStructure& ds, usize dim, double startValue =
  *        tiny, so the bulk-I/O ramp path is unnecessary here).
  */
 template <class T>
-inline DataPath BuildScalarValuesImage(DataStructure& ds, const std::vector<T>& values)
+inline DataPath BuildScalarValuesImage(DataStructure& dataStructure, const std::vector<T>& values)
 {
   const usize n = values.size();
   const ShapeType cellShape = {1, 1, n};
-  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
   imageGeomPtr->setDimensions({n, 1, 1});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < n; ++i)
   {
@@ -104,16 +104,16 @@ inline DataPath BuildScalarValuesImage(DataStructure& ds, const std::vector<T>& 
  *        ForceInCore). A test uses this helper to check a single crafted input.
  */
 template <class FilterT>
-inline DataPath RunPointwiseFilter(DataStructure& ds, const DataPath& inputPath)
+inline DataPath RunPointwiseFilter(DataStructure& dataStructure, const DataPath& inputPath)
 {
   FilterT filter;
   Arguments args;
   args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
   args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return inputPath.replaceName("Output");
 }

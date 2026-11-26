@@ -121,15 +121,15 @@ private:
 std::vector<float32> ExactEdtOracle(const std::vector<int32>& in, usize dx, usize dy, usize dz, bool squared, bool useSpacing, FloatVec3 spacing)
 {
   const int64 nX = static_cast<int64>(dx);
-  const int64 nY = static_cast<int64>(dy);
-  const int64 nZ = static_cast<int64>(dz);
+  const int64 ny = static_cast<int64>(dy);
+  const int64 nz = static_cast<int64>(dz);
   const float64 sp[3] = {static_cast<float64>(spacing[0]), static_cast<float64>(spacing[1]), static_cast<float64>(spacing[2])};
   auto at = [&](int64 x, int64 y, int64 z) { return in[FlatIndex(static_cast<usize>(x), static_cast<usize>(y), static_cast<usize>(z), dx, dy)]; };
 
   std::vector<std::array<int64, 3>> feats;
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       for(int64 x = 0; x < nX; ++x)
       {
@@ -142,9 +142,9 @@ std::vector<float32> ExactEdtOracle(const std::vector<int32>& in, usize dx, usiz
   }
 
   std::vector<float32> out(dx * dy * dz);
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       for(int64 x = 0; x < nX; ++x)
       {

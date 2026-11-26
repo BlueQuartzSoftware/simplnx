@@ -20,7 +20,7 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Computed
 {
   using morph_test::CompositeKind;
   using morph_test::KernelType;
-  auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); };
+  auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); };
   const auto setParams = morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalClosingImageFilter>(/*safeBorder=*/false);
   constexpr auto k_KClosing = CompositeKind::Closing;
 
@@ -78,9 +78,9 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
   constexpr int64 k_Ry = 1;
   constexpr int64 k_Rz = 1;
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   GrayscaleMorphologicalClosingImageFilter filter;
   Arguments args;
@@ -94,11 +94,11 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
   // streaming of the plain two-pass path on both algorithm iterations.
   args.insertOrAssign(GrayscaleMorphologicalClosingImageFilter::k_SafeBorder_Key, std::make_any<bool>(false));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   const usize numSlots = k_D * k_D * k_D;
@@ -145,7 +145,7 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
     UNSCOPED_INFO("slot=" << badSlot << " got=" << badGot << " expected=" << badExp);
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

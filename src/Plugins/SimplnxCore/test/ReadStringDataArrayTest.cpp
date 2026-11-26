@@ -277,7 +277,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Invalid filter execution", "[
 TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension RED fractional", "[SimplnxCore][ReadStringDataArray][DimensionRed]")
 {
   ReadStringDataArrayFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensions.txt";
   {
@@ -288,7 +288,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension RED fractional", "[Simpln
   args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
   args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
   args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == -79000);
 }
@@ -300,7 +300,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inh
   {
     const float64 value = GENERATE(-1.0, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64), 0.0, 1.5);
     CAPTURE(value);
-    DataStructure ds;
+    DataStructure dataStructure;
     auto args = filter.getDefaultArguments();
     const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensionsBoundary.txt";
     {
@@ -312,7 +312,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inh
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
-    auto result = filter.preflight(ds, args);
+    auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78603 : -79000));
     REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
@@ -322,8 +322,8 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inh
   {
     const usize count = GENERATE(usize{0}, usize{2});
     const bool useDimensions = GENERATE(false, true);
-    DataStructure ds;
-    REQUIRE(AttributeMatrix::Create(ds, "Parent", {count}) != nullptr);
+    DataStructure dataStructure;
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Parent", {count}) != nullptr);
     auto args = filter.getDefaultArguments();
     const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensionsBoundary.txt";
     {
@@ -336,20 +336,20 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inh
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(useDimensions));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(path));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
-    auto result = filter.preflight(ds, args);
+    auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    auto applied = result.outputActions.value().applyAll(ds, IDataAction::Mode::Preflight);
+    auto applied = result.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    REQUIRE_NOTHROW(ds.getDataRefAs<IArray>(path));
-    REQUIRE(ds.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(path));
+    REQUIRE(dataStructure.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension tuple product overflow", "[SimplnxCore][ReadStringDataArray]")
 {
   ReadStringDataArrayFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensionsBoundary.txt";
   {
@@ -360,7 +360,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension tuple product overflow", 
   args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
   args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
   args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == -79001);
   REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);

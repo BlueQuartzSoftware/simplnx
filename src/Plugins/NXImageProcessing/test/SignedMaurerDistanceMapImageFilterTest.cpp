@@ -53,7 +53,7 @@ private:
 
 // Sets the geometry, input, and output keys plus the four Maurer parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
-void RunMaurer(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bool insideIsPositive, bool squaredDistance, bool useImageSpacing, float64 backgroundValue,
+void RunMaurer(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool insideIsPositive, bool squaredDistance, bool useImageSpacing, float64 backgroundValue,
                UnitTest::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -65,9 +65,9 @@ void RunMaurer(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bo
   args.insertOrAssign(MaurerFilterType::k_SquaredDistance_Key, std::make_any<bool>(squaredDistance));
   args.insertOrAssign(MaurerFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
   args.insertOrAssign(MaurerFilterType::k_BackgroundValue_Key, std::make_any<float64>(backgroundValue));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = scope == nullptr ? filter.execute(ds, args) : scope->executeFilter(filter, ds, args);
+  auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace
@@ -169,17 +169,17 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
   std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 0);
   pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = 1;
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
   MaurerFilterType filter;
-  RunMaurer(filter, ds, inputPath, /*insideIsPositive=*/false, /*squaredDistance=*/true, /*useImageSpacing=*/false, /*backgroundValue=*/0.0, &scope);
+  RunMaurer(filter, dataStructure, inputPath, /*insideIsPositive=*/false, /*squaredDistance=*/true, /*useImageSpacing=*/false, /*backgroundValue=*/0.0, &scope);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& out = ds.getDataRefAs<DataArray<float32>>(outputPath).getDataStoreRef();
+  const auto& out = dataStructure.getDataRefAs<DataArray<float32>>(outputPath).getDataStoreRef();
   REQUIRE(out.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 0.0f); // the seed pixel
   REQUIRE(out.getValue(rt::FlatIndex(0, 2, 0, k_Dx, k_Dy)) == 4.0f); // dx=2
   REQUIRE(out.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == 8.0f); // dx=2,dy=2
@@ -206,9 +206,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
   std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 0);
   pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = 1;
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   MaurerFilterType filter;
   Arguments args;
@@ -220,17 +220,17 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
   args.insertOrAssign(MaurerFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
   args.insertOrAssign(MaurerFilterType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& out = outArray.getDataStoreRef();
   REQUIRE(out.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 0.0f); // the seed pixel
   REQUIRE(out.getValue(rt::FlatIndex(0, 2, 0, k_Dx, k_Dy)) == 4.0f); // dx=2
   REQUIRE(out.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == 8.0f); // dx=2,dy=2
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -290,8 +290,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
   constexpr usize k_Dz = 1;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 1.0f));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 1.0f));
   const DataPath geomPath = inputPath.getParent().getParent();
 
   MaurerFilterType filter;
@@ -303,15 +303,15 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   args.insertOrAssign(MaurerFilterType::k_SquaredDistance_Key, std::make_any<bool>(true));
   args.insertOrAssign(MaurerFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
   args.insertOrAssign(MaurerFilterType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
   const DataPath geomPath = inputPath.getParent().getParent();
   MaurerFilterType filter;
   auto makeArgs = [&](const DataPath& path) {
@@ -328,21 +328,21 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   SECTION("non-scalar")
   {
     const DataPath path({"Image Geometry", "CellData", "Vec"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, {1, 6, 6}, {3});
-    DataArray<int32>::Create(ds, "Vec", store, ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
-    const auto result = filter.preflight(ds, makeArgs(path));
+    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
+    DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
+    const auto result = filter.preflight(dataStructure, makeArgs(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8550);
   }
   SECTION("tuple mismatch")
   {
     const DataPath path({"Image Geometry", "WrongCellData", "Short"});
-    const auto& imageGeom = ds.getDataRefAs<ImageGeom>(geomPath);
-    auto* wrongCellDataPtr = AttributeMatrix::Create(ds, "WrongCellData", {35}, imageGeom.getId());
+    const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+    auto* wrongCellDataPtr = AttributeMatrix::Create(dataStructure, "WrongCellData", {35}, imageGeom.getId());
     REQUIRE(wrongCellDataPtr != nullptr);
-    auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, {35}, {1});
-    DataArray<int32>::Create(ds, "Short", store, wrongCellDataPtr->getId());
-    const auto result = filter.preflight(ds, makeArgs(path));
+    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
+    DataArray<int32>::Create(dataStructure, "Short", store, wrongCellDataPtr->getId());
+    const auto result = filter.preflight(dataStructure, makeArgs(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8001);
   }
@@ -361,8 +361,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight vali
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
   constexpr usize k_Dz = 1;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, k_Dx, k_Dy, k_Dz, std::vector<uint8>(k_Dx * k_Dy * k_Dz, uint8{1})); // uint8 input: valid range [0, 255]
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<uint8>(k_Dx * k_Dy * k_Dz, uint8{1})); // uint8 input: valid range [0, 255]
   const DataPath geomPath = inputPath.getParent().getParent();
   MaurerFilterType filter;
 
@@ -380,17 +380,17 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight vali
 
   SECTION("in-range integer background accepted")
   {
-    REQUIRE(filter.preflight(ds, makeArgs(0.0)).outputActions.valid());
-    REQUIRE(filter.preflight(ds, makeArgs(255.0)).outputActions.valid());
+    REQUIRE(filter.preflight(dataStructure, makeArgs(0.0)).outputActions.valid());
+    REQUIRE(filter.preflight(dataStructure, makeArgs(255.0)).outputActions.valid());
   }
   SECTION("out-of-range background rejected")
   {
-    REQUIRE(filter.preflight(ds, makeArgs(300.0)).outputActions.invalid()); // > uint8 max
-    REQUIRE(filter.preflight(ds, makeArgs(-1.0)).outputActions.invalid());  // < uint8 min
+    REQUIRE(filter.preflight(dataStructure, makeArgs(300.0)).outputActions.invalid()); // > uint8 max
+    REQUIRE(filter.preflight(dataStructure, makeArgs(-1.0)).outputActions.invalid());  // < uint8 min
   }
   SECTION("fractional background accepted with a truncation warning")
   {
-    auto result = filter.preflight(ds, makeArgs(2.5));
+    auto result = filter.preflight(dataStructure, makeArgs(2.5));
     REQUIRE(result.outputActions.valid());
     REQUIRE_FALSE(result.outputActions.warnings().empty());
   }
@@ -435,8 +435,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
   constexpr usize k_Dz = 1;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, k_Dx, k_Dy, k_Dz, std::vector<uint8>(k_Dx * k_Dy * k_Dz, uint8{1})); // uint8 input
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<uint8>(k_Dx * k_Dy * k_Dz, uint8{1})); // uint8 input
   const DataPath geomPath = inputPath.getParent().getParent();
   MaurerFilterType filter;
 
@@ -455,19 +455,19 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   // k_NonFiniteBackgroundValue is a filter-local anonymous-namespace constant (not exported); assert the literal -8560.
   SECTION("positive infinity rejected")
   {
-    const auto result = filter.preflight(ds, makeArgs(std::numeric_limits<float64>::infinity()));
+    const auto result = filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::infinity()));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8560);
   }
   SECTION("negative infinity rejected")
   {
-    const auto result = filter.preflight(ds, makeArgs(-std::numeric_limits<float64>::infinity()));
+    const auto result = filter.preflight(dataStructure, makeArgs(-std::numeric_limits<float64>::infinity()));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8560);
   }
   SECTION("NaN rejected")
   {
-    const auto result = filter.preflight(ds, makeArgs(std::numeric_limits<float64>::quiet_NaN()));
+    const auto result = filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN()));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8560);
   }
@@ -488,8 +488,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight Back
   constexpr usize k_Dx = 4;
   constexpr usize k_Dy = 4;
   constexpr usize k_Dz = 1;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int64>(ds, k_Dx, k_Dy, k_Dz, std::vector<int64>(k_Dx * k_Dy * k_Dz, int64{1})); // int64 input
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int64>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<int64>(k_Dx * k_Dy * k_Dz, int64{1})); // int64 input
   const DataPath geomPath = inputPath.getParent().getParent();
   MaurerFilterType filter;
 
@@ -507,13 +507,13 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight Back
 
   SECTION("value above 2^63 rejected as out-of-range")
   {
-    const auto result = filter.preflight(ds, makeArgs(9.3e18)); // > 2^63 == 9.2233...e18
+    const auto result = filter.preflight(dataStructure, makeArgs(9.3e18)); // > 2^63 == 9.2233...e18
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8561); // k_BackgroundValueOutOfRange (filter-local)
   }
   SECTION("value below 2^63 accepted")
   {
-    REQUIRE(filter.preflight(ds, makeArgs(9.2e18)).outputActions.valid()); // < 2^63 and within int64 max 9.223e18
+    REQUIRE(filter.preflight(dataStructure, makeArgs(9.2e18)).outputActions.valid()); // < 2^63 and within int64 max 9.223e18
   }
 }
 

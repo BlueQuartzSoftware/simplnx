@@ -57,8 +57,8 @@ TEST_CASE("NXImageProcessing::NotImageFilter: ITK real-image golden (defaults)",
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("STAPLE1.png"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("STAPLE1.png"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -66,15 +66,15 @@ TEST_CASE("NXImageProcessing::NotImageFilter: ITK real-image golden (defaults)",
   args.insertOrAssign(NotImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(NotImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   NotImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: md5-validity-first (plan Sec.4).
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("NotImageFilter defaults md5: ours='{}' committed='{}'", ourMd5, "2004dccdb2d68b953fd858a5b6a37d35"));
   REQUIRE(ourMd5 == "2004dccdb2d68b953fd858a5b6a37d35");
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

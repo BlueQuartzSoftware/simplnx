@@ -778,7 +778,7 @@ inline void DanielssonRowPassGenerated(int32* rowVec, const int32* yNeighborVec,
 }
 
 /** @brief Runs the reflective Y/X odometer for one plane without retaining X/Y visit arrays. */
-inline void DanielssonPlanePassGenerated(int32* planeVec, const int32* zNeighborVec, int32 zpull, int64 nX, int64 nY, bool useSpacing, const float64 sp[3],
+inline void DanielssonPlanePassGenerated(int32* planeVec, const int32* zNeighborVec, int32 zpull, int64 nX, int64 ny, bool useSpacing, const float64 sp[3],
                                          ThrottledMessageHandler* progressThrottle = nullptr)
 {
   auto visitRow = [&](int64 coordinate, int32 yPull) {
@@ -792,16 +792,16 @@ inline void DanielssonPlanePassGenerated(int32* planeVec, const int32* zNeighbor
       progressThrottle->incrementPercent();
     }
   };
-  if(nY <= 1)
+  if(ny <= 1)
   {
     visitRow(0, 0);
     return;
   }
-  for(int64 y = 1; y < nY; ++y)
+  for(int64 y = 1; y < ny; ++y)
   {
     visitRow(y, -1);
   }
-  for(int64 y = nY - 2; y >= 0; --y)
+  for(int64 y = ny - 2; y >= 0; --y)
   {
     visitRow(y, 1);
   }
@@ -886,12 +886,12 @@ inline float32 DanielssonDistance(const int32* v, bool squared, bool useSpacing,
 
 // The "unreached" init offset per axis: 2*maxLength for a real axis, 0 for a size-1 axis (so a 2D image contributes no
 // z term). Matches ITK's PrepareData (maxValue[j] = 2 * largest-dimension).
-inline void DanielssonInitMaxValue(int64 nX, int64 nY, int64 nZ, int32 maxV[3])
+inline void DanielssonInitMaxValue(int64 nX, int64 ny, int64 nz, int32 maxV[3])
 {
-  const int64 maxLength = std::max({nX, nY, nZ});
+  const int64 maxLength = std::max({nX, ny, nz});
   maxV[0] = (nX > 1) ? static_cast<int32>(2 * maxLength) : 0;
-  maxV[1] = (nY > 1) ? static_cast<int32>(2 * maxLength) : 0;
-  maxV[2] = (nZ > 1) ? static_cast<int32>(2 * maxLength) : 0;
+  maxV[1] = (ny > 1) ? static_cast<int32>(2 * maxLength) : 0;
+  maxV[2] = (nz > 1) ? static_cast<int32>(2 * maxLength) : 0;
 }
 
 /**
@@ -949,10 +949,10 @@ public:
   Result<> operator()()
   {
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
-    const usize slice = static_cast<usize>(nX * nY);
-    const usize vol = slice * static_cast<usize>(nZ);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
+    const usize slice = static_cast<usize>(nX * ny);
+    const usize vol = slice * static_cast<usize>(nz);
     if(vol == 0)
     {
       return {};
@@ -966,7 +966,7 @@ public:
     m_MessageHandler.sendInfoMessage("Danielsson: Initializing Vectors");
     // Prepare the vector map and feature mask before the serial reflective propagation.
     int32 maxV[3];
-    detail::DanielssonInitMaxValue(nX, nY, nZ, maxV);
+    detail::DanielssonInitMaxValue(nX, ny, nz, maxV);
     auto vec = std::make_unique_for_overwrite<int32[]>(vol * 3);
     auto feature = std::make_unique_for_overwrite<uint8[]>(vol);
     const auto prepareData = [vectorValuesPtr = vec.get(), featureValuesPtr = feature.get(), maxX = maxV[0], maxY = maxV[1], maxZ = maxV[2]](const T* inputValuesPtr, usize valueOffset, usize count) {
@@ -992,7 +992,7 @@ public:
     else
     {
       auto inputPlane = std::make_unique_for_overwrite<T[]>(slice);
-      for(int64 z = 0; z < nZ; ++z)
+      for(int64 z = 0; z < nz; ++z)
       {
         if(m_ShouldCancel)
         {
@@ -1010,11 +1010,11 @@ public:
     // Propagate vectors with the serial reflective odometer in Z, Y, and X order.
     const float64 sp[3] = {static_cast<float64>(m_Spacing[0]), static_cast<float64>(m_Spacing[1]), static_cast<float64>(m_Spacing[2])};
     const std::vector<detail::AxisVisit> xVisits = detail::BuildAxisVisits(nX);
-    const std::vector<detail::AxisVisit> yVisits = detail::BuildAxisVisits(nY);
-    const std::vector<detail::AxisVisit> zVisits = detail::BuildAxisVisits(nZ);
+    const std::vector<detail::AxisVisit> yVisits = detail::BuildAxisVisits(ny);
+    const std::vector<detail::AxisVisit> zVisits = detail::BuildAxisVisits(nz);
 
     m_MessageHandler.sendInfoMessage("Danielsson: Propagating Vectors");
-    progressThrottle.reset(nZ == 1 ? yVisits.size() : zVisits.size(), nZ == 1 ? "Danielsson: Propagating Rows" : "Danielsson: Propagating Slices");
+    progressThrottle.reset(nz == 1 ? yVisits.size() : zVisits.size(), nz == 1 ? "Danielsson: Propagating Rows" : "Danielsson: Propagating Slices");
     usize completedVisits = 0;
     for(const detail::AxisVisit& zv : zVisits)
     {
@@ -1026,8 +1026,8 @@ public:
       int32* planeVecPtr = vec.get() + zBase * 3;
       const int32* neighVecPtr = (zv.pull != 0) ? (vec.get() + (static_cast<usize>(zv.coord + zv.pull) * slice) * 3) : nullptr;
       const uint8* featurePlanePtr = feature.get() + zBase;
-      detail::DanielssonPlanePass<true>(planeVecPtr, neighVecPtr, featurePlanePtr, xVisits, yVisits, zv.pull, nX, m_UseSpacing, sp, nZ == 1 ? &progressThrottle : nullptr);
-      if(nZ != 1)
+      detail::DanielssonPlanePass<true>(planeVecPtr, neighVecPtr, featurePlanePtr, xVisits, yVisits, zv.pull, nX, m_UseSpacing, sp, nz == 1 ? &progressThrottle : nullptr);
+      if(nz != 1)
       {
         progressThrottle.updateCount(++completedVisits);
       }
@@ -1071,7 +1071,7 @@ public:
     }
 
     auto outputPlane = std::make_unique_for_overwrite<float32[]>(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(m_ShouldCancel)
       {
@@ -1781,10 +1781,10 @@ public:
   Result<> operator()()
   {
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
-    const usize slice = static_cast<usize>(nX * nY);
-    const usize vol = slice * static_cast<usize>(nZ);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
+    const usize slice = static_cast<usize>(nX * ny);
+    const usize vol = slice * static_cast<usize>(nz);
     if(vol == 0)
     {
       return {};
@@ -1797,10 +1797,10 @@ public:
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Danielsson: Propagating Distances");
     const bool hasOutOfCoreEndpoint = m_In.getStoreType() == IDataStore::StoreType::OutOfCore || m_Out.getStoreType() == IDataStore::StoreType::OutOfCore;
-    if(nZ == 1 && hasOutOfCoreEndpoint)
+    if(nz == 1 && hasOutOfCoreEndpoint)
     {
       DanielssonDistance2DBounded<T> bounded2D(m_In, m_Out, m_Squared, m_UseSpacing, m_Spacing, m_ShouldCancel, m_ResidentLimit2D, &progressThrottle);
-      return bounded2D(static_cast<usize>(nX), static_cast<usize>(nY));
+      return bounded2D(static_cast<usize>(nX), static_cast<usize>(ny));
     }
 
     // A disk-backed endpoint makes the full-volume vector map disk-backed too, whatever its resolved data format.
@@ -1811,7 +1811,7 @@ public:
     // the prior behavior.
     const bool useRawScratch = hasOutOfCoreEndpoint;
     const std::string workingDataFormat = detail::SelectDanielssonWorkingDataFormat(m_In.getStoreType(), m_In.getDataFormat(), m_Out.getStoreType(), m_Out.getDataFormat());
-    const usize storableForwardPlanes = nZ > 2 ? static_cast<usize>(nZ - 2) : 0;
+    const usize storableForwardPlanes = nz > 2 ? static_cast<usize>(nz - 2) : 0;
     const usize prefixPlanes = std::min(m_ResidentPrefixPlanes, storableForwardPlanes);
     usize prefixValues = 0;
     if(!detail::DanielssonCheckedMultiply(prefixPlanes, slice, prefixValues) || !detail::DanielssonCheckedMultiply(prefixValues, usize{3}, prefixValues) ||
@@ -1847,7 +1847,7 @@ public:
       else
       {
         compactVecStore =
-            DataStoreUtilities::CreateDataStoreWithFormat<int16>(workingDataFormat, std::vector<usize>{static_cast<usize>(nZ), static_cast<usize>(nY), static_cast<usize>(nX)}, std::vector<usize>{3});
+            DataStoreUtilities::CreateDataStoreWithFormat<int16>(workingDataFormat, std::vector<usize>{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)}, std::vector<usize>{3});
         compactVectorPlanesCompressed.emplace(*compactVecStore, residentPrefix, compactStaging, prefixPlanes, vectorPlaneValues, m_ShouldCancel, m_TransferStats);
       }
     }
@@ -1864,21 +1864,21 @@ public:
     else
     {
       fullVecStore =
-          DataStoreUtilities::CreateDataStoreWithFormat<int32>(workingDataFormat, std::vector<usize>{static_cast<usize>(nZ), static_cast<usize>(nY), static_cast<usize>(nX)}, std::vector<usize>{3});
+          DataStoreUtilities::CreateDataStoreWithFormat<int32>(workingDataFormat, std::vector<usize>{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)}, std::vector<usize>{3});
       fullVectorPlanesCompressed.emplace(*fullVecStore, residentPrefix, prefixPlanes, vectorPlaneValues, m_ShouldCancel, m_TransferStats);
     }
 
     int32 maxV[3];
-    detail::DanielssonInitMaxValue(nX, nY, nZ, maxV);
+    detail::DanielssonInitMaxValue(nX, ny, nz, maxV);
     const float64 sp[3] = {static_cast<float64>(m_Spacing[0]), static_cast<float64>(m_Spacing[1]), static_cast<float64>(m_Spacing[2])};
     usize axisVisitBytes = 0;
-    const bool useVisitArrays = detail::DanielssonXYVisitArraysFit(static_cast<usize>(nX), static_cast<usize>(nY), m_VisitArrayLimit, axisVisitBytes);
+    const bool useVisitArrays = detail::DanielssonXYVisitArraysFit(static_cast<usize>(nX), static_cast<usize>(ny), m_VisitArrayLimit, axisVisitBytes);
     std::vector<detail::AxisVisit> xVisits;
     std::vector<detail::AxisVisit> yVisits;
     if(useVisitArrays)
     {
       xVisits = detail::BuildAxisVisits(nX);
-      yVisits = detail::BuildAxisVisits(nY);
+      yVisits = detail::BuildAxisVisits(ny);
     }
 
     std::vector<T> inPlane(slice);
@@ -1931,11 +1931,11 @@ public:
     const auto passPlane = [&](int32* current, const int32* neighbor, int32 zPull) {
       if(useVisitArrays)
       {
-        detail::DanielssonPlanePass<false>(current, neighbor, nullptr, xVisits, yVisits, zPull, nX, m_UseSpacing, sp, nZ == 1 ? &progressThrottle : nullptr);
+        detail::DanielssonPlanePass<false>(current, neighbor, nullptr, xVisits, yVisits, zPull, nX, m_UseSpacing, sp, nz == 1 ? &progressThrottle : nullptr);
       }
       else
       {
-        detail::DanielssonPlanePassGenerated(current, neighbor, zPull, nX, nY, m_UseSpacing, sp, nZ == 1 ? &progressThrottle : nullptr);
+        detail::DanielssonPlanePassGenerated(current, neighbor, zPull, nX, ny, m_UseSpacing, sp, nz == 1 ? &progressThrottle : nullptr);
       }
     };
     const auto writeDistances = [&](int64 z, nonstd::span<const int32> vectors) -> Result<> {
@@ -1961,13 +1961,13 @@ public:
     {
       return result;
     }
-    if(nZ == 1)
+    if(nz == 1)
     {
-      progressThrottle.reset(nY > 1 ? static_cast<usize>(2 * nY - 2) : 1, "Danielsson: Propagating Rows");
+      progressThrottle.reset(ny > 1 ? static_cast<usize>(2 * ny - 2) : 1, "Danielsson: Propagating Rows");
       passPlane(vecPlane.data(), nullptr, 0);
       return writeDistances(0, vecPlane);
     }
-    if(nZ > 2)
+    if(nz > 2)
     {
       if(Result<> result = writeVectorPlane(0, nonstd::span<const int32>(vecPlane.data(), slice * 3)); result.invalid())
       {
@@ -1975,17 +1975,17 @@ public:
       }
     }
     std::swap(vecPlane, neighPlane);
-    progressThrottle.reset(static_cast<usize>(nZ), "Danielsson: Forward Slices");
-    for(int64 z = 1; z < nZ; ++z)
+    progressThrottle.reset(static_cast<usize>(nz), "Danielsson: Forward Slices");
+    for(int64 z = 1; z < nz; ++z)
     {
       if(Result<> result = initializePlane(z); result.invalid())
       {
         return result;
       }
       passPlane(vecPlane.data(), neighPlane.data(), -1);
-      if(z + 1 < nZ)
+      if(z + 1 < nz)
       {
-        if(z < nZ - 2)
+        if(z < nz - 2)
         {
           if(Result<> result = writeVectorPlane(static_cast<usize>(z), nonstd::span<const int32>(vecPlane.data(), slice * 3)); result.invalid())
           {
@@ -2001,8 +2001,8 @@ public:
     }
 
     m_MessageHandler.sendInfoMessage("Danielsson: Backward Pass");
-    progressThrottle.reset(static_cast<usize>(nZ), "Danielsson: Backward Slices");
-    if(Result<> result = writeDistances(nZ - 1, vecPlane); result.invalid())
+    progressThrottle.reset(static_cast<usize>(nz), "Danielsson: Backward Slices");
+    if(Result<> result = writeDistances(nz - 1, vecPlane); result.invalid())
     {
       return result;
     }
@@ -2013,7 +2013,7 @@ public:
     // The second-to-last forward state remains in neighPlane at the turnaround. Finish and output it before reading
     // the older forward states from scratch. This removes one complete scratch transfer pair.
     passPlane(neighPlane.data(), vecPlane.data(), 1);
-    if(Result<> result = writeDistances(nZ - 2, neighPlane); result.invalid())
+    if(Result<> result = writeDistances(nz - 2, neighPlane); result.invalid())
     {
       return result;
     }
@@ -2022,7 +2022,7 @@ public:
       progressThrottle.updateCount(2);
     }
     std::swap(vecPlane, neighPlane);
-    for(int64 z = nZ - 3; z >= 0; --z)
+    for(int64 z = nz - 3; z >= 0; --z)
     {
       if(m_ShouldCancel)
       {
@@ -2040,7 +2040,7 @@ public:
       std::swap(vecPlane, neighPlane);
       if(!m_ShouldCancel)
       {
-        progressThrottle.updateCount(static_cast<usize>(nZ - z));
+        progressThrottle.updateCount(static_cast<usize>(nz - z));
       }
     }
     return {};

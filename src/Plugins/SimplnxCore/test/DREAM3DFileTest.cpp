@@ -1584,7 +1584,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
 {
   UnitTest::LoadPlugins();
 
-  DataStructure ds;
+  DataStructure dataStructure;
   {
     CreateImageGeometryFilter filter;
     Arguments args;
@@ -1593,7 +1593,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
     args.insert(CreateImageGeometryFilter::k_Dimensions_Key, std::make_any<std::vector<uint64_t>>(std::vector<uint64_t>{480, 640, 1}));
     args.insert(CreateImageGeometryFilter::k_Origin_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0, 0, 0}));
     args.insert(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0.5, 0.5, 0.12}));
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -1604,7 +1604,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"New Geometry", "Cell Data", "Array 1"})));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("0"));
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -1615,7 +1615,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"New Geometry", "Cell Data", "Array 2"})));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("0"));
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -1626,11 +1626,11 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
     Arguments args;
     Dream3dImportParameter::ImportData importData(fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir)));
     args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds, SmallIn100::k_TupleCheckIgnoredPaths);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("DREAM3DFileTest: Path Import Policy Tests", "[ReadDREAM3DFilter]")
@@ -1935,9 +1935,9 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilt
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_off.dream3d";
   fs::remove(outPath);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath arrayPath({"A"});
-  auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "1.5");
+  auto cr = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "1.5");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
 
   WriteDREAM3DFilter filter;
@@ -1946,7 +1946,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilt
   args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
   args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, false);
   args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(5));
-  auto r = filter.execute(ds, args).result;
+  auto r = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
@@ -1962,12 +1962,12 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_on.dream3d";
   fs::remove(outPath);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath arrayPath({"A"});
-  auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
+  auto cr = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
   {
-    auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
+    auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
     auto& store = arr.getDataStoreRef();
     for(usize i = 0; i < 500'000; ++i)
     {
@@ -1981,7 +1981,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
   args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
   args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
   args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(5));
-  auto r = filter.execute(ds, args).result;
+  auto r = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
@@ -1994,7 +1994,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
   DataStructure imported = UnitTest::LoadDataStructure(outPath);
   REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
   const auto& importedArr = imported.getDataRefAs<DataArray<float32>>(arrayPath);
-  const auto& originalArr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
+  const auto& originalArr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
   UnitTest::CompareDataArrays<float32>(originalArr, importedArr);
   UnitTest::CheckArraysInheritTupleDims(imported);
 }
@@ -2005,10 +2005,10 @@ TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DF
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_small_bypass.dream3d";
   fs::remove(outPath);
 
-  DataStructure ds;
-  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute, "", "2");
+  DataStructure dataStructure;
+  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute, "", "2");
   SIMPLNX_RESULT_REQUIRE_VALID(crSmall);
-  auto crBig = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute, "", "3");
+  auto crBig = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute, "", "3");
   SIMPLNX_RESULT_REQUIRE_VALID(crBig);
 
   WriteDREAM3DFilter filter;
@@ -2017,7 +2017,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DF
   args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
   args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
   args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(5));
-  auto r = filter.execute(ds, args).result;
+  auto r = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
   const std::string dsRoot = std::string("/") + nx::core::Constants::k_DataStructureTag;
@@ -2045,12 +2045,12 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
     const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("compression_rt_level_{}.dream3d", level);
     fs::remove(outPath);
 
-    DataStructure ds;
+    DataStructure dataStructure;
     const DataPath arrayPath({"A"});
-    auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
+    auto cr = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
     SIMPLNX_RESULT_REQUIRE_VALID(cr);
     {
-      auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
+      auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
       auto& store = arr.getDataStoreRef();
       for(usize i = 0; i < 1'000'000; ++i)
       {
@@ -2064,12 +2064,12 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, level);
-    auto r = filter.execute(ds, args).result;
+    auto r = filter.execute(dataStructure, args).result;
     SIMPLNX_RESULT_REQUIRE_VALID(r);
 
     DataStructure imported = UnitTest::LoadDataStructure(outPath);
     REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
-    UnitTest::CompareDataArrays<float32>(ds.getDataRefAs<DataArray<float32>>(arrayPath), imported.getDataRefAs<DataArray<float32>>(arrayPath));
+    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<DataArray<float32>>(arrayPath), imported.getDataRefAs<DataArray<float32>>(arrayPath));
 
     // Add a size only after its file passes round-trip validation.
     sizesByLevel.push_back(fs::file_size(outPath));
@@ -2148,7 +2148,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
 {
   UnitTest::LoadPlugins();
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_preflight.dream3d";
-  DataStructure ds;
+  DataStructure dataStructure;
 
   WriteDREAM3DFilter filter;
 
@@ -2159,7 +2159,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
-    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).outputActions.invalid());
   }
 
   // Enabled compression rejects a level above the valid range [1, 9].
@@ -2169,7 +2169,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(10));
-    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).outputActions.invalid());
   }
 
   // Disabled compression ignores the level value, including an out-of-range value.
@@ -2179,7 +2179,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
-    REQUIRE(filter.preflight(ds, args).outputActions.valid());
+    REQUIRE(filter.preflight(dataStructure, args).outputActions.valid());
   }
 }
 
@@ -2577,8 +2577,8 @@ TEST_CASE("ReadDREAM3DFilter: uses default origin and spacing values for invalid
   input.ImportPolicy = Dream3dImportParameter::PathImportPolicy::All;
   args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, input);
 
-  DataStructure ds;
-  const auto strict = filter.preflight(ds, args);
+  DataStructure dataStructure;
+  const auto strict = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
   CHECK(strict.outputActions.errors().front().code == ImageGeom::k_InvalidSpacing);
   CHECK(strict.outputActions.errors().front().message == fmt::format("Cannot read image geometry 'Exemplar Data' from '{}'. Spacing on the X axis must be finite and greater than zero. Received 0. "
@@ -2586,9 +2586,9 @@ TEST_CASE("ReadDREAM3DFilter: uses default origin and spacing values for invalid
                                                                      file.string()));
 
   args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, true);
-  const auto execution = filter.execute(ds, args);
+  const auto execution = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
-  const auto* imagePtr = ds.getDataAs<ImageGeom>(geometry);
+  const auto* imagePtr = dataStructure.getDataAs<ImageGeom>(geometry);
   REQUIRE(imagePtr != nullptr);
   CHECK(imagePtr->getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F});
   const auto& warnings = execution.result.warnings();
@@ -2633,10 +2633,10 @@ TEST_CASE("ReadDREAM3DFilter: uses default values for invalid current-format com
   Arguments args;
   args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(file));
   args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, true);
-  DataStructure ds;
-  const auto execution = filter.execute(ds, args);
+  DataStructure dataStructure;
+  const auto execution = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
-  UnitTest::RequireReaderGeometry(ds, geometry, {1.0F, 2.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
+  UnitTest::RequireReaderGeometry(dataStructure, geometry, {1.0F, 2.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
   const auto& warnings = execution.result.warnings();
   REQUIRE(warnings.size() == 1);
   CHECK(warnings.front().code == 502693);

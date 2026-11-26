@@ -52,19 +52,19 @@ const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceAttribute
 static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>& pairs, const std::vector<int32>& expectedIds, const std::vector<std::pair<int32, int32>>& expectedLabels,
                                       const std::vector<int32>& expectedCounts)
 {
-  DataStructure ds;
-  auto* meshGeomPtr = TriangleGeom::Create(ds, "Mesh");
+  DataStructure dataStructure;
+  auto* meshGeomPtr = TriangleGeom::Create(dataStructure, "Mesh");
   REQUIRE(meshGeomPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {pairs.size() * 3}, {3}, meshGeomPtr->getId());
-  auto* trianglesPtr = UnitTest::CreateTestDataArray<uint64>(ds, "Triangles", {pairs.size()}, {3}, meshGeomPtr->getId());
-  auto* faceDataPtr = AttributeMatrix::Create(ds, "Faces", ShapeType{pairs.size()}, meshGeomPtr->getId());
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {pairs.size() * 3}, {3}, meshGeomPtr->getId());
+  auto* trianglesPtr = UnitTest::CreateTestDataArray<uint64>(dataStructure, "Triangles", {pairs.size()}, {3}, meshGeomPtr->getId());
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "Faces", ShapeType{pairs.size()}, meshGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(trianglesPtr != nullptr);
   REQUIRE(faceDataPtr != nullptr);
   meshGeomPtr->setVertices(*verticesPtr);
   meshGeomPtr->setFaceList(*trianglesPtr);
   meshGeomPtr->setFaceDataId(faceDataPtr->getId());
-  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(ds, "Labels", {pairs.size()}, {2}, faceDataPtr->getId());
+  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Labels", {pairs.size()}, {2}, faceDataPtr->getId());
   REQUIRE(labelsPtr != nullptr);
   for(usize tupleIdx = 0; tupleIdx < pairs.size(); ++tupleIdx)
   {
@@ -90,14 +90,14 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
   args.insertOrAssign(SharedFeatureFaceFilter::k_GrainBoundaryAttributeMatrixName_Key, std::make_any<std::string>("Boundaries"));
   args.insertOrAssign(SharedFeatureFaceFilter::k_FeatureFaceLabelsArrayName_Key, std::make_any<std::string>("Labels"));
   args.insertOrAssign(SharedFeatureFaceFilter::k_FeatureNumTrianglesArrayName_Key, std::make_any<std::string>("Counts"));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"})));
-  const auto& idsRef = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"}));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"})));
-  const auto& outLabelsRef = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"}));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"})));
-  const auto& countsRef = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"})));
+  const auto& idsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"})));
+  const auto& outLabelsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"})));
+  const auto& countsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"}));
   REQUIRE(idsRef.getNumberOfTuples() == expectedIds.size());
   REQUIRE(outLabelsRef.getNumberOfTuples() == expectedLabels.size());
   REQUIRE(countsRef.getNumberOfTuples() == expectedCounts.size());
@@ -111,7 +111,7 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
     CHECK(outLabelsRef[2 * row + 1] == expectedLabels[row].second);
     CHECK(countsRef[row] == expectedCounts[row]);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 } // namespace SharedFeatureFaceFilterTest

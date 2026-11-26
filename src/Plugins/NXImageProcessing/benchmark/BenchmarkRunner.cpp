@@ -41,21 +41,21 @@ std::string FirstErrorMessage(const std::vector<Error>& errors)
 // built). Handles both in-place-output filters (an array under the shared cell AM) and new-geometry-output filters
 // like MaximumProjection (a whole new ImageGeom). removeData recurses into children and is a no-op for IDs already
 // gone, so removing a parent before a stale child ID is harmless. Cheap: a few map removals + freeing the output.
-void CleanToBaseline(DataStructure& ds, const std::unordered_set<DataObject::IdType>& baseline)
+void CleanToBaseline(DataStructure& dataStructure, const std::unordered_set<DataObject::IdType>& baseline)
 {
-  const std::vector<DataObject::IdType> ids = ds.getAllDataObjectIds(); // snapshot (removal mutates the structure)
+  const std::vector<DataObject::IdType> ids = dataStructure.getAllDataObjectIds(); // snapshot (removal mutates the structure)
   for(DataObject::IdType id : ids)
   {
     if(baseline.find(id) == baseline.end())
     {
-      ds.removeData(id);
+      dataStructure.removeData(id);
     }
   }
 }
 
-std::unordered_set<DataObject::IdType> SnapshotIds(const DataStructure& ds)
+std::unordered_set<DataObject::IdType> SnapshotIds(const DataStructure& dataStructure)
 {
-  const std::vector<DataObject::IdType> ids = ds.getAllDataObjectIds();
+  const std::vector<DataObject::IdType> ids = dataStructure.getAllDataObjectIds();
   return std::unordered_set<DataObject::IdType>(ids.begin(), ids.end());
 }
 
@@ -87,7 +87,7 @@ Result<DataPath> PrepareBenchmarkInput(DataStructure& dataStructure, const ip_be
 // pre-check (to catch e.g. a key mismatch without aborting the sweep), then times execute() over warmup + repeats.
 // Returns the median ms, or nullopt with @p note set to the skip/error reason. @p sentinel must already be active for
 // the desired store mode.
-std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataStructure& ds, const std::unordered_set<DataObject::IdType>& baseline, const ip_bench::BenchmarkFilterSpec& spec,
+std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataStructure& dataStructure, const std::unordered_set<DataObject::IdType>& baseline, const ip_bench::BenchmarkFilterSpec& spec,
                                 const DataPath& geom, const DataPath& input, const std::string& outName, int warmup, int repeats, const std::optional<uint32>& projectionAxis, std::string& note)
 {
   IFilter::UniquePointer filter = filterList->createFilter(uuid);
@@ -105,11 +105,11 @@ std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataSt
   }
 
   // Start from a clean slate: a prior config may have left an output object of the same name behind.
-  CleanToBaseline(ds, baseline);
+  CleanToBaseline(dataStructure, baseline);
 
   try
   {
-    IFilter::PreflightResult pf = filter->preflight(ds, args);
+    IFilter::PreflightResult pf = filter->preflight(dataStructure, args);
     if(pf.outputActions.invalid())
     {
       note = "preflight failed: " + FirstErrorMessage(pf.outputActions.errors());
@@ -128,8 +128,8 @@ std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataSt
     // while the filter execute() over the full volume dominates.
     const ip_bench::Timing t = ip_bench::RunTimed(
         [&]() {
-          CleanToBaseline(ds, baseline);
-          const IFilter::ExecuteResult ex = filter->execute(ds, args);
+          CleanToBaseline(dataStructure, baseline);
+          const IFilter::ExecuteResult ex = filter->execute(dataStructure, args);
           if(ex.result.invalid())
           {
             throw std::runtime_error(FirstErrorMessage(ex.result.errors()));

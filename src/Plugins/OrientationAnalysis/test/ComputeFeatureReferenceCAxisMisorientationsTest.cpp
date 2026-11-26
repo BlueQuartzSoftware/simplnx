@@ -110,22 +110,22 @@ struct FixtureData
 // AvgCAxes uses {numFeatures}. CrystalStructures uses {numCrystalStructures}.
 // Each cell defaults to feature 1, phase 1, and the identity quaternion.
 // Each average c axis defaults to sample Z. CrystalStructures index 0 contains the 999 sentinel.
-FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize numCrystalStructures)
+FixtureData CreateScaffold(usize nX, usize ny, usize nz, usize numFeatures, usize numCrystalStructures)
 {
   FixtureData td;
-  td.total_cells = nX * nY * nZ;
+  td.total_cells = nX * ny * nz;
   td.total_features = numFeatures;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
   REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  td.geom->setDimensions({nX, nY, nZ});
+  td.geom->setDimensions({nX, ny, nz});
 
-  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());
+  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nz, ny, nX}, td.geom->getId());
   td.feature_am = AttributeMatrix::Create(td.ds, "CellFeatureData", ShapeType{numFeatures}, td.geom->getId());
   td.ensemble_am = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
-  const ShapeType cellTupleShape = {nZ, nY, nX};
+  const ShapeType cellTupleShape = {nz, ny, nX};
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
   td.feature_ids = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
   auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_CellPhasesName), cellTupleShape, {1});
@@ -186,22 +186,22 @@ Arguments BuildArgs()
   return args;
 }
 
-const Float32Array& GetOutputCellMisos(const DataStructure& ds)
+const Float32Array& GetOutputCellMisos(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_FRCAxisMisOutName)));
-  return ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_FRCAxisMisOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_FRCAxisMisOutName)));
+  return dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_FRCAxisMisOutName));
 }
 
-const Float32Array& GetOutputFeatureAvg(const DataStructure& ds)
+const Float32Array& GetOutputFeatureAvg(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatAvgCAxisMisOutName)));
-  return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatAvgCAxisMisOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatAvgCAxisMisOutName)));
+  return dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatAvgCAxisMisOutName));
 }
 
-const Float32Array& GetOutputFeatureStdev(const DataStructure& ds)
+const Float32Array& GetOutputFeatureStdev(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatStdevCAxisMisOutName)));
-  return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatStdevCAxisMisOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatStdevCAxisMisOutName)));
+  return dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_FeatStdevCAxisMisOutName));
 }
 
 // 5x5x1 realistic-microstructure scaffold used by Fixture 2 and the Class 4 invariants test.

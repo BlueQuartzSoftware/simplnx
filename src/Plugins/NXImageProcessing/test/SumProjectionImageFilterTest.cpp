@@ -54,7 +54,7 @@ float64 SumExpectedForSlot(uint32 projDim, usize slot, usize dim)
 TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][SumProjectionImageFilter]")
 {
   constexpr usize k_D = 12;
-  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0); },
+  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& dataStructure) { return ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0); },
                                                                                [](uint32 projDim, usize slot) { return SumExpectedForSlot(projDim, slot, k_D); });
 }
 
@@ -66,7 +66,7 @@ TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (
 TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (int16 input)", "[NXImageProcessing][SumProjectionImageFilter]")
 {
   constexpr usize k_D = 8;
-  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<int16>(ds, k_D, 0.0, 1.0); },
+  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& dataStructure) { return ip_test::BuildRampImage<int16>(dataStructure, k_D, 0.0, 1.0); },
                                                                                [](uint32 projDim, usize slot) { return SumExpectedForSlot(projDim, slot, k_D); });
 }
 

@@ -47,12 +47,12 @@ void SetVertexCoordsForVoxelIndex(Float32Array& vertices, usize vertexIdx, uint6
 // Vertex coordinates are set to map to the given voxel indices.
 DataStructure CreateTestDataStructure(const std::vector<uint64>& voxelIndices, const std::vector<float64>& faceAreas, bool allMasked = true, usize maskedOutIndex = 0)
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   usize numVertices = voxelIndices.size();
 
   // Vertex Geometry
-  auto* vertexGeomPtr = VertexGeom::Create(ds, "VertexGeom");
-  auto* verticesPtr = Float32Array::CreateWithStore<DataStore<float32>>(ds, "SharedVertexList", {numVertices}, {3}, vertexGeomPtr->getId());
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
+  auto* verticesPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "SharedVertexList", {numVertices}, {3}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertices(*verticesPtr);
 
   // Set vertex coordinates to map to the desired voxel indices
@@ -61,16 +61,16 @@ DataStructure CreateTestDataStructure(const std::vector<uint64>& voxelIndices, c
     SetVertexCoordsForVoxelIndex(*verticesPtr, i, voxelIndices[i]);
   }
 
-  auto* vertexAmPtr = AttributeMatrix::Create(ds, "VertexData", {numVertices}, vertexGeomPtr->getId());
+  auto* vertexAmPtr = AttributeMatrix::Create(dataStructure, "VertexData", {numVertices}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertexAttributeMatrix(*vertexAmPtr);
 
-  auto* faceArrPtr = Float64Array::CreateWithStore<DataStore<float64>>(ds, "FaceAreas", {numVertices}, {1}, vertexAmPtr->getId());
+  auto* faceArrPtr = Float64Array::CreateWithStore<DataStore<float64>>(dataStructure, "FaceAreas", {numVertices}, {1}, vertexAmPtr->getId());
   for(usize i = 0; i < numVertices; i++)
   {
     (*faceArrPtr)[i] = faceAreas[i];
   }
 
-  auto* maskArrPtr = BoolArray::CreateWithStore<DataStore<bool>>(ds, "Mask", {numVertices}, {1}, vertexAmPtr->getId());
+  auto* maskArrPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {numVertices}, {1}, vertexAmPtr->getId());
   maskArrPtr->fill(true);
   if(!allMasked)
   {
@@ -79,16 +79,16 @@ DataStructure CreateTestDataStructure(const std::vector<uint64>& voxelIndices, c
   }
 
   // Image Geometry: 4x4x1
-  auto* imageGeomPtr = ImageGeom::Create(ds, "ImageGeom");
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   imageGeomPtr->setDimensions({4, 4, 1});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   // Cell data attribute matrix (required for getCellDataPath())
-  auto* cellAmPtr = AttributeMatrix::Create(ds, k_InterpolatedGroupName, {1, 4, 4}, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_InterpolatedGroupName, {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  return ds;
+  return dataStructure;
 }
 
 Arguments GetBaseArgs(bool useMask, uint64 technique, const std::vector<float32>& kernelSize, bool findLength = false, bool findMin = false, bool findMax = false, bool findMean = false,

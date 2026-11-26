@@ -13,11 +13,11 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: square near sqrt(FLT_MAX) overf
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath input = ip_test::BuildScalarValuesImage<float32>(ds, {1.0e20f});
-  const DataPath output = ip_test::RunPointwiseFilter<SquareImageFilter>(ds, input);
+  DataStructure dataStructure;
+  const DataPath input = ip_test::BuildScalarValuesImage<float32>(dataStructure, {1.0e20f});
+  const DataPath output = ip_test::RunPointwiseFilter<SquareImageFilter>(dataStructure, input);
 
-  const auto& out = ds.getDataRefAs<DataArray<float32>>(output).getDataStoreRef();
+  const auto& out = dataStructure.getDataRefAs<DataArray<float32>>(output).getDataStoreRef();
   REQUIRE(std::isinf(out.getValue(0)));
   REQUIRE(out.getValue(0) > 0.0f); // (1e20)^2 = 1e40 > FLT_MAX -> +inf
 }
@@ -36,8 +36,8 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -45,15 +45,15 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults
   args.insertOrAssign(SquareImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(SquareImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   SquareImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: md5-validity-first (plan Sec.4).
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("SquareImageFilter defaults md5: ours='{}' committed='{}'", ourMd5, "314065b457b66e102b9cafd7c49be6b3"));
   REQUIRE(ourMd5 == "314065b457b66e102b9cafd7c49be6b3");
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -266,11 +266,11 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: No Valid Voxels Returns Err
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  RunNoValidVoxelsErrorTest<EBSDSegmentFeaturesFilter>(scope, [](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, const DataPath& maskPath) {
+  RunNoValidVoxelsErrorTest<EBSDSegmentFeaturesFilter>(scope, [](Arguments& args, DataStructure& dataStructure, const DataPath& geomPath, const DataPath& cellDataPath, const DataPath& maskPath) {
     const ShapeType cellShape = {3, 3, 3};
-    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
-    auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
-    BuildOrientationTestData(ds, cellShape, geom.getId(), am.getId(), 1, 3); // Cubic_High
+    auto& am = dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath);
+    auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+    BuildOrientationTestData(dataStructure, cellShape, geom.getId(), am.getId(), 1, 3); // Cubic_High
 
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
@@ -454,16 +454,16 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
   // 5-degree tolerance.
   constexpr float32 k_DegToRad = 3.14159265358979323846f / 180.0f;
 
-  auto setupEBSD = [&](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
+  auto setupEBSD = [&](Arguments& args, DataStructure& dataStructure, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
     const ShapeType cellShape = {3, 3, 3};
-    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
-    auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+    auto& am = dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath);
+    auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
 
     // Background cells use 60-degree X rotations. Paired cells use identity
     // quaternions in EbsdLib x,y,z,w order.
     const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
-    auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(ds, cellDataPath.createChildPath("Quats"), cellShape, {4});
-    auto* quatsArrPtr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
+    auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(dataStructure, cellDataPath.createChildPath("Quats"), cellShape, {4});
+    auto* quatsArrPtr = DataArray<float32>::Create(dataStructure, "Quats", quatsDS, am.getId());
     auto& quatsStore = quatsArrPtr->getDataStoreRef();
     for(usize i = 0; i < 27; i++)
     {
@@ -488,15 +488,15 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
       quatsStore[idx * 4 + 3] = std::cos(pairHalf);
     }
 
-    auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(ds, cellDataPath.createChildPath("Phases"), cellShape, {1});
-    auto* phasesArrPtr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
+    auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("Phases"), cellShape, {1});
+    auto* phasesArrPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDS, am.getId());
     phasesArrPtr->fill(1);
 
     const ShapeType ensShape = {2};
-    auto* ensAmPtr = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
+    auto* ensAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ensShape, geom.getId());
     const DataPath crystStructsPath = geomPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
-    auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(ds, crystStructsPath, ensShape, {1});
-    auto* crystArrPtr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAmPtr->getId());
+    auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystStructsPath, ensShape, {1});
+    auto* crystArrPtr = DataArray<uint32>::Create(dataStructure, "CrystalStructures", crystDS, ensAmPtr->getId());
     auto& crystStore = crystArrPtr->getDataStoreRef();
     crystStore[0] = 999;
     crystStore[1] = 1;
@@ -517,8 +517,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
   };
 
   RunFaceEdgeVertexConnectivityTest<EBSDSegmentFeaturesFilter>(
-      scope, [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 0); },
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 1); });
+      scope, [&](Arguments& args, DataStructure& dataStructure, const DataPath& gp, const DataPath& cp) { setupEBSD(args, dataStructure, gp, cp, 0); },
+      [&](Arguments& args, DataStructure& dataStructure, const DataPath& gp, const DataPath& cp) { setupEBSD(args, dataStructure, gp, cp, 1); });
 }
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[OrientationAnalysis][EBSDSegmentFeatures][.GenerateTestData]")
@@ -533,22 +533,22 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[Orie
     const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
     const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
 
-    DataStructure ds;
+    DataStructure dataStructure;
 
-    auto* amBasePtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_CellDataName));
-    auto& geomBase = ds.getDataRefAs<ImageGeom>(DataPath({"Base"}));
-    BuildOrientationTestData(ds, cellShape, geomBase.getId(), amBasePtr->getId(), 1, k_SmallBlockSize);
+    auto* amBasePtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Base", std::string(k_CellDataName));
+    auto& geomBase = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Base"}));
+    BuildOrientationTestData(dataStructure, cellShape, geomBase.getId(), amBasePtr->getId(), 1, k_SmallBlockSize);
 
-    auto* amMaskedPtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_CellDataName));
-    auto& geomMasked = ds.getDataRefAs<ImageGeom>(DataPath({"Masked"}));
-    BuildOrientationTestData(ds, cellShape, geomMasked.getId(), amMaskedPtr->getId(), 1, k_SmallBlockSize);
-    BuildSphericalMask(ds, cellShape, amMaskedPtr->getId());
+    auto* amMaskedPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Masked", std::string(k_CellDataName));
+    auto& geomMasked = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Masked"}));
+    BuildOrientationTestData(dataStructure, cellShape, geomMasked.getId(), amMaskedPtr->getId(), 1, k_SmallBlockSize);
+    BuildSphericalMask(dataStructure, cellShape, amMaskedPtr->getId());
 
-    auto* amPeriodicPtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Periodic", std::string(k_CellDataName));
-    auto& geomPeriodic = ds.getDataRefAs<ImageGeom>(DataPath({"Periodic"}));
-    BuildOrientationTestData(ds, cellShape, geomPeriodic.getId(), amPeriodicPtr->getId(), 1, k_SmallBlockSize, true); // wrapBoundary
+    auto* amPeriodicPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Periodic", std::string(k_CellDataName));
+    auto& geomPeriodic = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Periodic"}));
+    BuildOrientationTestData(dataStructure, cellShape, geomPeriodic.getId(), amPeriodicPtr->getId(), 1, k_SmallBlockSize, true); // wrapBoundary
 
-    UnitTest::WriteTestDataStructure(ds, outputDir / "small_input.dream3d");
+    UnitTest::WriteTestDataStructure(dataStructure, outputDir / "small_input.dream3d");
   }
 
   // The large periodic fixture omits a mask so boundary cells can exercise
@@ -557,12 +557,12 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[Orie
     const ShapeType cellShape = {k_LargeDim, k_LargeDim, k_LargeDim};
     const std::array<usize, 3> dims = {k_LargeDim, k_LargeDim, k_LargeDim};
 
-    DataStructure ds;
-    auto* amPtr = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_GeomName), std::string(k_CellDataName));
-    auto& geom = ds.getDataRefAs<ImageGeom>(k_GeomPath);
-    BuildOrientationTestData(ds, cellShape, geom.getId(), amPtr->getId(), 1, k_LargeBlockSize, true); // wrapBoundary
+    DataStructure dataStructure;
+    auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
+    auto& geom = dataStructure.getDataRefAs<ImageGeom>(k_GeomPath);
+    BuildOrientationTestData(dataStructure, cellShape, geom.getId(), amPtr->getId(), 1, k_LargeBlockSize, true); // wrapBoundary
 
-    UnitTest::WriteTestDataStructure(ds, outputDir / "large_input.dream3d");
+    UnitTest::WriteTestDataStructure(dataStructure, outputDir / "large_input.dream3d");
   }
 }
 

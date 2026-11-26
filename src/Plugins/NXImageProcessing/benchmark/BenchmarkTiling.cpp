@@ -113,7 +113,7 @@ bool IsInMemoryFormat(const std::string& format)
 struct FillTiledFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& ds, DataObject::IdType cellAmId, const IDataArray& srcArrayBase, const DataPath& arrayPath, const TileParams& p)
+  Result<> operator()(DataStructure& dataStructure, DataObject::IdType cellAmId, const IDataArray& srcArrayBase, const DataPath& arrayPath, const TileParams& p)
   {
     const auto& srcStore = srcArrayBase.getIDataStoreRefAs<AbstractDataStore<T>>();
     if(p.src_x == 0 || p.src_y == 0 || p.src_z == 0 || p.dst_x == 0 || p.dst_y == 0 || p.dst_z == 0 || p.num_comp == 0)
@@ -195,7 +195,7 @@ struct FillTiledFunctor
     std::shared_ptr<AbstractDataStore<T>> store;
     {
       const StorageModeSentinel storageModeSentinel(p.store_mode);
-      store = DataStoreUtilities::CreateDataStore<T>(ds, arrayPath, tupleShape, componentShape);
+      store = DataStoreUtilities::CreateDataStore<T>(dataStructure, arrayPath, tupleShape, componentShape);
     }
     if(store == nullptr)
     {
@@ -212,7 +212,7 @@ struct FillTiledFunctor
                                                 p.store_mode == DataStorageMode::ForceOutOfCore ? "ForceOutOfCore" : "ForceInCore", arrayPath.toString(),
                                                 store->getDataFormat().empty() ? "in-memory" : store->getDataFormat()));
     }
-    auto* dstArrayPtr = DataArray<T>::Create(ds, arrayPath.getTargetName(), store, cellAmId);
+    auto* dstArrayPtr = DataArray<T>::Create(dataStructure, arrayPath.getTargetName(), store, cellAmId);
     if(dstArrayPtr == nullptr)
     {
       return MakeErrorResult(-9111, fmt::format("Benchmark tiling could not create destination DataArray '{}' with type '{}', dimensions Z={}, Y={}, X={}, and {} component(s).", arrayPath.toString(),
@@ -301,7 +301,7 @@ struct FillTiledFunctor
 
 namespace ip_bench
 {
-Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, usize targetVoxels, usize minZSlices,
+Result<> BuildTiledInput(DataStructure& dataStructure, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, usize targetVoxels, usize minZSlices,
                          DataStorageMode storeMode, DataPath& outArrayPath, bool force2D, const SourceArrayValidator& sourceValidator)
 {
   // --- 1) Read the real input ONCE into a scratch DataStructure to recover dims/type/components. Force the scratch
@@ -434,13 +434,13 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
   std::optional<DataObject::IdType> parentId;
   if(geomPath.getLength() > 1)
   {
-    parentId = ds.getId(geomPath.getParent());
+    parentId = dataStructure.getId(geomPath.getParent());
     if(!parentId.has_value())
     {
       return MakeErrorResult(-9115, fmt::format("BuildTiledInput: destination geometry parent '{}' does not exist", geomPath.getParent().toString()));
     }
   }
-  auto* dstGeomPtr = ImageGeom::Create(ds, geomPath.getTargetName(), parentId);
+  auto* dstGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName(), parentId);
   if(dstGeomPtr == nullptr)
   {
     return MakeErrorResult(-9116, fmt::format("BuildTiledInput: could not create destination ImageGeom '{}'", geomPath.toString()));
@@ -456,7 +456,7 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
   }
 
   const ShapeType tupleShape = {dstZ, dstY, dstX}; // AttributeMatrix tuple shape is slowest-to-fastest (Z, Y, X)
-  auto* cellAmPtr = AttributeMatrix::Create(ds, cellAmName, tupleShape, dstGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, cellAmName, tupleShape, dstGeomPtr->getId());
   if(cellAmPtr == nullptr)
   {
     return MakeErrorResult(-9117, fmt::format("BuildTiledInput: could not create destination cell AttributeMatrix '{}'", cellAmName));
@@ -476,7 +476,7 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
 
   // NoBool: image voxel data is never boolean, and std::vector<bool> has no contiguous buffer to stream.
   const DataPath destinationArrayPath = geomPath.createChildPath(cellAmName).createChildPath(arrayName);
-  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, dataType, ds, cellAmPtr->getId(), *srcArrayPtr, destinationArrayPath, params);
+  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, dataType, dataStructure, cellAmPtr->getId(), *srcArrayPtr, destinationArrayPath, params);
   if(fillResult.invalid())
   {
     return fillResult;
@@ -486,7 +486,7 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
   return {};
 }
 
-Result<> AddTiledArray(DataStructure& ds, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, DataStorageMode storeMode,
+Result<> AddTiledArray(DataStructure& dataStructure, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, DataStorageMode storeMode,
                        DataPath& outArrayPath, const SourceArrayValidator& sourceValidator)
 {
   DataStructure scratch;
@@ -517,9 +517,9 @@ Result<> AddTiledArray(DataStructure& ds, const fs::path& realInput, const DataP
     }
   }
 
-  const auto* dstGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* dstGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const DataPath cellAmPath = geomPath.createChildPath(cellAmName);
-  const auto* cellAmPtr = ds.getDataAs<AttributeMatrix>(cellAmPath);
+  const auto* cellAmPtr = dataStructure.getDataAs<AttributeMatrix>(cellAmPath);
   if(dstGeomPtr == nullptr || cellAmPtr == nullptr)
   {
     return MakeErrorResult(-9119, fmt::format("AddTiledArray: destination ImageGeom '{}' or cell AttributeMatrix '{}' does not exist while adding source '{}'.", geomPath.toString(),
@@ -549,7 +549,7 @@ Result<> AddTiledArray(DataStructure& ds, const fs::path& realInput, const DataP
   params.store_mode = storeMode;
 
   const DataPath destinationArrayPath = cellAmPath.createChildPath(arrayName);
-  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, srcArrayPtr->getDataType(), ds, cellAmPtr->getId(), *srcArrayPtr, destinationArrayPath, params);
+  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, srcArrayPtr->getDataType(), dataStructure, cellAmPtr->getId(), *srcArrayPtr, destinationArrayPath, params);
   if(fillResult.invalid())
   {
     return fillResult;

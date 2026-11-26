@@ -25,7 +25,7 @@ using ZcFilterType = ZeroCrossingImageFilter;
 
 // Sets the geometry, input, and output keys plus the foreground and background values on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
-void RunZC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint8 foregroundValue, uint8 backgroundValue, UnitTest::AlgorithmTestScope* scope = nullptr,
+void RunZC(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint8 foregroundValue, uint8 backgroundValue, UnitTest::AlgorithmTestScope* scope = nullptr,
            const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -35,9 +35,9 @@ void RunZC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint8 
   args.insertOrAssign(ZcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   args.insertOrAssign(ZcFilterType::k_ForegroundValue_Key, std::make_any<uint8>(foregroundValue));
   args.insertOrAssign(ZcFilterType::k_BackgroundValue_Key, std::make_any<uint8>(backgroundValue));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = scope == nullptr ? filter.execute(ds, args) : scope->executeFilter(filter, ds, args);
+  auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -86,8 +86,8 @@ TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXIm
 
   SECTION("unsigned input rejected")
   {
-    DataStructure ds;
-    const DataPath inputPath = rt::BuildImageFromPattern<uint16>(ds, 6, 6, 1, std::vector<uint16>(36, uint16{1}));
+    DataStructure dataStructure;
+    const DataPath inputPath = rt::BuildImageFromPattern<uint16>(dataStructure, 6, 6, 1, std::vector<uint16>(36, uint16{1}));
     const DataPath geomPath = inputPath.getParent().getParent();
     ZcFilterType filter;
     Arguments args;
@@ -96,17 +96,17 @@ TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXIm
     args.insertOrAssign(ZcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(ZcFilterType::k_ForegroundValue_Key, std::make_any<uint8>(uint8{1}));
     args.insertOrAssign(ZcFilterType::k_BackgroundValue_Key, std::make_any<uint8>(uint8{0}));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions); // uint16 is not a SignedScalar type (rejected by the ArraySelectionParameter's allowed-types check)
   }
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
     ZcFilterType filter;
     Arguments args;
@@ -115,19 +115,19 @@ TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXIm
     args.insertOrAssign(ZcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(ZcFilterType::k_ForegroundValue_Key, std::make_any<uint8>(uint8{1}));
     args.insertOrAssign(ZcFilterType::k_BackgroundValue_Key, std::make_any<uint8>(uint8{0}));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar signed input creates a uint8 output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field = MakeZeroCrossingField<int16>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 12, 12, 1, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 12, 12, 1, field);
     ZcFilterType filter;
-    RunZC(filter, ds, inputPath, /*fg=*/1, /*bg=*/0);
+    RunZC(filter, dataStructure, inputPath, /*fg=*/1, /*bg=*/0);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 

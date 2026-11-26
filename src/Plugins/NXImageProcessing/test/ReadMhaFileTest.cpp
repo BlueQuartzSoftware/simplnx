@@ -104,10 +104,10 @@ Arguments MakeMhaArgs(const fs::path& inputFile, const DataPath& geomPath, const
 }
 
 template <typename T>
-void RequireMhaArrayEquals(const DataStructure& ds, const DataPath& arrPath, const std::vector<T>& expected)
+void RequireMhaArrayEquals(const DataStructure& dataStructure, const DataPath& arrPath, const std::vector<T>& expected)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(arrPath));
-  const auto& store = ds.getDataRefAs<DataArray<T>>(arrPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(arrPath));
+  const auto& store = dataStructure.getDataRefAs<DataArray<T>>(arrPath).getDataStoreRef();
   REQUIRE(store.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
   {
@@ -590,19 +590,19 @@ DataPath AlgoImageDataPath()
 // tuple dims are [Z, Y, X].
 DataStructure BuildMhaTarget(DataType dataType, const std::array<usize, 3>& destDims, usize comp)
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   const CreateImageGeometryAction::DimensionType dims = {destDims[0], destDims[1], destDims[2]};
   const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
   auto geomAction = CreateImageGeometryAction(k_AlgoGeomPath, dims, origin, spacing, k_AlgoCellDataName);
-  REQUIRE(geomAction.apply(ds, IDataAction::Mode::Execute).valid());
+  REQUIRE(geomAction.apply(dataStructure, IDataAction::Mode::Execute).valid());
   const std::vector<usize> tupleDims = {destDims[2], destDims[1], destDims[0]}; // [Z, Y, X]
   auto arrayAction = CreateArrayAction(dataType, tupleDims, {comp}, AlgoImageDataPath());
-  REQUIRE(arrayAction.apply(ds, IDataAction::Mode::Execute).valid());
-  return ds;
+  REQUIRE(arrayAction.apply(dataStructure, IDataAction::Mode::Execute).valid());
+  return dataStructure;
 }
 
-Result<> RunReadMhaFile(DataStructure& ds, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
+Result<> RunReadMhaFile(DataStructure& dataStructure, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
 {
   ReadMhaFileInputValues inputValues;
   inputValues.InputFilePath = inputFile;
@@ -612,7 +612,7 @@ Result<> RunReadMhaFile(DataStructure& ds, const fs::path& inputFile, const Crop
   inputValues.CroppingOptions = crop;
   const IFilter::MessageHandler messageHandler{};
   const std::atomic_bool shouldCancel{false};
-  ReadMhaFile algorithm(ds, messageHandler, shouldCancel, &inputValues);
+  ReadMhaFile algorithm(dataStructure, messageHandler, shouldCancel, &inputValues);
   return algorithm();
 }
 } // namespace
@@ -630,9 +630,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]",
                     "ElementType = MET_SHORT", "ElementDataFile = LOCAL"},
                    ToBytes(fileValues));
 
-  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
-  REQUIRE(RunReadMhaFile(ds, p).valid());
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
+  DataStructure dataStructure = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadMhaFile(dataStructure, p).valid());
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   for(usize i = 0; i < fileValues.size(); i++)
   {
@@ -663,9 +663,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: big-endian data is byteswapped", "[NX
                    {"ObjectType = Image", "NDims = 2", "BinaryData = True", "BinaryDataByteOrderMSB = True", "CompressedData = False", "ElementSpacing = 1 1", "DimSize = 4 3",
                     "ElementType = MET_SHORT", "ElementDataFile = LOCAL"},
                    data);
-  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
-  REQUIRE(RunReadMhaFile(ds, p).valid());
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
+  DataStructure dataStructure = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadMhaFile(dataStructure, p).valid());
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
   for(usize i = 0; i < logical.size(); i++)
   {
     REQUIRE(store.getValue(i) == logical[i]);
@@ -686,9 +686,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: numeric CompressedData = 1 round-trip
                    {"ObjectType = Image", "NDims = 3", "BinaryData = True", "BinaryDataByteOrderMSB = False", "CompressedData = 1", "ElementSpacing = 1 1 1", "DimSize = 4 3 2",
                     "ElementType = MET_SHORT", "ElementDataFile = LOCAL"},
                    ZlibCompress(ToBytes(fileValues)));
-  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
-  REQUIRE(RunReadMhaFile(ds, p).valid());
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
+  DataStructure dataStructure = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadMhaFile(dataStructure, p).valid());
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   for(usize i = 0; i < fileValues.size(); i++)
   {
@@ -721,9 +721,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps 
                    {"ObjectType = Image", "NDims = 2", "BinaryData = True", "BinaryDataByteOrderMSB = T", "CompressedData = False", "ElementSpacing = 1 1", "DimSize = 4 3", "ElementType = MET_SHORT",
                     "ElementDataFile = LOCAL"},
                    data);
-  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
-  REQUIRE(RunReadMhaFile(ds, p).valid());
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
+  DataStructure dataStructure = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadMhaFile(dataStructure, p).valid());
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
   for(usize i = 0; i < logical.size(); i++)
   {
     REQUIRE(store.getValue(i) == logical[i]);
@@ -743,9 +743,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: multi-component interleaves channels"
                    {"ObjectType = Image", "NDims = 2", "BinaryData = True", "BinaryDataByteOrderMSB = False", "CompressedData = False", "ElementNumberOfChannels = 2", "ElementSpacing = 1 1",
                     "DimSize = 4 2", "ElementType = MET_FLOAT", "ElementDataFile = LOCAL"},
                    ToBytes(fileValues));
-  DataStructure ds = BuildMhaTarget(DataType::float32, {k_X, k_Y, k_Z}, k_Comp);
-  REQUIRE(RunReadMhaFile(ds, p).valid());
-  const auto& store = ds.getDataRefAs<DataArray<float32>>(AlgoImageDataPath()).getDataStoreRef();
+  DataStructure dataStructure = BuildMhaTarget(DataType::float32, {k_X, k_Y, k_Z}, k_Comp);
+  REQUIRE(RunReadMhaFile(dataStructure, p).valid());
+  const auto& store = dataStructure.getDataRefAs<DataArray<float32>>(AlgoImageDataPath()).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == k_X * k_Y);
   REQUIRE(store.getNumberOfComponents() == k_Comp);
   for(usize i = 0; i < fileValues.size(); i++)
@@ -773,9 +773,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the r
   crop.yBoundVoxels = {0, 1};
   crop.cropZ = true;
   crop.zBoundVoxels = {1, 1};
-  DataStructure ds = BuildMhaTarget(DataType::int16, {2, 2, 1}, 1);
-  REQUIRE(RunReadMhaFile(ds, p, crop).valid());
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
+  DataStructure dataStructure = BuildMhaTarget(DataType::int16, {2, 2, 1}, 1);
+  REQUIRE(RunReadMhaFile(dataStructure, p, crop).valid());
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
   // file pos = (z*Y + y)*X + x; z=1,y=0,x=1..2 then z=1,y=1,x=1..2.
   const std::vector<int16_t> expected = {13, 14, 17, 18};
   REQUIRE(store.getNumberOfTuples() == expected.size());
@@ -810,22 +810,22 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zli
                         "TransformMatrix = 1 0 0 1", "Offset = -1 2", "CenterOfRotation = 0 0", "ElementSpacing = 0.5 0.75", "DimSize = 4 3", "ElementType = MET_UCHAR", "ElementDataFile = LOCAL"},
                        compressed ? ZlibCompress(voxels) : voxels);
 
-      DataStructure ds;
+      DataStructure dataStructure;
       ReadMhaFileFilter filter;
       const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
-      const auto preflightResult = filter.preflight(ds, args);
+      const auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      const auto executeResult = filter.execute(ds, args);
+      const auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
       REQUIRE(geom.getDimensions()[0] == 4);
       REQUIRE(geom.getDimensions()[1] == 3);
       REQUIRE(geom.getDimensions()[2] == 1);
       REQUIRE(geom.getSpacing()[0] == Approx(0.5f));
       REQUIRE(geom.getOrigin()[1] == Approx(2.0f));
-      RequireMhaArrayEquals<uint8>(ds, arrPath, voxels);
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      RequireMhaArrayEquals<uint8>(dataStructure, arrPath, voxels);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -845,17 +845,17 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round t
                    ToBytes(voxels));
   const DataPath geomPath({"MHA MC"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadMhaFileFilter filter;
   const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const auto& arr = ds.getDataRefAs<DataArray<float32>>(arrPath);
+  const auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrPath);
   REQUIRE(arr.getNumberOfComponents() == 2);
-  RequireMhaArrayEquals<float32>(ds, arrPath, voxels);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  RequireMhaArrayEquals<float32>(dataStructure, arrPath, voxels);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Regression for the physical-crop preflight/execute divergence: an out-of-range physical
@@ -889,19 +889,19 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps o
 
   const DataPath geomPath({"MHA PhysCropOOB"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadMhaFileFilter filter;
   const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData", crop);
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == k_X);
   REQUIRE(geom.getDimensions()[1] == k_Y);
   REQUIRE(geom.getDimensions()[2] == k_Z);
-  RequireMhaArrayEquals<uint16>(ds, arrPath, voxels);
+  RequireMhaArrayEquals<uint16>(dataStructure, arrPath, voxels);
 }
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: rejects missing file and bad ObjectType", "[NXImageProcessing][ReadMhaFileFilter]")
@@ -909,20 +909,20 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: rejects missing file and bad Ob
   UnitTest::LoadPlugins();
   SECTION("missing file")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     ReadMhaFileFilter filter;
     const Arguments args = MakeMhaArgs(MhaOutputDir() / "does_not_exist_654.mha", DataPath({"X"}), "Cell Data", "ImageData");
-    const auto preflightResult = filter.preflight(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.invalid());
   }
   SECTION("not an image")
   {
     const fs::path p = MhaOutputDir() / "rt_not_image.mha";
     WriteMhaAttached(p, {"ObjectType = Tube", "NDims = 2", "DimSize = 2 2", "ElementType = MET_UCHAR", "ElementDataFile = LOCAL"}, {});
-    DataStructure ds;
+    DataStructure dataStructure;
     ReadMhaFileFilter filter;
     const Arguments args = MakeMhaArgs(p, DataPath({"X"}), "Cell Data", "ImageData");
-    const auto preflightResult = filter.preflight(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.invalid());
   }
 }
@@ -945,13 +945,13 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply-transform preflights agai
                    pixels);
 
   const DataPath geomPath({"MHA Apply"});
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadMhaFileFilter filter;
   Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
   args.insertOrAssign(ReadMhaFileFilter::k_ApplyImageTransformation_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadMhaFileFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL)); // nearest neighbor
 
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   // Post-fix: the downstream transform sees the staged geometry, so preflight is VALID.
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   // Post-fix: the geometry is found, so the spurious "-5555 not an Image Geometry" warning is gone.
@@ -1045,13 +1045,13 @@ namespace
 template <typename T>
 void RequireMhaOocMatchesInCore(const fs::path& p, const std::vector<T>& expected)
 {
-  auto readInto = [&](DataStructure& ds) {
+  auto readInto = [&](DataStructure& dataStructure) {
     ReadMhaFileFilter filter;
     const DataPath geomPath({"MHA OOC"});
     const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
-    const auto preflight = filter.preflight(ds, args);
+    const auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-    const auto execute = filter.execute(ds, args);
+    const auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
     return geomPath.createChildPath("Cell Data").createChildPath("ImageData");
   };
@@ -1129,17 +1129,17 @@ std::vector<float32> ReadSavedTransform(const fs::path& p, bool transpose)
 {
   const DataPath geomPath({"MHA T"});
   const DataPath tMatrixPath = geomPath.createChildPath("TransformationMatrix");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadMhaFileFilter filter;
   Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
   args.insertOrAssign(ReadMhaFileFilter::k_SaveImageTransformation_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadMhaFileFilter::k_TransposeTransformMatrix_Key, std::make_any<bool>(transpose));
   args.insertOrAssign(ReadMhaFileFilter::k_TransformationMatrixPath_Key, std::make_any<ArrayCreationParameter::ValueType>(tMatrixPath));
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto execute = filter.execute(ds, args);
+  const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
-  const auto& store = ds.getDataRefAs<DataArray<float32>>(tMatrixPath).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<float32>>(tMatrixPath).getDataStoreRef();
   std::vector<float32> out(store.getSize());
   for(usize i = 0; i < out.size(); i++)
   {
@@ -1206,11 +1206,11 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transpose of a non-rotation mat
                    {"ObjectType = Image", "NDims = 2", "BinaryData = True", "CompressedData = False", "TransformMatrix = 2 0 0 2", "Offset = 0 0", "CenterOfRotation = 0 0", "ElementSpacing = 1 1",
                     "DimSize = 2 2", "ElementType = MET_UCHAR", "ElementDataFile = LOCAL"},
                    pixels);
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadMhaFileFilter filter;
   Arguments args = MakeMhaArgs(p, DataPath({"MHA Bad"}), "Cell Data", "ImageData");
   args.insertOrAssign(ReadMhaFileFilter::k_TransposeTransformMatrix_Key, std::make_any<bool>(true));
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   REQUIRE(preflight.outputActions.invalid());
   bool found = false;
   for(const auto& e : preflight.outputActions.errors())
@@ -1235,17 +1235,17 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply transformation to geometr
                     "DimSize = 4 3", "ElementType = MET_UCHAR", "ElementDataFile = LOCAL"},
                    pixels);
   const DataPath geomPath({"MHA Apply"});
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadMhaFileFilter filter;
   Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
   args.insertOrAssign(ReadMhaFileFilter::k_ApplyImageTransformation_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadMhaFileFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL)); // nearest neighbor
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto execute = filter.execute(ds, args);
+  const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   // The geometry still exists after the transform resample.
-  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(geomPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
 }
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadMhaFileFilter]")

@@ -256,14 +256,14 @@ TEST_CASE("NXImageProcessing::ApplyPointwise doubles every value", "[NXImageProc
 
   constexpr usize k_KDim = 10;
   const ShapeType tupleShape = {k_KDim, k_KDim, k_KDim};
-  DataStructure ds;
+  DataStructure dataStructure;
 
   const DataPath inputPath({"input"});
   const DataPath outputPath({"output"});
-  auto inStore = DataStoreUtilities::CreateDataStore<int32>(ds, inputPath, tupleShape, {1});
-  auto* inArrayPtr = DataArray<int32>::Create(ds, "input", inStore, {});
-  auto outStore = DataStoreUtilities::CreateDataStore<int32>(ds, outputPath, tupleShape, {1});
-  auto* outArrayPtr = DataArray<int32>::Create(ds, "output", outStore, {});
+  auto inStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, inputPath, tupleShape, {1});
+  auto* inArrayPtr = DataArray<int32>::Create(dataStructure, "input", inStore, {});
+  auto outStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, outputPath, tupleShape, {1});
+  auto* outArrayPtr = DataArray<int32>::Create(dataStructure, "output", outStore, {});
 
   // Fill input with 0..N-1
   auto& inRef = inArrayPtr->getDataStoreRef();

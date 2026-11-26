@@ -115,11 +115,11 @@ const OperatorDef* OperatorDefForSymbolToken(TokenType type)
 }
 
 // The unscoped fallback collects every match so parsing can report ambiguity.
-std::vector<DataPath> FindArraysByName(const DataStructure& ds, const std::string& name)
+std::vector<DataPath> FindArraysByName(const DataStructure& dataStructure, const std::string& name)
 {
   std::vector<DataPath> results;
 
-  auto allPaths = GetAllChildDataPathsRecursive(ds, DataPath{}, DataObject::Type::DataArray);
+  auto allPaths = GetAllChildDataPathsRecursive(dataStructure, DataPath{}, DataObject::Type::DataArray);
   if(allPaths.has_value())
   {
     for(const auto& path : allPaths.value())
@@ -296,9 +296,9 @@ struct WriteChunkFromFloat64Functor
    * @return The output-store bulk-write result.
    */
   template <typename T>
-  Result<> operator()(DataStructure& ds, const DataPath& outputPath, usize startIndex, nonstd::span<const float64> srcBuffer)
+  Result<> operator()(DataStructure& dataStructure, const DataPath& outputPath, usize startIndex, nonstd::span<const float64> srcBuffer)
   {
-    auto& outputStore = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+    auto& outputStore = dataStructure.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
     const usize count = srcBuffer.size();
 
     // The bool vector specialization has no contiguous data. This buffer avoids that specialization.
@@ -328,9 +328,9 @@ struct FillScalarResultFunctor
    * @param scalarValue Supplies the result value.
    */
   template <typename T>
-  void operator()(DataStructure& ds, const DataPath& outputPath, float64 scalarValue)
+  void operator()(DataStructure& dataStructure, const DataPath& outputPath, float64 scalarValue)
   {
-    auto& output = ds.getDataRefAs<DataArray<T>>(outputPath);
+    auto& output = dataStructure.getDataRefAs<DataArray<T>>(outputPath);
     output.fill(static_cast<T>(scalarValue));
   }
 };

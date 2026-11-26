@@ -2357,8 +2357,8 @@ void RunMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, 
   using HistType = MorphHistogram<T, Dilate>;
   const usize sliceValues = dimX * dimY;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2369,12 +2369,12 @@ void RunMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, 
   // Reads a GLOBAL (x,y,z) out of the slab; valid whenever (x,y,z) is in-bounds, since the slab always
   // spans every global Z the window can reach for this batch (see class docs).
   auto flat = [slab, sliceValues, dimX, zLo](int64 x, int64 y, int64 z) -> T { return slab[(static_cast<usize>(z) - zLo) * sliceValues + static_cast<usize>(y) * dimX + static_cast<usize>(x)]; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   // Slide the histogram from center (cx,cy,cz) by +1 along axis a -- identical to MorphDirect's push,
   // reading through the slab-relative `flat` instead of a whole-volume buffer.
   auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -2529,8 +2529,8 @@ void RunBinaryMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize 
   const usize windowSize = se.offsets.size();
   const usize sliceValues = dimX * dimY;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2539,13 +2539,13 @@ void RunBinaryMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize 
 
   // Reads a GLOBAL (x,y,z) out of the slab; valid whenever (x,y,z) is in-bounds (see RunMorphologySlabWindow).
   auto flat = [slab, sliceValues, dimX, zLo](int64 x, int64 y, int64 z) -> T { return slab[(static_cast<usize>(z) - zLo) * sliceValues + static_cast<usize>(y) * dimX + static_cast<usize>(x)]; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   // Slide the accumulator from center (cx,cy,cz) by +1 along axis a -- identical shape to
   // RunMorphologySlabWindow's push, folding in/out via addPixel/removePixel/addBoundary/removeBoundary instead
   // of a min/max histogram update.
   auto push = [&](AccType& acc, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -2699,8 +2699,8 @@ void RunMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX, usize
   using HistType = MorphHistogram<T, Dilate>;
   const usize boundSliceValues = boundDimX * boundDimY;
   const int64 nX = static_cast<int64>(boundDimX);
-  const int64 nY = static_cast<int64>(boundDimY);
-  const int64 nZ = static_cast<int64>(boundDimZ);
+  const int64 ny = static_cast<int64>(boundDimY);
+  const int64 nz = static_cast<int64>(boundDimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2716,12 +2716,12 @@ void RunMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX, usize
   auto flat = [slab, boundSliceValues, boundDimX, slabZLo](int64 x, int64 y, int64 zc) -> T {
     return slab[(static_cast<usize>(zc) - slabZLo) * boundSliceValues + static_cast<usize>(y) * boundDimX + static_cast<usize>(x)];
   };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < nY && zc >= 0 && zc < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < ny && zc >= 0 && zc < nz; };
 
   // Slide the histogram from center (cx,cy,cz) by +1 along axis a -- identical to RunMorphologySlabWindow's
   // push, reading through the ring-relative `flat` instead of a whole-slab buffer.
   auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -2856,8 +2856,8 @@ void RunBinaryMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX,
   const usize windowSize = se.offsets.size();
   const usize boundSliceValues = boundDimX * boundDimY;
   const int64 nX = static_cast<int64>(boundDimX);
-  const int64 nY = static_cast<int64>(boundDimY);
-  const int64 nZ = static_cast<int64>(boundDimZ);
+  const int64 ny = static_cast<int64>(boundDimY);
+  const int64 nz = static_cast<int64>(boundDimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2871,12 +2871,12 @@ void RunBinaryMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX,
   auto flat = [slab, boundSliceValues, boundDimX, slabZLo](int64 x, int64 y, int64 zc) -> T {
     return slab[(static_cast<usize>(zc) - slabZLo) * boundSliceValues + static_cast<usize>(y) * boundDimX + static_cast<usize>(x)];
   };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < nY && zc >= 0 && zc < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < ny && zc >= 0 && zc < nz; };
 
   // Slide the accumulator from center (cx,cy,cz) by +1 along axis a -- identical shape to
   // RunMorphologyPlaneWindow's push, reading through the ring-relative `flat`.
   auto push = [&](AccType& acc, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -3004,8 +3004,8 @@ void RunMorphologyGradientSlabWindow(const T* slab, T* outSlab, usize dimX, usiz
   using HistType = MorphGradientHistogram<T>;
   const usize sliceValues = dimX * dimY;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -3013,10 +3013,10 @@ void RunMorphologyGradientSlabWindow(const T* slab, T* outSlab, usize dimX, usiz
   const std::array<std::vector<SEOffset>, 3>& removed = axisSets.removed;
 
   auto flat = [slab, sliceValues, dimX, zLo](int64 x, int64 y, int64 z) -> T { return slab[(static_cast<usize>(z) - zLo) * sliceValues + static_cast<usize>(y) * dimX + static_cast<usize>(x)]; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -3508,8 +3508,8 @@ private:
     using HistType = detail::MorphHistogram<T, Dilate>;
 
     const int64 nX = static_cast<int64>(dimX);
-    const int64 nY = static_cast<int64>(dimY);
-    const int64 nZ = static_cast<int64>(dimZ);
+    const int64 ny = static_cast<int64>(dimY);
+    const int64 nz = static_cast<int64>(dimZ);
     // Per-axis radius (clamped >= 0). Any added/removed offset reaches at most r_a + 1 along axis a, so a
     // center whose (r_a + 1)-padded neighborhood is fully in bounds needs no per-voxel checks.
     const int64 rX = (m_SE.radius[0] > 0) ? m_SE.radius[0] : 0;
@@ -3526,14 +3526,14 @@ private:
     }
 #endif
 
-    auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-    auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+    auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+    auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
     // Slide the histogram from center (cx,cy,cz) by +1 along axis a: fold in the entering voxels, fold out
     // the leaving ones. The fast path (whole padded neighborhood in bounds) skips per-voxel checks; the slow
     // path substitutes the boundary extremum for OOB neighbors (== Scanline skipping them).
     auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
-      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
       if(fast)
       {
         for(const SEOffset& q : added[a])
@@ -3641,7 +3641,7 @@ private:
           push(histZ, 0, 0, z - 1, 2);
         }
         histY = histZ;
-        for(int64 y = 0; y < nY; ++y)
+        for(int64 y = 0; y < ny; ++y)
         {
           if(y > 0)
           {
@@ -4580,8 +4580,8 @@ public:
     using HistType = detail::MorphGradientHistogram<T>;
 
     const int64 nX = static_cast<int64>(dimX);
-    const int64 nY = static_cast<int64>(dimY);
-    const int64 nZ = static_cast<int64>(dimZ);
+    const int64 ny = static_cast<int64>(dimY);
+    const int64 nz = static_cast<int64>(dimZ);
     // Per-axis radius (clamped >= 0). Any added/removed offset reaches at most r_a + 1 along axis a, so a center
     // whose (r_a + 1)-padded neighborhood is fully in bounds needs no per-voxel checks.
     const int64 rX = (m_SE.radius[0] > 0) ? m_SE.radius[0] : 0;
@@ -4597,15 +4597,15 @@ public:
     }
 #endif
 
-    auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-    auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+    auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+    auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
     // Slide the fused histogram from center (cx,cy,cz) by +1 along axis a: fold in the entering voxels, fold out
     // the leaving ones. The fast path (whole padded neighborhood in bounds) skips per-voxel checks; the slow
     // path drops OOB neighbors (addBoundary/removeBoundary are no-ops for the gradient, since a boundary neighbor
     // wins neither extreme -- == MorphGradientScanline skipping them).
     auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
-      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
       if(fast)
       {
         for(const SEOffset& q : added[a])
@@ -4709,7 +4709,7 @@ public:
           push(histZ, 0, 0, z - 1, 2);
         }
         histY = histZ;
-        for(int64 y = 0; y < nY; ++y)
+        for(int64 y = 0; y < ny; ++y)
         {
           if(y > 0)
           {
@@ -5303,8 +5303,8 @@ private:
     using AccType = detail::FgCountAccumulator<T, Dilate>;
 
     const int64 nX = static_cast<int64>(dimX);
-    const int64 nY = static_cast<int64>(dimY);
-    const int64 nZ = static_cast<int64>(dimZ);
+    const int64 ny = static_cast<int64>(dimY);
+    const int64 nz = static_cast<int64>(dimZ);
     // Per-axis radius (clamped >= 0). Any added/removed offset reaches at most r_a + 1 along axis a, so a
     // center whose (r_a + 1)-padded neighborhood is fully in bounds needs no per-voxel checks.
     const int64 rX = (m_SE.radius[0] > 0) ? m_SE.radius[0] : 0;
@@ -5320,15 +5320,15 @@ private:
     }
 #endif
 
-    auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-    auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+    auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+    auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
     // Slide the accumulator from center (cx,cy,cz) by +1 along axis a: fold in the entering voxels, fold out
     // the leaving ones. The fast path (whole padded neighborhood in bounds) skips per-voxel checks; the slow
     // path treats an OOB neighbor as foreground iff boundaryToForeground via addBoundary/removeBoundary
     // (== BinaryMorphScanline's boundary rule).
     auto push = [&](AccType& h, int64 cx, int64 cy, int64 cz, int a) {
-      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
       if(fast)
       {
         for(const SEOffset& q : added[a])
@@ -5447,7 +5447,7 @@ private:
           push(accZ, 0, 0, z - 1, 2);
         }
         accY = accZ;
-        for(int64 y = 0; y < nY; ++y)
+        for(int64 y = 0; y < ny; ++y)
         {
           if(y > 0)
           {

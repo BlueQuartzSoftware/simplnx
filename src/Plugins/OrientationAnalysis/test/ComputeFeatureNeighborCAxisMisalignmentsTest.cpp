@@ -77,22 +77,22 @@ struct FixtureData
 // {numFeatures}; ensemble-level arrays (CrystalStructures) are sized {numCrystalStructures}.
 // Defaults: every cell assigned to feature 1 / phase 1; every feature phase 0 (caller to set);
 // identity quats; empty neighbor lists; CrystalStructures[0] = sentinel 999.
-FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize numCrystalStructures)
+FixtureData CreateScaffold(usize nX, usize ny, usize nz, usize numFeatures, usize numCrystalStructures)
 {
   FixtureData td;
-  td.total_cells = nX * nY * nZ;
+  td.total_cells = nX * ny * nz;
   td.total_features = numFeatures;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
   REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  td.geom->setDimensions({nX, nY, nZ});
+  td.geom->setDimensions({nX, ny, nz});
 
-  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());
+  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nz, ny, nX}, td.geom->getId());
   td.feature_am = AttributeMatrix::Create(td.ds, "CellFeatureData", ShapeType{numFeatures}, td.geom->getId());
   td.ensemble_am = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
-  const ShapeType cellTupleShape = {nZ, nY, nX};
+  const ShapeType cellTupleShape = {nz, ny, nX};
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
   td.feature_ids = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
   auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_CellPhasesName), cellTupleShape, {1});
@@ -168,16 +168,16 @@ Arguments BuildArgs(bool findAvgMisals)
   return args;
 }
 
-const NeighborList<float32>& GetOutputMisalignmentList(const DataStructure& ds)
+const NeighborList<float32>& GetOutputMisalignmentList(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName)));
-  return ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName)));
+  return dataStructure.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName));
 }
 
-const Float32Array& GetOutputAvgMisalignments(const DataStructure& ds)
+const Float32Array& GetOutputAvgMisalignments(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName)));
-  return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName)));
+  return dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName));
 }
 
 // Helper to construct the 10x10x1 realistic-microstructure scaffold used by Fixtures B and D.

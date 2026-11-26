@@ -206,9 +206,9 @@ struct ApproximateSignedDistanceMapExecuteFn
   Result<> operator()() const
   {
     const int64 nX = static_cast<int64>(dims[0]);
-    const int64 nY = static_cast<int64>(dims[1]);
-    const int64 nZ = static_cast<int64>(dims[2]);
-    const int64 sumSq = nX * nX + nY * nY + ((nZ > 1) ? (nZ * nZ) : 0);
+    const int64 ny = static_cast<int64>(dims[1]);
+    const int64 nz = static_cast<int64>(dims[2]);
+    const int64 sumSq = nX * nX + ny * ny + ((nz > 1) ? (nz * nz) : 0);
     const float32 maxDist = static_cast<float32>(std::floor(std::sqrt(static_cast<float64>(sumSq))));
     const float64 levelSet = (inside_value + outside_value) / 2.0;
 

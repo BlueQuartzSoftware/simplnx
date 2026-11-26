@@ -46,10 +46,10 @@ const DataPath k_CrystalStructures({"Ensembles", "CrystalStructures"});
 const DataPath k_Output({"Orientations", "CAxisReferenceMisalignments"});
 
 template <typename T>
-DataArray<T>& CreateArray(DataStructure& ds, const DataPath& path, const ShapeType& shape, usize components, DataObject::IdType parent)
+DataArray<T>& CreateArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& shape, usize components, DataObject::IdType parent)
 {
-  auto storePtr = DataStoreUtilities::CreateDataStore<T>(ds, path, shape, {components});
-  auto* arrayPtr = DataArray<T>::Create(ds, path.getTargetName(), storePtr, parent);
+  auto storePtr = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, shape, {components});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), storePtr, parent);
   REQUIRE(arrayPtr != nullptr);
   return *arrayPtr;
 }
@@ -71,18 +71,18 @@ DataPath InGroup(const std::string& groupName, const DataPath& path)
 DataStructure MakeData(const std::vector<EulerType>& eulers, const ShapeType& shape, std::vector<int32> phaseValues = {}, usize zeroQuaternion = std::numeric_limits<usize>::max(),
                        const std::string& groupName = "")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   std::optional<DataObject::IdType> groupId;
   if(!groupName.empty())
   {
-    auto* groupPtr = DataGroup::Create(ds, groupName);
+    auto* groupPtr = DataGroup::Create(dataStructure, groupName);
     REQUIRE(groupPtr != nullptr);
     groupId = groupPtr->getId();
   }
-  auto* orientationsPtr = AttributeMatrix::Create(ds, "Orientations", shape, groupId);
+  auto* orientationsPtr = AttributeMatrix::Create(dataStructure, "Orientations", shape, groupId);
   REQUIRE(orientationsPtr != nullptr);
-  auto& quatsRef = CreateArray<float32>(ds, InGroup(groupName, k_Quats), shape, 4, orientationsPtr->getId());
-  auto& phasesRef = CreateArray<int32>(ds, InGroup(groupName, k_Phases), shape, 1, orientationsPtr->getId());
+  auto& quatsRef = CreateArray<float32>(dataStructure, InGroup(groupName, k_Quats), shape, 4, orientationsPtr->getId());
+  auto& phasesRef = CreateArray<int32>(dataStructure, InGroup(groupName, k_Phases), shape, 1, orientationsPtr->getId());
   REQUIRE(quatsRef.getNumberOfTuples() == eulers.size());
   std::vector<float32> quatValues(eulers.size() * 4);
   if(phaseValues.empty())
@@ -103,14 +103,14 @@ DataStructure MakeData(const std::vector<EulerType>& eulers, const ShapeType& sh
   SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
   auto phasesWriteResult = phasesRef.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
-  auto* ensemblesPtr = AttributeMatrix::Create(ds, "Ensembles", {5}, groupId);
+  auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, "Ensembles", {5}, groupId);
   REQUIRE(ensemblesPtr != nullptr);
-  auto& crystalStructuresRef = CreateArray<uint32>(ds, InGroup(groupName, k_CrystalStructures), {5}, 1, ensemblesPtr->getId());
+  auto& crystalStructuresRef = CreateArray<uint32>(dataStructure, InGroup(groupName, k_CrystalStructures), {5}, 1, ensemblesPtr->getId());
   const std::vector<uint32> crystalValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Hexagonal_Low,
                                              ebsdlib::CrystalStructure::Cubic_High, ebsdlib::CrystalStructure::Trigonal_High};
   auto crystalWriteResult = crystalStructuresRef.getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalValues.data(), crystalValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalWriteResult);
-  return ds;
+  return dataStructure;
 }
 
 Arguments MakeArgs(const std::vector<float32>& reference = {0, 0, 1}, bool useMask = false, const std::string& groupName = "")
@@ -136,15 +136,15 @@ float64 ExpectedAngle(const EulerType& euler, const std::vector<float32>& refere
   return std::acos(std::clamp(std::abs(dot), 0.0, 1.0)) / k_Radians;
 }
 
-void CheckOutput(const DataStructure& ds, const std::vector<EulerType>& eulers, const std::vector<float32>& reference, const std::vector<usize>& excluded = {}, const std::string& groupName = "")
+void CheckOutput(const DataStructure& dataStructure, const std::vector<EulerType>& eulers, const std::vector<float32>& reference, const std::vector<usize>& excluded = {}, const std::string& groupName = "")
 {
   const DataPath outputPath = InGroup(groupName, k_Output);
   const DataPath quatsPath = InGroup(groupName, k_Quats);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(outputPath));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(quatsPath));
-  const auto& outputRef = ds.getDataRefAs<Float32Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(quatsPath));
+  const auto& outputRef = dataStructure.getDataRefAs<Float32Array>(outputPath);
   REQUIRE(outputRef.getNumberOfComponents() == 1);
-  REQUIRE(outputRef.getIDataStoreRef().getTupleShape() == ds.getDataRefAs<Float32Array>(quatsPath).getIDataStoreRef().getTupleShape());
+  REQUIRE(outputRef.getIDataStoreRef().getTupleShape() == dataStructure.getDataRefAs<Float32Array>(quatsPath).getIDataStoreRef().getTupleShape());
   std::vector<float32> outputValues(outputRef.getSize());
   auto outputReadResult = outputRef.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(outputValues.data(), outputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(outputReadResult);
@@ -167,35 +167,35 @@ void CheckOutput(const DataStructure& ds, const std::vector<EulerType>& eulers, 
 
 // The shared algorithm has no dispatch event. Use the scenario's store guard,
 // but do not call executeFilter(), which requires a Direct/Scanline dispatch.
-Result<> ExecuteInScope(DataStructure& ds, const Arguments& args, const UnitTest::AlgorithmTestScope& scope, const std::string& groupName = "")
+Result<> ExecuteInScope(DataStructure& dataStructure, const Arguments& args, const UnitTest::AlgorithmTestScope& scope, const std::string& groupName = "")
 {
   FilterType filter;
-  auto preflight = filter.preflight(ds, args);
+  auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const DataPath outputPath = InGroup(groupName, k_Output);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(outputPath));
-  scope.requireExpectedStore(ds.getDataRefAs<Float32Array>(outputPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(outputPath));
   return std::move(result.result);
 }
 
-void ExecuteAndCheck(DataStructure& ds, const Arguments& args, const UnitTest::AlgorithmTestScope& scope, const std::string& groupName = "")
+void ExecuteAndCheck(DataStructure& dataStructure, const Arguments& args, const UnitTest::AlgorithmTestScope& scope, const std::string& groupName = "")
 {
-  const Result<> result = ExecuteInScope(ds, args, scope, groupName);
+  const Result<> result = ExecuteInScope(dataStructure, args, scope, groupName);
   REQUIRE(result.warnings().empty());
 }
 
 // Valid inputs for a direct algorithm call: two tuples, a uint8 mask, and the pre-created output.
 DataStructure MakeDirectCallData()
 {
-  DataStructure ds = MakeData({{0, 30, 0}, {0, 45, 0}}, {2});
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
-  const auto parentId = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
-  CreateArray<uint8>(ds, k_Mask, {2}, 1, parentId).fill(1);
-  CreateArray<float32>(ds, k_Output, {2}, 1, parentId);
-  REQUIRE(AttributeMatrix::Create(ds, "Other", {3}) != nullptr);
-  return ds;
+  DataStructure dataStructure = MakeData({{0, 30, 0}, {0, 45, 0}}, {2});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
+  const auto parentId = dataStructure.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
+  CreateArray<uint8>(dataStructure, k_Mask, {2}, 1, parentId).fill(1);
+  CreateArray<float32>(dataStructure, k_Output, {2}, 1, parentId);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Other", {3}) != nullptr);
+  return dataStructure;
 }
 
 InputValuesType MakeDirectCallInputValues()
@@ -211,11 +211,11 @@ InputValuesType MakeDirectCallInputValues()
   return inputValues;
 }
 
-Result<> RunAlgorithm(DataStructure& ds, const InputValuesType& inputValues)
+Result<> RunAlgorithm(DataStructure& dataStructure, const InputValuesType& inputValues)
 {
   const std::atomic_bool shouldCancel = false;
   const IFilter::MessageHandler messageHandler{};
-  return AlgorithmType(ds, messageHandler, shouldCancel, &inputValues)();
+  return AlgorithmType(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace
 
@@ -784,12 +784,12 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: preflight re
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: algorithm validates its own inputs", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  DataStructure ds = MakeDirectCallData();
+  DataStructure dataStructure = MakeDirectCallData();
   InputValuesType inputValues = MakeDirectCallInputValues();
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
-  const auto parentId = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Other"})));
-  const auto otherId = ds.getDataRefAs<AttributeMatrix>(DataPath({"Other"})).getId();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
+  const auto parentId = dataStructure.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Other"})));
+  const auto otherId = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Other"})).getId();
   const DataPath wrongPath({"Orientations", "Wrong"});
   const DataPath otherPath({"Other", "Mismatched"});
   // 0 means the inputs are valid and the call must succeed.
@@ -808,65 +808,65 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: algorithm va
   }
   SECTION("Quaternion array of the wrong type")
   {
-    CreateArray<float64>(ds, wrongPath, {2}, 4, parentId);
+    CreateArray<float64>(dataStructure, wrongPath, {2}, 4, parentId);
     inputValues.QuatsArrayPath = wrongPath;
     expectedCode = AlgorithmType::k_InvalidQuatsArrayError;
     expectedPhrase = "has type 'float64', but type 'float32' is required";
   }
   SECTION("Quaternion array with five components")
   {
-    CreateArray<float32>(ds, wrongPath, {2}, 5, parentId);
+    CreateArray<float32>(dataStructure, wrongPath, {2}, 5, parentId);
     inputValues.QuatsArrayPath = wrongPath;
     expectedCode = AlgorithmType::k_QuatsComponentShapeError;
   }
   SECTION("Phases array of the wrong type")
   {
-    CreateArray<uint32>(ds, wrongPath, {2}, 1, parentId);
+    CreateArray<uint32>(dataStructure, wrongPath, {2}, 1, parentId);
     inputValues.PhasesArrayPath = wrongPath;
     expectedCode = AlgorithmType::k_InvalidPhasesArrayError;
   }
   SECTION("Phases array with two components")
   {
-    CreateArray<int32>(ds, wrongPath, {2}, 2, parentId);
+    CreateArray<int32>(dataStructure, wrongPath, {2}, 2, parentId);
     inputValues.PhasesArrayPath = wrongPath;
     expectedCode = AlgorithmType::k_PhasesComponentShapeError;
   }
   SECTION("Phases array with a different tuple count")
   {
-    CreateArray<int32>(ds, otherPath, {3}, 1, otherId);
+    CreateArray<int32>(dataStructure, otherPath, {3}, 1, otherId);
     inputValues.PhasesArrayPath = otherPath;
     expectedCode = AlgorithmType::k_TupleCountMismatchError;
     expectedPhrase = "Phases array 'Other/Mismatched' has 3 tuples";
   }
   SECTION("Mask array of the wrong type")
   {
-    CreateArray<int32>(ds, wrongPath, {2}, 1, parentId);
+    CreateArray<int32>(dataStructure, wrongPath, {2}, 1, parentId);
     inputValues.MaskArrayPath = wrongPath;
     expectedCode = AlgorithmType::k_InvalidMaskArrayError;
     expectedPhrase = "has type 'int32', but type 'bool' or 'uint8' is required";
   }
   SECTION("Mask array with two components")
   {
-    CreateArray<uint8>(ds, wrongPath, {2}, 2, parentId);
+    CreateArray<uint8>(dataStructure, wrongPath, {2}, 2, parentId);
     inputValues.MaskArrayPath = wrongPath;
     expectedCode = AlgorithmType::k_MaskComponentShapeError;
   }
   SECTION("Mask array with a different tuple count")
   {
-    CreateArray<bool>(ds, otherPath, {3}, 1, otherId);
+    CreateArray<bool>(dataStructure, otherPath, {3}, 1, otherId);
     inputValues.MaskArrayPath = otherPath;
     expectedCode = AlgorithmType::k_TupleCountMismatchError;
     expectedPhrase = "Mask array 'Other/Mismatched' has 3 tuples";
   }
   SECTION("Crystal Structures array of the wrong type")
   {
-    CreateArray<int32>(ds, otherPath, {3}, 1, otherId);
+    CreateArray<int32>(dataStructure, otherPath, {3}, 1, otherId);
     inputValues.CrystalStructuresArrayPath = otherPath;
     expectedCode = AlgorithmType::k_InvalidCrystalStructuresArrayError;
   }
   SECTION("Crystal Structures array with two components")
   {
-    CreateArray<uint32>(ds, otherPath, {3}, 2, otherId);
+    CreateArray<uint32>(dataStructure, otherPath, {3}, 2, otherId);
     inputValues.CrystalStructuresArrayPath = otherPath;
     expectedCode = AlgorithmType::k_CrystalStructuresComponentShapeError;
   }
@@ -877,13 +877,13 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: algorithm va
   }
   SECTION("Output array with two components")
   {
-    CreateArray<float32>(ds, wrongPath, {2}, 2, parentId);
+    CreateArray<float32>(dataStructure, wrongPath, {2}, 2, parentId);
     inputValues.OutputArrayPath = wrongPath;
     expectedCode = AlgorithmType::k_OutputComponentShapeError;
   }
   SECTION("Output array with a different tuple count")
   {
-    CreateArray<float32>(ds, otherPath, {3}, 1, otherId);
+    CreateArray<float32>(dataStructure, otherPath, {3}, 1, otherId);
     inputValues.OutputArrayPath = otherPath;
     expectedCode = AlgorithmType::k_OutputTupleCountMismatchError;
   }
@@ -899,13 +899,13 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: algorithm va
   }
   SECTION("Phase outside the Crystal Structures array")
   {
-    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
-    ds.getDataRefAs<Int32Array>(k_Phases)[1] = 5;
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_Phases));
+    dataStructure.getDataRefAs<Int32Array>(k_Phases)[1] = 5;
     expectedCode = AlgorithmType::k_PhaseOutOfRangeError;
   }
   CAPTURE(expectedCode);
   Result<> result;
-  REQUIRE_NOTHROW(result = RunAlgorithm(ds, inputValues));
+  REQUIRE_NOTHROW(result = RunAlgorithm(dataStructure, inputValues));
   if(expectedCode == 0)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);

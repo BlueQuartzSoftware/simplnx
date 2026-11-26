@@ -29,8 +29,8 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
   CAPTURE(projDim, performInPlace);
 
   constexpr usize k_D = 32;
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0);
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0);
 
   MeanProjectionImageFilter filter;
   Arguments args;
@@ -41,13 +41,13 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
   args.insertOrAssign(MeanProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
   args.insertOrAssign(MeanProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputArrayPath = performInPlace ? DataPath({"Image Geometry", "CellData", "Output"}) : DataPath({"Projected Image", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float64>>(outputArrayPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float64>>(outputArrayPath);
   const auto& outStore = outArray.getDataStoreRef();
   const usize numSlots = k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
@@ -106,7 +106,7 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
     UNSCOPED_INFO(fmt::format("slot={} got={} expected={}", badSlot, badGot, badExp));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

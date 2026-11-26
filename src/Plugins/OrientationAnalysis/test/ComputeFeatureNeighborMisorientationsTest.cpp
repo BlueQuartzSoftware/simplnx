@@ -158,16 +158,16 @@ Arguments BuildArgs(bool computeAvgMisors)
   return args;
 }
 
-const NeighborList<float32>& GetOutputMisorientationList(const DataStructure& ds)
+const NeighborList<float32>& GetOutputMisorientationList(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_MisorientationListOutName)));
-  return ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_MisorientationListOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_MisorientationListOutName)));
+  return dataStructure.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_MisorientationListOutName));
 }
 
-const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
+const Float32Array& GetOutputAvgMisorientations(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName)));
-  return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName)));
+  return dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName));
 }
 } // namespace AnalyticalFixtures
 } // namespace

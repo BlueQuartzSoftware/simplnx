@@ -34,25 +34,25 @@ namespace
  * @brief Builds a FillBadData test dataset with block-patterned FeatureIds
  * and ~10% scattered bad voxels (FeatureId=0) using a deterministic pattern.
  */
-void BuildFillBadDataTestData(DataStructure& ds, usize dimX, usize dimY, usize dimZ, usize blockSize, bool addLargeDefect = false)
+void BuildFillBadDataTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize, bool addLargeDefect = false)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeomPtr = ImageGeom::Create(ds, "DataContainer");
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeomPtr->setDimensions({dimX, dimY, dimZ});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({"DataContainer", "CellData", "FeatureIds"});
-  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellShape, {1});
-  auto* featureIdsArrayPtr = DataArray<int32>::Create(ds, "FeatureIds", featureIdsDataStore, cellAmPtr->getId());
+  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellShape, {1});
+  auto* featureIdsArrayPtr = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAmPtr->getId());
   auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
 
   const DataPath phasesPath = DataPath({"DataContainer", "CellData", "Phases"});
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, phasesPath, cellShape, {1});
-  auto* phasesArrayPtr = DataArray<int32>::Create(ds, "Phases", phasesDataStore, cellAmPtr->getId());
+  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, cellShape, {1});
+  auto* phasesArrayPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAmPtr->getId());
   auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
   const usize blocksPerDim = dimX / blockSize;
@@ -1027,8 +1027,8 @@ TEST_CASE("SimplnxCore::FillBadData: Generate Test Data", "[Core][FillBadDataFil
 
   // 200^3 input data with large defect (full z=k_Dim/2 plane)
   {
-    DataStructure ds;
-    BuildFillBadDataTestData(ds, k_Dim, k_Dim, k_Dim, k_BlockSize, true);
-    UnitTest::WriteTestDataStructure(ds, outputDir / "input.dream3d");
+    DataStructure dataStructure;
+    BuildFillBadDataTestData(dataStructure, k_Dim, k_Dim, k_Dim, k_BlockSize, true);
+    UnitTest::WriteTestDataStructure(dataStructure, outputDir / "input.dream3d");
   }
 }

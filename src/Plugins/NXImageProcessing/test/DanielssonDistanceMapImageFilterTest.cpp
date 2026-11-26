@@ -19,7 +19,7 @@ using DanielssonFilterType = DanielssonDistanceMapImageFilter;
 
 // Sets the geometry, input, and output keys plus the three Danielsson parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
-void RunDanielsson(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bool inputIsBinary, bool squaredDistance, bool useImageSpacing, UnitTest::AlgorithmTestScope* scope = nullptr,
+void RunDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool inputIsBinary, bool squaredDistance, bool useImageSpacing, UnitTest::AlgorithmTestScope* scope = nullptr,
                    const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -30,9 +30,9 @@ void RunDanielsson(IFilter& filter, DataStructure& ds, const DataPath& inputPath
   args.insertOrAssign(DanielssonFilterType::k_InputIsBinary_Key, std::make_any<bool>(inputIsBinary));
   args.insertOrAssign(DanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(squaredDistance));
   args.insertOrAssign(DanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = scope == nullptr ? filter.execute(ds, args) : scope->executeFilter(filter, ds, args);
+  auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace
@@ -55,16 +55,16 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
     pattern[rt::FlatIndex(0, y, 0, k_Dx, k_Dy)] = 1;
   }
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
   DanielssonFilterType filter;
-  RunDanielsson(filter, ds, inputPath, /*inputIsBinary=*/false, /*squaredDistance=*/true, /*useImageSpacing=*/false, &scope);
+  RunDanielsson(filter, dataStructure, inputPath, /*inputIsBinary=*/false, /*squaredDistance=*/true, /*useImageSpacing=*/false, &scope);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& out = ds.getDataRefAs<DataArray<float32>>(outputPath).getDataStoreRef();
+  const auto& out = dataStructure.getDataRefAs<DataArray<float32>>(outputPath).getDataStoreRef();
   for(usize y = 0; y < k_Dy; ++y)
   {
     for(usize x = 0; x < k_Dx; ++x)
@@ -99,9 +99,9 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
     pattern[rt::FlatIndex(0, y, 0, k_Dx, k_Dy)] = 1;
   }
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   DanielssonFilterType filter;
   Arguments args;
@@ -112,11 +112,11 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
   args.insertOrAssign(DanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(true));
   args.insertOrAssign(DanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& out = outArray.getDataStoreRef();
   for(usize y = 0; y < k_Dy; ++y)
@@ -127,7 +127,7 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
       REQUIRE(out.getValue(rt::FlatIndex(x, y, 0, k_Dx, k_Dy)) == static_cast<float32>(x * x));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is output-neutral", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
@@ -167,8 +167,8 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight reject
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
   constexpr usize k_Dz = 1;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 1.0f));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 1.0f));
   const DataPath geomPath = inputPath.getParent().getParent();
 
   DanielssonFilterType filter;
@@ -179,15 +179,15 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight reject
   args.insertOrAssign(DanielssonFilterType::k_InputIsBinary_Key, std::make_any<bool>(false));
   args.insertOrAssign(DanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(true));
   args.insertOrAssign(DanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds;
-  const DataPath input = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+  DataStructure dataStructure;
+  const DataPath input = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
   const DataPath geomPath = input.getParent().getParent();
   DanielssonFilterType filter;
   auto argsFor = [&](const DataPath& path) {
@@ -203,20 +203,20 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight reject
   SECTION("non-scalar")
   {
     const DataPath path({"Image Geometry", "CellData", "Vec"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, {1, 6, 6}, {3});
-    DataArray<int32>::Create(ds, "Vec", store, ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
-    const auto result = filter.preflight(ds, argsFor(path));
+    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
+    DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
+    const auto result = filter.preflight(dataStructure, argsFor(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8550);
   }
   SECTION("tuple mismatch")
   {
-    const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
-    auto* wrongAmPtr = AttributeMatrix::Create(ds, "WrongCellData", {35}, geom.getId());
+    const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+    auto* wrongAmPtr = AttributeMatrix::Create(dataStructure, "WrongCellData", {35}, geom.getId());
     const DataPath path({"Image Geometry", "WrongCellData", "Short"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, {35}, {1});
-    DataArray<int32>::Create(ds, "Short", store, wrongAmPtr->getId());
-    const auto result = filter.preflight(ds, argsFor(path));
+    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
+    DataArray<int32>::Create(dataStructure, "Short", store, wrongAmPtr->getId());
+    const auto result = filter.preflight(dataStructure, argsFor(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8001);
   }

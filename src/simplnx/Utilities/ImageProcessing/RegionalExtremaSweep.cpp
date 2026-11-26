@@ -545,8 +545,8 @@ Result<> RegionalExtremaSweep<T>::runImpl()
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     progressThrottle.reset(dimZ, "Initializing Regional Extrema Slices");
     const int64 nX = static_cast<int64>(dimX);
-    const int64 nY = static_cast<int64>(dimY);
-    const int64 nZ = static_cast<int64>(dimZ);
+    const int64 ny = static_cast<int64>(dimY);
+    const int64 nz = static_cast<int64>(dimZ);
     const T markerValue = Maxima ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max();
     auto beyond = [](T a, T b) {
       if constexpr(Maxima)
@@ -620,7 +620,7 @@ Result<> RegionalExtremaSweep<T>::runImpl()
                 const int64 qx = static_cast<int64>(x) + o.dx;
                 const int64 qy = static_cast<int64>(y) + o.dy;
                 const int64 qz = static_cast<int64>(z) + o.dz;
-                if(qx < 0 || qx >= nX || qy < 0 || qy >= nY || qz < 0 || qz >= nZ)
+                if(qx < 0 || qx >= nX || qy < 0 || qy >= ny || qz < 0 || qz >= nz)
                 {
                   continue;
                 }
@@ -756,7 +756,7 @@ Result<> RegionalExtremaSweep<T>::runImpl()
                     const int64 qx = static_cast<int64>(x) + o.dx;
                     const int64 qy = static_cast<int64>(y) + o.dy;
                     const int64 qz = static_cast<int64>(z) + o.dz;
-                    if(qx < 0 || qx >= nX || qy < 0 || qy >= nY || qz < 0 || qz >= nZ)
+                    if(qx < 0 || qx >= nX || qy < 0 || qy >= ny || qz < 0 || qz >= nz)
                     {
                       continue;
                     }

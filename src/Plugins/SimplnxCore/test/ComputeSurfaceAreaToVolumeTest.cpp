@@ -124,21 +124,21 @@ private:
   usize m_FailWrite = 0;
 };
 
-void BuildOctantWithNumCells(DataStructure& ds)
+void BuildOctantWithNumCells(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_Dim, k_Dim, k_Dim};
 
-  auto* imageGeomPtr = ImageGeom::Create(ds, k_GeomName);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
   imageGeomPtr->setDimensions({k_Dim, k_Dim, k_Dim});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({k_GeomName, Constants::k_CellData, Constants::k_FeatureIds});
-  auto fidsStore = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = DataArray<int32>::Create(ds, Constants::k_FeatureIds, fidsStore, cellAmPtr->getId());
+  auto fidsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, fidsStore, cellAmPtr->getId());
   auto& fidsRef = featureIdsPtr->getDataStoreRef();
 
   std::vector<int32> featureCounts(k_NumOctantFeatures + 1, 0);
@@ -165,12 +165,12 @@ void BuildOctantWithNumCells(DataStructure& ds)
     SIMPLNX_RESULT_REQUIRE_VALID(fidsRefWriteResult);
   }
 
-  auto* cellFeatureAmPtr = AttributeMatrix::Create(ds, Constants::k_CellFeatureData, {static_cast<usize>(k_NumOctantFeatures + 1)}, imageGeomPtr->getId());
+  auto* cellFeatureAmPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellFeatureData, {static_cast<usize>(k_NumOctantFeatures + 1)}, imageGeomPtr->getId());
 
   // NumCells is small (9 tuples) — per-element writes are fine
   const DataPath numCellsPath = DataPath({k_GeomName, Constants::k_CellFeatureData, Constants::k_NumElements});
-  auto numCellsStore = DataStoreUtilities::CreateDataStore<int32>(ds, numCellsPath, {static_cast<usize>(k_NumOctantFeatures + 1)}, {1});
-  auto* numCellsPtr = DataArray<int32>::Create(ds, Constants::k_NumElements, numCellsStore, cellFeatureAmPtr->getId());
+  auto numCellsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, numCellsPath, {static_cast<usize>(k_NumOctantFeatures + 1)}, {1});
+  auto* numCellsPtr = DataArray<int32>::Create(dataStructure, Constants::k_NumElements, numCellsStore, cellFeatureAmPtr->getId());
   auto& numCellsRef = numCellsPtr->getDataStoreRef();
   std::vector<int32> localNumCells(featureCounts.begin(), featureCounts.end());
   auto numCellsRefWriteResult = numCellsRef.copyFromBuffer(0, nonstd::span<const int32>(localNumCells.data(), localNumCells.size()));

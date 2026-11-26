@@ -2557,40 +2557,40 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
   const IFilter::MessageHandler handler;
   SECTION("Safe Border volume")
   {
-    DataStructure ds;
-    const auto inputPath = morph_test::BuildKernelRadiusMetadata(ds, {3, 3, 1024});
+    DataStructure dataStructure;
+    const auto inputPath = morph_test::BuildKernelRadiusMetadata(dataStructure, {3, 3, 1024});
     const auto geomPath = inputPath.getParent().getParent();
     const auto outputPath = inputPath.replaceName("Output");
     ImageProcessing::StructuringElement se;
     se.radius = {100000000, 100000000, 0};
     // The invalid layout returns before resolving or allocating an output or scratch store.
-    auto grayscale = ImageProcessing::ExecuteMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler);
+    auto grayscale = ImageProcessing::ExecuteMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler);
     SIMPLNX_RESULT_REQUIRE_INVALID(grayscale);
     REQUIRE(grayscale.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
     morph_test::RequireSingleGeometryContext(grayscale.errors().front().message, geomPath);
-    auto binary = ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler);
+    auto binary = ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler);
     SIMPLNX_RESULT_REQUIRE_INVALID(binary);
     REQUIRE(binary.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
     morph_test::RequireSingleGeometryContext(binary.errors().front().message, geomPath);
-    REQUIRE_FALSE(ds.containsData(outputPath));
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_FALSE(dataStructure.containsData(outputPath));
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
   SECTION("All seven execution helpers")
   {
-    DataStructure ds;
-    const auto inputPath = morph_test::BuildKernelRadiusMetadata(ds, {static_cast<usize>(std::numeric_limits<int64>::max()) - 2, 1, 1});
+    DataStructure dataStructure;
+    const auto inputPath = morph_test::BuildKernelRadiusMetadata(dataStructure, {static_cast<usize>(std::numeric_limits<int64>::max()) - 2, 1, 1});
     const auto geomPath = inputPath.getParent().getParent();
     const auto outputPath = inputPath.replaceName("Output");
     const auto se = ImageProcessing::MakeStructuringElement(ImageProcessing::KernelType::Box, {2, 0, 0});
     // These checks return before dispatch, so no algorithm-path witness or value store is needed.
     std::vector<Result<>> results;
-    results.push_back(ImageProcessing::ExecuteMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteObjectMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::ObjectMorphOp::Dilate, 5, 0, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteBinaryMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, 5, 0, false, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteReconstructionOpenCloseImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Erode, false, false, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteBinaryOpeningByReconstructionImageFilter(ds, geomPath, inputPath, outputPath, se, 5, 0, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteObjectMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::ObjectMorphOp::Dilate, 5, 0, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, 5, 0, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteReconstructionOpenCloseImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Erode, false, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryOpeningByReconstructionImageFilter(dataStructure, geomPath, inputPath, outputPath, se, 5, 0, false, cancel, handler));
     for(usize i = 0; i < results.size(); ++i)
     {
       DYNAMIC_SECTION("Execution helper " << i)
@@ -2601,7 +2601,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
         morph_test::RequireSingleGeometryContext(result.errors().front().message, geomPath);
       }
     }
-    REQUIRE_FALSE(ds.containsData(outputPath));
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_FALSE(dataStructure.containsData(outputPath));
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

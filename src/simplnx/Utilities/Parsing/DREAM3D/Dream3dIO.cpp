@@ -3110,9 +3110,9 @@ Result<> EagerLoadDataFromHDF5(DataStructure& dataStructure, const DataPath& dat
  * @param ds Provides and receives the hierarchy.
  * @param keepPaths Specifies retained paths.
  */
-void PruneDataStructure(DataStructure& ds, const std::vector<DataPath>& keepPaths)
+void PruneDataStructure(DataStructure& dataStructure, const std::vector<DataPath>& keepPaths)
 {
-  auto allPaths = ds.getAllDataPaths();
+  auto allPaths = dataStructure.getAllDataPaths();
   // Remove children before their parent groups.
   std::sort(allPaths.begin(), allPaths.end(), [](const DataPath& a, const DataPath& b) { return a.getLength() > b.getLength(); });
 
@@ -3148,7 +3148,7 @@ void PruneDataStructure(DataStructure& ds, const std::vector<DataPath>& keepPath
     }
     if(!isNeeded)
     {
-      ds.removeData(existingPath);
+      dataStructure.removeData(existingPath);
     }
   }
 }

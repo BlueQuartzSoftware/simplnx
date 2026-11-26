@@ -47,9 +47,9 @@ TEST_CASE("Data Format: ForceInCore keeps useOocData false and stores in memory"
   REQUIRE_FALSE(app->getPreferences()->useOocData());
 
   // CreateDataStore should produce an InMemory store regardless of size.
-  DataStructure ds;
+  DataStructure dataStructure;
   DataPath dp({"TestArray"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, dp, {100, 100, 100}, {1});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 }
@@ -67,9 +67,9 @@ TEST_CASE("Data Format: Adaptive and ForceOutOfCore report useOocData true", "[I
 
   // With no OOC manager registered in this build, even ForceOutOfCore can only
   // produce an in-memory store — the resolver has no disk-backed format to return.
-  DataStructure ds;
+  DataStructure dataStructure;
   DataPath dp({"TestArray"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, dp, {100, 100, 100}, {1});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 }

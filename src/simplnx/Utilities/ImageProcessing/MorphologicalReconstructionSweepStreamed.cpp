@@ -568,10 +568,10 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
 
   const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   auto flat = [dimX, dimY](usize x, usize y, usize z) { return z * dimY * dimX + y * dimX + x; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   // Block/wave layout depends only on (dimX, dimY), fixed for the whole reconstruction, so it is built once and
   // shared by every plane, direction, and sweep pair below. Used for BOTH connectivities here -- unlike
@@ -957,8 +957,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
   const usize residentValues = plan.residentValues;
   const usize tailPlanes = dimZ - residentPlanes;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
   // Block/wave layout depends only on (dimX, dimY), which are fixed for the whole reconstruction, so this is
   // built once and shared by every resident and streamed plane, direction, and sweep pair below.
@@ -995,7 +995,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
   }
 
   auto flat2d = [dimX](int64 x, int64 y) { return static_cast<usize>(y * static_cast<int64>(dimX) + x); };
-  auto inBoundsXY = [nX, nY](int64 x, int64 y) { return x >= 0 && x < nX && y >= 0 && y < nY; };
+  auto inBoundsXY = [nX, ny](int64 x, int64 y) { return x >= 0 && x < nX && y >= 0 && y < ny; };
   auto isPreviousOffset = [](const detail::ReconOffset& offset, bool xForward, bool yForward, bool zForward) {
     if(offset.dz != 0)
     {
@@ -1052,7 +1052,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
                 value = TraitsType::fold(value, residentWork[position - dimX]);
               }
             }
-            else if(y + 1 < nY)
+            else if(y + 1 < ny)
             {
               value = TraitsType::fold(value, residentWork[position + dimX]);
             }
@@ -1079,7 +1079,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
               const int64 neighborX = x + offset.dx;
               const int64 neighborY = y + offset.dy;
               const int64 neighborZ = static_cast<int64>(z) + offset.dz;
-              if(!inBoundsXY(neighborX, neighborY) || neighborZ < 0 || neighborZ >= nZ)
+              if(!inBoundsXY(neighborX, neighborY) || neighborZ < 0 || neighborZ >= nz)
               {
                 continue;
               }
@@ -1146,7 +1146,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
                 value = TraitsType::fold(value, workPlanePtr[position - dimX]);
               }
             }
-            else if(y + 1 < nY)
+            else if(y + 1 < ny)
             {
               value = TraitsType::fold(value, workPlanePtr[position + dimX]);
             }
@@ -1173,7 +1173,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
               const int64 neighborX = x + offset.dx;
               const int64 neighborY = y + offset.dy;
               const int64 neighborZ = static_cast<int64>(z) + offset.dz;
-              if(!inBoundsXY(neighborX, neighborY) || neighborZ < 0 || neighborZ >= nZ)
+              if(!inBoundsXY(neighborX, neighborY) || neighborZ < 0 || neighborZ >= nz)
               {
                 continue;
               }

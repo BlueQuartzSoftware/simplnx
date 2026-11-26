@@ -396,11 +396,11 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
                                 const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_GradientMagnitude2DTargetBytes)
 {
   const usize nX = dims[0];
-  const usize nY = dims[1];
-  const usize nZ = dims[2];
-  if(nX == 0 || nY == 0 || nZ == 0)
+  const usize ny = dims[1];
+  const usize nz = dims[2];
+  if(nX == 0 || ny == 0 || nz == 0)
   {
-    return MakeErrorResult(-8356, fmt::format("Gradient magnitude requires nonzero image dimensions. Dimensions: {} x {} x {}.", nX, nY, nZ));
+    return MakeErrorResult(-8356, fmt::format("Gradient magnitude requires nonzero image dimensions. Dimensions: {} x {} x {}.", nX, ny, nz));
   }
 
   auto checkedMultiply = [](usize left, usize right, usize& product) {
@@ -413,22 +413,22 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
   };
   usize slice = 0;
   usize volume = 0;
-  if(!checkedMultiply(nX, nY, slice) || !checkedMultiply(slice, nZ, volume))
+  if(!checkedMultiply(nX, ny, slice) || !checkedMultiply(slice, nz, volume))
   {
-    return MakeErrorResult(-8357, fmt::format("Gradient magnitude image dimensions overflow the addressable value count. Dimensions: {} x {} x {}.", nX, nY, nZ));
+    return MakeErrorResult(-8357, fmt::format("Gradient magnitude image dimensions overflow the addressable value count. Dimensions: {} x {} x {}.", nX, ny, nz));
   }
   if(inStore.getSize() != volume)
   {
     return MakeErrorResult(-8358, fmt::format("Gradient magnitude input store size does not match the image dimensions. Actual size: {}; expected size: {}; dimensions: {} x {} x {}.",
-                                              inStore.getSize(), volume, nX, nY, nZ));
+                                              inStore.getSize(), volume, nX, ny, nz));
   }
   if(outStore.getSize() != volume)
   {
     return MakeErrorResult(-8359, fmt::format("Gradient magnitude output store size does not match the image dimensions. Actual size: {}; expected size: {}; dimensions: {} x {} x {}.",
-                                              outStore.getSize(), volume, nX, nY, nZ));
+                                              outStore.getSize(), volume, nX, ny, nz));
   }
 
-  const bool hasZ = nZ > 1;
+  const bool hasZ = nz > 1;
   if(useSpacing)
   {
     const usize effectiveDimensions = hasZ ? 3 : 2;
@@ -469,8 +469,8 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
     {
       try
       {
-        DataStore<T> residentInput(ShapeType{nZ, nY, nX}, ShapeType{1}, std::nullopt);
-        DataStore<float32> residentOutput(ShapeType{nZ, nY, nX}, ShapeType{1}, std::nullopt);
+        DataStore<T> residentInput(ShapeType{nz, ny, nX}, ShapeType{1}, std::nullopt);
+        DataStore<float32> residentOutput(ShapeType{nz, ny, nX}, ShapeType{1}, std::nullopt);
         if(Result<> result = inStore.copyIntoBuffer(0, residentInput.createSpan()); result.invalid())
         {
           return result;
@@ -523,7 +523,7 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
     std::copy(win[0].cbegin(), win[0].cend(), win[2].begin());
   }
 
-  for(usize z = 0; z < nZ; ++z)
+  for(usize z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {
@@ -545,7 +545,7 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
         }
         const usize row = y * nX;
         const usize previousRow = (y == 0 ? 0 : y - 1) * nX;
-        const usize nextRow = (y + 1 == nY ? y : y + 1) * nX;
+        const usize nextRow = (y + 1 == ny ? y : y + 1) * nX;
         for(usize x = 0; x < nX; ++x)
         {
           const usize previousX = x == 0 ? 0 : x - 1;
@@ -564,7 +564,7 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
       }
     };
     ParallelDataAlgorithm parallelAlgorithm;
-    parallelAlgorithm.setRange(0, nY);
+    parallelAlgorithm.setRange(0, ny);
     parallelAlgorithm.execute(calculateRows);
     if(shouldCancel)
     {
@@ -574,11 +574,11 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
     {
       return r;
     }
-    if(z + 1 < nZ)
+    if(z + 1 < nz)
     {
       std::swap(win[0], win[1]);
       std::swap(win[1], win[2]);
-      if(z + 2 < nZ)
+      if(z + 2 < nz)
       {
         if(Result<> r = loadPlane(win[2], z + 2); r.invalid())
         {

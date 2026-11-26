@@ -183,14 +183,14 @@ Arguments MakeArgs(const std::vector<float32>& loading, bool storeAngleComps, bo
  * @brief Asserts the five outputs of one feature against the oracle. Angle components are
  * checked only when phisRef/lambdasRef are >= 0 (a negative sentinel means "do not check").
  */
-void CheckFeature(const DataStructure& ds, usize featureIdx, float64 expectedM, int32 expectedSlipSystem, const std::array<int32, 3>& expectedPoles, float64 expectedPhi, float64 expectedLambda)
+void CheckFeature(const DataStructure& dataStructure, usize featureIdx, float64 expectedM, int32 expectedSlipSystem, const std::array<int32, 3>& expectedPoles, float64 expectedPhi, float64 expectedLambda)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
-  const auto& schmidsRef = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-  const auto& slipSystemsRef = ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
-  const auto& polesRef = ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
+  const auto& schmidsRef = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+  const auto& slipSystemsRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
+  const auto& polesRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
 
   CAPTURE(featureIdx);
   CHECK(static_cast<float64>(schmidsRef[featureIdx]) == Approx(expectedM).margin(k_Tol));
@@ -203,10 +203,10 @@ void CheckFeature(const DataStructure& ds, usize featureIdx, float64 expectedM, 
 
   if(expectedPhi >= 0.0)
   {
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
-    const auto& phisRef = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
-    const auto& lambdasRef = ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
+    const auto& phisRef = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
+    const auto& lambdasRef = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
     CHECK(static_cast<float64>(phisRef[featureIdx]) == Approx(expectedPhi).margin(k_Tol));
     CHECK(static_cast<float64>(lambdasRef[featureIdx]) == Approx(expectedLambda).margin(k_Tol));
   }

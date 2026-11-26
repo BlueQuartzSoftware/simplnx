@@ -241,20 +241,20 @@ inline std::vector<T> MakeAhePattern(usize dimX, usize dimY, usize dimZ)
  *        scalar cell array "Input" of type T, filled with @ref MakeAhePattern. Returns the input path.
  */
 template <class T>
-inline DataPath BuildAheImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
+inline DataPath BuildAheImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
   imageGeomPtr->setDimensions({dimX, dimY, dimZ});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
   const std::vector<T> pattern = MakeAhePattern<T>(dimX, dimY, dimZ);
@@ -297,7 +297,7 @@ inline std::vector<T> RunApplyAhe(const std::vector<T>& input, usize dimX, usize
  *        execute, and requires that both succeed. The function reads the key constants from NewFilterT.
  */
 template <class NewFilterT>
-inline void RunAheFilter(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float32 alpha, float32 beta, const std::vector<uint32>& radius)
+inline void RunAheFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float32 alpha, float32 beta, const std::vector<uint32>& radius)
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -307,9 +307,9 @@ inline void RunAheFilter(IFilter& filter, DataStructure& ds, const DataPath& inp
   args.insertOrAssign(NewFilterT::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
   args.insertOrAssign(NewFilterT::k_Alpha_Key, std::make_any<float32>(alpha));
   args.insertOrAssign(NewFilterT::k_Beta_Key, std::make_any<float32>(beta));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 // Frozen pre-clipping traversals from 3321af983. These preserve operation order for exact regression

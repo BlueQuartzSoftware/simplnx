@@ -137,7 +137,7 @@ private:
 
 // Sets the geometry, input, and output keys plus MinimumObjectSize and SortByObjectSize on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
-void RunRelabel(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint64 minimumObjectSize, bool sortByObjectSize, const std::string& outputName = "Output")
+void RunRelabel(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint64 minimumObjectSize, bool sortByObjectSize, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -146,9 +146,9 @@ void RunRelabel(IFilter& filter, DataStructure& ds, const DataPath& inputPath, u
   args.insertOrAssign(RcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   args.insertOrAssign(RcFilterType::k_MinimumObjectSize_Key, std::make_any<uint64>(minimumObjectSize));
   args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(sortByObjectSize));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -205,12 +205,12 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
     RcFilterType filter;
     Arguments args;
@@ -219,14 +219,14 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[
     args.insertOrAssign(RcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(RcFilterType::k_MinimumObjectSize_Key, std::make_any<uint64>(uint64{0}));
     args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(true));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("float input rejected")
   {
-    DataStructure ds;
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, std::vector<float32>(36, 1.0f));
+    DataStructure dataStructure;
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 1.0f));
     const DataPath geomPath = inputPath.getParent().getParent();
     RcFilterType filter;
     Arguments args;
@@ -235,18 +235,18 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[
     args.insertOrAssign(RcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(RcFilterType::k_MinimumObjectSize_Key, std::make_any<uint64>(uint64{0}));
     args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(true));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
   }
   SECTION("scalar integer input creates a SameAsInput output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<uint8> field = MakeLabeledField<uint8>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 12, 12, 1, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 12, 12, 1, field);
     RcFilterType filter;
-    RunRelabel(filter, ds, inputPath, /*minimumObjectSize=*/0, /*sortByObjectSize=*/true);
+    RunRelabel(filter, dataStructure, inputPath, /*minimumObjectSize=*/0, /*sortByObjectSize=*/true);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 
@@ -277,8 +277,8 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects over
     field[i] = static_cast<int8>(labelValue);
   }
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int8>(ds, k_Dx, k_Dy, k_Dz, field);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int8>(dataStructure, k_Dx, k_Dy, k_Dz, field);
 
   RcFilterType filter;
   Arguments args;
@@ -288,9 +288,9 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects over
   args.insertOrAssign(RcFilterType::k_MinimumObjectSize_Key, std::make_any<uint64>(uint64{0})); // keep every label (nothing dropped)
   args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(false));
 
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // the overflow is only detectable at execute
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == nx::core::ImageProcessing::k_RelabelComponentTooManyObjects);
 }
@@ -310,17 +310,17 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: pre-cancel p
   constexpr usize k_Dy = 12;
   constexpr usize k_Dz = 4;
   constexpr T k_Poison = static_cast<T>(42);
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<T>(ds, k_Dx, k_Dy, k_Dz, MakeLabeledField<T>(k_Dx, k_Dy, k_Dz));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<T>(dataStructure, k_Dx, k_Dy, k_Dz, MakeLabeledField<T>(k_Dx, k_Dy, k_Dz));
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto outputStore = DataStoreUtilities::CreateDataStore<T>(ds, outputPath, {k_Dz, k_Dy, k_Dx}, {1});
-  const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(outputPath.getParent());
-  auto* outputArrayPtr = DataArray<T>::Create(ds, outputPath.getTargetName(), outputStore, cellAM.getId());
+  auto outputStore = DataStoreUtilities::CreateDataStore<T>(dataStructure, outputPath, {k_Dz, k_Dy, k_Dx}, {1});
+  const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(outputPath.getParent());
+  auto* outputArrayPtr = DataArray<T>::Create(dataStructure, outputPath.getTargetName(), outputStore, cellAM.getId());
   REQUIRE(outputArrayPtr != nullptr);
   outputArrayPtr->getDataStoreRef().fill(k_Poison);
 
   std::atomic_bool shouldCancel = true;
-  const Result<> result = ImageProcessing::ExecuteRelabelComponentImageFilter(ds, inputPath, outputPath, /*minimumObjectSize=*/0, /*sortByObjectSize=*/true, shouldCancel, {});
+  const Result<> result = ImageProcessing::ExecuteRelabelComponentImageFilter(dataStructure, inputPath, outputPath, /*minimumObjectSize=*/0, /*sortByObjectSize=*/true, shouldCancel, {});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   for(const T value : outputArrayPtr->getDataStoreRef())
   {

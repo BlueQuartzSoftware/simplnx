@@ -889,12 +889,12 @@ TEST_CASE("Node Based Geometry IO")
 
   // Write HDF5 file
   {
-    DataStructure ds = CreateNodeBasedGeometries();
-    nodeData = GetNodeGeomData(ds);
+    DataStructure dataStructure = CreateNodeBasedGeometries();
+    nodeData = GetNodeGeomData(dataStructure);
     nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
     REQUIRE(fileWriter.isValid());
 
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(ds, fileWriter);
+    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
@@ -1946,13 +1946,13 @@ TEST_CASE("ImageGeomIO rejects stored invalid spacing", "[simplnx][HDF5][ImageGe
 {
   const fs::path filePath = GetDataDir() / "ImageGeomInvalidSpacing.dream3d";
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const CreateImageGeometryAction action(DataPath({"Stored Image"}), {2, 3, 1}, {0.0f, 0.0f, 0.0f}, {0.5f, 2.0f, 1.0f}, "Cell Data");
-    const auto createResult = action.apply(ds, IDataAction::Mode::Execute);
+    const auto createResult = action.apply(dataStructure, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(createResult);
     auto file = HDF5::FileIO::WriteFile(filePath);
     REQUIRE(file.isValid());
-    const auto writeResult = HDF5::DataStructureWriter::WriteFile(ds, file);
+    const auto writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, file);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
     auto group = file.openGroup(nx::core::Constants::k_DataStructureTag).openGroup("Stored Image");
@@ -1978,18 +1978,18 @@ TEST_CASE("RectGridGeomIO rejects invalid external bounds on full and selective 
   const DataPath geometryPath({"Stored Grid"});
   const DataPath boundsPath({"Z Bound Coordinates"});
   {
-    DataStructure ds;
-    auto* geomPtr = RectGridGeom::Create(ds, geometryPath.getTargetName());
+    DataStructure dataStructure;
+    auto* geomPtr = RectGridGeom::Create(dataStructure, geometryPath.getTargetName());
     REQUIRE(geomPtr != nullptr);
     geomPtr->setDimensions({1, 1, 1});
     // This array lives outside the geometry's HDF5 group and is visited after it.
-    auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(ds, boundsPath.getTargetName(), ShapeType{2}, ShapeType{1});
+    auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, boundsPath.getTargetName(), ShapeType{2}, ShapeType{1});
     REQUIRE(boundsPtr != nullptr);
     boundsPtr->setValue(0, 0.0f);
     boundsPtr->setValue(1, 1.0f);
     const auto boundResult = geomPtr->setBounds(nullptr, nullptr, boundsPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(boundResult);
-    const auto writeResult = DREAM3D::WriteFile(filePath, ds);
+    const auto writeResult = DREAM3D::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
     // Modify the stored dataset directly to model an invalid file from an older producer.

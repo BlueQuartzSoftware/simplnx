@@ -55,11 +55,11 @@ TEST_CASE("simplnx::UpdateImageGeomAction: Invalid metadata is rejected before e
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const bool useClone = GENERATE(false, true);
   CAPTURE(mode, useClone);
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath geometryPath({"Parent", "Image"});
-  auto* parentPtr = DataGroup::Create(ds, "Parent");
+  auto* parentPtr = DataGroup::Create(dataStructure, "Parent");
   REQUIRE(parentPtr != nullptr);
-  auto* geomPtr = ImageGeom::Create(ds, "Image", parentPtr->getId());
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image", parentPtr->getId());
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({10, 1, 1});
   const FloatVec3 oldSpacing{1, 1, 1};
@@ -94,7 +94,7 @@ TEST_CASE("simplnx::UpdateImageGeomAction: Invalid metadata is rejected before e
   const UpdateImageGeomAction action(origin, spacing, geometryPath, centerOrigin);
   const auto clone = action.clone();
   const IDataAction* selectedActionPtr = useClone ? clone.get() : &action;
-  const auto result = selectedActionPtr->apply(ds, mode);
+  const auto result = selectedActionPtr->apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors().front().code == expectedCode);

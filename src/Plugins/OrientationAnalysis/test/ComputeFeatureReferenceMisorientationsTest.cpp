@@ -154,10 +154,10 @@ inline Arguments BuildArgs(int32 referenceOrientation)
 }
 
 // Helper: assert per-voxel FRM matches expected value within tolerance.
-inline void RequireFRMClose(const DataStructure& ds, usize voxelIdx, float32 expectedDeg, float32 tolDeg = 1e-3f)
+inline void RequireFRMClose(const DataStructure& dataStructure, usize voxelIdx, float32 expectedDeg, float32 tolDeg = 1e-3f)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
-  const auto& frm = ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
+  const auto& frm = dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
   const float32 actual = frm[voxelIdx];
   const float32 diff = std::abs(actual - expectedDeg);
   if(diff > tolDeg)
@@ -219,12 +219,12 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Ph
   UnitTest::CheckArraysInheritTupleDims(fixture.ds);
 }
 
-inline void RequireAvgClose(const DataStructure& ds, usize featureIdx, float32 expectedDeg, float32 tolDeg = 1e-3f, bool isMode1 = false)
+inline void RequireAvgClose(const DataStructure& dataStructure, usize featureIdx, float32 expectedDeg, float32 tolDeg = 1e-3f, bool isMode1 = false)
 {
   const std::string& avgName = k_FeatureAvgMisorientationsOutName;
   const auto avgPath = k_CellFeatureDataPath.createChildPath(avgName);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(avgPath));
-  const auto& avg = ds.getDataRefAs<Float32Array>(avgPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgPath));
+  const auto& avg = dataStructure.getDataRefAs<Float32Array>(avgPath);
   const float32 actual = avg[featureIdx];
   const float32 diff = std::abs(actual - expectedDeg);
   if(diff > tolDeg)
@@ -238,16 +238,16 @@ inline void RequireAvgClose(const DataStructure& ds, usize featureIdx, float32 e
 }
 
 // Class 4 invariant predicates — assert every invariant on the filter's output.
-inline void AssertClass4Invariants(const DataStructure& ds, bool isMode1)
+inline void AssertClass4Invariants(const DataStructure& dataStructure, bool isMode1)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
-  const auto& featureIds = ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName)));
-  const auto& cellPhases = ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
-  const auto& frm = ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName)));
-  const auto& avg = ds.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName)));
+  const auto& cellPhases = dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
+  const auto& frm = dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName)));
+  const auto& avg = dataStructure.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName));
 
   const usize totalVoxels = featureIds.getNumberOfTuples();
   const usize numFeatures = avg.getNumberOfTuples();

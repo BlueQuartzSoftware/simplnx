@@ -24,7 +24,7 @@ using GradMagFilterType = GradientMagnitudeImageFilter;
 
 // Sets the geometry, input, and output keys plus the UseImageSpacing flag on the Arguments. The helper runs preflight
 // and execute, and requires that both steps succeed.
-void RunGradMag(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bool useImageSpacing, UnitTest::AlgorithmTestScope* algorithmTestScope = nullptr,
+void RunGradMag(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool useImageSpacing, UnitTest::AlgorithmTestScope* algorithmTestScope = nullptr,
                 const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -33,9 +33,9 @@ void RunGradMag(IFilter& filter, DataStructure& ds, const DataPath& inputPath, b
   args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   args.insertOrAssign(GradMagFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeFilter = [&]() { return filter.execute(ds, args); };
+  auto executeFilter = [&]() { return filter.execute(dataStructure, args); };
   auto executeResult = algorithmTestScope == nullptr ? executeFilter() : algorithmTestScope->execute(executeFilter);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -71,12 +71,12 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
     GradMagFilterType filter;
     Arguments args;
@@ -84,7 +84,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "
     args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
     args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(GradMagFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
@@ -93,24 +93,24 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "
     const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
     CAPTURE(scenario);
     UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 1, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 6, 6, 1, field);
     GradMagFilterType filter;
-    RunGradMag(filter, ds, inputPath, /*useImageSpacing=*/false, &algorithmTestScope);
+    RunGradMag(filter, dataStructure, inputPath, /*useImageSpacing=*/false, &algorithmTestScope);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
   }
   SECTION("non-unit spacing is accepted when UseImageSpacing is off")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 6);
-    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 6, field);
-    REQUIRE(ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
+    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 6, 6, 6, field);
+    REQUIRE(dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
     GradMagFilterType filter;
-    RunGradMag(filter, ds, inputPath, /*useImageSpacing=*/false);
+    RunGradMag(filter, dataStructure, inputPath, /*useImageSpacing=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
   }
 }
 

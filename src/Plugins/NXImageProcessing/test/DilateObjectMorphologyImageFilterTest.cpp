@@ -54,7 +54,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
 
   SECTION("ObjectValue=1 (uint8)")
   {
-    const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(ds, dx, dy, dz, uint8{1}, uint8{0}); };
+    const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(dataStructure, dx, dy, dz, uint8{1}, uint8{0}); };
     const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0);
     for(const auto& kernel : kernels)
     {
@@ -70,7 +70,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
   }
   SECTION("ObjectValue=7 (non-default, int32 input)")
   {
-    const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<int32>(ds, dx, dy, dz, int32{7}, int32{0}); };
+    const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<int32>(dataStructure, dx, dy, dz, int32{7}, int32{0}); };
     const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(7.0);
     for(const auto& kernel : kernels)
     {
@@ -93,7 +93,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Annulus computed-expected", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
-  const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(ds, dx, dy, dz, uint8{1}, uint8{0}); };
+  const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(dataStructure, dx, dy, dz, uint8{1}, uint8{0}); };
   const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0);
   constexpr auto k_KDilate = ImageProcessing::ObjectMorphOp::Dilate;
 
@@ -118,7 +118,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Annulus compute
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: float32 exact-equality object value", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
-  const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<float32>(ds, dx, dy, dz, 3.0f, 0.0f); };
+  const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<float32>(dataStructure, dx, dy, dz, 3.0f, 0.0f); };
   const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(3.0);
   omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {2, 2, 2}, ImageProcessing::ObjectMorphOp::Dilate, 3.0f, 0.0f, setParams);
 }
@@ -158,17 +158,17 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
     }
   }
 
-  DataStructure ds;
-  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
   imageGeomPtr->setDimensions({k_D, k_D, k_D});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   const ShapeType cellShape = {k_D, k_D, k_D};
-  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<uint8>(ds, inputPath, cellShape, {1});
-  auto* inputArrayPtr = DataArray<uint8>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, inputPath, cellShape, {1});
+  auto* inputArrayPtr = DataArray<uint8>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   {
     constexpr usize k_ChunkValues = 65536;
     auto& ref = inputArrayPtr->getDataStoreRef();
@@ -179,7 +179,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
       SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
     }
   }
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   DilateObjectMorphologyImageFilter filter;
   Arguments args;
@@ -190,11 +190,11 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
   args.insertOrAssign(DilateObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{2, 2, 2}));
   args.insertOrAssign(DilateObjectMorphologyImageFilter::k_ObjectValue_Key, std::make_any<float64>(static_cast<float64>(k_ObjectValue)));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   const usize numSlots = k_D * k_D * k_D;
@@ -227,7 +227,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -256,31 +256,31 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-
 
   SECTION("integer input (uint8)")
   {
-    DataStructure ds;
-    const DataPath inputPath = omt::BuildObjectImage<uint8>(ds, 8, 8, 8, uint8{1}, uint8{0}); // range [0, 255]
+    DataStructure dataStructure;
+    const DataPath inputPath = omt::BuildObjectImage<uint8>(dataStructure, 8, 8, 8, uint8{1}, uint8{0}); // range [0, 255]
 
     // Out of range (> 255) -> undefined cast -> error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 99999.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 99999.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ObjectValueOutOfRange);
     }
     // Non-finite (NaN) -> error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_NonFiniteObjectValue);
     }
     // Fractional (1.5) -> truncation warning, still valid.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1.5));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.5));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE_FALSE(result.outputActions.warnings().empty());
       REQUIRE(result.outputActions.warnings().front().code == k_ObjectValueTruncated);
     }
     // In-range integer value -> clean.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.0));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().empty());
     }
@@ -288,31 +288,31 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-
 
   SECTION("float input (float32)")
   {
-    DataStructure ds;
-    const DataPath inputPath = omt::BuildObjectImage<float32>(ds, 8, 8, 8, 1.0f, 0.0f);
+    DataStructure dataStructure;
+    const DataPath inputPath = omt::BuildObjectImage<float32>(dataStructure, 8, 8, 8, 1.0f, 0.0f);
 
     // Non-finite (Inf) -> error (would break the exact-equality object test).
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_NonFiniteObjectValue);
     }
     // Finite but out of float32 range (1e300 > FLT_MAX): the cast to float32 would overflow to +inf and the
     // exact-equality object test would then match nothing -> reject as out-of-range rather than run silently.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1e300));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1e300));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ObjectValueOutOfRange);
     }
     // A fractional but finite value is representable in a float image -> clean, no truncation warning.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 3.5));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 3.5));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().empty());
     }
     // An exactly-representable value -> clean.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 3.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 3.0));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().empty());
     }
@@ -323,18 +323,18 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-
   // the downstream static_cast<T> was undefined behavior. The exclusive power-of-two bound must reject them.
   SECTION("int64 input: 2^63 boundary is rejected, in-range value is clean")
   {
-    DataStructure ds;
-    const DataPath inputPath = omt::BuildObjectImage<int64>(ds, 8, 8, 8, int64{1}, int64{0});
+    DataStructure dataStructure;
+    const DataPath inputPath = omt::BuildObjectImage<int64>(dataStructure, 8, 8, 8, int64{1}, int64{0});
 
     // Exactly 2^63 (== (float64)INT64_MAX): NOT representable as int64 -> undefined cast -> must error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 9223372036854775808.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 9223372036854775808.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ObjectValueOutOfRange);
     }
     // A large but representable value (< 2^63) -> clean (no false rejection at the extreme).
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 9.0e18));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 9.0e18));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().empty());
     }
@@ -342,18 +342,18 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-
 
   SECTION("uint64 input: 2^64 boundary is rejected, in-range value is clean")
   {
-    DataStructure ds;
-    const DataPath inputPath = omt::BuildObjectImage<uint64>(ds, 8, 8, 8, uint64{1}, uint64{0});
+    DataStructure dataStructure;
+    const DataPath inputPath = omt::BuildObjectImage<uint64>(dataStructure, 8, 8, 8, uint64{1}, uint64{0});
 
     // Exactly 2^64 (== (float64)UINT64_MAX): NOT representable as uint64 -> undefined cast -> must error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 18446744073709551616.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 18446744073709551616.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ObjectValueOutOfRange);
     }
     // A large but representable value (< 2^64) -> clean.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1.8e19));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.8e19));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().empty());
     }

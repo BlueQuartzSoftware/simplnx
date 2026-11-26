@@ -310,8 +310,8 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
   const DataPath output = cellData.createChildPath("Output");
 
   // --- read input through OUR ITK-free reader ---
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   // --- run OUR filter with the ITK case's radius ---
@@ -324,17 +324,17 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
     args.insertOrAssign(MedianImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(*radius));
   }
   MedianImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- DURABLE golden: md5-validity-first (plan Sec.4): our output's md5 must equal ITK's committed hash. ---
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("Median md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

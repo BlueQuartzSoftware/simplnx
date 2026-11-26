@@ -227,10 +227,10 @@ fs::path OutputDir()
 }
 
 template <typename T>
-void RequireArrayEquals(const DataStructure& ds, const DataPath& dataArrayPath, const std::vector<T>& expected)
+void RequireArrayEquals(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<T>& expected)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(dataArrayPath));
-  const auto& arr = ds.getDataRefAs<DataArray<T>>(dataArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath));
+  const auto& arr = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
   const auto& store = arr.getDataStoreRef();
   REQUIRE(store.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
@@ -244,10 +244,10 @@ void RequireArrayEquals(const DataStructure& ds, const DataPath& dataArrayPath, 
   }
 }
 
-void RequireFloatArrayApproxEquals(const DataStructure& ds, const DataPath& dataArrayPath, const std::vector<float>& expected, float tolerance = 1e-5f)
+void RequireFloatArrayApproxEquals(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<float>& expected, float tolerance = 1e-5f)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<float32>>(dataArrayPath));
-  const auto& arr = ds.getDataRefAs<DataArray<float32>>(dataArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(dataArrayPath));
+  const auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(dataArrayPath);
   const auto& store = arr.getDataStoreRef();
   REQUIRE(store.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
@@ -1568,9 +1568,9 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[N
   WriteNiftiFile(filePath, hdr, voxels, false);
   const DataPath geomPath({"NIfTI Flip"});
   auto args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", false, useAffine);
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   bool warned = false;
   bool rotationWarned = false;
@@ -1589,15 +1589,15 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[N
   CHECK(rotationWarned == (useAffine && kind == OrientationCase::RotatedFlippedSform));
   CHECK(preflight.outputActions.warnings().size() == static_cast<usize>(warned) + static_cast<usize>(rotationWarned));
   CHECK(warned == (useAffine && kind != OrientationCase::PositiveQform && kind != OrientationCase::PositiveSform));
-  const auto execute = filter.execute(ds, args);
+  const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(geomPath));
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions() == SizeVec3(2, 2, 2));
   REQUIRE(geom.getSpacing() == FloatVec3(2.0f, 3.0f, 4.0f));
   REQUIRE(geom.getOrigin() == (useAffine && kind != OrientationCase::NegativeFallbackPixdimX ? FloatVec3(10.0f, 20.0f, 30.0f) : FloatVec3(0.0f, 0.0f, 0.0f)));
-  RequireArrayEquals<uint8>(ds, geomPath.createChildPath("Cell Data").createChildPath("ImageData"), voxels);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  RequireArrayEquals<uint8>(dataStructure, geomPath.createChildPath("Cell Data").createChildPath("ImageData"), voxels);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite coefficients", "[NXImageProcessing][ReadNIfTIFileFilter]")

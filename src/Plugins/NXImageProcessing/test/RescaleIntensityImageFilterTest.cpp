@@ -14,8 +14,8 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: int8 output saturates
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<int8>(ds, 4, 0.0, 1.0); // 4x4x4 = 64 values, 0..63 (fits int8)
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<int8>(dataStructure, 4, 0.0, 1.0); // 4x4x4 = 64 values, 0..63 (fits int8)
 
   RescaleIntensityImageFilter filter;
   Arguments args;
@@ -24,11 +24,11 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: int8 output saturates
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputMinimum_Key, std::make_any<float64>(0.0));
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputMaximum_Key, std::make_any<float64>(255.0)); // exceeds int8 range on purpose
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int8>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int8>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getValue(0) == static_cast<int8>(0));    // input min -> output min
   REQUIRE(outStore.getValue(63) == static_cast<int8>(127)); // input max maps to 255, saturated to int8 max (NOT 0)
   bool allInRange = true;
@@ -64,8 +64,8 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: constant input maps t
     constantValue = 0.0;
   }
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, 4, constantValue, 0.0); // step 0 -> constant image (inMin == inMax)
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, 4, constantValue, 0.0); // step 0 -> constant image (inMin == inMax)
 
   RescaleIntensityImageFilter filter;
   Arguments args;
@@ -74,11 +74,11 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: constant input maps t
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputMinimum_Key, std::make_any<float64>(k_OutputMinimum));
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputMaximum_Key, std::make_any<float64>(k_OutputMaximum));
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<float32>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<float32>>(outputPath).getDataStoreRef();
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     INFO("index=" << i << " constantValue=" << constantValue);
@@ -101,8 +101,8 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: ITK real-image golden
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Float.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Float.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -110,18 +110,18 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: ITK real-image golden
   args.insertOrAssign(RescaleIntensityImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   RescaleIntensityImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: baseline compare @ 1e-8.
   const DataPath bGeom({"Baseline Geometry"});
-  const auto readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath("BasicFilters_RescaleIntensityImageFilter_3d.nrrd"), bGeom, "CellData", "Baseline");
+  const auto readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath("BasicFilters_RescaleIntensityImageFilter_3d.nrrd"), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 1e-8);
+  const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 1e-8);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

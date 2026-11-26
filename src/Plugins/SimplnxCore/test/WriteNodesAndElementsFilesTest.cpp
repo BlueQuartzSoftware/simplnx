@@ -32,29 +32,29 @@ void Cleanup()
   }
 }
 
-void CreateVertexGeometry(DataStructure& ds)
+void CreateVertexGeometry(DataStructure& dataStructure)
 {
-  VertexGeom* geomPtr = VertexGeom::Create(ds, k_GeometryName);
-  auto* vertexAttrMatrixPtr = AttributeMatrix::Create(ds, "Vertex Data", {2}, geomPtr->getId());
+  VertexGeom* geomPtr = VertexGeom::Create(dataStructure, k_GeometryName);
+  auto* vertexAttrMatrixPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {2}, geomPtr->getId());
   geomPtr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
-  Float32Array* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices Store", {2}, {3}, geomPtr->getId());
+  Float32Array* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices Store", {2}, {3}, geomPtr->getId());
   std::vector<float32> verticesVec = {1, 1.5, 1.75, 2, 3, 4};
   std::copy(verticesVec.begin(), verticesVec.end(), verticesPtr->begin());
   geomPtr->setVertices(*verticesPtr);
 }
 
-void CreateEdgeGeometry(DataStructure& ds)
+void CreateEdgeGeometry(DataStructure& dataStructure)
 {
-  EdgeGeom* geomPtr = EdgeGeom::Create(ds, k_GeometryName);
-  auto* edgeAttrMatrixPtr = AttributeMatrix::Create(ds, "Edge Data", {1}, geomPtr->getId());
+  EdgeGeom* geomPtr = EdgeGeom::Create(dataStructure, k_GeometryName);
+  auto* edgeAttrMatrixPtr = AttributeMatrix::Create(dataStructure, "Edge Data", {1}, geomPtr->getId());
   geomPtr->setEdgeAttributeMatrix(*edgeAttrMatrixPtr);
-  auto* vertexAttrMatrixPtr = AttributeMatrix::Create(ds, "Vertex Data", {2}, geomPtr->getId());
+  auto* vertexAttrMatrixPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {2}, geomPtr->getId());
   geomPtr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
-  Float32Array* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices Store", {2}, {3}, geomPtr->getId());
+  Float32Array* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices Store", {2}, {3}, geomPtr->getId());
   std::vector<float32> verticesVec = {1.0f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f};
   std::copy(verticesVec.begin(), verticesVec.end(), verticesPtr->begin());
   geomPtr->setVertices(*verticesPtr);
-  DataArray<IGeometry::MeshIndexType>* cellsPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, "Cells Store", {1}, {2}, geomPtr->getId());
+  DataArray<IGeometry::MeshIndexType>* cellsPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Cells Store", {1}, {2}, geomPtr->getId());
   cellsPtr->setValue(0, 0ULL);
   cellsPtr->setValue(1, 1ULL);
   geomPtr->setEdgeList(*cellsPtr);

@@ -1950,11 +1950,11 @@ TEST_CASE("Store-copy factories cannot return incompatible stores or hide failur
     REQUIRE_THROWS_WITH(source.deepCopy(format), Catch::Contains(format));
   }
   REQUIRE(source.getValue(0) == 17);
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
   resolver->selected_format = format;
-  ds.setFormatResolver(resolver);
-  auto* arrayPtr = DataArray<int32>::Create(ds, "FailureSource", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{2}, 17));
+  dataStructure.setFormatResolver(resolver);
+  auto* arrayPtr = DataArray<int32>::Create(dataStructure, "FailureSource", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{2}, 17));
   REQUIRE(arrayPtr != nullptr);
   if(failure == 4)
   {
@@ -1964,7 +1964,7 @@ TEST_CASE("Store-copy factories cannot return incompatible stores or hide failur
   {
     REQUIRE(arrayPtr->deepCopy(DataPath({"FailureCopy"})) == nullptr);
   }
-  REQUIRE_FALSE(ds.containsData(DataPath({"FailureCopy"})));
+  REQUIRE_FALSE(dataStructure.containsData(DataPath({"FailureCopy"})));
 }
 
 TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected factory", "[simplnx][DataArray][StorageFormatPlan]")
@@ -2006,21 +2006,21 @@ TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected fa
   auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
   resolver->selected_format = format;
-  ds.setFormatResolver(resolver);
-  DataStructObserver observer(ds);
+  dataStructure.setFormatResolver(resolver);
+  DataStructObserver observer(dataStructure);
   const DataPath outputPath({"RejectedOutput"});
   const usize initialAddCount = observer.getDataAddedCount();
 
   if(failure == 5)
   {
-    REQUIRE_THROWS_AS(ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format), std::bad_alloc);
+    REQUIRE_THROWS_AS(ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format), std::bad_alloc);
   }
   else
   {
-    auto result = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format);
+    auto result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format);
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
     REQUIRE(result.errors().front().code == -265);
@@ -2032,7 +2032,7 @@ TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected fa
     }
   }
 
-  REQUIRE_FALSE(ds.containsData(outputPath));
+  REQUIRE_FALSE(dataStructure.containsData(outputPath));
   REQUIRE(observer.getDataAddedCount() == initialAddCount);
   REQUIRE(*selectedFactoryCalls == 1);
   REQUIRE(*fallbackMemoryFactoryCalls == 0);
@@ -2042,16 +2042,16 @@ TEST_CASE("StorageFormatPlan: planned arrays resolve root parent and first paren
 {
   SECTION("root create")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath expectedPath({"RootValues"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, "");
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, "");
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value() == ds.getDataAs<DataArray<int32>>(expectedPath));
+    REQUIRE(result.value() == dataStructure.getDataAs<DataArray<int32>>(expectedPath));
     REQUIRE(resolver->paths == std::vector<DataPath>{expectedPath});
     REQUIRE(resolver->bytes == std::vector<uint64>{6 * sizeof(int32)});
     REQUIRE(observer.getDataAddedCount() == 1);
@@ -2059,36 +2059,36 @@ TEST_CASE("StorageFormatPlan: planned arrays resolve root parent and first paren
 
   SECTION("explicit memory bypasses destination policy")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
     resolver->failure_message = "explicit planned creation must not resolve policy";
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath expectedPath({"ExplicitMemory"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, Preferences::k_InMemoryFormat.str());
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, Preferences::k_InMemoryFormat.str());
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value() == ds.getDataAs<DataArray<int32>>(expectedPath));
+    REQUIRE(result.value() == dataStructure.getDataAs<DataArray<int32>>(expectedPath));
     REQUIRE(resolver->paths.empty());
     REQUIRE(observer.getDataAddedCount() == 1);
   }
 
   SECTION("parented import preserves the supplied identifier")
   {
-    DataStructure ds;
-    auto* parentPtr = DataGroup::Create(ds, "Parent");
+    DataStructure dataStructure;
+    auto* parentPtr = DataGroup::Create(dataStructure, "Parent");
     REQUIRE(parentPtr != nullptr);
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath expectedPath({"Parent", "ImportedValues"});
     constexpr DataObject::IdType k_ImportId = 701;
 
-    auto result = DataArray<int32>::ImportPlanned(ds, expectedPath.getTargetName(), k_ImportId, ShapeType{4}, ShapeType{1}, "", parentPtr->getId());
+    auto result = DataArray<int32>::ImportPlanned(dataStructure, expectedPath.getTargetName(), k_ImportId, ShapeType{4}, ShapeType{1}, "", parentPtr->getId());
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value() == ds.getDataAs<DataArray<int32>>(expectedPath));
+    REQUIRE(result.value() == dataStructure.getDataAs<DataArray<int32>>(expectedPath));
     REQUIRE(result.value()->getId() == k_ImportId);
     REQUIRE(resolver->paths == std::vector<DataPath>{expectedPath});
     REQUIRE(resolver->bytes == std::vector<uint64>{4 * sizeof(int32)});
@@ -2097,20 +2097,20 @@ TEST_CASE("StorageFormatPlan: planned arrays resolve root parent and first paren
 
   SECTION("multiply parented object uses its first path")
   {
-    DataStructure ds;
-    auto* firstParentPtr = DataGroup::Create(ds, "First");
-    auto* secondParentPtr = DataGroup::Create(ds, "Second");
+    DataStructure dataStructure;
+    auto* firstParentPtr = DataGroup::Create(dataStructure, "First");
+    auto* secondParentPtr = DataGroup::Create(dataStructure, "Second");
     REQUIRE(firstParentPtr != nullptr);
     REQUIRE(secondParentPtr != nullptr);
-    auto* sharedParentPtr = DataGroup::Create(ds, "Shared", firstParentPtr->getId());
+    auto* sharedParentPtr = DataGroup::Create(dataStructure, "Shared", firstParentPtr->getId());
     REQUIRE(sharedParentPtr != nullptr);
-    REQUIRE(ds.setAdditionalParent(sharedParentPtr->getId(), secondParentPtr->getId()));
+    REQUIRE(dataStructure.setAdditionalParent(sharedParentPtr->getId(), secondParentPtr->getId()));
     const DataPath expectedPath = sharedParentPtr->getDataPaths().front().createChildPath("ChildValues");
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
 
-    auto result = DataArray<int32>::CreatePlanned(ds, expectedPath.getTargetName(), ShapeType{5}, ShapeType{1}, "", sharedParentPtr->getId());
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, expectedPath.getTargetName(), ShapeType{5}, ShapeType{1}, "", sharedParentPtr->getId());
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(resolver->paths == std::vector<DataPath>{expectedPath});
@@ -2123,31 +2123,31 @@ TEST_CASE("StorageFormatPlan: planned array failures publish no object or notifi
 {
   SECTION("missing parent fails before policy resolution")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
 
-    auto result = DataArray<int32>::CreatePlanned(ds, "RejectedMissingParent", ShapeType{2}, ShapeType{1}, "", DataObject::IdType{99999});
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, "RejectedMissingParent", ShapeType{2}, ShapeType{1}, "", DataObject::IdType{99999});
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
     REQUIRE(result.errors().front().code == -10610);
     REQUIRE(resolver->paths.empty());
-    REQUIRE_FALSE(ds.containsData(DataPath({"RejectedMissingParent"})));
+    REQUIRE_FALSE(dataStructure.containsData(DataPath({"RejectedMissingParent"})));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 
   SECTION("resolver failure retains path and cause")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
     resolver->failure_message = "injected planned-array resolver failure -9881";
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath rejectedPath({"RejectedResolution"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "");
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "");
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
@@ -2155,43 +2155,43 @@ TEST_CASE("StorageFormatPlan: planned array failures publish no object or notifi
     REQUIRE(result.errors().front().message.find(rejectedPath.toString()) != std::string::npos);
     REQUIRE(result.errors().front().message.find("-9881") != std::string::npos);
     REQUIRE(resolver->paths == std::vector<DataPath>{rejectedPath});
-    REQUIRE_FALSE(ds.containsData(rejectedPath));
+    REQUIRE_FALSE(dataStructure.containsData(rejectedPath));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 
   SECTION("resolver allocation failure propagates")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
     resolver->throw_bad_allocation = true;
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath rejectedPath({"RejectedAllocation"});
 
-    REQUIRE_THROWS_AS(DataArray<int32>::CreatePlanned(ds, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, ""), std::bad_alloc);
+    REQUIRE_THROWS_AS(DataArray<int32>::CreatePlanned(dataStructure, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, ""), std::bad_alloc);
     REQUIRE(resolver->paths == std::vector<DataPath>{rejectedPath});
-    REQUIRE_FALSE(ds.containsData(rejectedPath));
+    REQUIRE_FALSE(dataStructure.containsData(rejectedPath));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 
   SECTION("insertion failure occurs after one successful plan")
   {
-    DataStructure ds;
-    auto* nonGroupParentPtr = DataArray<int32>::Create(ds, "NonGroupParent", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0));
+    DataStructure dataStructure;
+    auto* nonGroupParentPtr = DataArray<int32>::Create(dataStructure, "NonGroupParent", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0));
     REQUIRE(nonGroupParentPtr != nullptr);
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath rejectedPath({"NonGroupParent", "RejectedChild"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "", nonGroupParentPtr->getId());
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "", nonGroupParentPtr->getId());
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
     REQUIRE(result.errors().front().code == -10612);
     REQUIRE(result.errors().front().message.find(rejectedPath.toString()) != std::string::npos);
     REQUIRE(resolver->paths == std::vector<DataPath>{rejectedPath});
-    REQUIRE_FALSE(ds.containsData(rejectedPath));
+    REQUIRE_FALSE(dataStructure.containsData(rejectedPath));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 }
@@ -2203,44 +2203,44 @@ TEST_CASE("StorageFormatPlan: planned factories reject invalid names before poli
   const bool importing = GENERATE(false, true);
   CAPTURE(invalidName, parented, importing);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   std::optional<DataObject::IdType> parentId;
   if(parented)
   {
-    auto* parentPtr = DataGroup::Create(ds, "Parent");
+    auto* parentPtr = DataGroup::Create(dataStructure, "Parent");
     REQUIRE(parentPtr != nullptr);
     parentId = parentPtr->getId();
   }
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
-  DataStructObserver observer(ds);
-  const usize initialObjectCount = ds.getAllDataObjectIds().size();
+  dataStructure.setFormatResolver(resolver);
+  DataStructObserver observer(dataStructure);
+  const usize initialObjectCount = dataStructure.getAllDataObjectIds().size();
   constexpr DataObject::IdType k_ImportId = 901;
 
-  Result<DataArray<int32>*> result = importing ? DataArray<int32>::ImportPlanned(ds, invalidName, k_ImportId, ShapeType{2}, ShapeType{1}, "", parentId) :
-                                                 DataArray<int32>::CreatePlanned(ds, invalidName, ShapeType{2}, ShapeType{1}, "", parentId);
+  Result<DataArray<int32>*> result = importing ? DataArray<int32>::ImportPlanned(dataStructure, invalidName, k_ImportId, ShapeType{2}, ShapeType{1}, "", parentId) :
+                                                 DataArray<int32>::CreatePlanned(dataStructure, invalidName, ShapeType{2}, ShapeType{1}, "", parentId);
 
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   REQUIRE(result.errors().front().code == -10610);
   REQUIRE(result.errors().front().message.find(invalidName) != std::string::npos);
   REQUIRE(resolver->paths.empty());
-  REQUIRE(ds.getAllDataObjectIds().size() == initialObjectCount);
-  REQUIRE(ds.getData(k_ImportId) == nullptr);
+  REQUIRE(dataStructure.getAllDataObjectIds().size() == initialObjectCount);
+  REQUIRE(dataStructure.getData(k_ImportId) == nullptr);
   REQUIRE(observer.getDataAddedCount() == 0);
 }
 
 TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension shapes", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   const DataPath emptyTuplePath({"EmptyTuples"});
   const DataPath emptyComponentPath({"EmptyComponents"});
   const DataPath scalarPath({"Scalar"});
   const DataPath zeroDimensionPath({"ZeroDimension"});
 
-  auto emptyTupleResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(ds, emptyTuplePath, ShapeType{}, ShapeType{3}, "");
+  auto emptyTupleResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(dataStructure, emptyTuplePath, ShapeType{}, ShapeType{3}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(emptyTupleResult);
   REQUIRE(emptyTupleResult.value()->getTupleShape().empty());
   REQUIRE(emptyTupleResult.value()->getComponentShape() == ShapeType{3});
@@ -2248,7 +2248,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(emptyTupleResult.value()->getNumberOfComponents() == 3);
   REQUIRE(emptyTupleResult.value()->getSize() == 3);
 
-  auto emptyComponentResult = DataArray<uint64>::CreatePlanned(ds, emptyComponentPath.getTargetName(), ShapeType{3}, ShapeType{}, "");
+  auto emptyComponentResult = DataArray<uint64>::CreatePlanned(dataStructure, emptyComponentPath.getTargetName(), ShapeType{3}, ShapeType{}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(emptyComponentResult);
   REQUIRE(emptyComponentResult.value()->getTupleShape() == ShapeType{3});
   REQUIRE(emptyComponentResult.value()->getComponentShape().empty());
@@ -2256,7 +2256,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(emptyComponentResult.value()->getNumberOfComponents() == 1);
   REQUIRE(emptyComponentResult.value()->getSize() == 3);
 
-  auto scalarResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(ds, scalarPath, ShapeType{}, ShapeType{}, "");
+  auto scalarResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(dataStructure, scalarPath, ShapeType{}, ShapeType{}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(scalarResult);
   REQUIRE(scalarResult.value()->getTupleShape().empty());
   REQUIRE(scalarResult.value()->getComponentShape().empty());
@@ -2264,7 +2264,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(scalarResult.value()->getNumberOfComponents() == 1);
   REQUIRE(scalarResult.value()->getSize() == 1);
 
-  auto zeroDimensionResult = DataArray<uint64>::CreatePlanned(ds, zeroDimensionPath.getTargetName(), ShapeType{3, 0}, ShapeType{2}, "");
+  auto zeroDimensionResult = DataArray<uint64>::CreatePlanned(dataStructure, zeroDimensionPath.getTargetName(), ShapeType{3, 0}, ShapeType{2}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(zeroDimensionResult);
   REQUIRE(zeroDimensionResult.value()->getTupleShape() == ShapeType{3, 0});
   REQUIRE(zeroDimensionResult.value()->getComponentShape() == ShapeType{2});
@@ -2276,11 +2276,11 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(uint64), 3 * sizeof(uint64), sizeof(uint64), 0});
 
   const usize maximum = std::numeric_limits<usize>::max();
-  auto overflowResult = DataStoreUtilities::CreatePlannedDataStore<uint8>(ds, DataPath({"Overflow"}), ShapeType{}, ShapeType{maximum, 2}, "");
+  auto overflowResult = DataStoreUtilities::CreatePlannedDataStore<uint8>(dataStructure, DataPath({"Overflow"}), ShapeType{}, ShapeType{maximum, 2}, "");
   REQUIRE(overflowResult.invalid());
   REQUIRE_FALSE(overflowResult.errors().empty());
   REQUIRE(overflowResult.errors().front().code == -10614);
-  auto arrayOverflowResult = DataArray<uint8>::CreatePlanned(ds, "ArrayOverflow", ShapeType{}, ShapeType{maximum, 2}, "");
+  auto arrayOverflowResult = DataArray<uint8>::CreatePlanned(dataStructure, "ArrayOverflow", ShapeType{}, ShapeType{maximum, 2}, "");
   REQUIRE(arrayOverflowResult.invalid());
   REQUIRE_FALSE(arrayOverflowResult.errors().empty());
   REQUIRE(arrayOverflowResult.errors().front().code == -10611);
@@ -2289,12 +2289,12 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
 
 TEST_CASE("StorageFormatPlan: value stores retain populated scalar shape semantics", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   const DataPath valuePath({"ScalarValues"});
 
-  auto store = DataStoreUtilities::CreateDataStore<uint64>(ds, valuePath, ShapeType{3}, ShapeType{});
+  auto store = DataStoreUtilities::CreateDataStore<uint64>(dataStructure, valuePath, ShapeType{3}, ShapeType{});
 
   REQUIRE(store != nullptr);
   REQUIRE(store->getNumberOfTuples() == 3);
@@ -2306,13 +2306,13 @@ TEST_CASE("StorageFormatPlan: value stores retain populated scalar shape semanti
 
 TEST_CASE("StorageFormatPlan: scalar-shape metadata copy retains identity-product semantics", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   auto placeholderResult = EmptyDataStore<uint64>::Create(ShapeType{3}, ShapeType{}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(placeholderResult);
   std::shared_ptr<AbstractDataStore<uint64>> placeholder(std::move(placeholderResult.value()));
-  auto* sourcePtr = DataArray<uint64>::Create(ds, "MetadataSource", std::move(placeholder));
+  auto* sourcePtr = DataArray<uint64>::Create(dataStructure, "MetadataSource", std::move(placeholder));
   REQUIRE(sourcePtr != nullptr);
   const DataPath copyPath({"MetadataCopy"});
 
@@ -2321,7 +2321,7 @@ TEST_CASE("StorageFormatPlan: scalar-shape metadata copy retains identity-produc
   REQUIRE(copiedObject != nullptr);
   REQUIRE(resolver->paths == std::vector<DataPath>{copyPath});
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(uint64)});
-  const auto* copiedArrayPtr = ds.getDataAs<DataArray<uint64>>(copyPath);
+  const auto* copiedArrayPtr = dataStructure.getDataAs<DataArray<uint64>>(copyPath);
   REQUIRE(copiedArrayPtr != nullptr);
   REQUIRE(copiedArrayPtr->getTupleShape() == ShapeType{3});
   REQUIRE(copiedArrayPtr->getComponentShape().empty());
@@ -2352,18 +2352,18 @@ TEST_CASE("StorageFormatPlan: ArrayCreation preflight records plans without valu
   auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath memoryPath({"MemoryPlan"});
   const DataPath oocPath({"OocPlan"});
-  auto memoryResult = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, memoryPath, IDataAction::Mode::Preflight, Preferences::k_InMemoryFormat.str());
+  auto memoryResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, memoryPath, IDataAction::Mode::Preflight, Preferences::k_InMemoryFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(memoryResult);
-  auto oocResult = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, oocPath, IDataAction::Mode::Preflight, format);
+  auto oocResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, oocPath, IDataAction::Mode::Preflight, format);
   SIMPLNX_RESULT_REQUIRE_VALID(oocResult);
 
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<int32>>(memoryPath));
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<int32>>(oocPath));
-  const auto& memoryArray = ds.getDataRefAs<DataArray<int32>>(memoryPath);
-  const auto& oocArray = ds.getDataRefAs<DataArray<int32>>(oocPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(memoryPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(oocPath));
+  const auto& memoryArray = dataStructure.getDataRefAs<DataArray<int32>>(memoryPath);
+  const auto& oocArray = dataStructure.getDataRefAs<DataArray<int32>>(oocPath);
   REQUIRE(memoryArray.getStoreType() == IDataStore::StoreType::Empty);
   REQUIRE(memoryArray.getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(oocArray.getStoreType() == IDataStore::StoreType::Empty);
@@ -2405,13 +2405,13 @@ TEST_CASE("StorageFormatPlan: value helper preserves nullable factory failures",
   auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
   resolver->selected_format = format;
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   const DataPath path({"RejectedValueStore"});
 
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, ShapeType{2}, ShapeType{1});
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, ShapeType{2}, ShapeType{1});
 
   REQUIRE(store == nullptr);
   REQUIRE(*selectedFactoryCalls == 1);
@@ -2434,13 +2434,13 @@ TEST_CASE("StorageFormatPlan: canonical memory factory identity is accepted", "[
   auto restoreMemoryManager = MakeScopeGuard([memoryEntry, savedMemoryManager]() noexcept { memoryEntry->second = savedMemoryManager; });
   memoryEntry->second = memoryManager;
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath actionPath({"CanonicalActionMemory"});
   const DataPath helperPath({"CanonicalHelperMemory"});
 
-  auto actionResult = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{2}, ShapeType{1}, actionPath, IDataAction::Mode::Execute, Preferences::k_InMemoryFormat.str());
+  auto actionResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{2}, ShapeType{1}, actionPath, IDataAction::Mode::Execute, Preferences::k_InMemoryFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
-  auto helperStore = DataStoreUtilities::CreateDataStore<int32>(ds, helperPath, ShapeType{2}, ShapeType{1});
+  auto helperStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, helperPath, ShapeType{2}, ShapeType{1});
 
   REQUIRE(helperStore != nullptr);
   REQUIRE(helperStore->getStoreType() == IDataStore::StoreType::InMemory);
@@ -2450,25 +2450,25 @@ TEST_CASE("StorageFormatPlan: canonical memory factory identity is accepted", "[
 
 TEST_CASE("StorageFormatPlan: null and prepared stores preserve array state", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
   resolver->failure_message = "prepared stores must not resolve policy";
-  ds.setFormatResolver(resolver);
-  DataStructObserver observer(ds);
+  dataStructure.setFormatResolver(resolver);
+  DataStructObserver observer(dataStructure);
 
-  REQUIRE(DataArray<int32>::Create(ds, "NullCreate", nullptr) == nullptr);
-  REQUIRE(DataArray<int32>::Import(ds, "NullImport", 801, nullptr) == nullptr);
-  REQUIRE_FALSE(ds.containsData(DataPath({"NullCreate"})));
-  REQUIRE_FALSE(ds.containsData(DataPath({"NullImport"})));
+  REQUIRE(DataArray<int32>::Create(dataStructure, "NullCreate", nullptr) == nullptr);
+  REQUIRE(DataArray<int32>::Import(dataStructure, "NullImport", 801, nullptr) == nullptr);
+  REQUIRE_FALSE(dataStructure.containsData(DataPath({"NullCreate"})));
+  REQUIRE_FALSE(dataStructure.containsData(DataPath({"NullImport"})));
   REQUIRE(observer.getDataAddedCount() == 0);
 
   auto createStore = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 7);
-  auto* createdPtr = DataArray<int32>::Create(ds, "PreparedCreate", createStore);
+  auto* createdPtr = DataArray<int32>::Create(dataStructure, "PreparedCreate", createStore);
   REQUIRE(createdPtr != nullptr);
   REQUIRE(createdPtr->getIDataStore() == createStore.get());
 
   auto importStore = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 8);
-  auto* importedPtr = DataArray<int32>::Import(ds, "PreparedImport", 802, importStore);
+  auto* importedPtr = DataArray<int32>::Import(dataStructure, "PreparedImport", 802, importStore);
   REQUIRE(importedPtr != nullptr);
   REQUIRE(importedPtr->getId() == 802);
   REQUIRE(importedPtr->getIDataStore() == importStore.get());
@@ -2536,28 +2536,28 @@ TEST_CASE("List and string store copies own independent values and preserve plac
 
 TEST_CASE("Array and NeighborList copies pass resolved memory formats and destination paths", "[simplnx][DataStore][DeepCopy]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   auto store = std::make_shared<RecordingCopyStore>(ShapeType{3}, ShapeType{2}, 7);
-  auto* arrayPtr = DataArray<int32>::Create(ds, "Numeric", store);
+  auto* arrayPtr = DataArray<int32>::Create(dataStructure, "Numeric", store);
   REQUIRE(arrayPtr != nullptr);
   REQUIRE(arrayPtr->deepCopy(DataPath({"NumericCopy"})) != nullptr);
   REQUIRE(store->formats == std::vector<std::string>{""});
   REQUIRE(resolver->paths.back() == DataPath({"NumericCopy"}));
   REQUIRE(resolver->bytes.back() == 6 * sizeof(int32));
 
-  auto* firstParentPtr = DataGroup::Create(ds, "First");
-  auto* secondParentPtr = DataGroup::Create(ds, "Second");
+  auto* firstParentPtr = DataGroup::Create(dataStructure, "First");
+  auto* secondParentPtr = DataGroup::Create(dataStructure, "Second");
   REQUIRE(firstParentPtr != nullptr);
   REQUIRE(secondParentPtr != nullptr);
   auto listStore = std::make_shared<RecordingCopyListStore>(ShapeType{3});
   listStore->setList(0, std::vector<int32>{2, 4, 6});
-  auto* sourcePtr = NeighborList<int32>::Create(ds, "Source", listStore);
-  auto* destinationPtr = NeighborList<int32>::Create(ds, "Destination", ShapeType{3}, secondParentPtr->getId());
+  auto* sourcePtr = NeighborList<int32>::Create(dataStructure, "Source", listStore);
+  auto* destinationPtr = NeighborList<int32>::Create(dataStructure, "Destination", ShapeType{3}, secondParentPtr->getId());
   REQUIRE(sourcePtr != nullptr);
   REQUIRE(destinationPtr != nullptr);
-  REQUIRE(ds.setAdditionalParent(destinationPtr->getId(), firstParentPtr->getId()));
+  REQUIRE(dataStructure.setAdditionalParent(destinationPtr->getId(), firstParentPtr->getId()));
   const auto expectedPath = destinationPtr->getDataPaths().front();
   *destinationPtr = *sourcePtr;
   REQUIRE(listStore->formats == std::vector<std::string>{""});
@@ -2594,8 +2594,8 @@ public:
 
 TEST_CASE("NeighborList missing destination paths preserve the original store", "[simplnx][DataStore][DeepCopy]")
 {
-  DataStructure ds;
-  auto* sourcePtr = NeighborList<int32>::Create(ds, "Source", ShapeType{3});
+  DataStructure dataStructure;
+  auto* sourcePtr = NeighborList<int32>::Create(dataStructure, "Source", ShapeType{3});
   REQUIRE(sourcePtr != nullptr);
   sourcePtr->setList(0, std::make_shared<std::vector<int32>>(std::initializer_list<int32>{7, 9}));
   NeighborList<int32> orphan(*sourcePtr);
@@ -2620,13 +2620,13 @@ TEST_CASE("Large metadata array copies resolve exact logical bytes without alloc
   {
     const ShapeType tupleShape{static_cast<usize>(k_LogicalBytes / sizeof(int32))};
     const ShapeType componentShape{1};
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
+    dataStructure.setFormatResolver(resolver);
     auto sourceStoreResult = EmptyDataStore<int32>::Create(tupleShape, componentShape, "");
     SIMPLNX_RESULT_REQUIRE_VALID(sourceStoreResult);
     std::shared_ptr<EmptyDataStore<int32>> sourceStore(std::move(sourceStoreResult.value()));
-    auto* sourcePtr = DataArray<int32>::Create(ds, "LargeMetadata", sourceStore);
+    auto* sourcePtr = DataArray<int32>::Create(dataStructure, "LargeMetadata", sourceStore);
     REQUIRE(sourcePtr != nullptr);
     REQUIRE(sourceStore->getDataFormat().empty());
     REQUIRE(sourcePtr->getIDataStore() == sourceStore.get());

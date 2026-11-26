@@ -24,7 +24,7 @@ using TmccFilterType = ThresholdMaximumConnectedComponentsImageFilter;
 
 // Sets the geometry, input, and output keys plus the four operation parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
-void RunTMCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue,
+void RunTMCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue,
              const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -36,9 +36,9 @@ void RunTMCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint
   args.insertOrAssign(TmccFilterType::k_UpperBoundary_Key, std::make_any<float64>(upperBoundary));
   args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(insideValue));
   args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace
@@ -54,12 +54,12 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
     TmccFilterType filter;
     Arguments args;
@@ -70,19 +70,19 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
     args.insertOrAssign(TmccFilterType::k_UpperBoundary_Key, std::make_any<float64>(65536.0));
     args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
     args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input (incl. float) creates a uint8 output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = rt::MakeGradientNoisePattern<float32>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 12, 12, 1, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 12, 12, 1, field);
     TmccFilterType filter;
-    RunTMCC(filter, ds, inputPath, /*minimumObjectSizeInPixels=*/0u, /*upperBoundary=*/65536.0, /*insideValue=*/1u, /*outsideValue=*/0u);
+    RunTMCC(filter, dataStructure, inputPath, /*minimumObjectSizeInPixels=*/0u, /*upperBoundary=*/65536.0, /*insideValue=*/1u, /*outsideValue=*/0u);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 

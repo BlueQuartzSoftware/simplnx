@@ -229,14 +229,14 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Signed Central Origin",
 
 namespace
 {
-ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
+ImageGeom* MakeValidationImage(DataStructure& dataStructure, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
 {
-  auto* geomPtr = ImageGeom::Create(ds, "ValidationImage");
+  auto* geomPtr = ImageGeom::Create(dataStructure, "ValidationImage");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions(dims);
   REQUIRE(geomPtr->setSpacing(spacing).valid());
   REQUIRE(geomPtr->setOrigin(origin).valid());
-  auto* cellsPtr = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geomPtr->getId());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", {dims[2], dims[1], dims[0]}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
   return geomPtr;
@@ -247,8 +247,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Parameter domain regression",
 {
   const auto row = GENERATE(0, 1);
   CAPTURE(row);
-  DataStructure ds;
-  MakeValidationImage(ds);
+  DataStructure dataStructure;
+  MakeValidationImage(dataStructure);
   SetImageGeomOriginScalingFilter filter;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_SelectedImageGeometryPath_Key, DataPath({"ValidationImage"}));
@@ -256,7 +256,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Parameter domain regression",
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_ChangeOrigin_Key, row == 1);
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_Spacing_Key, VectorFloat32Parameter::ValueType{0, 1, 1});
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::quiet_NaN(), 0, 0});
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   CHECK(result.outputActions.errors()[0].code == (row == 0 ? -86011 : -86012));
 }
@@ -264,8 +264,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Centered result regression", 
 {
   const auto row = GENERATE(0, 1);
   CAPTURE(row);
-  DataStructure ds;
-  auto* geomPtr = MakeValidationImage(ds, row == 0 ? SizeVec3{10, 4, 2} : SizeVec3{10, 1, 1}, row == 0 ? FloatVec3{1, 0.5f, 2} : FloatVec3{1, 1, 1});
+  DataStructure dataStructure;
+  auto* geomPtr = MakeValidationImage(dataStructure, row == 0 ? SizeVec3{10, 4, 2} : SizeVec3{10, 1, 1}, row == 0 ? FloatVec3{1, 0.5f, 2} : FloatVec3{1, 1, 1});
   SetImageGeomOriginScalingFilter filter;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_SelectedImageGeometryPath_Key, DataPath({"ValidationImage"}));
@@ -274,7 +274,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Centered result regression", 
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_ChangeSpacing_Key, row == 1);
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_Origin_Key, row == 0 ? VectorFloat32Parameter::ValueType{-10, 5, -2} : VectorFloat32Parameter::ValueType{0, 0, 0});
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_Spacing_Key, VectorFloat32Parameter::ValueType{3e38f, 1, 1});
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
   if(row == 1)
   {
@@ -284,10 +284,10 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Centered result regression", 
     CHECK(pre.outputActions.warnings()[0].message.find("X origin 0, spacing 3e+38, dimension 10 produce centered result -inf") != std::string::npos);
   }
   // Use a copy to verify the action in preflight mode without changing the execution fixture.
-  DataStructure preflightDs = ds;
+  DataStructure preflightDs = dataStructure;
   const auto preflightActionResult = pre.outputActions.value().applyRegular(preflightDs, IDataAction::Mode::Preflight);
   const auto& preflightGeom = preflightDs.getDataRefAs<ImageGeom>(DataPath({"ValidationImage"}));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   if(row == 0)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(preflightActionResult);
@@ -317,11 +317,11 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Centered result regression", 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Inactive and retained metadata", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
 {
   const auto row = GENERATE(0, 1, 2);
-  DataStructure ds;
+  DataStructure dataStructure;
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
   const FloatVec3 oldSpacing{0.25f, 1, 1};
   const FloatVec3 oldOrigin{-4, 2, 3};
-  auto* geomPtr = MakeValidationImage(ds, {2, 2, 2}, oldSpacing, oldOrigin);
+  auto* geomPtr = MakeValidationImage(dataStructure, {2, 2, 2}, oldSpacing, oldOrigin);
   SetImageGeomOriginScalingFilter filter;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_SelectedImageGeometryPath_Key, DataPath({"ValidationImage"}));
@@ -334,9 +334,9 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Inactive and retained metadat
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_Spacing_Key, row == 1 ? VectorFloat32Parameter::ValueType{1, 1, 1} :
                                                                       row == 2 ? VectorFloat32Parameter::ValueType{} :
                                                                                  VectorFloat32Parameter::ValueType{0, 0, 0});
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   CHECK(geomPtr->getSpacing() == (row == 1 ? FloatVec3{1, 1, 1} : oldSpacing));
   CHECK(geomPtr->getOrigin() == (row == 0 ? FloatVec3{0.75f, 1, 2} : oldOrigin));

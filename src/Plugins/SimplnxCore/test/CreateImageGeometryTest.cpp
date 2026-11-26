@@ -125,7 +125,7 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "
 {
   const auto row = GENERATE(0, 1, 2, 3);
   CAPTURE(row);
-  DataStructure ds;
+  DataStructure dataStructure;
   CreateImageGeometryFilter filter;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
@@ -135,7 +135,7 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "
   const std::vector<VectorFloat32Parameter::ValueType> spacings = {{0, 1, 1}, {1, -1, 1}, {1, 1, nan}, {1, 1, 1}};
   args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, spacings[row]);
   args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86010 : -86009));
   CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);

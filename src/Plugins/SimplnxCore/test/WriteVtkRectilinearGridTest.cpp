@@ -144,21 +144,21 @@ private:
   mutable usize m_ReadCount = 0;
 };
 
-BoolArray& CreateBulkBoolInput(DataStructure& ds, std::shared_ptr<AbstractDataStore<bool>> store = nullptr)
+BoolArray& CreateBulkBoolInput(DataStructure& dataStructure, std::shared_ptr<AbstractDataStore<bool>> store = nullptr)
 {
-  auto* imagePtr = ImageGeom::Create(ds, k_BulkImagePath.getTargetName());
+  auto* imagePtr = ImageGeom::Create(dataStructure, k_BulkImagePath.getTargetName());
   REQUIRE(imagePtr != nullptr);
   imagePtr->setDimensions({k_BoolCount, 1, 1});
   REQUIRE(imagePtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellAmPtr = AttributeMatrix::Create(ds, k_BulkCellDataPath.getTargetName(), ShapeType{1, 1, k_BoolCount}, imagePtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_BulkCellDataPath.getTargetName(), ShapeType{1, 1, k_BoolCount}, imagePtr->getId());
   REQUIRE(cellAmPtr != nullptr);
   imagePtr->setCellData(*cellAmPtr);
   if(store == nullptr)
   {
     store = std::make_shared<DataStore<bool>>(cellAmPtr->getShape(), ShapeType{1}, false);
   }
-  auto* valuesPtr = BoolArray::Create(ds, k_BulkBoolPath.getTargetName(), std::move(store), cellAmPtr->getId());
+  auto* valuesPtr = BoolArray::Create(dataStructure, k_BulkBoolPath.getTargetName(), std::move(store), cellAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   for(usize valueIdx = 0; valueIdx < k_BoolCount; valueIdx++)
   {
@@ -538,14 +538,14 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Bulk bool page bytes and 
 
   SECTION("binary and ASCII output have independent exact bool payload oracles")
   {
-    DataStructure ds;
-    auto& source = CreateBulkBoolInput(ds);
+    DataStructure dataStructure;
+    auto& source = CreateBulkBoolInput(dataStructure);
     WriteVtkRectilinearGridFilter filter;
 
     for(const bool binary : {false, true})
     {
       const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / (binary ? "bulk_bool_binary.vtk" : "bulk_bool_ascii.vtk");
-      const auto executeResult = filter.execute(ds, CreateWriterArguments(outputPath, binary));
+      const auto executeResult = filter.execute(dataStructure, CreateWriterArguments(outputPath, binary));
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
       std::ifstream output(outputPath, std::ios::binary);
       const std::string actual(std::istreambuf_iterator<char>(output), {});
@@ -558,19 +558,19 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Bulk bool page bytes and 
     {
       REQUIRE(source[valueIdx] == (valueIdx % 3 == 1));
     }
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("second bool source page failure reaches the filter result")
   {
     constexpr int32 k_SourceError = -91931;
-    DataStructure ds;
+    DataStructure dataStructure;
     auto failingStore = std::make_shared<VtkFailOnLaterReadStore>(k_SourceError);
-    CreateBulkBoolInput(ds, failingStore);
+    CreateBulkBoolInput(dataStructure, failingStore);
     const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "bulk_bool_read_failure.vtk";
 
     WriteVtkRectilinearGridFilter filter;
-    const auto executeResult = filter.execute(ds, CreateWriterArguments(outputPath, true));
+    const auto executeResult = filter.execute(dataStructure, CreateWriterArguments(outputPath, true));
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
     REQUIRE(std::any_of(executeResult.result.errors().cbegin(), executeResult.result.errors().cend(), [](const Error& error) { return error.code == -2090; }));
     REQUIRE(std::any_of(executeResult.result.errors().cbegin(), executeResult.result.errors().cend(), [](const Error& error) { return error.code == -2091; }));

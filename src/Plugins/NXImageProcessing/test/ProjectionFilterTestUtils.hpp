@@ -116,8 +116,8 @@ inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataS
     {
       DYNAMIC_SECTION("projectionDimension=" << projDim << " performInPlace=" << (performInPlace ? "true" : "false"))
       {
-        DataStructure ds;
-        const DataPath inputPath = buildImage(ds);
+        DataStructure dataStructure;
+        const DataPath inputPath = buildImage(dataStructure);
         const DataPath cellDataPath = inputPath.getParent();
         const DataPath geomPath = cellDataPath.getParent();
         const std::string cellDataName = cellDataPath.getTargetName();
@@ -131,14 +131,14 @@ inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataS
         args.insertOrAssign(NewFilterT::k_OutputImageGeomName_Key, std::make_any<std::string>(kOutputGeomName));
         args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>(kOutputArrayName));
 
-        auto preflightResult = filter.preflight(ds, args);
+        auto preflightResult = filter.preflight(dataStructure, args);
         SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-        auto executeResult = filter.execute(ds, args);
+        auto executeResult = filter.execute(dataStructure, args);
         SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
         const DataPath outputGeomPath = performInPlace ? geomPath : DataPath({kOutputGeomName});
         const DataPath outputArrayPath = outputGeomPath.createChildPath(cellDataName).createChildPath(kOutputArrayName);
-        const auto& outStore = ds.getDataRefAs<DataArray<float64>>(outputArrayPath).getDataStoreRef();
+        const auto& outStore = dataStructure.getDataRefAs<DataArray<float64>>(outputArrayPath).getDataStoreRef();
         const usize numSlots = outStore.getSize();
         REQUIRE(numSlots > 0);
 
@@ -172,7 +172,7 @@ inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataS
           UNSCOPED_INFO(fmt::format("projDim={} slot={} got={} expected={}", projDim, badSlot, badGot, badExp));
         }
         REQUIRE(allMatch);
-        UnitTest::CheckArraysInheritTupleDims(ds);
+        UnitTest::CheckArraysInheritTupleDims(dataStructure);
       }
     }
   }
@@ -215,22 +215,22 @@ inline void RunProjectionMd5ItkGolden(
 
   // --- run OUR filter (bind every Result to a local: SIMPLNX_RESULT_REQUIRE_VALID evaluates its argument
   //     multiple times, so a read/execute call passed inline would run twice and the second run would fail) ---
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
   const Arguments args = makeArgs();
   FilterT filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- (A) DURABLE golden: md5 (plan Sec.4 md5-validity-first) ---
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("projection md5: ours='{}' committed='{}' (input={} projDim={} inPlace={})", ourMd5, committedMd5, inputFile, projectionDimension, removeOriginalGeometry));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // baseline-golden projection case (Float64 reducers Mean/Sum/StandardDeviation). Reads @p inputFile, projects
@@ -262,24 +262,24 @@ inline void RunProjectionBaselineItkGolden(const std::string& inputFile, const s
 
   // --- run OUR filter (bind every Result to a local: SIMPLNX_RESULT_REQUIRE_VALID evaluates its argument
   //     multiple times, so a read/execute call passed inline would run twice and the second run would fail) ---
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
   const Arguments args = makeArgs();
   FilterT filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- (A) DURABLE golden: baseline compare (output geometry == collapsed input geometry) ---
   const DataPath bGeom({"Baseline Geometry"});
-  const Result<> readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
+  const Result<> readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const Result<> compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, tolerance);
+  const Result<> compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace projection_test

@@ -380,7 +380,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
 
   // Configure the filter arguments.
   ComputeMomentInvariants2DFilter filter;
-  DataStructure ds = CreateTestData();
+  DataStructure dataStructure = CreateTestData();
   Arguments args;
 
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
@@ -393,14 +393,14 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_SaveCentralMoments_Key, std::make_any<bool>(false));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key, std::make_any<std::string>(k_CentralMoments));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const Float32Array* omega1Ptr = ds.getDataAs<Float32Array>(k_Omega1Path);
-  const Float32Array* omega2Ptr = ds.getDataAs<Float32Array>(k_Omega2Path);
+  const Float32Array* omega1Ptr = dataStructure.getDataAs<Float32Array>(k_Omega1Path);
+  const Float32Array* omega2Ptr = dataStructure.getDataAs<Float32Array>(k_Omega2Path);
   REQUIRE(omega1Ptr != nullptr);
   REQUIRE(omega2Ptr != nullptr);
   float32 value1 = (*omega1Ptr)[1];
@@ -408,7 +408,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
   REQUIRE(std::fabs(value1 - 0.95493) < 0.00001);
   REQUIRE(std::fabs(value2 - 0.911891) < 0.00001);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
@@ -417,7 +417,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Executio
 
   // Configure the filter arguments.
   ComputeMomentInvariants2DFilter filter;
-  DataStructure ds = CreateInvalidTestData(); // create invalid data structure input with 3D Image geometry
+  DataStructure dataStructure = CreateInvalidTestData(); // create invalid data structure input with 3D Image geometry
   Arguments args;
 
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
@@ -430,13 +430,13 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Executio
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_SaveCentralMoments_Key, std::make_any<bool>(false));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key, std::make_any<std::string>(k_CentralMoments));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeMomentInvariants2DFilter][BackwardsCompatibility]")

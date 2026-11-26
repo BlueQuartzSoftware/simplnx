@@ -474,9 +474,9 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
 
   SECTION("global extrema, constant component, and final partial page")
   {
-    DataStructure ds;
-    auto* firstPtr = Float32Array::CreateWithStore<DataStore<float32>>(ds, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
-    auto* secondPtr = Float32Array::CreateWithStore<DataStore<float32>>(ds, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
+    DataStructure dataStructure;
+    auto* firstPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
+    auto* secondPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
     REQUIRE(firstPtr != nullptr);
     REQUIRE(secondPtr != nullptr);
     for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
@@ -494,10 +494,10 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
                         std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{firstPath, secondPath}));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputPath.getTargetName()));
 
-    const auto executeResult = filter.execute(ds, args);
+    const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(outputPath));
-    const auto& output = ds.getDataRefAs<Float32Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<Float32Array>(outputPath);
     REQUIRE(output.getNumberOfTuples() == k_TupleCount);
     REQUIRE(output.getNumberOfComponents() == 3);
     for(usize tupleIdx : {usize{0}, usize{21844}, usize{21845}, k_TupleCount - 1})
@@ -506,14 +506,14 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
       REQUIRE(output[tupleIdx * 3 + 1] == Approx(static_cast<float32>(tupleIdx) / static_cast<float32>(k_TupleCount - 1)));
       REQUIRE(output[tupleIdx * 3 + 2] == 0.0F);
     }
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("bool values keep their component order without normalization")
   {
-    DataStructure ds;
-    auto* firstPtr = BoolArray::CreateWithStore<DataStore<bool>>(ds, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
-    auto* secondPtr = BoolArray::CreateWithStore<DataStore<bool>>(ds, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
+    DataStructure dataStructure;
+    auto* firstPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
+    auto* secondPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
     REQUIRE(firstPtr != nullptr);
     REQUIRE(secondPtr != nullptr);
     for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
@@ -531,9 +531,9 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
                         std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{firstPath, secondPath}));
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputPath.getTargetName()));
 
-    const auto executeResult = filter.execute(ds, args);
+    const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    const auto& output = ds.getDataRefAs<BoolArray>(outputPath);
+    const auto& output = dataStructure.getDataRefAs<BoolArray>(outputPath);
     for(usize tupleIdx : {usize{0}, usize{21844}, usize{21845}, k_TupleCount - 1})
     {
       REQUIRE(output[tupleIdx * 3] == (tupleIdx % 2 == 0));
@@ -548,11 +548,11 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
     constexpr usize k_FailureTupleCount = 43691;
     constexpr usize k_PageTuples = 65536 / 3;
     constexpr int32 k_UntouchedValue = -77;
-    DataStructure ds;
-    auto* firstPtr = Int32Array::CreateWithStore<DataStore<int32>>(ds, firstPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{1});
-    auto* secondPtr = Int32Array::CreateWithStore<DataStore<int32>>(ds, secondPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{2});
+    DataStructure dataStructure;
+    auto* firstPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, firstPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{1});
+    auto* secondPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, secondPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{2});
     auto outputStore = std::make_shared<CombineFailOnLaterWriteStore<int32>>(ShapeType{k_FailureTupleCount}, ShapeType{3}, k_UntouchedValue, k_WriteError);
-    auto* outputPtr = Int32Array::Create(ds, outputPath.getTargetName(), outputStore);
+    auto* outputPtr = Int32Array::Create(dataStructure, outputPath.getTargetName(), outputStore);
     REQUIRE(firstPtr != nullptr);
     REQUIRE(secondPtr != nullptr);
     REQUIRE(outputPtr != nullptr);
@@ -568,7 +568,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
     inputValues.SelectedDataArrayPaths = {firstPath, secondPath};
     inputValues.StackedDataArrayPath = outputPath;
     const std::atomic_bool shouldCancel = false;
-    const auto executeResult = CombineAttributeArrays(ds, {}, shouldCancel, &inputValues)();
+    const auto executeResult = CombineAttributeArrays(dataStructure, {}, shouldCancel, &inputValues)();
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult)
     REQUIRE(executeResult.errors().front().code == k_WriteError);
     REQUIRE(outputStore->getWriteCount() == 2);

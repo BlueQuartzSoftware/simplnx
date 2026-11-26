@@ -305,9 +305,9 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
   messageHandler.sendInfoMessage("Thinning Binary Image");
   ThrottledMessageHandler progressThrottle(messageHandler);
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  const usize slice = static_cast<usize>(nX) * static_cast<usize>(nY);
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  const usize slice = static_cast<usize>(nX) * static_cast<usize>(ny);
 
   auto clampi = [](int64 v, int64 hi) { return v < 0 ? int64{0} : (v > hi ? hi : v); };
 
@@ -316,7 +316,7 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
   std::vector<T> outBuf(slice);
   std::vector<usize> toDelete;
 
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {
@@ -332,7 +332,7 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
     }
 
     // ZeroFluxNeumann-clamped neighbor read (default NeighborhoodIterator boundary).
-    auto at = [&](int64 xx, int64 yy) -> int { return static_cast<int>(work[static_cast<usize>(clampi(yy, nY - 1) * nX + clampi(xx, nX - 1))]); };
+    auto at = [&](int64 xx, int64 yy) -> int { return static_cast<int>(work[static_cast<usize>(clampi(yy, ny - 1) * nX + clampi(xx, nX - 1))]); };
 
     usize completedIterations = 0;
     bool noChange = false;
@@ -348,7 +348,7 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
         const std::string passLabel = fmt::format("Binary Thinning Slice {} Iteration {} Pass {} Rows", z + 1, completedIterations + 1, step);
         progressThrottle.reset(dims[1], passLabel);
         toDelete.clear();
-        for(int64 y = 0; y < nY; ++y)
+        for(int64 y = 0; y < ny; ++y)
         {
           for(int64 x = 0; x < nX; ++x)
           {
@@ -725,10 +725,10 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
   }
 
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
+  const int64 ny = static_cast<int64>(dims[1]);
   const auto clamp = [](int64 value, int64 upper) { return value < 0 ? int64{0} : (value > upper ? upper : value); };
   const auto at = [&](int64 x, int64 y) {
-    const int64 flatIndex = clamp(y, nY - 1) * nX + clamp(x, nX - 1);
+    const int64 flatIndex = clamp(y, ny - 1) * nX + clamp(x, nX - 1);
     return static_cast<int>(work[static_cast<usize>(flatIndex)]);
   };
 
@@ -747,7 +747,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
       bool stepChanged = false;
       const std::string passLabel = fmt::format("Binary Thinning Iteration {} Pass {} Rows", completedIterations + 1, step);
       progressThrottle.reset(dims[1], passLabel);
-      for(int64 y = 0; y < nY; ++y)
+      for(int64 y = 0; y < ny; ++y)
       {
         if(shouldCancel)
         {

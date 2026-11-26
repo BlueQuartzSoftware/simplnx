@@ -39,8 +39,8 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: Valid Filter Execution",
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadEnsembleInfoFilter filter;
-  DataStructure ds;
-  DataGroup* topLevelGroupPtr = DataGroup::Create(ds, Constants::k_DataContainer);
+  DataStructure dataStructure;
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, Constants::k_DataContainer);
   Arguments args;
   args.insertOrAssign(ReadEnsembleInfoFilter::k_ParentGroupPath_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
@@ -63,28 +63,28 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: Valid Filter Execution",
   }
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const auto* crystalStructuresPtr = ds.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_CrystalStructures}));
+  const auto* crystalStructuresPtr = dataStructure.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_CrystalStructures}));
   REQUIRE(crystalStructuresPtr != nullptr);
   REQUIRE(crystalStructuresPtr->getNumberOfTuples() == 3);
   REQUIRE((*crystalStructuresPtr)[0] == 999);
   REQUIRE((*crystalStructuresPtr)[1] == 1);
   REQUIRE((*crystalStructuresPtr)[2] == 0);
 
-  const auto* phaseTypesPtr = ds.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_Phases}));
+  const auto* phaseTypesPtr = dataStructure.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_Phases}));
   REQUIRE(phaseTypesPtr != nullptr);
   REQUIRE(phaseTypesPtr->getNumberOfTuples() == 3);
   REQUIRE((*phaseTypesPtr)[0] == 999);
   REQUIRE((*phaseTypesPtr)[1] == 0);
   REQUIRE((*phaseTypesPtr)[2] == 3);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution")
@@ -93,8 +93,8 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadEnsembleInfoFilter filter;
-  DataStructure ds;
-  DataGroup* topLevelGroupPtr = DataGroup::Create(ds, Constants::k_DataContainer);
+  DataStructure dataStructure;
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, Constants::k_DataContainer);
   Arguments args;
   args.insertOrAssign(ReadEnsembleInfoFilter::k_ParentGroupPath_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
@@ -110,7 +110,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileDoc)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("EnsembleInfo misspelled")
@@ -120,7 +120,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("NumberPhases missing")
@@ -130,7 +130,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("Wrong number of phases")
@@ -140,7 +140,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("PhaseType missing")
@@ -150,7 +150,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("CrystalStructure missing")
@@ -160,7 +160,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("PrimaryPhase misspelled")
@@ -170,7 +170,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("Cubic misspelled")
@@ -180,7 +180,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("Incorrect group numbers")
@@ -190,15 +190,15 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
     args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestFileIni)));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadEnsembleInfoFilter][BackwardsCompatibility]")

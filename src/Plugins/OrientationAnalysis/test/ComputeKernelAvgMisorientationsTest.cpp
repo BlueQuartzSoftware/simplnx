@@ -110,22 +110,22 @@ struct FixtureData
 
 // Build valid image, cell, and ensemble arrays. Cells start in feature and
 // phase one with identity quaternions. Ensemble index one is Cubic_High.
-FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numCrystalStructures = 2)
+FixtureData CreateScaffold(usize nX, usize ny, usize nz, usize numCrystalStructures = 2)
 {
   FixtureData td;
-  td.total_cells = nX * nY * nZ;
+  td.total_cells = nX * ny * nz;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
   REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  td.geom->setDimensions({nX, nY, nZ});
+  td.geom->setDimensions({nX, ny, nz});
 
-  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());
+  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nz, ny, nX}, td.geom->getId());
   td.ensemble_am = AttributeMatrix::Create(td.ds, "EnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
-  td.feature_ids = CreateTestDataArray<int32>(td.ds, k_FeatureIdsName, {nZ, nY, nX}, {1}, td.cell_am->getId());
-  td.cell_phases = CreateTestDataArray<int32>(td.ds, k_CellPhasesName, {nZ, nY, nX}, {1}, td.cell_am->getId());
-  td.quats = CreateTestDataArray<float32>(td.ds, k_QuatsName, {nZ, nY, nX}, {4}, td.cell_am->getId());
+  td.feature_ids = CreateTestDataArray<int32>(td.ds, k_FeatureIdsName, {nz, ny, nX}, {1}, td.cell_am->getId());
+  td.cell_phases = CreateTestDataArray<int32>(td.ds, k_CellPhasesName, {nz, ny, nX}, {1}, td.cell_am->getId());
+  td.quats = CreateTestDataArray<float32>(td.ds, k_QuatsName, {nz, ny, nX}, {4}, td.cell_am->getId());
   td.crystal_structures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numCrystalStructures}, {1}, td.ensemble_am->getId());
 
   for(usize i = 0; i < td.total_cells; ++i)
@@ -167,22 +167,22 @@ Arguments BuildArgs(const std::vector<int32>& kernelRadius, bool useFeatureIds =
   return args;
 }
 
-const Float32Array& GetOutputKAM(const DataStructure& ds)
+const Float32Array& GetOutputKAM(const DataStructure& dataStructure)
 {
-  return ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_KAMOutName));
+  return dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_KAMOutName));
 }
 } // namespace AnalyticalFixtures
 
-analytical_fixtures::FixtureData CreateOocFixture(usize nX, usize nY, usize nZ)
+analytical_fixtures::FixtureData CreateOocFixture(usize nX, usize ny, usize nz)
 {
   analytical_fixtures::FixtureData td;
-  td.total_cells = nX * nY * nZ;
-  const ShapeType tupleShape = {nZ, nY, nX};
+  td.total_cells = nX * ny * nz;
+  const ShapeType tupleShape = {nz, ny, nX};
 
   td.geom = ImageGeom::Create(td.ds, analytical_fixtures::k_GeomName);
   REQUIRE(td.geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(td.geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  td.geom->setDimensions({nX, nY, nZ});
+  td.geom->setDimensions({nX, ny, nz});
 
   td.cell_am = AttributeMatrix::Create(td.ds, "CellData", tupleShape, td.geom->getId());
   td.geom->setCellData(*td.cell_am);

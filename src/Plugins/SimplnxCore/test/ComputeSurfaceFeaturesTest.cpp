@@ -131,21 +131,21 @@ constexpr usize k_BlocksPerDim = k_BenchDim / k_BlockSize;                      
 constexpr int32 k_NumBlockFeatures = static_cast<int32>(k_BlocksPerDim * k_BlocksPerDim * k_BlocksPerDim); // 512
 const std::string k_BenchGeomName = "ImageGeom";
 
-void BuildBlockFeatureIds(DataStructure& ds)
+void BuildBlockFeatureIds(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_BenchDim, k_BenchDim, k_BenchDim};
 
-  auto* imageGeomPtr = ImageGeom::Create(ds, k_BenchGeomName);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_BenchGeomName);
   imageGeomPtr->setDimensions({k_BenchDim, k_BenchDim, k_BenchDim});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({k_BenchGeomName, Constants::k_CellData, Constants::k_FeatureIds});
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = DataArray<int32>::Create(ds, Constants::k_FeatureIds, store, cellAmPtr->getId());
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, store, cellAmPtr->getId());
   auto& fidsRef = featureIdsPtr->getDataStoreRef();
   const usize sliceSize = k_BenchDim * k_BenchDim;
   std::vector<int32> sliceBuffer(sliceSize);
@@ -166,7 +166,7 @@ void BuildBlockFeatureIds(DataStructure& ds)
     SIMPLNX_RESULT_REQUIRE_VALID(fidsRefWriteResult);
   }
 
-  AttributeMatrix::Create(ds, Constants::k_CellFeatureData, {static_cast<usize>(k_NumBlockFeatures + 1)}, imageGeomPtr->getId());
+  AttributeMatrix::Create(dataStructure, Constants::k_CellFeatureData, {static_cast<usize>(k_NumBlockFeatures + 1)}, imageGeomPtr->getId());
 }
 } // namespace
 

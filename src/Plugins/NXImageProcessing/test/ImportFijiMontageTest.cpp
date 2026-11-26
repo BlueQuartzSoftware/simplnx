@@ -543,10 +543,10 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: metadata cache correctnes
 
   ImportFijiMontageFilter filter; // one instance -> its cache persists across the calls below
 
-  auto runInto = [&](DataStructure& ds, Arguments& args) {
-    auto pre = filter.preflight(ds, args);
+  auto runInto = [&](DataStructure& dataStructure, Arguments& args) {
+    auto pre = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-    auto exec = filter.execute(ds, args);
+    auto exec = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
   };
 
@@ -1126,8 +1126,8 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: rejects a nonfinite tile 
   WriteConfig(config, {"dim = 2", "# Define the image coordinates", "tile.png; ; (nan, 2)"});
   Arguments args;
   args.insertOrAssign(ImportFijiMontageFilter::k_InputFile_Key, config);
-  DataStructure ds;
-  const auto result = ImportFijiMontageFilter{}.preflight(ds, args);
+  DataStructure dataStructure;
+  const auto result = ImportFijiMontageFilter{}.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   CHECK(result.outputActions.errors().front().code == ImageGeom::k_InvalidOrigin);
   CHECK(result.outputActions.errors().front().message.find("line 3") != std::string::npos);
@@ -1149,13 +1149,13 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: tile geometry uses config
   const auto config = dir / "TileCoordinates.txt";
   WriteConfig(config, {"dim = 2", "# Define the image coordinates", "ZeroResolution.tif; ; (10, 20)"});
   auto args = MakeFijiArgs(config, true, false, {0, 0, 0});
-  DataStructure ds;
-  const auto result = ImportFijiMontageFilter{}.execute(ds, args);
+  DataStructure dataStructure;
+  const auto result = ImportFijiMontageFilter{}.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   CHECK(result.result.warnings().empty());
   const DataPath geometry({"Zen DataGroup", "Mosaic-ZeroResolution"});
-  UnitTest::RequireReaderGeometry(ds, geometry, {10, 20, 0}, {1, 1, 1});
-  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(ds, geometry.createChildPath("Tile Data").createChildPath("Image"));
+  UnitTest::RequireReaderGeometry(dataStructure, geometry, {10, 20, 0}, {1, 1, 1});
+  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(dataStructure, geometry.createChildPath("Tile Data").createChildPath("Image"));
   REQUIRE(pixels.getSize() == 4);
   for(usize i = 0; i < pixels.getSize(); ++i)
   {

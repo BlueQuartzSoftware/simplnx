@@ -88,7 +88,7 @@ const char* KernelName(KernelType kt)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected grid (all kernels)", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
-  const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(ds, dx, dy, dz, uint8{1}, uint8{0}); };
+  const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(dataStructure, dx, dy, dz, uint8{1}, uint8{0}); };
   const auto setParams = omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0);
   const std::vector<KernelType> kernels = {KernelType::Ball, KernelType::Box, KernelType::Cross, KernelType::Annulus};
 
@@ -125,13 +125,13 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
       {
         SECTION("ObjectValue=7 BackgroundValue=3 colliding with existing label 3")
         {
-          const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImageWithExtraLabel<int32>(ds, dx, dy, dz, int32{7}, int32{3}, int32{0}); };
+          const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImageWithExtraLabel<int32>(dataStructure, dx, dy, dz, int32{7}, int32{3}, int32{0}); };
           omt::RunObjectMorphologyComputedExpected<ErodeObjectMorphologyImageFilter, int32>(build, 12, 12, 12, kt, radius, ObjectMorphOp::Erode, int32{7}, int32{3},
                                                                                             omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(7.0, 3.0));
         }
         SECTION("ObjectValue=7 BackgroundValue=9 distinct")
         {
-          const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<int32>(ds, dx, dy, dz, int32{7}, int32{0}); };
+          const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<int32>(dataStructure, dx, dy, dz, int32{7}, int32{0}); };
           omt::RunObjectMorphologyComputedExpected<ErodeObjectMorphologyImageFilter, int32>(build, 12, 12, 12, kt, radius, ObjectMorphOp::Erode, int32{7}, int32{9},
                                                                                             omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(7.0, 9.0));
         }
@@ -146,7 +146,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: float32 exact-equality object value", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
-  const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<float32>(ds, dx, dy, dz, 3.0f, 0.0f); };
+  const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<float32>(dataStructure, dx, dy, dz, 3.0f, 0.0f); };
   const auto setParams = omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(3.0, 0.0);
   omt::RunObjectMorphologyComputedExpected<ErodeObjectMorphologyImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {2, 2, 2}, ObjectMorphOp::Erode, 3.0f, 0.0f, setParams);
 }
@@ -185,17 +185,17 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
     }
   }
 
-  DataStructure ds;
-  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
   imageGeomPtr->setDimensions({k_D, k_D, k_D});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   const ShapeType cellShape = {k_D, k_D, k_D};
-  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<uint8>(ds, inputPath, cellShape, {1});
-  auto* inputArrayPtr = DataArray<uint8>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, inputPath, cellShape, {1});
+  auto* inputArrayPtr = DataArray<uint8>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   {
     constexpr usize k_ChunkValues = 65536;
     auto& ref = inputArrayPtr->getDataStoreRef();
@@ -206,7 +206,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
       SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
     }
   }
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   ErodeObjectMorphologyImageFilter filter;
   Arguments args;
@@ -218,11 +218,11 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
   args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_ObjectValue_Key, std::make_any<float64>(static_cast<float64>(k_ObjectValue)));
   args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_BackgroundValue)));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   const usize numSlots = k_D * k_D * k_D;
@@ -255,7 +255,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -286,36 +286,36 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
 
   SECTION("integer input (uint8)")
   {
-    DataStructure ds;
-    const DataPath inputPath = omt::BuildObjectImage<uint8>(ds, 8, 8, 8, uint8{1}, uint8{0}); // range [0, 255]
+    DataStructure dataStructure;
+    const DataPath inputPath = omt::BuildObjectImage<uint8>(dataStructure, 8, 8, 8, uint8{1}, uint8{0}); // range [0, 255]
 
     // Object Value out of range -> error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 99999.0, 0.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 99999.0, 0.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
     }
     // Background Value out of range (negative) -> error (Object Value is in-range).
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1.0, -5.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.0, -5.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
     }
     // Non-finite (NaN) Object Value -> error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN(), 0.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN(), 0.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
     }
     // Non-finite (Inf) Background Value -> error (Object Value is in-range).
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1.0, std::numeric_limits<float64>::infinity()));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.0, std::numeric_limits<float64>::infinity()));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
     }
     // Both values fractional -> TWO truncation warnings, still valid (warnings from both are accumulated).
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1.5, 0.5));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.5, 0.5));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().size() == 2);
       REQUIRE(result.outputActions.warnings()[0].code == k_ValueTruncated);
@@ -323,7 +323,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
     }
     // Both in-range integer values -> clean.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1.0, 0.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.0, 0.0));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().empty());
     }
@@ -331,30 +331,30 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
 
   SECTION("float input (float32)")
   {
-    DataStructure ds;
-    const DataPath inputPath = omt::BuildObjectImage<float32>(ds, 8, 8, 8, 1.0f, 0.0f);
+    DataStructure dataStructure;
+    const DataPath inputPath = omt::BuildObjectImage<float32>(dataStructure, 8, 8, 8, 1.0f, 0.0f);
 
     // Object Value out of float32 range (1e300 > FLT_MAX) -> error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 1e300, 0.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1e300, 0.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
     }
     // Background Value out of float32 range -> error (Object Value is in-range).
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 3.0, 1e300));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 3.0, 1e300));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
     }
     // Non-finite (Inf) Object Value -> error.
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity(), 0.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::infinity(), 0.0));
       REQUIRE(result.outputActions.invalid());
       REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
     }
     // Both exactly-representable finite values -> clean (no truncation warning for float types).
     {
-      auto result = filter.preflight(ds, makeArgs(inputPath, 3.0, 0.0));
+      auto result = filter.preflight(dataStructure, makeArgs(inputPath, 3.0, 0.0));
       SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
       REQUIRE(result.outputActions.warnings().empty());
     }

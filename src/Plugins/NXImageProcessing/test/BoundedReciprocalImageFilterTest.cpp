@@ -12,8 +12,8 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: Correctness", "[NXIm
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, 12, 0.0, 1.0); // value(i) = i, i in [0, 1727]
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, 12, 0.0, 1.0); // value(i) = i, i in [0, 1727]
 
   BoundedReciprocalImageFilter filter;
   Arguments args;
@@ -21,21 +21,21 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: Correctness", "[NXIm
   args.insertOrAssign(BoundedReciprocalImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(BoundedReciprocalImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath)); // output is forced to float64
-  auto& outStore = ds.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath)); // output is forced to float64
+  auto& outStore = dataStructure.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     const double x = static_cast<double>(i);
     const double expected = 1.0 / (1.0 + x);
     REQUIRE(outStore.getValue(i) == Approx(expected).margin(1.0e-9));
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -55,8 +55,8 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: ITK real-image golde
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -64,18 +64,18 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: ITK real-image golde
   args.insertOrAssign(BoundedReciprocalImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(BoundedReciprocalImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   BoundedReciprocalImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // (A) DURABLE golden: baseline compare @ 0.01 (our AlwaysFloat64 output matches the baseline's `type: double`).
   const DataPath bGeom({"Baseline Geometry"});
-  const auto readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath("BasicFilters_BoundedReciprocalImageFilter_defaults.nrrd"), bGeom, "CellData", "Baseline");
+  const auto readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath("BasicFilters_BoundedReciprocalImageFilter_defaults.nrrd"), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.01);
+  const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -670,7 +670,7 @@ TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension RED tokens", "[SimplnxCore][R
 {
   WriteHdF5File();
   ReadHDF5DatasetFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   const bool components = GENERATE(true, false);
   const bool negative = GENERATE(false, true);
   auto args = filter.getDefaultArguments();
@@ -681,7 +681,7 @@ TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension RED tokens", "[SimplnxCore][R
   info.tupleDimensions = components ? "40" : (negative ? "-1" : "40x");
   ReadHDF5DatasetParameter::ValueType value = {.parent = std::nullopt, .inputFile = MFilePath, .datasets = {info}};
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key, std::make_any<ReadHDF5DatasetParameter::ValueType>(value));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == (components ? -20010 : -20012));
 }
@@ -701,7 +701,7 @@ TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension grammar, products and inherit
     SIMPLNX_RESULT_REQUIRE_VALID(created);
   }
   ReadHDF5DatasetFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadHDF5DatasetParameter::DatasetImportInfo info;
   info.dataSetPath = "/Values";
   info.componentDimensions = "3";
@@ -758,7 +758,7 @@ TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension grammar, products and inherit
   SECTION("Ignored tuple string and inherited zero tuples")
   {
     const bool empty = GENERATE(false, true);
-    REQUIRE(AttributeMatrix::Create(ds, "Parent", {empty ? usize{0} : usize{2}}) != nullptr);
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Parent", {empty ? usize{0} : usize{2}}) != nullptr);
     parent = DataPath({"Parent"});
     info.dataSetPath = empty ? "/Empty" : "/Values";
     info.tupleDimensions = "-1,invalid";
@@ -766,7 +766,7 @@ TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension grammar, products and inherit
   auto args = filter.getDefaultArguments();
   ReadHDF5DatasetParameter::ValueType value = {.parent = parent, .inputFile = input.string(), .datasets = {info}};
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key, std::make_any<ReadHDF5DatasetParameter::ValueType>(value));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   if(expectedCode != 0)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);

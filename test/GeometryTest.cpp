@@ -335,8 +335,8 @@ TEST_CASE("ImageGeom rejects invalid spacing atomically", "[simplnx][ImageGeom]"
   const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), 0.0f, -2.0f);
   CAPTURE(axis, value);
   const std::array<std::string, 3> axes = {"X", "Y", "Z"};
-  DataStructure ds;
-  auto* geomPtr = ImageGeom::Create(ds, "Image");
+  DataStructure dataStructure;
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geomPtr != nullptr);
   CHECK(geomPtr->getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
   const FloatVec3 original{0.5f, 2.0f, 4.0f};
@@ -359,8 +359,8 @@ TEST_CASE("ImageGeom rejects nonfinite origin atomically", "[simplnx][ImageGeom]
   const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(axis, value);
   const std::array<std::string, 3> axes = {"X", "Y", "Z"};
-  DataStructure ds;
-  auto* geomPtr = ImageGeom::Create(ds, "Image");
+  DataStructure dataStructure;
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geomPtr != nullptr);
   CHECK(geomPtr->getOrigin() == FloatVec3{0.0f, 0.0f, 0.0f});
   const FloatVec3 original{-3.0f, 0.0f, 5.0f};
@@ -385,24 +385,24 @@ TEST_CASE("Image geometry actions reject invalid metadata", "[simplnx][CreateIma
   const FloatVec3 origin{-2.0f, 5.0f, badSpacing ? 0.0f : infinity};
   const FloatVec3 spacing{2.0f, 3.0f, badSpacing ? 0.0f : 4.0f};
   const auto expectedCode = badSpacing ? ImageGeom::k_InvalidSpacing : ImageGeom::k_InvalidOrigin;
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath path({"Parent", "Image"});
   SECTION("create")
   {
     const CreateImageGeometryAction action(path, {2, 3, 4}, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), "Cell Data");
-    const auto result = action.apply(ds, mode);
+    const auto result = action.apply(dataStructure, mode);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     CHECK(result.errors().front().code == expectedCode);
     CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
-    CHECK_FALSE(ds.containsData(path));
+    CHECK_FALSE(dataStructure.containsData(path));
   }
   SECTION("update")
   {
-    REQUIRE(DataGroup::Create(ds, "Parent") != nullptr);
-    auto* geomPtr = ImageGeom::Create(ds, "Image", ds.getId(path.getParent()));
+    REQUIRE(DataGroup::Create(dataStructure, "Parent") != nullptr);
+    auto* geomPtr = ImageGeom::Create(dataStructure, "Image", dataStructure.getId(path.getParent()));
     REQUIRE(geomPtr != nullptr);
     const UpdateImageGeomAction action(origin, spacing, path);
-    const auto result = action.apply(ds, mode);
+    const auto result = action.apply(dataStructure, mode);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     CHECK(result.errors().front().code == expectedCode);
     CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
@@ -503,14 +503,14 @@ TEST_CASE("CreateRectGridGeometryAction reports a bound array that cannot be cre
 TEST_CASE("CreateRectGridGeometryAction rejects a count below two", "[simplnx][CreateRectGridGeometryAction]")
 {
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath path({"RectGrid"});
   const CreateRectGridGeometryAction action(path, 3, 1, 3, "Cell Data", "X Bounds", "Y Bounds", "Z Bounds");
-  const auto result = action.apply(ds, mode);
+  const auto result = action.apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == -5914);
   CHECK(result.errors().front().message.find("Y bounds") != std::string::npos);
-  CHECK_FALSE(ds.containsData(path));
+  CHECK_FALSE(dataStructure.containsData(path));
 }
 
 TEST_CASE("RectGridGeomTest")
@@ -738,9 +738,9 @@ TEST_CASE("Node geometry getBoundingBox handles negative coordinates")
 // -----------------------------------------------------------------------------
 namespace
 {
-Float32Array* MakeBoundsAxis(DataStructure& ds, RectGridGeom* geom, const std::string& name, std::vector<float32> values)
+Float32Array* MakeBoundsAxis(DataStructure& dataStructure, RectGridGeom* geom, const std::string& name, std::vector<float32> values)
 {
-  auto* arrPtr = Float32Array::CreateWithStore<DataStore<float32>>(ds, name, ShapeType{values.size()}, ShapeType{1}, geom->getId());
+  auto* arrPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, name, ShapeType{values.size()}, ShapeType{1}, geom->getId());
   for(usize i = 0; i < values.size(); ++i)
   {
     arrPtr->setValue(i, values[i]);
@@ -751,14 +751,14 @@ Float32Array* MakeBoundsAxis(DataStructure& ds, RectGridGeom* geom, const std::s
 
 TEST_CASE("RectGridGeom::setBounds accepts valid arrays")
 {
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
 
   SECTION("positive monotonically increasing")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {0.0f, 1.0f, 2.5f, 5.0f});
-    auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {0.0f, 3.0f});
-    auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {0.0f, 1.0f, 2.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f, 2.5f, 5.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 3.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f, 2.0f});
     auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(geomPtr->getXBounds() == xPtr);
@@ -768,9 +768,9 @@ TEST_CASE("RectGridGeom::setBounds accepts valid arrays")
 
   SECTION("all-negative monotonically increasing")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {-10.0f, -5.0f, -1.0f});
-    auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {-20.0f, -3.0f});
-    auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {-7.0f, -0.5f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {-10.0f, -5.0f, -1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {-20.0f, -3.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {-7.0f, -0.5f});
     auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(geomPtr->getXBounds() == xPtr);
@@ -780,27 +780,27 @@ TEST_CASE("RectGridGeom::setBounds accepts valid arrays")
 
   SECTION("straddling zero")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {-2.0f, 0.0f, 3.0f});
-    auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {-5.0f, 1.0f});
-    auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {-1.0f, 0.0f, 1.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {-2.0f, 0.0f, 3.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {-5.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {-1.0f, 0.0f, 1.0f});
     auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
 
   SECTION("minimum valid size — 2 elements each")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {0.0f, 1.0f});
-    auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {0.0f, 1.0f});
-    auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {0.0f, 1.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f});
     auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
 
   SECTION("nullptr pointers clear bounds IDs")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {0.0f, 1.0f});
-    auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {0.0f, 1.0f});
-    auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {0.0f, 1.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f});
     auto setResult = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(setResult);
 
@@ -817,15 +817,15 @@ TEST_CASE("RectGridGeom::setBounds validates EmptyDataStore metadata")
   const usize size = GENERATE(usize{0}, usize{1}, usize{2}, usize{3});
   const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(size, axis);
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
   std::array<Float32Array*, 3> bounds = {};
   const std::array<std::string, 3> names = {"X", "Y", "Z"};
   for(usize i = 0; i < bounds.size(); ++i)
   {
     auto storeResult = EmptyDataStore<float32>::Create(ShapeType{i == axis ? size : 3}, ShapeType{1}, "");
     SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
-    bounds[i] = Float32Array::Create(ds, names[i], std::move(storeResult.value()), geomPtr->getId());
+    bounds[i] = Float32Array::Create(dataStructure, names[i], std::move(storeResult.value()), geomPtr->getId());
     REQUIRE(bounds[i] != nullptr);
     REQUIRE(bounds[i]->getDataStoreRef().getStoreType() == IDataStore::StoreType::Empty);
   }
@@ -846,10 +846,10 @@ TEST_CASE("RectGridGeom::setBounds validates EmptyDataStore metadata")
 
 TEST_CASE("RectGridGeom::setBounds rejects nonscalar bounds", "[simplnx][RectGridGeom]")
 {
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
   REQUIRE(geomPtr != nullptr);
-  auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(ds, "Y", ShapeType{3}, ShapeType{2}, geomPtr->getId());
+  auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Y", ShapeType{3}, ShapeType{2}, geomPtr->getId());
   REQUIRE(boundsPtr != nullptr);
   const auto result = geomPtr->setBounds(nullptr, boundsPtr, nullptr);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -862,14 +862,14 @@ TEST_CASE("RectGridGeom::setBounds rejects nonfinite bounds", "[simplnx][RectGri
   const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
   const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(axis, value);
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
   REQUIRE(geomPtr != nullptr);
   const std::array<std::string, 3> axes = {"X", "Y", "Z"};
   std::array<Float32Array*, 3> bounds = {};
   for(usize i = 0; i < bounds.size(); ++i)
   {
-    bounds[i] = MakeBoundsAxis(ds, geomPtr, axes[i], {0.0f, 1.0f, 2.0f});
+    bounds[i] = MakeBoundsAxis(dataStructure, geomPtr, axes[i], {0.0f, 1.0f, 2.0f});
   }
   bounds[axis]->setValue(1, value);
   const auto result = geomPtr->setBounds(bounds[0], bounds[1], bounds[2]);
@@ -887,39 +887,39 @@ TEST_CASE("CreateRectGridGeometryAction reports invalid input bounds before movi
 {
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const auto handling = GENERATE(ArrayHandlingType::Copy, ArrayHandlingType::Move, ArrayHandlingType::Reference);
-  DataStructure ds;
-  auto* sourcePtr = RectGridGeom::Create(ds, "Source");
+  DataStructure dataStructure;
+  auto* sourcePtr = RectGridGeom::Create(dataStructure, "Source");
   REQUIRE(sourcePtr != nullptr);
-  MakeBoundsAxis(ds, sourcePtr, "X", {0.0f, 1.0f});
-  MakeBoundsAxis(ds, sourcePtr, "Y", {0.0f, 1.0f});
-  MakeBoundsAxis(ds, sourcePtr, "Z", {0.0f, 0.0f});
+  MakeBoundsAxis(dataStructure, sourcePtr, "X", {0.0f, 1.0f});
+  MakeBoundsAxis(dataStructure, sourcePtr, "Y", {0.0f, 1.0f});
+  MakeBoundsAxis(dataStructure, sourcePtr, "Z", {0.0f, 0.0f});
   const DataPath path({"Parent", "RectGrid"});
   const DataPath xPath({"Source", "X"});
   const DataPath yPath({"Source", "Y"});
   const DataPath zPath({"Source", "Z"});
   const CreateRectGridGeometryAction action(path, xPath, yPath, zPath, "Cell Data", handling);
-  const auto result = action.apply(ds, mode);
+  const auto result = action.apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == -4007);
   CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
-  CHECK(ds.containsData(xPath));
-  CHECK(ds.containsData(yPath));
-  CHECK(ds.containsData(zPath));
-  CHECK_FALSE(ds.containsData(path));
+  CHECK(dataStructure.containsData(xPath));
+  CHECK(dataStructure.containsData(yPath));
+  CHECK(dataStructure.containsData(zPath));
+  CHECK_FALSE(dataStructure.containsData(path));
 }
 
 TEST_CASE("RectGridGeom::setBounds validates across bulk read boundaries")
 {
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
   std::vector<float32> values(8193);
   for(usize i = 0; i < values.size(); ++i)
   {
     values[i] = static_cast<float32>(i);
   }
-  auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", values);
-  auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {0.0f, 1.0f});
-  auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {0.0f, 1.0f});
+  auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", values);
+  auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 1.0f});
+  auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f});
   const auto validResult = geomPtr->setBounds(xPtr, yPtr, zPtr);
   SIMPLNX_RESULT_REQUIRE_VALID(validResult);
 
@@ -933,14 +933,14 @@ TEST_CASE("RectGridGeom::setBounds validates across bulk read boundaries")
 
 TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
 {
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
-  auto* goodYPtr = MakeBoundsAxis(ds, geomPtr, "GoodY", {0.0f, 1.0f});
-  auto* goodZPtr = MakeBoundsAxis(ds, geomPtr, "GoodZ", {0.0f, 1.0f});
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+  auto* goodYPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodY", {0.0f, 1.0f});
+  auto* goodZPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodZ", {0.0f, 1.0f});
 
   SECTION("empty X array")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {});
     auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
@@ -948,7 +948,7 @@ TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
 
   SECTION("single-element X array")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {5.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {5.0f});
     auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
@@ -956,8 +956,8 @@ TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
 
   SECTION("single-element Y array")
   {
-    auto* goodXPtr = MakeBoundsAxis(ds, geomPtr, "GoodX", {0.0f, 1.0f});
-    auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {3.0f});
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {3.0f});
     auto result = geomPtr->setBounds(goodXPtr, yPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
@@ -965,8 +965,8 @@ TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
 
   SECTION("single-element Z array")
   {
-    auto* goodXPtr = MakeBoundsAxis(ds, geomPtr, "GoodX", {0.0f, 1.0f});
-    auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {7.0f});
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {7.0f});
     auto result = geomPtr->setBounds(goodXPtr, goodYPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
@@ -975,14 +975,14 @@ TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
 
 TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 {
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
-  auto* goodYPtr = MakeBoundsAxis(ds, geomPtr, "GoodY", {0.0f, 1.0f});
-  auto* goodZPtr = MakeBoundsAxis(ds, geomPtr, "GoodZ", {0.0f, 1.0f});
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+  auto* goodYPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodY", {0.0f, 1.0f});
+  auto* goodZPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodZ", {0.0f, 1.0f});
 
   SECTION("equal adjacent values on X")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {0.0f, 1.0f, 1.0f, 2.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f, 1.0f, 2.0f});
     auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
@@ -990,7 +990,7 @@ TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 
   SECTION("strictly decreasing on X")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {5.0f, 3.0f, 1.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {5.0f, 3.0f, 1.0f});
     auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
@@ -998,7 +998,7 @@ TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 
   SECTION("reversal in the middle of X")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {0.0f, 2.0f, 1.0f, 3.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 2.0f, 1.0f, 3.0f});
     auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
@@ -1006,8 +1006,8 @@ TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 
   SECTION("non-monotonic Y axis")
   {
-    auto* goodXPtr = MakeBoundsAxis(ds, geomPtr, "GoodX", {0.0f, 1.0f, 2.0f});
-    auto* yPtr = MakeBoundsAxis(ds, geomPtr, "Y", {3.0f, 1.0f});
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f, 2.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {3.0f, 1.0f});
     auto result = geomPtr->setBounds(goodXPtr, yPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
@@ -1015,8 +1015,8 @@ TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 
   SECTION("non-monotonic Z axis")
   {
-    auto* goodXPtr = MakeBoundsAxis(ds, geomPtr, "GoodX", {0.0f, 1.0f});
-    auto* zPtr = MakeBoundsAxis(ds, geomPtr, "Z", {2.0f, 1.0f});
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {2.0f, 1.0f});
     auto result = geomPtr->setBounds(goodXPtr, goodYPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
@@ -1024,7 +1024,7 @@ TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 
   SECTION("equal adjacent negative values")
   {
-    auto* xPtr = MakeBoundsAxis(ds, geomPtr, "X", {-5.0f, -3.0f, -3.0f, -1.0f});
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {-5.0f, -3.0f, -3.0f, -1.0f});
     auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
@@ -1033,20 +1033,20 @@ TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 
 TEST_CASE("RectGridGeom::setBounds is atomic — geometry unchanged on failure")
 {
-  DataStructure ds;
-  auto* geomPtr = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
 
-  auto* x0Ptr = MakeBoundsAxis(ds, geomPtr, "X0", {0.0f, 1.0f, 2.0f});
-  auto* y0Ptr = MakeBoundsAxis(ds, geomPtr, "Y0", {0.0f, 5.0f});
-  auto* z0Ptr = MakeBoundsAxis(ds, geomPtr, "Z0", {0.0f, 3.0f});
+  auto* x0Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X0", {0.0f, 1.0f, 2.0f});
+  auto* y0Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y0", {0.0f, 5.0f});
+  auto* z0Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z0", {0.0f, 3.0f});
   auto initialSet = geomPtr->setBounds(x0Ptr, y0Ptr, z0Ptr);
   SIMPLNX_RESULT_REQUIRE_VALID(initialSet);
 
   SECTION("X fails — Y and Z original IDs preserved")
   {
-    auto* x1Ptr = MakeBoundsAxis(ds, geomPtr, "X1", {9.0f}); // too small
-    auto* y1Ptr = MakeBoundsAxis(ds, geomPtr, "Y1", {0.0f, 4.0f});
-    auto* z1Ptr = MakeBoundsAxis(ds, geomPtr, "Z1", {0.0f, 2.0f});
+    auto* x1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X1", {9.0f}); // too small
+    auto* y1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y1", {0.0f, 4.0f});
+    auto* z1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z1", {0.0f, 2.0f});
     auto badResult = geomPtr->setBounds(x1Ptr, y1Ptr, z1Ptr);
     SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
     REQUIRE(geomPtr->getXBounds() == x0Ptr);
@@ -1056,9 +1056,9 @@ TEST_CASE("RectGridGeom::setBounds is atomic — geometry unchanged on failure")
 
   SECTION("Y fails — X and Z original IDs preserved")
   {
-    auto* x1Ptr = MakeBoundsAxis(ds, geomPtr, "X1", {0.0f, 4.0f});
-    auto* y1Ptr = MakeBoundsAxis(ds, geomPtr, "Y1", {99.0f}); // too small
-    auto* z1Ptr = MakeBoundsAxis(ds, geomPtr, "Z1", {0.0f, 2.0f});
+    auto* x1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X1", {0.0f, 4.0f});
+    auto* y1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y1", {99.0f}); // too small
+    auto* z1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z1", {0.0f, 2.0f});
     auto badResult = geomPtr->setBounds(x1Ptr, y1Ptr, z1Ptr);
     SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
     REQUIRE(geomPtr->getXBounds() == x0Ptr);
@@ -1068,9 +1068,9 @@ TEST_CASE("RectGridGeom::setBounds is atomic — geometry unchanged on failure")
 
   SECTION("Z fails — X and Y original IDs preserved")
   {
-    auto* x1Ptr = MakeBoundsAxis(ds, geomPtr, "X1", {0.0f, 4.0f});
-    auto* y1Ptr = MakeBoundsAxis(ds, geomPtr, "Y1", {0.0f, 2.0f});
-    auto* z1Ptr = MakeBoundsAxis(ds, geomPtr, "Z1", {5.0f, 2.0f}); // decreasing
+    auto* x1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X1", {0.0f, 4.0f});
+    auto* y1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y1", {0.0f, 2.0f});
+    auto* z1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z1", {5.0f, 2.0f}); // decreasing
     auto badResult = geomPtr->setBounds(x1Ptr, y1Ptr, z1Ptr);
     SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
     REQUIRE(geomPtr->getXBounds() == x0Ptr);

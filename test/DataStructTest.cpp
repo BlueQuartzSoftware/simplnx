@@ -3108,37 +3108,37 @@ namespace
  */
 DataStructure CreateExcludedLinkStructure()
 {
-  DataStructure ds;
-  auto* geomPtr = DataGroup::Create(ds, "Geom");
-  auto* featurePtr = AttributeMatrix::Create(ds, "Feature", {3}, geomPtr->getId());
-  auto* countsPtr = UnitTest::CreateTestDataArray<int32>(ds, "Counts", {3}, {1}, featurePtr->getId());
+  DataStructure dataStructure;
+  auto* geomPtr = DataGroup::Create(dataStructure, "Geom");
+  auto* featurePtr = AttributeMatrix::Create(dataStructure, "Feature", {3}, geomPtr->getId());
+  auto* countsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Counts", {3}, {1}, featurePtr->getId());
   (*countsPtr)[0] = 5;
   (*countsPtr)[1] = 6;
   (*countsPtr)[2] = 7;
-  auto* miscPtr = DataGroup::Create(ds, "Misc", geomPtr->getId());
-  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, miscPtr->getId());
+  auto* miscPtr = DataGroup::Create(dataStructure, "Misc", geomPtr->getId());
+  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Keep", {1}, {1}, miscPtr->getId());
   (*keepPtr)[0] = 123;
-  auto* subPtr = DataGroup::Create(ds, "Sub", miscPtr->getId());
-  auto* outsidePtr = DataGroup::Create(ds, "Outside");
-  ds.setAdditionalParent(featurePtr->getId(), miscPtr->getId());
-  ds.setAdditionalParent(featurePtr->getId(), subPtr->getId());
-  ds.setAdditionalParent(featurePtr->getId(), outsidePtr->getId());
-  DataGroup::Create(ds, "Copy");
-  return ds;
+  auto* subPtr = DataGroup::Create(dataStructure, "Sub", miscPtr->getId());
+  auto* outsidePtr = DataGroup::Create(dataStructure, "Outside");
+  dataStructure.setAdditionalParent(featurePtr->getId(), miscPtr->getId());
+  dataStructure.setAdditionalParent(featurePtr->getId(), subPtr->getId());
+  dataStructure.setAdditionalParent(featurePtr->getId(), outsidePtr->getId());
+  DataGroup::Create(dataStructure, "Copy");
+  return dataStructure;
 }
 } // namespace
 
 TEST_CASE("CopyDataObjectExcludingAction: excludes every link and restores the source", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
 {
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
-  DataStructure ds = CreateExcludedLinkStructure();
+  DataStructure dataStructure = CreateExcludedLinkStructure();
   const DataPath featurePath({"Geom", "Feature"});
-  const auto featureId = ds.getData(featurePath)->getId();
-  const auto parents = ds.getData(featurePath)->getParentIds();
+  const auto featureId = dataStructure.getData(featurePath)->getId();
+  const auto parents = dataStructure.getData(featurePath)->getParentIds();
   REQUIRE(parents.size() == 4);
 
   OutputActions actions;
-  AppendCopyDataObjectAction(ds, actions, DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), featurePath);
+  AppendCopyDataObjectAction(dataStructure, actions, DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), featurePath);
   REQUIRE(actions.actions.size() == 1);
   const auto* copyPtr = dynamic_cast<const CopyDataObjectExcludingAction*>(actions.actions[0].get());
   REQUIRE(copyPtr != nullptr);
@@ -3148,27 +3148,27 @@ TEST_CASE("CopyDataObjectExcludingAction: excludes every link and restores the s
   std::sort(expected.begin(), expected.end());
   CHECK(created == expected);
 
-  const Result<> applyResult = copyPtr->apply(ds, mode);
+  const Result<> applyResult = copyPtr->apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
 
   // Copy: unrelated data copied, no link to the excluded object at any depth.
-  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
-  CHECK(ds.getData(DataPath({"Copy", "Misc", "Sub"})) != nullptr);
-  CHECK(ds.getData(DataPath({"Copy", "Misc", "Feature"})) == nullptr);
-  CHECK(ds.getData(DataPath({"Copy", "Misc", "Sub", "Feature"})) == nullptr);
-  CHECK(ds.getDataRefAs<BaseGroup>(DataPath({"Copy", "Misc"})).getSize() == 2);
-  CHECK(ds.getDataRefAs<BaseGroup>(DataPath({"Copy", "Misc", "Sub"})).getSize() == 0);
+  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
+  CHECK(dataStructure.getData(DataPath({"Copy", "Misc", "Sub"})) != nullptr);
+  CHECK(dataStructure.getData(DataPath({"Copy", "Misc", "Feature"})) == nullptr);
+  CHECK(dataStructure.getData(DataPath({"Copy", "Misc", "Sub", "Feature"})) == nullptr);
+  CHECK(dataStructure.getDataRefAs<BaseGroup>(DataPath({"Copy", "Misc"})).getSize() == 2);
+  CHECK(dataStructure.getDataRefAs<BaseGroup>(DataPath({"Copy", "Misc", "Sub"})).getSize() == 0);
 
   // Source: all four links restored, same object, same parents, same values.
   for(const auto& path : {featurePath, DataPath({"Geom", "Misc", "Feature"}), DataPath({"Geom", "Misc", "Sub", "Feature"}), DataPath({"Outside", "Feature"})})
   {
-    const auto* objectPtr = ds.getData(path);
+    const auto* objectPtr = dataStructure.getData(path);
     REQUIRE(objectPtr != nullptr);
     CHECK(objectPtr->getId() == featureId);
   }
-  CHECK(ds.getData(featurePath)->getParentIds() == parents);
-  CHECK(ds.getDataRefAs<BaseGroup>(DataPath({"Geom", "Misc"})).getSize() == 3);
-  const auto& counts = ds.getDataRefAs<Int32Array>(featurePath.createChildPath("Counts"));
+  CHECK(dataStructure.getData(featurePath)->getParentIds() == parents);
+  CHECK(dataStructure.getDataRefAs<BaseGroup>(DataPath({"Geom", "Misc"})).getSize() == 3);
+  const auto& counts = dataStructure.getDataRefAs<Int32Array>(featurePath.createChildPath("Counts"));
   CHECK(counts[0] == 5);
   CHECK(counts[1] == 6);
   CHECK(counts[2] == 7);
@@ -3176,17 +3176,17 @@ TEST_CASE("CopyDataObjectExcludingAction: excludes every link and restores the s
 
 TEST_CASE("CopyDataObjectExcludingAction: helper with a missing excluded object copies everything", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
 {
-  DataStructure ds = CreateExcludedLinkStructure();
+  DataStructure dataStructure = CreateExcludedLinkStructure();
   OutputActions actions;
-  REQUIRE_NOTHROW(AppendCopyDataObjectAction(ds, actions, DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), DataPath({"Geom", "Missing"})));
+  REQUIRE_NOTHROW(AppendCopyDataObjectAction(dataStructure, actions, DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), DataPath({"Geom", "Missing"})));
   REQUIRE(actions.actions.size() == 1);
   const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(actions.actions[0].get());
   REQUIRE(copyPtr != nullptr);
   // Copy/Misc, Keep, Feature, Feature/Counts, Sub, Sub/Feature, Sub/Feature/Counts
   CHECK(copyPtr->getAllCreatedPaths().size() == 7);
-  const Result<> applyResult = copyPtr->apply(ds, IDataAction::Mode::Execute);
+  const Result<> applyResult = copyPtr->apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
-  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
+  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
 }
 
 TEST_CASE("CopyDataObjectExcludingAction: cloned action excludes links below a root placement", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
@@ -3250,35 +3250,35 @@ TEST_CASE("CopyDataObjectExcludingAction: cloned action excludes links below a r
 
 TEST_CASE("CopyDataObjectExcludingAction: missing excluded object copies everything", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
 {
-  DataStructure ds = CreateExcludedLinkStructure();
+  DataStructure dataStructure = CreateExcludedLinkStructure();
   const CopyDataObjectExcludingAction copy(DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), {DataPath({"Copy", "Misc"})}, DataPath({"Geom", "Missing"}));
-  const Result<> applyResult = copy.apply(ds, IDataAction::Mode::Execute);
+  const Result<> applyResult = copy.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
-  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
-  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
+  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
+  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
 }
 
 TEST_CASE("CopyDataObjectExcludingAction: preserves destination under an excluded parent", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
 {
   UnitTest::LoadPlugins();
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
-  DataStructure ds;
-  auto* sourcePtr = DataGroup::Create(ds, "Source");
-  auto* targetPtr = DataGroup::Create(ds, "Target");
+  DataStructure dataStructure;
+  auto* sourcePtr = DataGroup::Create(dataStructure, "Source");
+  auto* targetPtr = DataGroup::Create(dataStructure, "Target");
   REQUIRE(sourcePtr != nullptr);
   REQUIRE(targetPtr != nullptr);
-  auto* excludedPtr = AttributeMatrix::Create(ds, "Feature", {3}, sourcePtr->getId());
+  auto* excludedPtr = AttributeMatrix::Create(dataStructure, "Feature", {3}, sourcePtr->getId());
   REQUIRE(excludedPtr != nullptr);
-  REQUIRE(ds.setAdditionalParent(excludedPtr->getId(), targetPtr->getId()));
+  REQUIRE(dataStructure.setAdditionalParent(excludedPtr->getId(), targetPtr->getId()));
   const auto parents = excludedPtr->getParentIds();
   OutputActions actions;
-  AppendCopyDataObjectAction(ds, actions, DataPath({"Source"}), DataPath({"Target", "Copy"}), DataPath({"Source", "Feature"}));
+  AppendCopyDataObjectAction(dataStructure, actions, DataPath({"Source"}), DataPath({"Target", "Copy"}), DataPath({"Source", "Feature"}));
   REQUIRE(actions.actions.size() == 1);
-  auto result = actions.actions[0]->apply(ds, mode);
+  auto result = actions.actions[0]->apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  CHECK(ds.getData(DataPath({"Target", "Copy"})) != nullptr);
-  CHECK(ds.getData(DataPath({"Target", "Copy", "Feature"})) == nullptr);
-  CHECK(ds.getData(DataPath({"Source", "Feature"})) == excludedPtr);
-  CHECK(ds.getData(DataPath({"Target", "Feature"})) == excludedPtr);
+  CHECK(dataStructure.getData(DataPath({"Target", "Copy"})) != nullptr);
+  CHECK(dataStructure.getData(DataPath({"Target", "Copy", "Feature"})) == nullptr);
+  CHECK(dataStructure.getData(DataPath({"Source", "Feature"})) == excludedPtr);
+  CHECK(dataStructure.getData(DataPath({"Target", "Feature"})) == excludedPtr);
   CHECK(excludedPtr->getParentIds() == parents);
 }

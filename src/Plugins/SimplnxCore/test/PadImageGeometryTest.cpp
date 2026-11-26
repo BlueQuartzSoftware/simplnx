@@ -492,14 +492,14 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Child names containing the geometry na
 
 namespace
 {
-ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
+ImageGeom* MakeValidationImage(DataStructure& dataStructure, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
 {
-  auto* geomPtr = ImageGeom::Create(ds, "ValidationImage");
+  auto* geomPtr = ImageGeom::Create(dataStructure, "ValidationImage");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions(dims);
   REQUIRE(geomPtr->setSpacing(spacing).valid());
   REQUIRE(geomPtr->setOrigin(origin).valid());
-  auto* cellsPtr = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geomPtr->getId());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", {dims[2], dims[1], dims[0]}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
   return geomPtr;
@@ -527,8 +527,8 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Padding signs regression", "[SimplnxCo
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5);
   CAPTURE(row);
-  DataStructure ds;
-  MakeValidationImage(ds);
+  DataStructure dataStructure;
+  MakeValidationImage(dataStructure);
   auto args = ValidationPaddingArgs();
   args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, row / 2 == 0);
   args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, row / 2 == 1);
@@ -538,7 +538,7 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Padding signs regression", "[SimplnxCo
                                      PadImageGeometryFilter::k_ZMinMax_Key,
                       row % 2 == 0 ? VectorInt32Parameter::ValueType{-1, 0} : VectorInt32Parameter::ValueType{0, -1});
   PadImageGeometryFilter filter;
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors()[0].code == -86019 - row);
   CHECK(result.outputActions.errors()[0].message.find(row / 2 == 0 ? "X" : row / 2 == 1 ? "Y" : "Z") != std::string::npos);
@@ -546,23 +546,23 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Padding signs regression", "[SimplnxCo
 }
 TEST_CASE("SimplnxCore::PadImageGeometry: Origin result regression", "[SimplnxCore][PadImageGeometry][NumericDomainRed]")
 {
-  DataStructure ds;
-  auto* geomPtr = MakeValidationImage(ds, {2, 2, 2}, {3e38f, 1, 1}, {-3e38f, 0, 0});
+  DataStructure dataStructure;
+  auto* geomPtr = MakeValidationImage(dataStructure, {2, 2, 2}, {3e38f, 1, 1}, {-3e38f, 0, 0});
   auto args = ValidationPaddingArgs();
   args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, true);
   PadImageGeometryFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
   REQUIRE_FALSE(pre.outputActions.warnings().empty());
   CHECK(pre.outputActions.warnings()[0].code == -86032);
   CHECK(pre.outputActions.warnings()[0].message.find("X Min & Max Padding' Min value 1 with origin -3e+38 and spacing 3e+38 produces origin result -inf") != std::string::npos);
-  DataStructure preflightDs = ds;
+  DataStructure preflightDs = dataStructure;
   const auto preflightActionResult = pre.outputActions.value().applyRegular(preflightDs, IDataAction::Mode::Preflight);
   const auto& preflightGeom = preflightDs.getDataRefAs<ImageGeom>(DataPath({"ValidationImage"}));
   CHECK(preflightGeom.getOrigin() == FloatVec3{-3e38f, 0, 0});
   CHECK(preflightGeom.getSpacing() == FloatVec3{3e38f, 1, 1});
   CHECK_FALSE(preflightDs.containsData(DataPath({"Padded"})));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   for(const auto* failurePtr : std::array<const Result<>*, 2>{&preflightActionResult, &result.result})
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(*failurePtr);
@@ -573,14 +573,14 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Origin result regression", "[SimplnxCo
   }
   CHECK(geomPtr->getOrigin() == FloatVec3{-3e38f, 0, 0});
   CHECK(geomPtr->getSpacing() == FloatVec3{3e38f, 1, 1});
-  CHECK_FALSE(ds.containsData(DataPath({"Padded"})));
+  CHECK_FALSE(dataStructure.containsData(DataPath({"Padded"})));
 }
 
 TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding", "[SimplnxCore][PadImageGeometry]")
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6);
-  DataStructure ds;
-  auto* geomPtr = MakeValidationImage(ds, {1, 1, 1});
+  DataStructure dataStructure;
+  auto* geomPtr = MakeValidationImage(dataStructure, {1, 1, 1});
   auto args = ValidationPaddingArgs();
   const int32 max = std::numeric_limits<int32>::max();
   if(row == 0)
@@ -601,11 +601,11 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
     REQUIRE(cellsPtr != nullptr);
     if(row == 1)
     {
-      REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(ds, "Values", {1, 1, 1}, {1}, cellsPtr->getId()) != nullptr);
+      REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Values", {1, 1, 1}, {1}, cellsPtr->getId()) != nullptr);
     }
     else
     {
-      REQUIRE(UInt8Array::CreateWithStore<UInt8DataStore>(ds, "Values", {1, 1, 1}, {4}, cellsPtr->getId()) != nullptr);
+      REQUIRE(UInt8Array::CreateWithStore<UInt8DataStore>(dataStructure, "Values", {1, 1, 1}, {4}, cellsPtr->getId()) != nullptr);
     }
   }
   else if(row == 3)
@@ -627,7 +627,7 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
     args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, VectorInt32Parameter::ValueType{0, 0});
   }
   PadImageGeometryFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   if(row == 4)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
@@ -639,9 +639,9 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
   {
     REQUIRE(pre.outputActions.warnings().size() == 1);
     CHECK(pre.outputActions.warnings()[0].code == -86031);
-    auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Preflight);
+    auto applied = pre.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    auto* outputPtr = ds.getDataAs<ImageGeom>(DataPath({"Padded"}));
+    auto* outputPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"Padded"}));
     REQUIRE(outputPtr != nullptr);
     CHECK(outputPtr->getDimensions() == SizeVec3{1, 1, 1});
     DataStructure executeDs;
@@ -653,7 +653,7 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
   }
   else if(row == 1 || row == 2)
   {
-    auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Preflight);
+    auto applied = pre.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_INVALID(applied);
     REQUIRE(applied.errors()[0].code == -270);
     CHECK(applied.errors()[0].message.find(row == 1 ? "byte" : "value") != std::string::npos);
@@ -662,11 +662,11 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
 TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[SimplnxCore][PadImageGeometry]")
 {
   const auto row = GENERATE(0, 1, 2, 3, 4);
-  DataStructure ds;
-  auto* geomPtr = MakeValidationImage(ds, {2, 2, 1});
+  DataStructure dataStructure;
+  auto* geomPtr = MakeValidationImage(dataStructure, {2, 2, 1});
   auto* cellsPtr = geomPtr->getCellData();
   REQUIRE(cellsPtr != nullptr);
-  auto* markerPtr = Int32Array::CreateWithStore<Int32DataStore>(ds, "Marker", {1, 2, 2}, {1}, cellsPtr->getId());
+  auto* markerPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Marker", {1, 2, 2}, {1}, cellsPtr->getId());
   REQUIRE(markerPtr != nullptr);
   for(usize idx = 0; idx < 4; ++idx)
   {
@@ -675,11 +675,11 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[S
   auto args = ValidationPaddingArgs();
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, VectorInt32Parameter::ValueType{1, 1});
   PadImageGeometryFilter filter;
-  auto pre = filter.preflight(ds, args);
+  auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-  auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+  auto applied = pre.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
-  auto* destPtr = ds.getDataAs<Int32Array>(DataPath({"Padded", "Cells", "Marker"}));
+  auto* destPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Padded", "Cells", "Marker"}));
   REQUIRE(destPtr != nullptr);
   destPtr->fill(99);
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, row == 0 ? VectorInt32Parameter::ValueType{-1, 0} : row == 1 ? VectorInt32Parameter::ValueType{1} : VectorInt32Parameter::ValueType{1, 1});
@@ -690,12 +690,12 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[S
     args.insertOrAssign(row == 3 ? PadImageGeometryFilter::k_YMinMax_Key : PadImageGeometryFilter::k_ZMinMax_Key, VectorInt32Parameter::ValueType{});
   }
   args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, DataPath({"FilteredPadded"}));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   if(row != 2)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     CHECK(result.result.errors()[0].code == (row == 0 ? -86019 : -1));
-    CHECK_FALSE(ds.containsData(DataPath({"FilteredPadded"})));
+    CHECK_FALSE(dataStructure.containsData(DataPath({"FilteredPadded"})));
     for(usize idx = 0; idx < 8; ++idx)
     {
       CHECK((*destPtr)[idx] == 99);
@@ -704,7 +704,7 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[S
   else
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    destPtr = ds.getDataAs<Int32Array>(DataPath({"FilteredPadded", "Cells", "Marker"}));
+    destPtr = dataStructure.getDataAs<Int32Array>(DataPath({"FilteredPadded", "Cells", "Marker"}));
     REQUIRE(destPtr != nullptr);
     const std::array<int32, 8> expected = {0, 1, 2, 0, 0, 3, 4, 0};
     for(usize idx = 0; idx < 8; ++idx)

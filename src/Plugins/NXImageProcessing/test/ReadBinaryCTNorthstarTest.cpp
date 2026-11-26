@@ -488,7 +488,7 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: override spacing befo
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: spacing for a wide location range", "[NXImageProcessing][ReadBinaryCTNorthstarFilter]")
 {
   const ReadBinaryCTNorthstarFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, k_NsiHeaderPath);
   const DataPath geometryPath({"CT Image Geometry"});
@@ -497,16 +497,16 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: spacing for a wide lo
   {
     WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2, 4, "-2e38", "2e38");
     WriteNsiBinaryDataFiles<4, k_YDim, k_File1ZCount, k_File2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
-    const auto preflight = filter.preflight(ds, args);
+    const auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
     const auto volumeInfo = std::ranges::find(preflight.outputValues, "Original Volume", &IFilter::PreflightValue::name);
     REQUIRE(volumeInfo != preflight.outputValues.end());
     CHECK(volumeInfo->value.find("inf") == std::string::npos);
-    const auto result = filter.execute(ds, args);
+    const auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     // A span of 4e38 over four X voxels gives 1e38 per voxel.
-    UnitTest::RequireReaderGeometry(ds, geometryPath, {-2e38F, 0, 0}, {1e38F, 1, 1});
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::RequireReaderGeometry(dataStructure, geometryPath, {-2e38F, 0, 0}, {1e38F, 1, 1});
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("One voxel needs a spacing override")
@@ -552,8 +552,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: overrides out-of-rang
     }
     args.insertOrAssign(ImageIO::k_ChangeOrigin, !replaceSpacing);
     args.insertOrAssign(ImageIO::k_ChangeSpacing, replaceSpacing);
-    DataStructure ds;
-    const auto strict = filter.preflight(ds, args);
+    DataStructure dataStructure;
+    const auto strict = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
     const auto& diagnostic = strict.outputActions.errors().front();
     INFO(diagnostic.message);

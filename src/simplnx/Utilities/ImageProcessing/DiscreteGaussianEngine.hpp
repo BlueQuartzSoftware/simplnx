@@ -575,11 +575,11 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
                                   const IFilter::MessageHandler& /*messageHandler*/, const DiscreteGaussianPassOptions& options = {})
 {
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  const usize slice = static_cast<usize>(nX) * static_cast<usize>(nY);
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  const usize slice = static_cast<usize>(nX) * static_cast<usize>(ny);
   const int64 r = static_cast<int64>(kernel.size() / 2);
-  const int64 ln = (axis == 0) ? nX : ((axis == 1) ? nY : nZ);
+  const int64 ln = (axis == 0) ? nX : ((axis == 1) ? ny : nz);
   auto clampi = [](int64 v, int64 hi) { return v < 0 ? int64{0} : (v > hi ? hi : v); };
 
   // Convolve one gathered line (length ln) of doubles `in` into `out` (length ln, static_cast<T>).
@@ -609,7 +609,7 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
     // plane before writing it keeps in-place aliasing (src may alias dst) safe, and bounds memory at O(slice) like Y.
     std::vector<T> srcPlane(slice);
     std::vector<T> dstPlane(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -640,7 +640,7 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
-      parallelAlgorithm.setRange(0, static_cast<usize>(nY));
+      parallelAlgorithm.setRange(0, static_cast<usize>(ny));
       parallelAlgorithm.execute(convRows);
       if(Result<> rr = dst.copyFromBuffer(planeOff, nonstd::span<const T>(dstPlane.data(), slice)); rr.invalid())
       {
@@ -654,7 +654,7 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
     // Y pass: read a whole z-plane, convolve each column (stride nX, count nY) in parallel, write the plane back.
     std::vector<T> srcPlane(slice);
     std::vector<T> dstPlane(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -668,16 +668,16 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
       // Parallel over columns [0, nX): each worker convolves a disjoint set of columns (stride nX, count nY) with its OWN
       // thread-local scratch, gathering from srcPlane and scattering into dstPlane at disjoint indices.
       auto convColumns = [&](const Range& colRange) {
-        std::vector<double> lineIn(static_cast<usize>(nY));
-        std::vector<T> lineOut(static_cast<usize>(nY));
+        std::vector<double> lineIn(static_cast<usize>(ny));
+        std::vector<T> lineOut(static_cast<usize>(ny));
         for(usize x = colRange.min(); x < colRange.max(); ++x)
         {
-          for(int64 j = 0; j < nY; ++j)
+          for(int64 j = 0; j < ny; ++j)
           {
             lineIn[static_cast<usize>(j)] = static_cast<double>(srcPlane[static_cast<usize>(j) * static_cast<usize>(nX) + x]);
           }
           convLine(lineIn, lineOut);
-          for(int64 j = 0; j < nY; ++j)
+          for(int64 j = 0; j < ny; ++j)
           {
             dstPlane[static_cast<usize>(j) * static_cast<usize>(nX) + x] = lineOut[static_cast<usize>(j)];
           }
@@ -728,8 +728,8 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
     // access remains outside the parallel region.
     const usize lineCount = valuesPerPlaneBlock;
     auto convZLines = [&](const Range& lineRange) {
-      std::vector<double> lineIn(static_cast<usize>(nZ));
-      std::vector<T> lineOut(static_cast<usize>(nZ));
+      std::vector<double> lineIn(static_cast<usize>(nz));
+      std::vector<T> lineOut(static_cast<usize>(nz));
       for(usize line = lineRange.min(); line < lineRange.max(); ++line)
       {
         if(shouldCancel)

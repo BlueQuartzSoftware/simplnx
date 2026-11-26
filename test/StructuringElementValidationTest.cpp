@@ -306,9 +306,9 @@ TEST_CASE("simplnx::MorphologyLayout: Packed word endpoint", "[simplnx][Structur
 TEST_CASE("simplnx::MorphologyLayout: Direct engine guards", "[simplnx][StructuringElement]")
 {
   // Invalid metadata must return before dispatch, reading values, or allocating scratch.
-  DataStructure ds;
-  auto* inputPtr = UnitTest::CreateTestDataArray<uint8>(ds, "Input", {1}, {1});
-  auto* outputPtr = UnitTest::CreateTestDataArray<uint8>(ds, "Output", {1}, {1});
+  DataStructure dataStructure;
+  auto* inputPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Input", {1}, {1});
+  auto* outputPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Output", {1}, {1});
   REQUIRE(inputPtr != nullptr);
   REQUIRE(outputPtr != nullptr);
   const auto& in = inputPtr->getDataStoreRef();

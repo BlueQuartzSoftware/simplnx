@@ -10,17 +10,17 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
 {
   using TraitsType = detail::ReconTraits<T, Dilation>;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
-  auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
+  auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   struct NeighborDelta
   {
     detail::ReconOffset offset;
     int64 delta;
   };
-  const int64 nXY = nX * nY;
+  const int64 nXY = nX * ny;
   auto withDeltas = [nXY, nX](const std::vector<detail::ReconOffset>& offsets) {
     std::vector<NeighborDelta> neighbors;
     neighbors.reserve(offsets.size());
@@ -35,13 +35,13 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
   const std::vector<NeighborDelta> laterNeighbors = withDeltas(offsets.later);
   const std::vector<NeighborDelta> allNeighbors = withDeltas(offsets.all);
 
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(m_ShouldCancel)
     {
       return false;
     }
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       for(int64 x = 0; x < nX; ++x)
       {
@@ -59,13 +59,13 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
     }
   }
 
-  for(int64 z = nZ - 1; z >= 0; --z)
+  for(int64 z = nz - 1; z >= 0; --z)
   {
     if(m_ShouldCancel)
     {
       return false;
     }
-    for(int64 y = nY - 1; y >= 0; --y)
+    for(int64 y = ny - 1; y >= 0; --y)
     {
       for(int64 x = nX - 1; x >= 0; --x)
       {
@@ -180,10 +180,10 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3D(usize dimX, usize 
 
   const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   auto flat = [dimX, dimY](usize x, usize y, usize z) { return z * dimY * dimX + y * dimX + x; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   auto sweep = [&](bool forward, bool& changed) {
     const std::vector<detail::ReconOffset>& half = forward ? offsets.previous : offsets.later;

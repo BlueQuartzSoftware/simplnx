@@ -26,12 +26,12 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 8, 8, 8); // values in [0,199] -> NOT binary
+  DataStructure dataStructure;
+  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // values in [0,199] -> NOT binary
   constexpr uint8 k_Fg = 1;
   constexpr uint8 k_Bg = 0;
   const AbstractDataStore<uint8>* inputStorePtr = nullptr;
-  REQUIRE_NOTHROW(inputStorePtr = &ds.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef());
+  REQUIRE_NOTHROW(inputStorePtr = &dataStructure.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef());
   REQUIRE(inputStorePtr != nullptr);
   usize expectedIndex = 0;
   uint8 expectedValue = 0;
@@ -57,9 +57,9 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
   args.insertOrAssign(BinaryDilateImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
   args.insertOrAssign(BinaryDilateImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(false));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // fg/bg are in range -> preflight is clean
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid()); // non-binary input rejected at execute
   REQUIRE_FALSE(executeResult.result.errors().empty());
   REQUIRE(executeResult.result.errors()[0].code == ImageProcessing::k_NonBinaryInput);
@@ -77,7 +77,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
-  const auto buildBinary = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(ds, dx, dy, dz, uint8{41}, uint8{0}); };
+  const auto buildBinary = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(dataStructure, dx, dy, dz, uint8{41}, uint8{0}); };
   morph_test::RunMorphologyEmptySEPassthrough<BinaryDilateImageFilter, uint8>(buildBinary, 12, 12, 12, morph_test::BinaryKernelParamSetter<BinaryDilateImageFilter>(41.0, 0.0, false));
 }
 
@@ -103,9 +103,9 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
   const std::array<int32, 3> radius = {2, 1, 1};
   const auto kernelType = morph_test::KernelType::Box;
 
-  DataStructure ds;
-  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, k_D, k_Fg, k_Bg);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(dataStructure, k_D, k_Fg, k_Bg);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   BinaryDilateImageFilter filter;
   Arguments args;
@@ -119,11 +119,11 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
   args.insertOrAssign(BinaryDilateImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
   args.insertOrAssign(BinaryDilateImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(k_B2f));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   const usize numSlots = k_D * k_D * k_D;
@@ -133,7 +133,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
   // independent of the engine's slab streaming / moving accumulator.
   constexpr usize k_ChunkValues = 65536;
   std::vector<uint8> input(numSlots);
-  const auto& inStore = ds.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef();
   for(usize start = 0; start < numSlots; start += k_ChunkValues)
   {
     const usize count = std::min(k_ChunkValues, numSlots - start);
@@ -167,7 +167,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -180,8 +180,8 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-fin
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 8, 8, 8); // uint8 input, range [0, 255]
+  DataStructure dataStructure;
+  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // uint8 input, range [0, 255]
 
   const auto makeArgs = [&](float64 fg, float64 bg) {
     Arguments args;
@@ -199,15 +199,15 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-fin
   BinaryDilateImageFilter filter;
 
   // Foreground out of uint8 range (255 max) -> undefined cast -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(99999.0, 0.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0, 0.0)).outputActions.valid());
   // Background out of range on the negative side -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(1.0, -5.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, -5.0)).outputActions.valid());
   // Non-finite (NaN) foreground -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).outputActions.valid());
   // Non-finite (Inf) background -> preflight error.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(1.0, std::numeric_limits<float64>::infinity())).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, std::numeric_limits<float64>::infinity())).outputActions.valid());
   // In-range integer values still preflight cleanly.
-  auto preflightResult = filter.preflight(ds, makeArgs(5.0, 0.0));
+  auto preflightResult = filter.preflight(dataStructure, makeArgs(5.0, 0.0));
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 }
 

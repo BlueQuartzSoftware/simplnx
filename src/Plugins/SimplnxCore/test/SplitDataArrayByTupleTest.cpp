@@ -99,14 +99,14 @@ void FillDataArray(DataArray<T>& inputArray)
 template <typename T>
 DataStructure CreateDataStructure(const ShapeType& tupleShape, const ShapeType& compShape)
 {
-  DataStructure ds;
+  DataStructure dataStructure;
 
-  auto* amPtr = AttributeMatrix::Create(ds, k_AttributeMatrixName, tupleShape);
+  auto* amPtr = AttributeMatrix::Create(dataStructure, k_AttributeMatrixName, tupleShape);
 
-  auto* arrayPtr = DataArray<T>::template CreateWithStore<DataStore<T>>(ds, k_DataArrayName, tupleShape, compShape, amPtr->getId());
+  auto* arrayPtr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_DataArrayName, tupleShape, compShape, amPtr->getId());
   FillDataArray<T>(*arrayPtr);
 
-  return ds;
+  return dataStructure;
 }
 } // namespace
 
@@ -129,7 +129,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
 
     SECTION("New Data Group")
     {
-      DataStructure ds = CreateDataStructure<T>({10}, {2});
+      DataStructure dataStructure = CreateDataStructure<T>({10}, {2});
 
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -138,22 +138,22 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(splitCounts));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_NewDGName})));
 
-      auto preflight = filter.preflight(ds, args);
+      auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
-      auto exec = scope.executeFilter(filter, ds, args);
+      auto exec = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
       // Verify output arrays
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_InputArrayPath));
-      const auto& inputArray = ds.getDataRefAs<DataArray<T>>(k_InputArrayPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath));
+      const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
-      const auto& arr1 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
-      const auto& arr2 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
-      const auto& arr3 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
+      const auto& arr1 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
+      const auto& arr2 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
+      const auto& arr3 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
 
       REQUIRE(arr1.getNumberOfTuples() == 5);
       REQUIRE(arr1.getNumberOfComponents() == 2);
@@ -167,15 +167,15 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       CompareSplitArray(inputArray, arr3, {7});
 
       // Original array still present
-      REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) != nullptr);
+      REQUIRE(dataStructure.getDataAs<IDataArray>(k_InputArrayPath) != nullptr);
 
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
 
     SECTION("Existing Data Group")
     {
-      DataStructure ds = CreateDataStructure<T>({10}, {2});
-      DataGroup::Create(ds, k_ExistingDGName);
+      DataStructure dataStructure = CreateDataStructure<T>({10}, {2});
+      DataGroup::Create(dataStructure, k_ExistingDGName);
 
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(true));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -184,26 +184,26 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(splitCounts));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_ExistingDataGroupPath, std::make_any<DataPath>(DataPath({k_ExistingDGName})));
 
-      auto preflight = filter.preflight(ds, args);
+      auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
       // Copy input array so that we can check result after execute is over (inputArray is getting deleted)
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_InputArrayPath));
-      const auto& inputArray = ds.getDataRefAs<DataArray<T>>(k_InputArrayPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath));
+      const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath);
       const auto& inputDataStore = inputArray.getDataStoreRef();
       std::vector<T> inputArrayVals;
       std::transform(inputArray.begin(), inputArray.end(), std::back_inserter(inputArrayVals), [](auto val) { return val; });
 
-      auto exec = scope.executeFilter(filter, ds, args);
+      auto exec = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
       // Verify output arrays
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
-      const auto& arr1 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
-      const auto& arr2 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
-      const auto& arr3 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
+      const auto& arr1 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
+      const auto& arr2 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
+      const auto& arr3 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
 
       REQUIRE(arr1.getNumberOfTuples() == 5);
       REQUIRE(arr1.getNumberOfComponents() == 2);
@@ -235,14 +235,14 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       REQUIRE(arr3[4] == inputArrayVals[18]);
       REQUIRE(arr3[5] == inputArrayVals[19]);
 
-      REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) == nullptr); // deleted
+      REQUIRE(dataStructure.getDataAs<IDataArray>(k_InputArrayPath) == nullptr); // deleted
 
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
 
     SECTION("New Attribute Matrix")
     {
-      DataStructure ds = CreateDataStructure<T>({4, 8, 4}, {2});
+      DataStructure dataStructure = CreateDataStructure<T>({4, 8, 4}, {2});
 
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -253,37 +253,37 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimension_Key, std::make_any<uint64>(2));
 
       // Preflight + execute
-      auto preflight = filter.preflight(ds, args);
+      auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
-      auto exec = scope.executeFilter(filter, ds, args);
+      auto exec = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({k_NewAMName})));
-      const auto& splitAM = ds.getDataRefAs<AttributeMatrix>(DataPath({k_NewAMName}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewAMName})));
+      const auto& splitAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewAMName}));
       REQUIRE(splitAM.getShape() == std::vector<usize>{4, 8, 2});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_InputArrayPath));
-      const auto& inputArray = ds.getDataRefAs<DataArray<T>>(k_InputArrayPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath));
+      const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 1, 2)})));
-      const auto& arr1 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 1, 2)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 1, 2)})));
+      const auto& arr1 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 1, 2)}));
       REQUIRE(arr1.getTupleShape() == std::vector<usize>{4, 8, 2});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 2, 2)})));
-      const auto& arr2 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 2, 2)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 2, 2)})));
+      const auto& arr2 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewAMName, MakeArrayName(k_DataArrayName, 2, 2)}));
       REQUIRE(arr2.getTupleShape() == std::vector<usize>{4, 8, 2});
 
       CompareSplitArray(inputArray, arr1, {0, 0, 0});
       CompareSplitArray(inputArray, arr2, {0, 0, 2});
 
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
 
     SECTION("Existing Attribute Matrix")
     {
-      DataStructure ds = CreateDataStructure<T>({10, 15, 20}, {2});
-      AttributeMatrix::Create(ds, k_ExistingAMName, {10, 3, 20});
+      DataStructure dataStructure = CreateDataStructure<T>({10, 15, 20}, {2});
+      AttributeMatrix::Create(dataStructure, k_ExistingAMName, {10, 3, 20});
 
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -291,37 +291,37 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_ExistingAttributeMatrixPath, std::make_any<DataPath>(DataPath({k_ExistingAMName})));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimension_Key, std::make_any<uint64>(1));
 
-      auto preflight = filter.preflight(ds, args);
+      auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
-      auto exec = scope.executeFilter(filter, ds, args);
+      auto exec = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({k_ExistingAMName})));
-      const auto& splitAM = ds.getDataRefAs<AttributeMatrix>(DataPath({k_ExistingAMName}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_ExistingAMName})));
+      const auto& splitAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_ExistingAMName}));
       REQUIRE(splitAM.getShape() == std::vector<usize>{10, 3, 20});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_InputArrayPath));
-      const auto& inputArray = ds.getDataRefAs<DataArray<T>>(k_InputArrayPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath));
+      const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 1, 5)})));
-      const auto& arr1 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 1, 5)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 1, 5)})));
+      const auto& arr1 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 1, 5)}));
       REQUIRE(arr1.getTupleShape() == std::vector<usize>{10, 3, 20});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 2, 5)})));
-      const auto& arr2 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 2, 5)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 2, 5)})));
+      const auto& arr2 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 2, 5)}));
       REQUIRE(arr2.getTupleShape() == std::vector<usize>{10, 3, 20});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 3, 5)})));
-      const auto& arr3 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 3, 5)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 3, 5)})));
+      const auto& arr3 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 3, 5)}));
       REQUIRE(arr3.getTupleShape() == std::vector<usize>{10, 3, 20});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 4, 5)})));
-      const auto& arr4 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 4, 5)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 4, 5)})));
+      const auto& arr4 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 4, 5)}));
       REQUIRE(arr4.getTupleShape() == std::vector<usize>{10, 3, 20});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 5, 5)})));
-      const auto& arr5 = ds.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 5, 5)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 5, 5)})));
+      const auto& arr5 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_ExistingAMName, MakeArrayName(k_DataArrayName, 5, 5)}));
       REQUIRE(arr5.getTupleShape() == std::vector<usize>{10, 3, 20});
 
       CompareSplitArray(inputArray, arr1, {0, 0, 0});
@@ -330,12 +330,12 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       CompareSplitArray(inputArray, arr4, {0, 9, 0});
       CompareSplitArray(inputArray, arr5, {0, 12, 0});
 
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
 
     SECTION("2D Tuple Shape")
     {
-      DataStructure ds = CreateDataStructure<T>({10, 15}, {2});
+      DataStructure dataStructure = CreateDataStructure<T>({10, 15}, {2});
 
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -346,37 +346,37 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(splitCounts));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_NewDGName})));
 
-      auto preflight = filter.preflight(ds, args);
+      auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
-      auto exec = scope.executeFilter(filter, ds, args);
+      auto exec = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_InputArrayPath));
-      const auto& inputArray = ds.getDataRefAs<DataArray<T>>(k_InputArrayPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath));
+      const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
-      const auto& arr1 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
+      const auto& arr1 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
       REQUIRE(arr1.getTupleShape() == std::vector<usize>{10, 5});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
-      const auto& arr2 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
+      const auto& arr2 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
       REQUIRE(arr2.getTupleShape() == std::vector<usize>{10, 6});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
-      const auto& arr3 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
+      const auto& arr3 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
       REQUIRE(arr3.getTupleShape() == std::vector<usize>{10, 4});
 
       CompareSplitArray(inputArray, arr1, {0, 0});
       CompareSplitArray(inputArray, arr2, {0, 5});
       CompareSplitArray(inputArray, arr3, {0, 11});
 
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
 
     SECTION("3D Tuple Shape")
     {
-      DataStructure ds = CreateDataStructure<T>({10, 10, 10}, {2});
+      DataStructure dataStructure = CreateDataStructure<T>({10, 10, 10}, {2});
 
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -387,40 +387,40 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(splitCounts));
       args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_NewDGName})));
 
-      auto preflight = filter.preflight(ds, args);
+      auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
-      auto exec = scope.executeFilter(filter, ds, args);
+      auto exec = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_InputArrayPath));
-      const auto& inputArray = ds.getDataRefAs<DataArray<T>>(k_InputArrayPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath));
+      const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath);
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
-      const auto& arr1 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)})));
+      const auto& arr1 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 1, 3)}));
       REQUIRE(arr1.getTupleShape() == std::vector<usize>{10, 10, 7});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
-      const auto& arr2 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)})));
+      const auto& arr2 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 2, 3)}));
       REQUIRE(arr2.getTupleShape() == std::vector<usize>{10, 10, 2});
 
-      REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
-      const auto& arr3 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)})));
+      const auto& arr3 = dataStructure.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, MakeArrayName(k_DataArrayName, 3, 3)}));
       REQUIRE(arr3.getTupleShape() == std::vector<usize>{10, 10, 1});
 
       CompareSplitArray(inputArray, arr1, {0, 0, 0});
       CompareSplitArray(inputArray, arr2, {0, 0, 7});
       CompareSplitArray(inputArray, arr3, {0, 0, 9});
 
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 
   SECTION("NeighborList")
   {
-    DataStructure ds;
-    auto* amPtr = AttributeMatrix::Create(ds, k_AttributeMatrixName, {10});
-    auto* nlPtr = NeighborList<T>::Create(ds, "Input NL", amPtr->getShape(), amPtr->getId());
+    DataStructure dataStructure;
+    auto* amPtr = AttributeMatrix::Create(dataStructure, k_AttributeMatrixName, {10});
+    auto* nlPtr = NeighborList<T>::Create(dataStructure, "Input NL", amPtr->getShape(), amPtr->getId());
     for(usize i = 0; i < 10; ++i)
     {
       nlPtr->setList(i, std::vector<T>{static_cast<T>(i), static_cast<T>(i + 1)});
@@ -437,15 +437,15 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(splitCounts));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_NewDGName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
-    auto exec = filter.execute(ds, args);
+    auto exec = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
     // Verify results
-    auto* outNL1Ptr = ds.getDataAs<NeighborList<T>>(DataPath({k_NewDGName, "Input NL_1"}));
-    auto* outNL2Ptr = ds.getDataAs<NeighborList<T>>(DataPath({k_NewDGName, "Input NL_2"}));
+    auto* outNL1Ptr = dataStructure.getDataAs<NeighborList<T>>(DataPath({k_NewDGName, "Input NL_1"}));
+    auto* outNL2Ptr = dataStructure.getDataAs<NeighborList<T>>(DataPath({k_NewDGName, "Input NL_2"}));
 
     REQUIRE(outNL1Ptr != nullptr);
     REQUIRE(outNL2Ptr != nullptr);
@@ -462,22 +462,22 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     }
 
     // Original NeighborList still exists
-    REQUIRE(ds.getDataAs<NeighborList<T>>(DataPath({k_AttributeMatrixName, "Input NL"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<NeighborList<T>>(DataPath({k_AttributeMatrixName, "Input NL"})) != nullptr);
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("String Array")
   {
-    DataStructure ds;
-    auto* amPtr = AttributeMatrix::Create(ds, k_AttributeMatrixName, {10});
+    DataStructure dataStructure;
+    auto* amPtr = AttributeMatrix::Create(dataStructure, k_AttributeMatrixName, {10});
     auto strings = StringArray::collection_type();
     strings.reserve(10);
     for(usize i = 0; i < 10; ++i)
     {
       strings.push_back(fmt::format("str{}", i));
     }
-    auto* strArrayPtr = StringArray::CreateWithValues(ds, "Input Strings", amPtr->getShape(), strings, amPtr->getId());
+    auto* strArrayPtr = StringArray::CreateWithValues(dataStructure, "Input Strings", amPtr->getShape(), strings, amPtr->getId());
 
     // Execute filter
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({k_AttributeMatrixName, "Input Strings"})));
@@ -490,15 +490,15 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(splitCounts));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_NewDGName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
-    auto exec = filter.execute(ds, args);
+    auto exec = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(exec.result);
 
     // Verify results
-    auto* outSA1Ptr = ds.getDataAs<StringArray>(DataPath({k_NewDGName, "Input Strings_1"}));
-    auto* outSA2Ptr = ds.getDataAs<StringArray>(DataPath({k_NewDGName, "Input Strings_2"}));
+    auto* outSA1Ptr = dataStructure.getDataAs<StringArray>(DataPath({k_NewDGName, "Input Strings_1"}));
+    auto* outSA2Ptr = dataStructure.getDataAs<StringArray>(DataPath({k_NewDGName, "Input Strings_2"}));
 
     REQUIRE(outSA1Ptr != nullptr);
     REQUIRE(outSA2Ptr != nullptr);
@@ -515,9 +515,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     }
 
     // Original StringArray still exists
-    REQUIRE(ds.getDataAs<StringArray>(DataPath({k_AttributeMatrixName, "Input Strings"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<StringArray>(DataPath({k_AttributeMatrixName, "Input Strings"})) != nullptr);
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -531,7 +531,7 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
 
   SECTION("Tuple shape contains non‑positive value")
   {
-    DataStructure ds = CreateDataStructure<uint32>({10}, {2});
+    DataStructure dataStructure = CreateDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -541,17 +541,17 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(badSplitCounts));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_BadDGName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountLessThanZero));
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Tuple shapes do not sum to input tuple shape")
   {
-    DataStructure ds = CreateDataStructure<uint32>({10}, {2});
+    DataStructure dataStructure = CreateDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -561,17 +561,17 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(badSplitCounts));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_BadDGName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountSumNotEqual));
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("New Attribute Matrix tuple shape contains non‑positive value")
   {
-    DataStructure ds = CreateDataStructure<uint32>({10}, {2});
+    DataStructure dataStructure = CreateDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -580,17 +580,17 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(badAMTuple));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewAttributeMatrixPath, std::make_any<DataPath>(DataPath({k_BadAMName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative));
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("New Attribute Matrix tuple shape does not divide input in only one dimension")
   {
-    DataStructure ds = CreateDataStructure<uint32>({10, 15}, {2});
+    DataStructure dataStructure = CreateDataStructure<uint32>({10, 15}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -599,35 +599,35 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(badAMTuple));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewAttributeMatrixPath, std::make_any<DataPath>(DataPath({k_BadAMName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Existing Attribute Matrix tuple shape does not divide input")
   {
-    DataStructure ds = CreateDataStructure<uint32>({10}, {2});
-    AttributeMatrix::Create(ds, k_BadExistingAMName, {3});
+    DataStructure dataStructure = CreateDataStructure<uint32>({10}, {2});
+    AttributeMatrix::Create(dataStructure, k_BadExistingAMName, {3});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
                         std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(SplitDataArrayByTuple::OutputContainer::ExistingAttrMatrix)));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_ExistingAttributeMatrixPath, std::make_any<DataPath>(DataPath({k_BadExistingAMName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("New Attribute Matrix tuple shape has non-positive value")
   {
-    DataStructure ds = CreateDataStructure<uint32>({10}, {2});
+    DataStructure dataStructure = CreateDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -636,12 +636,12 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(badAMTuple));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewAttributeMatrixPath, std::make_any<DataPath>(DataPath({k_BadAMName})));
 
-    auto preflight = filter.preflight(ds, args);
+    auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative));
 
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 

@@ -28,7 +28,7 @@ using LaplacianFilterType = LaplacianRecursiveGaussianImageFilter;
 
 // Sets the geometry, input, and output keys plus the scalar sigma and the normalize flag on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
-void RunLaplacian(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float64 sigma, bool normalize, const std::string& outputName = "Output")
+void RunLaplacian(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 sigma, bool normalize, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -37,9 +37,9 @@ void RunLaplacian(IFilter& filter, DataStructure& ds, const DataPath& inputPath,
   args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(sigma));
   args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -121,9 +121,9 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
 
   SECTION("too-few-pixels rejected")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(3 * 8 * 8, int16{1}); // X = 3 < 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 3, 8, 8, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 3, 8, 8, field);
     LaplacianFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
@@ -132,7 +132,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
@@ -141,9 +141,9 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
   // arm, while Z == 1 is accepted as a 2D image. All other params here are valid so the dims check is the only failure.
   SECTION("3D image with Z==2 rejected (too few Z pixels)")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 2, int16{1}); // Z == 2 (> 1, so not 2D) and < 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 2, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 2, field);
     LaplacianFilterType filter;
     Arguments args;
     args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
@@ -151,15 +151,15 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("3D image with Z==3 rejected (too few Z pixels)")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 3, int16{1}); // Z == 3 (> 1, so not 2D) and < 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 3, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 3, field);
     LaplacianFilterType filter;
     Arguments args;
     args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
@@ -167,15 +167,15 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("Z==1 accepted as a 2D image")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 1, int16{1}); // Z == 1 -> treated as 2D, so Z is not required to be >= 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 1, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 1, field);
     LaplacianFilterType filter;
     Arguments args;
     args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
@@ -183,14 +183,14 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
   SECTION("non-positive sigma rejected")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims + type; only sigma is invalid
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 8, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 8, field);
     LaplacianFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
@@ -199,7 +199,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(0.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
   }

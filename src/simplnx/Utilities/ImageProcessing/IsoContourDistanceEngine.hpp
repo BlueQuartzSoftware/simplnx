@@ -376,8 +376,8 @@ public:
     }
 
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
 
     // ITK stores spacing as double for every input type.
     // Double spacing preserves ITK promotion rules in the gradient denominator and distance calculation.
@@ -393,15 +393,15 @@ public:
     RecordAlgorithmPathExecution(direct ? AlgorithmPath::InCore : AlgorithmPath::OutOfCore, usesOutOfCoreStore);
     if(direct)
     {
-      return runResident(inMemoryInputStorePtr->createSpan(), inMemoryOutputStorePtr->createSpan(), nX, nY, nZ, slice, sp, negFar);
+      return runResident(inMemoryInputStorePtr->createSpan(), inMemoryOutputStorePtr->createSpan(), nX, ny, nz, slice, sp, negFar);
     }
 
-    if(nZ == 1)
+    if(nz == 1)
     {
-      return runBounded2D(static_cast<usize>(nX), static_cast<usize>(nY), sp, negFar);
+      return runBounded2D(static_cast<usize>(nX), static_cast<usize>(ny), sp, negFar);
     }
 
-    return runSlabs(nX, nY, nZ, slice, sp, negFar);
+    return runSlabs(nX, ny, nz, slice, sp, negFar);
   }
 
 private:
@@ -421,7 +421,7 @@ private:
    * Each slab uses at most two bulk reads because its new plane range can wrap once.
    * Each completed slab uses one bulk output write. A successful run reads every input plane once.
    */
-  Result<> runSlabs(int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
+  Result<> runSlabs(int64 nX, int64 ny, int64 nz, usize slice, const double spacing[3], float32 negativeFar)
   {
     auto usefulResult = detail::IsoContourSlabUsefulBytes<T>(m_Dims);
     if(usefulResult.invalid())
@@ -445,8 +445,8 @@ private:
     }
 
     const usize xCount = static_cast<usize>(nX);
-    const usize yCount = static_cast<usize>(nY);
-    const usize zCount = static_cast<usize>(nZ);
+    const usize yCount = static_cast<usize>(ny);
+    const usize zCount = static_cast<usize>(nz);
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
     progressThrottle.reset(zCount == 1 ? yCount : zCount, zCount == 1 ? "Computing Iso-Contour Rows" : "Computing Iso-Contour Slices");
@@ -523,17 +523,17 @@ private:
             const int64 x = static_cast<int64>(xIndex);
             auto relativeReal = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> RealT {
               const usize sampleX = static_cast<usize>(std::clamp<int64>(x + deltaX, 0, nX - 1));
-              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, nY - 1));
-              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nZ - 1));
+              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, ny - 1));
+              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nz - 1));
               return static_cast<RealT>(input[(sampleZ % plan.inputPlanes) * slice + sampleY * xCount + sampleX]);
             };
             auto relativeFloat = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> float32 {
               const usize sampleX = static_cast<usize>(std::clamp<int64>(x + deltaX, 0, nX - 1));
-              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, nY - 1));
-              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nZ - 1));
+              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, ny - 1));
+              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nz - 1));
               return static_cast<float32>(input[(sampleZ % plan.inputPlanes) * slice + sampleY * xCount + sampleX]);
             };
-            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
+            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, ny, nz, spacing, negativeFar);
           };
           detail::IsoContourRow(previousPlaneRowPtr, previousRowPtr, rowPtr, nextRowPtr, nextPlaneRowPtr, outputRowPtr, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
           if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)
@@ -582,20 +582,20 @@ private:
    * The algorithm checks cancellation between plane groups and once per row inside each group.
    * The algorithm never checks cancellation per voxel.
    */
-  Result<> runResident(nonstd::span<const T> input, nonstd::span<float32> output, int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
+  Result<> runResident(nonstd::span<const T> input, nonstd::span<float32> output, int64 nX, int64 ny, int64 nz, usize slice, const double spacing[3], float32 negativeFar)
   {
     auto clampCoordinate = [](int64 value, int64 high) { return value < 0 ? int64{0} : (value > high ? high : value); };
     auto sampleReal = [&](int64 x, int64 y, int64 z) -> RealT {
-      const usize index = static_cast<usize>((clampCoordinate(z, nZ - 1) * nY + clampCoordinate(y, nY - 1)) * nX + clampCoordinate(x, nX - 1));
+      const usize index = static_cast<usize>((clampCoordinate(z, nz - 1) * ny + clampCoordinate(y, ny - 1)) * nX + clampCoordinate(x, nX - 1));
       return static_cast<RealT>(input[index]);
     };
     auto sampleFloat = [&](int64 x, int64 y, int64 z) -> float32 {
-      const usize index = static_cast<usize>((clampCoordinate(z, nZ - 1) * nY + clampCoordinate(y, nY - 1)) * nX + clampCoordinate(x, nX - 1));
+      const usize index = static_cast<usize>((clampCoordinate(z, nz - 1) * ny + clampCoordinate(y, ny - 1)) * nX + clampCoordinate(x, nX - 1));
       return static_cast<float32>(input[index]);
     };
     const usize xCount = static_cast<usize>(nX);
-    const usize yCount = static_cast<usize>(nY);
-    const usize zCount = static_cast<usize>(nZ);
+    const usize yCount = static_cast<usize>(ny);
+    const usize zCount = static_cast<usize>(nz);
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
     progressThrottle.reset(zCount == 1 ? yCount : zCount, zCount == 1 ? "Computing Iso-Contour Rows" : "Computing Iso-Contour Slices");
@@ -640,7 +640,7 @@ private:
             const int64 x = static_cast<int64>(xIndex);
             auto relativeReal = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> RealT { return sampleReal(x + deltaX, y + deltaY, z + deltaZ); };
             auto relativeFloat = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> float32 { return sampleFloat(x + deltaX, y + deltaY, z + deltaZ); };
-            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
+            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, ny, nz, spacing, negativeFar);
           };
           detail::IsoContourRow(previousPlaneRowPtr, previousRowPtr, rowPtr, nextRowPtr, nextPlaneRowPtr, outputRowPtr, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
           if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)

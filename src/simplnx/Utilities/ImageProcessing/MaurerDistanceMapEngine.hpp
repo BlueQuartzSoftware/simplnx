@@ -1027,11 +1027,11 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
   const T* inputDataPtr = input.data();
   float32* workDataPtr = work.data();
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  const int64 planeStride = nX * nY;
-  const int64 wzLo = (nZ == 1) ? 0 : -1;
-  const int64 wzHi = (nZ == 1) ? 0 : 1;
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  const int64 planeStride = nX * ny;
+  const int64 wzLo = (nz == 1) ? 0 : -1;
+  const int64 wzHi = (nz == 1) ? 0 : 1;
   std::array<int64, 26> interiorOffsets{};
   usize interiorOffsetIndex = 0;
   for(int64 dz = -1; dz <= 1; ++dz)
@@ -1050,7 +1050,7 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
   }
 
   std::atomic_bool hasBoundary{false};
-  auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
+  auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
   auto initializeRows = [&](const Range& rowRange) {
     for(usize row = rowRange.min(); row < rowRange.max(); ++row)
     {
@@ -1058,8 +1058,8 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
       {
         return;
       }
-      const int64 z = static_cast<int64>(row / static_cast<usize>(nY));
-      const int64 y = static_cast<int64>(row % static_cast<usize>(nY));
+      const int64 z = static_cast<int64>(row / static_cast<usize>(ny));
+      const int64 y = static_cast<int64>(row % static_cast<usize>(ny));
       bool rowHasBoundary = false;
       auto initializeBoundedVoxel = [&](int64 x) {
         const usize p = flat(x, y, z);
@@ -1080,7 +1080,7 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
                 const int64 ax = x + wx;
                 const int64 ay = y + wy;
                 const int64 az = z + wz;
-                if(ax < 0 || ay < 0 || az < 0 || ax >= nX || ay >= nY || az >= nZ)
+                if(ax < 0 || ay < 0 || az < 0 || ax >= nX || ay >= ny || az >= nz)
                 {
                   continue; // ITK ignores out-of-bounds neighbors because the image border is not background.
                 }
@@ -1099,7 +1099,7 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
         }
       };
 
-      const bool isInteriorRow = nZ > 1 && z >= 1 && z < nZ - 1 && y >= 1 && y < nY - 1 && nX > 2;
+      const bool isInteriorRow = nz > 1 && z >= 1 && z < nz - 1 && y >= 1 && y < ny - 1 && nX > 2;
       if(!isInteriorRow)
       {
         for(int64 x = 0; x < nX; ++x)
@@ -1141,7 +1141,7 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
     }
   };
   ParallelDataAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(0, static_cast<usize>(nZ) * static_cast<usize>(nY));
+  parallelAlgorithm.setRange(0, static_cast<usize>(nz) * static_cast<usize>(ny));
   parallelAlgorithm.execute(initializeRows);
   return hasBoundary.load(std::memory_order_relaxed);
 }
@@ -1241,10 +1241,10 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
 {
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
   const int64 nX = static_cast<int64>(parameters.dims[0]);
-  const int64 nY = static_cast<int64>(parameters.dims[1]);
-  const int64 nZ = static_cast<int64>(parameters.dims[2]);
+  const int64 ny = static_cast<int64>(parameters.dims[1]);
+  const int64 nz = static_cast<int64>(parameters.dims[2]);
   const usize slice = parameters.dims[0] * parameters.dims[1];
-  const bool is2D = nZ == 1;
+  const bool is2D = nz == 1;
   std::vector<T> prev(slice);
   std::vector<T> cur(slice);
   std::vector<T> next(slice);
@@ -1274,14 +1274,14 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
     }
   }
 
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {
       return {};
     }
     const bool hasPrev = z > 0;
-    const bool hasNext = z < nZ - 1;
+    const bool hasNext = z < nz - 1;
     auto initializeRows = [&](const Range& rowRange) {
       for(usize yIndex = rowRange.min(); yIndex < rowRange.max(); ++yIndex)
       {
@@ -1315,7 +1315,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
                   }
                   const int64 adjacentX = x + xOffset;
                   const int64 adjacentY = y + yOffset;
-                  if(adjacentX < 0 || adjacentY < 0 || adjacentX >= nX || adjacentY >= nY || (zOffset < 0 && !hasPrev) || (zOffset > 0 && !hasNext))
+                  if(adjacentX < 0 || adjacentY < 0 || adjacentX >= nX || adjacentY >= ny || (zOffset < 0 && !hasPrev) || (zOffset > 0 && !hasNext))
                   {
                     continue; // ITK ignores out-of-bounds neighbors because the image border is not background.
                   }
@@ -1335,7 +1335,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
           }
         };
 
-        const bool isInteriorRow = hasPrev && hasNext && y >= 1 && y < nY - 1 && nX > 2;
+        const bool isInteriorRow = hasPrev && hasNext && y >= 1 && y < ny - 1 && nX > 2;
         if(!isInteriorRow)
         {
           for(int64 x = 0; x < nX; ++x)
@@ -1394,7 +1394,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
     initializeParallelAlgorithm.execute(initializeRows);
 
     MaurerIoWorker ioWorker;
-    if(z + 2 < nZ)
+    if(z + 2 < nz)
     {
       // The boundary scan releases prev before prefetch. Compute workers access only featurePlane.
       ioWorker.start([&, z]() -> Result<> {
@@ -1499,11 +1499,11 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
                           ThrottledMessageHandler* progressThrottle = nullptr)
 {
   const usize nX = parameters.dims[0];
-  const usize nY = parameters.dims[1];
-  const usize nZ = parameters.dims[2];
-  if(nZ == 1)
+  const usize ny = parameters.dims[1];
+  const usize nz = parameters.dims[2];
+  if(nz == 1)
   {
-    std::vector<float32> plane(nX * nY);
+    std::vector<float32> plane(nX * ny);
     if(Result<> result = RunMaurerIoCallSafely([&]() { return workStore.copyIntoBuffer(0, nonstd::span<float32>(plane.data(), plane.size())); }, "2D XY scratch plane read"); result.invalid())
     {
       return result;
@@ -1542,24 +1542,24 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     // This limit bounds both fallback staging buffers together.
     constexpr usize k_DefaultMaxStagingBytes = 16ULL * 1024ULL * 1024ULL;
     const usize maxStagedValues = std::max<usize>(1, (k_DefaultMaxStagingBytes / 2) / sizeof(float32));
-    maxYRows = std::max<usize>(1, std::min(nY, maxStagedValues / nX / nZ));
+    maxYRows = std::max<usize>(1, std::min(ny, maxStagedValues / nX / nz));
   }
   else
   {
-    maxYRows = std::min(maxYRows, nY);
+    maxYRows = std::min(maxYRows, ny);
   }
   if(const auto outputChunkShape = outputStore.getChunkShape(); outputChunkShape.has_value() && outputChunkShape->size() >= 3)
   {
     maxYRows = AlignMaurer3DYBatchRows(maxYRows, (*outputChunkShape)[1]);
   }
 
-  const usize stagingValues = maxYRows * nX * nZ;
+  const usize stagingValues = maxYRows * nX * nz;
   std::vector<float32> stagingA(stagingValues);
   std::vector<float32> stagingB(stagingValues);
   std::vector<float32>* currentPtr = &stagingA;
   std::vector<float32>* otherPtr = &stagingB;
-  const usize batchCount = 1 + (nY - 1) / maxYRows;
-  const usize firstYCount = std::min(maxYRows, nY);
+  const usize batchCount = 1 + (ny - 1) / maxYRows;
+  const usize firstYCount = std::min(maxYRows, ny);
   if(Result<> result = GatherMaurer3DZBatch(workStore, nonstd::span<float32>(currentPtr->data(), currentPtr->size()), parameters.dims, 0, firstYCount, shouldCancel); result.invalid())
   {
     return result;
@@ -1572,18 +1572,18 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
   for(usize batchIndex = 0; batchIndex < batchCount; ++batchIndex)
   {
     const usize yBegin = batchIndex * maxYRows;
-    const usize yCount = std::min(maxYRows, nY - yBegin);
+    const usize yCount = std::min(maxYRows, ny - yBegin);
     const usize valuesPerPlaneBlock = yCount * nX;
-    const usize batchValues = valuesPerPlaneBlock * nZ;
+    const usize batchValues = valuesPerPlaneBlock * nz;
     MaurerIoWorker ioWorker;
     // The I/O thread exclusively owns other until join. Compute workers exclusively own current during this interval.
     ioWorker.start([&, batchIndex, otherPtr]() -> Result<> {
       if(batchIndex > 0)
       {
         const usize previousYBegin = (batchIndex - 1) * maxYRows;
-        const usize previousYCount = std::min(maxYRows, nY - previousYBegin);
-        const usize previousBatchValues = previousYCount * nX * nZ;
-        const Extent previousExtent({0, static_cast<uint64>(previousYBegin), 0}, {static_cast<uint64>(nZ - 1), static_cast<uint64>(previousYBegin + previousYCount - 1), static_cast<uint64>(nX - 1)});
+        const usize previousYCount = std::min(maxYRows, ny - previousYBegin);
+        const usize previousBatchValues = previousYCount * nX * nz;
+        const Extent previousExtent({0, static_cast<uint64>(previousYBegin), 0}, {static_cast<uint64>(nz - 1), static_cast<uint64>(previousYBegin + previousYCount - 1), static_cast<uint64>(nX - 1)});
         if(Result<> result = WriteExtentSafely(outputStore, previousExtent, nonstd::span<const float32>(otherPtr->data(), previousBatchValues), shouldCancel, "3D Z-pass output"); result.invalid())
         {
           return result;
@@ -1592,16 +1592,16 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
       if(batchIndex + 1 < batchCount)
       {
         const usize nextYBegin = (batchIndex + 1) * maxYRows;
-        const usize nextYCount = std::min(maxYRows, nY - nextYBegin);
+        const usize nextYCount = std::min(maxYRows, ny - nextYBegin);
         return GatherMaurer3DZBatch(workStore, nonstd::span<float32>(otherPtr->data(), otherPtr->size()), parameters.dims, nextYBegin, nextYCount, shouldCancel);
       }
       return {};
     });
 
     auto transformZLines = [&](const Range& lineRange) {
-      std::vector<float32> localG(nZ);
-      std::vector<float32> localH(nZ);
-      std::vector<float32> localLine(nZ);
+      std::vector<float32> localG(nz);
+      std::vector<float32> localH(nz);
+      std::vector<float32> localLine(nz);
       float32* currentDataPtr = currentPtr->data();
       float32* lineDataPtr = localLine.data();
       for(usize line = lineRange.min(); line < lineRange.max(); ++line)
@@ -1610,12 +1610,12 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
         {
           return;
         }
-        for(usize z = 0; z < nZ; ++z)
+        for(usize z = 0; z < nz; ++z)
         {
           lineDataPtr[z] = currentDataPtr[z * valuesPerPlaneBlock + line];
         }
-        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, nZ), nZ, parameters.useSpacing, parameters.spacing[2], localG, localH);
-        for(usize z = 0; z < nZ; ++z)
+        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, nz), nz, parameters.useSpacing, parameters.spacing[2], localG, localH);
+        for(usize z = 0; z < nz; ++z)
         {
           currentDataPtr[z * valuesPerPlaneBlock + line] = lineDataPtr[z];
         }
@@ -1654,7 +1654,7 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     }
     if(progressThrottle != nullptr)
     {
-      progressThrottle->updatePercent(std::min(nY, (batchIndex + 1) * maxYRows));
+      progressThrottle->updatePercent(std::min(ny, (batchIndex + 1) * maxYRows));
     }
     if(batchIndex + 1 < batchCount)
     {
@@ -1664,9 +1664,9 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
   }
 
   const usize lastYBegin = (batchCount - 1) * maxYRows;
-  const usize lastYCount = nY - lastYBegin;
-  const usize lastBatchValues = lastYCount * nX * nZ;
-  const Extent lastExtent({0, static_cast<uint64>(lastYBegin), 0}, {static_cast<uint64>(nZ - 1), static_cast<uint64>(lastYBegin + lastYCount - 1), static_cast<uint64>(nX - 1)});
+  const usize lastYCount = ny - lastYBegin;
+  const usize lastBatchValues = lastYCount * nX * nz;
+  const Extent lastExtent({0, static_cast<uint64>(lastYBegin), 0}, {static_cast<uint64>(nz - 1), static_cast<uint64>(lastYBegin + lastYCount - 1), static_cast<uint64>(nX - 1)});
   return WriteExtentSafely(outputStore, lastExtent, nonstd::span<const float32>(currentPtr->data(), lastBatchValues), shouldCancel, "3D Z-pass output");
 }
 } // namespace detail
@@ -1707,9 +1707,9 @@ public:
   Result<> operator()()
   {
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
-    const usize vol = static_cast<usize>(nX * nY * nZ);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
+    const usize vol = static_cast<usize>(nX * ny * nz);
     if(vol == 0)
     {
       return {};
@@ -1754,8 +1754,8 @@ public:
 
     const float32 sp[3] = {m_Spacing[0], m_Spacing[1], m_Spacing[2]};
 
-    const int32 dimCount = (nZ == 1) ? 2 : 3;
-    const usize slice = static_cast<usize>(nX * nY);
+    const int32 dimCount = (nz == 1) ? 2 : 3;
+    const usize slice = static_cast<usize>(nX * ny);
     // The lines partition the volume for each axis. Workers update disjoint work values and keep line scratch private.
     // Each axis completes before the next axis reads the encoded distances.
     for(int32 d = 0; d < dimCount; ++d)
@@ -1764,12 +1764,12 @@ public:
       {
         return {};
       }
-      const usize nd = (d == 0) ? static_cast<usize>(nX) : (d == 1) ? static_cast<usize>(nY) : static_cast<usize>(nZ);
+      const usize nd = (d == 0) ? static_cast<usize>(nX) : (d == 1) ? static_cast<usize>(ny) : static_cast<usize>(nz);
       const usize stride = (d == 0) ? 1u : (d == 1) ? static_cast<usize>(nX) : slice;
       // The line count is the product of the orthogonal extents. The flattened line index preserves Z-Y-X storage order.
-      const usize numLines = (d == 0) ? (static_cast<usize>(nZ) * static_cast<usize>(nY)) :
-                             (d == 1) ? (static_cast<usize>(nZ) * static_cast<usize>(nX)) :
-                                        (static_cast<usize>(nY) * static_cast<usize>(nX));
+      const usize numLines = (d == 0) ? (static_cast<usize>(nz) * static_cast<usize>(ny)) :
+                             (d == 1) ? (static_cast<usize>(nz) * static_cast<usize>(nX)) :
+                                        (static_cast<usize>(ny) * static_cast<usize>(nX));
       const std::string progressLabel = fmt::format("Maurer: Transforming Axis {}", d);
       m_MessageHandler.sendInfoMessage(progressLabel);
       progressThrottle.reset(numLines, progressLabel);
@@ -1914,19 +1914,19 @@ public:
   Result<> operator()()
   {
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
-    const usize slice = static_cast<usize>(nX * nY);
-    const usize vol = slice * static_cast<usize>(nZ);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
+    const usize slice = static_cast<usize>(nX * ny);
+    const usize vol = slice * static_cast<usize>(nz);
     if(vol == 0)
     {
       return {};
     }
 
     const bool hasOutOfCoreEndpoint = m_In.getStoreType() == IDataStore::StoreType::OutOfCore || m_Out.getStoreType() == IDataStore::StoreType::OutOfCore;
-    if(nZ == 1 && hasOutOfCoreEndpoint)
+    if(nz == 1 && hasOutOfCoreEndpoint)
     {
-      return runBounded2D(static_cast<usize>(nX), static_cast<usize>(nY));
+      return runBounded2D(static_cast<usize>(nX), static_cast<usize>(ny));
     }
 
     // A disk-backed endpoint also makes the full-volume work store disk-backed.
@@ -1944,7 +1944,7 @@ public:
     }
 
     const std::string workingFormat = detail::SelectDistanceWorkingDataFormat(m_In.getStoreType(), m_In.getDataFormat(), m_Out.getStoreType(), m_Out.getDataFormat());
-    const ShapeType workTupleShape{static_cast<usize>(nZ), static_cast<usize>(nY), static_cast<usize>(nX)};
+    const ShapeType workTupleShape{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)};
     std::optional<ShapeType> workChunkHint;
     if(const auto outputChunkShape = m_Out.getChunkShape(); outputChunkShape.has_value())
     {

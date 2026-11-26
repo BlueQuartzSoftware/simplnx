@@ -27,21 +27,21 @@ constexpr usize k_DimZ = 200;
 constexpr usize k_TotalVoxels = k_DimX * k_DimY * k_DimZ;
 const std::string k_GeomName = "ImageGeom";
 
-void BuildOctantFeatureIds(DataStructure& ds)
+void BuildOctantFeatureIds(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
 
-  auto* imageGeomPtr = ImageGeom::Create(ds, k_GeomName);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
   imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({k_GeomName, Constants::k_CellData, Constants::k_FeatureIds});
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = DataArray<int32>::Create(ds, Constants::k_FeatureIds, store, cellAmPtr->getId());
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, store, cellAmPtr->getId());
   auto& fidsRef = featureIdsPtr->getDataStoreRef();
   const usize sliceSize = k_DimY * k_DimX;
   std::vector<int32> sliceBuffer(sliceSize);

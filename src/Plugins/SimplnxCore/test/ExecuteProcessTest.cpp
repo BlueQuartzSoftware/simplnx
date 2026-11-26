@@ -48,7 +48,7 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcessFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.txt", unit_test::k_BuildDir));
@@ -65,11 +65,11 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
   args.insertOrAssign(ExecuteProcessFilter::k_OutputLogFile_Key, std::make_any<FileSystemPathParameter::ValueType>(processOutput));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   std::ifstream processOutputFile(processOutput);
@@ -83,7 +83,7 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
   const std::string correctOutput = fmt::format("nxrunner: Version {} Build Date:{}", nx::core::Version::Package(), nx::core::Version::BuildDate());
   REQUIRE(firstLine == correctOutput);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
@@ -92,7 +92,7 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcessFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -105,11 +105,11 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
     args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<StringParameter::ValueType>("adfshjads"));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -56410);
   }
@@ -119,15 +119,15 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
     args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<StringParameter::ValueType>(""));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ExecuteProcessFilter][BackwardsCompatibility]")

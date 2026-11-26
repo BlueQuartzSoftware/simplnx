@@ -671,15 +671,15 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
   const T interiorFill = (kind == ReconMarker::FillholeMaxBorder) ? statsResult.value().max : statsResult.value().min;
 
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  if(nX <= 0 || nY <= 0 || nZ <= 0)
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  if(nX <= 0 || ny <= 0 || nz <= 0)
   {
     return {};
   }
   const usize dimX = static_cast<usize>(nX);
-  const usize dimY = static_cast<usize>(nY);
-  const usize dimZ = static_cast<usize>(nZ);
+  const usize dimY = static_cast<usize>(ny);
+  const usize dimZ = static_cast<usize>(nz);
   if(inStore.getStoreType() != IDataStore::StoreType::OutOfCore && markerStore.getStoreType() != IDataStore::StoreType::OutOfCore)
   {
     const usize planeSize = dimX * dimY;

@@ -35,7 +35,7 @@ using WsFilterType = MorphologicalWatershedImageFilter;
 
 // Sets the standard geom/input/output keys + Level/MarkWatershedLine/FullyConnected on a shared Arguments, runs
 // preflight + execute, and requires both succeed.
-void RunWatershed(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float64 level, bool markWatershedLine, bool fullyConnected, const std::string& outputName = "Output")
+void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 level, bool markWatershedLine, bool fullyConnected, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -45,9 +45,9 @@ void RunWatershed(IFilter& filter, DataStructure& ds, const DataPath& inputPath,
   args.insertOrAssign(WsFilterType::k_Level_Key, std::make_any<float64>(level));
   args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(markWatershedLine));
   args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -64,12 +64,12 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guard
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
     WsFilterType filter;
     Arguments args;
@@ -79,19 +79,19 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guard
     args.insertOrAssign(WsFilterType::k_Level_Key, std::make_any<float64>(0.0));
     args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(true));
     args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
-    const auto result = filter.preflight(ds, args);
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input creates a uint32 output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = rt::MakePlateauPattern<float32>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 12, 12, 1, field);
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 12, 12, 1, field);
     WsFilterType filter;
-    RunWatershed(filter, ds, inputPath, /*level=*/0.0, /*markWatershedLine=*/true, /*fullyConnected=*/false);
+    RunWatershed(filter, dataStructure, inputPath, /*level=*/0.0, /*markWatershedLine=*/true, /*fullyConnected=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint32);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint32);
   }
 }
 
