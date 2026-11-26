@@ -1,6 +1,6 @@
 #include "MultiThresholdObjectsFilter.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include "SimplnxCore/Filters/Algorithms/MultiThresholdObjects.hpp"
 

@@ -1,6 +1,6 @@
 #include "ReadDeformKeyFileV12.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"

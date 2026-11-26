@@ -1,6 +1,6 @@
 #include "IterativeClosestPoint.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include "nanoflann/nanoflann.hpp"
 

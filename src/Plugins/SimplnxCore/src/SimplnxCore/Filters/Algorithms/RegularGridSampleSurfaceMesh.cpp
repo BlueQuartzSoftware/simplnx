@@ -1,6 +1,6 @@
 #include "RegularGridSampleSurfaceMesh.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"

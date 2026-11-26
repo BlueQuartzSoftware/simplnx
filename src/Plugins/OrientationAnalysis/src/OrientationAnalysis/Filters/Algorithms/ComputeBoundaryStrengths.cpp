@@ -7,7 +7,7 @@
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
-#include <math.h>
+#include <cmath>
 
 using namespace nx::core;
 

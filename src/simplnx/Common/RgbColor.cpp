@@ -1,6 +1,6 @@
 #include "RgbColor.hpp"
 
-#include <math.h>
+#include <cmath>
 
 namespace nx::core
 {

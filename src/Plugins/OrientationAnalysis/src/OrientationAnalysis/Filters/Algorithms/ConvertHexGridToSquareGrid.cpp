@@ -9,7 +9,7 @@
 
 #include <EbsdLib/IO/TSL/AngConstants.h>
 #include <EbsdLib/IO/TSL/AngReader.h>
-#include <math.h>
+#include <cmath>
 
 #include "simplnx/Utilities/ProgressEstimator.hpp"
 

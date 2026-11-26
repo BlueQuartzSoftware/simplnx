@@ -9,8 +9,8 @@
 #include "simplnx/Utilities/ImageProcessing/GaussianTemporaryStore.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <cmath>
 #include <fmt/format.h>
-#include <math.h>
 #include <nonstd/span.hpp>
 
 #include <atomic>

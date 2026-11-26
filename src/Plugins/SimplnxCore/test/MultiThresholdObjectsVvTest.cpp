@@ -7,7 +7,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include <catch2/catch.hpp>
 #include <filesystem>

@@ -12,7 +12,7 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include <array>
 #include <catch2/catch.hpp>

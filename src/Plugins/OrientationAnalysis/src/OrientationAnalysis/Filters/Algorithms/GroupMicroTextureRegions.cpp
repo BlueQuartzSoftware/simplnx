@@ -1,6 +1,6 @@
 #include "GroupMicroTextureRegions.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"

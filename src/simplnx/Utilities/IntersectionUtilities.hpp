@@ -4,7 +4,7 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include <Eigen/Dense>
 
