@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/MultiThresholdObjects.hpp"
 
+#include "simplnx/Common/NumericBounds.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -14,6 +15,8 @@
 #include "simplnx/Utilities/ArrayThreshold.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <cmath>
 
 namespace nx::core
 {
@@ -52,22 +55,9 @@ struct CheckCustomValueInBounds
   template <typename T>
   Result<> operator()(float64 customValue)
   {
-    float64 minValue;
-    float64 maxValue;
-    if constexpr(std::is_floating_point_v<T>)
-    {
-      // Floating Point Types
-      minValue = static_cast<float64>(-std::numeric_limits<T>::max());
-      maxValue = static_cast<float64>(std::numeric_limits<T>::max());
-    }
-    else
-    {
-      // Everything Else
-      minValue = static_cast<float64>(std::numeric_limits<T>::min());
-      maxValue = static_cast<float64>(std::numeric_limits<T>::max());
-    }
-
-    if(customValue < minValue || customValue > maxValue)
+    // For integer masks, a fraction above the maximum is outside the allowed range even if it would truncate to the maximum.
+    const float64 upperValue = std::is_integral_v<T> ? std::ceil(customValue) : customValue;
+    if((std::is_integral_v<T> && std::isnan(customValue)) || ExceedsLowestOf<T>(customValue) || ExceedsMaxOf<T>(upperValue))
     {
       return MakeErrorResult(-100, "Custom value is outside the bounds of the chosen data type!");
     }

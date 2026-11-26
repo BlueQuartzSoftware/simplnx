@@ -834,6 +834,11 @@ Histogram** groups values with the same equality test, and the shared statistics
 and `HistogramUtilities.hpp` sort and key floating-point values with `operator<`. `ComputeArrayMinMax` is not NaN-aware
 (issue #1874). **Invert Intensity Image** accepts a NaN **Maximum** and writes 0 to every integer pixel (issue #1873).
 
+In #2026, both copies of the MultiThresholdObjects custom-mask test tried values far beyond the integer limits.
+Both passed while preflight accepted NaN for integer masks, as well as `2^63` for int64 and `2^64` for uint64.
+Converting either integer maximum to float64 rounds it up to the first invalid value. Test that exact value
+and the adjacent representable float64 on the valid side.
+
 **Why:** ordered comparisons with NaN are false. Sorting a mixture of NaNs and finite values with ordinary less-than
 comparisons can violate the ordering the sort requires. Converting NaN or infinity to an integer is undefined behavior.
 Guard these operations where they occur.

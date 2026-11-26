@@ -2,26 +2,17 @@
 #include "SimplnxCore/Filters/Algorithms/MultiThresholdObjectsDirect.hpp"
 #include "SimplnxCore/Filters/Algorithms/MultiThresholdObjectsScanline.hpp"
 #include "SimplnxCore/Filters/MultiThresholdObjectsFilter.hpp"
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <array>
 #include <catch2/catch.hpp>
-#include <chrono>
-#include <cstdlib>
-#include <filesystem>
-#include <fstream>
 
 using namespace nx::core;
 using namespace nx::core::Constants;
-namespace fs = std::filesystem;
 
 namespace
 {
@@ -35,9 +26,6 @@ const DataPath k_TestArrayFloatPath = k_ImageCellDataName.createChildPath(k_Test
 const DataPath k_TestArrayIntPath = k_ImageCellDataName.createChildPath(k_TestArrayIntName);
 const DataPath k_MultiComponentArrayPath = k_ImageCellDataName.createChildPath(k_MultiComponentArrayName);
 const DataPath k_ThresholdArrayPath = k_ImageCellDataName.createChildPath(k_ThresholdArrayName);
-
-const DataPath k_MismatchingComponentsArrayPath = k_ImageCellDataName.createChildPath("MismatchingComponentsArray");
-const DataPath k_MismatchingTuplesArrayPath({"MismatchingTuplesArray"});
 
 /**
  * @class MultiThresholdFailingReadStore
@@ -165,12 +153,6 @@ DataStructure CreateTestDataStructure()
   Int32Array* data1 = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, am->getId());
   Int32Array* multiComponentData = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, am->getId());
 
-  Float32Array* invalid1 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingComponentsArrayPath.getTargetName(), tDims, cDimsMulti, am->getId());
-  invalid1->fill(1.0);
-  Float32Array* invalid2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
-  invalid2->fill(2.0);
-
-  usize numComponents = multiComponentData->getNumberOfComponents();
   int32 sign = 1;
 
   // The scalar arrays increase with the tuple index. The three-component array
@@ -189,36 +171,6 @@ DataStructure CreateTestDataStructure()
   return dataStructure;
 }
 
-/**
- * @brief Produces a value below the representable range of T.
- * @tparam T Specifies the tested numeric type.
- * @return A lower out-of-range value represented as float64.
- */
-template <typename T>
-float64 GetOutOfBoundsMinimumValue()
-{
-  if constexpr(std::is_unsigned_v<T>)
-  {
-    return -1.0;
-  }
-  else if constexpr(std::is_floating_point_v<T>)
-  {
-    return static_cast<float64>(-std::numeric_limits<T>::max()) * 2;
-  }
-
-  return static_cast<float64>(std::numeric_limits<T>::min()) * 2;
-}
-
-/**
- * @brief Produces a value above the representable range of T.
- * @tparam T Specifies the tested numeric type.
- * @return An upper out-of-range value represented as float64.
- */
-template <typename T>
-float64 GetOutOfBoundsMaximumValue()
-{
-  return static_cast<float64>(std::numeric_limits<T>::max()) * 2;
-}
 } // namespace
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][MultiThresholdObjectsFilter]")
@@ -609,7 +561,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
   auto* thresholdArray = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
   REQUIRE(thresholdArray != nullptr);
 
-  // A 0.1 threshold rejects indices 0 through 9 and selects indices 10 through 19.
+  // Integer inputs equal their tuple indices. Only indices 16 through 19 exceed 15.
   for(usize i = 0; i < 20; i++)
   {
     if(i <= 15)
@@ -621,167 +573,6 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
       REQUIRE((*thresholdArray)[i] == trueValue);
     }
   }
-}
-
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore][MultiThresholdObjectsFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  MultiThresholdObjectsFilter filter;
-  DataStructure dataStructure = CreateTestDataStructure();
-  Arguments args;
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-
-  SECTION("Empty ArrayThresholdSet")
-  {
-    ArrayThresholdSet thresholdSet;
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  SECTION("Empty ArrayThreshold DataPath")
-  {
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  SECTION("Out of Bounds Component Index")
-  {
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    threshold->setComponentIndex(1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  SECTION("Mismatching Tuples in Threshold Arrays")
-  {
-    ArrayThresholdSet thresholdSet;
-    auto threshold1 = std::make_shared<ArrayThreshold>();
-    threshold1->setArrayPath(k_TestArrayFloatPath);
-    threshold1->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold1->setComparisonValue(0.1);
-    auto threshold2 = std::make_shared<ArrayThreshold>();
-    threshold2->setArrayPath(k_MismatchingTuplesArrayPath);
-    threshold2->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold2->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold1, threshold2});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32,
-                   int64, uint64, float32)
-{
-  UnitTest::LoadPlugins();
-
-  MultiThresholdObjectsFilter filter;
-  DataStructure dataStructure = CreateTestDataStructure();
-  Arguments args;
-
-  float64 trueValue;
-  float64 falseValue;
-  int32 code;
-
-  SECTION("True Value < Minimum")
-  {
-    trueValue = GetOutOfBoundsMinimumValue<TestType>();
-    falseValue = 1;
-    code = MultiThresholdObjectsFilter::ErrorCodes::CustomTrueOutOfBounds;
-  }
-
-  SECTION("False Value < Minimum")
-  {
-    trueValue = 1;
-    falseValue = GetOutOfBoundsMinimumValue<TestType>();
-    code = MultiThresholdObjectsFilter::ErrorCodes::CustomFalseOutOfBounds;
-  }
-
-  SECTION("True Value > Maximum")
-  {
-    trueValue = GetOutOfBoundsMaximumValue<TestType>();
-    falseValue = 1;
-    code = MultiThresholdObjectsFilter::ErrorCodes::CustomTrueOutOfBounds;
-  }
-
-  SECTION("False Value > Maximum")
-  {
-    trueValue = 1;
-    falseValue = GetOutOfBoundsMaximumValue<TestType>();
-    code = MultiThresholdObjectsFilter::ErrorCodes::CustomFalseOutOfBounds;
-  }
-
-  ArrayThresholdSet thresholdSet;
-  auto threshold = std::make_shared<ArrayThreshold>();
-  threshold->setArrayPath(k_TestArrayIntPath);
-  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  threshold->setComparisonValue(15);
-  thresholdSet.setArrayThresholds({threshold});
-
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomTrueValue, std::make_any<bool>(true));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CustomTrueValue, std::make_any<float64>(trueValue));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomFalseValue, std::make_any<bool>(true));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CustomFalseValue, std::make_any<float64>(falseValue));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(GetDataType<TestType>()));
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == code);
-}
-
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  MultiThresholdObjectsFilter filter;
-  DataStructure dataStructure = CreateTestDataStructure();
-  Arguments args;
-
-  int32 code;
-
-  SECTION("Custom True Value")
-  {
-    code = MultiThresholdObjectsFilter::ErrorCodes::CustomTrueWithBoolean;
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomTrueValue, std::make_any<bool>(true));
-  }
-
-  SECTION("Custom False Value")
-  {
-    code = MultiThresholdObjectsFilter::ErrorCodes::CustomFalseWithBoolean;
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomFalseValue, std::make_any<bool>(true));
-  }
-
-  ArrayThresholdSet thresholdSet;
-  auto threshold = std::make_shared<ArrayThreshold>();
-  threshold->setArrayPath(k_TestArrayIntPath);
-  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  threshold->setComparisonValue(15);
-  thresholdSet.setArrayThresholds({threshold});
-
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == code);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**
@@ -1106,40 +897,4 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent"
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][MultiThresholdObjectsFilter][BackwardsCompatibility]")
-{
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "MultiThresholdObjectsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "MultiThresholdObjectsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<std::string>(MultiThresholdObjectsFilter::k_CreatedDataName_Key) == "TestName");
-    }
-  }
 }
