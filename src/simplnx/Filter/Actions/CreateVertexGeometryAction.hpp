@@ -11,6 +11,7 @@
 
 #include <fmt/core.h>
 
+#include <memory>
 #include <utility>
 
 namespace nx::core
@@ -184,7 +185,7 @@ public:
 
   UniquePointer clone() const override
   {
-    auto action = std::unique_ptr<CreateVertexGeometryAction>(new CreateVertexGeometryAction(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName, m_Units));
+    auto action = std::make_unique<CreateVertexGeometryAction>(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName, m_Units);
     action->m_InputVertices = m_InputVertices;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
     return action;
