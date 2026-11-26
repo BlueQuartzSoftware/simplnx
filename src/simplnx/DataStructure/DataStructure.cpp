@@ -365,7 +365,7 @@ DataObject* DataStructure::getData(const DataPath& path)
     {
       return nullptr;
     }
-    auto* groupObject = static_cast<BaseGroup*>(targetObject);
+    auto* groupObject = dynamic_cast<BaseGroup*>(targetObject);
     DataObject* childObject = (*groupObject)[path[index]];
     if(childObject == nullptr)
     {
@@ -444,7 +444,7 @@ const DataObject* DataStructure::getData(const DataPath& path) const
     {
       return nullptr;
     }
-    const auto* groupObject = static_cast<const BaseGroup*>(targetObject);
+    const auto* groupObject = dynamic_cast<const BaseGroup*>(targetObject);
     const DataObject* childObject = (*groupObject)[path[index]];
     if(childObject == nullptr)
     {

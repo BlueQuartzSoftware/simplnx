@@ -427,7 +427,7 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
   auto* inMemoryPartitionIdsStore = dynamic_cast<Int32DataStore*>(&partitionIdsStore);
   if(inputGeometry.getGeomType() == IGeometry::Type::Image && inMemoryPartitionIdsStore != nullptr)
   {
-    const auto& imageGeom = static_cast<const ImageGeom&>(inputGeometry);
+    const auto& imageGeom = dynamic_cast<const ImageGeom&>(inputGeometry);
     const SizeVec3 partitionDimensions = psImageGeom.getDimensions();
     const FloatVec3 inputOrigin = imageGeom.getOrigin();
     const FloatVec3 inputSpacing = imageGeom.getSpacing();
