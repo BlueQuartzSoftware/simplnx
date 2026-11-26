@@ -24,7 +24,7 @@ DataObject::OptionalId IDataIO::ReadDataId(const object_reader_type& groupReader
   {
     return {};
   }
-  DataObject::IdType id = std::move(result.value());
+  DataObject::IdType id = result.value();
 
   return id;
 }

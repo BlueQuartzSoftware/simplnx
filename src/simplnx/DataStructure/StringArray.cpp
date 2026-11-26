@@ -26,7 +26,7 @@ StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const s
 StringArray* StringArray::Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings,
                                  const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), tupleShape, importId, std::move(strings)));
+  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), tupleShape, importId, strings));
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;

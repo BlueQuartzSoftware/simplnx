@@ -1660,7 +1660,7 @@ TEST_CASE("ParallelChunkCodec: ParallelLoadChunks fills every slot", "[ParallelL
 
   ParallelLoadChunks<uint64>(
       nonstd::span<const uint64>(chunkIndices.data(), chunkIndices.size()), [](uint64 chunkIndex) -> uint64 { return chunkIndex * 10; },
-      [&results](usize localIndex, uint64&& value) { results[localIndex] = std::move(value); });
+      [&results](usize localIndex, uint64&& value) { results[localIndex] = value; });
 
   REQUIRE(results == std::vector<uint64>{0, 10, 20, 30, 40});
 }
@@ -1715,7 +1715,7 @@ TEST_CASE("ParallelChunkCodec: ParallelLoadChunks skips unallocated chunks", "[P
         }
         return chunkIndex * 10;
       },
-      [&results](usize localIndex, uint64&& value) { results[localIndex] = std::move(value); });
+      [&results](usize localIndex, uint64&& value) { results[localIndex] = value; });
 
   // Slot 2 is skipped (sink never called); every other slot is filled.
   REQUIRE(results == std::vector<uint64>{0, 10, k_Untouched, 30, 40});
@@ -1736,7 +1736,7 @@ TEST_CASE("ParallelChunkCodec: ParallelLoadChunks rethrows a non-skip error", "[
                           }
                           return chunkIndex * 10;
                         },
-                        [&results](usize localIndex, uint64&& value) { results[localIndex] = std::move(value); }),
+                        [&results](usize localIndex, uint64&& value) { results[localIndex] = value; }),
                     std::runtime_error);
 }
 

@@ -18,7 +18,7 @@ AbstractTileIndex::AbstractTileIndex(const AbstractTileIndex& other)
 }
 
 AbstractTileIndex::AbstractTileIndex(AbstractTileIndex&& other) noexcept
-: m_Montage(std::move(other.m_Montage))
+: m_Montage(other.m_Montage)
 {
 }
 

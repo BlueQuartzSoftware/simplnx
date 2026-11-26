@@ -1334,8 +1334,8 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
 {
   m_DataObjects = std::move(rhs.m_DataObjects);
   m_RootGroup = std::move(rhs.m_RootGroup);
-  m_IsValid = std::move(rhs.m_IsValid);
-  m_NextId = std::move(rhs.m_NextId);
+  m_IsValid = rhs.m_IsValid;
+  m_NextId = rhs.m_NextId;
   m_FormatResolver = std::move(rhs.m_FormatResolver);
 
   applyAllDataStructure();

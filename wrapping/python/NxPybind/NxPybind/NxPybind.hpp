@@ -724,7 +724,7 @@ public:
         py::gil_scoped_acquire global_interpreter_lock;
         return std::make_unique<PyFilter>(filterType());
       };
-      plugin->addFilter(std::move(filterCreationFunc));
+      plugin->addFilter(filterCreationFunc);
     }
 
     return plugin;

@@ -24,7 +24,7 @@ DataRenamedMessage::DataRenamedMessage(const DataRenamedMessage& other)
 
 DataRenamedMessage::DataRenamedMessage(DataRenamedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
-, m_Id(std::move(other.m_Id))
+, m_Id(other.m_Id)
 , m_OldName(std::move(other.m_OldName))
 , m_NewName(std::move(other.m_NewName))
 {

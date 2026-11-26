@@ -151,8 +151,8 @@ public:
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_Data(std::move(other.m_Data))
-  , m_NumComponents(std::move(other.m_NumComponents))
-  , m_NumTuples(std::move(other.m_NumTuples))
+  , m_NumComponents(other.m_NumComponents)
+  , m_NumTuples(other.m_NumTuples)
   {
   }
 

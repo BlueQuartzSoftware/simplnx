@@ -30,7 +30,7 @@ TooltipRowItem::TooltipRowItem(const TooltipRowItem& other)
 }
 
 TooltipRowItem::TooltipRowItem(TooltipRowItem&& other) noexcept
-: m_Type(std::move(other.m_Type))
+: m_Type(other.m_Type)
 , m_Title(std::move(other.m_Title))
 , m_Value(std::move(other.m_Value))
 {
@@ -63,7 +63,7 @@ TooltipRowItem& TooltipRowItem::operator=(const TooltipRowItem& rhs)
 
 TooltipRowItem& TooltipRowItem::operator=(TooltipRowItem&& rhs) noexcept
 {
-  m_Type = std::move(rhs.m_Type);
+  m_Type = rhs.m_Type;
   m_Title = std::move(rhs.m_Title);
   m_Value = std::move(rhs.m_Value);
   return *this;

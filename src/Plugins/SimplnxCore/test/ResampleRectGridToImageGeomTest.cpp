@@ -88,7 +88,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Noncubic cell arrays 
       }
     }
   }
-  REQUIRE(StringArray::CreateWithValues(dataStructure, k_StringArrayName, cellTupleShape, std::move(strings), cellDataPtr->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, k_StringArrayName, cellTupleShape, strings, cellDataPtr->getId()) != nullptr);
 
   ResampleRectGridToImageGeomFilter filter;
   Arguments args;

@@ -26,18 +26,18 @@ ObjectIO::ObjectIO(std::filesystem::path  filepath, std::string  objectName)
 ObjectIO::ObjectIO(ObjectIO&& other) noexcept
 : m_FilePath(std::move(other.m_FilePath))
 , m_ObjectName(std::move(other.m_ObjectName))
-, m_ParentId(std::move(other.m_ParentId))
-, m_Id(std::move(other.m_Id))
+, m_ParentId(other.m_ParentId)
+, m_Id(other.m_Id)
 {
   other.m_Id = -1;
 }
 
 ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
 {
-  m_Id = std::move(other.m_Id);
+  m_Id = other.m_Id;
   m_FilePath = std::move(other.m_FilePath);
   m_ObjectName = std::move(other.m_ObjectName);
-  m_ParentId = std::move(other.m_ParentId);
+  m_ParentId = other.m_ParentId;
 
   other.m_Id = -1;
   return *this;
@@ -166,8 +166,8 @@ void ObjectIO::moveObj(ObjectIO&& rhs) noexcept
 {
   m_FilePath = std::move(rhs.m_FilePath);
   m_ObjectName = std::move(rhs.m_ObjectName);
-  m_ParentId = std::move(rhs.m_ParentId);
-  m_Id = std::move(rhs.m_Id);
+  m_ParentId = rhs.m_ParentId;
+  m_Id = rhs.m_Id;
 }
 
 usize ObjectIO::getNumAttributes() const

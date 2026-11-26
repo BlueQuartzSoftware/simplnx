@@ -144,7 +144,7 @@ public:
   template <typename T>
   std::shared_ptr<T> getFactoryAs(factory_id_type typeName) const
   {
-    return std::dynamic_pointer_cast<T>(getFactory(std::move(typeName)));
+    return std::dynamic_pointer_cast<T>(getFactory(typeName));
   }
 
   /**

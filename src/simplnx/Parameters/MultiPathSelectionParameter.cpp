@@ -174,7 +174,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
 
     if(attributeMatrixNameResult.value().empty() == false)
     {
-      dataPath = dataPath.createChildPath(std::move(attributeMatrixNameResult.value()));
+      dataPath = dataPath.createChildPath(attributeMatrixNameResult.value());
 
       // Data Array Name is optional — an AttributeMatrixSelectionFilterParameter does not include it.
       if(json.contains(k_DataArrayNameKey))
@@ -187,7 +187,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
 
         if(dataArrayNameResult.value().empty() == false)
         {
-          dataPath = dataPath.createChildPath(std::move(dataArrayNameResult.value()));
+          dataPath = dataPath.createChildPath(dataArrayNameResult.value());
         }
       }
     }

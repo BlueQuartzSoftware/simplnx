@@ -94,7 +94,7 @@ Pipeline::Pipeline(Pipeline&& other) noexcept
 : 
  m_Name(std::move(other.m_Name))
 , m_Collection(std::move(other.m_Collection))
-, m_FilterList(std::move(other.m_FilterList))
+, m_FilterList(other.m_FilterList)
 , m_ExecutionContext(std::move(other.m_ExecutionContext))
 {
   setDisabled(other.isDisabled());
@@ -123,7 +123,7 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
 {
   m_Name = std::move(rhs.m_Name);
   m_Collection = std::move(rhs.m_Collection);
-  m_FilterList = std::move(rhs.m_FilterList);
+  m_FilterList = rhs.m_FilterList;
   setDisabled(rhs.isDisabled());
   resetCollectionParent();
   return *this;

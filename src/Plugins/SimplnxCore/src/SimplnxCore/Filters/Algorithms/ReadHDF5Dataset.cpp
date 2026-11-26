@@ -52,7 +52,7 @@ Result<> ReadHDF5Dataset::operator()()
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
     auto h5TypeResult = datasetReader.getDataType();
-    const auto type = std::move(h5TypeResult.value());
+    const auto type = h5TypeResult.value();
     switch(type)
     {
     case DataType::float32: {

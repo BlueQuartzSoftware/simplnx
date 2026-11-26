@@ -780,7 +780,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     {
       throw std::runtime_error(exceptionMessage);
     }
-    pipelineFilter->setArguments(std::move(argumentsResult.value()));
+    pipelineFilter->setArguments(argumentsResult.value());
   }
   else
   {

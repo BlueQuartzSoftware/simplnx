@@ -21,7 +21,7 @@ DataRemovedMessage::DataRemovedMessage(const DataRemovedMessage& other)
 DataRemovedMessage::DataRemovedMessage(DataRemovedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
 , m_Name(std::move(other.m_Name))
-, m_Id(std::move(other.m_Id))
+, m_Id(other.m_Id)
 {
 }
 

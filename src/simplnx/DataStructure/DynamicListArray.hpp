@@ -103,7 +103,7 @@ public:
   DynamicListArray(DynamicListArray&& other)
  noexcept   : DataObject(std::move(other))
   , m_Array(std::move(other.m_Array))
-  , m_Size(std::move(other.m_Size))
+  , m_Size(other.m_Size)
   {
   }
 

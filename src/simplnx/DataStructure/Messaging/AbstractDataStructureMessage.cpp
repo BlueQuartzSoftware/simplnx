@@ -15,7 +15,7 @@ AbstractDataStructureMessage::AbstractDataStructureMessage(const AbstractDataStr
 }
 
 AbstractDataStructureMessage::AbstractDataStructureMessage(AbstractDataStructureMessage&& other) noexcept
-: m_DataStructure(std::move(other.m_DataStructure))
+: m_DataStructure(other.m_DataStructure)
 {
 }
 
