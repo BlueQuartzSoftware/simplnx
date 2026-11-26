@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/UnitTest/CellTupleCountTest.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -330,19 +331,12 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeatures: Geometry cell tuple count", "[Si
   using FilterType = ComputeSurfaceFeaturesFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Grid");
-  REQUIRE(imageGeomPtr != nullptr);
-  imageGeomPtr->setDimensions({4, 3, 1});
-  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 3, 4}, imageGeomPtr->getId());
-  REQUIRE(cellAMPtr != nullptr);
-  imageGeomPtr->setCellData(*cellAMPtr);
+  UnitTest::SetGridDimensionsAndCellData(imageGeomPtr, {4, 3, 1}, {1, 3, 4});
 
   // Equal counts remain valid in another Attribute Matrix with a different tuple shape.
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
-  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAMPtr != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 0), otherAMPtr->getId()) != nullptr);
-  const DataPath inputPath({"Other Data", "Values"});
+  const auto inputPath = UnitTest::CreateCellTupleCountInput<int32>(dataStructure, {tuples}, 0);
 
   FilterType filter;
   Arguments args;
@@ -359,12 +353,6 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeatures: Geometry cell tuple count", "[Si
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
-    REQUIRE(errorRef.code == -1099);
-    REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
-    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
-    REQUIRE(errorRef.message.find("'Grid' has 12 cells") != std::string::npos);
+    UnitTest::RequireCellTupleCountError(result.outputActions, -1099, inputPath, tuples, "'Grid' has 12 cells");
   }
 }

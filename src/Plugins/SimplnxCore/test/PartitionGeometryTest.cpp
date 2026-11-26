@@ -36,6 +36,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
+#include "simplnx/UnitTest/CellTupleCountTest.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -1305,12 +1306,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry cell tuple count", "[P
   using FilterType = PartitionGeometryFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(imageGeomPtr != nullptr);
-  imageGeomPtr->setDimensions({2, 3, 2});
+  UnitTest::SetGridDimensionsAndCellData(imageGeomPtr, {2, 3, 2}, {12});
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
-  REQUIRE(cellAMPtr != nullptr);
-  imageGeomPtr->setCellData(*cellAMPtr);
   auto* partitionGridPtr = ImageGeom::Create(dataStructure, "Existing Grid");
   REQUIRE(partitionGridPtr != nullptr);
   partitionGridPtr->setDimensions({1, 1, 1});

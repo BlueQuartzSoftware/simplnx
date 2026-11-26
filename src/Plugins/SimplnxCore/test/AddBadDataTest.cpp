@@ -22,6 +22,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/CellTupleCountTest.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 namespace fs = std::filesystem;
@@ -118,20 +119,13 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Geometry cell tuple count", "[SimplnxC
   using FilterType = AddBadDataFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(imageGeomPtr != nullptr);
-  imageGeomPtr->setDimensions({2, 3, 2});
+  UnitTest::SetGridDimensionsAndCellData(imageGeomPtr, {2, 3, 2}, {2, 3, 2});
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 3, 2}, imageGeomPtr->getId());
-  REQUIRE(cellAMPtr != nullptr);
-  imageGeomPtr->setCellData(*cellAMPtr);
 
   // Matching arrays remain valid outside the geometry's Cell Attribute Matrix, with a different tuple shape.
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
-  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAMPtr != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 0), otherAMPtr->getId()) != nullptr);
-  const DataPath inputPath({"Other Data", "Values"});
+  const auto inputPath = UnitTest::CreateCellTupleCountInput<int32>(dataStructure, {tuples}, 0);
 
   FilterType filter;
   Arguments args;
@@ -146,13 +140,7 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Geometry cell tuple count", "[SimplnxC
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
-    REQUIRE(errorRef.code == -76238);
-    REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
-    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
-    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
+    UnitTest::RequireCellTupleCountError(result.outputActions, -76238, inputPath, tuples, "'Image' has 12 cells");
   }
 }
 

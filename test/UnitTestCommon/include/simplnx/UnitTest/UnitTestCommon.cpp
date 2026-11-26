@@ -1,5 +1,6 @@
 #include "UnitTestCommon.hpp"
 
+#include "CellTupleCountTest.hpp"
 #include "ReaderGeometryTest.hpp"
 
 #include "simplnx/DataStructure/IDataStore.hpp"
@@ -36,6 +37,27 @@ bool VolumeSupportsPosixRename(const fs::path& directory)
   return (flags & k_SupportsPosixUnlinkRename) != 0;
 }
 #endif
+
+void SetGridDimensionsAndCellData(IGridGeometry* grid, const SizeVec3& dimensions, const ShapeType& cellShape)
+{
+  REQUIRE(grid != nullptr);
+  grid->setDimensions(dimensions);
+  auto* cellData = AttributeMatrix::Create(grid->getDataStructureRef(), "Cell Data", cellShape, grid->getId());
+  REQUIRE(cellData != nullptr);
+  grid->setCellData(*cellData);
+}
+
+void RequireCellTupleCountError(const Result<OutputActions>& result, int32 expectedCode, const DataPath& path, usize tuples, std::string_view geometryMessage)
+{
+  CAPTURE(expectedCode, path.toString(), tuples, geometryMessage);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  const auto& error = result.errors().front();
+  REQUIRE(error.code == expectedCode);
+  REQUIRE(error.message.find(path.toString()) != std::string::npos);
+  REQUIRE(error.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
+  REQUIRE(error.message.find(geometryMessage) != std::string::npos);
+}
 
 void RequireBadReaderMetadata(const IFilter& filter, const Arguments& args, const std::filesystem::path& file, bool spacing)
 {

@@ -9,6 +9,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/CellTupleCountTest.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -459,20 +460,13 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Geometry cell tuple c
   using FilterType = InitializeImageGeomCellDataFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(imageGeomPtr != nullptr);
-  imageGeomPtr->setDimensions({2, 3, 2});
+  UnitTest::SetGridDimensionsAndCellData(imageGeomPtr, {2, 3, 2}, {12});
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
-  REQUIRE(cellAMPtr != nullptr);
-  imageGeomPtr->setCellData(*cellAMPtr);
 
   // A matching array is valid outside Cell Data; short and long arrays must fail preflight.
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
-  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{1, 1, tuples});
-  REQUIRE(otherAMPtr != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(otherAMPtr->getShape(), ShapeType{1}, 0), otherAMPtr->getId()) != nullptr);
-  const DataPath inputPath({"Other Data", "Values"});
+  const auto inputPath = UnitTest::CreateCellTupleCountInput<int32>(dataStructure, {1, 1, tuples}, 0);
   const bool shortSecondInput = GENERATE(false, true);
   CAPTURE(shortSecondInput);
   auto* secondAMPtr = AttributeMatrix::Create(dataStructure, "Second Data", ShapeType{1, 1, shortSecondInput ? usize{10} : usize{12}});
@@ -492,15 +486,9 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Geometry cell tuple c
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
-    REQUIRE(errorRef.code == -3557);
     const DataPath expectedPath = tuples != 12 ? inputPath : secondPath;
     const usize expectedTuples = tuples != 12 ? tuples : usize{10};
-    REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
-    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
-    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
+    UnitTest::RequireCellTupleCountError(result.outputActions, -3557, expectedPath, expectedTuples, "'Image' has 12 cells");
   }
 }
 
