@@ -57,7 +57,7 @@ void AbstractPipelineNode::setDisabled(bool disabled)
 
 void AbstractPipelineNode::setEnabled(bool enabled)
 {
-  return setDisabled(!enabled);
+  setDisabled(!enabled);
 }
 
 const DataStructure& AbstractPipelineNode::getDataStructure() const
