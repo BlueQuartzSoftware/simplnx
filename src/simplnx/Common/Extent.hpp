@@ -71,7 +71,7 @@ struct Extent
     {
       throw std::invalid_argument("Extent min, max, and stride must have the same number of dimensions");
     }
-    for(unsigned long d : stride)
+    for(uint64 d : stride)
     {
       if(d == 0)
       {

@@ -253,7 +253,7 @@ private:
     {
       record.touchesExterior = 1;
     }
-    const auto* const ownerEnd = record.owners.cbegin() + record.ownerCount;
+    const auto ownerEnd = record.owners.cbegin() + record.ownerCount;
     if(std::find(record.owners.cbegin(), ownerEnd, owner) == ownerEnd && record.ownerCount < record.owners.size())
     {
       record.owners[record.ownerCount++] = owner;

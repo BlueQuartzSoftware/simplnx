@@ -199,19 +199,19 @@ SIMPLNX_EXPORT ImageRotationUtilities::RotateArgs CreateRotationArgs(const Image
 template <typename T>
 T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, const DataArray<T>& sourceArray, usize compIndex)
 {
-  xyzIndex[0] = std::max<Eigen::DenseCoeffsBase<class Eigen::Array<long, 1, 3>, 1>::Scalar>(xyzIndex[0], 0);
+  xyzIndex[0] = std::max<int64>(xyzIndex[0], 0);
   if(xyzIndex[0] >= params.xp)
   {
     xyzIndex[0] = params.xp - 1;
   }
 
-  xyzIndex[1] = std::max<Eigen::DenseCoeffsBase<class Eigen::Array<long, 1, 3>, 1>::Scalar>(xyzIndex[1], 0);
+  xyzIndex[1] = std::max<int64>(xyzIndex[1], 0);
   if(xyzIndex[1] >= params.yp)
   {
     xyzIndex[1] = params.yp - 1;
   }
 
-  xyzIndex[2] = std::max<Eigen::DenseCoeffsBase<class Eigen::Array<long, 1, 3>, 1>::Scalar>(xyzIndex[2], 0);
+  xyzIndex[2] = std::max<int64>(xyzIndex[2], 0);
   if(xyzIndex[2] >= params.zp)
   {
     xyzIndex[2] = params.zp - 1;

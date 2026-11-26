@@ -1628,7 +1628,7 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
     int nFE = 0;
     int eff = 0;
     SiteId arrayFC[6];
-    for(long& ii : arrayFC)
+    for(SiteId& ii : arrayFC)
     {
       ii = -1;
     }
@@ -2467,7 +2467,7 @@ bool RemapSharpEdgeTriangle(Triangle& triangle, const SharpEdgeResult& result, c
     return (it != result.SnappedCoords.end()) ? it->second : nodeCoords[id];
   };
   int numTouched = 0;
-  for(long& corner : triangle.node_id)
+  for(int64& corner : triangle.node_id)
   {
     const auto it = result.MergedInto.find(corner);
     if(it != result.MergedInto.end())
@@ -2694,7 +2694,7 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
     int eff = 0;
     SiteId bodyCtr = 7 * (i - 1) + 6;
     SiteId arrayFC[6];
-    for(long& ii : arrayFC)
+    for(SiteId& ii : arrayFC)
     {
       ii = -1;
     }
@@ -4564,14 +4564,14 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       sqID[5] = 3 * (i + numSitesPerPlane - 1);
 
       SiteId arrayFC[6];
-      for(long& ii : arrayFC)
+      for(SiteId& ii : arrayFC)
       {
         ii = -1;
       }
       int fcid = 0;
       int nFE = 0;
       int eff = 0;
-      for(long ii : sqID)
+      for(SiteId ii : sqID)
       {
         const Face& sqf = window[winIndex(ii)];
         if(sqf.FCnode != -1)
@@ -4626,7 +4626,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 
       std::vector<SiteId> arrayFE(nFE);
       int tindex = 0;
-      for(long i1 : sqID)
+      for(SiteId i1 : sqID)
       {
         const Face& sqf = window[winIndex(i1)];
         int tnfe = sqf.nEdge;
@@ -4716,14 +4716,14 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       sqID[4] = 3 * (i + xDim - 1) + 1;
       sqID[5] = 3 * (i + numSitesPerPlane - 1);
       SiteId arrayFC[6];
-      for(long& ii : arrayFC)
+      for(SiteId& ii : arrayFC)
       {
         ii = -1;
       }
       int fcid = 0;
       int nFE = 0;
       int eff = 0;
-      for(long ii : sqID)
+      for(SiteId ii : sqID)
       {
         const Face& sqf = window[winIndex(ii)];
         if(sqf.FCnode != -1)
@@ -4775,7 +4775,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       std::array<SiteId, 64> localAFE{};
       std::array<Segment, 64> localEdges{};
       int tindex = 0;
-      for(long i1 : sqID)
+      for(SiteId i1 : sqID)
       {
         const Face& sqf = window[winIndex(i1)];
         int tnfe = sqf.nEdge;

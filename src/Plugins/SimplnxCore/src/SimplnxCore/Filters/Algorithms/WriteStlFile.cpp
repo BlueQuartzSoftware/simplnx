@@ -635,7 +635,7 @@ private:
   {
     const usize startValue = i * maxTriangles;
     usize endValue = (i + 1) * maxTriangles;
-    endValue = std::min(endValue, nTriangles);
+    endValue = std::min<usize>(endValue, nTriangles);
     taskRunner.execute(SingleOutWrapper(filter, limitedFile.m_AtomicFilesList[i].tempFilePath(), endValue, header, triangles, vertices, startValue, shouldCancel));
   }
 

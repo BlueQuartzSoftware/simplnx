@@ -928,7 +928,7 @@ public:
 
     m_MessageHandler.sendInfoMessage("Identifying Qualifying Independent Clusters:");
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
-    for(unsigned long& coreGridId : coreGridIds)
+    for(usize& coreGridId : coreGridIds)
     {
       if(m_ShouldCancel)
       {

@@ -307,8 +307,8 @@ void CheckFeatureIdsModified(const DataStructure& dataStructure)
  */
 void CheckOutput(const DataStructure& dataStructure, ChoicesParameter::ValueType operation, const DirectionType& directions, int32 iterations)
 {
-  const auto* const exemplarIter = std::find_if(k_Exemplars.cbegin(), k_Exemplars.cend(),
-                                                [&](const ExemplarRecord& record) { return record.operation == operation && record.directions == directions && record.iterations == iterations; });
+  const auto exemplarIter = std::find_if(k_Exemplars.cbegin(), k_Exemplars.cend(),
+                                         [&](const ExemplarRecord& record) { return record.operation == operation && record.directions == directions && record.iterations == iterations; });
   if(exemplarIter == k_Exemplars.cend())
   {
     FAIL(fmt::format("No expected output is tabulated for operation {} with directions X={} Y={} Z={} and {} iteration(s)", operation, directions[0], directions[1], directions[2], iterations));

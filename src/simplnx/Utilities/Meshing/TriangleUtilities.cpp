@@ -1796,7 +1796,7 @@ Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::store_type& t
                                                                 [&] { return MakeErrorResult(-65817, "Error reading the connectivity of triangle 0 before recalculating triangle normals."); });
   }
   std::array<float32, 9> coordinates{};
-  for(unsigned long vertexIndex : face)
+  for(IGeometry::MeshIndexType vertexIndex : face)
   {
     if(vertexIndex >= numVertices)
     {

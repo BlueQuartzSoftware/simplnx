@@ -598,7 +598,7 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection external Median Y target ({} bytes) cannot hold a transpose value and row transfer.", targetBytes));
       }
-      plan.blockRows = std::min({dimY, static_cast<unsigned long>(256), transposeCapacity / 2});
+      plan.blockRows = std::min({dimY, static_cast<usize>(256), transposeCapacity / 2});
       plan.tileColumns = std::min(dimX, transposeCapacity / (plan.blockRows + 1));
       if(plan.tileColumns == 0)
       {
