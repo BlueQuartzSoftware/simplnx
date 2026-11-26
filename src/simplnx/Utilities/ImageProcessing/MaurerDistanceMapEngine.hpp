@@ -615,12 +615,12 @@ void Voronoi1D(nonstd::span<float32> line, nonstd::span<const uint8> inside, usi
 {
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
   // Raw pointers avoid the per-element span contract check in the line kernel.
-  float32* lineData = line.data();
-  const uint8* insideData = inside.data();
+  float32* lineDataPtr = line.data();
+  const uint8* insideDataPtr = inside.data();
   int32 l = -1;
   for(usize i = 0; i < nd; ++i)
   {
-    const float32 di = lineData[i];
+    const float32 di = lineDataPtr[i];
     const float32 iw = useSpacing ? (static_cast<float32>(i) * spacingD) : static_cast<float32>(i);
     const bool isReached = HasEncodedInsideSign ? std::abs(di) != k_Max : di != k_Max;
     if(isReached)
@@ -654,7 +654,7 @@ void Voronoi1D(nonstd::span<float32> line, nonstd::span<const uint8> inside, usi
     bool encodedNegativeSign = false;
     if constexpr(HasEncodedInsideSign)
     {
-      encodedNegativeSign = std::signbit(lineData[i]);
+      encodedNegativeSign = std::signbit(lineDataPtr[i]);
     }
     // ITK's query loop uses float(i*spacing) (double-ish intermediate), unlike the build loop's float(i)*float(spacing).
     const float32 iw = useSpacing ? static_cast<float32>(static_cast<float64>(i) * static_cast<float64>(spacingD)) : static_cast<float32>(i);
@@ -671,12 +671,12 @@ void Voronoi1D(nonstd::span<float32> line, nonstd::span<const uint8> inside, usi
     }
     if constexpr(HasEncodedInsideSign)
     {
-      lineData[i] = encodedNegativeSign ? -d1 : d1;
+      lineDataPtr[i] = encodedNegativeSign ? -d1 : d1;
     }
     else
     {
       // Sign table (itk lines 405-426): inside==insideIsPositive -> +d1, else -d1.
-      lineData[i] = ((insideData[i] != 0) == insideIsPositive) ? d1 : -d1;
+      lineDataPtr[i] = ((insideDataPtr[i] != 0) == insideIsPositive) ? d1 : -d1;
     }
   }
 }
@@ -1024,8 +1024,8 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
 {
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
   // Raw pointers avoid the per-element span contract check during initialization.
-  const T* inputData = input.data();
-  float32* workData = work.data();
+  const T* inputDataPtr = input.data();
+  float32* workDataPtr = work.data();
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 nY = static_cast<int64>(dims[1]);
   const int64 nZ = static_cast<int64>(dims[2]);
@@ -1063,7 +1063,7 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
       bool rowHasBoundary = false;
       auto initializeBoundedVoxel = [&](int64 x) {
         const usize p = flat(x, y, z);
-        const bool obj = inputData[p] != backgroundValue;
+        const bool obj = inputDataPtr[p] != backgroundValue;
         bool boundary = false;
         if(obj)
         {
@@ -1084,7 +1084,7 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
                 {
                   continue; // ITK ignores out-of-bounds neighbors because the image border is not background.
                 }
-                if(inputData[flat(ax, ay, az)] == backgroundValue)
+                if(inputDataPtr[flat(ax, ay, az)] == backgroundValue)
                 {
                   boundary = true;
                 }
@@ -1092,7 +1092,7 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
             }
           }
         }
-        workData[p] = MaurerSignedValue(boundary ? 0.0f : k_Max, obj, insideIsPositive);
+        workDataPtr[p] = MaurerSignedValue(boundary ? 0.0f : k_Max, obj, insideIsPositive);
         if(boundary)
         {
           rowHasBoundary = true;
@@ -1113,20 +1113,20 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
         for(int64 x = 1; x < nX - 1; ++x)
         {
           const usize p = flat(x, y, z);
-          const bool obj = inputData[p] != backgroundValue;
+          const bool obj = inputDataPtr[p] != backgroundValue;
           bool boundary = false;
           if(obj)
           {
             for(const int64 offset : interiorOffsets)
             {
-              if(inputData[static_cast<usize>(static_cast<int64>(p) + offset)] == backgroundValue)
+              if(inputDataPtr[static_cast<usize>(static_cast<int64>(p) + offset)] == backgroundValue)
               {
                 boundary = true;
                 break;
               }
             }
           }
-          workData[p] = MaurerSignedValue(boundary ? 0.0f : k_Max, obj, insideIsPositive);
+          workDataPtr[p] = MaurerSignedValue(boundary ? 0.0f : k_Max, obj, insideIsPositive);
           if(boundary)
           {
             rowHasBoundary = true;
@@ -1204,7 +1204,7 @@ template <class WorkStoreT>
 Result<> GatherMaurer3DZBatch(const WorkStoreT& workStore, nonstd::span<float32> stagingBuffer, const SizeVec3& dims, usize yBegin, usize yCount, const std::atomic_bool& shouldCancel)
 {
   const usize valuesPerPlaneBlock = yCount * dims[0];
-  float32* stagingData = stagingBuffer.data();
+  float32* stagingDataPtr = stagingBuffer.data();
   for(usize z = 0; z < dims[2]; ++z)
   {
     if(shouldCancel)
@@ -1212,7 +1212,7 @@ Result<> GatherMaurer3DZBatch(const WorkStoreT& workStore, nonstd::span<float32>
       return {};
     }
     const usize planeRowOffset = (z * dims[1] + yBegin) * dims[0];
-    Result<> result = RunMaurerIoCallSafely([&]() { return workStore.copyIntoBuffer(planeRowOffset, nonstd::span<float32>(stagingData + z * valuesPerPlaneBlock, valuesPerPlaneBlock)); },
+    Result<> result = RunMaurerIoCallSafely([&]() { return workStore.copyIntoBuffer(planeRowOffset, nonstd::span<float32>(stagingDataPtr + z * valuesPerPlaneBlock, valuesPerPlaneBlock)); },
                                             "3D Z-pass scratch gather");
     if(result.invalid())
     {
@@ -1290,14 +1290,14 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
           return;
         }
         const int64 y = static_cast<int64>(yIndex);
-        const T* prevData = prev.data();
-        const T* curData = cur.data();
-        const T* nextData = next.data();
-        float32* featurePlaneData = featurePlane.data();
+        const T* prevDataPtr = prev.data();
+        const T* curDataPtr = cur.data();
+        const T* nextDataPtr = next.data();
+        float32* featurePlaneDataPtr = featurePlane.data();
         bool rowHasBoundary = false;
         auto initializeBoundedVoxel = [&](int64 x) {
           const usize planeIndex = flat2d(x, y);
-          const bool isObject = curData[planeIndex] != parameters.backgroundValue;
+          const bool isObject = curDataPtr[planeIndex] != parameters.backgroundValue;
           bool isBoundary = false;
           if(isObject)
           {
@@ -1319,7 +1319,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
                   {
                     continue; // ITK ignores out-of-bounds neighbors because the image border is not background.
                   }
-                  const T neighborValue = zOffset == 0 ? curData[flat2d(adjacentX, adjacentY)] : zOffset < 0 ? prevData[flat2d(adjacentX, adjacentY)] : nextData[flat2d(adjacentX, adjacentY)];
+                  const T neighborValue = zOffset == 0 ? curDataPtr[flat2d(adjacentX, adjacentY)] : zOffset < 0 ? prevDataPtr[flat2d(adjacentX, adjacentY)] : nextDataPtr[flat2d(adjacentX, adjacentY)];
                   if(neighborValue == parameters.backgroundValue)
                   {
                     isBoundary = true;
@@ -1328,7 +1328,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
               }
             }
           }
-          featurePlaneData[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.insideIsPositive);
+          featurePlaneDataPtr[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.insideIsPositive);
           if(isBoundary)
           {
             rowHasBoundary = true;
@@ -1349,7 +1349,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
           for(int64 x = 1; x < nX - 1; ++x)
           {
             const usize planeIndex = flat2d(x, y);
-            const bool isObject = curData[planeIndex] != parameters.backgroundValue;
+            const bool isObject = curDataPtr[planeIndex] != parameters.backgroundValue;
             bool isBoundary = false;
             if(isObject)
             {
@@ -1357,7 +1357,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
               for(const int64 offset : adjacentPlaneOffsets)
               {
                 const usize neighborIndex = static_cast<usize>(center + offset);
-                if(prevData[neighborIndex] == parameters.backgroundValue || nextData[neighborIndex] == parameters.backgroundValue)
+                if(prevDataPtr[neighborIndex] == parameters.backgroundValue || nextDataPtr[neighborIndex] == parameters.backgroundValue)
                 {
                   isBoundary = true;
                   break;
@@ -1367,7 +1367,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
               {
                 for(const int64 offset : currentPlaneOffsets)
                 {
-                  if(curData[static_cast<usize>(center + offset)] == parameters.backgroundValue)
+                  if(curDataPtr[static_cast<usize>(center + offset)] == parameters.backgroundValue)
                   {
                     isBoundary = true;
                     break;
@@ -1375,7 +1375,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
                 }
               }
             }
-            featurePlaneData[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.insideIsPositive);
+            featurePlaneDataPtr[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.insideIsPositive);
             if(isBoundary)
             {
               rowHasBoundary = true;
@@ -1409,7 +1409,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
     auto transformXRows = [&](const Range& rowRange) {
       std::vector<float32> localG(parameters.dims[0]);
       std::vector<float32> localH(parameters.dims[0]);
-      float32* featurePlaneData = featurePlane.data();
+      float32* featurePlaneDataPtr = featurePlane.data();
       for(usize y = rowRange.min(); y < rowRange.max(); ++y)
       {
         if(shouldCancel)
@@ -1417,7 +1417,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
           return;
         }
         const usize offset = y * parameters.dims[0];
-        Voronoi1DEncodedSign(nonstd::span<float32>(featurePlaneData + offset, parameters.dims[0]), parameters.dims[0], parameters.useSpacing, parameters.spacing[0], localG, localH);
+        Voronoi1DEncodedSign(nonstd::span<float32>(featurePlaneDataPtr + offset, parameters.dims[0]), parameters.dims[0], parameters.useSpacing, parameters.spacing[0], localG, localH);
       }
     };
     ParallelDataAlgorithm xParallelAlgorithm;
@@ -1428,8 +1428,8 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
       std::vector<float32> localG(parameters.dims[1]);
       std::vector<float32> localH(parameters.dims[1]);
       std::vector<float32> localLine(parameters.dims[1]);
-      float32* featurePlaneData = featurePlane.data();
-      float32* lineData = localLine.data();
+      float32* featurePlaneDataPtr = featurePlane.data();
+      float32* lineDataPtr = localLine.data();
       for(usize x = columnRange.min(); x < columnRange.max(); ++x)
       {
         if(shouldCancel)
@@ -1438,12 +1438,12 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
         }
         for(usize y = 0; y < parameters.dims[1]; ++y)
         {
-          lineData[y] = featurePlaneData[y * parameters.dims[0] + x];
+          lineDataPtr[y] = featurePlaneDataPtr[y * parameters.dims[0] + x];
         }
-        Voronoi1DEncodedSign(nonstd::span<float32>(lineData, parameters.dims[1]), parameters.dims[1], parameters.useSpacing, parameters.spacing[1], localG, localH);
+        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, parameters.dims[1]), parameters.dims[1], parameters.useSpacing, parameters.spacing[1], localG, localH);
         for(usize y = 0; y < parameters.dims[1]; ++y)
         {
-          featurePlaneData[y * parameters.dims[0] + x] = lineData[y];
+          featurePlaneDataPtr[y * parameters.dims[0] + x] = lineDataPtr[y];
         }
       }
     };
@@ -1511,17 +1511,17 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     if(!parameters.squaredDistance || !hasBoundary)
     {
       auto finalizeValues = [&](const Range& valueRange) {
-        float32* planeData = plane.data();
+        float32* planeDataPtr = plane.data();
         for(usize index = valueRange.min(); index < valueRange.max(); ++index)
         {
           if(parameters.squaredDistance)
           {
-            planeData[index] = std::abs(planeData[index]);
+            planeDataPtr[index] = std::abs(planeDataPtr[index]);
           }
           else
           {
-            const float32 magnitude = std::sqrt(std::abs(planeData[index]));
-            planeData[index] = std::signbit(planeData[index]) ? -magnitude : magnitude;
+            const float32 magnitude = std::sqrt(std::abs(planeDataPtr[index]));
+            planeDataPtr[index] = std::signbit(planeDataPtr[index]) ? -magnitude : magnitude;
           }
         }
       };
@@ -1556,11 +1556,11 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
   const usize stagingValues = maxYRows * nX * nZ;
   std::vector<float32> stagingA(stagingValues);
   std::vector<float32> stagingB(stagingValues);
-  std::vector<float32>* current = &stagingA;
-  std::vector<float32>* other = &stagingB;
+  std::vector<float32>* currentPtr = &stagingA;
+  std::vector<float32>* otherPtr = &stagingB;
   const usize batchCount = 1 + (nY - 1) / maxYRows;
   const usize firstYCount = std::min(maxYRows, nY);
-  if(Result<> result = GatherMaurer3DZBatch(workStore, nonstd::span<float32>(current->data(), current->size()), parameters.dims, 0, firstYCount, shouldCancel); result.invalid())
+  if(Result<> result = GatherMaurer3DZBatch(workStore, nonstd::span<float32>(currentPtr->data(), currentPtr->size()), parameters.dims, 0, firstYCount, shouldCancel); result.invalid())
   {
     return result;
   }
@@ -1577,14 +1577,14 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     const usize batchValues = valuesPerPlaneBlock * nZ;
     MaurerIoWorker ioWorker;
     // The I/O thread exclusively owns other until join. Compute workers exclusively own current during this interval.
-    ioWorker.start([&, batchIndex, other]() -> Result<> {
+    ioWorker.start([&, batchIndex, otherPtr]() -> Result<> {
       if(batchIndex > 0)
       {
         const usize previousYBegin = (batchIndex - 1) * maxYRows;
         const usize previousYCount = std::min(maxYRows, nY - previousYBegin);
         const usize previousBatchValues = previousYCount * nX * nZ;
         const Extent previousExtent({0, static_cast<uint64>(previousYBegin), 0}, {static_cast<uint64>(nZ - 1), static_cast<uint64>(previousYBegin + previousYCount - 1), static_cast<uint64>(nX - 1)});
-        if(Result<> result = WriteExtentSafely(outputStore, previousExtent, nonstd::span<const float32>(other->data(), previousBatchValues), shouldCancel, "3D Z-pass output"); result.invalid())
+        if(Result<> result = WriteExtentSafely(outputStore, previousExtent, nonstd::span<const float32>(otherPtr->data(), previousBatchValues), shouldCancel, "3D Z-pass output"); result.invalid())
         {
           return result;
         }
@@ -1593,7 +1593,7 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
       {
         const usize nextYBegin = (batchIndex + 1) * maxYRows;
         const usize nextYCount = std::min(maxYRows, nY - nextYBegin);
-        return GatherMaurer3DZBatch(workStore, nonstd::span<float32>(other->data(), other->size()), parameters.dims, nextYBegin, nextYCount, shouldCancel);
+        return GatherMaurer3DZBatch(workStore, nonstd::span<float32>(otherPtr->data(), otherPtr->size()), parameters.dims, nextYBegin, nextYCount, shouldCancel);
       }
       return {};
     });
@@ -1602,8 +1602,8 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
       std::vector<float32> localG(nZ);
       std::vector<float32> localH(nZ);
       std::vector<float32> localLine(nZ);
-      float32* currentData = current->data();
-      float32* lineData = localLine.data();
+      float32* currentDataPtr = currentPtr->data();
+      float32* lineDataPtr = localLine.data();
       for(usize line = lineRange.min(); line < lineRange.max(); ++line)
       {
         if(shouldCancel)
@@ -1612,12 +1612,12 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
         }
         for(usize z = 0; z < nZ; ++z)
         {
-          lineData[z] = currentData[z * valuesPerPlaneBlock + line];
+          lineDataPtr[z] = currentDataPtr[z * valuesPerPlaneBlock + line];
         }
-        Voronoi1DEncodedSign(nonstd::span<float32>(lineData, nZ), nZ, parameters.useSpacing, parameters.spacing[2], localG, localH);
+        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, nZ), nZ, parameters.useSpacing, parameters.spacing[2], localG, localH);
         for(usize z = 0; z < nZ; ++z)
         {
-          currentData[z * valuesPerPlaneBlock + line] = lineData[z];
+          currentDataPtr[z * valuesPerPlaneBlock + line] = lineDataPtr[z];
         }
       }
     };
@@ -1626,17 +1626,17 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     if(!shouldCancel && (!parameters.squaredDistance || !hasBoundary))
     {
       auto finalizeValues = [&](const Range& valueRange) {
-        float32* currentData = current->data();
+        float32* currentDataPtr = currentPtr->data();
         for(usize index = valueRange.min(); index < valueRange.max(); ++index)
         {
           if(parameters.squaredDistance)
           {
-            currentData[index] = std::abs(currentData[index]);
+            currentDataPtr[index] = std::abs(currentDataPtr[index]);
           }
           else
           {
-            const float32 magnitude = std::sqrt(std::abs(currentData[index]));
-            currentData[index] = std::signbit(currentData[index]) ? -magnitude : magnitude;
+            const float32 magnitude = std::sqrt(std::abs(currentDataPtr[index]));
+            currentDataPtr[index] = std::signbit(currentDataPtr[index]) ? -magnitude : magnitude;
           }
         }
       };
@@ -1659,7 +1659,7 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     if(batchIndex + 1 < batchCount)
     {
       // The swap makes the gathered next batch current and preserves the transformed batch in other for the next write.
-      std::swap(current, other);
+      std::swap(currentPtr, otherPtr);
     }
   }
 
@@ -1667,7 +1667,7 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
   const usize lastYCount = nY - lastYBegin;
   const usize lastBatchValues = lastYCount * nX * nZ;
   const Extent lastExtent({0, static_cast<uint64>(lastYBegin), 0}, {static_cast<uint64>(nZ - 1), static_cast<uint64>(lastYBegin + lastYCount - 1), static_cast<uint64>(nX - 1)});
-  return WriteExtentSafely(outputStore, lastExtent, nonstd::span<const float32>(current->data(), lastBatchValues), shouldCancel, "3D Z-pass output");
+  return WriteExtentSafely(outputStore, lastExtent, nonstd::span<const float32>(currentPtr->data(), lastBatchValues), shouldCancel, "3D Z-pass output");
 }
 } // namespace detail
 
@@ -1776,7 +1776,7 @@ public:
       // Each worker reuses private envelope and line buffers across its assigned lines.
       auto processLines = [&](const Range& lineRange) {
         // The raw pointer avoids the per-element span contract check in the X-axis line kernel.
-        float32* workData = work.data();
+        float32* workDataPtr = work.data();
         std::vector<float32> g(nd);
         std::vector<float32> h(nd);
         std::vector<float32> lineBuf(nd);
@@ -1789,11 +1789,11 @@ public:
           const usize base = (d == 0) ? (k * static_cast<usize>(nX)) : (d == 1) ? ((k / static_cast<usize>(nX)) * slice + (k % static_cast<usize>(nX))) : k;
           if(d == 0)
           {
-            detail::Voronoi1DEncodedSign(nonstd::span<float32>(workData + base, nd), nd, m_UseSpacing, sp[d], g, h);
+            detail::Voronoi1DEncodedSign(nonstd::span<float32>(workDataPtr + base, nd), nd, m_UseSpacing, sp[d], g, h);
           }
           else
           {
-            RunLine(work, base, stride, nd, sp[d], g, h, lineBuf);
+            runLine(work, base, stride, nd, sp[d], g, h, lineBuf);
           }
           if(((k - lineRange.min() + 1) & 31ULL) == 0)
           {
@@ -1817,11 +1817,11 @@ public:
     {
       auto finalizeDistances = [&](const Range& valueRange) {
         // The raw pointer avoids the per-element span contract check during finalization.
-        float32* workData = work.data();
+        float32* workDataPtr = work.data();
         for(usize p = valueRange.min(); p < valueRange.max(); ++p)
         {
-          const float32 mag = std::sqrt(std::abs(workData[p]));
-          workData[p] = std::signbit(workData[p]) ? -mag : mag;
+          const float32 mag = std::sqrt(std::abs(workDataPtr[p]));
+          workDataPtr[p] = std::signbit(workDataPtr[p]) ? -mag : mag;
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
@@ -1842,18 +1842,18 @@ public:
 
 private:
   // The buffer makes a strided line contiguous for the encoded-sign Voronoi pass.
-  void RunLine(nonstd::span<float32> work, usize base, usize stride, usize nd, float32 spacingD, std::vector<float32>& g, std::vector<float32>& h, std::vector<float32>& lineBuf)
+  void runLine(nonstd::span<float32> work, usize base, usize stride, usize nd, float32 spacingD, std::vector<float32>& g, std::vector<float32>& h, std::vector<float32>& lineBuf)
   {
     // The raw pointer avoids the per-element span contract check during gather and scatter.
-    float32* workData = work.data();
+    float32* workDataPtr = work.data();
     for(usize i = 0; i < nd; ++i)
     {
-      lineBuf[i] = workData[base + i * stride];
+      lineBuf[i] = workDataPtr[base + i * stride];
     }
     detail::Voronoi1DEncodedSign(nonstd::span<float32>(lineBuf.data(), nd), nd, m_UseSpacing, spacingD, g, h);
     for(usize i = 0; i < nd; ++i)
     {
-      workData[base + i * stride] = lineBuf[i];
+      workDataPtr[base + i * stride] = lineBuf[i];
     }
   }
 
@@ -1926,7 +1926,7 @@ public:
     const bool hasOutOfCoreEndpoint = m_In.getStoreType() == IDataStore::StoreType::OutOfCore || m_Out.getStoreType() == IDataStore::StoreType::OutOfCore;
     if(nZ == 1 && hasOutOfCoreEndpoint)
     {
-      return RunBounded2D(static_cast<usize>(nX), static_cast<usize>(nY));
+      return runBounded2D(static_cast<usize>(nX), static_cast<usize>(nY));
     }
 
     // A disk-backed endpoint also makes the full-volume work store disk-backed.
@@ -1940,7 +1940,7 @@ public:
         return ConvertResult(std::move(scratchResult));
       }
       std::unique_ptr<detail::SweepTemporaryStore<float32>> workScratch = std::move(scratchResult.value());
-      return Run3D(*workScratch);
+      return run3D(*workScratch);
     }
 
     const std::string workingFormat = detail::SelectDistanceWorkingDataFormat(m_In.getStoreType(), m_In.getDataFormat(), m_Out.getStoreType(), m_Out.getDataFormat());
@@ -1951,7 +1951,7 @@ public:
       workChunkHint = detail::SelectMaurer3DScratchChunkHint(*outputChunkShape, workTupleShape);
     }
     auto workPtr = DataStoreUtilities::CreateDataStoreWithFormat<float32>(workingFormat, workTupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute, workChunkHint);
-    return Run3D(*workPtr);
+    return run3D(*workPtr);
   }
 
 private:
@@ -1960,7 +1960,7 @@ private:
   // transfers, no multi-dimensional extent API -- while the bounded-resident-memory route keeps passing a real
   // AbstractDataStore<float32> (a plain in-core allocation in that case, so an extent API costs nothing there).
   template <class WorkStoreT>
-  Result<> Run3D(WorkStoreT& work)
+  Result<> run3D(WorkStoreT& work)
   {
     const detail::Maurer3DSlabParameters<T> parameters{m_Dims, m_Bg, m_InsidePos, m_Squared, m_UseSpacing, m_Spacing, m_Max3DYRows, m_Max3DWorkers};
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
@@ -1992,7 +1992,7 @@ private:
     return fmt::format("{} (provider code {})", error.message, error.code);
   }
 
-  Result<> WriteTemporaryRecordsSafely(ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, std::string_view context)
+  Result<> writeTemporaryRecordsSafely(ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, std::string_view context)
   {
     if(m_ShouldCancel)
     {
@@ -2012,7 +2012,7 @@ private:
     return {};
   }
 
-  Result<> ReadTemporaryRecordsSafely(const ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<std::byte> records, std::string_view context)
+  Result<> readTemporaryRecordsSafely(const ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<std::byte> records, std::string_view context)
   {
     if(m_ShouldCancel)
     {
@@ -2037,7 +2037,7 @@ private:
     return {};
   }
 
-  Result<> RunBounded2D(usize nx, usize ny)
+  Result<> runBounded2D(usize nx, usize ny)
   {
     const detail::Maurer2DBufferPlan plan = detail::BuildMaurer2DBufferPlan(nx, ny, sizeof(T), m_ResidentLimit2D);
     if(plan.overflow)
@@ -2244,17 +2244,17 @@ private:
             auto packRecords = [&](const Range& range) {
               for(usize localX = range.min(); localX < range.max(); ++localX)
               {
-                std::byte* record = recordBytes.data() + localX * directRecordSize;
+                std::byte* recordPtr = recordBytes.data() + localX * directRecordSize;
                 for(usize localY = 0; localY < rowCount; ++localY)
                 {
                   const float32 value = rowWork[localY * nx + xBegin + localX];
-                  std::memcpy(record + localY * sizeof(float32), &value, sizeof(float32));
-                  record[directRowBatchRows * sizeof(float32) + localY] = static_cast<std::byte>(rowInside[localY * nx + xBegin + localX]);
+                  std::memcpy(recordPtr + localY * sizeof(float32), &value, sizeof(float32));
+                  recordPtr[directRowBatchRows * sizeof(float32) + localY] = static_cast<std::byte>(rowInside[localY * nx + xBegin + localX]);
                 }
               }
             };
             detail::ExecuteMaurer2DParallel(columnCount, packRecords);
-            if(Result<> result = WriteTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<const std::byte>(recordBytes.data(), recordBytes.size()),
+            if(Result<> result = writeTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<const std::byte>(recordBytes.data(), recordBytes.size()),
                                                              "2D direct-transpose write");
                result.invalid())
             {
@@ -2382,7 +2382,7 @@ private:
             const usize batchRecordOffset = (yBegin / directRowBatchRows) * nx;
             std::vector<std::byte> recordBytes(columnCount * directRecordSize);
             if(Result<> result =
-                   ReadTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<std::byte>(recordBytes.data(), recordBytes.size()), "2D direct-transpose read");
+                   readTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<std::byte>(recordBytes.data(), recordBytes.size()), "2D direct-transpose read");
                result.invalid())
             {
               return result;
@@ -2390,11 +2390,11 @@ private:
             auto unpackRecords = [&](const Range& range) {
               for(usize localX = range.min(); localX < range.max(); ++localX)
               {
-                const std::byte* record = recordBytes.data() + localX * directRecordSize;
+                const std::byte* recordPtr = recordBytes.data() + localX * directRecordSize;
                 for(usize localY = 0; localY < rowCount; ++localY)
                 {
-                  std::memcpy(columns.data() + localX * ny + yBegin + localY, record + localY * sizeof(float32), sizeof(float32));
-                  insideValues[localX * ny + yBegin + localY] = static_cast<uint8>(record[directRowBatchRows * sizeof(float32) + localY]);
+                  std::memcpy(columns.data() + localX * ny + yBegin + localY, recordPtr + localY * sizeof(float32), sizeof(float32));
+                  insideValues[localX * ny + yBegin + localY] = static_cast<uint8>(recordPtr[directRowBatchRows * sizeof(float32) + localY]);
                 }
               }
             };
@@ -2402,21 +2402,21 @@ private:
           }
           auto processColumns = [&](const Range& range) {
             // Raw pointers avoid the per-element span contract check during finalization.
-            float32* columnsData = columns.data();
-            const uint8* insideValuesData = insideValues.data();
+            float32* columnsDataPtr = columns.data();
+            const uint8* insideValuesDataPtr = insideValues.data();
             std::vector<float32> g(ny);
             std::vector<float32> h(ny);
             for(usize localX = range.min(); localX < range.max(); ++localX)
             {
-              float32* lineData = columnsData + localX * ny;
-              const uint8* lineInsideData = insideValuesData + localX * ny;
-              detail::Voronoi1D(nonstd::span<float32>(lineData, ny), nonstd::span<const uint8>(lineInsideData, ny), ny, m_InsidePos, m_UseSpacing, m_Spacing[1], g, h);
+              float32* lineDataPtr = columnsDataPtr + localX * ny;
+              const uint8* lineInsideDataPtr = insideValuesDataPtr + localX * ny;
+              detail::Voronoi1D(nonstd::span<float32>(lineDataPtr, ny), nonstd::span<const uint8>(lineInsideDataPtr, ny), ny, m_InsidePos, m_UseSpacing, m_Spacing[1], g, h);
               if(!m_Squared)
               {
                 for(usize y = 0; y < ny; ++y)
                 {
-                  const float32 magnitude = std::sqrt(std::abs(lineData[y]));
-                  lineData[y] = ((lineInsideData[y] != 0) == m_InsidePos) ? magnitude : -magnitude;
+                  const float32 magnitude = std::sqrt(std::abs(lineDataPtr[y]));
+                  lineDataPtr[y] = ((lineInsideDataPtr[y] != 0) == m_InsidePos) ? magnitude : -magnitude;
                 }
               }
             }
@@ -2430,17 +2430,17 @@ private:
             auto packRecords = [&](const Range& range) {
               for(usize localX = range.min(); localX < range.max(); ++localX)
               {
-                std::byte* record = recordBytes.data() + localX * directRecordSize;
+                std::byte* recordPtr = recordBytes.data() + localX * directRecordSize;
                 for(usize localY = 0; localY < rowCount; ++localY)
                 {
                   const float32 value = columns[localX * ny + yBegin + localY];
-                  std::memcpy(record + localY * sizeof(float32), &value, sizeof(float32));
-                  record[directRowBatchRows * sizeof(float32) + localY] = static_cast<std::byte>(insideValues[localX * ny + yBegin + localY]);
+                  std::memcpy(recordPtr + localY * sizeof(float32), &value, sizeof(float32));
+                  recordPtr[directRowBatchRows * sizeof(float32) + localY] = static_cast<std::byte>(insideValues[localX * ny + yBegin + localY]);
                 }
               }
             };
             detail::ExecuteMaurer2DParallel(columnCount, packRecords);
-            if(Result<> result = WriteTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<const std::byte>(recordBytes.data(), recordBytes.size()),
+            if(Result<> result = writeTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<const std::byte>(recordBytes.data(), recordBytes.size()),
                                                              "2D transformed-record write");
                result.invalid())
             {
@@ -2467,7 +2467,7 @@ private:
           const usize columnCount = std::min(plan.columnBatchCols, nx - xBegin);
           std::vector<std::byte> recordBytes(columnCount * directRecordSize);
           if(Result<> result =
-                 ReadTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<std::byte>(recordBytes.data(), recordBytes.size()), "2D final-output record read");
+                 readTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<std::byte>(recordBytes.data(), recordBytes.size()), "2D final-output record read");
              result.invalid())
           {
             return result;
@@ -2475,10 +2475,10 @@ private:
           auto unpackOutput = [&](const Range& range) {
             for(usize localX = range.min(); localX < range.max(); ++localX)
             {
-              const std::byte* record = recordBytes.data() + localX * directRecordSize;
+              const std::byte* recordPtr = recordBytes.data() + localX * directRecordSize;
               for(usize localY = 0; localY < rowCount; ++localY)
               {
-                std::memcpy(output.data() + localY * nx + xBegin + localX, record + localY * sizeof(float32), sizeof(float32));
+                std::memcpy(output.data() + localY * nx + xBegin + localX, recordPtr + localY * sizeof(float32), sizeof(float32));
               }
             }
           };
@@ -2499,14 +2499,14 @@ private:
         const usize offset = x * ny;
         auto writeOutputY = [&](usize blockBegin, nonstd::span<float32> values, nonstd::span<const uint8> insideValues) {
           // Raw pointers avoid the per-element span contract check during finalization.
-          float32* valuesData = values.data();
-          const uint8* insideValuesData = insideValues.data();
+          float32* valuesDataPtr = values.data();
+          const uint8* insideValuesDataPtr = insideValues.data();
           if(!m_Squared)
           {
             for(usize index = 0; index < values.size(); ++index)
             {
-              const float32 magnitude = std::sqrt(std::abs(valuesData[index]));
-              valuesData[index] = ((insideValuesData[index] != 0) == m_InsidePos) ? magnitude : -magnitude;
+              const float32 magnitude = std::sqrt(std::abs(valuesDataPtr[index]));
+              valuesDataPtr[index] = ((insideValuesDataPtr[index] != 0) == m_InsidePos) ? magnitude : -magnitude;
             }
           }
           const Extent outputExtent({0, static_cast<uint64>(blockBegin), static_cast<uint64>(x)}, {0, static_cast<uint64>(blockBegin + values.size() - 1), static_cast<uint64>(x)});

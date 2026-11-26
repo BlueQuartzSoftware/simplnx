@@ -28,9 +28,9 @@ Result<> QuickSurfaceMesh::operator()()
 {
   std::vector<const IArray*> targets;
   const auto append = [this, &targets](const DataPath& path) {
-    if(const auto* array = m_DataStructure.getDataAs<IDataArray>(path); array != nullptr)
+    if(const auto* arrayPtr = m_DataStructure.getDataAs<IDataArray>(path); arrayPtr != nullptr)
     {
-      targets.push_back(array);
+      targets.push_back(arrayPtr);
     }
   };
 

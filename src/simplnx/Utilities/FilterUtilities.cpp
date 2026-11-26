@@ -36,9 +36,9 @@ void CollectAttributeMatrixPaths(const DataObject& object, const DataPath& path,
     paths.push_back(path.toString());
     return;
   }
-  if(const auto* group = dynamic_cast<const BaseGroup*>(&object); group != nullptr)
+  if(const auto* groupPtr = dynamic_cast<const BaseGroup*>(&object); groupPtr != nullptr)
   {
-    for(const auto& [id, child] : *group)
+    for(const auto& [id, child] : *groupPtr)
     {
       if(dynamic_cast<const BaseGroup*>(child.get()) != nullptr)
       {
@@ -52,13 +52,13 @@ void CollectAttributeMatrixPaths(const DataObject& object, const DataPath& path,
 // -----------------------------------------------------------------------------
 Result<> CreateOutputDirectories(const fs::path& outputPath)
 {
-  constexpr int32 pathStatusError = -4090;
-  constexpr int32 createDirectoryError = -4010;
+  constexpr int32 k_PathStatusError = -4090;
+  constexpr int32 k_CreateDirectoryError = -4010;
   std::error_code statusError;
   const bool outputExists = fs::exists(outputPath, statusError);
   if(statusError)
   {
-    return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect output path '{}'. Check directory access. Operating system error {}: {}",
+    return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect output path '{}'. Check directory access. Operating system error {}: {}",
                                                         FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
   }
   if(outputExists)
@@ -79,15 +79,15 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   }
   if(creationError)
   {
-    return MakeErrorResult(createDirectoryError, fmt::format("Unable to create output directory '{}'. Check the path and write permissions. Operating system error {}: {}",
+    return MakeErrorResult(k_CreateDirectoryError, fmt::format("Unable to create output directory '{}'. Check the path and write permissions. Operating system error {}: {}",
                                                              FileUtilities::detail::PathForDiagnostic(outputPath), creationError.value(), creationError.message()));
   }
   if(statusError)
   {
-    return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect output path '{}' after the directory creation attempt. Check directory access. Operating system error {}: {}",
+    return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect output path '{}' after the directory creation attempt. Check directory access. Operating system error {}: {}",
                                                         FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
   }
-  return MakeErrorResult(createDirectoryError,
+  return MakeErrorResult(k_CreateDirectoryError,
                          fmt::format("Output directory '{}' no longer exists after the creation attempt. Check the path and try again.", FileUtilities::detail::PathForDiagnostic(outputPath)));
 }
 
@@ -157,14 +157,14 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
 void AppendStaleFeatureArraysPreflightValue(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath, const DataPath& featureIdsPath,
                                             std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
-  const auto* featureAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
-  if(featureAttributeMatrix == nullptr)
+  const auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  if(featureAttributeMatrixPtr == nullptr)
   {
     return;
   }
 
   std::string list;
-  for(const auto& [identifier, object] : *featureAttributeMatrix)
+  for(const auto& [identifier, object] : *featureAttributeMatrixPtr)
   {
     if(dynamic_cast<const IDataArray*>(object.get()) != nullptr)
     {
@@ -187,18 +187,18 @@ void AppendUnchangedAttributeMatricesWarning(const DataStructure& dataStructure,
   std::vector<DataObject::IdType> excludedIds;
   for(const auto& path : excludedPaths)
   {
-    if(const auto* object = dataStructure.getData(path); object != nullptr)
+    if(const auto* objectPtr = dataStructure.getData(path); objectPtr != nullptr)
     {
-      excludedIds.push_back(object->getId());
+      excludedIds.push_back(objectPtr->getId());
     }
   }
 
   std::vector<std::string> paths;
   for(const auto& path : childPaths)
   {
-    if(const auto* object = dataStructure.getData(path); object != nullptr)
+    if(const auto* objectPtr = dataStructure.getData(path); objectPtr != nullptr)
     {
-      CollectAttributeMatrixPaths(*object, path, excludedIds, paths);
+      CollectAttributeMatrixPaths(*objectPtr, path, excludedIds, paths);
     }
   }
   if(!paths.empty())

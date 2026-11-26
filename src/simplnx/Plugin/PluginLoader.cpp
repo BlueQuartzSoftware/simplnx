@@ -78,12 +78,12 @@ auto GetErrorMessage()
   std::wstring message = fmt::format(L"Error code {}: {}", error, messageBuffer);
   return message;
 #elif defined(__linux__) || defined(__APPLE__)
-  const char* error = dlerror();
-  if(error == nullptr)
+  const char* errorPtr = dlerror();
+  if(errorPtr == nullptr)
   {
     return std::string("Unable to retrieve error message");
   }
-  std::string message(error);
+  std::string message(errorPtr);
   return message;
 #endif
 }
@@ -108,8 +108,8 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  CreatePluginFunc createPluginFunc = ImportFunction<CreatePluginFunc>(m_Handle, SIMPLNX_CREATE_PLUGIN_FUNC_NAME);
-  if(createPluginFunc == nullptr)
+  CreatePluginFunc createPluginFuncPtr = ImportFunction<CreatePluginFunc>(m_Handle, SIMPLNX_CREATE_PLUGIN_FUNC_NAME);
+  if(createPluginFuncPtr == nullptr)
   {
     unloadPlugin();
     fmt::print(SIMPLNX_TEXT("Could not retrieve function \"" SIMPLNX_CREATE_PLUGIN_FUNC_NAME "\" from library '{}' with the following error:\n"), m_Path.c_str());
@@ -117,8 +117,8 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  DestroyPluginFunc destroyPluginFunc = ImportFunction<DestroyPluginFunc>(m_Handle, SIMPLNX_DESTROY_PLUGIN_FUNC_NAME);
-  if(destroyPluginFunc == nullptr)
+  DestroyPluginFunc destroyPluginFuncPtr = ImportFunction<DestroyPluginFunc>(m_Handle, SIMPLNX_DESTROY_PLUGIN_FUNC_NAME);
+  if(destroyPluginFuncPtr == nullptr)
   {
     unloadPlugin();
     fmt::print(SIMPLNX_TEXT("Could not retrieve function \"" SIMPLNX_DESTROY_PLUGIN_FUNC_NAME "\" from library '{}' with following error:\n"), m_Path.c_str());
@@ -126,7 +126,7 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  m_Plugin = std::shared_ptr<AbstractPlugin>(createPluginFunc(), destroyPluginFunc);
+  m_Plugin = std::shared_ptr<AbstractPlugin>(createPluginFuncPtr(), destroyPluginFuncPtr);
 }
 
 void PluginLoader::unloadPlugin()

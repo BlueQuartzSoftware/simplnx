@@ -39,7 +39,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Relative Shifts execution", "[S
   UnitTest::AlgorithmTestScope scope(scenario);
 
   auto app = Application::GetOrCreateInstance();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
 
@@ -66,7 +66,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Relative Shifts execution", "[S
   SIMPLNX_RESULT_REQUIRE_VALID(newShiftsCopyResult);
 
   // Apply the mask filter before alignment.
-  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
+  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
 
   // Execute the alignment filter.
   {
@@ -116,7 +116,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  auto* filterList = Application::GetOrCreateInstance()->getFilterList();
+  auto* filterListPtr = Application::GetOrCreateInstance()->getFilterList();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
 
@@ -143,7 +143,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
   SIMPLNX_RESULT_REQUIRE_VALID(newShiftsCopyResult);
 
   // Apply the mask filter before alignment.
-  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
+  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
 
   // Execute the alignment filter.
   {

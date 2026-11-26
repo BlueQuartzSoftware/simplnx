@@ -86,43 +86,43 @@ nlohmann::json OEMEbsdScanSelectionParameter::toJsonImpl(const std::any& value) 
 //-----------------------------------------------------------------------------
 Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'OEMEbsdScanSelectionParameter' Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'OEMEbsdScanSelectionParameter' Error: ";
 
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", k_Prefix.view(), name()));
   }
   // Validate numeric json entries
   std::vector<const char*> keys = {k_StackingOrder.c_str()};
-  for(const char* key : keys)
+  for(const char* keyPtr : keys)
   {
-    if(!json.contains(key))
+    if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
-    if(!json[key].is_number_integer())
+    if(!json[keyPtr].is_number_integer())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", k_Prefix.view(), keyPtr));
     }
   }
 
   keys = {k_InputFilePath.c_str()};
-  for(const char* key : keys)
+  for(const char* keyPtr : keys)
   {
-    if(!json.contains(key))
+    if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
-    if(!json[key].is_string())
+    if(!json[keyPtr].is_string())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), keyPtr));
     }
   }
 
   const auto orderCheck = json[k_StackingOrder].get<int32>();
   if(orderCheck != RefFrameZDir::k_LowtoHigh && orderCheck != RefFrameZDir::k_HightoLow)
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(),
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(),
                                                                                                            k_StackingOrder.view(), RefFrameZDir::k_LowtoHigh, RefFrameZDir::k_HightoLow));
   }
 
@@ -140,7 +140,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::jso
   {
     if(!jsonScanNames.is_array())
     {
-      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_ScanNames));
+      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", k_Prefix, name(), k_ScanNames));
     }
     const auto scanNameStrings = jsonScanNames.get<std::vector<std::string>>();
     std::list<std::string> scanNames;
@@ -149,7 +149,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::jso
     {
       if(name.empty())
       {
-        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name)});
+        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name)});
         continue;
       }
       scanNames.push_back(name);

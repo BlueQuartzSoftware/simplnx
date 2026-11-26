@@ -28,9 +28,9 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
   const bool performInPlace = GENERATE(false, true);
   CAPTURE(projDim, performInPlace);
 
-  constexpr usize D = 32;
+  constexpr usize k_D = 32;
   DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0);
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0);
 
   MeanProjectionImageFilter filter;
   Arguments args;
@@ -49,29 +49,29 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
   const DataPath outputArrayPath = performInPlace ? DataPath({"Image Geometry", "CellData", "Output"}) : DataPath({"Projected Image", "CellData", "Output"});
   auto& outArray = ds.getDataRefAs<DataArray<float64>>(outputArrayPath);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D;
+  const usize numSlots = k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   // Mean of the arithmetic-sequence column, decomposed by the collapsed-slot -> (non-projected coords) map.
-  constexpr float64 Dd = static_cast<float64>(D);
-  const float64 midOffset = (Dd - 1.0) / 2.0; // mean of {0,1,...,D-1}
+  constexpr float64 k_Dd = static_cast<float64>(k_D);
+  const float64 midOffset = (k_Dd - 1.0) / 2.0; // mean of {0,1,...,D-1}
   auto expectedForSlot = [&](usize s) -> float64 {
     switch(projDim)
     {
     case 0: { // collapse X: slot = z*D + y ; mean over x of (z*D^2 + y*D + x)
-      const auto z = static_cast<float64>(s / D);
-      const auto y = static_cast<float64>(s % D);
-      return z * Dd * Dd + y * Dd + midOffset;
+      const auto z = static_cast<float64>(s / k_D);
+      const auto y = static_cast<float64>(s % k_D);
+      return z * k_Dd * k_Dd + y * k_Dd + midOffset;
     }
     case 1: { // collapse Y: slot = z*D + x ; mean over y of (z*D^2 + y*D + x)
-      const auto z = static_cast<float64>(s / D);
-      const auto x = static_cast<float64>(s % D);
-      return z * Dd * Dd + x + Dd * midOffset;
+      const auto z = static_cast<float64>(s / k_D);
+      const auto x = static_cast<float64>(s % k_D);
+      return z * k_Dd * k_Dd + x + k_Dd * midOffset;
     }
     default: { // collapse Z: slot = y*D + x ; mean over z of (z*D^2 + y*D + x)
-      const auto y = static_cast<float64>(s / D);
-      const auto x = static_cast<float64>(s % D);
-      return y * Dd + x + Dd * Dd * midOffset;
+      const auto y = static_cast<float64>(s / k_D);
+      const auto x = static_cast<float64>(s % k_D);
+      return y * k_Dd + x + k_Dd * k_Dd * midOffset;
     }
     }
   };

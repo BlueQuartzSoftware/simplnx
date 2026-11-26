@@ -117,15 +117,15 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
 
   if(pUseFileValue == 0u)
   {
-    const auto* shiftsArray = dataStructure.getDataAs<IDataArray>(pShiftsArrayPathValue);
-    if(shiftsArray == nullptr)
+    const auto* shiftsArrayPtr = dataStructure.getDataAs<IDataArray>(pShiftsArrayPathValue);
+    if(shiftsArrayPtr == nullptr)
     {
       return MakePreflightErrorResult(-8942, "Shifts array is not valid.");
     }
 
-    if(shiftsArray->getNumberOfTuples() != imageGeom.getNumZCells())
+    if(shiftsArrayPtr->getNumberOfTuples() != imageGeom.getNumZCells())
     {
-      return MakePreflightErrorResult(-8943, fmt::format("The size of shifts array ({}) does not align with Z Dimension of geometry ({})", shiftsArray->getNumberOfTuples(), imageGeom.getNumZCells()));
+      return MakePreflightErrorResult(-8943, fmt::format("The size of shifts array ({}) does not align with Z Dimension of geometry ({})", shiftsArrayPtr->getNumberOfTuples(), imageGeom.getNumZCells()));
     }
   }
 

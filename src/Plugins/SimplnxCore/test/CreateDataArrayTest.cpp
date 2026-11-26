@@ -24,9 +24,9 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Instantiate)", "[SimplnxCore][Crea
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
+  const static DynamicTableInfo::TableDataType kTupleDims = {{static_cast<double>(k_NumTuples)}};
 
-  static const DataPath k_DataPath({"foo"});
+  static const DataPath kDataPath({"foo"});
 
   CreateDataArrayFilter filter;
   DataStructure dataStructure;
@@ -34,8 +34,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Instantiate)", "[SimplnxCore][Crea
 
   args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
   args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
-  args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-  args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+  args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -49,8 +49,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
-  static const DataPath k_DataPath({"foo"});
+  const static DynamicTableInfo::TableDataType kTupleDims = {{static_cast<double>(k_NumTuples)}};
+  static const DataPath kDataPath({"foo"});
 
   CreateDataArrayFilter filter;
   DataStructure dataStructure;
@@ -60,8 +60,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint16));
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
-    args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("-1"));
 
     auto result = filter.execute(dataStructure, args);
@@ -71,8 +71,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
-    args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1024"));
 
     auto result = filter.execute(dataStructure, args);
@@ -82,8 +82,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(0));
-    args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1"));
 
     auto result = filter.execute(dataStructure, args);
@@ -96,7 +96,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
 
     DynamicTableInfo::TableDataType tupleDims = {{0.0}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
-    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1"));
 
     auto result = filter.execute(dataStructure, args);
@@ -108,7 +108,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
     DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
-    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>(""));
 
     auto result = filter.execute(dataStructure, args);
@@ -120,7 +120,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
     DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
-    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1000"));
 
     auto result = filter.execute(dataStructure, args);
@@ -159,7 +159,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -172,22 +172,22 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter: SIMPL Backwards Compatibility", "
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateDataArrayFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CreateDataArrayFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Complex type (ScalarTypeParameterToNumericTypeConverter) - verified by successful pipeline loading
       CHECK(args.value<uint64>(CreateDataArrayFilter::k_NumComps_Key) == 5);
       CHECK(args.value<std::string>(CreateDataArrayFilter::k_InitializationValue_Key) == "TestName");

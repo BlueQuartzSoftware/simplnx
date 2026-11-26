@@ -124,14 +124,14 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   std::vector<DataPath> dataArrayPaths;
 
   // Validate the Quats is a 4 component array
-  const auto* avgQuats = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
-  if(avgQuats->getNumberOfComponents() != 4)
+  const auto* avgQuatsPtr = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
+  if(avgQuatsPtr->getNumberOfComponents() != 4)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(
-                -34500, fmt::format("Input Average Quaternions array at path '{}' has {} components but 4 are required.", pAvgQuatsArrayPathValue.toString(), avgQuats->getNumberOfComponents()))};
+                -34500, fmt::format("Input Average Quaternions array at path '{}' has {} components but 4 are required.", pAvgQuatsArrayPathValue.toString(), avgQuatsPtr->getNumberOfComponents()))};
   }
 
-  const auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  const auto* featurePhasesPtr = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
 
   dataArrayPaths.push_back(pAvgQuatsArrayPathValue);
   dataArrayPaths.push_back(pFeaturePhasesArrayPathValue);
@@ -148,12 +148,12 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
 
   if(pComputeAvgMisorsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, avgQuats->getIDataStore()->getTupleShape(), std::vector<usize>{1}, pAvgMisorientationsArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, avgQuatsPtr->getIDataStore()->getTupleShape(), std::vector<usize>{1}, pAvgMisorientationsArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create the NeighborList array
-  auto createArrayAction = std::make_unique<CreateNeighborListAction>(nx::core::DataType::float32, avgQuats->getTupleShape(), pMisorientationListArrayPath);
+  auto createArrayAction = std::make_unique<CreateNeighborListAction>(nx::core::DataType::float32, avgQuatsPtr->getTupleShape(), pMisorientationListArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   std::vector<PreflightValue> preflightUpdatedValues;

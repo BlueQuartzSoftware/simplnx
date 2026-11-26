@@ -239,33 +239,33 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
   struct ConversionCase
   {
     std::string name;
-    bool degreesToRadians;
-    bool edaxHexagonalAlignment;
-    std::vector<float32> expectedEulerAngles;
+    bool degrees_to_radians;
+    bool edax_hexagonal_alignment;
+    std::vector<float32> expected_euler_angles;
   };
 
   const std::vector<ConversionCase> cases = {
       {.name = "Degrees, No Hex Alignment",
-       .degreesToRadians = false,
-       .edaxHexagonalAlignment = false,
-       .expectedEulerAngles = {0.125F, 0.25F, 0.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 7.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
+       .degrees_to_radians = false,
+       .edax_hexagonal_alignment = false,
+       .expected_euler_angles = {0.125F, 0.25F, 0.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 7.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
       // 0.375 + 30 = 30.375 and 7.125 + 30 = 37.125 are exact in float32.
       {.name = "Degrees, Hex Alignment",
-       .degreesToRadians = false,
-       .edaxHexagonalAlignment = true,
-       .expectedEulerAngles = {0.125F, 0.25F, 30.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 37.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
+       .degrees_to_radians = false,
+       .edax_hexagonal_alignment = true,
+       .expected_euler_angles = {0.125F, 0.25F, 30.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 37.125F, 3.375F, 6.75F, 1.875F, 2.0F, 2.125F, 2.25F}},
       // These values distinguish double-intermediate conversion from direct float32 arithmetic.
       {.name = "Radians, No Hex Alignment",
-       .degreesToRadians = true,
-       .edaxHexagonalAlignment = false,
-       .expectedEulerAngles = {0.0021816615F, 0.004363323F, 0.006544985F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.12435471F,
+       .degrees_to_radians = true,
+       .edax_hexagonal_alignment = false,
+       .expected_euler_angles = {0.0021816615F, 0.004363323F, 0.006544985F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.12435471F,
                                0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
       // Points 0/3 (hex): float32(float64(30.375) * pi/180) = 0.53014374,
       //                   float32(float64(37.125) * pi/180) = 0.6479535 (float32 arithmetic: 0.64795345).
       {.name = "Radians, Hex Alignment",
-       .degreesToRadians = true,
-       .edaxHexagonalAlignment = true,
-       .expectedEulerAngles = {0.0021816615F, 0.004363323F, 0.53014374F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.6479535F,
+       .degrees_to_radians = true,
+       .edax_hexagonal_alignment = true,
+       .expected_euler_angles = {0.0021816615F, 0.004363323F, 0.53014374F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.6479535F,
                                0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
   };
 
@@ -275,7 +275,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
     {
       ReadCtfDataFilter filter;
       DataStructure dataStructure;
-      Arguments args = MakeDefaultArgs(inputCtfFile, conversionCase.degreesToRadians, conversionCase.edaxHexagonalAlignment);
+      Arguments args = MakeDefaultArgs(inputCtfFile, conversionCase.degrees_to_radians, conversionCase.edax_hexagonal_alignment);
 
       auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -284,7 +284,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
       const DataPath cellAMPath = k_DataContainerPath.createChildPath(k_CellData);
-      CompareArrayValues<float32>(dataStructure, cellAMPath.createChildPath("EulerAngles"), conversionCase.expectedEulerAngles);
+      CompareArrayValues<float32>(dataStructure, cellAMPath.createChildPath("EulerAngles"), conversionCase.expected_euler_angles);
       CompareArrayValues<uint32>(
           dataStructure, k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix).createChildPath("CrystalStructures"),
           {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Cubic_High, ebsdlib::CrystalStructure::Hexagonal_Low});
@@ -317,20 +317,20 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: 3D Multi-Slice CTF", "[Orient
   struct SliceCase
   {
     std::string name;
-    std::string extraHeaderLines;
-    float32 expectedZSpacing;
+    std::string extra_header_lines;
+    float32 expected_z_spacing;
   };
   const std::vector<SliceCase> cases = {
-      {.name = "ZStep 0.75", .extraHeaderLines = "ZCells\t2\nZStep\t0.75\n", .expectedZSpacing = 0.75F},
+      {.name = "ZStep 0.75", .extra_header_lines = "ZCells\t2\nZStep\t0.75\n", .expected_z_spacing = 0.75F},
       // A ZCells key without a usable ZStep (0) falls back to a slice thickness of 1.
-      {.name = "ZStep absent", .extraHeaderLines = "ZCells\t2\n", .expectedZSpacing = 1.0F},
+      {.name = "ZStep absent", .extra_header_lines = "ZCells\t2\n", .expected_z_spacing = 1.0F},
   };
 
   for(const SliceCase& sliceCase : cases)
   {
     DYNAMIC_SECTION(sliceCase.name)
     {
-      const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_3d.ctf", MakeToyCtf(sliceCase.extraHeaderLines, cubicPhaseBlock, k_ColumnHeader, dataBlock3D, 2, 2));
+      const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_3d.ctf", MakeToyCtf(sliceCase.extra_header_lines, cubicPhaseBlock, k_ColumnHeader, dataBlock3D, 2, 2));
 
       ReadCtfDataFilter filter;
       DataStructure dataStructure;
@@ -345,7 +345,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: 3D Multi-Slice CTF", "[Orient
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath));
       const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath);
       REQUIRE(imageGeom.getDimensions() == SizeVec3(2, 2, 2));
-      REQUIRE(imageGeom.getSpacing() == FloatVec3(0.25F, 0.5F, sliceCase.expectedZSpacing));
+      REQUIRE(imageGeom.getSpacing() == FloatVec3(0.25F, 0.5F, sliceCase.expected_z_spacing));
 
       const DataPath cellAMPath = k_DataContainerPath.createChildPath(k_CellData);
       CompareArrayValues<int32>(dataStructure, cellAMPath.createChildPath("Phases"), {1, 1, 0, 1, 1, 0, 1, 1});
@@ -633,7 +633,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: SIMPL Backwards Compatibility
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -646,22 +646,22 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadCtfDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadCtfDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(ReadCtfDataFilter::k_InputFile_Key) == fs::path("/some/test/path/data.ctf"));
       CHECK(args.value<bool>(ReadCtfDataFilter::k_DegreesToRadians_Key) == true);
       CHECK(args.value<bool>(ReadCtfDataFilter::k_EdaxHexagonalAlignment_Key) == false);

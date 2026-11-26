@@ -29,9 +29,9 @@ namespace
  */
 bool IsMagicsFile(const std::string& stlHeaderStr)
 {
-  static const std::string k_ColorHeader("COLOR=");
-  static const std::string k_MaterialHeader("MATERIAL=");
-  return stlHeaderStr.find(k_ColorHeader) != std::string::npos && stlHeaderStr.find(k_MaterialHeader) != std::string::npos;
+  static const std::string kColorHeader("COLOR=");
+  static const std::string kMaterialHeader("MATERIAL=");
+  return stlHeaderStr.find(kColorHeader) != std::string::npos && stlHeaderStr.find(kMaterialHeader) != std::string::npos;
 }
 
 /**
@@ -49,8 +49,8 @@ bool IsVxElementsFile(const std::string& stlHeaderStr)
 StlConstants::StlFileType StlUtilities::DetermineStlFileType(const fs::path& path)
 {
   // Open File
-  FILE* f = std::fopen(path.string().c_str(), "rb");
-  if(nullptr == f)
+  FILE* fPtr = std::fopen(path.string().c_str(), "rb");
+  if(nullptr == fPtr)
   {
     return StlConstants::StlFileType::FileOpenError;
   }
@@ -58,13 +58,13 @@ StlConstants::StlFileType StlUtilities::DetermineStlFileType(const fs::path& pat
   // Read the first 256 bytes of data, that should be enough but I'm sure someone will write
   // an ASCII STL File that contains a really long name which messes this up.
   std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
-  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, f) != StlConstants::k_STL_HEADER_LENGTH)
+  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, fPtr) != StlConstants::k_STL_HEADER_LENGTH)
   {
-    std::ignore = std::fclose(f);
+    std::ignore = std::fclose(fPtr);
     return StlConstants::StlFileType::HeaderParseError;
   }
   // close the file
-  std::ignore = std::fclose(f);
+  std::ignore = std::fclose(fPtr);
 
   size_t solidPos = header.find("solid", 0);
   // The word 'solid' was not found ANYWHERE in the first 80 bytes.
@@ -89,8 +89,8 @@ StlConstants::StlFileType StlUtilities::DetermineStlFileType(const fs::path& pat
 int32_t StlUtilities::NumFacesFromHeader(const fs::path& path)
 {
   // Open File
-  FILE* f = std::fopen(path.string().c_str(), "rb");
-  if(nullptr == f)
+  FILE* fPtr = std::fopen(path.string().c_str(), "rb");
+  if(nullptr == fPtr)
   {
     return StlConstants::k_ErrorOpeningFile;
   }
@@ -98,21 +98,21 @@ int32_t StlUtilities::NumFacesFromHeader(const fs::path& path)
   // Read the first 256 bytes of data, that should be enough but I'm sure someone will write
   // an ASCII STL File that contains a really long name which messes this up.
   std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
-  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, f) != StlConstants::k_STL_HEADER_LENGTH)
+  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, fPtr) != StlConstants::k_STL_HEADER_LENGTH)
   {
-    std::ignore = std::fclose(f);
+    std::ignore = std::fclose(fPtr);
     return StlConstants::k_StlHeaderParseError;
   }
 
   int32_t triCount = 0;
   // Read the number of triangles in the file.
-  if(std::fread(&triCount, sizeof(int32_t), 1, f) != 1)
+  if(std::fread(&triCount, sizeof(int32_t), 1, fPtr) != 1)
   {
-    std::ignore = std::fclose(f);
+    std::ignore = std::fclose(fPtr);
     return StlConstants::k_StlHeaderParseError;
   }
 
-  std::ignore = std::fclose(f);
+  std::ignore = std::fclose(fPtr);
   return triCount;
 }
 
@@ -130,18 +130,18 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
   }
 
   // Open File
-  FILE* f = std::fopen(path.string().c_str(), "rb");
-  if(nullptr == f)
+  FILE* fPtr = std::fopen(path.string().c_str(), "rb");
+  if(nullptr == fPtr)
   {
     stlFileCheck.error = StlConstants::k_ErrorOpeningFile;
     stlFileCheck.errorMessage = fmt::format("Error opening STL file '{}'", path.string());
     return stlFileCheck;
   }
-  StlFileSentinel fileSentinel(f); // Ensures the file is closed on every return path below
+  StlFileSentinel fileSentinel(fPtr); // Ensures the file is closed on every return path below
 
   // Read the 80 byte header.
   std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
-  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, f) != StlConstants::k_STL_HEADER_LENGTH)
+  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, fPtr) != StlConstants::k_STL_HEADER_LENGTH)
   {
     stlFileCheck.error = StlConstants::k_StlHeaderParseError;
     stlFileCheck.errorMessage = fmt::format("Error reading the {} byte header from STL file '{}'. The file is only {} bytes long.", StlConstants::k_STL_HEADER_LENGTH, path.string(), fileSize);
@@ -150,7 +150,7 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
 
   int32_t triCount = 0;
   // Read the number of triangles in the file.
-  if(std::fread(&triCount, sizeof(int32_t), 1, f) != 1)
+  if(std::fread(&triCount, sizeof(int32_t), 1, fPtr) != 1)
   {
     stlFileCheck.error = StlConstants::k_TriangleCountParseError;
     stlFileCheck.errorMessage = fmt::format("Error reading the triangle count from STL file '{}'. The file is only {} bytes long.", path.string(), fileSize);

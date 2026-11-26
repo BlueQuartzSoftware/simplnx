@@ -22,7 +22,7 @@ using namespace nx::core;
 
 namespace
 {
-namespace VerificationConstants
+namespace verification_constants
 {
 const std::string k_ImageName = "Image Geometry";
 const DataPath k_ImagePath = DataPath({k_ImageName});
@@ -41,12 +41,12 @@ const std::string k_CStuctsName = "Crystal Structures";
 const DataPath k_CStuctsArrayPath = k_CellEnsembleDataPath.createChildPath(k_CStuctsName);
 } // namespace VerificationConstants
 
-namespace ClassFourInvariants
+namespace class_four_invariants
 {
 // Capture the mask before invariant checks.
 std::vector<uint8> CaptureMask(const DataStructure& dataStructure)
 {
-  const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(VerificationConstants::k_MaskArrayPath);
+  const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(verification_constants::k_MaskArrayPath);
   const auto& store = maskArray.getDataStoreRef();
   std::vector<uint8> snapshot(store.getSize());
   for(usize i = 0; i < store.getSize(); ++i)
@@ -60,7 +60,7 @@ std::vector<uint8> CaptureMask(const DataStructure& dataStructure)
 // value or reduce the true-value count.
 void AssertInvariants(const std::vector<uint8>& originalMask, const DataStructure& dataStructure)
 {
-  const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(VerificationConstants::k_MaskArrayPath);
+  const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(verification_constants::k_MaskArrayPath);
   const auto& store = maskArray.getDataStoreRef();
   REQUIRE(originalMask.size() == store.getSize());
 
@@ -101,11 +101,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -116,7 +116,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 
   const std::array<uint8, 27> expectedMask = {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -150,11 +150,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -165,7 +165,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 
   const std::array<uint8, 27> expectedMask = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -199,11 +199,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -214,7 +214,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 
   const std::array<uint8, 27> expectedMask = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -248,11 +248,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(2));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -263,7 +263,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 
   const std::array<uint8, 27> expectedMask = {1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -300,11 +300,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(2));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -315,7 +315,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 
   const std::array<uint8, 27> expectedMask = {0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -349,11 +349,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(2));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -364,7 +364,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 
   const std::array<uint8, 27> expectedMask = {0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -398,11 +398,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(3));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -413,7 +413,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -447,11 +447,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(3));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -462,7 +462,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -496,11 +496,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(3));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -511,7 +511,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -545,11 +545,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -560,7 +560,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -594,11 +594,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -609,7 +609,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -643,11 +643,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -658,7 +658,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -692,11 +692,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -707,7 +707,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -741,11 +741,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -756,7 +756,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -790,11 +790,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -805,7 +805,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -839,11 +839,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(6));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -854,7 +854,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -888,11 +888,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(6));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -903,7 +903,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -937,11 +937,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(6));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -952,7 +952,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 
   const std::array<uint8, 27> expectedMask = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -986,11 +986,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -999,7 +999,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1033,11 +1033,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.2"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1046,7 +1046,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.2"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1080,11 +1080,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.3"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1093,7 +1093,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.3"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1127,11 +1127,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.4"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1140,7 +1140,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.4"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1174,11 +1174,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.5"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1187,7 +1187,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.5"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1221,11 +1221,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.6"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(5));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1234,7 +1234,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.6"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1268,11 +1268,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1281,7 +1281,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1315,11 +1315,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.2"
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1328,7 +1328,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.2"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != 1)
@@ -1363,11 +1363,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4", 
 
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1410,7 +1410,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4", 
   };
   // clang-format on
 
-  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < maskStore.getSize(); ++i)
   {
     if(maskStore.getValue(i) != expectedMask[i])
@@ -1436,19 +1436,19 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Preflight
   // Mask, CellPhases, and Quats have different tuple counts and must report
   // -6809.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {10}, {1}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {10}, {1}, cellAmPtr->getId());
 
   // The separate group gives CellPhases nine tuples instead of ten.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   BadDataNeighborOrientationCheckFilter filter;
   Arguments args;
@@ -1473,16 +1473,16 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Preflight
   CAPTURE(numberOfNeighbors);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {10}, {1}, cellAM->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {10}, {1}, cellAmPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, cellAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   BadDataNeighborOrientationCheckFilter filter;
   Arguments args;
@@ -1503,7 +1503,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: SIMPL Bac
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1516,22 +1516,22 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: SIMPL Bac
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<float32>(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key) == 2.5f);
       CHECK(args.value<int32>(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key) == 5);
       CHECK(args.value<DataPath>(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
@@ -1558,48 +1558,48 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 I
    */
   struct Fixture
   {
-    std::string relPath;
-    int32 numberOfNeighbors;
+    std::string rel_path;
+    int32 number_of_neighbors;
   };
 
   // Case 1 covers all neighbor counts and phase configurations.
   const std::vector<Fixture> fixtures = {
-      {.relPath = "case_1/case_1_1/case_1_1_1/case_1_1_1_input.dream3d", .numberOfNeighbors = 1}, {.relPath = "case_1/case_1_1/case_1_1_2/case_1_1_2_input.dream3d", .numberOfNeighbors = 1},
-      {.relPath = "case_1/case_1_1/case_1_1_3/case_1_1_3_input.dream3d", .numberOfNeighbors = 1}, {.relPath = "case_1/case_1_2/case_1_2_1/case_1_2_1_input.dream3d", .numberOfNeighbors = 2},
-      {.relPath = "case_1/case_1_2/case_1_2_2/case_1_2_2_input.dream3d", .numberOfNeighbors = 2}, {.relPath = "case_1/case_1_2/case_1_2_3/case_1_2_3_input.dream3d", .numberOfNeighbors = 2},
-      {.relPath = "case_1/case_1_3/case_1_3_1/case_1_3_1_input.dream3d", .numberOfNeighbors = 3}, {.relPath = "case_1/case_1_3/case_1_3_2/case_1_3_2_input.dream3d", .numberOfNeighbors = 3},
-      {.relPath = "case_1/case_1_3/case_1_3_3/case_1_3_3_input.dream3d", .numberOfNeighbors = 3}, {.relPath = "case_1/case_1_4/case_1_4_1/case_1_4_1_input.dream3d", .numberOfNeighbors = 4},
-      {.relPath = "case_1/case_1_4/case_1_4_2/case_1_4_2_input.dream3d", .numberOfNeighbors = 4}, {.relPath = "case_1/case_1_4/case_1_4_3/case_1_4_3_input.dream3d", .numberOfNeighbors = 4},
-      {.relPath = "case_1/case_1_5/case_1_5_1/case_1_5_1_input.dream3d", .numberOfNeighbors = 5}, {.relPath = "case_1/case_1_5/case_1_5_2/case_1_5_2_input.dream3d", .numberOfNeighbors = 5},
-      {.relPath = "case_1/case_1_5/case_1_5_3/case_1_5_3_input.dream3d", .numberOfNeighbors = 5}, {.relPath = "case_1/case_1_6/case_1_6_1/case_1_6_1_input.dream3d", .numberOfNeighbors = 6},
-      {.relPath = "case_1/case_1_6/case_1_6_2/case_1_6_2_input.dream3d", .numberOfNeighbors = 6}, {.relPath = "case_1/case_1_6/case_1_6_3/case_1_6_3_input.dream3d", .numberOfNeighbors = 6},
+      {.rel_path = "case_1/case_1_1/case_1_1_1/case_1_1_1_input.dream3d", .number_of_neighbors = 1}, {.rel_path = "case_1/case_1_1/case_1_1_2/case_1_1_2_input.dream3d", .number_of_neighbors = 1},
+      {.rel_path = "case_1/case_1_1/case_1_1_3/case_1_1_3_input.dream3d", .number_of_neighbors = 1}, {.rel_path = "case_1/case_1_2/case_1_2_1/case_1_2_1_input.dream3d", .number_of_neighbors = 2},
+      {.rel_path = "case_1/case_1_2/case_1_2_2/case_1_2_2_input.dream3d", .number_of_neighbors = 2}, {.rel_path = "case_1/case_1_2/case_1_2_3/case_1_2_3_input.dream3d", .number_of_neighbors = 2},
+      {.rel_path = "case_1/case_1_3/case_1_3_1/case_1_3_1_input.dream3d", .number_of_neighbors = 3}, {.rel_path = "case_1/case_1_3/case_1_3_2/case_1_3_2_input.dream3d", .number_of_neighbors = 3},
+      {.rel_path = "case_1/case_1_3/case_1_3_3/case_1_3_3_input.dream3d", .number_of_neighbors = 3}, {.rel_path = "case_1/case_1_4/case_1_4_1/case_1_4_1_input.dream3d", .number_of_neighbors = 4},
+      {.rel_path = "case_1/case_1_4/case_1_4_2/case_1_4_2_input.dream3d", .number_of_neighbors = 4}, {.rel_path = "case_1/case_1_4/case_1_4_3/case_1_4_3_input.dream3d", .number_of_neighbors = 4},
+      {.rel_path = "case_1/case_1_5/case_1_5_1/case_1_5_1_input.dream3d", .number_of_neighbors = 5}, {.rel_path = "case_1/case_1_5/case_1_5_2/case_1_5_2_input.dream3d", .number_of_neighbors = 5},
+      {.rel_path = "case_1/case_1_5/case_1_5_3/case_1_5_3_input.dream3d", .number_of_neighbors = 5}, {.rel_path = "case_1/case_1_6/case_1_6_1/case_1_6_1_input.dream3d", .number_of_neighbors = 6},
+      {.rel_path = "case_1/case_1_6/case_1_6_2/case_1_6_2_input.dream3d", .number_of_neighbors = 6}, {.rel_path = "case_1/case_1_6/case_1_6_3/case_1_6_3_input.dream3d", .number_of_neighbors = 6},
   };
 
   for(const auto& fixture : fixtures)
   {
-    DYNAMIC_SECTION("Fixture: " << fixture.relPath << " NumberOfNeighbors=" << fixture.numberOfNeighbors)
+    DYNAMIC_SECTION("Fixture: " << fixture.rel_path << " NumberOfNeighbors=" << fixture.number_of_neighbors)
     {
-      auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check_v2/{}", unit_test::k_TestFilesDir, fixture.relPath));
+      auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check_v2/{}", unit_test::k_TestFilesDir, fixture.rel_path));
       DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
-      const auto originalMask = ClassFourInvariants::CaptureMask(dataStructure);
+      const auto originalMask = class_four_invariants::CaptureMask(dataStructure);
 
       BadDataNeighborOrientationCheckFilter filter;
       Arguments args;
       args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
-      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(fixture.numberOfNeighbors));
-      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(fixture.number_of_neighbors));
+      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+      args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
       auto preflightResult = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
       auto executeResult = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      ClassFourInvariants::AssertInvariants(originalMask, dataStructure);
+      class_four_invariants::AssertInvariants(originalMask, dataStructure);
     }
   }
 }
@@ -1619,23 +1619,23 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 I
   Arguments args;
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   auto executeResult1 = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult1.result);
-  const auto maskAfterRun1 = ClassFourInvariants::CaptureMask(dataStructure);
+  const auto maskAfterRun1 = class_four_invariants::CaptureMask(dataStructure);
 
   auto executeResult2 = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult2.result);
 
-  const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(VerificationConstants::k_MaskArrayPath);
+  const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(verification_constants::k_MaskArrayPath);
   const auto& store = maskArray.getDataStoreRef();
   REQUIRE(maskAfterRun1.size() == store.getSize());
   for(usize i = 0; i < store.getSize(); ++i)
@@ -1653,50 +1653,50 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image 
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, VerificationConstants::k_ImageName);
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  imageGeom->setDimensions({3, 3, 1});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, verification_constants::k_ImageName);
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  imageGeomPtr->setDimensions({3, 3, 1});
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, ShapeType{1, 3, 3}, imageGeom->getId());
-  AttributeMatrix* cellEnsemble = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, ShapeType{2}, imageGeom->getId());
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, ShapeType{1, 3, 3}, imageGeomPtr->getId());
+  AttributeMatrix* cellEnsemblePtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, ShapeType{2}, imageGeomPtr->getId());
 
-  UInt8Array* maskArray = UnitTest::CreateTestDataArray<uint8>(dataStructure, VerificationConstants::k_MaskName, {1, 3, 3}, {1}, cellData->getId());
+  UInt8Array* maskArrayPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, verification_constants::k_MaskName, {1, 3, 3}, {1}, cellDataPtr->getId());
   const std::array<uint8, 9> inputMask = {0, 1, 0, 1, 0, 1, 0, 1, 0};
   for(usize i = 0; i < 9; ++i)
   {
-    (*maskArray)[i] = inputMask[i];
+    (*maskArrayPtr)[i] = inputMask[i];
   }
 
-  Int32Array* phasesArray = UnitTest::CreateTestDataArray<int32>(dataStructure, VerificationConstants::k_PhasesName, {1, 3, 3}, {1}, cellData->getId());
-  phasesArray->fill(1);
+  Int32Array* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, verification_constants::k_PhasesName, {1, 3, 3}, {1}, cellDataPtr->getId());
+  phasesArrayPtr->fill(1);
 
   // Identical quaternions give zero misorientation.
-  Float32Array* quatsArray = UnitTest::CreateTestDataArray<float32>(dataStructure, VerificationConstants::k_QuatsName, {1, 3, 3}, {4}, cellData->getId());
-  const float32 q_z = 0.00872654f;
-  const float32 q_w = 0.99996191f;
+  Float32Array* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, verification_constants::k_QuatsName, {1, 3, 3}, {4}, cellDataPtr->getId());
+  const float32 qZ = 0.00872654f;
+  const float32 qW = 0.99996191f;
   for(usize i = 0; i < 9; ++i)
   {
-    (*quatsArray)[i * 4 + 0] = 0.0f;
-    (*quatsArray)[i * 4 + 1] = 0.0f;
-    (*quatsArray)[i * 4 + 2] = q_z;
-    (*quatsArray)[i * 4 + 3] = q_w;
+    (*quatsArrayPtr)[i * 4 + 0] = 0.0f;
+    (*quatsArrayPtr)[i * 4 + 1] = 0.0f;
+    (*quatsArrayPtr)[i * 4 + 2] = qZ;
+    (*quatsArrayPtr)[i * 4 + 3] = qW;
   }
 
   // CrystalStructures retains the phase-zero unknown sentinel.
-  UInt32Array* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, VerificationConstants::k_CStuctsName, {2}, {1}, cellEnsemble->getId());
-  (*crystalStructures)[0] = 999u;
-  (*crystalStructures)[1] = 1u;
+  UInt32Array* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, verification_constants::k_CStuctsName, {2}, {1}, cellEnsemblePtr->getId());
+  (*crystalStructuresPtr)[0] = 999u;
+  (*crystalStructuresPtr)[1] = 1u;
 
   BadDataNeighborOrientationCheckFilter filter;
   Arguments args;
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1704,7 +1704,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image 
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::array<uint8, 9> expectedMask = {0, 1, 0, 1, 1, 1, 0, 1, 0};
-  const auto& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  const auto& maskStore = dataStructure.getDataAs<UInt8Array>(verification_constants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < 9; ++i)
   {
     INFO("2D fixture: index " << i);
@@ -1719,7 +1719,7 @@ TEMPLATE_TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   DataStructure dataStructure;
-  auto* imageGeomPtr = ImageGeom::Create(dataStructure, VerificationConstants::k_ImageName);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, verification_constants::k_ImageName);
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({3, 3, 5});
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
@@ -1729,14 +1729,14 @@ TEMPLATE_TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 
   REQUIRE(cellsPtr != nullptr);
   REQUIRE(ensemblesPtr != nullptr);
   imageGeomPtr->setCellData(*cellsPtr);
-  auto maskStore = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, VerificationConstants::k_MaskArrayPath, {5, 3, 3}, {1});
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, VerificationConstants::k_PhasesArrayPath, {5, 3, 3}, {1});
-  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, VerificationConstants::k_QuatsArrayPath, {5, 3, 3}, {4});
-  auto crystalsStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, VerificationConstants::k_CStuctsArrayPath, {2}, {1});
-  auto* maskPtr = DataArray<TestType>::Create(dataStructure, VerificationConstants::k_MaskName, maskStore, cellsPtr->getId());
-  auto* phasesPtr = Int32Array::Create(dataStructure, VerificationConstants::k_PhasesName, phasesStore, cellsPtr->getId());
-  auto* quatsPtr = Float32Array::Create(dataStructure, VerificationConstants::k_QuatsName, quatsStore, cellsPtr->getId());
-  auto* crystalsPtr = UInt32Array::Create(dataStructure, VerificationConstants::k_CStuctsName, crystalsStore, ensemblesPtr->getId());
+  auto maskStore = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, verification_constants::k_MaskArrayPath, {5, 3, 3}, {1});
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, verification_constants::k_PhasesArrayPath, {5, 3, 3}, {1});
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, verification_constants::k_QuatsArrayPath, {5, 3, 3}, {4});
+  auto crystalsStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, verification_constants::k_CStuctsArrayPath, {2}, {1});
+  auto* maskPtr = DataArray<TestType>::Create(dataStructure, verification_constants::k_MaskName, maskStore, cellsPtr->getId());
+  auto* phasesPtr = Int32Array::Create(dataStructure, verification_constants::k_PhasesName, phasesStore, cellsPtr->getId());
+  auto* quatsPtr = Float32Array::Create(dataStructure, verification_constants::k_QuatsName, quatsStore, cellsPtr->getId());
+  auto* crystalsPtr = UInt32Array::Create(dataStructure, verification_constants::k_CStuctsName, crystalsStore, ensemblesPtr->getId());
   REQUIRE(maskPtr != nullptr);
   REQUIRE(phasesPtr != nullptr);
   REQUIRE(quatsPtr != nullptr);
@@ -1770,11 +1770,11 @@ TEMPLATE_TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(1.0F));
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
   const auto before = GetAlgorithmPathExecutionCounts();
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -1798,7 +1798,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Phase Ind
   UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
-  auto* imageGeomPtr = ImageGeom::Create(dataStructure, VerificationConstants::k_ImageName);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, verification_constants::k_ImageName);
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   imageGeomPtr->setDimensions({3, 3, 1});
@@ -1807,22 +1807,22 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Phase Ind
   imageGeomPtr->setCellData(*cellDataPtr);
   auto* cellEnsemblePtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, ShapeType{2}, imageGeomPtr->getId());
 
-  auto* maskArrayPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, VerificationConstants::k_MaskName, {1, 3, 3}, {1}, cellDataPtr->getId());
+  auto* maskArrayPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, verification_constants::k_MaskName, {1, 3, 3}, {1}, cellDataPtr->getId());
   maskArrayPtr->fill(1);
   (*maskArrayPtr)[4] = 0;
 
-  auto* cellPhasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, VerificationConstants::k_PhasesName, {1, 3, 3}, {1}, cellDataPtr->getId());
+  auto* cellPhasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, verification_constants::k_PhasesName, {1, 3, 3}, {1}, cellDataPtr->getId());
   cellPhasesArrayPtr->fill(1);
   (*cellPhasesArrayPtr)[invalidBadVoxel ? 4 : 0] = 2;
 
-  auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, VerificationConstants::k_QuatsName, {1, 3, 3}, {4}, cellDataPtr->getId());
+  auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, verification_constants::k_QuatsName, {1, 3, 3}, {4}, cellDataPtr->getId());
   quatsArrayPtr->fill(0.0F);
   for(usize voxelIdx = 0; voxelIdx < 9; ++voxelIdx)
   {
     (*quatsArrayPtr)[voxelIdx * 4 + 3] = 1.0F;
   }
 
-  auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, VerificationConstants::k_CStuctsName, {2}, {1}, cellEnsemblePtr->getId());
+  auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, verification_constants::k_CStuctsName, {2}, {1}, cellEnsemblePtr->getId());
   (*crystalStructuresArrayPtr)[0] = 999U;
   (*crystalStructuresArrayPtr)[1] = 1U;
 
@@ -1830,11 +1830,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Phase Ind
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
   args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
-  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(verification_constants::k_ImagePath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(verification_constants::k_QuatsArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(verification_constants::k_MaskArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(verification_constants::k_PhasesArrayPath));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(verification_constants::k_CStuctsArrayPath));
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   if(invalidBadVoxel)

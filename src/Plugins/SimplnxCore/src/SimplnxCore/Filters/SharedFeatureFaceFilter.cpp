@@ -101,18 +101,18 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
 
   // Create the Face Data/FeatureIds Array
   {
-    const auto* faceLabelDataArray = dataStructure.getDataAs<Int32Array>(pFaceLabelsArrayPathValue);
-    if(nullptr == faceLabelDataArray)
+    const auto* faceLabelDataArrayPtr = dataStructure.getDataAs<Int32Array>(pFaceLabelsArrayPathValue);
+    if(nullptr == faceLabelDataArrayPtr)
     {
       return IFilter::MakePreflightErrorResult(-12901, fmt::format("Face Labels does not exist at path '{}' or the path does not point to an Int32 Array", pFaceLabelsArrayPathValue.toString()));
     }
-    auto tupleShape = faceLabelDataArray->getTupleShape();
+    auto tupleShape = faceLabelDataArrayPtr->getTupleShape();
     auto faceDataGroupPathVector = pFaceLabelsArrayPathValue.getPathVector();
     faceDataGroupPathVector.pop_back();
     DataPath faceDataGroupPath = DataPath(faceDataGroupPathVector);
 
     DataPath createdArrayPath = faceDataGroupPath.createChildPath(featureFaceIdsArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, faceLabelDataArray->getTupleShape(), std::vector<usize>{1}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, faceLabelDataArrayPtr->getTupleShape(), std::vector<usize>{1}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

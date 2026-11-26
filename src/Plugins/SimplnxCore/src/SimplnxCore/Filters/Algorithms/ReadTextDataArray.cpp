@@ -55,6 +55,6 @@ Result<> ReadTextDataArray::operator()()
 
   char delimiter = nx::core::CsvParser::IndexToDelimiter(choiceIndex);
 
-  auto* iDataArray = m_DataStructure.getDataAs<IDataArray>(path);
-  return ExecuteDataFunction(CSVReadFileFunctor{}, iDataArray->getDataType(), iDataArray, inputFilePath, skipLines, delimiter);
+  auto* iDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(path);
+  return ExecuteDataFunction(CSVReadFileFunctor{}, iDataArrayPtr->getDataType(), iDataArrayPtr, inputFilePath, skipLines, delimiter);
 }

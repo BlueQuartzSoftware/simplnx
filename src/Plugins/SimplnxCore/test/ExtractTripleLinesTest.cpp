@@ -388,18 +388,18 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
   usize quickEdgeCount = 0;
   struct MesherCase
   {
-    const char* Name;
-    void (*Run)(DataStructure&);
+    const char* name;
+    void (*run)(DataStructure&);
   };
-  const std::array<MesherCase, 3> mesherCases = {MesherCase{.Name = "QuickSurfaceMesh", .Run = &RunQuickSurfaceMesh}, MesherCase{.Name = "SurfaceNets", .Run = &RunSurfaceNets},
-                                                 MesherCase{.Name = "M3CSurfaceMeshing", .Run = &RunM3CSurfaceMeshing}};
+  const std::array<MesherCase, 3> mesherCases = {MesherCase{.name = "QuickSurfaceMesh", .run = &RunQuickSurfaceMesh}, MesherCase{.name = "SurfaceNets", .run = &RunSurfaceNets},
+                                                 MesherCase{.name = "M3CSurfaceMeshing", .run = &RunM3CSurfaceMeshing}};
 
   for(const auto& mesherCase : mesherCases)
   {
-    INFO(mesherCase.Name);
+    INFO(mesherCase.name);
     DataStructure dataStructure;
     BuildFourGrainBlock(dataStructure);
-    mesherCase.Run(dataStructure);
+    mesherCase.run(dataStructure);
 
     auto executeResult = RunExtractTripleLines(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -410,14 +410,14 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
     const auto& numFeatures = dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath);
 
     // 1. A junction exists in this input, so every mesher must find at least one segment.
-    INFO(mesherCase.Name << " produced " << tripleLineGeom.getNumberOfEdges() << " triple line segments");
+    INFO(mesherCase.name << " produced " << tripleLineGeom.getNumberOfEdges() << " triple line segments");
     REQUIRE(tripleLineGeom.getNumberOfEdges() > 0);
 
     // Counts saturate at 4, which means four or more Features.
     bool sawQuadruplePoint = false;
     for(usize i = 0; i < numFeatures.getNumberOfTuples(); i++)
     {
-      INFO(mesherCase.Name << " segment " << i << " reported NumFeatures " << static_cast<int32>(numFeatures[i]));
+      INFO(mesherCase.name << " segment " << i << " reported NumFeatures " << static_cast<int32>(numFeatures[i]));
       REQUIRE((numFeatures[i] == 3 || numFeatures[i] == 4));
       if(numFeatures[i] == 4)
       {
@@ -430,12 +430,12 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
     {
       histogram[numFeatures[index] - 3]++;
     }
-    if(std::string(mesherCase.Name) == "QuickSurfaceMesh")
+    if(std::string(mesherCase.name) == "QuickSurfaceMesh")
     {
       quickHistogram = histogram;
       quickEdgeCount = tripleLineGeom.getNumberOfEdges();
     }
-    else if(std::string(mesherCase.Name) == "SurfaceNets")
+    else if(std::string(mesherCase.name) == "SurfaceNets")
     {
       REQUIRE(tripleLineGeom.getNumberOfEdges() == quickEdgeCount);
       REQUIRE(histogram == quickHistogram);

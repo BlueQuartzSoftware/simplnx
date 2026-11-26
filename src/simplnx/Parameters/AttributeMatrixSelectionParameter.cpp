@@ -41,18 +41,18 @@ nlohmann::json AttributeMatrixSelectionParameter::toJsonImpl(const std::any& val
 
 Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
   }
 
   auto valueString = json.get<std::string>();
   auto path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", prefix, valueString, name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", k_Prefix, valueString, name()));
   }
   return {{std::move(*path)}};
 }
@@ -88,14 +88,14 @@ Result<> AttributeMatrixSelectionParameter::validatePath(const DataStructure& da
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
 
-  const DataObject* dataObject = dataStructure.getData(value);
-  if(dataObject == nullptr)
+  const DataObject* dataObjectPtr = dataStructure.getData(value);
+  if(dataObjectPtr == nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const AttributeMatrix* attrMatrix = dynamic_cast<const AttributeMatrix*>(dataObject);
-  if(attrMatrix == nullptr)
+  const AttributeMatrix* attrMatrixPtr = dynamic_cast<const AttributeMatrix*>(dataObjectPtr);
+  if(attrMatrixPtr == nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is *not* an AttributeMatrix", prefix, value.toString()));
   }
@@ -106,8 +106,8 @@ Result<> AttributeMatrixSelectionParameter::validatePath(const DataStructure& da
 Result<std::any> AttributeMatrixSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
 namespace SIMPLConversion

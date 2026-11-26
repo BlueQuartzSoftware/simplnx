@@ -40,18 +40,18 @@ nlohmann::json DataGroupCreationParameter::toJsonImpl(const std::any& value) con
 
 Result<std::any> DataGroupCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'DataGroupCreationParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'DataGroupCreationParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
   }
 
   auto valueString = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", prefix.view(), valueString, name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", k_Prefix.view(), valueString, name()));
   }
   return {{std::move(*path)}};
 }
@@ -86,8 +86,8 @@ Result<> DataGroupCreationParameter::validatePath(const DataStructure& dataStruc
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object != nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr != nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
   }
@@ -98,8 +98,8 @@ Result<> DataGroupCreationParameter::validatePath(const DataStructure& dataStruc
 Result<std::any> DataGroupCreationParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
 namespace SIMPLConversion

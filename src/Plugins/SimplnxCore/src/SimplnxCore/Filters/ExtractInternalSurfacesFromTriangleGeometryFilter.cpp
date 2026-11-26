@@ -192,20 +192,20 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   // Create arrays and check number of tuples match their respective face or vertex attribute matrix
   std::vector<DataPath> copiedArrays;
   copiedArrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
-  for(const auto& data_array : copyVertexPaths)
+  for(const auto& dataArray : copyVertexPaths)
   {
-    copiedArrays.push_back(data_array);
-    const auto* targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
-    if(targetDataArray == nullptr)
+    copiedArrays.push_back(dataArray);
+    const auto* targetDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataArray);
+    if(targetDataArrayPtr == nullptr)
     {
-      std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
+      std::string ss = fmt::format("Could not find DataArray at path '{}'", dataArray.toString());
       return {.outputActions = MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
     }
 
-    DataType type = targetDataArray->getDataType();
-    DataPath copyPath = internalVertexDataPath.createChildPath(data_array.getTargetName());
-    auto numTuples = targetDataArray->getNumberOfTuples();
-    auto components = targetDataArray->getNumberOfComponents();
+    DataType type = targetDataArrayPtr->getDataType();
+    DataPath copyPath = internalVertexDataPath.createChildPath(dataArray.getTargetName());
+    auto numTuples = targetDataArrayPtr->getNumberOfTuples();
+    auto components = targetDataArrayPtr->getNumberOfComponents();
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
     actions.appendAction(std::move(action));
   }
@@ -217,20 +217,20 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 
   copiedArrays.clear();
   copiedArrays.push_back(triangleGeom.getFaces()->getDataPaths().front());
-  for(const auto& data_array : copyTrianglePaths)
+  for(const auto& dataArray : copyTrianglePaths)
   {
-    copiedArrays.push_back(data_array);
-    const auto* targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
-    if(targetDataArray == nullptr)
+    copiedArrays.push_back(dataArray);
+    const auto* targetDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataArray);
+    if(targetDataArrayPtr == nullptr)
     {
-      std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
+      std::string ss = fmt::format("Could not find DataArray at path '{}'", dataArray.toString());
       return {.outputActions = MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
     }
 
-    DataType type = targetDataArray->getDataType();
-    DataPath copyPath = internalFaceDataPath.createChildPath(data_array.getTargetName());
-    auto numTuples = targetDataArray->getNumberOfTuples();
-    auto components = targetDataArray->getNumberOfComponents();
+    DataType type = targetDataArrayPtr->getDataType();
+    DataPath copyPath = internalFaceDataPath.createChildPath(dataArray.getTargetName());
+    auto numTuples = targetDataArrayPtr->getNumberOfTuples();
+    auto components = targetDataArrayPtr->getNumberOfComponents();
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
     actions.appendAction(std::move(action));
   }

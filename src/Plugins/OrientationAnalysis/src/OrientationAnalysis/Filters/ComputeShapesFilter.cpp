@@ -119,13 +119,13 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const AttributeMatrix* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
-  if(featureAttrMatrix == nullptr)
+  const AttributeMatrix* featureAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
+  if(featureAttrMatrixPtr == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
 
-  ShapeType tupleShape = featureAttrMatrix->getShape();
+  ShapeType tupleShape = featureAttrMatrixPtr->getShape();
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {

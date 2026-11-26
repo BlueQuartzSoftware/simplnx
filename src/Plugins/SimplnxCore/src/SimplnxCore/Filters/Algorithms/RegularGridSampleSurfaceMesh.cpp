@@ -29,7 +29,7 @@ struct SliceEdge
 {
   float32 x1, y1;
   float32 x2, y2;
-  usize faceIndex;
+  usize face_index;
 };
 
 /**
@@ -39,7 +39,7 @@ struct SliceEdge
 struct ScanlineIntersection
 {
   float32 x;
-  usize faceIndex;
+  usize face_index;
 };
 
 /**
@@ -48,8 +48,8 @@ struct ScanlineIntersection
  */
 struct TriangleZRange
 {
-  float32 zMin = 0.0f;
-  float32 zMax = 0.0f;
+  float32 z_min = 0.0f;
+  float32 z_max = 0.0f;
 };
 
 /**
@@ -64,7 +64,7 @@ struct TriangleZRange
  *
  * The half-open vertex classification prevents duplicate crossings at shared vertices.
  */
-bool sliceTriangleAtZ(const std::array<Point3Df, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
+bool SliceTriangleAtZ(const std::array<Point3Df, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
 {
   // Vertices on the plane belong to the upper half-space.
   std::array<bool, 3> above = {verts[0][2] >= zPlane, verts[1][2] >= zPlane, verts[2][2] >= zPlane};
@@ -177,7 +177,7 @@ public:
     for(usize t = 0; t < m_NumTriangles; t++)
     {
       const auto& zRange = m_TriZRanges[t];
-      if(zRange.zMax < zCoord || zRange.zMin > zCoord)
+      if(zRange.z_max < zCoord || zRange.z_min > zCoord)
       {
         continue;
       }
@@ -193,7 +193,7 @@ public:
       float32 ey1 = NAN;
       float32 ex2 = NAN;
       float32 ey2 = NAN;
-      if(sliceTriangleAtZ(verts, zCoord, ex1, ey1, ex2, ey2))
+      if(SliceTriangleAtZ(verts, zCoord, ex1, ey1, ex2, ey2))
       {
         edges.push_back({ex1, ey1, ex2, ey2, t});
       }
@@ -237,7 +237,7 @@ public:
 
         float32 t = (yCoord - edge.y1) / dy;
         float32 xIntersect = edge.x1 + t * (edge.x2 - edge.x1);
-        intersections.push_back({xIntersect, edge.faceIndex});
+        intersections.push_back({xIntersect, edge.face_index});
       }
 
       std::sort(intersections.begin(), intersections.end(), [](const ScanlineIntersection& a, const ScanlineIntersection& b) { return a.x < b.x; });
@@ -254,7 +254,7 @@ public:
 
         while(nextIsect < intersections.size() && intersections[nextIsect].x <= xCoord)
         {
-          usize faceIdx = intersections[nextIsect].faceIndex;
+          usize faceIdx = intersections[nextIsect].face_index;
           T label0;
           T label1;
           if(m_NumFaceLabelComps == 2)
@@ -476,8 +476,8 @@ struct ZSliceFunctor
       float32 z1 = verticesBuffer[v1Idx * 3 + 2];
       float32 z2 = verticesBuffer[v2Idx * 3 + 2];
 
-      triZRanges[t].zMin = std::min({z0, z1, z2});
-      triZRanges[t].zMax = std::max({z0, z1, z2});
+      triZRanges[t].z_min = std::min({z0, z1, z2});
+      triZRanges[t].z_max = std::max({z0, z1, z2});
     }
 
     if(shouldCancel)

@@ -81,13 +81,13 @@ public:
   std::unique_ptr<parent_type> deepCopy(const std::string& destinationFormat) const override
   {
     auto copy = CopyListStore(*this, GetDataType<T>(), destinationFormat);
-    auto* typedCopy = dynamic_cast<parent_type*>(copy.get());
-    if(typedCopy == nullptr)
+    auto* typedCopyPtr = dynamic_cast<parent_type*>(copy.get());
+    if(typedCopyPtr == nullptr)
     {
       throw std::runtime_error("List store copy returned an incompatible type for format '" + destinationFormat + "'");
     }
     copy.release();
-    return std::unique_ptr<parent_type>(typedCopy);
+    return std::unique_ptr<parent_type>(typedCopyPtr);
   }
 
   /**

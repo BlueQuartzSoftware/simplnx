@@ -19,18 +19,18 @@ namespace
 DataPath BuildMultimodalImage(DataStructure& ds, usize dim)
 {
   const ShapeType cellShape = {dim, dim, dim};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dim, dim, dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<float32>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const std::array<float32, 4> clusterBase = {10.0f, 70.0f, 140.0f, 210.0f};
   const usize total = ref.getSize();
@@ -46,16 +46,16 @@ DataPath BuildMultimodalImage(DataStructure& ds, usize dim)
 DataPath BuildCompactInt16Image(DataStructure& ds, usize dim)
 {
   const ShapeType cellShape = {dim, dim, dim};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dim, dim, dim});
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<int16>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<int16>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<int16>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < ref.getSize(); ++i)
   {
     const int32 cluster = static_cast<int32>((i / 37) % 4);
@@ -137,15 +137,15 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constant image 
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({4, 4, 4});
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({4, 4, 4});
   const ShapeType cellShape = {4, 4, 4};
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<float32>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < ref.getSize(); ++i)
   {
     ref.setValue(i, 42.0f); // constant

@@ -46,16 +46,16 @@ constexpr int32 k_EmptyLabel = std::numeric_limits<int32>::min();
 template <usize Capacity>
 struct FeatureSet
 {
-  std::array<int32, Capacity> Features;
+  std::array<int32, Capacity> features;
 
   FeatureSet()
   {
-    Features.fill(k_EmptyLabel);
+    features.fill(k_EmptyLabel);
   }
 
   void insert(int32 featureId)
   {
-    for(auto& storedLabel : Features)
+    for(auto& storedLabel : features)
     {
       if(storedLabel == featureId)
       {
@@ -71,7 +71,7 @@ struct FeatureSet
 
   uint8 count() const
   {
-    return static_cast<uint8>(std::count_if(Features.begin(), Features.end(), [](int32 label) { return label != k_EmptyLabel; }));
+    return static_cast<uint8>(std::count_if(features.begin(), features.end(), [](int32 label) { return label != k_EmptyLabel; }));
   }
 };
 static_assert(sizeof(FeatureSet<3>) == 12);
@@ -99,7 +99,7 @@ constexpr uint64 MakeEdgeKey(uint64 vertex0, uint64 vertex1)
  * @return The first transfer error, admission/allocation error, or accumulated warnings.
  * @pre Indices refer to source tuples. Node Types pointers are paired and have compatible extents.
  */
-Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32AbstractDataStore& destination, nonstd::span<const uint64> indices, const Int8AbstractDataStore* sourceNodes,
+Result<> CopyTripleLineVertices(const Float32AbstractDataStore& source, Float32AbstractDataStore& destination, nonstd::span<const uint64> indices, const Int8AbstractDataStore* sourceNodes,
                                 Int8AbstractDataStore* destinationNodes, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progress)
 {
   if(indices.empty() || shouldCancel)
@@ -217,28 +217,28 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
  * @param progress Receives completed block progress.
  * @return The first transfer error, admission/allocation error, or accumulated warnings.
  */
-Result<> writeTripleLineEdges(AbstractDataStore<IGeometry::MeshIndexType>& destination, Int8AbstractDataStore& counts, nonstd::span<const std::pair<uint64, uint8>> edges,
+Result<> WriteTripleLineEdges(AbstractDataStore<IGeometry::MeshIndexType>& destination, Int8AbstractDataStore& counts, nonstd::span<const std::pair<uint64, uint8>> edges,
                               const std::vector<uint64>& indices, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progress)
 {
   if(edges.empty() || shouldCancel)
   {
     return {};
   }
-  constexpr usize bytesPerEdge = (2 * sizeof(IGeometry::MeshIndexType)) + sizeof(int8);
-  if(edges.size() > std::numeric_limits<usize>::max() / bytesPerEdge)
+  constexpr usize k_BytesPerEdge = (2 * sizeof(IGeometry::MeshIndexType)) + sizeof(int8);
+  if(edges.size() > std::numeric_limits<usize>::max() / k_BytesPerEdge)
   {
     return MakeErrorResult(-57411, "Triple line edge transfer sizes exceed addressable memory. Reduce the mesh size before extracting triple lines.");
   }
-  const usize requestedBytes = edges.size() * bytesPerEdge;
+  const usize requestedBytes = edges.size() * k_BytesPerEdge;
   auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
-  const usize capacity = static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / bytesPerEdge, edges.size()));
+  const usize capacity = static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / k_BytesPerEdge, edges.size()));
   if(capacity == 0)
   {
     return MakeErrorResult(-57409, fmt::format("Triple line edge writing requested {} working bytes and received {}. At least {} bytes are required. Increase the cache memory budget or finish "
                                                "other processing before retrying.",
-                                               requestedBytes, reservation.sizeBytes(), bytesPerEdge));
+                                               requestedBytes, reservation.sizeBytes(), k_BytesPerEdge));
   }
-  reservation.shrinkTo(capacity * bytesPerEdge);
+  reservation.shrinkTo(capacity * k_BytesPerEdge);
   Result<> result;
   try
   {
@@ -481,7 +481,7 @@ Result<> ExtractTripleLines::operator()()
   Result<> publicationResult;
   if(copyVerticesInBlocks)
   {
-    publicationResult = copyTripleLineVertices(sourceVertsRef, destVertsRef, {compactToOriginal.data(), compactToOriginal.size()}, m_InputValues->SourceNodeTypes, m_InputValues->DestinationNodeTypes,
+    publicationResult = CopyTripleLineVertices(sourceVertsRef, destVertsRef, {compactToOriginal.data(), compactToOriginal.size()}, m_InputValues->SourceNodeTypes, m_InputValues->DestinationNodeTypes,
                                                m_ShouldCancel, progressThrottle);
     if(publicationResult.invalid() || m_ShouldCancel)
     {
@@ -515,7 +515,7 @@ Result<> ExtractTripleLines::operator()()
   if(destEdgesRef.getStoreType() == IDataStore::StoreType::OutOfCore || numFeaturesRef.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
     publicationResult = MeshingUtilities::detail::MergeTransferResult(
-        publicationResult, writeTripleLineEdges(destEdgesRef, numFeaturesRef, {keptEdges.data(), keptEdges.size()}, compactToOriginal, m_ShouldCancel, progressThrottle));
+        publicationResult, WriteTripleLineEdges(destEdgesRef, numFeaturesRef, {keptEdges.data(), keptEdges.size()}, compactToOriginal, m_ShouldCancel, progressThrottle));
     if(publicationResult.invalid() || m_ShouldCancel)
     {
       return publicationResult;

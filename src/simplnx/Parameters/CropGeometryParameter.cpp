@@ -68,20 +68,20 @@ nlohmann::json CropGeometryParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'CropGeometryParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'CropGeometryParameter' JSON Error: ";
   static const std::string nameDiv = name() + "/";
 
   ValueType value;
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not an object", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix.view(), name()));
   }
 
   const auto& keyJson = json[k_Type_Key];
   if(!keyJson.is_number_unsigned())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
-                                     fmt::format("{}JSON value for key '{}' is not an unsigned integer", prefix.view(), nameDiv + k_Type_Key.str()));
+                                     fmt::format("{}JSON value for key '{}' is not an unsigned integer", k_Prefix.view(), nameDiv + k_Type_Key.str()));
   }
   value.type = static_cast<ValueType::TypeEnum>(keyJson.get<uint8>());
 
@@ -90,7 +90,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& is2dJson = json[k_Is2D_Key];
     if(!is2dJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), nameDiv + k_Is2D_Key.str()));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_Is2D_Key.str()));
     }
     value.is2D = is2dJson.get<bool>();
   }
@@ -99,7 +99,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& cropXJson = json[k_CropX_Key];
     if(!cropXJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), nameDiv + k_CropX_Key.str()));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropX_Key.str()));
     }
     value.cropX = cropXJson.get<bool>();
   }
@@ -108,7 +108,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& cropYJson = json[k_CropY_Key];
     if(!cropYJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), nameDiv + k_CropY_Key.str()));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropY_Key.str()));
     }
     value.cropY = cropYJson.get<bool>();
   }
@@ -117,7 +117,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& cropZJson = json[k_CropZ_Key];
     if(!cropZJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), nameDiv + k_CropZ_Key.str()));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropZ_Key.str()));
     }
     value.cropZ = cropZJson.get<bool>();
   }
@@ -127,7 +127,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     if(!xBoundsJson.is_array())
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
-                                       fmt::format("{}JSON value for key '{}' is not an array", prefix.view(), nameDiv + k_XBoundsVoxels_Key.str()));
+                                       fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_XBoundsVoxels_Key.str()));
     }
     const auto tmp = xBoundsJson.get<std::array<usize, 2>>();
     value.xBoundVoxels = {tmp[0], tmp[1]};
@@ -138,7 +138,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     if(!yBoundsJson.is_array())
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
-                                       fmt::format("{}JSON value for key '{}' is not an array", prefix.view(), nameDiv + k_YBoundsVoxels_Key.str()));
+                                       fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_YBoundsVoxels_Key.str()));
     }
     const auto tmp = yBoundsJson.get<std::array<usize, 2>>();
     value.yBoundVoxels = {tmp[0], tmp[1]};
@@ -149,7 +149,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     if(!zBoundsJson.is_array())
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
-                                       fmt::format("{}JSON value for key '{}' is not an array", prefix.view(), nameDiv + k_ZBoundsVoxels_Key.str()));
+                                       fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_ZBoundsVoxels_Key.str()));
     }
     const auto tmp = zBoundsJson.get<std::array<usize, 2>>();
     value.zBoundVoxels = {tmp[0], tmp[1]};
@@ -160,7 +160,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     if(!xBoundsJson.is_array())
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
-                                       fmt::format("{}JSON value for key '{}' is not an array", prefix.view(), nameDiv + k_XBoundsPhysical_Key.str()));
+                                       fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_XBoundsPhysical_Key.str()));
     }
     const auto tmp = xBoundsJson.get<std::array<float32, 2>>();
     value.xBoundPhysical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
@@ -171,7 +171,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     if(!yBoundsJson.is_array())
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
-                                       fmt::format("{}JSON value for key '{}' is not an array", prefix.view(), nameDiv + k_YBoundsPhysical_Key.str()));
+                                       fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_YBoundsPhysical_Key.str()));
     }
     const auto tmp = yBoundsJson.get<std::array<float32, 2>>();
     value.yBoundPhysical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
@@ -182,7 +182,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     if(!zBoundsJson.is_array())
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
-                                       fmt::format("{}JSON value for key '{}' is not an array", prefix.view(), nameDiv + k_ZBoundsPhysical_Key.str()));
+                                       fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_ZBoundsPhysical_Key.str()));
     }
     const auto tmp = zBoundsJson.get<std::array<float32, 2>>();
     value.zBoundPhysical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};

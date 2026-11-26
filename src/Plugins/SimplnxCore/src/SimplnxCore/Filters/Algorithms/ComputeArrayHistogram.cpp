@@ -720,9 +720,9 @@ struct ComputeHistogramFunctor
     {
       return countsResult;
     }
-    auto* const maxElement = std::max_element(counts.get(), counts.get() + numBins);
-    mostPopulatedStore.setComponent(0, 0, static_cast<uint64>(std::distance(counts.get(), maxElement)));
-    mostPopulatedStore.setComponent(0, 1, *maxElement);
+    auto* const maxElementPtr = std::max_element(counts.get(), counts.get() + numBins);
+    mostPopulatedStore.setComponent(0, 0, static_cast<uint64>(std::distance(counts.get(), maxElementPtr)));
+    mostPopulatedStore.setComponent(0, 1, *maxElementPtr);
 
     if(modalBinRanges != nullptr)
     {
@@ -756,10 +756,10 @@ ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const
 
 Result<> ComputeArrayHistogram::operator()()
 {
-  const IDataArray* maskArray = nullptr;
+  const IDataArray* maskArrayPtr = nullptr;
   if(m_InputValues->MaskPath.has_value())
   {
-    maskArray = &m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskPath.value());
+    maskArrayPtr = &m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskPath.value());
   }
 
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
@@ -775,15 +775,15 @@ Result<> ComputeArrayHistogram::operator()()
     auto& binRanges = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(index));
     auto& counts = m_DataStructure.getDataRefAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(index)).getDataStoreRef();
     auto& mostPopulated = m_DataStructure.getDataRefAs<DataArray<uint64>>(m_InputValues->CreatedBinMostPopulatedDataPaths.at(index)).getDataStoreRef();
-    INeighborList* modalBinRanges = nullptr;
+    INeighborList* modalBinRangesPtr = nullptr;
     if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
     {
-      modalBinRanges = &m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->CreatedBinModalRangesDataPaths->at(index));
+      modalBinRangesPtr = &m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->CreatedBinModalRangesDataPaths->at(index));
     }
 
     usize overflow = 0;
     Result<> result =
-        ExecuteDataFunctionNoBool(ComputeHistogramFunctor{}, inputData.getDataType(), inputData, binRanges, counts, mostPopulated, modalBinRanges, maskArray, *m_InputValues, m_ShouldCancel, overflow);
+        ExecuteDataFunctionNoBool(ComputeHistogramFunctor{}, inputData.getDataType(), inputData, binRanges, counts, mostPopulated, modalBinRangesPtr, maskArrayPtr, *m_InputValues, m_ShouldCancel, overflow);
     if(result.invalid())
     {
       return result;

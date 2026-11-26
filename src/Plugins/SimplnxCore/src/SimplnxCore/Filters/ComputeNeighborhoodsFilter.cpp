@@ -196,8 +196,8 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
 
   // Locate the Cell Feature Attribute Matrix (via the Centroids array, which is required in both modes) that
   // the output arrays will be created in
-  const auto* cellFeatureData = dataStructure.getDataAs<AttributeMatrix>(pCentroidsArrayPathValue.getParent());
-  if(cellFeatureData == nullptr)
+  const auto* cellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(pCentroidsArrayPathValue.getParent());
+  if(cellFeatureDataPtr == nullptr)
   {
     return MakePreflightErrorResult(-5731, fmt::format("The selected Centroids array is not located in an attribute matrix. Make sure you have selected the input arrays located in the "
                                                        "cell feature attribute matrix of the selected geometry"));
@@ -205,12 +205,12 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
 
   // Create the Neighborhoods Array in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatureData->getShape(), std::vector<usize>{1ULL}, pCentroidsArrayPathValue.replaceName(pNeighborhoodsArrayNameValue));
+    auto action = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatureDataPtr->getShape(), std::vector<usize>{1ULL}, pCentroidsArrayPathValue.replaceName(pNeighborhoodsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureData->getShape(), pCentroidsArrayPathValue.replaceName(pNeighborhoodListArrayNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureDataPtr->getShape(), pCentroidsArrayPathValue.replaceName(pNeighborhoodListArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 

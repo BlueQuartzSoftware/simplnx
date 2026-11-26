@@ -22,7 +22,7 @@
 
 namespace
 {
-thread_local std::optional<std::string> s_GroupConstructionFailureName;
+thread_local std::optional<std::string> SGroupConstructionFailureName;
 
 /**
  * @brief Injects an allocation failure immediately before the base wrapper copies its name.
@@ -32,9 +32,9 @@ thread_local std::optional<std::string> s_GroupConstructionFailureName;
  */
 const std::string& CheckGroupConstructionForTesting(const std::string& groupName)
 {
-  if(s_GroupConstructionFailureName.has_value() && s_GroupConstructionFailureName.value() == groupName)
+  if(SGroupConstructionFailureName.has_value() && SGroupConstructionFailureName.value() == groupName)
   {
-    s_GroupConstructionFailureName.reset();
+    SGroupConstructionFailureName.reset();
     throw std::bad_alloc{};
   }
   return groupName;
@@ -47,12 +47,12 @@ namespace nx::core::HDF5
 #if SIMPLNX_BUILD_TESTS
 void FailNextGroupConstructionForTesting(const std::string& groupName)
 {
-  s_GroupConstructionFailureName = groupName;
+  SGroupConstructionFailureName = groupName;
 }
 
 void ResetGroupConstructionFailureForTesting() noexcept
 {
-  s_GroupConstructionFailureName.reset();
+  SGroupConstructionFailureName.reset();
 }
 #endif
 
@@ -69,7 +69,7 @@ constexpr int32 k_AttributeRemovalError = -18802;
  * @return Open group identifier, or a negative HDF5 identifier on failure.
  * @pre The caller does not hold Support::ApiLock().
  */
-static IdType getGroupId(IdType parentId, const std::string& groupName)
+static IdType GetGroupId(IdType parentId, const std::string& groupName)
 {
   // Keep the probe and its dependent open or create operation atomic to HDF5 callers.
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());

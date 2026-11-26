@@ -66,13 +66,13 @@ enum class Command : uint8
 
 struct CliOptions
 {
-  std::optional<Command> SelectedCommand;
-  fs::path InputFile;
-  std::optional<fs::path> OutputFile;
+  std::optional<Command> selected_command;
+  fs::path input_file;
+  std::optional<fs::path> output_file;
   OutputFormat Format = OutputFormat::Json;
-  std::optional<std::string> DumpFlag;
-  std::optional<std::string> OutputFlag;
-  std::optional<std::string> FormatFlag;
+  std::optional<std::string> dump_flag;
+  std::optional<std::string> output_flag;
+  std::optional<std::string> format_flag;
 };
 
 /**
@@ -120,7 +120,7 @@ private:
  * @brief Writes command usage.
  * @param outputStream Stream that receives the usage text.
  */
-void printUsage(std::ostream& outputStream)
+void PrintUsage(std::ostream& outputStream)
 {
   outputStream << "Usage:\n"
                << "  nxinfo --dump-data-structure <file.dream3d> [--output-file <path>] [--format JSON|TEXT|DOT]\n"
@@ -149,7 +149,7 @@ void printUsage(std::ostream& outputStream)
  * @brief Writes the package version and build date.
  * @param outputStream Stream that receives the version text.
  */
-void printVersion(std::ostream& outputStream)
+void PrintVersion(std::ostream& outputStream)
 {
   outputStream << fmt::format("nxinfo: Version {} Build Date: {}\n", Version::Package(), Version::BuildDate());
 }
@@ -159,7 +159,7 @@ void printVersion(std::ostream& outputStream)
  * @param streams Success and diagnostic output streams.
  * @return Zero when standard output is healthy, or the output-failure code.
  */
-int finishStandardOutput(OutputStreams streams)
+int FinishStandardOutput(OutputStreams streams)
 {
   streams.Output.get().flush();
   if(streams.Output.get().good())
@@ -175,7 +175,7 @@ int finishStandardOutput(OutputStreams streams)
  * @brief Loads plugins from the same paths as nxrunner.
  * @param errorStream Stream that receives plugin-loading diagnostics.
  */
-void loadApp(std::ostream& errorStream)
+void LoadApp(std::ostream& errorStream)
 {
   const auto printLoadWarnings = [&errorStream](const fs::path& pluginPath, const Result<>& result) {
     errorStream << fmt::format("Warning: Failed to load one or more plugins from '{}'. Some file types may be unavailable.\n", pluginPath.string());
@@ -220,7 +220,7 @@ void loadApp(std::ostream& errorStream)
  * @param value Format name supplied by the user.
  * @return Parsed format or an argument error listing the valid formats.
  */
-Result<OutputFormat> parseFormat(const std::string& value)
+Result<OutputFormat> ParseFormat(const std::string& value)
 {
   const std::string upper = StringUtilities::toUpper(value);
   if(upper == "JSON")
@@ -245,7 +245,7 @@ Result<OutputFormat> parseFormat(const std::string& value)
  * @param flag Option spelling used in diagnostics.
  * @return The option value or a missing-value error.
  */
-Result<std::string> takeValue(const std::vector<std::string>& arguments, usize& index, const std::string& flag)
+Result<std::string> TakeValue(const std::vector<std::string>& arguments, usize& index, const std::string& flag)
 {
   if(index + 1 >= arguments.size())
   {
@@ -260,7 +260,7 @@ Result<std::string> takeValue(const std::vector<std::string>& arguments, usize& 
  * @param currentFlag Current option spelling.
  * @return Valid result for first use or an argument error for repeated use.
  */
-Result<> recordOption(std::optional<std::string>& firstFlag, const std::string& currentFlag)
+Result<> RecordOption(std::optional<std::string>& firstFlag, const std::string& currentFlag)
 {
   if(firstFlag.has_value())
   {
@@ -275,7 +275,7 @@ Result<> recordOption(std::optional<std::string>& firstFlag, const std::string& 
  * @param arguments Command-line arguments excluding the executable name.
  * @return Parsed options or a detailed argument error.
  */
-Result<CliOptions> parseArguments(const std::vector<std::string>& arguments)
+Result<CliOptions> ParseArguments(const std::vector<std::string>& arguments)
 {
   if(arguments.empty())
   {
@@ -293,7 +293,7 @@ Result<CliOptions> parseArguments(const std::vector<std::string>& arguments)
       {
         return MakeErrorResult<CliOptions>(k_FailedParsingArguments, fmt::format("Option '{}' cannot be combined with other arguments. Use it by itself.", arg));
       }
-      options.SelectedCommand = Command::Help;
+      options.selected_command = Command::Help;
       return {std::move(options)};
     }
     if(arg == k_VersionParamLong || arg == k_VersionParamShort)
@@ -302,53 +302,53 @@ Result<CliOptions> parseArguments(const std::vector<std::string>& arguments)
       {
         return MakeErrorResult<CliOptions>(k_FailedParsingArguments, fmt::format("Option '{}' cannot be combined with other arguments. Use it by itself.", arg));
       }
-      options.SelectedCommand = Command::Version;
+      options.selected_command = Command::Version;
       return {std::move(options)};
     }
     if(arg == k_DumpParamLong || arg == k_DumpParamShort)
     {
-      auto recordResult = recordOption(options.DumpFlag, arg);
+      auto recordResult = RecordOption(options.dump_flag, arg);
       if(recordResult.invalid())
       {
         return ConvertInvalidResult<CliOptions>(std::move(recordResult));
       }
-      auto value = takeValue(arguments, index, arg);
+      auto value = TakeValue(arguments, index, arg);
       if(value.invalid())
       {
         return ConvertInvalidResult<CliOptions>(std::move(value));
       }
-      options.SelectedCommand = Command::DumpDataStructure;
-      options.InputFile = std::move(value.value());
+      options.selected_command = Command::DumpDataStructure;
+      options.input_file = std::move(value.value());
       continue;
     }
     if(arg == k_OutputParamLong || arg == k_OutputParamShort)
     {
-      auto recordResult = recordOption(options.OutputFlag, arg);
+      auto recordResult = RecordOption(options.output_flag, arg);
       if(recordResult.invalid())
       {
         return ConvertInvalidResult<CliOptions>(std::move(recordResult));
       }
-      auto value = takeValue(arguments, index, arg);
+      auto value = TakeValue(arguments, index, arg);
       if(value.invalid())
       {
         return ConvertInvalidResult<CliOptions>(std::move(value));
       }
-      options.OutputFile.emplace(std::move(value.value()));
+      options.output_file.emplace(std::move(value.value()));
       continue;
     }
     if(arg == k_FormatParamLong || arg == k_FormatParamShort)
     {
-      auto recordResult = recordOption(options.FormatFlag, arg);
+      auto recordResult = RecordOption(options.format_flag, arg);
       if(recordResult.invalid())
       {
         return ConvertInvalidResult<CliOptions>(std::move(recordResult));
       }
-      auto value = takeValue(arguments, index, arg);
+      auto value = TakeValue(arguments, index, arg);
       if(value.invalid())
       {
         return ConvertInvalidResult<CliOptions>(std::move(value));
       }
-      auto format = parseFormat(value.value());
+      auto format = ParseFormat(value.value());
       if(format.invalid())
       {
         return ConvertInvalidResult<CliOptions>(std::move(format));
@@ -360,7 +360,7 @@ Result<CliOptions> parseArguments(const std::vector<std::string>& arguments)
     return MakeErrorResult<CliOptions>(k_FailedParsingArguments, fmt::format("Unknown argument '{}'.", arg));
   }
 
-  if(!options.SelectedCommand.has_value())
+  if(!options.selected_command.has_value())
   {
     return MakeErrorResult<CliOptions>(k_FailedParsingArguments, "No command given. Expected '--dump-data-structure <file>'.");
   }
@@ -376,7 +376,7 @@ Result<CliOptions> parseArguments(const std::vector<std::string>& arguments)
  * @param outputStream Stream that receives the serialized hierarchy.
  * @return True if the stream accepts and flushes the complete hierarchy.
  */
-bool writeDump(const DataStructure& dataStructure, OutputFormat format, std::ostream& outputStream)
+bool WriteDump(const DataStructure& dataStructure, OutputFormat format, std::ostream& outputStream)
 {
   switch(format)
   {
@@ -400,7 +400,7 @@ bool writeDump(const DataStructure& dataStructure, OutputFormat format, std::ost
  * @param errorStream Stream that receives the diagnostics.
  * @return The first error code, or the generic argument-error code for an empty list.
  */
-int printErrors(const std::vector<Error>& errors, std::ostream& errorStream)
+int PrintErrors(const std::vector<Error>& errors, std::ostream& errorStream)
 {
   for(const auto& error : errors)
   {
@@ -416,29 +416,29 @@ int printErrors(const std::vector<Error>& errors, std::ostream& errorStream)
  * @param loadPluginsFunction Function called before the DREAM3D input is read.
  * @return Zero on success or an input/output error code.
  */
-int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const LoadPluginsFunctionType& loadPluginsFunction)
+int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const LoadPluginsFunctionType& loadPluginsFunction)
 {
   std::error_code inputStatusError;
-  const fs::file_status inputStatus = fs::status(options.InputFile, inputStatusError);
+  const fs::file_status inputStatus = fs::status(options.input_file, inputStatusError);
   if(inputStatusError)
   {
     if(inputStatusError == std::errc::no_such_file_or_directory)
     {
-      streams.Error.get() << fmt::format("Error {}: Input file '{}' does not exist. Check the path and try again.\n", k_InputFileMissing, options.InputFile.string());
+      streams.Error.get() << fmt::format("Error {}: Input file '{}' does not exist. Check the path and try again.\n", k_InputFileMissing, options.input_file.string());
       return k_InputFileMissing;
     }
-    streams.Error.get() << fmt::format("Error {}: Could not inspect input file '{}': {}. Check the path and permissions.\n", k_InputFileMissing, options.InputFile.string(),
+    streams.Error.get() << fmt::format("Error {}: Could not inspect input file '{}': {}. Check the path and permissions.\n", k_InputFileMissing, options.input_file.string(),
                                        inputStatusError.message());
     return k_InputFileMissing;
   }
   if(!fs::is_regular_file(inputStatus))
   {
-    streams.Error.get() << fmt::format("Error {}: Input path '{}' is not a regular file. Select a DREAM3D file and try again.\n", k_InputFileMissing, options.InputFile.string());
+    streams.Error.get() << fmt::format("Error {}: Input path '{}' is not a regular file. Select a DREAM3D file and try again.\n", k_InputFileMissing, options.input_file.string());
     return k_InputFileMissing;
   }
-  if(options.OutputFile.has_value())
+  if(options.output_file.has_value())
   {
-    const fs::path& outputPath = *options.OutputFile;
+    const fs::path& outputPath = *options.output_file;
     const fs::path outputDirectory = outputPath.has_parent_path() ? outputPath.parent_path() : fs::path{"."};
     std::error_code outputDirectoryError;
     const bool outputDirectoryExists = fs::is_directory(outputDirectory, outputDirectoryError);
@@ -451,10 +451,10 @@ int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const
     }
 
     std::error_code sameFileError;
-    const bool pathsIdentifySameFile = fs::equivalent(options.InputFile, outputPath, sameFileError);
+    const bool pathsIdentifySameFile = fs::equivalent(options.input_file, outputPath, sameFileError);
     if(!sameFileError && pathsIdentifySameFile)
     {
-      streams.Error.get() << fmt::format("Error {}: Input file '{}' and output file '{}' identify the same file. Choose a different output path.\n", k_OutputFailure, options.InputFile.string(),
+      streams.Error.get() << fmt::format("Error {}: Input file '{}' and output file '{}' identify the same file. Choose a different output path.\n", k_OutputFailure, options.input_file.string(),
                                          outputPath.string());
       return k_OutputFailure;
     }
@@ -464,7 +464,7 @@ int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const
 
   const Result<DataStructure> readResult = [&options] {
     const ScopedHdf5ErrorHandler scopedHdf5ErrorHandler;
-    auto result = DREAM3D::ImportDataStructureFromFile(options.InputFile, /*preflight=*/true);
+    auto result = DREAM3D::ImportDataStructureFromFile(options.input_file, /*preflight=*/true);
     if(result.invalid())
     {
       Dream3dImportParameter::AddImageGeometryImportHint(result.errors());
@@ -473,19 +473,19 @@ int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const
   }();
   if(readResult.invalid())
   {
-    streams.Error.get() << fmt::format("Error {}: Failed to read the DataStructure from '{}'. Confirm that it is a valid DREAM3D file.\n", k_FailedReadingDataStructure, options.InputFile.string());
-    printErrors(readResult.errors(), streams.Error.get());
+    streams.Error.get() << fmt::format("Error {}: Failed to read the DataStructure from '{}'. Confirm that it is a valid DREAM3D file.\n", k_FailedReadingDataStructure, options.input_file.string());
+    PrintErrors(readResult.errors(), streams.Error.get());
     return k_FailedReadingDataStructure;
   }
 
-  if(options.OutputFile.has_value())
+  if(options.output_file.has_value())
   {
-    const fs::path& outputPath = *options.OutputFile;
+    const fs::path& outputPath = *options.output_file;
     auto atomicFileResult = AtomicFile::Create(outputPath);
     if(atomicFileResult.invalid())
     {
       streams.Error.get() << fmt::format("Error {}: Could not prepare output file '{}'. Check the path and write permissions.\n", k_OutputFailure, outputPath.string());
-      printErrors(atomicFileResult.errors(), streams.Error.get());
+      PrintErrors(atomicFileResult.errors(), streams.Error.get());
       return k_OutputFailure;
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
@@ -496,7 +496,7 @@ int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const
       streams.Error.get() << fmt::format("Error {}: Failed to open temporary output for '{}'. Check available disk space and write permissions.\n", k_OutputFailure, outputPath.string());
       return k_OutputFailure;
     }
-    const bool writeSucceeded = writeDump(readResult.value(), options.Format, outputFileStream);
+    const bool writeSucceeded = WriteDump(readResult.value(), options.Format, outputFileStream);
     outputFileStream.close();
     if(!writeSucceeded || outputFileStream.fail())
     {
@@ -508,13 +508,13 @@ int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const
     if(commitResult.invalid())
     {
       streams.Error.get() << fmt::format("Error {}: Failed to replace output file '{}'. The existing destination, if any, was preserved.\n", k_OutputFailure, outputPath.string());
-      printErrors(commitResult.errors(), streams.Error.get());
+      PrintErrors(commitResult.errors(), streams.Error.get());
       return k_OutputFailure;
     }
     return 0;
   }
 
-  if(!writeDump(readResult.value(), options.Format, streams.Output.get()))
+  if(!WriteDump(readResult.value(), options.Format, streams.Output.get()))
   {
     streams.Error.get() << fmt::format("Error {}: Failed to write the DataStructure hierarchy to standard output. Check that the receiving process or output destination is writable.\n",
                                        k_OutputFailure);
@@ -526,35 +526,35 @@ int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const
 
 int Run(const std::vector<std::string>& arguments, OutputStreams streams, const LoadPluginsFunctionType& loadPluginsFunction)
 {
-  const Result<CliOptions> parsed = parseArguments(arguments);
+  const Result<CliOptions> parsed = ParseArguments(arguments);
   if(parsed.invalid())
   {
-    const int code = printErrors(parsed.errors(), streams.Error.get());
-    printUsage(streams.Error.get());
+    const int code = PrintErrors(parsed.errors(), streams.Error.get());
+    PrintUsage(streams.Error.get());
     return code;
   }
 
   const CliOptions& options = parsed.value();
-  if(!options.SelectedCommand.has_value())
+  if(!options.selected_command.has_value())
   {
     streams.Error.get() << fmt::format("Error {}: No command was selected. Use '--help' to list available commands.\n", k_FailedParsingArguments);
     return k_FailedParsingArguments;
   }
-  if(*options.SelectedCommand == Command::Help)
+  if(*options.selected_command == Command::Help)
   {
-    printUsage(streams.Output.get());
-    return finishStandardOutput(streams);
+    PrintUsage(streams.Output.get());
+    return FinishStandardOutput(streams);
   }
-  if(*options.SelectedCommand == Command::Version)
+  if(*options.selected_command == Command::Version)
   {
-    printVersion(streams.Output.get());
-    return finishStandardOutput(streams);
+    PrintVersion(streams.Output.get());
+    return FinishStandardOutput(streams);
   }
-  return runDumpDataStructure(options, streams, loadPluginsFunction);
+  return RunDumpDataStructure(options, streams, loadPluginsFunction);
 }
 
 int Run(const std::vector<std::string>& arguments, OutputStreams streams)
 {
-  return Run(arguments, streams, loadApp);
+  return Run(arguments, streams, LoadApp);
 }
 } // namespace nx::core::nxinfo

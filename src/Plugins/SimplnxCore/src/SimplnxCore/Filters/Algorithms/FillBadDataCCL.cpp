@@ -776,12 +776,12 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
       {
         continue;
       }
-      auto* cellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+      auto* cellArrayPtr = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
       if(m_ShouldCancel)
       {
         return {};
       }
-      auto fillResult = ExecuteDataFunction(SliceBufferedCopyFunctor{}, cellArray->getDataType(), cellArray, pairStore, pairsWritten, sliceTuples, sliceStride, dims[2], m_ShouldCancel);
+      auto fillResult = ExecuteDataFunction(SliceBufferedCopyFunctor{}, cellArrayPtr->getDataType(), cellArrayPtr, pairStore, pairsWritten, sliceTuples, sliceStride, dims[2], m_ShouldCancel);
       if(fillResult.invalid())
       {
         return fillResult;
@@ -886,8 +886,8 @@ Result<> FillBadDataCCL::operator()()
   {
     for(const DataPath& path : childPaths.value())
     {
-      const auto* array = m_DataStructure.getDataAs<IDataArray>(path);
-      usesOutOfCoreStore = usesOutOfCoreStore || (array != nullptr && IsOutOfCore(*array));
+      const auto* arrayPtr = m_DataStructure.getDataAs<IDataArray>(path);
+      usesOutOfCoreStore = usesOutOfCoreStore || (arrayPtr != nullptr && IsOutOfCore(*arrayPtr));
     }
   }
   const bool allowInMemoryFallback = !usesOutOfCoreStore;

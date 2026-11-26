@@ -288,12 +288,12 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
   {
     return MakeErrorResult(-62078, "Feature tuple transfer array component shapes are incompatible.");
   }
-  constexpr usize kInvalid = std::numeric_limits<usize>::max();
+  constexpr usize k_KInvalid = std::numeric_limits<usize>::max();
   bool hasSource = false;
   for(const auto& record : records)
   {
     const auto cells = sourceIndices(record);
-    hasSource = cells[0] != kInvalid || cells[1] != kInvalid;
+    hasSource = cells[0] != k_KInvalid || cells[1] != k_KInvalid;
     if(hasSource)
     {
       break;
@@ -320,7 +320,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
       return MakeErrorResult(-62071, "Feature tuple transfer failed to allocate its bounded component buffers.");
     }
 
-    usize idPageStart = kInvalid;
+    usize idPageStart = k_KInvalid;
     const auto loadId = [&](usize cell) -> Result<K> {
       if(cell >= featureIds.getNumberOfTuples())
       {
@@ -355,8 +355,8 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
       const usize destinationFaceOffset = record.faceIndex * valuesPerFace;
       for(usize side = 0; side < 2; side++)
       {
-        usize feature = kInvalid;
-        if(cells[side] != kInvalid)
+        usize feature = k_KInvalid;
+        if(cells[side] != k_KInvalid)
         {
           auto featureIdResult = loadId(cells[side]);
           if(featureIdResult.invalid())
@@ -377,7 +377,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
           }
         }
 
-        const usize sourceTupleOffset = feature == kInvalid ? 0 : feature * numComps;
+        const usize sourceTupleOffset = feature == k_KInvalid ? 0 : feature * numComps;
         if(destinationFaceOffset > std::numeric_limits<usize>::max() - side * numComps)
         {
           return MakeErrorResult(-62074, "Feature tuple transfer destination offset overflows usize.");
@@ -386,7 +386,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
         for(usize componentStart = 0; componentStart < numComps;)
         {
           const usize componentCount = std::min(kTransferPageValues, numComps - componentStart);
-          if(feature == kInvalid)
+          if(feature == k_KInvalid)
           {
             std::fill_n(values.get(), componentCount, T{});
           }
@@ -428,8 +428,8 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
   std::array<usize, kTransferPageCount> valueUse{};
   usize idUseCounter = 0;
   usize valueUseCounter = 0;
-  idStarts.fill(kInvalid);
-  valueStarts.fill(kInvalid);
+  idStarts.fill(k_KInvalid);
+  valueStarts.fill(k_KInvalid);
   try
   {
     for(usize i = 0; i < kTransferPageCount; i++)
@@ -528,7 +528,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
       const auto cells = sourceIndices(rec);
       for(usize side = 0; side < 2; side++)
       {
-        if(cells[side] != kInvalid)
+        if(cells[side] != k_KInvalid)
         {
           auto fid = loadId(cells[side]);
           if(fid.invalid())
@@ -964,8 +964,8 @@ public:
   Result<> quickSurfaceTransferBatch(nonstd::span<const QuickSurfaceTransferData> records) override
   {
     return detail::TransferBoundedFeatureTuples<T, K>(m_FeatureIdsRef, m_FeatureDataRef, m_FaceRef, m_NumComps, records, [](const QuickSurfaceTransferData& record) {
-      constexpr usize kInvalid = std::numeric_limits<usize>::max();
-      return std::array<usize, 2>{record.faceLabel0 == -1 ? kInvalid : record.firstcIndex, record.faceLabel1 == -1 ? kInvalid : record.secondcIndex};
+      constexpr usize k_KInvalid = std::numeric_limits<usize>::max();
+      return std::array<usize, 2>{record.faceLabel0 == -1 ? k_KInvalid : record.firstcIndex, record.faceLabel1 == -1 ? k_KInvalid : record.secondcIndex};
     });
   }
 

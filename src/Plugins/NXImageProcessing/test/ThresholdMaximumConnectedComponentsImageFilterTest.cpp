@@ -20,7 +20,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using TMCCFilter = ThresholdMaximumConnectedComponentsImageFilter;
+using TmccFilterType = ThresholdMaximumConnectedComponentsImageFilter;
 
 // Sets the geometry, input, and output keys plus the four operation parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
@@ -29,13 +29,13 @@ void RunTMCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(TMCCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(TMCCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(TMCCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(TMCCFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(minimumObjectSizeInPixels));
-  args.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(upperBoundary));
-  args.insertOrAssign(TMCCFilter::k_InsideValue_Key, std::make_any<uint8>(insideValue));
-  args.insertOrAssign(TMCCFilter::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
+  args.insertOrAssign(TmccFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(TmccFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(TmccFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(TmccFilterType::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(minimumObjectSizeInPixels));
+  args.insertOrAssign(TmccFilterType::k_UpperBoundary_Key, std::make_any<float64>(upperBoundary));
+  args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(insideValue));
+  args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -61,15 +61,15 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
     const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    TMCCFilter filter;
+    TmccFilterType filter;
     Arguments args;
-    args.insertOrAssign(TMCCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(TMCCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(TMCCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(TMCCFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(0u));
-    args.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(65536.0));
-    args.insertOrAssign(TMCCFilter::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
-    args.insertOrAssign(TMCCFilter::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
+    args.insertOrAssign(TmccFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(TmccFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(TmccFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(TmccFilterType::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(0u));
+    args.insertOrAssign(TmccFilterType::k_UpperBoundary_Key, std::make_any<float64>(65536.0));
+    args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
+    args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
     const auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
@@ -79,7 +79,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
     DataStructure ds;
     const std::vector<float32> field = rt::MakeGradientNoisePattern<float32>(12, 12, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 12, 12, 1, field);
-    TMCCFilter filter;
+    TmccFilterType filter;
     RunTMCC(filter, ds, inputPath, /*minimumObjectSizeInPixels=*/0u, /*upperBoundary=*/65536.0, /*insideValue=*/1u, /*outsideValue=*/0u);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);

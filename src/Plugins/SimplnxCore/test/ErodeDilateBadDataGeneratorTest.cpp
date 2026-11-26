@@ -35,25 +35,25 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
   const usize sliceSize = dimX * dimY;
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1});
-  auto* featureIdsArray = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAM->getId());
-  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+  auto* featureIdsArrayPtr = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAmPtr->getId());
+  auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
 
   auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3});
-  auto* eulerArray = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAM->getId());
-  auto& eulerStore = eulerArray->getDataStoreRef();
+  auto* eulerArrayPtr = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAmPtr->getId());
+  auto& eulerStore = eulerArrayPtr->getDataStoreRef();
 
   auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_CellDataPath.createChildPath("Phases"), cellTupleShape, {1});
-  auto* phasesArray = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAM->getId());
-  auto& phasesStore = phasesArray->getDataStoreRef();
+  auto* phasesArrayPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAmPtr->getId());
+  auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
   const usize blocksPerDimX = dimX / blockSize;
   const usize blocksPerDimY = dimY / blockSize;

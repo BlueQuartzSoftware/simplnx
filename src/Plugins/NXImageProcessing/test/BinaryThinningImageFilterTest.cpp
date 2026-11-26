@@ -20,7 +20,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using BTFilter = BinaryThinningImageFilter;
+using BtFilterType = BinaryThinningImageFilter;
 
 // A single-slice 2D field that holds one solid rectangle. The rectangle spans x=3..11 and y=3..11 with the
 // foreground value 1. The background value is 0. The rectangle thins to a medial skeleton.
@@ -44,9 +44,9 @@ void RunThinning(IFilter& filter, DataStructure& ds, const DataPath& inputPath, 
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(BTFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(BTFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(BTFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(BtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(BtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(BtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -72,11 +72,11 @@ TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: preflight guards", "[NX
     const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    BTFilter filter;
+    BtFilterType filter;
     Arguments args;
-    args.insertOrAssign(BTFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(BTFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(BTFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(BtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(BtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(BtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     const auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
@@ -86,11 +86,11 @@ TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: preflight guards", "[NX
     DataStructure ds;
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, std::vector<float32>(36, 1.0f));
     const DataPath geomPath = inputPath.getParent().getParent();
-    BTFilter filter;
+    BtFilterType filter;
     Arguments args;
-    args.insertOrAssign(BTFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(BTFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(BTFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(BtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(BtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(BtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
   }
@@ -99,7 +99,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: preflight guards", "[NX
     DataStructure ds;
     const std::vector<uint8> field = MakeSolidRectField<uint8>(15, 15);
     const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 15, 15, 1, field);
-    BTFilter filter;
+    BtFilterType filter;
     RunThinning(filter, ds, inputPath);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
@@ -119,9 +119,9 @@ TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: FromSIMPLJson", "[NXIma
   const Result<Arguments> result = BinaryThinningImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<DataPath>(BTFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
-  REQUIRE(args.value<DataPath>(BTFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
-  REQUIRE(args.value<std::string>(BTFilter::k_OutputImageArrayName_Key) == "ThinnedOut");
+  REQUIRE(args.value<DataPath>(BtFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
+  REQUIRE(args.value<DataPath>(BtFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
+  REQUIRE(args.value<std::string>(BtFilterType::k_OutputImageArrayName_Key) == "ThinnedOut");
 }
 
 // -----------------------------------------------------------------------------

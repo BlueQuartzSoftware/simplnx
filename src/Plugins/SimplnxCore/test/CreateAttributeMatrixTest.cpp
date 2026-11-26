@@ -25,15 +25,15 @@ TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter(Instantiate)", "[SimplnxCore
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
-  static const DataPath k_DataPath({"foo"});
+  const static DynamicTableInfo::TableDataType kTupleDims = {{static_cast<double>(k_NumTuples)}};
+  static const DataPath kDataPath({"foo"});
 
   CreateAttributeMatrixFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  args.insert(CreateAttributeMatrixFilter::k_DataObjectPath, std::make_any<DataPath>(k_DataPath));
-  args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+  args.insert(CreateAttributeMatrixFilter::k_DataObjectPath, std::make_any<DataPath>(kDataPath));
+  args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -47,7 +47,7 @@ TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter(Invalid Parameters)", "[Simp
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
+  const static DynamicTableInfo::TableDataType kTupleDims = {{static_cast<double>(k_NumTuples)}};
 
   CreateAttributeMatrixFilter filter;
   DataStructure dataStructure;
@@ -56,14 +56,14 @@ TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter(Invalid Parameters)", "[Simp
   SECTION("Section 1")
   {
     args.insert(CreateAttributeMatrixFilter::k_DataObjectPath, std::make_any<DataPath>(DataPath{}));
-    args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
   }
 
   SECTION("Section 2")
   {
-    AttributeMatrix* attMat1 = AttributeMatrix::Create(dataStructure, "AttributeMatrix1", {1ULL});
+    AttributeMatrix* attMat1Ptr = AttributeMatrix::Create(dataStructure, "AttributeMatrix1", {1ULL});
     args.insert(CreateAttributeMatrixFilter::k_DataObjectPath, std::make_any<DataPath>(DataPath({"AttributeMatrix1", "AttributeMatrix2"})));
-    args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
   }
 
   auto result = filter.execute(dataStructure, args);
@@ -76,7 +76,7 @@ TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -89,22 +89,22 @@ TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateAttributeMatrixFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CreateAttributeMatrixFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Complex type (DynamicTableFilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<DataPath>(CreateAttributeMatrixFilter::k_DataObjectPath) == DataPath({"DataContainer", "CellData"}));
     }

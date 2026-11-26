@@ -54,7 +54,7 @@ const DataPath k_AvgCAxesPath = k_CellFeatureDataPath.createChildPath("AvgCAxes"
 // =============================================================================
 namespace
 {
-namespace AnalyticalFixtures
+namespace analytical_fixtures
 {
 const std::string k_GeomName = "ImageGeometry";
 const DataPath k_ImageGeomPath = DataPath({k_GeomName});
@@ -94,16 +94,16 @@ struct FixtureData
 {
   DataStructure ds;
   ImageGeom* geom = nullptr;
-  AttributeMatrix* cellAM = nullptr;
-  AttributeMatrix* featureAM = nullptr;
-  AttributeMatrix* ensembleAM = nullptr;
-  Int32Array* featureIds = nullptr;
-  Int32Array* cellPhases = nullptr;
+  AttributeMatrix* cell_am = nullptr;
+  AttributeMatrix* feature_am = nullptr;
+  AttributeMatrix* ensemble_am = nullptr;
+  Int32Array* feature_ids = nullptr;
+  Int32Array* cell_phases = nullptr;
   Float32Array* quats = nullptr;
-  Float32Array* avgCAxes = nullptr;
-  UInt32Array* crystalStructures = nullptr;
-  usize totalCells = 0;
-  usize totalFeatures = 0;
+  Float32Array* avg_c_axes = nullptr;
+  UInt32Array* crystal_structures = nullptr;
+  usize total_cells = 0;
+  usize total_features = 0;
 };
 
 // This function builds an ImageGeom-backed scaffold. Cell arrays use the {nZ, nY, nX} shape.
@@ -113,34 +113,34 @@ struct FixtureData
 FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize numCrystalStructures)
 {
   FixtureData td;
-  td.totalCells = nX * nY * nZ;
-  td.totalFeatures = numFeatures;
+  td.total_cells = nX * nY * nZ;
+  td.total_features = numFeatures;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
   REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.geom->setDimensions({nX, nY, nZ});
 
-  td.cellAM = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());
-  td.featureAM = AttributeMatrix::Create(td.ds, "CellFeatureData", ShapeType{numFeatures}, td.geom->getId());
-  td.ensembleAM = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
+  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());
+  td.feature_am = AttributeMatrix::Create(td.ds, "CellFeatureData", ShapeType{numFeatures}, td.geom->getId());
+  td.ensemble_am = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
   const ShapeType cellTupleShape = {nZ, nY, nX};
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
-  td.featureIds = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cellAM->getId());
+  td.feature_ids = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
   auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_CellPhasesName), cellTupleShape, {1});
-  td.cellPhases = Int32Array::Create(td.ds, k_CellPhasesName, cellPhasesStore, td.cellAM->getId());
+  td.cell_phases = Int32Array::Create(td.ds, k_CellPhasesName, cellPhasesStore, td.cell_am->getId());
   auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_CellDataPath.createChildPath(k_QuatsName), cellTupleShape, {4});
-  td.quats = Float32Array::Create(td.ds, k_QuatsName, quatsStore, td.cellAM->getId());
+  td.quats = Float32Array::Create(td.ds, k_QuatsName, quatsStore, td.cell_am->getId());
   auto avgCAxesStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_FeatureDataPath.createChildPath(k_AvgCAxesName), {numFeatures}, {3});
-  td.avgCAxes = Float32Array::Create(td.ds, k_AvgCAxesName, avgCAxesStore, td.featureAM->getId());
+  td.avg_c_axes = Float32Array::Create(td.ds, k_AvgCAxesName, avgCAxesStore, td.feature_am->getId());
   auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_EnsembleDataPath.createChildPath(k_CrystalStructuresName), {numCrystalStructures}, {1});
-  td.crystalStructures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.ensembleAM->getId());
+  td.crystal_structures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.ensemble_am->getId());
 
-  for(usize i = 0; i < td.totalCells; ++i)
+  for(usize i = 0; i < td.total_cells; ++i)
   {
-    (*td.featureIds)[i] = 1;
-    (*td.cellPhases)[i] = 1;
+    (*td.feature_ids)[i] = 1;
+    (*td.cell_phases)[i] = 1;
     (*td.quats)[i * 4 + 0] = 0.0f;
     (*td.quats)[i * 4 + 1] = 0.0f;
     (*td.quats)[i * 4 + 2] = 0.0f;
@@ -148,11 +148,11 @@ FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usiz
   }
   for(usize i = 0; i < numFeatures; ++i)
   {
-    (*td.avgCAxes)[i * 3 + 0] = 0.0f;
-    (*td.avgCAxes)[i * 3 + 1] = 0.0f;
-    (*td.avgCAxes)[i * 3 + 2] = 1.0f;
+    (*td.avg_c_axes)[i * 3 + 0] = 0.0f;
+    (*td.avg_c_axes)[i * 3 + 1] = 0.0f;
+    (*td.avg_c_axes)[i * 3 + 2] = 1.0f;
   }
-  (*td.crystalStructures)[0] = 999u;
+  (*td.crystal_structures)[0] = 999u;
   return td;
 }
 
@@ -166,9 +166,9 @@ void SetCellQuat(FixtureData& td, usize cellIdx, const std::array<float32, 4>& q
 
 void SetAvgCAxis(FixtureData& td, usize featureIdx, const std::array<float32, 3>& cAxis)
 {
-  (*td.avgCAxes)[featureIdx * 3 + 0] = cAxis[0];
-  (*td.avgCAxes)[featureIdx * 3 + 1] = cAxis[1];
-  (*td.avgCAxes)[featureIdx * 3 + 2] = cAxis[2];
+  (*td.avg_c_axes)[featureIdx * 3 + 0] = cAxis[0];
+  (*td.avg_c_axes)[featureIdx * 3 + 1] = cAxis[1];
+  (*td.avg_c_axes)[featureIdx * 3 + 2] = cAxis[2];
 }
 
 Arguments BuildArgs()
@@ -217,8 +217,8 @@ FixtureData BuildRealisticMicrostructure()
 {
   FixtureData td = CreateScaffold(/*nX=*/5, /*nY=*/5, /*nZ=*/1, /*numFeatures=*/6, /*numCrystalStructures=*/3);
 
-  (*td.crystalStructures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
-  (*td.crystalStructures)[2] = static_cast<uint32>(ebsdlib::CrystalStructure::Cubic_High);
+  (*td.crystal_structures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
+  (*td.crystal_structures)[2] = static_cast<uint32>(ebsdlib::CrystalStructure::Cubic_High);
 
   SetAvgCAxis(td, 1, CAxisFromPhiDeg(0.0f));
   SetAvgCAxis(td, 2, CAxisFromPhiDeg(10.0f));
@@ -233,8 +233,8 @@ FixtureData BuildRealisticMicrostructure()
     {
       const usize cellIdx = y * 5 + x;
       int32 fid = static_cast<int32>(y + 1); // y=0 -> F1, y=1 -> F2, ..., y=4 -> F5
-      (*td.featureIds)[cellIdx] = fid;
-      (*td.cellPhases)[cellIdx] = (fid == 3) ? 2 : 1; // F3 cubic, all others hex
+      (*td.feature_ids)[cellIdx] = fid;
+      (*td.cell_phases)[cellIdx] = (fid == 3) ? 2 : 1; // F3 cubic, all others hex
     }
   }
 
@@ -281,10 +281,10 @@ FixtureData BuildRealisticMicrostructure()
 // =============================================================================
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Class 1 — Simple Hex Triple", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
 {
-  using namespace AnalyticalFixtures;
+  using namespace analytical_fixtures;
 
   FixtureData td = CreateScaffold(/*nX=*/3, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/2, /*numCrystalStructures=*/2);
-  (*td.crystalStructures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
+  (*td.crystal_structures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
 
   SetCellQuat(td, 0, QuatFromPhiDeg(0.0f));
   SetCellQuat(td, 1, QuatFromPhiDeg(5.0f));
@@ -328,7 +328,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Class 1 — Realistic Microstructure (exposes divide-by-zero)",
           "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
 {
-  using namespace AnalyticalFixtures;
+  using namespace analytical_fixtures;
 
   FixtureData td = BuildRealisticMicrostructure();
 
@@ -390,10 +390,10 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Class 1 — All-Identical Orientation Feature",
           "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
 {
-  using namespace AnalyticalFixtures;
+  using namespace analytical_fixtures;
 
   FixtureData td = CreateScaffold(/*nX=*/5, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/2, /*numCrystalStructures=*/2);
-  (*td.crystalStructures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
+  (*td.crystal_structures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
 
   for(usize i = 0; i < 5; ++i)
   {
@@ -432,7 +432,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
 // =============================================================================
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Class 4 — Invariants", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
 {
-  using namespace AnalyticalFixtures;
+  using namespace analytical_fixtures;
 
   FixtureData td = BuildRealisticMicrostructure();
 
@@ -453,7 +453,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
     for(usize i = 0; i < 25; ++i)
     {
       INFO("Cell index " << i);
-      const int32 fid = (*td.featureIds)[i];
+      const int32 fid = (*td.feature_ids)[i];
       const bool isHexCell = (fid != 3); // F3 is cubic in this fixture
       if(isHexCell)
       {
@@ -481,7 +481,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
       usize count = 0;
       for(usize i = 0; i < 25; ++i)
       {
-        if((*td.featureIds)[i] == fid && (*td.cellPhases)[i] != 2) // skip cubic cells
+        if((*td.feature_ids)[i] == fid && (*td.cell_phases)[i] != 2) // skip cubic cells
         {
           sumMisos += cellMisos[i];
           count++;
@@ -557,23 +557,23 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
   // count. This drives the validateNumberOfTuples() guard in preflightImpl that emits
   // error -9800.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {10}, {1}, cellAM->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {10}, {1}, cellAmPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
 
   // CellPhases lives in a separate AttributeMatrix with a deliberately different tuple
   // count (9 != 10) so the cross-array tuple-count check fails.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "CellFeatureData", {5}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "AvgCAxes", {5}, {3}, featureAM->getId());
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "CellFeatureData", {5}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "AvgCAxes", {5}, {3}, featureAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   ComputeFeatureReferenceCAxisMisorientationsFilter filter;
   Arguments args;
@@ -598,7 +598,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -611,22 +611,22 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureReferenceCAxisMisorientationsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureReferenceCAxisMisorientationsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeFeatureReferenceCAxisMisorientationsFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeFeatureReferenceCAxisMisorientationsFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFeatureReferenceCAxisMisorientationsFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -648,32 +648,32 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
 
   constexpr usize k_SliceTuples = 17 * 19;
   constexpr usize k_CellTuples = k_SliceTuples * 4;
-  auto fixture = AnalyticalFixtures::CreateScaffold(17, 19, 4, 2, 2);
-  fixture.featureIds->fill(0);
-  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  auto fixture = analytical_fixtures::CreateScaffold(17, 19, 4, 2, 2);
+  fixture.feature_ids->fill(0);
+  (*fixture.crystal_structures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
   const std::array<usize, 3> cellIndices = {k_SliceTuples - 1, k_SliceTuples, k_CellTuples - 1};
   const std::array<float32, 3> expectedAngles = {10.0F, 20.0F, 30.0F};
   for(usize witnessIdx = 0; witnessIdx < cellIndices.size(); witnessIdx++)
   {
-    (*fixture.featureIds)[cellIndices[witnessIdx]] = 1;
-    AnalyticalFixtures::SetCellQuat(fixture, cellIndices[witnessIdx], AnalyticalFixtures::QuatFromPhiDeg(expectedAngles[witnessIdx]));
+    (*fixture.feature_ids)[cellIndices[witnessIdx]] = 1;
+    analytical_fixtures::SetCellQuat(fixture, cellIndices[witnessIdx], analytical_fixtures::QuatFromPhiDeg(expectedAngles[witnessIdx]));
   }
 
-  REQUIRE(fixture.featureIds->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(fixture.cellPhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.feature_ids->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.cell_phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(fixture.quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(fixture.avgCAxes->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.avg_c_axes->getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   ComputeFeatureReferenceCAxisMisorientationsFilter filter;
-  auto args = AnalyticalFixtures::BuildArgs();
+  auto args = analytical_fixtures::BuildArgs();
   auto executeResult = filter.execute(fixture.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(executeResult.result.warnings().size() == 1);
   REQUIRE(executeResult.result.warnings()[0].code == -9801);
 
-  const auto& cellMisorientations = AnalyticalFixtures::GetOutputCellMisos(fixture.ds);
-  const auto& featureMeans = AnalyticalFixtures::GetOutputFeatureAvg(fixture.ds);
-  const auto& featureStdevs = AnalyticalFixtures::GetOutputFeatureStdev(fixture.ds);
+  const auto& cellMisorientations = analytical_fixtures::GetOutputCellMisos(fixture.ds);
+  const auto& featureMeans = analytical_fixtures::GetOutputFeatureAvg(fixture.ds);
+  const auto& featureStdevs = analytical_fixtures::GetOutputFeatureStdev(fixture.ds);
   REQUIRE(cellMisorientations.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(featureMeans.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(featureStdevs.getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -693,19 +693,19 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
   UnitTest::LoadPlugins();
 
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  AnalyticalFixtures::FixtureData fixture = AnalyticalFixtures::CreateScaffold(/*nX=*/2, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/2, /*numCrystalStructures=*/2);
+  analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(/*nX=*/2, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/2, /*numCrystalStructures=*/2);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
-    REQUIRE(fixture.cellPhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(fixture.cell_phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
   }
-  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  (*fixture.crystal_structures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
 
   ComputeFeatureReferenceCAxisMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs();
+  Arguments args = analytical_fixtures::BuildArgs();
 
   SECTION("Participating Phase returns an error")
   {
-    (*fixture.cellPhases)[1] = 2;
+    (*fixture.cell_phases)[1] = 2;
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -9804);
@@ -713,15 +713,15 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
 
   SECTION("Nonpositive Phase is ignored")
   {
-    (*fixture.cellPhases)[1] = -1;
+    (*fixture.cell_phases)[1] = -1;
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   SECTION("Phase on feature zero is ignored")
   {
-    (*fixture.featureIds)[1] = 0;
-    (*fixture.cellPhases)[1] = 2;
+    (*fixture.feature_ids)[1] = 0;
+    (*fixture.cell_phases)[1] = 2;
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }

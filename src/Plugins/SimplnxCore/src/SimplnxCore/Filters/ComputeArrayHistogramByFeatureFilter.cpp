@@ -159,31 +159,31 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     parentPath = pDataGroupNameValue;
   }
 
-  const IDataArray* maskArray = nullptr;
+  const IDataArray* maskArrayPtr = nullptr;
   if(pUseMaskValue)
   {
-    maskArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
+    maskArrayPtr = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
   }
 
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
-    if(featureIdsArray.getNumberOfTuples() != dataArray->getNumberOfTuples())
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    if(featureIdsArray.getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
       return {.outputActions = MakeErrorResult<OutputActions>(
                   -57209, fmt::format("Cell Feature Ids array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
-                                      pCellFeatureIdsArrayPathValue.toString(), featureIdsArray.getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples())),
+                                      pCellFeatureIdsArrayPathValue.toString(), featureIdsArray.getNumberOfTuples(), selectedArrayPath.toString(), dataArrayPtr->getNumberOfTuples())),
               .outputValues = {}};
     }
-    if((maskArray != nullptr) && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
+    if((maskArrayPtr != nullptr) && maskArrayPtr->getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
       return {.outputActions =
                   MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
-                                                                     pMaskArrayPathValue.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples())),
+                                                                     pMaskArrayPathValue.toString(), maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(), dataArrayPtr->getNumberOfTuples())),
               .outputValues = {}};
     }
 
-    auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
+    auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArrayPtr->getName()));
     resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(arrayGroupPath));
 
     {
@@ -193,7 +193,7 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     }
 
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray->getDataType(), std::vector<usize>{1}, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue) * 2},
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArrayPtr->getDataType(), std::vector<usize>{1}, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue) * 2},
                                                                    arrayGroupPath.createChildPath(pBinRangeName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
@@ -204,7 +204,7 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     }
     if(pCalculateModalBinRanges)
     {
-      auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataArray->getDataType(), std::vector<usize>{1}, arrayGroupPath.createChildPath(pBinModalBinRangesName));
+      auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataArrayPtr->getDataType(), std::vector<usize>{1}, arrayGroupPath.createChildPath(pBinModalBinRangesName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }

@@ -25,26 +25,26 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 11;
-  constexpr usize DY = 11;
-  constexpr usize DZ = 1;
-  constexpr int32 bg = 0;
-  constexpr int32 fg = 1;
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Bg = 0;
+  constexpr int32 k_Fg = 1;
 
-  std::vector<int32> pattern(DX * DY * DZ, bg);
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Bg);
   // A 5x5 foreground square (interior) -- larger than a radius-1 Ball, so it survives erosion and is regrown.
   for(usize y = 3; y <= 7; ++y)
   {
     for(usize x = 3; x <= 7; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = fg;
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Fg;
     }
   }
   // An isolated 1-voxel foreground dot -- smaller than the structuring element, so erosion removes it with no seed.
-  pattern[rt::FlatIndex(9, 1, 0, DX, DY)] = fg;
+  pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Fg;
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   BinaryOpeningByReconstructionImageFilter filter;
   rt::RunReconstructionFilter<BinaryOpeningByReconstructionImageFilter>(
@@ -54,10 +54,10 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, DX, DY)) == bg); // isolated dot removed
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == fg); // square center preserved
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == fg); // square corner regrown (a plain opening would round it off)
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, DX, DY)) == bg); // untouched background
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Bg); // isolated dot removed
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Fg); // square center preserved
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Fg); // square corner regrown (a plain opening would round it off)
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Bg); // untouched background
 }
 
 // -----------------------------------------------------------------------------
@@ -77,23 +77,23 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 11;
-  constexpr usize DY = 11;
-  constexpr usize DZ = 1;
-  constexpr int32 bg = 0;
-  constexpr int32 fg = 1;
-  std::vector<int32> pattern(DX * DY * DZ, bg);
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Bg = 0;
+  constexpr int32 k_Fg = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Bg);
   for(usize y = 3; y <= 7; ++y)
   {
     for(usize x = 3; x <= 7; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = fg; // 5x5 foreground square -- larger than the SE, regrown exactly
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Fg; // 5x5 foreground square -- larger than the SE, regrown exactly
     }
   }
-  pattern[rt::FlatIndex(9, 1, 0, DX, DY)] = fg; // isolated 1-voxel foreground dot -- smaller than the SE, removed
+  pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Fg; // isolated 1-voxel foreground dot -- smaller than the SE, removed
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   BinaryOpeningByReconstructionImageFilter filter;
@@ -112,10 +112,10 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
   auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, DX, DY)) == bg); // isolated dot removed
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == fg); // square center preserved
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == fg); // square corner regrown
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, DX, DY)) == bg); // untouched background
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Bg); // isolated dot removed
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Fg); // square center preserved
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Fg); // square corner regrown
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Bg); // untouched background
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
@@ -136,23 +136,23 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 11;
-  constexpr usize DY = 11;
-  constexpr usize DZ = 1;
-  constexpr int32 bg = 0;
-  constexpr int32 fg = 1;
-  std::vector<int32> pattern(DX * DY * DZ, bg);
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Bg = 0;
+  constexpr int32 k_Fg = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Bg);
   for(usize y = 2; y <= 8; ++y) // 7x7 solid foreground block (strictly binary: only bg/fg)
   {
     for(usize x = 2; x <= 8; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = fg;
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Fg;
     }
   }
-  pattern[rt::FlatIndex(5, 5, 0, DX, DY)] = bg; // single fully-enclosed background hole -> Annulus erode marks it fg (stray marker)
+  pattern[rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)] = k_Bg; // single fully-enclosed background hole -> Annulus erode marks it fg (stray marker)
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   BinaryOpeningByReconstructionImageFilter filter;
   rt::RunReconstructionFilter<BinaryOpeningByReconstructionImageFilter>(
@@ -164,11 +164,11 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
 
   // The stray-marker hole (clamped back to the mask) must stay background -- the exact behavior the clamp-to-mask
   // branch guarantees.
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == bg);
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Bg);
   // The surrounding block's connected component is restored (interior seeds survived the Annulus erode), so the
   // reconstruction genuinely ran rather than collapsing to all-background.
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == fg);
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == fg);
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Fg);
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Fg);
 
   // Output is strictly binary AND anti-extensive (every output-foreground voxel was input-foreground). A clamp
   // failure would leak a stray marker into background, violating one of these.
@@ -176,10 +176,10 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
   {
     const int32 outValue = outStore.getValue(i);
     INFO("clamp-to-mask index=" << i << " out=" << outValue << " in=" << pattern[i]);
-    REQUIRE((outValue == bg || outValue == fg));
-    if(outValue == fg)
+    REQUIRE((outValue == k_Bg || outValue == k_Fg));
+    if(outValue == k_Fg)
     {
-      REQUIRE(pattern[i] == fg);
+      REQUIRE(pattern[i] == k_Fg);
     }
   }
 }

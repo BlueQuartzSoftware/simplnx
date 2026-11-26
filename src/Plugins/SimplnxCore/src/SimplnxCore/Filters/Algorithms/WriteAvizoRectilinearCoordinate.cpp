@@ -244,13 +244,13 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 
   if(m_InputValues->WriteBinaryFile)
   {
-    constexpr std::array<char, 3> axisNames = {'X', 'Y', 'Z'};
+    constexpr std::array<char, 3> k_AxisNames = {'X', 'Y', 'Z'};
     for(int d = 0; d < 3; ++d)
     {
       if(dims[d] > std::numeric_limits<usize>::max() / sizeof(float32))
       {
         auto overflowError = MakeErrorResult(
-            -5833, fmt::format("Cannot write {} coordinates to Avizo output '{}': {} float values exceed the byte-count limit.", axisNames[d], m_InputValues->OutputFile.string(), dims[d]));
+            -5833, fmt::format("Cannot write {} coordinates to Avizo output '{}': {} float values exceed the byte-count limit.", k_AxisNames[d], m_InputValues->OutputFile.string(), dims[d]));
         return MergeResults(std::move(result), std::move(overflowError));
       }
       const usize axisBytes = dims[d] * sizeof(float32);

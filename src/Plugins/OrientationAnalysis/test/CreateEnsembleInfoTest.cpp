@@ -123,32 +123,32 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
   const DataPath exemplarAttributeMatrixPath({"ImageDataContainer", "CellEnsembleData"});
 
-  const auto* attributeMatrix = dataStructure.getDataAs<AttributeMatrix>(cellEnsembleAttributeMatrixPath);
-  REQUIRE(attributeMatrix != nullptr);
+  const auto* attributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(cellEnsembleAttributeMatrixPath);
+  REQUIRE(attributeMatrixPtr != nullptr);
 
-  const auto* exemplarAttributeMatrix = exemplarDataStructure.getDataAs<AttributeMatrix>(exemplarAttributeMatrixPath);
-  REQUIRE(attributeMatrix->getShape() == exemplarAttributeMatrix->getShape());
+  const auto* exemplarAttributeMatrixPtr = exemplarDataStructure.getDataAs<AttributeMatrix>(exemplarAttributeMatrixPath);
+  REQUIRE(attributeMatrixPtr->getShape() == exemplarAttributeMatrixPtr->getShape());
 
-  const auto* crystalStructures = dataStructure.getDataAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(crystalStructuresName));
-  const auto* phaseTypes = dataStructure.getDataAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(phaseTypesName));
-  const auto* phaseNames = dataStructure.getDataAs<StringArray>(cellEnsembleAttributeMatrixPath.createChildPath(phaseNamesName));
-  REQUIRE(crystalStructures != nullptr);
-  REQUIRE(phaseTypes != nullptr);
-  REQUIRE(phaseTypes != nullptr);
+  const auto* crystalStructuresPtr = dataStructure.getDataAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(crystalStructuresName));
+  const auto* phaseTypesPtr = dataStructure.getDataAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(phaseTypesName));
+  const auto* phaseNamesPtr = dataStructure.getDataAs<StringArray>(cellEnsembleAttributeMatrixPath.createChildPath(phaseNamesName));
+  REQUIRE(crystalStructuresPtr != nullptr);
+  REQUIRE(phaseTypesPtr != nullptr);
+  REQUIRE(phaseTypesPtr != nullptr);
 
   const auto& exemplarCrystalStructures = exemplarDataStructure.getDataRefAs<UInt32Array>(exemplarAttributeMatrixPath.createChildPath(crystalStructuresName));
   const auto& exemplarPhaseTypes = exemplarDataStructure.getDataRefAs<UInt32Array>(exemplarAttributeMatrixPath.createChildPath(phaseTypesName));
   const auto& exemplarPhaseNames = exemplarDataStructure.getDataRefAs<StringArray>(exemplarAttributeMatrixPath.createChildPath(phaseNamesName));
-  REQUIRE(exemplarCrystalStructures.getSize() == crystalStructures->getSize());
-  REQUIRE(exemplarPhaseTypes.getSize() == phaseTypes->getSize());
-  REQUIRE(exemplarPhaseNames.getSize() == phaseNames->getSize());
+  REQUIRE(exemplarCrystalStructures.getSize() == crystalStructuresPtr->getSize());
+  REQUIRE(exemplarPhaseTypes.getSize() == phaseTypesPtr->getSize());
+  REQUIRE(exemplarPhaseNames.getSize() == phaseNamesPtr->getSize());
 
   usize numElements = exemplarCrystalStructures.getSize();
   for(usize i = 0; i < numElements; ++i)
   {
-    REQUIRE((*crystalStructures)[i] == exemplarCrystalStructures[i]);
-    REQUIRE((*phaseTypes)[i] == exemplarPhaseTypes[i]);
-    REQUIRE((*phaseNames)[i] == exemplarPhaseNames[i]);
+    REQUIRE((*crystalStructuresPtr)[i] == exemplarCrystalStructures[i]);
+    REQUIRE((*phaseTypesPtr)[i] == exemplarPhaseTypes[i]);
+    REQUIRE((*phaseNamesPtr)[i] == exemplarPhaseNames[i]);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -158,7 +158,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: SIMPL Backwards Compat
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -171,20 +171,20 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: SIMPL Backwards Compat
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateEnsembleInfoFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CreateEnsembleInfoFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key) == "TestName");
       CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key) == "TestName");
       CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key) == "TestName");

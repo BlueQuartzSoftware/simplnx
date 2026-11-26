@@ -25,16 +25,16 @@ namespace
 {
 struct OtsuOperation
 {
-  uint32 numBins = 128u;
-  uint8 numThresholds = 1u;
-  uint8 labelOffset = 0u;
-  bool valleyEmphasis = false;
-  bool returnBinMidpoint = false;
+  uint32 num_bins = 128u;
+  uint8 num_thresholds = 1u;
+  uint8 label_offset = 0u;
+  bool valley_emphasis = false;
+  bool return_bin_midpoint = false;
 
   template <class T, class U>
   auto makeClassifyOp(const std::vector<float64>& thresholds) const
   {
-    const uint8 offset = labelOffset;
+    const uint8 offset = label_offset;
     return [thresholds, offset](T value) -> U {
       // class index = count of thresholds this value STRICTLY EXCEEDS, + labelOffset. std::lower_bound gives the
       // count of thresholds < value, i.e. a value exactly equal to a threshold lands in the LOWER class -- which
@@ -144,7 +144,7 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
 
   const OtsuOperation operation{
-      .numBins = numberOfHistogramBins, .numThresholds = numberOfThresholds, .labelOffset = labelOffset, .valleyEmphasis = valleyEmphasis, .returnBinMidpoint = returnBinMidpoint};
+      .num_bins = numberOfHistogramBins, .num_thresholds = numberOfThresholds, .label_offset = labelOffset, .valley_emphasis = valleyEmphasis, .return_bin_midpoint = returnBinMidpoint};
   return ImageProcessing::ExecuteHistogramImageFilter<ImageProcessing::AllNumeric>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

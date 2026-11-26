@@ -32,14 +32,14 @@ DataStructure CreateDataStructure()
 {
   DataStructure dataStructure;
 
-  DataGroup* group = nx::core::DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
-  DataGroup* scanData = nx::core::DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, group->getId());
+  DataGroup* groupPtr = nx::core::DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
+  DataGroup* scanDataPtr = nx::core::DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, groupPtr->getId());
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_SmallIn100ImageGeom, scanData->getId());
-  REQUIRE(imageGeom->setSpacing({0.25f, 0.25f, 0.25f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_SmallIn100ImageGeom, scanDataPtr->getId());
+  REQUIRE(imageGeomPtr->setSpacing({0.25f, 0.25f, 0.25f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   nx::core::SizeVec3 imageGeomDims = {100, 100, 2};
-  imageGeom->setDimensions(imageGeomDims);
+  imageGeomPtr->setDimensions(imageGeomDims);
 
   // DataStructure owns created arrays. Do not create a second shared owner.
   std::vector<size_t> compDims = {4};
@@ -48,18 +48,18 @@ DataStructure CreateDataStructure()
   std::string filePath = nx::core::unit_test::k_DataDir.str();
 
   std::string fileName = "/quats.raw";
-  nx::core::ImportFromBinaryFile<float>(filePath + fileName, k_Quats, dataStructure, tupleDims, compDims, scanData->getId());
+  nx::core::ImportFromBinaryFile<float>(filePath + fileName, k_Quats, dataStructure, tupleDims, compDims, scanDataPtr->getId());
 
   fileName = "/fz_quats.raw";
-  nx::core::ImportFromBinaryFile<float>(filePath + fileName, "FZ_QUATS_EXEMPLAR", dataStructure, tupleDims, compDims, scanData->getId());
+  nx::core::ImportFromBinaryFile<float>(filePath + fileName, "FZ_QUATS_EXEMPLAR", dataStructure, tupleDims, compDims, scanDataPtr->getId());
 
-  Int32Array* phases_data = nx::core::UnitTest::CreateTestDataArray<int32>(dataStructure, k_Phases, tupleDims, {1}, scanData->getId());
-  phases_data->fill(1);
+  Int32Array* phasesDataPtr = nx::core::UnitTest::CreateTestDataArray<int32>(dataStructure, k_Phases, tupleDims, {1}, scanDataPtr->getId());
+  phasesDataPtr->fill(1);
 
-  DataGroup* phaseGroup = nx::core::DataGroup::Create(dataStructure, k_PhaseData, group->getId());
-  UInt32Array* laueClass = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_LaueClass, {2}, {1}, phaseGroup->getId());
-  (*laueClass)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-  (*laueClass)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  DataGroup* phaseGroupPtr = nx::core::DataGroup::Create(dataStructure, k_PhaseData, groupPtr->getId());
+  UInt32Array* laueClassPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_LaueClass, {2}, {1}, phaseGroupPtr->getId());
+  (*laueClassPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*laueClassPtr)[1] = ebsdlib::CrystalStructure::Cubic_High;
 
   return dataStructure;
 }
@@ -93,33 +93,33 @@ DataStructure CreateAnalyticalDataStructure(const std::array<int32, 4>& phases)
   REQUIRE(boolMaskStore != nullptr);
   REQUIRE(uint8MaskStore != nullptr);
 
-  auto* quats = Float32Array::Create(dataStructure, k_AnalyticalQuatsPath.getTargetName(), quatsStore);
-  auto* phaseArray = Int32Array::Create(dataStructure, k_AnalyticalPhasesPath.getTargetName(), phasesStore);
-  auto* crystalStructures = UInt32Array::Create(dataStructure, k_AnalyticalCrystalStructuresPath.getTargetName(), crystalStructuresStore);
-  auto* boolMask = BoolArray::Create(dataStructure, k_AnalyticalBoolMaskPath.getTargetName(), boolMaskStore);
-  auto* uint8Mask = UInt8Array::Create(dataStructure, k_AnalyticalUInt8MaskPath.getTargetName(), uint8MaskStore);
-  REQUIRE(quats != nullptr);
-  REQUIRE(phaseArray != nullptr);
-  REQUIRE(crystalStructures != nullptr);
-  REQUIRE(boolMask != nullptr);
-  REQUIRE(uint8Mask != nullptr);
+  auto* quatsPtr = Float32Array::Create(dataStructure, k_AnalyticalQuatsPath.getTargetName(), quatsStore);
+  auto* phaseArrayPtr = Int32Array::Create(dataStructure, k_AnalyticalPhasesPath.getTargetName(), phasesStore);
+  auto* crystalStructuresPtr = UInt32Array::Create(dataStructure, k_AnalyticalCrystalStructuresPath.getTargetName(), crystalStructuresStore);
+  auto* boolMaskPtr = BoolArray::Create(dataStructure, k_AnalyticalBoolMaskPath.getTargetName(), boolMaskStore);
+  auto* uint8MaskPtr = UInt8Array::Create(dataStructure, k_AnalyticalUInt8MaskPath.getTargetName(), uint8MaskStore);
+  REQUIRE(quatsPtr != nullptr);
+  REQUIRE(phaseArrayPtr != nullptr);
+  REQUIRE(crystalStructuresPtr != nullptr);
+  REQUIRE(boolMaskPtr != nullptr);
+  REQUIRE(uint8MaskPtr != nullptr);
 
   for(usize tupleIdx = 0; tupleIdx < 4; tupleIdx++)
   {
-    (*quats)[tupleIdx * 4] = 0.0F;
-    (*quats)[tupleIdx * 4 + 1] = 0.0F;
-    (*quats)[tupleIdx * 4 + 2] = 0.0F;
-    (*quats)[tupleIdx * 4 + 3] = 1.0F;
-    (*phaseArray)[tupleIdx] = phases[tupleIdx];
+    (*quatsPtr)[tupleIdx * 4] = 0.0F;
+    (*quatsPtr)[tupleIdx * 4 + 1] = 0.0F;
+    (*quatsPtr)[tupleIdx * 4 + 2] = 0.0F;
+    (*quatsPtr)[tupleIdx * 4 + 3] = 1.0F;
+    (*phaseArrayPtr)[tupleIdx] = phases[tupleIdx];
   }
-  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  (*crystalStructuresPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructuresPtr)[1] = ebsdlib::CrystalStructure::Cubic_High;
 
   const std::array<bool, 4> mask = {true, false, false, false};
   for(usize tupleIdx = 0; tupleIdx < mask.size(); tupleIdx++)
   {
-    (*boolMask)[tupleIdx] = mask[tupleIdx];
-    (*uint8Mask)[tupleIdx] = mask[tupleIdx] ? 1U : 0U;
+    (*boolMaskPtr)[tupleIdx] = mask[tupleIdx];
+    (*uint8MaskPtr)[tupleIdx] = mask[tupleIdx] ? 1U : 0U;
   }
 
   return dataStructure;
@@ -293,7 +293,7 @@ TEST_CASE("OrientationAnalysis::ComputeFZQuaternionsFilter: SIMPL Backwards Comp
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -306,22 +306,22 @@ TEST_CASE("OrientationAnalysis::ComputeFZQuaternionsFilter: SIMPL Backwards Comp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFZQuaternionsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFZQuaternionsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeFZQuaternionsFilter::k_UseMask_Key) == true);
       CHECK(args.value<DataPath>(ComputeFZQuaternionsFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFZQuaternionsFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

@@ -125,12 +125,12 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   }
 
   const auto phaseNamesPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
-  const auto* phaseNames = dataStructure.getDataAs<StringArray>(phaseNamesPath);
-  if(phaseNames == nullptr)
+  const auto* phaseNamesPtr = dataStructure.getDataAs<StringArray>(phaseNamesPath);
+  if(phaseNamesPtr == nullptr)
   {
     return MakePreflightErrorResult(-12025, fmt::format("The phase names object '{}' is not a StringArray. Select a StringArray that contains the phase names.", phaseNamesPath.toString()));
   }
-  if(phaseNames->getNumberOfTuples() == 0)
+  if(phaseNamesPtr->getNumberOfTuples() == 0)
   {
     resultOutputActions.warnings().push_back(
         Warning{.code = -12038, .message = fmt::format("The phase names StringArray '{}' has 0 tuples. Every name will be written as 'Phase_<id>'.", phaseNamesPath.toString())});

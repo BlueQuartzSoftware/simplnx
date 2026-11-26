@@ -157,8 +157,8 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     }
   }
 
-  const auto* pFeatureAM = dataStructure.getDataAs<AttributeMatrix>(pFeatureVolumesPath.getParent());
-  if(pFeatureAM == nullptr)
+  const auto* pFeatureAmPtr = dataStructure.getDataAs<AttributeMatrix>(pFeatureVolumesPath.getParent());
+  if(pFeatureAmPtr == nullptr)
   {
     return MakePreflightErrorResult(-15673, fmt::format("Feature Volumes [{}] must be stored in an Attribute Matrix.", pFeatureVolumesPath.toString()));
   }
@@ -169,7 +169,7 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
   if(pFindCheckedFeatures)
   {
     DataPath checkedFeaturesPath = pFeatureVolumesPath.replaceName(pCheckedFeaturesName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, pFeatureAM->getShape(), ShapeType{1}, checkedFeaturesPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, pFeatureAmPtr->getShape(), ShapeType{1}, checkedFeaturesPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   else
@@ -199,15 +199,15 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     }
   }
 
-  const auto* pParentAM = dataStructure.getDataAs<AttributeMatrix>(pParentVolumesPath.getParent());
-  if(pParentAM == nullptr)
+  const auto* pParentAmPtr = dataStructure.getDataAs<AttributeMatrix>(pParentVolumesPath.getParent());
+  if(pParentAmPtr == nullptr)
   {
     return MakePreflightErrorResult(-15670, fmt::format("Parent Volumes [{}] must be stored in an Attribute Matrix.", pParentVolumesPath.toString()));
   }
 
   {
     DataPath groupingDataPath = pParentVolumesPath.replaceName(pGroupingDensitiesName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, pParentAM->getShape(), std::vector<usize>{1}, groupingDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, pParentAmPtr->getShape(), std::vector<usize>{1}, groupingDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

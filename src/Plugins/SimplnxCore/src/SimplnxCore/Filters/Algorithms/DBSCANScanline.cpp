@@ -136,12 +136,12 @@ constexpr uint64 k_MergeTileRecords = 2048;       // Bounds point records held f
  */
 struct DBSCANGridState
 {
-  uint64 Grid[3] = {0, 0, 0}; // Grid coordinates in X/Y/Z order.
-  uint64 FirstMember = 0;     // First point-record index in sorted membership.
-  uint64 MemberCount = 0;     // Number of point records in the grid.
-  uint64 Parent = 0;          // Parent grid identifier in the external forest.
-  int32 ClusterId = 0;        // Feature identifier for a root grid.
-  uint8 IsCore = 0;           // Nonzero when MemberCount meets MinPoints.
+  uint64 grid[3] = {0, 0, 0}; // Grid coordinates in X/Y/Z order.
+  uint64 first_member = 0;     // First point-record index in sorted membership.
+  uint64 member_count = 0;     // Number of point records in the grid.
+  uint64 parent = 0;          // Parent grid identifier in the external forest.
+  int32 cluster_id = 0;        // Feature identifier for a root grid.
+  uint8 is_core = 0;           // Nonzero when MemberCount meets MinPoints.
 };
 
 /**
@@ -150,7 +150,7 @@ struct DBSCANGridState
  */
 struct DBSCANCoreOrder
 {
-  uint64 GridId = 0; // Grid-state record identifier.
+  uint64 grid_id = 0; // Grid-state record identifier.
 };
 
 /**
@@ -159,7 +159,7 @@ struct DBSCANCoreOrder
  */
 struct DBSCANAxisRecord
 {
-  uint64 Coordinate = 0; // Grid coordinate on one axis.
+  uint64 coordinate = 0; // Grid coordinate on one axis.
 };
 
 /**
@@ -168,8 +168,8 @@ struct DBSCANAxisRecord
  */
 struct DBSCANLabelRecord
 {
-  uint64 TupleId = 0;  // Source tuple identifier.
-  int32 FeatureId = 0; // Final feature identifier.
+  uint64 tuple_id = 0;  // Source tuple identifier.
+  int32 feature_id = 0; // Final feature identifier.
 };
 
 /**
@@ -180,9 +180,9 @@ struct DBSCANLabelRecord
 template <typename T>
 struct DBSCANPointRecord
 {
-  uint64 Grid[3] = {0, 0, 0}; // Grid coordinates in X/Y/Z order.
-  uint64 TupleId = 0;         // Original tuple identifier.
-  T Coordinates[3] = {};      // Point coordinate values.
+  uint64 grid[3] = {0, 0, 0}; // Grid coordinates in X/Y/Z order.
+  uint64 tuple_id = 0;         // Original tuple identifier.
+  T coordinates[3] = {};      // Point coordinate values.
 };
 
 static_assert(std::is_trivially_copyable_v<DBSCANGridState>);
@@ -208,16 +208,16 @@ int32 ComparePointRecords(nonstd::span<const std::byte> left, nonstd::span<const
   std::memcpy(&rhs, right.data(), sizeof(rhs));
   for(usize dimension = 3; dimension-- > 0;)
   {
-    if(lhs.Grid[dimension] != rhs.Grid[dimension])
+    if(lhs.grid[dimension] != rhs.grid[dimension])
     {
-      return lhs.Grid[dimension] < rhs.Grid[dimension] ? -1 : 1;
+      return lhs.grid[dimension] < rhs.grid[dimension] ? -1 : 1;
     }
   }
-  if(lhs.TupleId == rhs.TupleId)
+  if(lhs.tuple_id == rhs.tuple_id)
   {
     return 0;
   }
-  return lhs.TupleId < rhs.TupleId ? -1 : 1;
+  return lhs.tuple_id < rhs.tuple_id ? -1 : 1;
 }
 
 /**
@@ -230,7 +230,7 @@ int32 ComparePointRecords(nonstd::span<const std::byte> left, nonstd::span<const
 template <typename T>
 bool SameGrid(const DBSCANPointRecord<T>& left, const DBSCANPointRecord<T>& right)
 {
-  return left.Grid[0] == right.Grid[0] && left.Grid[1] == right.Grid[1] && left.Grid[2] == right.Grid[2];
+  return left.grid[0] == right.grid[0] && left.grid[1] == right.grid[1] && left.grid[2] == right.grid[2];
 }
 
 /**
@@ -245,11 +245,11 @@ int32 CompareAxisRecords(nonstd::span<const std::byte> left, nonstd::span<const 
   DBSCANAxisRecord rhs = {};
   std::memcpy(&lhs, left.data(), sizeof(lhs));
   std::memcpy(&rhs, right.data(), sizeof(rhs));
-  if(lhs.Coordinate == rhs.Coordinate)
+  if(lhs.coordinate == rhs.coordinate)
   {
     return 0;
   }
-  return lhs.Coordinate < rhs.Coordinate ? -1 : 1;
+  return lhs.coordinate < rhs.coordinate ? -1 : 1;
 }
 
 /**
@@ -264,11 +264,11 @@ int32 CompareLabelRecords(nonstd::span<const std::byte> left, nonstd::span<const
   DBSCANLabelRecord rhs = {};
   std::memcpy(&lhs, left.data(), sizeof(lhs));
   std::memcpy(&rhs, right.data(), sizeof(rhs));
-  if(lhs.TupleId == rhs.TupleId)
+  if(lhs.tuple_id == rhs.tuple_id)
   {
     return 0;
   }
-  return lhs.TupleId < rhs.TupleId ? -1 : 1;
+  return lhs.tuple_id < rhs.tuple_id ? -1 : 1;
 }
 
 /**
@@ -443,12 +443,12 @@ public:
         }
         DBSCANPointRecord<T>& record = pointRecords[static_cast<usize>(pointCount)];
         record = {};
-        record.TupleId = static_cast<uint64>(offset + index);
+        record.tuple_id = static_cast<uint64>(offset + index);
         for(usize dimension = 0; dimension < m_Dimensions; ++dimension)
         {
           const float32 value = static_cast<float32>(values[index * m_Dimensions + dimension]);
-          record.Grid[dimension] = static_cast<uint64>(std::floor((value - m_Origin[dimension]) / m_SideLength));
-          record.Coordinates[dimension] = values[index * m_Dimensions + dimension];
+          record.grid[dimension] = static_cast<uint64>(std::floor((value - m_Origin[dimension]) / m_SideLength));
+          record.coordinates[dimension] = values[index * m_Dimensions + dimension];
         }
         ++pointCount;
       }
@@ -612,7 +612,7 @@ public:
       {
         return ConvertResult(std::move(coreOrderResult));
       }
-      const uint64 coreGridId = coreOrderResult.value().GridId;
+      const uint64 coreGridId = coreOrderResult.value().grid_id;
       Result<GridNeighborhood> neighborsResult = gridNeighborhood(coreGridId);
       if(neighborsResult.invalid())
       {
@@ -629,7 +629,7 @@ public:
       const GridNeighborhood& neighbors = neighborsResult.value();
       for(usize neighborIndex = 0; neighborIndex < neighbors.Count; ++neighborIndex)
       {
-        const uint64 neighborGridId = neighbors.GridIds[neighborIndex];
+        const uint64 neighborGridId = neighbors.grid_ids[neighborIndex];
         Result<bool> inferResult = infer(coreGridId, neighborGridId);
         if(inferResult.invalid())
         {
@@ -657,7 +657,7 @@ public:
         {
           return ConvertResult(std::move(neighborStateResult));
         }
-        if(neighborStateResult.value().IsCore == 0 && neighborStateResult.value().Parent == neighborGridId)
+        if(neighborStateResult.value().is_core == 0 && neighborStateResult.value().parent == neighborGridId)
         {
           Result<> parentResult = setParent(neighborGridId, coreGridId);
           if(parentResult.invalid())
@@ -701,7 +701,7 @@ public:
         {
           return ConvertResult(std::move(activeStateResult));
         }
-        if(activeStateResult.value().IsCore != 0)
+        if(activeStateResult.value().is_core != 0)
         {
           continue;
         }
@@ -717,7 +717,7 @@ public:
         }
         for(usize neighborIndex = 0; neighborIndex < neighbors.Count; ++neighborIndex)
         {
-          const uint64 neighborGridId = neighbors.GridIds[neighborIndex];
+          const uint64 neighborGridId = neighbors.grid_ids[neighborIndex];
           Result<bool> inferResult = infer(gridId, neighborGridId);
           if(inferResult.invalid())
           {
@@ -765,7 +765,7 @@ public:
 
           if(activeParent == gridId)
           {
-            if(neighborStateResult.value().IsCore == 0 && neighborParent == neighborGridId)
+            if(neighborStateResult.value().is_core == 0 && neighborParent == neighborGridId)
             {
               continue;
             }
@@ -775,7 +775,7 @@ public:
               return parentResult;
             }
           }
-          else if(neighborStateResult.value().IsCore == 0 && neighborParent == neighborGridId)
+          else if(neighborStateResult.value().is_core == 0 && neighborParent == neighborGridId)
           {
             Result<> parentResult = setParent(neighborGridId, activeParent);
             if(parentResult.invalid())
@@ -796,7 +796,7 @@ public:
               return ConvertResult(std::move(neighborRootStateResult));
             }
             Result<> parentResult;
-            if(activeRootStateResult.value().ClusterId < neighborRootStateResult.value().ClusterId)
+            if(activeRootStateResult.value().cluster_id < neighborRootStateResult.value().cluster_id)
             {
               parentResult = setParent(neighborParent, activeParent);
             }
@@ -836,21 +836,21 @@ public:
         return ConvertResult(std::move(stateResult));
       }
       DBSCANGridState state = stateResult.value();
-      if(state.Parent != gridId)
+      if(state.parent != gridId)
       {
         continue;
       }
-      if(state.IsCore != 0)
+      if(state.is_core != 0)
       {
         if(m_FinalClusterCount == std::numeric_limits<int32>::max())
         {
           return MakeErrorResult(-54084, "DBSCAN final cluster count exceeds the Int32 label range.");
         }
-        state.ClusterId = ++m_FinalClusterCount;
+        state.cluster_id = ++m_FinalClusterCount;
       }
       else
       {
-        state.ClusterId = 0;
+        state.cluster_id = 0;
       }
       Result<> writeResult = writeGridState(gridId, state);
       if(writeResult.invalid())
@@ -938,7 +938,7 @@ public:
           {
             return ConvertResult(std::move(stateResult));
           }
-          if(compareGridCoordinates(stateResult.value().Grid, point.Grid) != 0)
+          if(CompareGridCoordinates(stateResult.value().grid, point.grid) != 0)
           {
             return MakeErrorResult(-54087, fmt::format("DBSCAN point-membership grid run {} does not match its grid-state record.", currentGridId));
           }
@@ -956,10 +956,10 @@ public:
           {
             return ConvertResult(std::move(rootStateResult));
           }
-          currentFeatureId = rootStateResult.value().ClusterId;
+          currentFeatureId = rootStateResult.value().cluster_id;
           hasGrid = true;
         }
-        labelRecords[static_cast<usize>(index)] = {point.TupleId, currentFeatureId};
+        labelRecords[static_cast<usize>(index)] = {point.tuple_id, currentFeatureId};
         previousPoint = point;
       }
       auto bytes = nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(labelRecords.get()), static_cast<usize>(count) * sizeof(DBSCANLabelRecord));
@@ -1027,15 +1027,15 @@ public:
       for(uint64 index = 0; index < count; ++index)
       {
         const DBSCANLabelRecord& record = labelRecords[static_cast<usize>(index)];
-        if(record.TupleId >= featureIds.getNumberOfTuples())
+        if(record.tuple_id >= featureIds.getNumberOfTuples())
         {
-          return MakeErrorResult(-54089, fmt::format("DBSCAN tuple-label sort contains out-of-range tuple {}.", record.TupleId));
+          return MakeErrorResult(-54089, fmt::format("DBSCAN tuple-label sort contains out-of-range tuple {}.", record.tuple_id));
         }
-        if(previousTuple.has_value() && record.TupleId <= *previousTuple)
+        if(previousTuple.has_value() && record.tuple_id <= *previousTuple)
         {
-          return MakeErrorResult(-54089, fmt::format("DBSCAN tuple-label sort is not strictly increasing at tuple {}.", record.TupleId));
+          return MakeErrorResult(-54089, fmt::format("DBSCAN tuple-label sort is not strictly increasing at tuple {}.", record.tuple_id));
         }
-        while(record.TupleId >= windowStart + windowCount)
+        while(record.tuple_id >= windowStart + windowCount)
         {
           Result<> advanceResult = advanceWindow();
           if(advanceResult.invalid())
@@ -1043,8 +1043,8 @@ public:
             return advanceResult;
           }
         }
-        outputBuffer[static_cast<usize>(record.TupleId - windowStart)] = record.FeatureId;
-        previousTuple = record.TupleId;
+        outputBuffer[static_cast<usize>(record.tuple_id - windowStart)] = record.feature_id;
+        previousTuple = record.tuple_id;
       }
     }
     while(windowCount > 0)
@@ -1065,7 +1065,7 @@ private:
    * @param right Second grid coordinate.
    * @return Negative, zero, or positive lexical comparison result.
    */
-  static int32 compareGridCoordinates(const uint64* left, const uint64* right)
+  static int32 CompareGridCoordinates(const uint64* left, const uint64* right)
   {
     for(usize dimension = 3; dimension-- > 0;)
     {
@@ -1106,7 +1106,7 @@ private:
       {
         return ConvertInvalidResult<std::optional<uint64>>(std::move(stateResult));
       }
-      const int32 comparison = compareGridCoordinates(stateResult.value().Grid, coordinates);
+      const int32 comparison = CompareGridCoordinates(stateResult.value().grid, coordinates);
       if(comparison < 0)
       {
         begin = middle + 1;
@@ -1125,7 +1125,7 @@ private:
     {
       return ConvertInvalidResult<std::optional<uint64>>(std::move(stateResult));
     }
-    return {compareGridCoordinates(stateResult.value().Grid, coordinates) == 0 ? std::optional<uint64>{begin} : std::nullopt};
+    return {CompareGridCoordinates(stateResult.value().grid, coordinates) == 0 ? std::optional<uint64>{begin} : std::nullopt};
   }
 
   /**
@@ -1172,7 +1172,7 @@ private:
       {
         return ConvertInvalidResult<AxisNeighborhood>(std::move(recordResult));
       }
-      if(recordResult.value().Coordinate < coordinate)
+      if(recordResult.value().coordinate < coordinate)
       {
         begin = middle + 1;
       }
@@ -1190,7 +1190,7 @@ private:
     {
       return ConvertInvalidResult<AxisNeighborhood>(std::move(targetResult));
     }
-    if(targetResult.value().Coordinate != coordinate)
+    if(targetResult.value().coordinate != coordinate)
     {
       return MakeErrorResult<AxisNeighborhood>(-54074, fmt::format("DBSCAN occupied-axis index does not contain coordinate {} for dimension {}.", coordinate, dimension));
     }
@@ -1205,7 +1205,7 @@ private:
       {
         return ConvertInvalidResult<AxisNeighborhood>(std::move(recordResult));
       }
-      neighborhood.Coordinates[neighborhood.Count++] = recordResult.value().Coordinate;
+      neighborhood.Coordinates[neighborhood.Count++] = recordResult.value().coordinate;
     }
     return {neighborhood};
   }
@@ -1216,7 +1216,7 @@ private:
    */
   struct GridNeighborhood
   {
-    std::array<uint64, 125> GridIds = {}; // Grid identifiers in the 5x5x5 search range.
+    std::array<uint64, 125> grid_ids = {}; // Grid identifiers in the 5x5x5 search range.
     usize Count = 0;                      // Number of occupied neighboring grids.
   };
 
@@ -1238,7 +1238,7 @@ private:
     std::array<AxisNeighborhood, 3> axes;
     for(usize dimension = 0; dimension < m_Dimensions; ++dimension)
     {
-      Result<AxisNeighborhood> axisResult = axisNeighborhood(dimension, targetResult.value().Grid[dimension]);
+      Result<AxisNeighborhood> axisResult = axisNeighborhood(dimension, targetResult.value().grid[dimension]);
       if(axisResult.invalid())
       {
         return ConvertInvalidResult<GridNeighborhood>(std::move(axisResult));
@@ -1277,16 +1277,16 @@ private:
           }
           if(foundResult.value().has_value())
           {
-            if(neighborhood.Count == neighborhood.GridIds.size())
+            if(neighborhood.Count == neighborhood.grid_ids.size())
             {
               return MakeErrorResult<GridNeighborhood>(-54079, "DBSCAN neighbor enumeration exceeded its fixed 5x5x5 capacity.");
             }
-            neighborhood.GridIds[neighborhood.Count++] = *foundResult.value();
+            neighborhood.grid_ids[neighborhood.Count++] = *foundResult.value();
           }
         }
       }
     }
-    std::sort(neighborhood.GridIds.begin(), neighborhood.GridIds.begin() + static_cast<std::ptrdiff_t>(neighborhood.Count));
+    std::sort(neighborhood.grid_ids.begin(), neighborhood.grid_ids.begin() + static_cast<std::ptrdiff_t>(neighborhood.Count));
     return {neighborhood};
   }
 
@@ -1313,8 +1313,8 @@ private:
     const DBSCANGridState& leftState = leftStateResult.value();
     const DBSCANGridState& rightState = rightStateResult.value();
     const uint64 pointCount = m_Membership->recordCount();
-    if(leftState.FirstMember > pointCount || leftState.MemberCount > pointCount - leftState.FirstMember || rightState.FirstMember > pointCount ||
-       rightState.MemberCount > pointCount - rightState.FirstMember)
+    if(leftState.first_member > pointCount || leftState.member_count > pointCount - leftState.first_member || rightState.first_member > pointCount ||
+       rightState.member_count > pointCount - rightState.first_member)
     {
       return MakeErrorResult<bool>(-54080, "DBSCAN grid-state membership range exceeds the point-membership sort.");
     }
@@ -1323,22 +1323,22 @@ private:
     {
       return MakeErrorResult<bool>(-54071, "DBSCAN external merge-tile buffers were not initialized.");
     }
-    for(uint64 leftOffset = 0; leftOffset < leftState.MemberCount; leftOffset += k_MergeTileRecords)
+    for(uint64 leftOffset = 0; leftOffset < leftState.member_count; leftOffset += k_MergeTileRecords)
     {
       if(m_ShouldCancel)
       {
         return {false};
       }
-      const uint64 leftCount = std::min<uint64>(k_MergeTileRecords, leftState.MemberCount - leftOffset);
-      Result<uint64> leftReadResult = readMembership(leftState.FirstMember + leftOffset, leftCount, m_LeftMergeBuffer.get());
+      const uint64 leftCount = std::min<uint64>(k_MergeTileRecords, leftState.member_count - leftOffset);
+      Result<uint64> leftReadResult = readMembership(leftState.first_member + leftOffset, leftCount, m_LeftMergeBuffer.get());
       if(leftReadResult.invalid())
       {
         return ConvertInvalidResult<bool>(std::move(leftReadResult));
       }
-      for(uint64 rightOffset = 0; rightOffset < rightState.MemberCount; rightOffset += k_MergeTileRecords)
+      for(uint64 rightOffset = 0; rightOffset < rightState.member_count; rightOffset += k_MergeTileRecords)
       {
-        const uint64 rightCount = std::min<uint64>(k_MergeTileRecords, rightState.MemberCount - rightOffset);
-        Result<uint64> rightReadResult = readMembership(rightState.FirstMember + rightOffset, rightCount, m_RightMergeBuffer.get());
+        const uint64 rightCount = std::min<uint64>(k_MergeTileRecords, rightState.member_count - rightOffset);
+        Result<uint64> rightReadResult = readMembership(rightState.first_member + rightOffset, rightCount, m_RightMergeBuffer.get());
         if(rightReadResult.invalid())
         {
           return ConvertInvalidResult<bool>(std::move(rightReadResult));
@@ -1351,7 +1351,7 @@ private:
           }
           for(uint64 rightIndex = 0; rightIndex < rightCount; ++rightIndex)
           {
-            const float64 distance = ClusterUtilities::GetDistance(m_LeftMergeBuffer[static_cast<usize>(leftIndex)].Coordinates, 0, m_RightMergeBuffer[static_cast<usize>(rightIndex)].Coordinates, 0,
+            const float64 distance = ClusterUtilities::GetDistance(m_LeftMergeBuffer[static_cast<usize>(leftIndex)].coordinates, 0, m_RightMergeBuffer[static_cast<usize>(rightIndex)].coordinates, 0,
                                                                    m_Dimensions, m_InputValues.DistanceMetric);
             if(distance < m_InputValues.Epsilon)
             {
@@ -1414,7 +1414,7 @@ private:
       {
         return ConvertInvalidResult<uint64>(std::move(stateResult));
       }
-      const uint64 parent = stateResult.value().Parent;
+      const uint64 parent = stateResult.value().parent;
       if(parent == current)
       {
         return {current};
@@ -1472,7 +1472,7 @@ private:
     {
       return ConvertResult(std::move(stateResult));
     }
-    stateResult.value().Parent = parent;
+    stateResult.value().parent = parent;
     return writeGridState(gridId, stateResult.value());
   }
 
@@ -1524,7 +1524,7 @@ private:
       {
         return ConvertResult(std::move(stateResult));
       }
-      if(stateResult.value().ClusterId < lowestStateResult.value().ClusterId)
+      if(stateResult.value().cluster_id < lowestStateResult.value().cluster_id)
       {
         lowestRoot = rootResult.value();
         lowestStateResult = std::move(stateResult);
@@ -1567,12 +1567,12 @@ private:
     {
       return ConvertInvalidResult<uint64>(std::move(pivotOrderResult));
     }
-    Result<DBSCANGridState> pivotStateResult = m_GridStateCache->read(pivotOrderResult.value().GridId, m_ShouldCancel);
+    Result<DBSCANGridState> pivotStateResult = m_GridStateCache->read(pivotOrderResult.value().grid_id, m_ShouldCancel);
     if(pivotStateResult.invalid())
     {
       return ConvertInvalidResult<uint64>(std::move(pivotStateResult));
     }
-    const uint64 threshold = pivotStateResult.value().MemberCount;
+    const uint64 threshold = pivotStateResult.value().member_count;
     uint64 front = begin;
     uint64 back = end;
 
@@ -1593,12 +1593,12 @@ private:
         {
           return ConvertInvalidResult<uint64>(std::move(orderResult));
         }
-        Result<DBSCANGridState> stateResult = m_GridStateCache->read(orderResult.value().GridId, m_ShouldCancel);
+        Result<DBSCANGridState> stateResult = m_GridStateCache->read(orderResult.value().grid_id, m_ShouldCancel);
         if(stateResult.invalid())
         {
           return ConvertInvalidResult<uint64>(std::move(stateResult));
         }
-        if(stateResult.value().MemberCount >= threshold)
+        if(stateResult.value().member_count >= threshold)
         {
           break;
         }
@@ -1615,12 +1615,12 @@ private:
         {
           return ConvertInvalidResult<uint64>(std::move(orderResult));
         }
-        Result<DBSCANGridState> stateResult = m_GridStateCache->read(orderResult.value().GridId, m_ShouldCancel);
+        Result<DBSCANGridState> stateResult = m_GridStateCache->read(orderResult.value().grid_id, m_ShouldCancel);
         if(stateResult.invalid())
         {
           return ConvertInvalidResult<uint64>(std::move(stateResult));
         }
-        if(stateResult.value().MemberCount <= threshold)
+        if(stateResult.value().member_count <= threshold)
         {
           break;
         }
@@ -1859,10 +1859,10 @@ private:
       {
         return {};
       }
-      currentState.Parent = statesWritten + stateBufferCount;
-      currentState.ClusterId = static_cast<int32>(currentState.Parent + 1);
-      currentState.IsCore = currentState.MemberCount >= static_cast<uint64>(m_InputValues.MinPoints) ? uint8{1} : uint8{0};
-      if(currentState.IsCore != 0)
+      currentState.parent = statesWritten + stateBufferCount;
+      currentState.cluster_id = static_cast<int32>(currentState.parent + 1);
+      currentState.is_core = currentState.member_count >= static_cast<uint64>(m_InputValues.MinPoints) ? uint8{1} : uint8{0};
+      if(currentState.is_core != 0)
       {
         ++m_CoreGridCount;
       }
@@ -1886,7 +1886,7 @@ private:
       for(uint64 index = 0; index < count; ++index)
       {
         const DBSCANPointRecord<T>& record = pointBuffer[static_cast<usize>(index)];
-        if(!hasState || currentState.Grid[0] != record.Grid[0] || currentState.Grid[1] != record.Grid[1] || currentState.Grid[2] != record.Grid[2])
+        if(!hasState || currentState.grid[0] != record.grid[0] || currentState.grid[1] != record.grid[1] || currentState.grid[2] != record.grid[2])
         {
           Result<> finishStateResult = finishState();
           if(finishStateResult.invalid())
@@ -1894,11 +1894,11 @@ private:
             return finishStateResult;
           }
           currentState = {};
-          std::copy(std::begin(record.Grid), std::end(record.Grid), std::begin(currentState.Grid));
-          currentState.FirstMember = offset + index;
+          std::copy(std::begin(record.grid), std::end(record.grid), std::begin(currentState.grid));
+          currentState.first_member = offset + index;
           hasState = true;
         }
-        ++currentState.MemberCount;
+        ++currentState.member_count;
       }
     }
     Result<> finishStateResult = finishState();
@@ -1980,11 +1980,11 @@ private:
       }
       for(uint64 index = 0; index < count; ++index)
       {
-        if(stateBuffer[static_cast<usize>(index)].IsCore == 0)
+        if(stateBuffer[static_cast<usize>(index)].is_core == 0)
         {
           continue;
         }
-        orderBuffer[static_cast<usize>(orderCount++)].GridId = offset + index;
+        orderBuffer[static_cast<usize>(orderCount++)].grid_id = offset + index;
         if(orderCount == k_ExternalBatchRecords)
         {
           Result<> flushResult = flushOrders();
@@ -2063,7 +2063,7 @@ private:
       {
         for(uint64 index = 0; index < count; ++index)
         {
-          axisRecords[dimension][static_cast<usize>(index)].Coordinate = states[static_cast<usize>(index)].Grid[dimension];
+          axisRecords[dimension][static_cast<usize>(index)].coordinate = states[static_cast<usize>(index)].grid[dimension];
         }
         auto bytes = nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(axisRecords[dimension].get()), static_cast<usize>(count) * sizeof(DBSCANAxisRecord));
         Result<> appendResult = axisSorts[dimension]->append(count, bytes, m_ShouldCancel, {});
@@ -2109,7 +2109,7 @@ private:
         }
         for(uint64 index = 0; index < count; ++index)
         {
-          const uint64 value = axisRecords[dimension][static_cast<usize>(index)].Coordinate;
+          const uint64 value = axisRecords[dimension][static_cast<usize>(index)].coordinate;
           if(!hasPrevious || value != previous)
           {
             ++uniqueCount;
@@ -2171,12 +2171,12 @@ private:
         }
         for(uint64 index = 0; index < count; ++index)
         {
-          const uint64 value = sortedAxisRecords[static_cast<usize>(index)].Coordinate;
+          const uint64 value = sortedAxisRecords[static_cast<usize>(index)].coordinate;
           if(hasPrevious && value == previous)
           {
             continue;
           }
-          axisRecords[dimension][static_cast<usize>(outputCount++)].Coordinate = value;
+          axisRecords[dimension][static_cast<usize>(outputCount++)].coordinate = value;
           previous = value;
           hasPrevious = true;
           if(outputCount == k_ExternalBatchRecords)
@@ -2345,9 +2345,9 @@ struct DBSCANExternalFunctor
  */
 struct GridBitMap
 {
-  std::vector<uint8> gridTable; // Bit-packed grid incidence rows.
-  usize numPositions = 0;       // Number of positions on the indexed axis.
-  usize rowLength = 0;          // Bytes in one axis-position row.
+  std::vector<uint8> grid_table; // Bit-packed grid incidence rows.
+  usize num_positions = 0;       // Number of positions on the indexed axis.
+  usize row_length = 0;          // Bytes in one axis-position row.
 };
 
 /**
@@ -2362,16 +2362,16 @@ struct GridBitMapFactory
    * @param numPositons Number of positions on the indexed axis.
    * @return Zeroed table with one bit for each grid and position pair.
    */
-  static GridBitMap createGridBitMap(usize numGrids, usize numPositons)
+  static GridBitMap CreateGridBitMap(usize numGrids, usize numPositons)
   {
     GridBitMap gridBitMap = {};
 
     usize bitPackSize = numGrids / 8;
     bitPackSize += static_cast<usize>((numGrids % 8 > 0));
 
-    gridBitMap.numPositions = numPositons;
-    gridBitMap.rowLength = bitPackSize;
-    gridBitMap.gridTable.resize(bitPackSize * numPositons);
+    gridBitMap.num_positions = numPositons;
+    gridBitMap.row_length = bitPackSize;
+    gridBitMap.grid_table.resize(bitPackSize * numPositons);
 
     return gridBitMap;
   }
@@ -2384,7 +2384,7 @@ struct GridBitMapFactory
 class HyperGridBitMap
 {
 public:
-  std::vector<std::vector<usize>> gridVoxels; // Maps each occupied grid to its source tuple indices.
+  std::vector<std::vector<usize>> grid_voxels; // Maps each occupied grid to its source tuple indices.
 
   /**
    * @brief Moves the constructor-time bulk-I/O, coordinate or grid-sizing result to the caller.
@@ -2420,7 +2420,7 @@ public:
 
   GridBitMap x_table; // Occupied-grid incidence by X position.
   GridBitMap y_table; // Occupied-grid incidence by Y position.
-  GridBitMap zTable; // Occupied-grid incidence by Z position.
+  GridBitMap z_table; // Occupied-grid incidence by Z position.
 
   HyperGridBitMap3D() = delete;
 
@@ -2572,7 +2572,7 @@ public:
           }
         }
 
-        gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
+        grid_voxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
         for(usize startTup = 0; startTup < numTuples; startTup += k_ChunkTuples)
         {
           if(shouldCancel)
@@ -2600,13 +2600,13 @@ public:
             usize zPos = std::floor((static_cast<float32>(chunkBuf[local * numComps + 2]) - origin[2]) / spacing[2]);
 
             usize bin = (zPos * dims[1] * dims[0]) + (yPos * dims[0]) + xPos;
-            gridVoxels[gridMap[bin]].push_back(tup);
+            grid_voxels[gridMap[bin]].push_back(tup);
           }
         }
       }
 
       // Release construction capacity before clustering retains this index.
-      for(auto& grid : gridVoxels)
+      for(auto& grid : grid_voxels)
       {
         grid.shrink_to_fit();
       }
@@ -2627,9 +2627,9 @@ public:
         return;
       }
 
-      x_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
-      y_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
-      zTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), zSet.size());
+      x_table = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), xSet.size());
+      y_table = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), ySet.size());
+      z_table = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), zSet.size());
 
       if(shouldCancel)
       {
@@ -2641,24 +2641,24 @@ public:
         usize relativeGridBytePos = gridId / 8;
         uint8 bitGridOffset = gridId % 8;
 
-        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * x_table.rowLength;
-        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * y_table.rowLength;
-        usize zPos = std::distance(zSet.begin(), zSet.find(positions[gridId][2])) * zTable.rowLength;
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * x_table.row_length;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * y_table.row_length;
+        usize zPos = std::distance(zSet.begin(), zSet.find(positions[gridId][2])) * z_table.row_length;
 
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        x_table.gridTable[xBytePos] = xMask | x_table.gridTable[xBytePos];
+        x_table.grid_table[xBytePos] = xMask | x_table.grid_table[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        y_table.gridTable[yBytePos] = yMask | y_table.gridTable[yBytePos];
+        y_table.grid_table[yBytePos] = yMask | y_table.grid_table[yBytePos];
 
         usize zBytePos = zPos + relativeGridBytePos;
         uint8 zMask = 1;
         zMask <<= bitGridOffset;
-        zTable.gridTable[zBytePos] = zMask | zTable.gridTable[zBytePos];
+        z_table.grid_table[zBytePos] = zMask | z_table.grid_table[zBytePos];
       }
     }
   }
@@ -2819,7 +2819,7 @@ public:
           }
         }
 
-        gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
+        grid_voxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
         for(usize startTup = 0; startTup < numTuples; startTup += k_ChunkTuples)
         {
           if(shouldCancel)
@@ -2846,13 +2846,13 @@ public:
             usize yPos = std::floor((static_cast<float32>(chunkBuf[local * numComps + 1]) - origin[1]) / spacing[1]);
 
             usize bin = (yPos * dims[0]) + xPos;
-            gridVoxels[gridMap[bin]].push_back(tup);
+            grid_voxels[gridMap[bin]].push_back(tup);
           }
         }
       }
 
       // Release construction capacity before clustering retains this index.
-      for(auto& grid : gridVoxels)
+      for(auto& grid : grid_voxels)
       {
         grid.shrink_to_fit();
       }
@@ -2871,8 +2871,8 @@ public:
         return;
       }
 
-      x_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
-      y_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
+      x_table = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), xSet.size());
+      y_table = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), ySet.size());
 
       if(shouldCancel)
       {
@@ -2884,18 +2884,18 @@ public:
         usize relativeGridBytePos = gridId / 8;
         uint8 bitGridOffset = gridId % 8;
 
-        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * x_table.rowLength;
-        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * y_table.rowLength;
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * x_table.row_length;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * y_table.row_length;
 
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        x_table.gridTable[xBytePos] = xMask | x_table.gridTable[xBytePos];
+        x_table.grid_table[xBytePos] = xMask | x_table.grid_table[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        y_table.gridTable[yBytePos] = yMask | y_table.gridTable[yBytePos];
+        y_table.grid_table[yBytePos] = yMask | y_table.grid_table[yBytePos];
       }
     }
   }
@@ -2910,20 +2910,20 @@ public:
  */
 void SearchTablePositions(std::vector<uint8>& outputGridMask, usize searchSpace, usize targetPosition, const GridBitMap& selectedTable)
 {
-  std::vector<uint8> tempGridMask(selectedTable.rowLength, 0);
+  std::vector<uint8> tempGridMask(selectedTable.row_length, 0);
 
   usize xStart = (targetPosition < searchSpace) ? 0 : targetPosition - searchSpace;
-  usize xEnd = (targetPosition + searchSpace < selectedTable.numPositions) ? targetPosition + searchSpace + 1 : selectedTable.numPositions;
+  usize xEnd = (targetPosition + searchSpace < selectedTable.num_positions) ? targetPosition + searchSpace + 1 : selectedTable.num_positions;
 
   for(usize pos = xStart; pos < xEnd; pos++)
   {
-    for(usize i = 0; i < selectedTable.rowLength; i++)
+    for(usize i = 0; i < selectedTable.row_length; i++)
     {
-      tempGridMask[i] = tempGridMask[i] | selectedTable.gridTable[(pos * selectedTable.rowLength) + i];
+      tempGridMask[i] = tempGridMask[i] | selectedTable.grid_table[(pos * selectedTable.row_length) + i];
     }
   }
 
-  for(usize i = 0; i < selectedTable.rowLength; i++)
+  for(usize i = 0; i < selectedTable.row_length; i++)
   {
     outputGridMask[i] = tempGridMask[i] & outputGridMask[i];
   }
@@ -2954,18 +2954,18 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
 
   std::vector<usize> neighborGridIds = {};
 
-  std::vector<uint8> finalGridMask(hyperGridBitMap.x_table.rowLength, std::numeric_limits<uint8>::max());
+  std::vector<uint8> finalGridMask(hyperGridBitMap.x_table.row_length, std::numeric_limits<uint8>::max());
 
   usize relativeGridBytePos = targetGridId / 8;
   uint8 bitGridOffset = targetGridId % 8;
 
   usize xPos = 0;
-  for(usize i = 0; i < hyperGridBitMap.x_table.numPositions; i++)
+  for(usize i = 0; i < hyperGridBitMap.x_table.num_positions; i++)
   {
-    usize gridPos = (i * hyperGridBitMap.x_table.rowLength) + relativeGridBytePos;
+    usize gridPos = (i * hyperGridBitMap.x_table.row_length) + relativeGridBytePos;
     uint8 mask = 1;
     mask <<= bitGridOffset;
-    uint8 result = hyperGridBitMap.x_table.gridTable[gridPos] & mask;
+    uint8 result = hyperGridBitMap.x_table.grid_table[gridPos] & mask;
     if(result > 0)
     {
       xPos = i;
@@ -2975,12 +2975,12 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
   SearchTablePositions(finalGridMask, searchSpace, xPos, hyperGridBitMap.x_table);
 
   usize yPos = 0;
-  for(usize i = 0; i < hyperGridBitMap.y_table.numPositions; i++)
+  for(usize i = 0; i < hyperGridBitMap.y_table.num_positions; i++)
   {
-    usize gridPos = (i * hyperGridBitMap.y_table.rowLength) + relativeGridBytePos;
+    usize gridPos = (i * hyperGridBitMap.y_table.row_length) + relativeGridBytePos;
     uint8 mask = 1;
     mask <<= bitGridOffset;
-    uint8 result = hyperGridBitMap.y_table.gridTable[gridPos] & mask;
+    uint8 result = hyperGridBitMap.y_table.grid_table[gridPos] & mask;
     if(result > 0)
     {
       yPos = i;
@@ -2992,19 +2992,19 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
   if constexpr(HGBPT::k_Dimensions == 3)
   {
     usize zPos = 0;
-    for(usize i = 0; i < hyperGridBitMap.zTable.numPositions; i++)
+    for(usize i = 0; i < hyperGridBitMap.z_table.num_positions; i++)
     {
-      usize gridPos = (i * hyperGridBitMap.zTable.rowLength) + relativeGridBytePos;
+      usize gridPos = (i * hyperGridBitMap.z_table.row_length) + relativeGridBytePos;
       uint8 mask = 1;
       mask <<= bitGridOffset;
-      uint8 result = hyperGridBitMap.zTable.gridTable[gridPos] & mask;
+      uint8 result = hyperGridBitMap.z_table.grid_table[gridPos] & mask;
       if(result > 0)
       {
         zPos = i;
         break;
       }
     }
-    SearchTablePositions(finalGridMask, searchSpace, zPos, hyperGridBitMap.zTable);
+    SearchTablePositions(finalGridMask, searchSpace, zPos, hyperGridBitMap.z_table);
   }
 
   for(usize i = 0; i < finalGridMask.size(); i++)
@@ -3030,7 +3030,7 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
  */
 struct ClusterNode
 {
-  int32 clusterId = 0; // Feature identifier for a root grid.
+  int32 cluster_id = 0; // Feature identifier for a root grid.
   usize parent = 0;    // Parent grid identifier in the union forest.
 };
 
@@ -3040,7 +3040,7 @@ struct ClusterNode
  */
 struct ClusterForest
 {
-  std::vector<ClusterNode> clusterForestNodes; // State for every occupied grid.
+  std::vector<ClusterNode> cluster_forest_nodes; // State for every occupied grid.
 
   /**
    * @brief Creates one singleton cluster node for each occupied grid.
@@ -3048,21 +3048,21 @@ struct ClusterForest
    */
   void initialize(usize numGrids)
   {
-    clusterForestNodes.resize(numGrids);
+    cluster_forest_nodes.resize(numGrids);
 
-    for(usize i = 0; i < clusterForestNodes.size(); i++)
+    for(usize i = 0; i < cluster_forest_nodes.size(); i++)
     {
-      clusterForestNodes[i].parent = i;
-      clusterForestNodes[i].clusterId = static_cast<int32>(i + 1);
+      cluster_forest_nodes[i].parent = i;
+      cluster_forest_nodes[i].cluster_id = static_cast<int32>(i + 1);
     }
   }
 
   /** @brief Finds the canonical cluster root without recursive stack growth. */
   usize findClusterRoot(usize gridId) const
   {
-    while(clusterForestNodes[gridId].parent != gridId)
+    while(cluster_forest_nodes[gridId].parent != gridId)
     {
-      gridId = clusterForestNodes[gridId].parent;
+      gridId = cluster_forest_nodes[gridId].parent;
     }
     return gridId;
   }
@@ -3094,7 +3094,7 @@ struct ClusterForest
     {
       usize clusterIndex = findClusterRoot(gridIds[i]);
       rootClusterIdx.push_back(clusterIndex);
-      if(clusterForestNodes[clusterIndex].clusterId < clusterForestNodes[lowestClusterIdx].clusterId)
+      if(cluster_forest_nodes[clusterIndex].cluster_id < cluster_forest_nodes[lowestClusterIdx].cluster_id)
       {
         lowestClusterIdx = clusterIndex;
       }
@@ -3104,7 +3104,7 @@ struct ClusterForest
     {
       if(lowestClusterIdx != clusterIdx)
       {
-        clusterForestNodes[clusterIdx].parent = lowestClusterIdx;
+        cluster_forest_nodes[clusterIdx].parent = lowestClusterIdx;
       }
     }
   }
@@ -3136,7 +3136,7 @@ public:
    */
   GDCF(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
        ClusterUtilities::DistanceMetric distMetric)
-  : hyperGridBitMap(HGBPT(shouldCancel, inputArray, arrayPath, epsilon, mask))
+  : m_HyperGridBitMap(HGBPT(shouldCancel, inputArray, arrayPath, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
   , m_DistMetric(distMetric)
@@ -3152,7 +3152,7 @@ public:
    */
   Result<> takeInitializationResult()
   {
-    return hyperGridBitMap.takeInitializationResult();
+    return m_HyperGridBitMap.takeInitializationResult();
   }
 
   /**
@@ -3168,9 +3168,9 @@ public:
   Result<> cluster(usize minPoints, DBSCAN::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
   {
     std::vector<usize> coreGridIds = {};
-    for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
+    for(usize i = 0; i < m_HyperGridBitMap.grid_voxels.size(); i++)
     {
-      if(hyperGridBitMap.gridVoxels[i].size() >= minPoints)
+      if(m_HyperGridBitMap.grid_voxels[i].size() >= minPoints)
       {
         coreGridIds.push_back(i);
       }
@@ -3189,7 +3189,7 @@ public:
     switch(parseOrder)
     {
     case DBSCAN::ParseOrder::LowDensityFirst: {
-      QuickSortGrids(coreGridIds, 0, coreGridIds.size() - 1);
+      quickSortGrids(coreGridIds, 0, coreGridIds.size() - 1);
       break;
     }
     case DBSCAN::ParseOrder::Random:
@@ -3207,7 +3207,7 @@ public:
       return {};
     }
 
-    clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
+    m_ClusterForest.initialize(m_HyperGridBitMap.grid_voxels.size());
     for(usize& coreGridId : coreGridIds)
     {
       if(m_ShouldCancel)
@@ -3215,13 +3215,13 @@ public:
         return {};
       }
 
-      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridId, hyperGridBitMap);
+      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridId, m_HyperGridBitMap);
 
       std::vector<usize> cluster = {};
       cluster.push_back(coreGridId);
       for(const usize gridId : neighborGrids)
       {
-        if(clusterForest.infer(coreGridId, gridId))
+        if(m_ClusterForest.infer(coreGridId, gridId))
         {
           continue;
         }
@@ -3233,9 +3233,9 @@ public:
         }
         if(mergeResult.value())
         {
-          if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
+          if(m_HyperGridBitMap.grid_voxels[gridId].size() < minPoints && m_ClusterForest.cluster_forest_nodes[gridId].parent == gridId)
           {
-            clusterForest.clusterForestNodes[gridId].parent = coreGridId;
+            m_ClusterForest.cluster_forest_nodes[gridId].parent = coreGridId;
           }
           else
           {
@@ -3244,7 +3244,7 @@ public:
         }
       }
 
-      clusterForest.mergeLRC(cluster);
+      m_ClusterForest.mergeLRC(cluster);
     }
 
     // Non-core grids attach to connected clusters or remain labeled as noise.
@@ -3252,20 +3252,20 @@ public:
     do
     {
       operations = 0;
-      for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
+      for(usize i = 0; i < m_HyperGridBitMap.grid_voxels.size(); i++)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
 
-        if(hyperGridBitMap.gridVoxels[i].size() < minPoints)
+        if(m_HyperGridBitMap.grid_voxels[i].size() < minPoints)
         {
-          std::vector<usize> neighborGrids = NeighborGridQuery(i, hyperGridBitMap);
+          std::vector<usize> neighborGrids = NeighborGridQuery(i, m_HyperGridBitMap);
 
           for(const usize gridId : neighborGrids)
           {
-            if(clusterForest.infer(i, gridId))
+            if(m_ClusterForest.infer(i, gridId))
             {
               continue;
             }
@@ -3277,31 +3277,31 @@ public:
             }
             if(mergeResult.value())
             {
-              usize activeParent = clusterForest.findClusterRoot(i);
-              usize neighborGridParent = clusterForest.findClusterRoot(gridId);
+              usize activeParent = m_ClusterForest.findClusterRoot(i);
+              usize neighborGridParent = m_ClusterForest.findClusterRoot(gridId);
               if(activeParent == i)
               {
-                if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+                if(m_HyperGridBitMap.grid_voxels[gridId].size() < minPoints && neighborGridParent == gridId)
                 {
                   continue;
                 }
-                clusterForest.clusterForestNodes[i].parent = neighborGridParent;
+                m_ClusterForest.cluster_forest_nodes[i].parent = neighborGridParent;
               }
               else
               {
-                if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+                if(m_HyperGridBitMap.grid_voxels[gridId].size() < minPoints && neighborGridParent == gridId)
                 {
-                  clusterForest.clusterForestNodes[gridId].parent = activeParent;
+                  m_ClusterForest.cluster_forest_nodes[gridId].parent = activeParent;
                 }
                 else
                 {
-                  if(clusterForest.clusterForestNodes[activeParent].clusterId < clusterForest.clusterForestNodes[neighborGridParent].clusterId)
+                  if(m_ClusterForest.cluster_forest_nodes[activeParent].cluster_id < m_ClusterForest.cluster_forest_nodes[neighborGridParent].cluster_id)
                   {
-                    clusterForest.clusterForestNodes[neighborGridParent].parent = activeParent;
+                    m_ClusterForest.cluster_forest_nodes[neighborGridParent].parent = activeParent;
                   }
                   else
                   {
-                    clusterForest.clusterForestNodes[activeParent].parent = neighborGridParent;
+                    m_ClusterForest.cluster_forest_nodes[activeParent].parent = neighborGridParent;
                   }
                 }
               }
@@ -3313,24 +3313,24 @@ public:
     } while(operations > 0);
 
     std::vector<usize> clusters = {};
-    for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
+    for(usize i = 0; i < m_ClusterForest.cluster_forest_nodes.size(); i++)
     {
-      if(clusterForest.clusterForestNodes[i].parent == i)
+      if(m_ClusterForest.cluster_forest_nodes[i].parent == i)
       {
-        if(hyperGridBitMap.gridVoxels[i].size() >= minPoints)
+        if(m_HyperGridBitMap.grid_voxels[i].size() >= minPoints)
         {
           clusters.push_back(i);
         }
         else
         {
-          clusterForest.clusterForestNodes[i].clusterId = 0;
+          m_ClusterForest.cluster_forest_nodes[i].cluster_id = 0;
         }
       }
     }
 
     for(usize i = 0; i < clusters.size(); i++)
     {
-      clusterForest.clusterForestNodes[clusters[i]].clusterId = static_cast<int32>(i + 1);
+      m_ClusterForest.cluster_forest_nodes[clusters[i]].cluster_id = static_cast<int32>(i + 1);
     }
 
     return {};
@@ -3339,28 +3339,28 @@ public:
   /** @brief Returns true when clustering created resident forest state. */
   bool forestBuilt() const
   {
-    return !clusterForest.clusterForestNodes.empty();
+    return !m_ClusterForest.cluster_forest_nodes.empty();
   }
 
   /** @brief Writes each point's resolved cluster ID, leaving unassigned points at zero. */
   Result<> label(AbstractDataStore<int32>& fIdsDataStore)
   {
-    if(clusterForest.clusterForestNodes.empty())
+    if(m_ClusterForest.cluster_forest_nodes.empty())
     {
       return MakeWarningVoidResult(-85640, "No clusters detected - If a mask is applied, verify that some points are unmasked. Otherwise, consider reducing the number of required points (`Minimum "
                                            "Points`) or increasing the acceptable distance (`Epsilon`).");
     }
 
     fIdsDataStore.fill(0);
-    for(usize gridIdx = 0; gridIdx < hyperGridBitMap.gridVoxels.size(); gridIdx++)
+    for(usize gridIdx = 0; gridIdx < m_HyperGridBitMap.grid_voxels.size(); gridIdx++)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
 
-      int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(gridIdx)].clusterId;
-      for(usize pointIdx : hyperGridBitMap.gridVoxels[gridIdx])
+      int32 featureId = m_ClusterForest.cluster_forest_nodes[m_ClusterForest.findClusterRoot(gridIdx)].cluster_id;
+      for(usize pointIdx : m_HyperGridBitMap.grid_voxels[gridIdx])
       {
         fIdsDataStore.setValue(pointIdx, featureId);
       }
@@ -3370,9 +3370,9 @@ public:
   }
 
 private:
-  HGBPT hyperGridBitMap;
+  HGBPT m_HyperGridBitMap;
 
-  ClusterForest clusterForest = {};
+  ClusterForest m_ClusterForest = {};
 
   float32 m_Epsilon = 0.0f;
   const AbstractDataStore<T>& m_InputDataStore;
@@ -3389,7 +3389,7 @@ private:
    */
   Result<std::vector<float32>> readGridCellCoords(usize gridId) const
   {
-    const auto& indices = hyperGridBitMap.gridVoxels[gridId];
+    const auto& indices = m_HyperGridBitMap.grid_voxels[gridId];
     const usize dims = static_cast<usize>(HGBPT::k_Dimensions);
     std::vector<float32> coords(indices.size() * dims);
     auto tupleBuf = std::make_unique<T[]>(dims);
@@ -3417,21 +3417,21 @@ private:
    *
    * Hoare partitioning sorts in place and avoids another core-grid buffer.
    */
-  usize ProcessSection(std::vector<usize>& sorted, usize begin, usize end) const
+  usize processSection(std::vector<usize>& sorted, usize begin, usize end) const
   {
-    const usize threshold = hyperGridBitMap.gridVoxels[sorted[begin]].size();
+    const usize threshold = m_HyperGridBitMap.grid_voxels[sorted[begin]].size();
 
     usize front = begin;
     usize back = end;
 
     while(true)
     {
-      while(hyperGridBitMap.gridVoxels[sorted[front]].size() < threshold)
+      while(m_HyperGridBitMap.grid_voxels[sorted[front]].size() < threshold)
       {
         front++;
       }
 
-      while(hyperGridBitMap.gridVoxels[sorted[back]].size() > threshold)
+      while(m_HyperGridBitMap.grid_voxels[sorted[back]].size() > threshold)
       {
         back--;
       }
@@ -3453,19 +3453,19 @@ private:
    * @param begin First index in the sort range.
    * @param end Last index in the sort range.
    */
-  void QuickSortGrids(std::vector<usize>& sorted, usize begin, usize end) const
+  void quickSortGrids(std::vector<usize>& sorted, usize begin, usize end) const
   {
     while(begin < end)
     {
-      const usize next = ProcessSection(sorted, begin, end);
+      const usize next = processSection(sorted, begin, end);
       if((next - begin) < (end - (next + 1)))
       {
-        QuickSortGrids(sorted, begin, next);
+        quickSortGrids(sorted, begin, next);
         begin = next + 1;
       }
       else
       {
-        QuickSortGrids(sorted, next + 1, end);
+        quickSortGrids(sorted, next + 1, end);
         end = next;
       }
     }
@@ -3493,13 +3493,13 @@ private:
     const std::vector<float32>& pCoords = pCoordsResult.value();
     const std::vector<float32>& qCoords = qCoordsResult.value();
 
-    for(usize p = 0; p < hyperGridBitMap.gridVoxels[pGridId].size(); p++)
+    for(usize p = 0; p < m_HyperGridBitMap.grid_voxels[pGridId].size(); p++)
     {
       if(m_ShouldCancel)
       {
         return {false};
       }
-      for(usize q = 0; q < hyperGridBitMap.gridVoxels[qGridId].size(); q++)
+      for(usize q = 0; q < m_HyperGridBitMap.grid_voxels[qGridId].size(); q++)
       {
         float64 dist = ClusterUtilities::GetDistance(pCoords, dims * p, qCoords, dims * q, dims, m_DistMetric);
         if(dist < m_Epsilon)
@@ -3609,14 +3609,14 @@ Result<> DBSCANScanline::operator()()
 {
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const IDataArray* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-  const bool actualOutOfCore = IsOutOfCore(clusteringArray) || IsOutOfCore(featureIds) || (maskArray != nullptr && IsOutOfCore(*maskArray));
+  const IDataArray* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  const bool actualOutOfCore = IsOutOfCore(clusteringArray) || IsOutOfCore(featureIds) || (maskArrayPtr != nullptr && IsOutOfCore(*maskArrayPtr));
 
   Result<> result;
   int32 maxCluster = 0;
   if(actualOutOfCore)
   {
-    result = ExecuteDataFunction(DBSCANExternalFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskArray, featureIds, m_ShouldCancel, maxCluster);
+    result = ExecuteDataFunction(DBSCANExternalFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskArrayPtr, featureIds, m_ShouldCancel, maxCluster);
     if(result.invalid() || m_ShouldCancel)
     {
       return result;
@@ -3673,8 +3673,8 @@ Result<> DBSCANScanline::operator()()
     }
   }
 
-  auto* featureAttributeMatrix = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM);
-  if(featureAttributeMatrix == nullptr)
+  auto* featureAttributeMatrixPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM);
+  if(featureAttributeMatrixPtr == nullptr)
   {
     return MakeErrorResult(-54090, fmt::format("DBSCAN Feature Attribute Matrix '{}' is missing.", m_InputValues->FeatureAM.toString()));
   }
@@ -3682,7 +3682,7 @@ Result<> DBSCANScanline::operator()()
   {
     return MakeErrorResult(-54084, "DBSCAN Feature Attribute Matrix tuple count exceeds the platform size range.");
   }
-  Result<> resizeResult = featureAttributeMatrix->resizeTuples(ShapeType{static_cast<usize>(maxCluster) + 1});
+  Result<> resizeResult = featureAttributeMatrixPtr->resizeTuples(ShapeType{static_cast<usize>(maxCluster) + 1});
   if(resizeResult.invalid())
   {
     return resizeResult;

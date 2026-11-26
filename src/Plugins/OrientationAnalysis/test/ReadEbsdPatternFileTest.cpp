@@ -293,8 +293,8 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Attribute Matrix Tupl
   SECTION("Matching tuple count inherits the Attribute Matrix shape")
   {
     DataStructure dataStructure;
-    auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2});
-    REQUIRE(attributeMatrix != nullptr);
+    auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2});
+    REQUIRE(attributeMatrixPtr != nullptr);
 
     const DataPath outputPath({"Cell Data", "Patterns"});
     ReadEbsdPatternFileFilter filter;
@@ -311,8 +311,8 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Attribute Matrix Tupl
   SECTION("Mismatching tuple count is rejected")
   {
     DataStructure dataStructure;
-    auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{3});
-    REQUIRE(attributeMatrix != nullptr);
+    auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{3});
+    REQUIRE(attributeMatrixPtr != nullptr);
 
     const DataPath outputPath({"Cell Data", "Patterns"});
     ReadEbsdPatternFileFilter filter;
@@ -452,8 +452,8 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Cancellation Before P
   WriteVersion1Up1File(inputFile);
 
   DataStructure dataStructure;
-  auto* outputArray = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, k_OutputArrayPath.getTargetName(), ShapeType{4}, ShapeType{12, 12});
-  REQUIRE(outputArray != nullptr);
+  auto* outputArrayPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, k_OutputArrayPath.getTargetName(), ShapeType{4}, ShapeType{12, 12});
+  REQUIRE(outputArrayPtr != nullptr);
 
   ReadEbsdPatternFileInputValues inputValues;
   inputValues.inputFile = inputFile;

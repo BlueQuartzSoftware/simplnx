@@ -15,8 +15,8 @@ namespace
 class ReverseWindingImpl
 {
 public:
-  using TriStore = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
-  explicit ReverseWindingImpl(TriStore& triangles)
+  using TriStoreType = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
+  explicit ReverseWindingImpl(TriStoreType& triangles)
   : m_Triangles(triangles)
   {
   }
@@ -42,7 +42,7 @@ public:
   }
 
 private:
-  TriStore& m_Triangles;
+  TriStoreType& m_Triangles;
 };
 } // namespace
 

@@ -114,7 +114,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
   }
 
-  const AttributeMatrix* parentAM = pSelectedAttributeMatrixValue.has_value() ? dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) : nullptr;
+  const AttributeMatrix* parentAmPtr = pSelectedAttributeMatrixValue.has_value() ? dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) : nullptr;
 
   int err = 0;
   auto h5FileReader = nx::core::HDF5::FileIO::ReadFile(inputFilePath);
@@ -154,7 +154,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     ShapeType cDims = std::move(componentDimensions.value());
 
     ShapeType tDims;
-    if(parentAM == nullptr)
+    if(parentAmPtr == nullptr)
     {
       std::string tDimsStr = datasetImportInfo.tupleDimensions;
       if(tDimsStr.empty())
@@ -172,7 +172,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
     else
     {
-      tDims = parentAM->getShape();
+      tDims = parentAmPtr->getShape();
     }
 
     auto tupleCount = ComputeDimensionProduct(tDims, fmt::format("Tuple for dataset '{}'", datasetPath));

@@ -85,24 +85,24 @@ std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 
 Result<> EdgeGeom::findElementSizes(bool recalculate)
 {
-  auto* sizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
-  if(sizes != nullptr && !recalculate)
+  auto* sizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  if(sizesPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(sizes == nullptr)
+  if(sizesPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
-    sizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
-    if(sizes == nullptr)
+    sizesPtr = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(sizesPtr == nullptr)
     {
       m_ElementSizesId.reset();
       return MakeErrorResult(-2430, "EdgeGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 
-  m_ElementSizesId = sizes->getId();
+  m_ElementSizesId = sizesPtr->getId();
 
   std::array<Point3Df, 2> verts = {Point3Df(0.0f, 0.0f, 0.0f), Point3Df(0.0f, 0.0f, 0.0f)};
 
@@ -114,7 +114,7 @@ Result<> EdgeGeom::findElementSizes(bool recalculate)
     {
       length += (verts[0][j] - verts[1][j]) * (verts[0][j] - verts[1][j]);
     }
-    (*sizes)[i] = std::sqrt(length);
+    (*sizesPtr)[i] = std::sqrt(length);
   }
 
   return {};
@@ -127,37 +127,37 @@ usize EdgeGeom::getNumberOfVerticesPerEdge() const
 
 Result<> EdgeGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* edgesContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
-  if(edgesContainingVert != nullptr && !recalculate)
+  auto* edgesContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  if(edgesContainingVertPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(edgesContainingVert == nullptr)
+  if(edgesContainingVertPtr == nullptr)
   {
-    edgesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
-    if(edgesContainingVert == nullptr)
+    edgesContainingVertPtr = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+    if(edgesContainingVertPtr == nullptr)
     {
       m_CellContainingVertDataArrayId.reset();
       return MakeErrorResult(-2431, "EdgeGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVert, getNumberOfVertices());
+  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVertPtr, getNumberOfVertices());
   if(findResult.invalid())
   {
     m_CellContainingVertDataArrayId.reset();
     return findResult;
   }
-  m_CellContainingVertDataArrayId = edgesContainingVert->getId();
+  m_CellContainingVertDataArrayId = edgesContainingVertPtr->getId();
 
   return {};
 }
 
 Result<> EdgeGeom::findElementNeighbors(bool recalculate)
 {
-  auto* edgeNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
-  if(edgeNeighbors != nullptr && !recalculate)
+  auto* edgeNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  if(edgeNeighborsPtr != nullptr && !recalculate)
   {
     return {};
   }
@@ -168,19 +168,19 @@ Result<> EdgeGeom::findElementNeighbors(bool recalculate)
     m_CellNeighborsDataArrayId.reset();
     return result;
   }
-  if(edgeNeighbors == nullptr)
+  if(edgeNeighborsPtr == nullptr)
   {
-    edgeNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
-    if(edgeNeighbors == nullptr)
+    edgeNeighborsPtr = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
+    if(edgeNeighborsPtr == nullptr)
     {
       m_CellNeighborsDataArrayId.reset();
       return MakeErrorResult(-2432, "EdgeGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
-  m_CellNeighborsDataArrayId = edgeNeighbors->getId();
+  m_CellNeighborsDataArrayId = edgeNeighborsPtr->getId();
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, Type::Edge);
+  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighborsPtr, Type::Edge);
   if(findResult.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
@@ -192,25 +192,25 @@ Result<> EdgeGeom::findElementNeighbors(bool recalculate)
 
 Result<> EdgeGeom::findElementCentroids(bool recalculate)
 {
-  auto* edgeCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
-  if(edgeCentroids != nullptr && !recalculate)
+  auto* edgeCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
+  if(edgeCentroidsPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(edgeCentroids == nullptr)
+  if(edgeCentroidsPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
-    edgeCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
-    if(edgeCentroids == nullptr)
+    edgeCentroidsPtr = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
+    if(edgeCentroidsPtr == nullptr)
     {
       m_CellCentroidsDataArrayId.reset();
       return MakeErrorResult(-2433, "EdgeGeom Error: Unable to find or create a valid element centroids array or data store.");
     }
   }
 
-  GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
-  m_CellCentroidsDataArrayId = edgeCentroids->getId();
+  GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroidsPtr);
+  m_CellCentroidsDataArrayId = edgeCentroidsPtr->getId();
 
   return {};
 }

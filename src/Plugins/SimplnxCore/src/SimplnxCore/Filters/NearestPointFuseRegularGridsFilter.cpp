@@ -117,12 +117,12 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* sampleAM = dataStructure.getDataAs<AttributeMatrix>(pSamplingCellAttributeMatrixPathValue);
-  const auto* refAM = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
+  const auto* sampleAmPtr = dataStructure.getDataAs<AttributeMatrix>(pSamplingCellAttributeMatrixPathValue);
+  const auto* refAmPtr = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
 
   // The reference grid needs matching arrays for sampling-grid values.
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IArray>();
+    auto sampleVoxelArrays = sampleAmPtr->findAllChildrenOfType<IArray>();
     for(const auto& array : sampleVoxelArrays)
     {
       // Neighbor lists may implement IDataArray, but this filter intentionally does not create or
@@ -133,17 +133,17 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
       }
       const auto& dataArray = dynamic_cast<const IDataArray&>(*array);
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), refAM->getShape(), dataArray.getComponentShape(), createdArrayPath);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), refAmPtr->getShape(), dataArray.getComponentShape(), createdArrayPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
 
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<StringArray>();
+    auto sampleVoxelArrays = sampleAmPtr->findAllChildrenOfType<StringArray>();
     for(const auto& array : sampleVoxelArrays)
     {
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-      auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAM->getShape(), createdArrayPath);
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAmPtr->getShape(), createdArrayPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }

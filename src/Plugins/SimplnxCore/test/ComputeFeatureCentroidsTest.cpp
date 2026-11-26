@@ -50,7 +50,7 @@ using namespace nx::core::UnitTest;
 // Reference: src/Plugins/SimplnxCore/vv/ComputeFeatureCentroidsFilter.md
 // =============================================================================
 
-namespace CentroidToy
+namespace centroid_toy
 {
 const std::string k_GeomName = "Image";
 const std::string k_CellAMName = "CellData";
@@ -63,8 +63,8 @@ struct Scaffold
   DataStructure ds;
   DataPath geomPath;
   DataPath featureIdsPath;
-  DataPath featureAMPath;
-  DataPath centroidsPath;
+  DataPath feature_am_path;
+  DataPath centroids_path;
 };
 
 class CentroidsFailOnLaterReadStore : public DataStore<int32>
@@ -184,28 +184,28 @@ private:
 inline static Scaffold Build(usize dimX, usize dimY, usize dimZ, std::array<float32, 3> spacing, std::array<float32, 3> origin, usize numFeatures, const std::vector<int32>& featureIdValues)
 {
   Scaffold s;
-  auto* imageGeom = ImageGeom::Create(s.ds, k_GeomName);
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({spacing[0], spacing[1], spacing[2]}).valid());
-  REQUIRE(imageGeom->setOrigin({origin[0], origin[1], origin[2]}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(s.ds, k_GeomName);
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({spacing[0], spacing[1], spacing[2]}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({origin[0], origin[1], origin[2]}).valid());
 
   const ShapeType cellTupleShape{dimZ, dimY, dimX};
-  auto* cellAM = AttributeMatrix::Create(s.ds, k_CellAMName, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(s.ds, k_CellAMName, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto* featureIds = CreateTestDataArray<int32>(s.ds, k_FeatureIdsName, cellTupleShape, {1}, cellAM->getId());
+  auto* featureIdsPtr = CreateTestDataArray<int32>(s.ds, k_FeatureIdsName, cellTupleShape, {1}, cellAmPtr->getId());
   REQUIRE(featureIdValues.size() == dimX * dimY * dimZ);
   for(usize i = 0; i < featureIdValues.size(); ++i)
   {
-    (*featureIds)[i] = featureIdValues[i];
+    (*featureIdsPtr)[i] = featureIdValues[i];
   }
 
-  AttributeMatrix::Create(s.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeom->getId());
+  AttributeMatrix::Create(s.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeomPtr->getId());
 
   s.geomPath = DataPath({k_GeomName});
   s.featureIdsPath = s.geomPath.createChildPath(k_CellAMName).createChildPath(k_FeatureIdsName);
-  s.featureAMPath = s.geomPath.createChildPath(k_FeatureAMName);
-  s.centroidsPath = s.featureAMPath.createChildPath(k_CentroidsName);
+  s.feature_am_path = s.geomPath.createChildPath(k_FeatureAMName);
+  s.centroids_path = s.feature_am_path.createChildPath(k_CentroidsName);
   return s;
 }
 
@@ -214,7 +214,7 @@ inline static Arguments MakeArguments(const Scaffold& s, bool isPeriodic)
   Arguments args;
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(s.geomPath));
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(s.featureIdsPath));
-  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(s.featureAMPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(s.feature_am_path));
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
   return args;
@@ -239,13 +239,13 @@ constexpr float32 k_UnpublishedSentinel = -123.25F;
 
 inline static void PrepareSentinelOutput(Scaffold& s, usize featureCount)
 {
-  REQUIRE_NOTHROW(s.ds.getDataRefAs<AttributeMatrix>(s.featureAMPath));
-  const auto& featureAM = s.ds.getDataRefAs<AttributeMatrix>(s.featureAMPath);
-  auto* output = CreateTestDataArray<float32>(s.ds, k_CentroidsName, ShapeType{featureCount}, ShapeType{3}, featureAM.getId());
-  REQUIRE(output != nullptr);
-  for(usize index = 0; index < output->getSize(); index++)
+  REQUIRE_NOTHROW(s.ds.getDataRefAs<AttributeMatrix>(s.feature_am_path));
+  const auto& featureAM = s.ds.getDataRefAs<AttributeMatrix>(s.feature_am_path);
+  auto* outputPtr = CreateTestDataArray<float32>(s.ds, k_CentroidsName, ShapeType{featureCount}, ShapeType{3}, featureAM.getId());
+  REQUIRE(outputPtr != nullptr);
+  for(usize index = 0; index < outputPtr->getSize(); index++)
   {
-    (*output)[index] = k_UnpublishedSentinel;
+    (*outputPtr)[index] = k_UnpublishedSentinel;
   }
 }
 
@@ -253,9 +253,9 @@ inline static Result<> RunDirect(Scaffold& s, const std::atomic_bool& cancel)
 {
   ComputeFeatureCentroidsInputValues inputs;
   inputs.FeatureIdsArrayPath = s.featureIdsPath;
-  inputs.CentroidsArrayPath = s.centroidsPath;
+  inputs.CentroidsArrayPath = s.centroids_path;
   inputs.ImageGeometryPath = s.geomPath;
-  inputs.FeatureAttributeMatrixPath = s.featureAMPath;
+  inputs.FeatureAttributeMatrixPath = s.feature_am_path;
   inputs.IsPeriodic = true;
   const IFilter::MessageHandler handler{};
   return ComputeFeatureCentroids(s.ds, handler, cancel, &inputs)();
@@ -263,8 +263,8 @@ inline static Result<> RunDirect(Scaffold& s, const std::atomic_bool& cancel)
 
 inline static void RequireUnpublished(const Scaffold& s)
 {
-  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroidsPath));
-  const auto& output = s.ds.getDataRefAs<Float32Array>(s.centroidsPath);
+  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroids_path));
+  const auto& output = s.ds.getDataRefAs<Float32Array>(s.centroids_path);
   for(usize index = 0; index < output.getSize(); index++)
   {
     REQUIRE(output[index] == k_UnpublishedSentinel);
@@ -367,8 +367,8 @@ inline static std::vector<float32> Run(Scaffold& s, bool isPeriodic)
   auto executeResult = filter.execute(s.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroidsPath));
-  const auto& centroids = s.ds.getDataRefAs<Float32Array>(s.centroidsPath);
+  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroids_path));
+  const auto& centroids = s.ds.getDataRefAs<Float32Array>(s.centroids_path);
   std::vector<float32> out(centroids.getSize());
   for(usize i = 0; i < centroids.getSize(); ++i)
   {
@@ -396,7 +396,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 65536-block tai
   std::vector<int32> featureIds(k_BlockTuples + 1, 0);
   featureIds[k_BlockTuples - 1] = 1;
   featureIds[k_BlockTuples] = 1;
-  auto fixture = CentroidToy::Build(k_BlockTuples + 1, 1, 1, {2.0F, 3.0F, 4.0F}, {10.0F, -2.0F, 7.0F}, 3, featureIds);
+  auto fixture = centroid_toy::Build(k_BlockTuples + 1, 1, 1, {2.0F, 3.0F, 4.0F}, {10.0F, -2.0F, 7.0F}, 3, featureIds);
   REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath));
   auto& idsArray = fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath);
   auto store = DataStoreUtilities::ConvertDataStore<int32>(idsArray.getDataStoreRef(), "HDF5-OOC");
@@ -404,9 +404,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 65536-block tai
   auto replaceResult = idsArray.setDataStore(store);
   SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
   REQUIRE(idsArray.getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  const auto centroids = CentroidToy::Run(fixture, periodic);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath));
-  REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  const auto centroids = centroid_toy::Run(fixture, periodic);
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path));
+  REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   // The two feature-one centers are x=131081 and x=131083. Neither feature wraps.
   const std::vector<float32> expected = {65545.0F, -0.5F, 9.0F, 131082.0F, -0.5F, 9.0F, 0.0F, 0.0F, 0.0F};
   REQUIRE(centroids == expected);
@@ -415,7 +415,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 65536-block tai
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighted oracle", "[SimplnxCore][ComputeFeatureCentroidsFilter][.OocStoreContract]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
@@ -429,8 +429,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
   SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
   REQUIRE(idsArray.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   const auto actual = Run(fixture, true);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath));
-  REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path));
+  REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   RequireCentroid(actual, 1, 4.7F, 0.9F, 0.5F);
   UnitTest::CheckArraysInheritTupleDims(fixture.ds);
 
@@ -479,8 +479,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
       const auto started = std::chrono::steady_clock::now();
       const auto timedActual = Run(timingFixture, true);
       const auto elapsedMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count();
-      REQUIRE(timingFixture.ds.getDataRefAs<Float32Array>(timingFixture.centroidsPath).getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
-      REQUIRE(timingFixture.ds.getDataRefAs<Float32Array>(timingFixture.centroidsPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+      REQUIRE(timingFixture.ds.getDataRefAs<Float32Array>(timingFixture.centroids_path).getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+      REQUIRE(timingFixture.ds.getDataRefAs<Float32Array>(timingFixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
       REQUIRE(timedActual.size() == expected.size());
       for(usize index = 0; index < expected.size(); index++)
       {
@@ -497,7 +497,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1 - Analytical Centroids", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
 
   SECTION("Fixture A - single multi-cell feature + empty background")
@@ -535,7 +535,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1 - Analytical Cent
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boundary", "[SimplnxCore][ComputeFeatureCentroidsFilter][Periodic]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
 
   SECTION("weighted asymmetric boundary uses largest-gap unwrapped arithmetic")
@@ -686,7 +686,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boun
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: sorted-coordinate periodic oracle", "[SimplnxCore][ComputeFeatureCentroidsFilter][Periodic]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
   std::mt19937 generator(19077);
   std::uniform_int_distribution<int32> labels(0, 3);
@@ -714,7 +714,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: sorted-coordinate periodi
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans and failures", "[SimplnxCore][ComputeFeatureCentroidsFilter][Periodic]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
   const PreferencesSentinel resident(DataStorageMode::ForceInCore, 0);
 
@@ -890,8 +890,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
       REQUIRE(executeResult.result.warnings().size() == 1);
       REQUIRE(executeResult.result.warnings().front().code == -91913);
       REQUIRE(observed->readCount() == 4);
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath));
-      REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroidsPath)[3] == Approx(4.5F));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path));
+      REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path)[3] == Approx(4.5F));
     }
   }
 
@@ -950,7 +950,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: checked working sizes", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
   const PreferencesSentinel resident(DataStorageMode::ForceInCore, 0);
   const std::atomic_bool cancel = false;
@@ -961,10 +961,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: checked working sizes", "
     auto fixture = Build(1, 1, 1, {1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 0.0F}, k_HugeFeatureCount, {0});
     auto plannedStore = EmptyDataStore<float32>::Create(ShapeType{k_HugeFeatureCount}, ShapeType{3}, "");
     SIMPLNX_RESULT_REQUIRE_VALID(plannedStore);
-    REQUIRE_NOTHROW(fixture.ds.getDataRefAs<AttributeMatrix>(fixture.featureAMPath));
-    const auto& featureAM = fixture.ds.getDataRefAs<AttributeMatrix>(fixture.featureAMPath);
-    auto* output = Float32Array::Create(fixture.ds, k_CentroidsName, std::shared_ptr<AbstractDataStore<float32>>(std::move(plannedStore.value())), featureAM.getId());
-    REQUIRE(output != nullptr);
+    REQUIRE_NOTHROW(fixture.ds.getDataRefAs<AttributeMatrix>(fixture.feature_am_path));
+    const auto& featureAM = fixture.ds.getDataRefAs<AttributeMatrix>(fixture.feature_am_path);
+    auto* outputPtr = Float32Array::Create(fixture.ds, k_CentroidsName, std::shared_ptr<AbstractDataStore<float32>>(std::move(plannedStore.value())), featureAM.getId());
+    REQUIRE(outputPtr != nullptr);
     const auto result = RunDirect(fixture, cancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -5320);
@@ -988,7 +988,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: checked working sizes", "
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds Feature AM", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
 
   // 2x1x1 with FeatureIds {0, 5} but only 2 feature tuples -> id 5 >= numFeatures -> error -5351.
@@ -998,7 +998,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds
   Arguments args;
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(s.geomPath));
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(s.featureIdsPath));
-  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(s.featureAMPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(s.feature_am_path));
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
 
@@ -1008,18 +1008,18 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure propagation", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
-  using namespace CentroidToy;
+  using namespace centroid_toy;
   UnitTest::LoadPlugins();
   constexpr usize k_CellCount = 65537;
-  const std::array<float32, 3> k_Spacing = {2.0F, 3.0F, 4.0F};
-  const std::array<float32, 3> k_Origin = {10.0F, -2.0F, 1.0F};
+  const std::array<float32, 3> kSpacing = {2.0F, 3.0F, 4.0F};
+  const std::array<float32, 3> kOrigin = {10.0F, -2.0F, 1.0F};
 
   SECTION("feature crosses the 65536-cell boundary with nonunit coordinates")
   {
     std::vector<int32> featureIds(k_CellCount, 2);
     featureIds[0] = 1;
     featureIds.back() = 1;
-    auto scaffold = Build(k_CellCount, 1, 1, k_Spacing, k_Origin, 3, featureIds);
+    auto scaffold = Build(k_CellCount, 1, 1, kSpacing, kOrigin, 3, featureIds);
     const auto centroids = Run(scaffold, false);
 
     RequireCentroid(centroids, 0, 0.0F, 0.0F, 0.0F);
@@ -1034,7 +1034,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure
   {
     constexpr int32 k_ReadError = -91911;
     std::vector<int32> featureIds(k_CellCount, 1);
-    auto scaffold = Build(k_CellCount, 1, 1, k_Spacing, k_Origin, 2, featureIds);
+    auto scaffold = Build(k_CellCount, 1, 1, kSpacing, kOrigin, 2, featureIds);
     auto failingStore = std::make_shared<CentroidsFailOnLaterReadStore>(ShapeType{k_CellCount}, k_ReadError);
     for(usize cellIdx = 0; cellIdx < k_CellCount; cellIdx++)
     {
@@ -1047,15 +1047,15 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure
     Arguments args;
     args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(scaffold.geomPath));
     args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(scaffold.featureIdsPath));
-    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(scaffold.featureAMPath));
+    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(scaffold.feature_am_path));
     args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
     args.insertOrAssign(ComputeFeatureCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
 
     const auto executeResult = filter.execute(scaffold.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
     REQUIRE(executeResult.result.errors().front().code == k_ReadError);
-    REQUIRE_NOTHROW(scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroidsPath));
-    const auto& centroids = scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroidsPath);
+    REQUIRE_NOTHROW(scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroids_path));
+    const auto& centroids = scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroids_path);
     REQUIRE(centroids[3] == 0.0F);
   }
 }
@@ -1064,7 +1064,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1077,22 +1077,22 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureCentroidsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureCentroidsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       // Complex type (DataArrayCreationToAMFilterParameterConverter) - verified by successful pipeline loading

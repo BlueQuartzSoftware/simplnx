@@ -29,9 +29,9 @@ namespace
 {
 constexpr int32 k_FileAccessError = -12051;
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, OnScaleTableFileHeader> s_HeaderCache;
-std::mutex s_HeaderCacheMutex;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, OnScaleTableFileHeader> SHeaderCache;
+std::mutex SHeaderCacheMutex;
 
 const std::array<std::string, 3> k_BoundsNames = {"X Bounds", "Y Bounds", "Z Bounds"};
 } // namespace
@@ -39,16 +39,16 @@ const std::array<std::string, 3> k_BoundsNames = {"X Bounds", "Y Bounds", "Z Bou
 namespace nx::core
 {
 ReadOnScaleTableFileFilter::ReadOnScaleTableFileFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-  s_HeaderCache[m_InstanceId] = {};
+  std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+  SHeaderCache[m_InstanceId] = {};
 }
 
 ReadOnScaleTableFileFilter::~ReadOnScaleTableFileFilter() noexcept
 {
-  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-  s_HeaderCache.erase(m_InstanceId);
+  std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 std::string ReadOnScaleTableFileFilter::name() const
@@ -141,8 +141,8 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
 
   OnScaleTableFileHeader cachedHeader;
   {
-    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-    cachedHeader = s_HeaderCache[m_InstanceId];
+    std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+    cachedHeader = SHeaderCache[m_InstanceId];
   }
   if(cachedHeader.InputFile != inputFile || cachedHeader.TimeStamp != writeTime)
   {
@@ -153,8 +153,8 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
     }
     cachedHeader = std::move(headerResult.value());
     cachedHeader.TimeStamp = writeTime;
-    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-    s_HeaderCache[m_InstanceId] = cachedHeader;
+    std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+    SHeaderCache[m_InstanceId] = cachedHeader;
   }
 
   const auto geometryPath = filterArgs.value<DataPath>(k_CreatedRectGridGeometryPath_Key);
@@ -205,8 +205,8 @@ Result<> ReadOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.PhaseAttributeMatrixPath = inputValues.RectGridGeometryPath.createChildPath(filterArgs.value<std::string>(k_PhaseAttributeMatrixName_Key));
   inputValues.MaterialNamesArrayPath = inputValues.PhaseAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_MaterialNamesArrayName_Key));
   {
-    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-    inputValues.Header = s_HeaderCache[m_InstanceId];
+    std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+    inputValues.Header = SHeaderCache[m_InstanceId];
   }
 
   return ReadOnScaleTableFile(dataStructure, messageHandler, shouldCancel, &inputValues)();

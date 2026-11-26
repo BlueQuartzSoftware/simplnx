@@ -71,7 +71,7 @@ struct ComputeFeatureNeighborsFunctor
     std::vector<std::map<usize, float64>> neighborSurfaceAreas(totalFeatures);
 
     // Boundary cells validate only faces that exist before the 3D interior sweep.
-    constexpr std::array<FaceNeighborType, k_NeighborCount> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimensionStateT>();
+    constexpr std::array<FaceNeighborType, k_NeighborCount> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimensionStateT>();
 
     // Process corner cells.
     {
@@ -88,7 +88,7 @@ struct ComputeFeatureNeighborsFunctor
           }
 
           std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
-          for(const auto faceIndex : faceNeighborInternalIdx)
+          for(const auto faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {
@@ -130,7 +130,7 @@ struct ComputeFeatureNeighborsFunctor
           }
 
           std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
-          for(const auto faceIndex : faceNeighborInternalIdx)
+          for(const auto faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {
@@ -217,7 +217,7 @@ struct ComputeFeatureNeighborsFunctor
             int32 feature = featureIds.getValue(voxelIndex);
             if(feature > 0)
             {
-              for(const auto faceIndex : faceNeighborInternalIdx)
+              for(const auto faceIndex : k_FaceNeighborInternalIdx)
               {
                 const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
@@ -368,22 +368,22 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
   if(m_InputValues->StoreSurfaceFeatures && m_InputValues->StoreBoundaryCells)
   {
     // Preflight initializes surface flags to false. This path marks only geometry-face features.
-    auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
-    auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    auto* surfaceFeaturesPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
+    auto* boundaryCellsPtr = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeaturesPtr, boundaryCellsPtr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                          spacing64, progressThrottle, m_ShouldCancel);
   }
   if(m_InputValues->StoreSurfaceFeatures)
   {
     // Preflight initializes surface flags to false. This path marks only geometry-face features.
-    auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    auto* surfaceFeaturesPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeaturesPtr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                          spacing64, progressThrottle, m_ShouldCancel);
   }
   if(m_InputValues->StoreBoundaryCells)
   {
-    auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    auto* boundaryCellsPtr = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCellsPtr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                          spacing64, progressThrottle, m_ShouldCancel);
   }
 

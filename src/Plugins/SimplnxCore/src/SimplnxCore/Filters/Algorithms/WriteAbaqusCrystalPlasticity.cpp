@@ -46,9 +46,9 @@ enum class FileIndex : usize
 
 struct GrainData
 {
-  std::vector<int32> Phases;
-  std::vector<std::array<float32, 3>> Orientations;
-  std::vector<uint8> HasCells;
+  std::vector<int32> phases;
+  std::vector<std::array<float32, 3>> orientations;
+  std::vector<uint8> has_cells;
 };
 
 constexpr usize k_TextBufferSize = 64 * 1024;
@@ -214,8 +214,8 @@ Result<> WriteElementSets(const fs::path& filePath, const GrainData& grainData, 
   }
   output << fmt::format("{}**\n** The element sets\n*Elset, elset=cube, generate\n1, {}, 1\n**\n** Each Grain is made up of multiple elements\n**", k_SeparatorLine, featureIdsRef.getNumberOfTuples());
   Result<> result = AbaqusElementSets::write(
-      progressThrottle, output, [&grainData](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_Phase{}_set\n", grainId, grainData.Phases[grainId]); }, featureIdsRef,
-      static_cast<int32>(grainData.Phases.size() - 1), useOocAlgorithm, shouldCancel);
+      progressThrottle, output, [&grainData](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_Phase{}_set\n", grainId, grainData.phases[grainId]); }, featureIdsRef,
+      static_cast<int32>(grainData.phases.size() - 1), useOocAlgorithm, shouldCancel);
   if(result.valid())
   {
     output << fmt::format("\n**\n{}**\n", k_SeparatorLine);
@@ -293,7 +293,7 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
   fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_sects.inp\n", inputValues.FilePrefix);
   fmt::format_to(std::back_inserter(buffer), "**\n** ----------------------------Materials---------------------------\n**\n");
 
-  const usize grainCount = grainData.Phases.size() - 1;
+  const usize grainCount = grainData.phases.size() - 1;
   progressThrottle.reset(grainCount, "Writing Master File (File 4/5)");
   for(usize grainId = 1; grainId <= grainCount; grainId++)
   {
@@ -302,8 +302,8 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
       return WriteStatus::Cancelled;
     }
 
-    const int32 phaseId = grainData.Phases[grainId];
-    const auto& orientation = grainData.Orientations[grainId];
+    const int32 phaseId = grainData.phases[grainId];
+    const auto& orientation = grainData.orientations[grainId];
     const std::vector<std::string> constants = BuildUserMaterialConstants(grainId, phaseId, orientation, inputValues);
     fmt::format_to(std::back_inserter(buffer), "*Material, name=Grain{}_Phase{}_mat\n", grainId, phaseId);
     fmt::format_to(std::back_inserter(buffer), "*Depvar\n{}\n", inputValues.NumDepvar);
@@ -338,7 +338,7 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
     return WriteStatus::OpenError;
   }
 
-  const usize grainCount = grainData.Phases.size() - 1;
+  const usize grainCount = grainData.phases.size() - 1;
   fmt::memory_buffer buffer;
   fmt::format_to(std::back_inserter(buffer), "{}**\n** Each section is a separate grain\n", k_SeparatorLine);
   progressThrottle.reset(grainCount, "Writing Sections (File 5/5)");
@@ -349,7 +349,7 @@ WriteStatus WriteSections(const fs::path& filePath, const GrainData& grainData, 
       return WriteStatus::Cancelled;
     }
 
-    const int32 phaseId = grainData.Phases[grainId];
+    const int32 phaseId = grainData.phases[grainId];
     fmt::format_to(std::back_inserter(buffer), "** Section: Grain{}_Phase{}\n", grainId, phaseId);
     fmt::format_to(std::back_inserter(buffer), "*Solid Section, elset=Grain{}_Phase{}_set, material=Grain{}_Phase{}_mat\n", grainId, phaseId, grainId, phaseId);
     if(useReducedIntegration)
@@ -428,9 +428,9 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   RecordAlgorithmPathExecution(useOocAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
   GrainData grainData;
-  grainData.Phases.resize(grainCount + 1, 0);
-  grainData.Orientations.resize(grainCount + 1, {0.0F, 0.0F, 0.0F});
-  grainData.HasCells.resize(grainCount + 1, 0);
+  grainData.phases.resize(grainCount + 1, 0);
+  grainData.orientations.resize(grainCount + 1, {0.0F, 0.0F, 0.0F});
+  grainData.has_cells.resize(grainCount + 1, 0);
   const float64 angleScale = m_InputValues->WriteEulerAnglesInDegrees ? 180.0 / std::numbers::pi : 1.0;
   const usize cellCount = featureIdsRef.getNumberOfTuples();
   const usize chunkSize = std::min(AbaqusElementSets::k_ChunkSize, cellCount);
@@ -463,17 +463,17 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
       if(featurePage[index] > 0)
       {
         const usize grainId = static_cast<usize>(featurePage[index]);
-        grainData.HasCells[grainId] = 1;
-        grainData.Phases[grainId] = phasePage[index];
+        grainData.has_cells[grainId] = 1;
+        grainData.phases[grainId] = phasePage[index];
         for(usize component = 0; component < 3; component++)
         {
-          grainData.Orientations[grainId][component] = static_cast<float32>(eulerPage[index * 3 + component] * angleScale);
+          grainData.orientations[grainId][component] = static_cast<float32>(eulerPage[index * 3 + component] * angleScale);
         }
       }
     }
     progressThrottle.updateCount(offset + count);
   }
-  const usize emptyGrainCount = static_cast<usize>(std::count(grainData.HasCells.cbegin() + 1, grainData.HasCells.cend(), 0));
+  const usize emptyGrainCount = static_cast<usize>(std::count(grainData.has_cells.cbegin() + 1, grainData.has_cells.cend(), 0));
   if(emptyGrainCount > 0)
   {
     m_MessageHandler.sendWarningMessage(

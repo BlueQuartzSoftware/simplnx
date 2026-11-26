@@ -104,13 +104,13 @@ Result<> ExecuteProcess::operator()()
   {
     // redirect the process output to the output string so we can save it to a log file
     std::mutex mutex;
-    auto drain_async = std::async(std::launch::async, [&process, &output, &mutex]() {
+    auto drainAsync = std::async(std::launch::async, [&process, &output, &mutex]() {
       reproc::sink::thread_safe::string sink(output, mutex);
       return reproc::drain(process, sink, sink);
     });
 
     // Show new output every 2 seconds.
-    while(drain_async.wait_for(std::chrono::seconds(1)) != std::future_status::ready)
+    while(drainAsync.wait_for(std::chrono::seconds(1)) != std::future_status::ready)
     {
       std::lock_guard<std::mutex> lock(mutex);
       outFile << output;
@@ -126,7 +126,7 @@ Result<> ExecuteProcess::operator()()
     outFile << output;
 
     // Check if any errors occurred in the background thread.
-    ec = drain_async.get();
+    ec = drainAsync.get();
     if(ec)
     {
       outFile.close();

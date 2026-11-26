@@ -31,21 +31,21 @@ namespace
  */
 struct ValuedRegionalExtremaExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   RegionalExtremaOp op;
-  bool fullyConnected;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool fully_connected;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
-    return ApplyValuedRegionalExtrema<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
+    return ApplyValuedRegionalExtrema<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, op, fully_connected, inArray, outArray, should_cancel, message_handler);
   }
 };
 
@@ -59,25 +59,25 @@ struct ValuedRegionalExtremaExecuteFn
  */
 struct RegionalExtremaExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   RegionalExtremaOp op;
-  bool fullyConnected;
+  bool fully_connected;
   float64 foreground;
   float64 background;
-  bool flatIsExtremum;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool flat_is_extremum;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
     // Input is the T-typed image; the output is a FIXED uint32 binary label image (matching the legacy ITK
     // RegionalMaxima/Minima FilterOutputType), so the preflight must have created it via the AlwaysUInt32 map.
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<uint32>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<uint32>& outStore = outArray.getDataStoreRef();
     const uint32 fgU = static_cast<uint32>(foreground);
@@ -86,24 +86,24 @@ struct RegionalExtremaExecuteFn
     // Flat-image special case (ITK's GetFlat() branch): a completely flat image has no regional structure, so the
     // whole image is either the extremum (all foreground) or not (all background), per flatIsExtremum. Only
     // min/max are consumed, so the parallel min/max reduction replaces the full statistics pass.
-    Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(inStore, shouldCancel);
+    Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(inStore, should_cancel);
     if(stats.invalid())
     {
       return {nonstd::make_unexpected(std::move(stats.errors()))};
     }
-    if(shouldCancel)
+    if(should_cancel)
     {
       return {};
     }
     if(stats.value().min == stats.value().max)
     {
-      return FillStore<uint32>(outStore, flatIsExtremum ? fgU : bgU, shouldCancel);
+      return FillStore<uint32>(outStore, flat_is_extremum ? fgU : bgU, should_cancel);
     }
 
     // Compute the valued regional extrema into an OOC-inheriting scratch (input type T), then threshold that into
     // the uint32 output: non-extrema (left at the marker value) -> background, extrema (kept value) -> foreground.
     auto scratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-    if(Result<> r = ApplyValuedRegionalExtrema<T>(inStore, *scratch, dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+    if(Result<> r = ApplyValuedRegionalExtrema<T>(inStore, *scratch, dims, op, fully_connected, inArray, outArray, should_cancel, message_handler); r.invalid())
     {
       return r;
     }
@@ -114,7 +114,7 @@ struct RegionalExtremaExecuteFn
     auto outBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
     for(usize start = 0; start < total; start += k_ChunkValues)
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return {};
       }
@@ -143,20 +143,20 @@ struct RegionalExtremaExecuteFn
 Result<> ExecuteValuedRegionalExtremaImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, RegionalExtremaOp op,
                                                  bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::ValuedRegionalExtremaExecuteFn executeFn{.dataStructure = dataStructure,
-                                                   .inputArrayPath = inputArrayPath,
-                                                   .outputArrayPath = outputArrayPath,
+  detail::ValuedRegionalExtremaExecuteFn executeFn{.data_structure = dataStructure,
+                                                   .input_array_path = inputArrayPath,
+                                                   .output_array_path = outputArrayPath,
                                                    .dims = dims,
                                                    .op = op,
-                                                   .fullyConnected = fullyConnected,
-                                                   .shouldCancel = shouldCancel,
-                                                   .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                                   .fully_connected = fullyConnected,
+                                                   .should_cancel = shouldCancel,
+                                                   .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -164,23 +164,23 @@ Result<> ExecuteRegionalExtremaImageFilter(DataStructure& dataStructure, const D
                                            bool fullyConnected, float64 foreground, float64 background, bool flatIsExtremum, const std::atomic_bool& shouldCancel,
                                            const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::RegionalExtremaExecuteFn executeFn{.dataStructure = dataStructure,
-                                             .inputArrayPath = inputArrayPath,
-                                             .outputArrayPath = outputArrayPath,
+  detail::RegionalExtremaExecuteFn executeFn{.data_structure = dataStructure,
+                                             .input_array_path = inputArrayPath,
+                                             .output_array_path = outputArrayPath,
                                              .dims = dims,
                                              .op = op,
-                                             .fullyConnected = fullyConnected,
+                                             .fully_connected = fullyConnected,
                                              .foreground = foreground,
                                              .background = background,
-                                             .flatIsExtremum = flatIsExtremum,
-                                             .shouldCancel = shouldCancel,
-                                             .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                             .flat_is_extremum = flatIsExtremum,
+                                             .should_cancel = shouldCancel,
+                                             .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

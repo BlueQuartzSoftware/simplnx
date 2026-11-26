@@ -31,7 +31,7 @@ constexpr usize k_ControlPointCompSize = 4;
  * @return Error from the mask store, or success.
  */
 template <typename MaskType>
-Result<> readMaskChunk(const IDataArray& maskArray, usize offset, usize count, MaskType* maskBuffer)
+Result<> ReadMaskChunk(const IDataArray& maskArray, usize offset, usize count, MaskType* maskBuffer)
 {
   const auto& maskStore = maskArray.getIDataStoreRefAs<AbstractDataStore<MaskType>>();
   return maskStore.copyIntoBuffer(offset, nonstd::span<MaskType>(maskBuffer, count));
@@ -69,9 +69,9 @@ struct GenerateColorArrayScanlineFunctor
       return {};
     }
 
-    const IDataArray* maskArray = inputValues->UseMask ? dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath) : nullptr;
-    const bool hasBoolMask = maskArray != nullptr && maskArray->getDataType() == DataType::boolean;
-    const bool hasUInt8Mask = maskArray != nullptr && maskArray->getDataType() == DataType::uint8;
+    const IDataArray* maskArrayPtr = inputValues->UseMask ? dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath) : nullptr;
+    const bool hasBoolMask = maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::boolean;
+    const bool hasUInt8Mask = maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::uint8;
 
     auto inputBuffer = std::make_unique<ScalarType[]>(k_ChunkTuples);
     auto colorBuffer = std::make_unique<uint8[]>(k_ChunkTuples * k_ColorComponentCount);
@@ -120,7 +120,7 @@ struct GenerateColorArrayScanlineFunctor
     }
 
     // Unsupported mask types leave RGB output unchanged in both paths.
-    if(maskArray != nullptr && !hasBoolMask && !hasUInt8Mask)
+    if(maskArrayPtr != nullptr && !hasBoolMask && !hasUInt8Mask)
     {
       return {};
     }
@@ -143,7 +143,7 @@ struct GenerateColorArrayScanlineFunctor
 
         if(hasBoolMask)
         {
-          Result<> maskReadResult = readMaskChunk(*maskArray, offset, count, boolMaskBuffer.get());
+          Result<> maskReadResult = ReadMaskChunk(*maskArrayPtr, offset, count, boolMaskBuffer.get());
           if(maskReadResult.invalid())
           {
             return maskReadResult;
@@ -151,7 +151,7 @@ struct GenerateColorArrayScanlineFunctor
         }
         else if(hasUInt8Mask)
         {
-          Result<> maskReadResult = readMaskChunk(*maskArray, offset, count, uint8MaskBuffer.get());
+          Result<> maskReadResult = ReadMaskChunk(*maskArrayPtr, offset, count, uint8MaskBuffer.get());
           if(maskReadResult.invalid())
           {
             return maskReadResult;
@@ -161,7 +161,7 @@ struct GenerateColorArrayScanlineFunctor
         for(usize index = 0; index < count; index++)
         {
           const usize colorIndex = index * k_ColorComponentCount;
-          const bool valid = maskArray == nullptr || (hasBoolMask ? boolMaskBuffer[index] : uint8MaskBuffer[index] != 0);
+          const bool valid = maskArrayPtr == nullptr || (hasBoolMask ? boolMaskBuffer[index] : uint8MaskBuffer[index] != 0);
           if(!valid)
           {
             colorBuffer[colorIndex] = inputValues->InvalidColor[0];

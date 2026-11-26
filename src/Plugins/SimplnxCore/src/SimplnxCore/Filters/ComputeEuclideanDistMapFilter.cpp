@@ -123,13 +123,13 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* cellDataArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
-  if(nullptr == cellDataArray)
+  const auto* cellDataArrayPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(nullptr == cellDataArrayPtr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
   }
 
-  ShapeType tupleShape = cellDataArray->getIDataStore()->getTupleShape();
+  ShapeType tupleShape = cellDataArrayPtr->getIDataStore()->getTupleShape();
   DataType outputDataType = DataType::int32;
   if(!pCalcManhattanDistValue)
   {

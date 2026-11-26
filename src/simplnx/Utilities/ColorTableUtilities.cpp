@@ -14,7 +14,7 @@ namespace
 {
 constexpr nx::core::usize k_ControlPointCompSize = 4;
 
-nx::core::usize findRightBinIndex(nx::core::float32 nValue, const std::vector<nx::core::float32>& binPoints)
+nx::core::usize FindRightBinIndex(nx::core::float32 nValue, const std::vector<nx::core::float32>& binPoints)
 {
   nx::core::usize min = 0;
   nx::core::usize max = binPoints.size() - 1;
@@ -288,7 +288,7 @@ std::vector<float32> ColorTableUtilities::NormalizeBinPoints(const std::vector<f
 
 std::array<uint8, 3> ColorTableUtilities::ComputeRgbFromControlPoints(float32 nValue, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors)
 {
-  int rightBinIndex = static_cast<int>(findRightBinIndex(nValue, binPoints));
+  int rightBinIndex = static_cast<int>(FindRightBinIndex(nValue, binPoints));
   int leftBinIndex = rightBinIndex - 1;
   if(leftBinIndex < 0)
   {

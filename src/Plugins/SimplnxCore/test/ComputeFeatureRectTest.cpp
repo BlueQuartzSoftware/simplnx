@@ -38,15 +38,15 @@ DataStructure CreateTestData()
 {
   DataStructure dataStructure;
 
-  ImageGeom* iGeom = ImageGeom::Create(dataStructure, k_ImageGeometryName);
+  ImageGeom* iGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometryName);
   std::vector<usize> dims = {5, 5, 5};
-  iGeom->setDimensions(dims);
-  AttributeMatrix* cellAM = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, {dims[2], dims[1], dims[0]}, iGeom->getId());
+  iGeomPtr->setDimensions(dims);
+  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, {dims[2], dims[1], dims[0]}, iGeomPtr->getId());
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsArrayName, {dims[2], dims[1], dims[0]}, {1}, cellAM->getId());
-  featureIds->fill(0);
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsArrayName, {dims[2], dims[1], dims[0]}, {1}, cellAmPtr->getId());
+  featureIdsPtr->fill(0);
 
-  auto& featureIdsStore = featureIds->getDataStoreRef();
+  auto& featureIdsStore = featureIdsPtr->getDataStoreRef();
   featureIdsStore[6] = 1;
   featureIdsStore[7] = 1;
   featureIdsStore[8] = 1;
@@ -83,11 +83,11 @@ DataStructure CreateTestData()
   featureIdsStore[67] = 3;
   featureIdsStore[68] = 3;
 
-  AttributeMatrix* featureAM = AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, {4}, iGeom->getId());
+  AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, {4}, iGeomPtr->getId());
 
   ShapeType compDims = {6};
-  UInt32Array* rect = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAM->getId());
-  auto& rectStore = rect->getDataStoreRef();
+  UInt32Array* rectPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAmPtr->getId());
+  auto& rectStore = rectPtr->getDataStoreRef();
   rectStore.setComponent(1, 0, 1);
   rectStore.setComponent(1, 1, 1);
   rectStore.setComponent(1, 2, 0);
@@ -114,17 +114,17 @@ DataStructure CreateTestData()
 
 Int32Array* CreateLargeBlockTestData(DataStructure& dataStructure)
 {
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeometryName);
-  imageGeom->setDimensions({k_LargeDim, k_LargeDim, k_LargeDim});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometryName);
+  imageGeomPtr->setDimensions({k_LargeDim, k_LargeDim, k_LargeDim});
 
   const ShapeType cellShape = {k_LargeDim, k_LargeDim, k_LargeDim};
-  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath{{k_ImageGeometryName, k_CellAttrMatrixName, k_FeatureIdsArrayName}};
   auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellShape, {1});
-  auto* featureIds = Int32Array::Create(dataStructure, k_FeatureIdsArrayName, featureIdsDataStore, cellAM->getId());
-  auto& featureIdsStore = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, k_FeatureIdsArrayName, featureIdsDataStore, cellAmPtr->getId());
+  auto& featureIdsStore = featureIdsPtr->getDataStoreRef();
 
   constexpr usize k_SliceTuples = k_LargeDim * k_LargeDim;
   auto sliceBuffer = std::make_unique<int32[]>(k_SliceTuples);
@@ -145,8 +145,8 @@ Int32Array* CreateLargeBlockTestData(DataStructure& dataStructure)
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, {k_NumBlockFeatures + 1}, imageGeom->getId());
-  return featureIds;
+  AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, {k_NumBlockFeatures + 1}, imageGeomPtr->getId());
+  return featureIdsPtr;
 }
 
 void RequireFeatureCorners(const UInt32Array& corners, usize featureId, const std::array<uint32, 6>& expected)
@@ -204,7 +204,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: SIMPL Backwards Compatibility"
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -217,22 +217,22 @@ TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: SIMPL Backwards Compatibility"
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureRectFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureRectFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<DataPath>(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key) == "TestArray");

@@ -107,8 +107,8 @@ inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataS
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  const std::string k_OutputArrayName = "Output";
-  const std::string k_OutputGeomName = "Projected Image";
+  const std::string kOutputArrayName = "Output";
+  const std::string kOutputGeomName = "Projected Image";
 
   for(uint32 projDim = 0; projDim <= 2; ++projDim)
   {
@@ -128,16 +128,16 @@ inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataS
         args.insertOrAssign(NewFilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
         args.insertOrAssign(NewFilterT::k_ProjectionDimension_Key, std::make_any<uint32>(projDim));
         args.insertOrAssign(NewFilterT::k_RemoveOriginalGeometry_Key, std::make_any<bool>(performInPlace));
-        args.insertOrAssign(NewFilterT::k_OutputImageGeomName_Key, std::make_any<std::string>(k_OutputGeomName));
-        args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>(k_OutputArrayName));
+        args.insertOrAssign(NewFilterT::k_OutputImageGeomName_Key, std::make_any<std::string>(kOutputGeomName));
+        args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>(kOutputArrayName));
 
         auto preflightResult = filter.preflight(ds, args);
         SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
         auto executeResult = filter.execute(ds, args);
         SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-        const DataPath outputGeomPath = performInPlace ? geomPath : DataPath({k_OutputGeomName});
-        const DataPath outputArrayPath = outputGeomPath.createChildPath(cellDataName).createChildPath(k_OutputArrayName);
+        const DataPath outputGeomPath = performInPlace ? geomPath : DataPath({kOutputGeomName});
+        const DataPath outputArrayPath = outputGeomPath.createChildPath(cellDataName).createChildPath(kOutputArrayName);
         const auto& outStore = ds.getDataRefAs<DataArray<float64>>(outputArrayPath).getDataStoreRef();
         const usize numSlots = outStore.getSize();
         REQUIRE(numSlots > 0);
@@ -197,7 +197,7 @@ inline void RunProjectionMd5ItkGolden(
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
   const DataPath input = cellData.createChildPath("Input");
-  const std::string k_NewGeomName = "New Image Geometry";
+  const std::string kNewGeomName = "New Image Geometry";
 
   const auto makeArgs = [&] {
     Arguments args;
@@ -205,13 +205,13 @@ inline void RunProjectionMd5ItkGolden(
     args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
     args.insertOrAssign(FilterT::k_ProjectionDimension_Key, std::make_any<uint32>(projectionDimension));
     args.insertOrAssign(FilterT::k_RemoveOriginalGeometry_Key, std::make_any<bool>(removeOriginalGeometry));
-    args.insertOrAssign(FilterT::k_OutputImageGeomName_Key, std::make_any<std::string>(k_NewGeomName));
+    args.insertOrAssign(FilterT::k_OutputImageGeomName_Key, std::make_any<std::string>(kNewGeomName));
     args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     setExtraParams(args);
     return args;
   };
 
-  const DataPath output = removeOriginalGeometry ? cellData.createChildPath("Output") : DataPath({k_NewGeomName, "CellData", "Output"});
+  const DataPath output = removeOriginalGeometry ? cellData.createChildPath("Output") : DataPath({kNewGeomName, "CellData", "Output"});
 
   // --- run OUR filter (bind every Result to a local: SIMPLNX_RESULT_REQUIRE_VALID evaluates its argument
   //     multiple times, so a read/execute call passed inline would run twice and the second run would fail) ---

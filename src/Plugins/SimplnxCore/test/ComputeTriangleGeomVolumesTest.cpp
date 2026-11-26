@@ -11,7 +11,7 @@
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
-namespace ComputeTriangleGeomSizesFilterTest
+namespace compute_triangle_geom_sizes_filter_test
 {
 const std::string k_TriangleGeometryName = "TriangleDataContainer";
 const std::string k_FaceLabelsName = "FaceLabels";
@@ -25,7 +25,7 @@ const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceAttribute
 
 } // namespace ComputeTriangleGeomSizesFilterTest
 
-using namespace ComputeTriangleGeomSizesFilterTest;
+using namespace compute_triangle_geom_sizes_filter_test;
 
 TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangleGeomSizes]")
 {

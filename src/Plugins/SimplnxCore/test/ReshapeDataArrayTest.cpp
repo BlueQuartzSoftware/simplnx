@@ -30,15 +30,15 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Sam
   DataStructure dataStructure;
   Arguments args;
 
-  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{4}, std::vector<usize>{2});
-  array1->setComponent(0, 0, 0);
-  array1->setComponent(0, 1, 1);
-  array1->setComponent(1, 0, 0);
-  array1->setComponent(1, 1, 0);
-  array1->setComponent(2, 0, 1);
-  array1->setComponent(2, 1, 0);
-  array1->setComponent(3, 0, 1);
-  array1->setComponent(3, 1, 0);
+  auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{4}, std::vector<usize>{2});
+  array1Ptr->setComponent(0, 0, 0);
+  array1Ptr->setComponent(0, 1, 1);
+  array1Ptr->setComponent(1, 0, 0);
+  array1Ptr->setComponent(1, 1, 0);
+  array1Ptr->setComponent(2, 0, 1);
+  array1Ptr->setComponent(2, 1, 0);
+  array1Ptr->setComponent(3, 0, 1);
+  array1Ptr->setComponent(3, 1, 0);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0, 2.0}}));
@@ -76,19 +76,19 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Shr
   DataStructure dataStructure;
   Arguments args;
 
-  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{3, 2}, std::vector<usize>{2});
-  array1->setComponent(0, 0, 0);
-  array1->setComponent(0, 1, 1);
-  array1->setComponent(1, 0, 0);
-  array1->setComponent(1, 1, 0);
-  array1->setComponent(2, 0, 1);
-  array1->setComponent(2, 1, 0);
-  array1->setComponent(3, 0, 1);
-  array1->setComponent(3, 1, 0);
-  array1->setComponent(4, 0, 1);
-  array1->setComponent(4, 1, 0);
-  array1->setComponent(5, 0, 1);
-  array1->setComponent(5, 1, 0);
+  auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{3, 2}, std::vector<usize>{2});
+  array1Ptr->setComponent(0, 0, 0);
+  array1Ptr->setComponent(0, 1, 1);
+  array1Ptr->setComponent(1, 0, 0);
+  array1Ptr->setComponent(1, 1, 0);
+  array1Ptr->setComponent(2, 0, 1);
+  array1Ptr->setComponent(2, 1, 0);
+  array1Ptr->setComponent(3, 0, 1);
+  array1Ptr->setComponent(3, 1, 0);
+  array1Ptr->setComponent(4, 0, 1);
+  array1Ptr->setComponent(4, 1, 0);
+  array1Ptr->setComponent(5, 0, 1);
+  array1Ptr->setComponent(5, 1, 0);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0, 2.0}}));
@@ -122,9 +122,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Exp
   DataStructure dataStructure;
   Arguments args;
 
-  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{1}, std::vector<usize>{2});
-  array1->setComponent(0, 0, 0);
-  array1->setComponent(0, 1, 1);
+  auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{1}, std::vector<usize>{2});
+  array1Ptr->setComponent(0, 0, 0);
+  array1Ptr->setComponent(0, 1, 1);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0, 2.0}}));
@@ -158,11 +158,11 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{2});
+  auto inputNeighborListPtr = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{2});
   typename NeighborList<T>::VectorType inputList({0, 1, 0});
-  inputNeighborList->setList(0, inputList);
+  inputNeighborListPtr->setList(0, inputList);
   typename NeighborList<T>::VectorType inputList2({1, 0, 0});
-  inputNeighborList->setList(1, inputList2);
+  inputNeighborListPtr->setList(1, inputList2);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
@@ -190,9 +190,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{1});
+  auto inputNeighborListPtr = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{1});
   typename NeighborList<T>::VectorType inputList({0, 1, 0});
-  inputNeighborList->setList(0, inputList);
+  inputNeighborListPtr->setList(0, inputList);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0}}));
@@ -286,24 +286,24 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid - Same Size", 
 
   SECTION("DataArrays")
   {
-    auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{2, 2}, std::vector<usize>{2});
-    array1->setComponent(0, 0, 0);
-    array1->setComponent(0, 1, 1);
-    array1->setComponent(1, 0, 0);
-    array1->setComponent(1, 1, 0);
-    array1->setComponent(2, 0, 1);
-    array1->setComponent(2, 1, 0);
-    array1->setComponent(3, 0, 1);
-    array1->setComponent(3, 1, 0);
+    auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArrayName, std::vector<usize>{2, 2}, std::vector<usize>{2});
+    array1Ptr->setComponent(0, 0, 0);
+    array1Ptr->setComponent(0, 1, 1);
+    array1Ptr->setComponent(1, 0, 0);
+    array1Ptr->setComponent(1, 1, 0);
+    array1Ptr->setComponent(2, 0, 1);
+    array1Ptr->setComponent(2, 1, 0);
+    array1Ptr->setComponent(3, 0, 1);
+    array1Ptr->setComponent(3, 1, 0);
 
     args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
     args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0, 2.0}}));
   }
   SECTION("NeighborLists")
   {
-    auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{1});
+    auto inputNeighborListPtr = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{1});
     typename NeighborList<T>::VectorType inputList({0, 1, 0});
-    inputNeighborList->setList(0, inputList);
+    inputNeighborListPtr->setList(0, inputList);
 
     args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
     args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
@@ -336,9 +336,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: NeighborList Warning -
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{1});
+  auto inputNeighborListPtr = NeighborList<T>::Create(dataStructure, k_TestArrayName, ShapeType{1});
   typename NeighborList<T>::VectorType inputList({0, 1, 0});
-  inputNeighborList->setList(0, inputList);
+  inputNeighborListPtr->setList(0, inputList);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0, 2.0}}));

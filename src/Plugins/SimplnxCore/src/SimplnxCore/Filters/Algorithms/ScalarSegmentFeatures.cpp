@@ -219,76 +219,76 @@ Result<> ScalarSegmentFeatures::operator()()
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
-  auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
-  m_InputDataArray = inputDataArray;
-  usize inDataPoints = inputDataArray->getNumberOfTuples();
-  nx::core::DataType dataType = inputDataArray->getDataType();
+  auto* inputDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
+  m_InputDataArray = inputDataArrayPtr;
+  usize inDataPoints = inputDataArrayPtr->getNumberOfTuples();
+  nx::core::DataType dataType = inputDataArrayPtr->getDataType();
 
   switch(dataType)
   {
   case nx::core::DataType::int8: {
-    m_CompareFunctor = std::make_shared<::TSpecificCompareFunctor<int8>>(inputDataArray, inDataPoints, static_cast<int8>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<::TSpecificCompareFunctor<int8>>(inputDataArrayPtr, inDataPoints, static_cast<int8>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::uint8: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint8>>(inputDataArray, inDataPoints, static_cast<uint8>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint8>>(inputDataArrayPtr, inDataPoints, static_cast<uint8>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::boolean: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArray, inDataPoints);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArrayPtr, inDataPoints);
     break;
   }
   case nx::core::DataType::int16: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int16>>(inputDataArray, inDataPoints, static_cast<int16>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int16>>(inputDataArrayPtr, inDataPoints, static_cast<int16>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::uint16: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint16>>(inputDataArray, inDataPoints, static_cast<uint16>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint16>>(inputDataArrayPtr, inDataPoints, static_cast<uint16>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::int32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int32>>(inputDataArray, inDataPoints, static_cast<int32>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int32>>(inputDataArrayPtr, inDataPoints, static_cast<int32>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::uint32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint32>>(inputDataArray, inDataPoints, static_cast<uint32>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint32>>(inputDataArrayPtr, inDataPoints, static_cast<uint32>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::int64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int64>>(inputDataArray, inDataPoints, static_cast<int64>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int64>>(inputDataArrayPtr, inDataPoints, static_cast<int64>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::uint64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint64>>(inputDataArray, inDataPoints, static_cast<uint64>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint64>>(inputDataArrayPtr, inDataPoints, static_cast<uint64>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::float32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float32>>(inputDataArray, inDataPoints, static_cast<float32>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float32>>(inputDataArrayPtr, inDataPoints, static_cast<float32>(m_InputValues->ScalarTolerance));
     break;
   }
   case nx::core::DataType::float64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float64>>(inputDataArray, inDataPoints, static_cast<float64>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float64>>(inputDataArrayPtr, inDataPoints, static_cast<float64>(m_InputValues->ScalarTolerance));
     break;
   }
   default:
     break;
   }
-  if(inputDataArray->getNumberOfComponents() != 1)
+  if(inputDataArrayPtr->getNumberOfComponents() != 1)
   {
     m_CompareFunctor = std::make_shared<SegmentFeatures::CompareFunctor>();
   }
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3 udims = gridGeomPtr->getDimensions();
   allocateSliceBuffers(static_cast<int64>(udims[0]), static_cast<int64>(udims[1]));
 
   auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
-  const auto* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-  const bool usesOutOfCoreInput = IsOutOfCore(*m_InputDataArray) || (maskArray != nullptr && IsOutOfCore(*maskArray));
-  Result<> segmentResult = executeCCL(gridGeom, featureIdsStore, usesOutOfCoreInput);
+  const auto* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  const bool usesOutOfCoreInput = IsOutOfCore(*m_InputDataArray) || (maskArrayPtr != nullptr && IsOutOfCore(*maskArrayPtr));
+  Result<> segmentResult = executeCCL(gridGeomPtr, featureIdsStore, usesOutOfCoreInput);
 
   deallocateSliceBuffers();
 
@@ -316,9 +316,9 @@ Result<> ScalarSegmentFeatures::operator()()
   }
 
   // Positive features start active. Feature zero remains reserved background.
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  activeArray->getDataStore()->fill(1);
-  (*activeArray)[0] = 0;
+  auto* activeArrayPtr = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  activeArrayPtr->getDataStore()->fill(1);
+  (*activeArrayPtr)[0] = 0;
 
   // A deterministic permutation improves adjacent-feature color contrast.
   if(m_InputValues->RandomizeFeatureIds)

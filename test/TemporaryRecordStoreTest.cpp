@@ -27,7 +27,7 @@ public:
   : m_Count(count)
   , m_Width(width)
   , m_Batch(batch)
-  , m_Bytes(static_cast<usize>(count * width))
+  , m_bytes(static_cast<usize>(count * width))
   {
   }
   uint64 recordSize() const override
@@ -48,13 +48,13 @@ public:
   }
   Result<uint64> read(uint64 offset, uint64 count, nonstd::span<std::byte> bytes, const std::atomic_bool& cancel) const override
   {
-    ++readCalls;
-    readOffsets.push_back(offset);
-    if(cancel || failRead)
+    ++read_calls;
+    read_offsets.push_back(offset);
+    if(cancel || fail_read)
     {
       return MakeErrorResult<uint64>(-9000, "spy read failure");
     }
-    if(shortRead)
+    if(short_read)
     {
       return {count == 0 ? 0 : count - 1};
     }
@@ -62,14 +62,14 @@ public:
     {
       return MakeErrorResult<uint64>(-9001, "spy invalid read");
     }
-    std::memcpy(bytes.data(), m_Bytes.data() + offset * m_Width, static_cast<usize>(count * m_Width));
+    std::memcpy(bytes.data(), m_bytes.data() + offset * m_Width, static_cast<usize>(count * m_Width));
     return {count};
   }
   Result<> write(uint64 offset, uint64 count, nonstd::span<const std::byte> bytes, const std::atomic_bool& cancel) override
   {
-    ++writeCalls;
+    ++write_calls;
     write_offsets.push_back(offset);
-    if(cancel || failWrite)
+    if(cancel || fail_write)
     {
       return MakeErrorResult(-9002, "spy write failure");
     }
@@ -77,7 +77,7 @@ public:
     {
       return MakeErrorResult(-9003, "spy invalid write");
     }
-    std::memcpy(m_Bytes.data() + offset * m_Width, bytes.data(), static_cast<usize>(count * m_Width));
+    std::memcpy(m_bytes.data() + offset * m_Width, bytes.data(), static_cast<usize>(count * m_Width));
     return {};
   }
   Result<> fill(uint64 /*recordOffset*/, uint64 /*recordCount*/, nonstd::span<const std::byte> /*record*/, const std::atomic_bool& /*shouldCancel*/) override
@@ -88,14 +88,14 @@ public:
   {
     return {};
   }
-  mutable usize readCalls = 0;
-  usize writeCalls = 0;
-  bool shortRead = false;
-  bool failRead = false;
-  bool failWrite = false;
-  mutable std::vector<uint64> readOffsets;
+  mutable usize read_calls = 0;
+  usize write_calls = 0;
+  bool short_read = false;
+  bool fail_read = false;
+  bool fail_write = false;
+  mutable std::vector<uint64> read_offsets;
   std::vector<uint64> write_offsets;
-  std::vector<std::byte> m_Bytes;
+  std::vector<std::byte> m_bytes;
 
 private:
   uint64 m_Count;
@@ -238,7 +238,7 @@ TEST_CASE("DataIOCollection forwards datastore chunk-shape hints and CreateArray
   struct RecordedHint
   {
     std::optional<ShapeType> value;
-    DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default;
+    DataStoreInitializationMode initialization_mode = DataStoreInitializationMode::Default;
   };
 
   class HintRecordingManager : public IDataIOManager
@@ -250,7 +250,7 @@ TEST_CASE("DataIOCollection forwards datastore chunk-shape hints and CreateArray
       addDataStoreCreationFnc(formatName(), [recordedState = m_RecordedHint](DataType dataType, const ShapeType& tupleShape, const ShapeType& componentShape,
                                                                              const std::optional<ShapeType>& chunkShapeHint, DataStoreInitializationMode initializationMode) {
         recordedState->value = chunkShapeHint;
-        recordedState->initializationMode = initializationMode;
+        recordedState->initialization_mode = initializationMode;
         if(dataType != DataType::int32)
         {
           return std::unique_ptr<IDataStore>{};
@@ -276,28 +276,28 @@ TEST_CASE("DataIOCollection forwards datastore chunk-shape hints and CreateArray
   auto store = collection.createDataStoreWithType<int32>("ChunkHintRecording", ShapeType{8, 17, 32}, ShapeType{1}, chunkShapeHint);
   REQUIRE(store != nullptr);
   REQUIRE(recordedHint->value == chunkShapeHint);
-  REQUIRE(recordedHint->initializationMode == DataStoreInitializationMode::Default);
+  REQUIRE(recordedHint->initialization_mode == DataStoreInitializationMode::Default);
 
   store = collection.createDataStoreWithType<int32>("ChunkHintRecording", ShapeType{8, 17, 32}, ShapeType{1}, chunkShapeHint, DataStoreInitializationMode::DeferredZeroFill);
   REQUIRE(store != nullptr);
   REQUIRE(recordedHint->value == chunkShapeHint);
-  REQUIRE(recordedHint->initializationMode == DataStoreInitializationMode::DeferredZeroFill);
+  REQUIRE(recordedHint->initialization_mode == DataStoreInitializationMode::DeferredZeroFill);
 
   CreateArrayAction action(DataType::int32, ShapeType{8, 17, 32}, ShapeType{1}, DataPath({"Image", "Data"}), "", "", chunkShapeHint);
   REQUIRE(action.chunkShapeHint() == chunkShapeHint);
   REQUIRE(action.initializationMode() == DataStoreInitializationMode::Default);
   const auto clone = action.clone();
-  const auto* clonedAction = dynamic_cast<const CreateArrayAction*>(clone.get());
-  REQUIRE(clonedAction != nullptr);
-  REQUIRE(clonedAction->chunkShapeHint() == chunkShapeHint);
-  REQUIRE(clonedAction->initializationMode() == DataStoreInitializationMode::Default);
+  const auto* clonedActionPtr = dynamic_cast<const CreateArrayAction*>(clone.get());
+  REQUIRE(clonedActionPtr != nullptr);
+  REQUIRE(clonedActionPtr->chunkShapeHint() == chunkShapeHint);
+  REQUIRE(clonedActionPtr->initializationMode() == DataStoreInitializationMode::Default);
 
   CreateArrayAction deferredAction(DataType::int32, ShapeType{8, 17, 32}, ShapeType{1}, DataPath({"Image", "Deferred"}), "", "", chunkShapeHint, DataStoreInitializationMode::DeferredZeroFill);
   REQUIRE(deferredAction.initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
   const auto deferredClone = deferredAction.clone();
-  const auto* clonedDeferredAction = dynamic_cast<const CreateArrayAction*>(deferredClone.get());
-  REQUIRE(clonedDeferredAction != nullptr);
-  REQUIRE(clonedDeferredAction->initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
+  const auto* clonedDeferredActionPtr = dynamic_cast<const CreateArrayAction*>(deferredClone.get());
+  REQUIRE(clonedDeferredActionPtr != nullptr);
+  REQUIRE(clonedDeferredActionPtr->initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
 
   CreateArrayAction fillAction(DataType::int32, ShapeType{8, 17, 32}, ShapeType{1}, DataPath({"Image", "Filled"}), "", "12", chunkShapeHint, DataStoreInitializationMode::DeferredZeroFill);
   REQUIRE(fillAction.initializationMode() == DataStoreInitializationMode::Default);
@@ -349,14 +349,14 @@ TEST_CASE("BoundedRecordPageCache obeys cache hits, LRU eviction, partial pages,
   SIMPLNX_RESULT_REQUIRE_VALID(page0ReadResult);
   auto page1ReadResult = cache.read(1, active);
   SIMPLNX_RESULT_REQUIRE_VALID(page1ReadResult);
-  REQUIRE(store.readCalls == 1);
+  REQUIRE(store.read_calls == 1);
   auto page2ReadResult = cache.read(2, active);
   SIMPLNX_RESULT_REQUIRE_VALID(page2ReadResult);
   auto cachedPage0ReadResult = cache.read(0, active);
   SIMPLNX_RESULT_REQUIRE_VALID(cachedPage0ReadResult);
   auto partialPageReadResult = cache.read(4, active);
   SIMPLNX_RESULT_REQUIRE_VALID(partialPageReadResult);
-  REQUIRE(store.readOffsets == std::vector<uint64>{0, 2, 4});
+  REQUIRE(store.read_offsets == std::vector<uint64>{0, 2, 4});
   auto outOfBoundsPageReadResult = cache.read(5, active);
   SIMPLNX_RESULT_REQUIRE_INVALID(outOfBoundsPageReadResult);
   auto partialPageWriteResult = cache.write(4, 11, active);
@@ -364,12 +364,12 @@ TEST_CASE("BoundedRecordPageCache obeys cache hits, LRU eviction, partial pages,
   auto cacheFlushResult = cache.flush(active);
   SIMPLNX_RESULT_REQUIRE_VALID(cacheFlushResult);
   REQUIRE(store.write_offsets.back() == 4);
-  store.shortRead = true;
+  store.short_read = true;
   BoundedRecordPageCache<uint64> shortCache(store, 2, 1);
   auto shortCacheReadResult = shortCache.read(0, active);
   SIMPLNX_RESULT_REQUIRE_INVALID(shortCacheReadResult);
-  store.shortRead = false;
-  store.failRead = true;
+  store.short_read = false;
+  store.fail_read = true;
   BoundedRecordPageCache<uint64> failedRead(store, 2, 1);
   auto failedReadReadResult = failedRead.read(0, active);
   SIMPLNX_RESULT_REQUIRE_INVALID(failedReadReadResult);
@@ -392,7 +392,7 @@ TEST_CASE("BoundedRecordPageCache bulk read preserves request order across pages
   const std::atomic_bool active = false;
   SpyTemporaryRecordStore store(8, sizeof(uint64), 4);
   const std::array<uint64, 8> storedValues = {11, 12, 13, 14, 21, 22, 23, 24};
-  std::memcpy(store.m_Bytes.data(), storedValues.data(), sizeof(storedValues));
+  std::memcpy(store.m_bytes.data(), storedValues.data(), sizeof(storedValues));
   BoundedRecordPageCache<uint64> cache(store, 4, 2);
 
   const std::array<uint64, 6> indices = {0, 1, 3, 4, 5, 7};
@@ -400,7 +400,7 @@ TEST_CASE("BoundedRecordPageCache bulk read preserves request order across pages
   Result<> readManyResult = cache.readMany(indices, values, active);
   SIMPLNX_RESULT_REQUIRE_VALID(readManyResult);
   REQUIRE(values == std::array<uint64, 6>{11, 12, 14, 21, 22, 24});
-  REQUIRE(store.readOffsets == std::vector<uint64>{0, 4});
+  REQUIRE(store.read_offsets == std::vector<uint64>{0, 4});
 
   Result<> shortIndicesResult = cache.readMany(nonstd::span<const uint64>(indices.data(), indices.size() - 1), values, active);
   SIMPLNX_RESULT_REQUIRE_INVALID(shortIndicesResult);
@@ -415,7 +415,7 @@ TEST_CASE("BoundedRecordPageCache inspects and modifies a cached record in place
   const std::atomic_bool active = false;
   SpyTemporaryRecordStore store(4, sizeof(uint64), 2);
   const std::array<uint64, 4> storedValues = {3, 5, 7, 9};
-  std::memcpy(store.m_Bytes.data(), storedValues.data(), sizeof(storedValues));
+  std::memcpy(store.m_bytes.data(), storedValues.data(), sizeof(storedValues));
   BoundedRecordPageCache<uint64> cache(store, 2, 1);
 
   uint64 inspectedValue = 0;
@@ -428,10 +428,10 @@ TEST_CASE("BoundedRecordPageCache inspects and modifies a cached record in place
   SIMPLNX_RESULT_REQUIRE_VALID(flushResult);
 
   uint64 storedValue = 0;
-  std::memcpy(&storedValue, store.m_Bytes.data() + sizeof(uint64), sizeof(storedValue));
+  std::memcpy(&storedValue, store.m_bytes.data() + sizeof(uint64), sizeof(storedValue));
   REQUIRE(storedValue == 41);
-  REQUIRE(store.readCalls == 1);
-  REQUIRE(store.writeCalls == 1);
+  REQUIRE(store.read_calls == 1);
+  REQUIRE(store.write_calls == 1);
 }
 
 TEST_CASE("BoundedRecordPageCache retains dirty data after failed eviction write", "[TemporaryRecordStore]")
@@ -441,13 +441,13 @@ TEST_CASE("BoundedRecordPageCache retains dirty data after failed eviction write
   BoundedRecordPageCache<uint64> cache(store, 2, 1);
   auto page0WriteResult = cache.write(0, 17, active);
   SIMPLNX_RESULT_REQUIRE_VALID(page0WriteResult);
-  store.failWrite = true;
+  store.fail_write = true;
   auto failedFlushPageReadResult = cache.read(2, active);
   SIMPLNX_RESULT_REQUIRE_INVALID(failedFlushPageReadResult);
-  store.failWrite = false;
+  store.fail_write = false;
   auto cacheFlushResult = cache.flush(active);
   SIMPLNX_RESULT_REQUIRE_VALID(cacheFlushResult);
-  REQUIRE(store.writeCalls >= 2);
+  REQUIRE(store.write_calls >= 2);
   REQUIRE(std::all_of(store.write_offsets.begin(), store.write_offsets.end(), [](uint64 offset) { return offset == 0; }));
 }
 
@@ -459,11 +459,11 @@ TEST_CASE("ExternalEquivalence compresses a 4096-node chain without resident pat
   config.maxRecordsPerBatch = 64;
   config.initialRecordCount = k_Count;
   auto store = std::make_unique<SpyTemporaryRecordStore>(k_Count, sizeof(ExternalEquivalence::Node), 64);
-  auto* spy = store.get();
+  auto* spyPtr = store.get();
   for(uint64 label = 0; label < k_Count; ++label)
   {
     const ExternalEquivalence::Node node = {.parent = label == 0 ? 0 : label - 1, .size = label == 0 ? k_Count : 1};
-    std::memcpy(spy->m_Bytes.data() + label * sizeof(node), &node, sizeof(node));
+    std::memcpy(spyPtr->m_bytes.data() + label * sizeof(node), &node, sizeof(node));
   }
   auto equivalenceResult = ExternalEquivalence::Create(std::move(store), 64, 2);
   SIMPLNX_RESULT_REQUIRE_VALID(equivalenceResult);
@@ -477,7 +477,7 @@ TEST_CASE("ExternalEquivalence compresses a 4096-node chain without resident pat
   auto equivalenceResultFlushResult = equivalenceResult.value()->flush(active);
   SIMPLNX_RESULT_REQUIRE_VALID(equivalenceResultFlushResult);
   ExternalEquivalence::Node tail{};
-  std::memcpy(&tail, spy->m_Bytes.data() + (k_Count - 1) * sizeof(tail), sizeof(tail));
+  std::memcpy(&tail, spyPtr->m_bytes.data() + (k_Count - 1) * sizeof(tail), sizeof(tail));
   REQUIRE(tail.parent < k_Count - 1);
 }
 
@@ -486,14 +486,14 @@ TEST_CASE("ExternalEquivalence propagates backing-store failures and size overfl
   const std::atomic_bool active = false;
 
   auto failedReadStore = std::make_unique<SpyTemporaryRecordStore>(2, sizeof(ExternalEquivalence::Node), 1);
-  failedReadStore->failRead = true;
+  failedReadStore->fail_read = true;
   auto failedReadEquivalence = ExternalEquivalence::Create(std::move(failedReadStore), 1, 1);
   SIMPLNX_RESULT_REQUIRE_VALID(failedReadEquivalence);
   auto failedStoreReadFindResult = failedReadEquivalence.value()->find(0, active);
   SIMPLNX_RESULT_REQUIRE_INVALID(failedStoreReadFindResult);
 
   auto failedWriteStore = std::make_unique<SpyTemporaryRecordStore>(2, sizeof(ExternalEquivalence::Node), 1);
-  failedWriteStore->failWrite = true;
+  failedWriteStore->fail_write = true;
   auto failedWriteEquivalence = ExternalEquivalence::Create(std::move(failedWriteStore), 1, 1);
   SIMPLNX_RESULT_REQUIRE_VALID(failedWriteEquivalence);
   auto existingNodeFindResult = failedWriteEquivalence.value()->find(0, active);
@@ -504,8 +504,8 @@ TEST_CASE("ExternalEquivalence propagates backing-store failures and size overfl
   auto overflowStore = std::make_unique<SpyTemporaryRecordStore>(2, sizeof(ExternalEquivalence::Node), 1);
   const ExternalEquivalence::Node firstNode{.parent = 0, .size = std::numeric_limits<uint64>::max()};
   const ExternalEquivalence::Node secondNode{.parent = 1, .size = 1};
-  std::memcpy(overflowStore->m_Bytes.data(), &firstNode, sizeof(firstNode));
-  std::memcpy(overflowStore->m_Bytes.data() + sizeof(firstNode), &secondNode, sizeof(secondNode));
+  std::memcpy(overflowStore->m_bytes.data(), &firstNode, sizeof(firstNode));
+  std::memcpy(overflowStore->m_bytes.data() + sizeof(firstNode), &secondNode, sizeof(secondNode));
   auto overflowEquivalence = ExternalEquivalence::Create(std::move(overflowStore), 1, 2);
   SIMPLNX_RESULT_REQUIRE_VALID(overflowEquivalence);
   auto overflowEquivalenceUnionResult = overflowEquivalence.value()->unite(0, 1, active);

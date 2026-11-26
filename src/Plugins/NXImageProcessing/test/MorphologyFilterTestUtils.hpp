@@ -57,18 +57,18 @@ template <class T>
 inline DataPath BuildMorphologyImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -100,18 +100,18 @@ template <class T>
 inline DataPath BuildBinaryPatternImage(DataStructure& ds, usize dim, T foreground, T background)
 {
   const ShapeType cellShape = {dim, dim, dim};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dim, dim, dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const usize total = ref.getSize();
   constexpr usize k_ChunkValues = 65536;
@@ -148,18 +148,18 @@ template <class T>
 inline DataPath BuildBinaryLabelImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T foreground, T background)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -247,16 +247,16 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Kern
   constexpr usize k_Dim = 4;
   const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({k_Dim, k_Dim, k_Dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({k_Dim, k_Dim, k_Dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {3}); // 3-component (non-scalar)
-  DataArray<T>::Create(ds, "Input", store, cellAM->getId());
+  DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
 
   NewFilterT filter;
   Arguments args;
@@ -873,13 +873,13 @@ namespace morph_test
 inline DataPath BuildKernelRadiusMetadata(DataStructure& ds, const SizeVec3& dims)
 {
   const ShapeType shape = {dims[2], dims[1], dims[0]};
-  auto* geom = ImageGeom::Create(ds, "Image Geometry");
-  geom->setDimensions(dims);
-  auto* cells = AttributeMatrix::Create(ds, "CellData", shape, geom->getId());
-  geom->setCellData(*cells);
+  auto* geomPtr = ImageGeom::Create(ds, "Image Geometry");
+  geomPtr->setDimensions(dims);
+  auto* cellsPtr = AttributeMatrix::Create(ds, "CellData", shape, geomPtr->getId());
+  geomPtr->setCellData(*cellsPtr);
   auto store = EmptyDataStore<uint8>::Create(shape, {1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(store);
-  DataArray<uint8>::Create(ds, "Input", std::move(store.value()), cells->getId());
+  DataArray<uint8>::Create(ds, "Input", std::move(store.value()), cellsPtr->getId());
   return DataPath({"Image Geometry", "CellData", "Input"});
 }
 

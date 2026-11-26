@@ -171,8 +171,8 @@ public:
   T* getDataAs(const std::optional<DataObject::IdType>& identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    auto* object = getData(identifier);
-    return dynamic_cast<T*>(object);
+    auto* objectPtr = getData(identifier);
+    return dynamic_cast<T*>(objectPtr);
   }
 
   /**
@@ -186,8 +186,8 @@ public:
   T* getDataAsUnsafe(const std::optional<DataObject::IdType>& identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    auto* object = getData(identifier);
-    return static_cast<T*>(object);
+    auto* objectPtr = getData(identifier);
+    return static_cast<T*>(objectPtr);
   }
 
   DataObject* getData(const DataPath& path);
@@ -900,7 +900,7 @@ private:
    * @param sourceFile Supplies diagnostic context.
    * @pre result is invalid.
    */
-  static void appendImportCleanupDiagnostics(Result<>& result, const std::vector<ImportPublicationRecord>& records, const std::filesystem::path& sourceFile);
+  static void AppendImportCleanupDiagnostics(Result<>& result, const std::vector<ImportPublicationRecord>& records, const std::filesystem::path& sourceFile);
 
   /**
    * @brief Transfers failed transaction observations into action-local test storage.

@@ -21,29 +21,29 @@ CopyDataObjectAction::CopyDataObjectAction(DataPath path, const DataPath& newPat
 
 CopyDataObjectAction::~CopyDataObjectAction() noexcept = default;
 
-std::shared_ptr<DataObject> CopyDataObjectAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
+std::shared_ptr<DataObject> CopyDataObjectAction::CopyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
 {
-  auto* data = dataStructure.getData(sourcePath);
-  std::shared_ptr<DataObject> copy = data->deepCopy(destPath);
+  auto* dataPtr = dataStructure.getData(sourcePath);
+  std::shared_ptr<DataObject> copy = dataPtr->deepCopy(destPath);
   return copy;
 }
 
 Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "CopyDataObjectAction: ";
+  static constexpr StringLiteral k_Prefix = "CopyDataObjectAction: ";
 
   if(dataStructure.getData(path()) == nullptr)
   {
-    return MakeErrorResult(-5100, fmt::format("{}Cannot find data object at path '{}'", prefix, path().toString()));
+    return MakeErrorResult(-5100, fmt::format("{}Cannot find data object at path '{}'", k_Prefix, path().toString()));
   }
   if(dataStructure.getData(newPath()) != nullptr)
   {
-    return MakeErrorResult(-5101, fmt::format("{}Data already exists at path '{}'", prefix, newPath().toString()));
+    return MakeErrorResult(-5101, fmt::format("{}Data already exists at path '{}'", k_Prefix, newPath().toString()));
   }
 
-  if(copyData(dataStructure, path(), newPath()) == nullptr)
+  if(CopyData(dataStructure, path(), newPath()) == nullptr)
   {
-    return MakeErrorResult(-5102, fmt::format("{}Failed to copy data from '{}' to '{}'", prefix, path().toString(), newPath().toString()));
+    return MakeErrorResult(-5102, fmt::format("{}Failed to copy data from '{}' to '{}'", k_Prefix, path().toString(), newPath().toString()));
   }
 
   return {};

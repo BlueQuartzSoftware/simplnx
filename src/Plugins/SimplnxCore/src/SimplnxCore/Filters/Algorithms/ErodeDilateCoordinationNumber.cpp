@@ -133,7 +133,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
   // Face order determines which source wins when neighbor tallies compete.
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
@@ -272,7 +272,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
               inSlice                                          // +Z
           };
 
-          for(const auto& faceIndex : faceNeighborInternalIdx)
+          for(const auto& faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {
@@ -309,7 +309,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           }
 
           // The center update does not change any face-neighbor value used by this reset.
-          for(const auto& faceIndex : faceNeighborInternalIdx)
+          for(const auto& faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {

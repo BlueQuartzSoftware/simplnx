@@ -43,14 +43,14 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
   using UniqueEdgesType = std::set<EdgePairType>;
   using UniqueVertType = std::set<IGeometry::MeshIndexType>;
 
-  constexpr IGeometry::MeshIndexType numVertsPerElem = 3;
+  constexpr IGeometry::MeshIndexType k_NumVertsPerElem = 3;
   std::vector<int64> regionTriangleCount(numRegions, 0);
   std::vector<UniqueEdgesType> uniqueEdges(numRegions);
   std::vector<UniqueVertType> uniqueVerts(numRegions);
 
   for(IGeometry::MeshIndexType tIdx = 0; tIdx < triangleList.getNumberOfTuples(); ++tIdx)
   {
-    const usize offset = tIdx * numVertsPerElem;
+    const usize offset = tIdx * k_NumVertsPerElem;
 
     for(IGeometry::MeshIndexType labelIdx = 0; labelIdx < 2; labelIdx++)
     {
@@ -65,7 +65,7 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
 
       ++regionTriangleCount[regionIdx];
       // Compute the first 2 pairs of vertices: V0,V1 and V1,V2
-      for(usize j = 0; j < numVertsPerElem - 1; j++)
+      for(usize j = 0; j < k_NumVertsPerElem - 1; j++)
       {
         auto t0 = triangleList[offset + j];
         auto tj = triangleList[offset + j + 1];
@@ -80,7 +80,7 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
 
       // compute the last pair which wraps from V2,V0
       {
-        usize j = numVertsPerElem - 1;
+        usize j = k_NumVertsPerElem - 1;
 
         auto t0 = triangleList[offset];
         auto tj = triangleList[offset + j];

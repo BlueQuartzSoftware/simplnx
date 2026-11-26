@@ -966,9 +966,9 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
 
   auto residentWork = std::make_unique<T[]>(residentValues);
   auto streamingBuffers = std::make_unique<T[]>(3 * sliceValues);
-  T* const workPlane = streamingBuffers.get();
-  T* const maskPlane = streamingBuffers.get() + sliceValues;
-  T* const adjacentPlane = streamingBuffers.get() + 2 * sliceValues;
+  T* const workPlanePtr = streamingBuffers.get();
+  T* const maskPlanePtr = streamingBuffers.get() + sliceValues;
+  T* const adjacentPlanePtr = streamingBuffers.get() + 2 * sliceValues;
 
   if(initializeWork)
   {
@@ -983,11 +983,11 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
         return {};
       }
       const usize planeStart = z * sliceValues;
-      if(Result<> result = loadMarker(planeStart, nonstd::span<T>(workPlane, sliceValues)); result.invalid())
+      if(Result<> result = loadMarker(planeStart, nonstd::span<T>(workPlanePtr, sliceValues)); result.invalid())
       {
         return result;
       }
-      if(Result<> result = workStore.copyFromBuffer(planeStart, nonstd::span<const T>(workPlane, sliceValues)); result.invalid())
+      if(Result<> result = workStore.copyFromBuffer(planeStart, nonstd::span<const T>(workPlanePtr, sliceValues)); result.invalid())
       {
         return result;
       }
@@ -1125,7 +1125,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
           const usize columnIndex = xForward ? block.colBegin + localCol : block.colEnd - 1 - localCol;
           const int64 x = static_cast<int64>(columnIndex);
           const usize position = flat2d(x, y);
-          T value = workPlane[position];
+          T value = workPlanePtr[position];
           if(!m_FullyConnected)
           {
             if(zForward)
@@ -1143,23 +1143,23 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
             {
               if(y > 0)
               {
-                value = TraitsType::fold(value, workPlane[position - dimX]);
+                value = TraitsType::fold(value, workPlanePtr[position - dimX]);
               }
             }
             else if(y + 1 < nY)
             {
-              value = TraitsType::fold(value, workPlane[position + dimX]);
+              value = TraitsType::fold(value, workPlanePtr[position + dimX]);
             }
             if(xForward)
             {
               if(x > 0)
               {
-                value = TraitsType::fold(value, workPlane[position - 1]);
+                value = TraitsType::fold(value, workPlanePtr[position - 1]);
               }
             }
             else if(x + 1 < nX)
             {
-              value = TraitsType::fold(value, workPlane[position + 1]);
+              value = TraitsType::fold(value, workPlanePtr[position + 1]);
             }
           }
           else
@@ -1178,13 +1178,13 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
                 continue;
               }
               const usize neighbor2d = flat2d(neighborX, neighborY);
-              value = TraitsType::fold(value, offset.dz == 0 ? workPlane[neighbor2d] : adjacent[neighbor2d]);
+              value = TraitsType::fold(value, offset.dz == 0 ? workPlanePtr[neighbor2d] : adjacent[neighbor2d]);
             }
           }
-          const T newValue = TraitsType::clampToMask(value, maskPlane[position]);
-          if(newValue != workPlane[position])
+          const T newValue = TraitsType::clampToMask(value, maskPlanePtr[position]);
+          if(newValue != workPlanePtr[position])
           {
-            workPlane[position] = newValue;
+            workPlanePtr[position] = newValue;
             blockChanged = true;
           }
         }
@@ -1235,10 +1235,10 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
     bool changed = false;
 
     progressThrottle.reset(dimZ, forwardProgressLabel);
-    constexpr usize forwardMaskBatchPlanes = 3;
-    for(usize batchBegin = 0; batchBegin < residentPlanes; batchBegin += forwardMaskBatchPlanes)
+    constexpr usize k_ForwardMaskBatchPlanes = 3;
+    for(usize batchBegin = 0; batchBegin < residentPlanes; batchBegin += k_ForwardMaskBatchPlanes)
     {
-      const usize batchPlanes = std::min(forwardMaskBatchPlanes, residentPlanes - batchBegin);
+      const usize batchPlanes = std::min(k_ForwardMaskBatchPlanes, residentPlanes - batchBegin);
       bool batchClean = true;
       for(usize z = batchBegin; z < batchBegin + batchPlanes; ++z)
       {
@@ -1278,7 +1278,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       progressThrottle.updateCount(batchBegin + batchPlanes);
     }
 
-    std::copy_n(residentWork.get() + (residentPlanes - 1) * sliceValues, sliceValues, adjacentPlane);
+    std::copy_n(residentWork.get() + (residentPlanes - 1) * sliceValues, sliceValues, adjacentPlanePtr);
     for(usize z = residentPlanes; z < dimZ; ++z)
     {
       const usize planeStart = z * sliceValues;
@@ -1286,26 +1286,26 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       {
         // Provable no-op: refresh the carry for the next tail plane with a single bounded read instead of the
         // full read-compute-write cycle.
-        if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(adjacentPlane, sliceValues)); result.invalid())
+        if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(adjacentPlanePtr, sliceValues)); result.invalid())
         {
           return result;
         }
         progressThrottle.updateCount(z + 1);
         continue;
       }
-      if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(workPlane, sliceValues)); result.invalid())
+      if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(workPlanePtr, sliceValues)); result.invalid())
       {
         return result;
       }
-      if(Result<> result = maskStore.copyIntoBuffer(planeStart, nonstd::span<T>(maskPlane, sliceValues)); result.invalid())
+      if(Result<> result = maskStore.copyIntoBuffer(planeStart, nonstd::span<T>(maskPlanePtr, sliceValues)); result.invalid())
       {
         return result;
       }
       bool planeChanged = false;
-      scanStreamedPlane(z, true, true, true, adjacentPlane, changed, planeChanged);
+      scanStreamedPlane(z, true, true, true, adjacentPlanePtr, changed, planeChanged);
       if(planeChanged)
       {
-        if(Result<> result = workStore.copyFromBuffer(planeStart, nonstd::span<const T>(workPlane, sliceValues)); result.invalid())
+        if(Result<> result = workStore.copyFromBuffer(planeStart, nonstd::span<const T>(workPlanePtr, sliceValues)); result.invalid())
         {
           return result;
         }
@@ -1315,7 +1315,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       {
         forwardPlaneDirty[z] = false;
       }
-      std::copy_n(workPlane, sliceValues, adjacentPlane);
+      std::copy_n(workPlanePtr, sliceValues, adjacentPlanePtr);
 
       progressThrottle.updateCount(z + 1);
     }
@@ -1328,7 +1328,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       const usize planeStart = z * sliceValues;
       if(!reversePlaneDirty[z])
       {
-        if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(adjacentPlane, sliceValues)); result.invalid())
+        if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(adjacentPlanePtr, sliceValues)); result.invalid())
         {
           return result;
         }
@@ -1336,19 +1336,19 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
         progressThrottle.updateCount(planeIndex + 1);
         continue;
       }
-      if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(workPlane, sliceValues)); result.invalid())
+      if(Result<> result = workStore.copyIntoBuffer(planeStart, nonstd::span<T>(workPlanePtr, sliceValues)); result.invalid())
       {
         return result;
       }
-      if(Result<> result = maskStore.copyIntoBuffer(planeStart, nonstd::span<T>(maskPlane, sliceValues)); result.invalid())
+      if(Result<> result = maskStore.copyIntoBuffer(planeStart, nonstd::span<T>(maskPlanePtr, sliceValues)); result.invalid())
       {
         return result;
       }
       bool planeChanged = false;
-      scanStreamedPlane(z, false, false, false, haveAdjacent ? adjacentPlane : nullptr, changed, planeChanged);
+      scanStreamedPlane(z, false, false, false, haveAdjacent ? adjacentPlanePtr : nullptr, changed, planeChanged);
       if(planeChanged)
       {
-        if(Result<> result = workStore.copyFromBuffer(planeStart, nonstd::span<const T>(workPlane, sliceValues)); result.invalid())
+        if(Result<> result = workStore.copyFromBuffer(planeStart, nonstd::span<const T>(workPlanePtr, sliceValues)); result.invalid())
         {
           return result;
         }
@@ -1358,17 +1358,17 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
       {
         reversePlaneDirty[z] = false;
       }
-      std::copy_n(workPlane, sliceValues, adjacentPlane);
+      std::copy_n(workPlanePtr, sliceValues, adjacentPlanePtr);
       haveAdjacent = true;
 
       progressThrottle.updateCount(planeIndex + 1);
     }
 
-    constexpr usize reverseMaskBatchPlanes = 2;
-    for(usize processedPlanes = 0; processedPlanes < residentPlanes; processedPlanes += reverseMaskBatchPlanes)
+    constexpr usize k_ReverseMaskBatchPlanes = 2;
+    for(usize processedPlanes = 0; processedPlanes < residentPlanes; processedPlanes += k_ReverseMaskBatchPlanes)
     {
       const usize batchEnd = residentPlanes - processedPlanes;
-      const usize batchPlanes = std::min(reverseMaskBatchPlanes, batchEnd);
+      const usize batchPlanes = std::min(k_ReverseMaskBatchPlanes, batchEnd);
       const usize batchBegin = batchEnd - batchPlanes;
       bool batchClean = true;
       for(usize z = batchBegin; z < batchEnd; ++z)
@@ -1393,7 +1393,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
         const usize z = batchEnd - 1 - localPlane;
         const usize maskOffset = z - batchBegin;
         bool planeChanged = false;
-        scanResidentPlane(z, false, false, false, streamingBuffers.get() + maskOffset * sliceValues, z + 1 == residentPlanes ? adjacentPlane : nullptr, planeChanged);
+        scanResidentPlane(z, false, false, false, streamingBuffers.get() + maskOffset * sliceValues, z + 1 == residentPlanes ? adjacentPlanePtr : nullptr, planeChanged);
         changed = changed || planeChanged;
         if(planeChanged)
         {

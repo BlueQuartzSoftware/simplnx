@@ -265,7 +265,7 @@ struct SliceTransferOneZFunctor
   template <typename T>
   Result<> operator()(IDataArray& dataArray, const std::vector<int64>& sliceMarks, usize sliceSize, usize destZ, usize dimZ)
   {
-    using BufT = typename SliceBufferedTransferFunctor::BufferType<T>;
+    using BufTType = typename SliceBufferedTransferFunctor::BufferType<T>;
     auto& store = dynamic_cast<DataArray<T>&>(dataArray).getDataStoreRef();
     const usize numComp = store.getNumberOfComponents();
     const usize sliceValues = sliceSize * numComp;
@@ -279,7 +279,7 @@ struct SliceTransferOneZFunctor
     }
 
     // Slots zero, one, and two contain Z-1, Z, and Z+1 when loaded.
-    std::array<BufT, 3> srcBufs;
+    std::array<BufTType, 3> srcBufs;
     std::array<bool, 3> srcLoaded = {false, false, false};
 
     // Load each required source slice at most once.

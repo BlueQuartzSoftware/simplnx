@@ -31,16 +31,16 @@ constexpr float64 k_StdDevRelTol = 1.0e-7;
 // FilterList), so this independent closed form is the correctness oracle instead of legacy parity.
 float64 StdDevExpectedForSlot(uint32 projDim, usize /*slot*/, usize dim)
 {
-  const auto Dd = static_cast<float64>(dim);
-  const float64 baseStdDev = std::sqrt(Dd * (Dd + 1.0) / 12.0);
+  const auto dd = static_cast<float64>(dim);
+  const float64 baseStdDev = std::sqrt(dd * (dd + 1.0) / 12.0);
   float64 commonDiff = 1.0; // projDim == 0 -> vary x -> stride 1
   if(projDim == 1)
   {
-    commonDiff = Dd; // vary y -> stride D
+    commonDiff = dd; // vary y -> stride D
   }
   else if(projDim == 2)
   {
-    commonDiff = Dd * Dd; // vary z -> stride D^2
+    commonDiff = dd * dd; // vary z -> stride D^2
   }
   return commonDiff * baseStdDev;
 }
@@ -62,16 +62,16 @@ TEMPLATE_TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: l
   dims[projDim] = 3;
   const ShapeType cellShape = {dims[2], dims[1], dims[0]};
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions(dims);
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions(dims);
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<TestType>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<TestType>::Create(ds, "Input", store, cellAM->getId());
-  REQUIRE(array != nullptr);
+  auto* arrayPtr = DataArray<TestType>::Create(ds, "Input", store, cellAmPtr->getId());
+  REQUIRE(arrayPtr != nullptr);
   const auto writeResult = store->copyFromBuffer(0, nonstd::span<const TestType>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
@@ -146,9 +146,9 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: large-offs
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
-  constexpr usize D = 12;
-  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0); },
-                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, D); }, k_StdDevAbsTol,
+  constexpr usize k_D = 12;
+  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0); },
+                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, k_D); }, k_StdDevAbsTol,
                                                                                              k_StdDevRelTol);
 }
 
@@ -160,9 +160,9 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-e
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (int16 input)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
-  constexpr usize D = 8;
-  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<int16>(ds, D, 0.0, 1.0); },
-                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, D); }, k_StdDevAbsTol,
+  constexpr usize k_D = 8;
+  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<int16>(ds, k_D, 0.0, 1.0); },
+                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, k_D); }, k_StdDevAbsTol,
                                                                                              k_StdDevRelTol);
 }
 
@@ -177,20 +177,20 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: single-sam
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize D = 6;
+  constexpr usize k_D = 6;
   // Image dims are XYZ; make the projected axis (Z) have extent 1, so every projected column is a single sample.
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({D, D, 1});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  const ShapeType cellShape = {1, D, D}; // tuple shape is ZYX
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({k_D, k_D, 1});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  const ShapeType cellShape = {1, k_D, k_D}; // tuple shape is ZYX
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<float32>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < ref.getSize(); ++i)
   {
     ref.setValue(i, static_cast<float32>(i + 1)); // arbitrary distinct values; single-sample columns -> stddev 0
@@ -211,7 +211,7 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: single-sam
 
   const DataPath outputPath({"Projected Image", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<float64>>(outputPath).getDataStoreRef();
-  REQUIRE(outStore.getSize() == D * D);
+  REQUIRE(outStore.getSize() == k_D * k_D);
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     INFO("index=" << i);
@@ -225,9 +225,9 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: constant c
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize D = 8;
+  constexpr usize k_D = 8;
   DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, D, 42.0, 0.0); // step 0 -> globally constant image (every column constant)
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, k_D, 42.0, 0.0); // step 0 -> globally constant image (every column constant)
 
   StandardDeviationProjectionImageFilter filter;
   Arguments args;
@@ -244,7 +244,7 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: constant c
 
   const DataPath outputPath({"Projected Image", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<float64>>(outputPath).getDataStoreRef();
-  REQUIRE(outStore.getSize() == D * D);
+  REQUIRE(outStore.getSize() == k_D * k_D);
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     INFO("index=" << i);

@@ -16,16 +16,16 @@ namespace
 {
 // Per-operation sleep, in microseconds, applied on every open and read. Atomic
 // so the benchmark can arm and disarm the driver without touching HDF5 state.
-std::atomic<uint64> s_DelayMicroseconds{0};
+std::atomic<uint64> SDelayMicroseconds{0};
 
 // The registered driver id, cached so Register() is idempotent across calls.
-hid_t s_DriverId = H5I_INVALID_HID;
+hid_t SDriverId = H5I_INVALID_HID;
 
 // Sleeps for the currently configured per-operation delay. A zero delay is a
 // no-op, so the registered driver behaves as a plain pass-through when disarmed.
 void Sleep()
 {
-  const uint64 usec = s_DelayMicroseconds.load();
+  const uint64 usec = SDelayMicroseconds.load();
   if(usec > 0)
   {
     std::this_thread::sleep_for(std::chrono::microseconds(usec));
@@ -70,22 +70,22 @@ H5FD_t* DelayOpen(const char* name, unsigned flags, hid_t /*fapl*/, haddr_t /*ma
     return nullptr; // read-only driver: benchmarks only ever read
   }
   Sleep();
-  std::FILE* fp = std::fopen(name, "rb");
-  if(fp == nullptr)
+  std::FILE* fpPtr = std::fopen(name, "rb");
+  if(fpPtr == nullptr)
   {
     return nullptr;
   }
-  auto* file = new DelayFile();
-  file->fp = fp;
-  file->eof = static_cast<haddr_t>(FileSize(fp));
-  return reinterpret_cast<H5FD_t*>(file);
+  auto* filePtr = new DelayFile();
+  filePtr->fp = fpPtr;
+  filePtr->eof = static_cast<haddr_t>(FileSize(fpPtr));
+  return reinterpret_cast<H5FD_t*>(filePtr);
 }
 
 herr_t DelayClose(H5FD_t* fdt)
 {
-  auto* file = reinterpret_cast<DelayFile*>(fdt);
-  std::fclose(file->fp);
-  delete file;
+  auto* filePtr = reinterpret_cast<DelayFile*>(fdt);
+  std::fclose(filePtr->fp);
+  delete filePtr;
   return 0;
 }
 
@@ -108,9 +108,9 @@ haddr_t DelayGetEof(const H5FD_t* fdt, H5FD_mem_t /*type*/)
 herr_t DelayRead(H5FD_t* fdt, H5FD_mem_t /*type*/, hid_t /*dxpl*/, haddr_t addr, size_t size, void* buf)
 {
   Sleep();
-  auto* file = reinterpret_cast<DelayFile*>(fdt);
-  SeekTo(file->fp, addr);
-  const size_t got = std::fread(buf, 1, size, file->fp);
+  auto* filePtr = reinterpret_cast<DelayFile*>(fdt);
+  SeekTo(filePtr->fp, addr);
+  const size_t got = std::fread(buf, 1, size, filePtr->fp);
   if(got < size)
   {
     std::memset(static_cast<char*>(buf) + got, 0, size - got);
@@ -153,16 +153,16 @@ namespace DelayVfd
 {
 hid_t Register()
 {
-  if(s_DriverId == H5I_INVALID_HID)
+  if(SDriverId == H5I_INVALID_HID)
   {
     static H5FD_class_t cls = MakeDriverClass();
-    s_DriverId = H5FDregister(&cls);
+    SDriverId = H5FDregister(&cls);
   }
-  return s_DriverId;
+  return SDriverId;
 }
 
 void SetDelayMicroseconds(uint64 microseconds)
 {
-  s_DelayMicroseconds.store(microseconds);
+  SDelayMicroseconds.store(microseconds);
 }
 } // namespace DelayVfd

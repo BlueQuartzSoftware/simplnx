@@ -54,10 +54,10 @@ const DataPath k_ExemplarMaskPath = k_EbsdScanDataPath.createChildPath("Mask");
 
 struct MaskLiteralFixture
 {
-  DataStructure dataStructure;
-  DataPath geometryPath;
-  DataPath maskPath;
-  DataPath siblingValuesPath;
+  DataStructure data_structure;
+  DataPath geometry_path;
+  DataPath mask_path;
+  DataPath sibling_values_path;
 };
 
 /**
@@ -71,23 +71,23 @@ struct MaskLiteralFixture
 MaskLiteralFixture CreateMaskLiteralFixture(const usize dimX, const usize dimY, const usize dimZ, const std::array<bool, 4>& maskValues)
 {
   MaskLiteralFixture fixture;
-  fixture.geometryPath = DataPath({"Mask Literal Geometry"});
-  const DataPath cellDataPath = fixture.geometryPath.createChildPath("Cell Data");
-  fixture.maskPath = cellDataPath.createChildPath("Mask");
-  fixture.siblingValuesPath = cellDataPath.createChildPath("Sibling Values");
+  fixture.geometry_path = DataPath({"Mask Literal Geometry"});
+  const DataPath cellDataPath = fixture.geometry_path.createChildPath("Cell Data");
+  fixture.mask_path = cellDataPath.createChildPath("Mask");
+  fixture.sibling_values_path = cellDataPath.createChildPath("Sibling Values");
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
 
-  auto* imageGeomPtr = ImageGeom::Create(fixture.dataStructure, fixture.geometryPath.getTargetName());
+  auto* imageGeomPtr = ImageGeom::Create(fixture.data_structure, fixture.geometry_path.getTargetName());
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({dimX, dimY, dimZ});
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellDataPtr = AttributeMatrix::Create(fixture.dataStructure, cellDataPath.getTargetName(), cellTupleShape, imageGeomPtr->getId());
+  auto* cellDataPtr = AttributeMatrix::Create(fixture.data_structure, cellDataPath.getTargetName(), cellTupleShape, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto maskStore = DataStoreUtilities::CreateDataStore<bool>(fixture.dataStructure, fixture.maskPath, cellTupleShape, {1});
-  auto* maskArrayPtr = BoolArray::Create(fixture.dataStructure, fixture.maskPath.getTargetName(), maskStore, cellDataPtr->getId());
+  auto maskStore = DataStoreUtilities::CreateDataStore<bool>(fixture.data_structure, fixture.mask_path, cellTupleShape, {1});
+  auto* maskArrayPtr = BoolArray::Create(fixture.data_structure, fixture.mask_path.getTargetName(), maskStore, cellDataPtr->getId());
   REQUIRE(maskArrayPtr != nullptr);
   maskStore->fill(false);
   for(usize tupleIdx = 0; tupleIdx < maskValues.size(); tupleIdx++)
@@ -95,8 +95,8 @@ MaskLiteralFixture CreateMaskLiteralFixture(const usize dimX, const usize dimY, 
     (*maskStore)[tupleIdx] = maskValues[tupleIdx];
   }
 
-  auto siblingValuesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.dataStructure, fixture.siblingValuesPath, cellTupleShape, {1});
-  auto* siblingValuesArrayPtr = Int32Array::Create(fixture.dataStructure, fixture.siblingValuesPath.getTargetName(), siblingValuesStore, cellDataPtr->getId());
+  auto siblingValuesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.data_structure, fixture.sibling_values_path, cellTupleShape, {1});
+  auto* siblingValuesArrayPtr = Int32Array::Create(fixture.data_structure, fixture.sibling_values_path.getTargetName(), siblingValuesStore, cellDataPtr->getId());
   REQUIRE(siblingValuesArrayPtr != nullptr);
   constexpr std::array<int32, 4> k_SiblingValues = {10, 20, 30, 40};
   for(usize tupleIdx = 0; tupleIdx < k_SiblingValues.size(); tupleIdx++)
@@ -118,8 +118,8 @@ MaskLiteralFixture CreateMaskLiteralFixture(const usize dimX, const usize dimY, 
  */
 void ExecuteMaskLiteralFixture(MaskLiteralFixture& fixture, const ChoicesParameter::ValueType operation, const int32 iterations, const bool xDirOn, const bool yDirOn, const bool zDirOn)
 {
-  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath));
-  const auto& inputMaskArrayRef = fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath);
+  REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path));
+  const auto& inputMaskArrayRef = fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path);
   REQUIRE(inputMaskArrayRef.getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
 
   ErodeDilateMaskFilter filter;
@@ -129,14 +129,14 @@ void ExecuteMaskLiteralFixture(MaskLiteralFixture& fixture, const ChoicesParamet
   args.insertOrAssign(ErodeDilateMaskFilter::k_XDirOn_Key, std::make_any<bool>(xDirOn));
   args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(yDirOn));
   args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(zDirOn));
-  args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(fixture.maskPath));
-  args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(fixture.geometryPath));
+  args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(fixture.mask_path));
+  args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(fixture.geometry_path));
 
-  const auto preflightResult = filter.preflight(fixture.dataStructure, args);
+  const auto preflightResult = filter.preflight(fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(fixture.dataStructure, args);
+  const auto executeResult = filter.execute(fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  UnitTest::CheckArraysInheritTupleDims(fixture.dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 /**
@@ -186,17 +186,17 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
   const usize sliceSize = dimX * dimY;
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   auto maskDataStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_MaskPath, cellTupleShape, {1});
-  auto* maskArray = DataArray<bool>::Create(dataStructure, "Mask", maskDataStore, cellAM->getId());
-  auto& maskStore = maskArray->getDataStoreRef();
+  auto* maskArrayPtr = DataArray<bool>::Create(dataStructure, "Mask", maskDataStore, cellAmPtr->getId());
+  auto& maskStore = maskArrayPtr->getDataStoreRef();
 
   // Use Z-slice buffered writes. Bool data requires a raw array instead of vector<bool>.
   auto maskBuf = std::make_unique<bool[]>(sliceSize);
@@ -236,7 +236,7 @@ usize CountTrueVoxels(const DataStructure& dataStructure, usize dimX, usize dimY
   }
   return count;
 }
-namespace MaskFixture
+namespace mask_fixture
 {
 constexpr usize k_XDim = 5;
 constexpr usize k_YDim = 5;
@@ -484,10 +484,10 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Literal One-Dimensional Morpholog
       {
         MaskLiteralFixture fixture = CreateMaskLiteralFixture(dimension[0], dimension[1], dimension[2], k_DilationInput);
         ExecuteMaskLiteralFixture(fixture, k_Dilate, 1, true, true, true);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath));
-        const auto& actualMaskArrayRef = fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath));
-        const auto& siblingValuesArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path));
+        const auto& actualMaskArrayRef = fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path));
+        const auto& siblingValuesArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path);
         CheckMaskValues(actualMaskArrayRef, k_DilationOneIteration);
         CheckSiblingValues(siblingValuesArrayRef);
       }
@@ -496,10 +496,10 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Literal One-Dimensional Morpholog
       {
         MaskLiteralFixture fixture = CreateMaskLiteralFixture(dimension[0], dimension[1], dimension[2], k_DilationInput);
         ExecuteMaskLiteralFixture(fixture, k_Dilate, 2, true, true, true);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath));
-        const auto& actualMaskArrayRef = fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath));
-        const auto& siblingValuesArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path));
+        const auto& actualMaskArrayRef = fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path));
+        const auto& siblingValuesArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path);
         CheckMaskValues(actualMaskArrayRef, k_DilationTwoIterations);
         CheckSiblingValues(siblingValuesArrayRef);
       }
@@ -508,10 +508,10 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Literal One-Dimensional Morpholog
       {
         MaskLiteralFixture fixture = CreateMaskLiteralFixture(dimension[0], dimension[1], dimension[2], k_ErosionInput);
         ExecuteMaskLiteralFixture(fixture, k_Erode, 1, true, true, true);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath));
-        const auto& actualMaskArrayRef = fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath));
-        const auto& siblingValuesArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path));
+        const auto& actualMaskArrayRef = fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path));
+        const auto& siblingValuesArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path);
         CheckMaskValues(actualMaskArrayRef, k_ErosionOneIteration);
         CheckSiblingValues(siblingValuesArrayRef);
       }
@@ -520,10 +520,10 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Literal One-Dimensional Morpholog
       {
         MaskLiteralFixture fixture = CreateMaskLiteralFixture(dimension[0], dimension[1], dimension[2], k_DilationInput);
         ExecuteMaskLiteralFixture(fixture, k_Dilate, 1, false, true, false);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath));
-        const auto& actualMaskArrayRef = fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath));
-        const auto& siblingValuesArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path));
+        const auto& actualMaskArrayRef = fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path));
+        const auto& siblingValuesArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path);
         CheckMaskValues(actualMaskArrayRef, k_DilationInput);
         CheckSiblingValues(siblingValuesArrayRef);
       }
@@ -532,10 +532,10 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Literal One-Dimensional Morpholog
       {
         MaskLiteralFixture fixture = CreateMaskLiteralFixture(dimension[0], dimension[1], dimension[2], k_ErosionInput);
         ExecuteMaskLiteralFixture(fixture, k_Erode, 1, false, true, false);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath));
-        const auto& actualMaskArrayRef = fixture.dataStructure.getDataRefAs<BoolArray>(fixture.maskPath);
-        REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath));
-        const auto& siblingValuesArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.siblingValuesPath);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path));
+        const auto& actualMaskArrayRef = fixture.data_structure.getDataRefAs<BoolArray>(fixture.mask_path);
+        REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path));
+        const auto& siblingValuesArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.sibling_values_path);
         CheckMaskValues(actualMaskArrayRef, k_ErosionInput);
         CheckSiblingValues(siblingValuesArrayRef);
       }
@@ -546,9 +546,9 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Literal One-Dimensional Morpholog
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate, one iteration", "[SimplnxCore][ErodeDilateMaskFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure dataStructure = MaskFixture::CreateFixture();
+  DataStructure dataStructure = mask_fixture::CreateFixture();
 
-  MaskFixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, true, true, true);
+  mask_fixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, true, true, true);
 
   // Hand derivation. Dilate walks every voxel where mask[voxelIndex] == false and sets
   // maskCopy[voxelIndex] = true if any in-bounds face neighbour is true. The only true voxel in the
@@ -558,54 +558,54 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate, one iteration", "
   // copied forward unchanged by the maskCopy initialization. The grid is one plane thick, so
   // computeValidFaceNeighbors reports -Z and +Z invalid for every voxel and no Z growth is possible.
   // Expected true set: {7, 11, 12, 13, 17} -- a plus shape centred on (2, 2).
-  MaskFixture::CheckMask(dataStructure, MaskFixture::k_CellCount,
-                         {MaskFixture::GetIndex(2, 2), MaskFixture::GetIndex(1, 2), MaskFixture::GetIndex(3, 2), MaskFixture::GetIndex(2, 1), MaskFixture::GetIndex(2, 3)});
+  mask_fixture::CheckMask(dataStructure, mask_fixture::k_CellCount,
+                         {mask_fixture::GetIndex(2, 2), mask_fixture::GetIndex(1, 2), mask_fixture::GetIndex(3, 2), mask_fixture::GetIndex(2, 1), mask_fixture::GetIndex(2, 3)});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 erode, one iteration", "[SimplnxCore][ErodeDilateMaskFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure dataStructure = MaskFixture::CreateFixture();
+  DataStructure dataStructure = mask_fixture::CreateFixture();
 
-  MaskFixture::RunFilter(dataStructure, nx::core::detail::k_ErodeIndex, 1, true, true, true);
+  mask_fixture::RunFilter(dataStructure, nx::core::detail::k_ErodeIndex, 1, true, true, true);
 
   // Hand derivation. Erode also visits only the false voxels, but it clears the *neighbour*:
   // for a false voxel with a true face neighbour it sets maskCopy[neighpoint] = false. The four
   // false voxels (1, 2), (3, 2), (2, 1), (2, 3) each see the true seed (2, 2) and each clear it.
   // No other voxel has a true neighbour, so nothing else is written. Expected true set: {} --
   // an isolated single-voxel region cannot survive one erode iteration.
-  MaskFixture::CheckMask(dataStructure, MaskFixture::k_CellCount, {});
+  mask_fixture::CheckMask(dataStructure, mask_fixture::k_CellCount, {});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate honours direction flags", "[SimplnxCore][ErodeDilateMaskFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure dataStructure = MaskFixture::CreateFixture();
+  DataStructure dataStructure = mask_fixture::CreateFixture();
 
   // X disabled: growth is confined to Y, producing a vertical 3-cell bar.
-  MaskFixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, false, true, true);
+  mask_fixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, false, true, true);
 
   // Hand derivation. With XDirOn == false the -X and +X face neighbours are masked out, so the
   // false voxels (1, 2) and (3, 2) can no longer reach the seed at (2, 2) and stay false. The
   // false voxels (2, 1) and (2, 3) still reach it through their +Y and -Y faces and flip to true.
   // Z is off the table regardless because the grid is one plane thick.
   // Expected true set: {7, 12, 17} -- the vertical bar (2, 1), (2, 2), (2, 3).
-  MaskFixture::CheckMask(dataStructure, MaskFixture::k_CellCount, {MaskFixture::GetIndex(2, 2), MaskFixture::GetIndex(2, 1), MaskFixture::GetIndex(2, 3)});
+  mask_fixture::CheckMask(dataStructure, mask_fixture::k_CellCount, {mask_fixture::GetIndex(2, 2), mask_fixture::GetIndex(2, 1), mask_fixture::GetIndex(2, 3)});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate with Y direction off", "[SimplnxCore][ErodeDilateMaskFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure dataStructure = MaskFixture::CreateFixture();
+  DataStructure dataStructure = mask_fixture::CreateFixture();
 
   // Y disabled, X and Z enabled: the mirror image of the X-off case, and the axis the fixed
   // regression got wrong most easily. A build that gates only on X and Z -- or that maps the Y flag
   // onto the wrong pair of entries in isValidFaceNeighbor -- produces the full plus shape here while
   // still passing the X-off test, so this case is what pins the Y flag specifically.
-  MaskFixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, true, false, true);
+  mask_fixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, true, false, true);
 
   // Hand derivation. Grid index = z*25 + y*5 + x on the 5x5x1 grid, so z is always 0 and
   // index = y*5 + x. The single true voxel is the seed (2, 2) -> index 12.
@@ -621,21 +621,21 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate with Y direction o
   //   Every other false voxel has no true neighbour at all.
   // The seed is skipped by the !mask test and carried forward by the maskCopy seeding.
   // Expected true set: {11, 12, 13} -- a horizontal 3-cell bar (1, 2), (2, 2), (3, 2).
-  MaskFixture::CheckMask(dataStructure, MaskFixture::k_CellCount, {MaskFixture::GetIndex(1, 2), MaskFixture::GetIndex(2, 2), MaskFixture::GetIndex(3, 2)});
+  mask_fixture::CheckMask(dataStructure, mask_fixture::k_CellCount, {mask_fixture::GetIndex(1, 2), mask_fixture::GetIndex(2, 2), mask_fixture::GetIndex(3, 2)});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate, two iterations", "[SimplnxCore][ErodeDilateMaskFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure dataStructure = MaskFixture::CreateFixture();
+  DataStructure dataStructure = mask_fixture::CreateFixture();
 
   // Two iterations exercise the inter-iteration dataflow: the per-iteration maskCopy seeding must
   // happen inside the iteration loop (so pass 2 starts from pass 1's result, not from the original
   // input) and the write-back must also happen inside it (so pass 2 can see pass 1's result at all).
   // Hoisting either one out of the loop leaves the single-iteration results untouched and is only
   // visible from two iterations onward.
-  MaskFixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 2, true, true, true);
+  mask_fixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 2, true, true, true);
 
   // Hand derivation. Index = y*5 + x; ±Z is invalid everywhere (one plane thick); all flags on, so
   // the enabled neighbours of a voxel are its in-bounds -Y, -X, +X, +Y faces.
@@ -670,7 +670,7 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate, two iterations", 
   // The five voxels already true (7, 11, 12, 13, 17) are skipped and carried forward.
   // Expected true set: {2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 22} -- the 13-cell diamond of
   // every cell within a Manhattan distance of 2 of (2, 2) that fits on the grid.
-  MaskFixture::CheckMask(dataStructure, MaskFixture::k_CellCount, {2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 22});
+  mask_fixture::CheckMask(dataStructure, mask_fixture::k_CellCount, {2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 22});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -696,9 +696,9 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate from a boundary se
   // false. So index 9 is the discriminator, and no assertion in the committed suite covered it.
   // This is also the only case in the suite where the seed itself sits against a grid face, so it
   // exercises the boundary rejection on the seed's own missing -X neighbour.
-  DataStructure dataStructure = MaskFixture::CreateSeededFixture(0, 2);
+  DataStructure dataStructure = mask_fixture::CreateSeededFixture(0, 2);
 
-  MaskFixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, true, true, true);
+  mask_fixture::RunFilter(dataStructure, nx::core::detail::k_DilateIndex, 1, true, true, true);
 
   // Hand derivation. Index = y*5 + x; the seed (0, 2) is index 10; ±Z invalid everywhere.
   // Dilate flips each false voxel that has a true enabled valid neighbour, so exactly the in-bounds
@@ -710,7 +710,7 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate from a boundary se
   // *not* adjacent to the seed in the grid even though 9 and 10 are adjacent in flat storage -- its
   // -X neighbour is index 8. Index 9 must stay false.
   // Expected true set: {5, 10, 11, 15}.
-  MaskFixture::CheckMask(dataStructure, MaskFixture::k_CellCount, {MaskFixture::GetIndex(0, 1), MaskFixture::GetIndex(0, 2), MaskFixture::GetIndex(1, 2), MaskFixture::GetIndex(0, 3)});
+  mask_fixture::CheckMask(dataStructure, mask_fixture::k_CellCount, {mask_fixture::GetIndex(0, 1), mask_fixture::GetIndex(0, 2), mask_fixture::GetIndex(1, 2), mask_fixture::GetIndex(0, 3)});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -725,34 +725,34 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 erode honours direction f
   // The centre is the only false voxel, so it is the only voxel that enters the neighbour loop, and
   // every enabled face neighbour of it is true and therefore gets cleared in maskCopy. Voxel 13 is
   // already false and stays false.
-  const usize k_Centre = MaskFixture::GetCubeIndex(1, 1, 1);
-  const usize k_NegZ = MaskFixture::GetCubeIndex(1, 1, 0);
-  const usize k_NegY = MaskFixture::GetCubeIndex(1, 0, 1);
-  const usize k_NegX = MaskFixture::GetCubeIndex(0, 1, 1);
-  const usize k_PosX = MaskFixture::GetCubeIndex(2, 1, 1);
-  const usize k_PosY = MaskFixture::GetCubeIndex(1, 2, 1);
-  const usize k_PosZ = MaskFixture::GetCubeIndex(1, 1, 2);
+  const usize kCentre = mask_fixture::GetCubeIndex(1, 1, 1);
+  const usize kNegZ = mask_fixture::GetCubeIndex(1, 1, 0);
+  const usize kNegY = mask_fixture::GetCubeIndex(1, 0, 1);
+  const usize kNegX = mask_fixture::GetCubeIndex(0, 1, 1);
+  const usize kPosX = mask_fixture::GetCubeIndex(2, 1, 1);
+  const usize kPosY = mask_fixture::GetCubeIndex(1, 2, 1);
+  const usize kPosZ = mask_fixture::GetCubeIndex(1, 1, 2);
 
   SECTION("All directions on")
   {
-    DataStructure dataStructure = MaskFixture::CreateHollowCubeFixture();
+    DataStructure dataStructure = mask_fixture::CreateHollowCubeFixture();
 
-    MaskFixture::RunFilter(dataStructure, nx::core::detail::k_ErodeIndex, 1, true, true, true);
+    mask_fixture::RunFilter(dataStructure, nx::core::detail::k_ErodeIndex, 1, true, true, true);
 
     // All six neighbours are cleared: false set = {4, 10, 12, 13, 14, 16, 22}, 20 voxels stay true.
-    MaskFixture::CheckMask(dataStructure, MaskFixture::k_CubeCellCount, MaskFixture::AllIndicesExcept(MaskFixture::k_CubeCellCount, {k_Centre, k_NegZ, k_NegY, k_NegX, k_PosX, k_PosY, k_PosZ}));
+    mask_fixture::CheckMask(dataStructure, mask_fixture::k_CubeCellCount, mask_fixture::AllIndicesExcept(mask_fixture::k_CubeCellCount, {kCentre, kNegZ, kNegY, kNegX, kPosX, kPosY, kPosZ}));
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Z direction off")
   {
-    DataStructure dataStructure = MaskFixture::CreateHollowCubeFixture();
+    DataStructure dataStructure = mask_fixture::CreateHollowCubeFixture();
 
-    MaskFixture::RunFilter(dataStructure, nx::core::detail::k_ErodeIndex, 1, true, true, false);
+    mask_fixture::RunFilter(dataStructure, nx::core::detail::k_ErodeIndex, 1, true, true, false);
 
     // With ZDirOn == false the -Z and +Z faces are masked out, so voxels 4 and 22 survive:
     // false set = {10, 12, 13, 14, 16}, 22 voxels stay true.
-    MaskFixture::CheckMask(dataStructure, MaskFixture::k_CubeCellCount, MaskFixture::AllIndicesExcept(MaskFixture::k_CubeCellCount, {k_Centre, k_NegY, k_NegX, k_PosX, k_PosY}));
+    mask_fixture::CheckMask(dataStructure, mask_fixture::k_CubeCellCount, mask_fixture::AllIndicesExcept(mask_fixture::k_CubeCellCount, {kCentre, kNegY, kNegX, kPosX, kPosY}));
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
@@ -769,10 +769,10 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Invalid Number of Iterations", "[
   const int32 numIterations = GENERATE(0, -2);
   CAPTURE(numIterations);
 
-  DataStructure dataStructure = MaskFixture::CreateFixture();
+  DataStructure dataStructure = mask_fixture::CreateFixture();
 
   const ErodeDilateMaskFilter filter;
-  const Arguments args = MaskFixture::MakeArgs(nx::core::detail::k_DilateIndex, numIterations, true, true, true);
+  const Arguments args = mask_fixture::MakeArgs(nx::core::detail::k_DilateIndex, numIterations, true, true, true);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
@@ -786,7 +786,7 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
   const std::vector<std::pair<std::string, fs::path>> fixtures = {
@@ -798,19 +798,19 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: SIMPL Backwards Compatibility", "
   {
     DYNAMIC_SECTION(label)
     {
-      const auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      const auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       const auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
-      const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ErodeDilateMaskFilter>::uuid);
-      CHECK(pipelineFilter->getComments().empty());
+      const auto* pipelineFilterPtr = dynamic_cast<const PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ErodeDilateMaskFilter>::uuid);
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(ErodeDilateMaskFilter::k_Operation_Key) == k_Dilate);
       CHECK(args.value<int32>(ErodeDilateMaskFilter::k_NumIterations_Key) == 5);
       CHECK(args.value<bool>(ErodeDilateMaskFilter::k_XDirOn_Key));

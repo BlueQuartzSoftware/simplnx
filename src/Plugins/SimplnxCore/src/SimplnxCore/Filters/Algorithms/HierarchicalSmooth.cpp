@@ -26,31 +26,31 @@ namespace
 // ============================================================================
 // Type aliases matching the original HierarchicalSmooth types
 // ============================================================================
-using trimesh = Eigen::Array<int, Eigen::Dynamic, 3>;
-using meshnode = Eigen::Matrix<double, 3, Eigen::Dynamic>;
-using facelabel = Eigen::Array<int, Eigen::Dynamic, 2>;
-using nodetype = Eigen::Array<int, Eigen::Dynamic, 1>;
+using TrimeshType = Eigen::Array<int, Eigen::Dynamic, 3>;
+using MeshnodeType = Eigen::Matrix<double, 3, Eigen::Dynamic>;
+using FacelabelType = Eigen::Array<int, Eigen::Dynamic, 2>;
+using NodetypeType = Eigen::Array<int, Eigen::Dynamic, 1>;
 using IsSmoothedType = Eigen::Array<bool, Eigen::Dynamic, 1>;
-using matindex = Eigen::Matrix<int, Eigen::Dynamic, 1>;
-using EdgePair = std::pair<int, int>;
-using EdgeList = std::vector<EdgePair>;
-using SpMat = Eigen::SparseMatrix<double>;
+using MatindexType = Eigen::Matrix<int, Eigen::Dynamic, 1>;
+using EdgePairType = std::pair<int, int>;
+using EdgeListType = std::vector<EdgePairType>;
+using SpMatType = Eigen::SparseMatrix<double>;
 using TripletType = Eigen::Triplet<double>;
-using Smoother = Eigen::ConjugateGradient<SpMat, Eigen::Upper | Eigen::Lower>;
+using SmootherType = Eigen::ConjugateGradient<SpMatType, Eigen::Upper | Eigen::Lower>;
 
 // Use std::map for the edge/boundary dictionaries to ensure deterministic iteration
 // order across platforms and STL implementations (libc++ vs libstdc++). The algorithm
 // is hierarchical and its boundary/free-boundary traversal order is result-affecting,
 // so a hash-ordered container would produce non-reproducible cross-platform output.
 template <typename T>
-using OrderedEdgeDict = std::map<EdgePair, T>;
+using OrderedEdgeDictType = std::map<EdgePairType, T>;
 
 struct EdgeCount
 {
-  EdgePair origPair;
+  EdgePairType orig_pair;
   int count;
   EdgeCount(int x, int y)
-  : origPair(std::make_pair(x, y))
+  : orig_pair(std::make_pair(x, y))
   , count(1)
   {
   }
@@ -61,7 +61,7 @@ struct EdgeCount
 // ============================================================================
 
 // Slice rows from a dense matrix: out = mat(rowIdx, :)
-Eigen::MatrixXd sliceDenseRows(const Eigen::MatrixXd& mat, const matindex& rowIdx)
+Eigen::MatrixXd SliceDenseRows(const Eigen::MatrixXd& mat, const MatindexType& rowIdx)
 {
   int numRows = static_cast<int>(rowIdx.size());
   Eigen::MatrixXd result(numRows, mat.cols());
@@ -73,7 +73,7 @@ Eigen::MatrixXd sliceDenseRows(const Eigen::MatrixXd& mat, const matindex& rowId
 }
 
 // Merge rows from source into target at specified row indices
-void mergeDenseRows(const Eigen::MatrixXd& source, Eigen::MatrixXd& target, const matindex& locations)
+void MergeDenseRows(const Eigen::MatrixXd& source, Eigen::MatrixXd& target, const MatindexType& locations)
 {
   for(int i = 0; i < static_cast<int>(source.rows()); i++)
   {
@@ -82,11 +82,11 @@ void mergeDenseRows(const Eigen::MatrixXd& source, Eigen::MatrixXd& target, cons
 }
 
 // Slice rows and columns from a sparse matrix: out = mat(rowIdx, colIdx)
-SpMat sliceSparse(const SpMat& mat, const matindex& rowIdx, const matindex& colIdx)
+SpMatType SliceSparse(const SpMatType& mat, const MatindexType& rowIdx, const MatindexType& colIdx)
 {
   int numRows = static_cast<int>(rowIdx.size());
   int numCols = static_cast<int>(colIdx.size());
-  SpMat result(numRows, numCols);
+  SpMatType result(numRows, numCols);
 
   std::unordered_map<int, int> rowMap;
   for(int i = 0; i < numRows; i++)
@@ -108,7 +108,7 @@ SpMat sliceSparse(const SpMat& mat, const matindex& rowIdx, const matindex& colI
     {
       continue;
     }
-    for(SpMat::InnerIterator it(mat, k); it; ++it)
+    for(SpMatType::InnerIterator it(mat, k); it; ++it)
     {
       auto rowFound = rowMap.find(static_cast<int>(it.row()));
       if(rowFound != rowMap.end())
@@ -123,10 +123,10 @@ SpMat sliceSparse(const SpMat& mat, const matindex& rowIdx, const matindex& colI
 }
 
 // Slice columns from meshnode (3xN matrix): out = mat(:, colIdx)
-meshnode sliceMeshnodeCols(const meshnode& mat, const matindex& colIdx)
+MeshnodeType SliceMeshnodeCols(const MeshnodeType& mat, const MatindexType& colIdx)
 {
   int numCols = static_cast<int>(colIdx.size());
-  meshnode result(3, numCols);
+  MeshnodeType result(3, numCols);
   for(int i = 0; i < numCols; i++)
   {
     result.col(i) = mat.col(colIdx(i));
@@ -135,7 +135,7 @@ meshnode sliceMeshnodeCols(const meshnode& mat, const matindex& colIdx)
 }
 
 // Slice rows from is_smoothed array: out = arr(rowIdx)
-IsSmoothedType sliceIsSmoothed(const IsSmoothedType& arr, const matindex& idx)
+IsSmoothedType SliceIsSmoothed(const IsSmoothedType& arr, const MatindexType& idx)
 {
   int n = static_cast<int>(idx.size());
   IsSmoothedType result(n);
@@ -150,14 +150,14 @@ IsSmoothedType sliceIsSmoothed(const IsSmoothedType& arr, const matindex& idx)
 // Base utility functions (from HSmoothBase)
 // ============================================================================
 
-trimesh ismember(const trimesh& array1, const std::vector<int>& array2)
+TrimeshType Ismember(const TrimeshType& array1, const std::vector<int>& array2)
 {
   std::unordered_map<int, int> dict;
   for(int i = 0; i < static_cast<int>(array2.size()); i++)
   {
     dict.insert({array2[i], i});
   }
-  trimesh newTri = trimesh::Zero(array1.rows(), array1.cols());
+  TrimeshType newTri = TrimeshType::Zero(array1.rows(), array1.cols());
   for(int col = 0; col < array1.cols(); col++)
   {
     for(int row = 0; row < array1.rows(); row++)
@@ -169,9 +169,9 @@ trimesh ismember(const trimesh& array1, const std::vector<int>& array2)
   return newTri;
 }
 
-matindex getindex(const std::vector<int>& fromThis)
+MatindexType Getindex(const std::vector<int>& fromThis)
 {
-  matindex idx(static_cast<int>(fromThis.size()));
+  MatindexType idx(static_cast<int>(fromThis.size()));
   for(int i = 0; i < static_cast<int>(fromThis.size()); i++)
   {
     idx(i) = fromThis[i];
@@ -179,7 +179,7 @@ matindex getindex(const std::vector<int>& fromThis)
   return idx;
 }
 
-matindex getindex(const std::vector<int>& fromThis, const matindex& inThis)
+MatindexType Getindex(const std::vector<int>& fromThis, const MatindexType& inThis)
 {
   std::unordered_map<int, int> dict;
   for(int i = 0; i < inThis.rows(); i++)
@@ -192,12 +192,12 @@ matindex getindex(const std::vector<int>& fromThis, const matindex& inThis)
     auto got = dict.find(fromThi);
     vtemp.push_back(got->second);
   }
-  return getindex(vtemp);
+  return Getindex(vtemp);
 }
 
-matindex getcomplement(const matindex& nSet, int n)
+MatindexType Getcomplement(const MatindexType& nSet, int n)
 {
-  matindex nAll = -1 * matindex::Ones(n, 1);
+  MatindexType nAll = -1 * MatindexType::Ones(n, 1);
   for(int i = 0; i < nSet.size(); i++)
   {
     nAll(nSet(i)) = nSet(i);
@@ -210,10 +210,10 @@ matindex getcomplement(const matindex& nSet, int n)
       nComplement.push_back(i);
     }
   }
-  return getindex(nComplement);
+  return Getindex(nComplement);
 }
 
-matindex matunion(const matindex& mat1, const matindex& mat2)
+MatindexType Matunion(const MatindexType& mat1, const MatindexType& mat2)
 {
   std::vector<int> v;
   v.reserve(mat1.size());
@@ -227,10 +227,10 @@ matindex matunion(const matindex& mat1, const matindex& mat2)
   }
   std::sort(v.begin(), v.end());
   v.erase(std::unique(v.begin(), v.end()), v.end());
-  return getindex(v);
+  return Getindex(v);
 }
 
-void merge(const meshnode& source, meshnode& target, const matindex& locations)
+void Merge(const MeshnodeType& source, MeshnodeType& target, const MatindexType& locations)
 {
   for(int i = 0; i < source.cols(); i++)
   {
@@ -247,19 +247,19 @@ class Triangulation
 public:
   Triangulation() = default;
 
-  explicit Triangulation(trimesh& inTri)
+  explicit Triangulation(TrimeshType& inTri)
   {
     auto [edges, freeBnd] = getEdges(inTri);
     m_FreeBoundary = freeBnd;
     differentiateFaces();
   }
 
-  std::tuple<EdgeList, EdgeList> freeBoundary() const
+  std::tuple<EdgeListType, EdgeListType> freeBoundary() const
   {
     return std::make_tuple(m_FreeBoundary, m_FreeBoundarySegments);
   }
 
-  std::tuple<SpMat, matindex> graphLaplacian() const
+  std::tuple<SpMatType, MatindexType> graphLaplacian() const
   {
     std::vector<TripletType> tripletList;
     tripletList.reserve(m_Unique.size() + 2 * m_Dict.size());
@@ -275,23 +275,23 @@ public:
       tripletList.emplace_back(i, i, m_DiagCount[i]);
     }
 
-    SpMat gl(static_cast<int>(m_Unique.size()), static_cast<int>(m_Unique.size()));
+    SpMatType gl(static_cast<int>(m_Unique.size()), static_cast<int>(m_Unique.size()));
     gl.setFromTriplets(tripletList.begin(), tripletList.end());
     gl.makeCompressed();
 
     // Copy unique to matindex
     std::vector<int> uniqueCopy = m_Unique;
-    return std::make_tuple(gl, getindex(uniqueCopy));
+    return std::make_tuple(gl, Getindex(uniqueCopy));
   }
 
 private:
-  EdgeList m_FreeBoundary;
-  EdgeList m_FreeBoundarySegments;
+  EdgeListType m_FreeBoundary;
+  EdgeListType m_FreeBoundarySegments;
   std::vector<int> m_Unique;
   // Ordered (std::map) so freeBoundary iteration order is identical across platforms/STL
   // implementations. m_Dict order feeds the freeBoundary sequence -> chain-link/segment
   // assignment, so a hash-ordered map (libc++ vs libstdc++) caused cross-platform divergence.
-  OrderedEdgeDict<EdgeCount> m_Dict;
+  OrderedEdgeDictType<EdgeCount> m_Dict;
   std::vector<double> m_DiagCount;
 
   void differentiateFaces()
@@ -320,7 +320,7 @@ private:
     }
   }
 
-  std::tuple<EdgeList, EdgeList> getEdges(const trimesh& inTri)
+  std::tuple<EdgeListType, EdgeListType> getEdges(const TrimeshType& inTri)
   {
     for(int i = 0; i < inTri.rows(); i++)
     {
@@ -333,10 +333,10 @@ private:
     m_Unique.erase(std::unique(m_Unique.begin(), m_Unique.end()), m_Unique.end());
 
     m_DiagCount = std::vector<double>(m_Unique.size(), 0.0);
-    trimesh subTri = ismember(inTri, m_Unique);
+    TrimeshType subTri = Ismember(inTri, m_Unique);
 
-    EdgeList edgeList;
-    EdgeList freeBoundary;
+    EdgeListType edgeList;
+    EdgeListType freeBoundary;
 
     for(int i = 0; i < subTri.rows(); i++)
     {
@@ -346,7 +346,7 @@ private:
         int m = (j + 4) % 3;
         int thisRow = subTri(i, l);
         int thisCol = subTri(i, m);
-        EdgePair ep = std::make_pair(std::min(thisRow, thisCol), std::max(thisRow, thisCol));
+        EdgePairType ep = std::make_pair(std::min(thisRow, thisCol), std::max(thisRow, thisCol));
         auto got = m_Dict.find(ep);
         if(got == m_Dict.end())
         {
@@ -364,17 +364,17 @@ private:
 
     for(auto& it : m_Dict)
     {
-      edgeList.push_back(it.second.origPair);
+      edgeList.push_back(it.second.orig_pair);
       if(it.second.count == 1)
       {
-        freeBoundary.push_back(it.second.origPair);
+        freeBoundary.push_back(it.second.orig_pair);
       }
     }
 
-    return std::make_tuple(edgeList, fastChainLinkSort(freeBoundary));
+    return std::make_tuple(edgeList, FastChainLinkSort(freeBoundary));
   }
 
-  static EdgeList fastChainLinkSort(const EdgeList& inList)
+  static EdgeListType FastChainLinkSort(const EdgeListType& inList)
   {
     // Use std::map for deterministic iteration order across platforms
     std::map<int, std::vector<int>> windingDict;
@@ -393,7 +393,7 @@ private:
       }
     }
 
-    EdgeList outList;
+    EdgeListType outList;
     auto it = windingDict.begin();
     while(!windingDict.empty())
     {
@@ -418,7 +418,7 @@ private:
 // Core smoothing functions (from HSmoothMain)
 // ============================================================================
 
-SpMat laplacian2D(int n, const std::string& type = "serial")
+SpMatType Laplacian2D(int n, const std::string& type = "serial")
 {
   std::vector<TripletType> tripletList;
   tripletList.reserve(3 * n);
@@ -430,9 +430,9 @@ SpMat laplacian2D(int n, const std::string& type = "serial")
       tripletList.emplace_back(i, i + 1, 1.0);
     }
   }
-  SpMat temp(n, n);
+  SpMatType temp(n, n);
   temp.setFromTriplets(tripletList.begin(), tripletList.end());
-  SpMat lap = SpMat(temp.transpose()) * temp;
+  SpMatType lap = SpMatType(temp.transpose()) * temp;
   if(type == "serial")
   {
     lap.coeffRef(n - 1, n - 1) = 1.0;
@@ -447,16 +447,16 @@ SpMat laplacian2D(int n, const std::string& type = "serial")
   return lap;
 }
 
-std::tuple<SpMat, SpMat> analyzeLaplacian(const SpMat& gl)
+std::tuple<SpMatType, SpMatType> AnalyzeLaplacian(const SpMatType& gl)
 {
-  SpMat d(gl.rows(), gl.cols());
-  SpMat a(gl.rows(), gl.cols());
+  SpMatType d(gl.rows(), gl.cols());
+  SpMatType a(gl.rows(), gl.cols());
   std::vector<TripletType> dt;
   std::vector<TripletType> at;
 
   for(int k = 0; k < gl.outerSize(); ++k)
   {
-    for(SpMat::InnerIterator it(gl, k); it; ++it)
+    for(SpMatType::InnerIterator it(gl, k); it; ++it)
     {
       if(it.value() < -0.5)
       {
@@ -475,37 +475,37 @@ std::tuple<SpMat, SpMat> analyzeLaplacian(const SpMat& gl)
   return std::make_tuple(d, a);
 }
 
-std::tuple<SpMat, Eigen::MatrixXd> getDirichletBVP(const SpMat& gl, const Eigen::MatrixXd& yIn, const matindex& nFixed, const matindex& nMobile)
+std::tuple<SpMatType, Eigen::MatrixXd> GetDirichletBvp(const SpMatType& gl, const Eigen::MatrixXd& yIn, const MatindexType& nFixed, const MatindexType& nMobile)
 {
-  matindex nAll = matunion(nFixed, nMobile);
+  MatindexType nAll = Matunion(nFixed, nMobile);
 
-  SpMat glRed = sliceSparse(gl, nMobile, nMobile);
-  SpMat sm1 = sliceSparse(gl, nAll, nFixed);
-  Eigen::MatrixXd sm2 = sliceDenseRows(yIn, nFixed);
+  SpMatType glRed = SliceSparse(gl, nMobile, nMobile);
+  SpMatType sm1 = SliceSparse(gl, nAll, nFixed);
+  Eigen::MatrixXd sm2 = SliceDenseRows(yIn, nFixed);
   Eigen::MatrixXd sm3 = sm1 * sm2;
-  Eigen::MatrixXd fConst = sliceDenseRows(sm3, nMobile);
+  Eigen::MatrixXd fConst = SliceDenseRows(sm3, nMobile);
 
   return std::make_tuple(glRed, fConst);
 }
 
-double getObjFn(Smoother& smth, double feps, const SpMat& fSmallEye, const SpMat& ltl, const Eigen::MatrixXd& ltk, const matindex& nMobile, const Eigen::MatrixXd& yMobile, const SpMat& d,
+double GetObjFn(SmootherType& smth, double feps, const SpMatType& fSmallEye, const SpMatType& ltl, const Eigen::MatrixXd& ltk, const MatindexType& nMobile, const Eigen::MatrixXd& yMobile, const SpMatType& d,
                 const Eigen::MatrixXd& ayIn, Eigen::MatrixXd& yOut)
 {
-  SpMat bigA = (1.0 - feps) * fSmallEye + feps * ltl;
+  SpMatType bigA = (1.0 - feps) * fSmallEye + feps * ltl;
   Eigen::MatrixXd b = (1.0 - feps) * yMobile - feps * ltk;
 
   smth.compute(bigA);
   Eigen::MatrixXd ySmooth = smth.solve(b);
 
-  mergeDenseRows(ySmooth, yOut, nMobile);
+  MergeDenseRows(ySmooth, yOut, nMobile);
 
   Eigen::ArrayXXd yDeltaD = (d * yOut + ayIn).array();
   return (yDeltaD * yDeltaD).sum();
 }
 
-meshnode smooth(const meshnode& nodesIn, const matindex& nFixed, SpMat& gl, double fThresh = 0.001, int nIter = 53)
+MeshnodeType Smooth(const MeshnodeType& nodesIn, const MatindexType& nFixed, SpMatType& gl, double fThresh = 0.001, int nIter = 53)
 {
-  matindex nMobile = getcomplement(nFixed, static_cast<int>(gl.cols()));
+  MatindexType nMobile = Getcomplement(nFixed, static_cast<int>(gl.cols()));
   if(nMobile.size() == 0)
   {
     return nodesIn;
@@ -513,27 +513,27 @@ meshnode smooth(const meshnode& nodesIn, const matindex& nFixed, SpMat& gl, doub
 
   Eigen::MatrixXd data = nodesIn.transpose(); // Dense Nx3
 
-  auto [glRed, fConst] = getDirichletBVP(gl, data, nFixed, nMobile);
-  auto [d, a] = analyzeLaplacian(gl);
+  auto [glRed, fConst] = GetDirichletBvp(gl, data, nFixed, nMobile);
+  auto [d, a] = AnalyzeLaplacian(gl);
 
   Eigen::MatrixXd ayIn = a * data;
-  SpMat fSmallEye(nMobile.size(), nMobile.size());
+  SpMatType fSmallEye(nMobile.size(), nMobile.size());
   fSmallEye.setIdentity();
 
-  Eigen::MatrixXd yMobile = sliceDenseRows(data, nMobile);
+  Eigen::MatrixXd yMobile = SliceDenseRows(data, nMobile);
 
-  SpMat ltl = SpMat(glRed.transpose() * glRed);
+  SpMatType ltl = SpMatType(glRed.transpose() * glRed);
   Eigen::MatrixXd ltk = glRed.transpose() * fConst;
   Eigen::MatrixXd yOut = data;
 
-  Smoother smth;
+  SmootherType smth;
 
   double fEps = 0.5;
   double fStep = fEps / 2.0;
   int nCount = 1;
 
-  double fobj1 = getObjFn(smth, fEps, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
-  double fobj2 = getObjFn(smth, fEps + fThresh, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
+  double fobj1 = GetObjFn(smth, fEps, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
+  double fobj2 = GetObjFn(smth, fEps + fThresh, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
   double fslope = (fobj2 - fobj1) / fThresh;
 
   // Adaptive bisection over the smoothing parameter fEps, matching the reference
@@ -553,8 +553,8 @@ meshnode smooth(const meshnode& nodesIn, const matindex& nFixed, SpMat& gl, doub
     }
 
     fStep /= 2.0;
-    fobj1 = getObjFn(smth, fEps, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
-    fobj2 = getObjFn(smth, fEps + fThresh, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
+    fobj1 = GetObjFn(smth, fEps, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
+    fobj2 = GetObjFn(smth, fEps + fThresh, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
     fslope = (fobj2 - fobj1) / fThresh;
     nCount++;
   }
@@ -562,16 +562,16 @@ meshnode smooth(const meshnode& nodesIn, const matindex& nFixed, SpMat& gl, doub
   return yOut.transpose(); // Nx3 -> 3xN
 }
 
-meshnode smoothWithType(const meshnode& nodesIn, const std::string& type = "serial", double fThresh = 0.001, int nIter = 53)
+MeshnodeType SmoothWithType(const MeshnodeType& nodesIn, const std::string& type = "serial", double fThresh = 0.001, int nIter = 53)
 {
-  SpMat lap = laplacian2D(static_cast<int>(nodesIn.cols()), type);
+  SpMatType lap = Laplacian2D(static_cast<int>(nodesIn.cols()), type);
   std::vector<int> vidx;
   if(type == "serial")
   {
     vidx = std::vector<int>{0, static_cast<int>(lap.cols() - 1)};
   }
-  matindex nFixed = getindex(vidx);
-  return smooth(nodesIn, nFixed, lap, fThresh, nIter);
+  MatindexType nFixed = Getindex(vidx);
+  return Smooth(nodesIn, nFixed, lap, fThresh, nIter);
 }
 
 // ============================================================================
@@ -581,25 +581,25 @@ meshnode smoothWithType(const meshnode& nodesIn, const std::string& type = "seri
 struct VolumeSolverData
 {
   IsSmoothedType status;
-  trimesh mesh;
-  meshnode node;
-  meshnode nodeSmooth;
-  facelabel label;
-  nodetype type;
-  int maxIterations{};
+  TrimeshType mesh;
+  MeshnodeType node;
+  MeshnodeType node_smooth;
+  FacelabelType label;
+  NodetypeType type;
+  int max_iterations{};
   double error{};
-  double errorThreshold{};
-  OrderedEdgeDict<std::vector<int>> boundaryDict;
+  double error_threshold{};
+  OrderedEdgeDictType<std::vector<int>> boundary_dict;
 };
 
-void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& surfaceNodes, facelabel&& fLabels, nodetype&& nodeType, int nIterations, double errorThreshold)
+void InitVolumeSolver(VolumeSolverData& vs, TrimeshType&& volumeMesh, MeshnodeType&& surfaceNodes, FacelabelType&& fLabels, NodetypeType&& nodeType, int nIterations, double errorThreshold)
 {
   vs.mesh = std::move(volumeMesh);
   vs.node = std::move(surfaceNodes);
   vs.label = std::move(fLabels);
   vs.type = std::move(nodeType);
-  vs.maxIterations = nIterations;
-  vs.errorThreshold = errorThreshold;
+  vs.max_iterations = nIterations;
+  vs.error_threshold = errorThreshold;
 
   vs.status = IsSmoothedType(vs.type.size());
   for(int i = 0; i < vs.type.size(); i++)
@@ -607,7 +607,7 @@ void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& sur
     vs.status(i) = (vs.type(i) % 10 == 4); // quad junction points considered already smoothed
   }
 
-  vs.nodeSmooth = vs.node;
+  vs.node_smooth = vs.node;
 
   // Compute minimum edge length for error threshold
   vs.error = (vs.node.col(vs.mesh(0, 0)).array() - vs.node.col(vs.mesh(0, 1)).array()).matrix().norm();
@@ -626,13 +626,13 @@ void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& sur
       vs.mesh(i, 0) = vs.mesh(i, 1);
       vs.mesh(i, 1) = temp;
     }
-    EdgePair thisPair = std::make_pair(thisMin, thisMax);
-    auto got = vs.boundaryDict.find(thisPair);
-    if(got == vs.boundaryDict.end())
+    EdgePairType thisPair = std::make_pair(thisMin, thisMax);
+    auto got = vs.boundary_dict.find(thisPair);
+    if(got == vs.boundary_dict.end())
     {
       std::vector<int> v;
       v.push_back(i);
-      vs.boundaryDict.insert({thisPair, v});
+      vs.boundary_dict.insert({thisPair, v});
     }
     else
     {
@@ -641,11 +641,11 @@ void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& sur
   }
 }
 
-trimesh sliceMesh(const VolumeSolverData& vs, const std::vector<int>& fromThesePatches)
+TrimeshType SliceMesh(const VolumeSolverData& vs, const std::vector<int>& fromThesePatches)
 {
-  matindex patchIdx = getindex(fromThesePatches);
+  MatindexType patchIdx = Getindex(fromThesePatches);
   int numPatches = static_cast<int>(patchIdx.size());
-  trimesh triSub(numPatches, 3);
+  TrimeshType triSub(numPatches, 3);
   for(int i = 0; i < numPatches; i++)
   {
     triSub(i, 0) = vs.mesh(patchIdx(i), 0);
@@ -655,7 +655,7 @@ trimesh sliceMesh(const VolumeSolverData& vs, const std::vector<int>& fromTheseP
   return triSub;
 }
 
-void markSectionAsComplete(VolumeSolverData& vs, const matindex& idx)
+void MarkSectionAsComplete(VolumeSolverData& vs, const MatindexType& idx)
 {
   for(int i = 0; i < idx.size(); i++)
   {
@@ -663,14 +663,14 @@ void markSectionAsComplete(VolumeSolverData& vs, const matindex& idx)
   }
 }
 
-Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<> RunHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   int boundaryCount = 1;
-  int totalBoundaries = static_cast<int>(vs.boundaryDict.size());
+  int totalBoundaries = static_cast<int>(vs.boundary_dict.size());
 
   ThrottledMessageHandler progressThrottle(messageHandler, std::chrono::milliseconds(1000));
 
-  for(auto it = vs.boundaryDict.begin(); it != vs.boundaryDict.end(); ++it)
+  for(auto it = vs.boundary_dict.begin(); it != vs.boundary_dict.end(); ++it)
   {
     if(shouldCancel)
     {
@@ -679,7 +679,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
 
     progressThrottle.updateCount("Processing boundary", boundaryCount, totalBoundaries);
 
-    trimesh triSub = sliceMesh(vs, it->second);
+    TrimeshType triSub = SliceMesh(vs, it->second);
     Triangulation tri(triSub);
 
     auto [gl, nUniq] = tri.graphLaplacian();
@@ -712,11 +712,11 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
         {
           vtemp.push_back(fb[count].first);
         }
-        matindex thisFreeBoundaryIdx = getindex(vtemp);
-        meshnode thisFreeBoundary = sliceMeshnodeCols(vs.nodeSmooth, thisFreeBoundaryIdx);
-        meshnode thisFreeBoundarySmooth = smoothWithType(thisFreeBoundary, "cyclic");
-        merge(thisFreeBoundarySmooth, vs.nodeSmooth, thisFreeBoundaryIdx);
-        markSectionAsComplete(vs, thisFreeBoundaryIdx);
+        MatindexType thisFreeBoundaryIdx = Getindex(vtemp);
+        MeshnodeType thisFreeBoundary = SliceMeshnodeCols(vs.node_smooth, thisFreeBoundaryIdx);
+        MeshnodeType thisFreeBoundarySmooth = SmoothWithType(thisFreeBoundary, "cyclic");
+        Merge(thisFreeBoundarySmooth, vs.node_smooth, thisFreeBoundaryIdx);
+        MarkSectionAsComplete(vs, thisFreeBoundaryIdx);
       }
       else
       {
@@ -730,14 +730,14 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
           if(vs.type(fb[effectiveJ].first) % 10 == 4)
           {
             // Reached terminal quad point
-            matindex thisTripleLineIndex = getindex(vtemp);
-            IsSmoothedType thisStatus = sliceIsSmoothed(vs.status, thisTripleLineIndex);
+            MatindexType thisTripleLineIndex = Getindex(vtemp);
+            IsSmoothedType thisStatus = SliceIsSmoothed(vs.status, thisTripleLineIndex);
             if(!thisStatus.all())
             {
-              meshnode thisTripleLine = sliceMeshnodeCols(vs.nodeSmooth, thisTripleLineIndex);
-              meshnode thisTripleLineSmoothed = smoothWithType(thisTripleLine);
-              merge(thisTripleLineSmoothed, vs.nodeSmooth, thisTripleLineIndex);
-              markSectionAsComplete(vs, thisTripleLineIndex);
+              MeshnodeType thisTripleLine = SliceMeshnodeCols(vs.node_smooth, thisTripleLineIndex);
+              MeshnodeType thisTripleLineSmoothed = SmoothWithType(thisTripleLine);
+              Merge(thisTripleLineSmoothed, vs.node_smooth, thisTripleLineIndex);
+              MarkSectionAsComplete(vs, thisTripleLineIndex);
             }
             vtemp.clear();
             vtemp.push_back(fb[effectiveJ].first);
@@ -752,31 +752,31 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
     }
 
     // Smooth entire boundary subject to fixed triple points
-    meshnode boundaryNode = sliceMeshnodeCols(vs.nodeSmooth, nUniq);
+    MeshnodeType boundaryNode = SliceMeshnodeCols(vs.node_smooth, nUniq);
     std::vector<int> fixed;
     for(auto& i : fb)
     {
       fixed.push_back(i.first);
     }
-    matindex nFixed = getindex(fixed, nUniq);
-    meshnode boundaryNodeSmooth = smooth(boundaryNode, nFixed, gl);
-    merge(boundaryNodeSmooth, vs.nodeSmooth, nUniq);
-    markSectionAsComplete(vs, nUniq);
+    MatindexType nFixed = Getindex(fixed, nUniq);
+    MeshnodeType boundaryNodeSmooth = Smooth(boundaryNode, nFixed, gl);
+    Merge(boundaryNodeSmooth, vs.node_smooth, nUniq);
+    MarkSectionAsComplete(vs, nUniq);
     boundaryCount++;
   }
 
   // Validate results - reject nodes with excessive displacement
-  Eigen::ArrayXXd fTemp = vs.nodeSmooth.array() - vs.node.array();
+  Eigen::ArrayXXd fTemp = vs.node_smooth.array() - vs.node.array();
   Eigen::ArrayXXd fNorm = (fTemp * fTemp).colwise().sum().sqrt() / vs.error;
   int rejectedCount = 0;
-  if((fNorm > vs.errorThreshold).any())
+  if((fNorm > vs.error_threshold).any())
   {
     for(int i = 0; i < vs.status.rows(); i++)
     {
-      if(fNorm(0, i) > vs.errorThreshold)
+      if(fNorm(0, i) > vs.error_threshold)
       {
         vs.status(i, 0) = false;
-        vs.nodeSmooth.col(i) = vs.node.col(i); // reset to old values
+        vs.node_smooth.col(i) = vs.node.col(i); // reset to old values
         rejectedCount++;
       }
     }
@@ -784,7 +784,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
 
   if(rejectedCount > 0)
   {
-    messageHandler.sendWarningMessage(fmt::format("{} of {} nodes not smoothed due to excessive displacement", rejectedCount, vs.nodeSmooth.cols()));
+    messageHandler.sendWarningMessage(fmt::format("{} of {} nodes not smoothed due to excessive displacement", rejectedCount, vs.node_smooth.cols()));
   }
   else
   {
@@ -830,7 +830,7 @@ Result<> HierarchicalSmooth::operator()()
 
   // Convert simplnx data to Eigen types
   // meshnode is 3 x N (each column is a vertex)
-  meshnode vertices(3, numVertices);
+  MeshnodeType vertices(3, numVertices);
   for(IGeometry::MeshIndexType i = 0; i < numVertices; i++)
   {
     vertices(0, i) = static_cast<double>(verticesRef[3 * i + 0]);
@@ -839,7 +839,7 @@ Result<> HierarchicalSmooth::operator()()
   }
 
   // trimesh is N x 3 (each row is a triangle with 3 vertex indices)
-  trimesh faces(numFaces, 3);
+  TrimeshType faces(numFaces, 3);
   for(IGeometry::MeshIndexType i = 0; i < numFaces; i++)
   {
     faces(i, 0) = static_cast<int>(facesRef[3 * i + 0]);
@@ -848,7 +848,7 @@ Result<> HierarchicalSmooth::operator()()
   }
 
   // facelabel is N x 2
-  facelabel fLabels(numFaces, 2);
+  FacelabelType fLabels(numFaces, 2);
   for(IGeometry::MeshIndexType i = 0; i < numFaces; i++)
   {
     fLabels(i, 0) = static_cast<int>(faceLabelsRef[2 * i + 0]);
@@ -856,7 +856,7 @@ Result<> HierarchicalSmooth::operator()()
   }
 
   // nodetype is N x 1
-  nodetype nType(numVertices);
+  NodetypeType nType(numVertices);
   for(IGeometry::MeshIndexType i = 0; i < numVertices; i++)
   {
     nType(i) = static_cast<int>(nodeTypeRef[i]);
@@ -864,9 +864,9 @@ Result<> HierarchicalSmooth::operator()()
 
   // Initialize solver and run (move Eigen matrices to avoid copies)
   VolumeSolverData vs;
-  initVolumeSolver(vs, std::move(faces), std::move(vertices), std::move(fLabels), std::move(nType), m_InputValues->maxIterations, m_InputValues->errorThreshold);
+  InitVolumeSolver(vs, std::move(faces), std::move(vertices), std::move(fLabels), std::move(nType), m_InputValues->maxIterations, m_InputValues->errorThreshold);
 
-  Result<> result = runHierarchicalSmooth(vs, m_ShouldCancel, m_MessageHandler);
+  Result<> result = RunHierarchicalSmooth(vs, m_ShouldCancel, m_MessageHandler);
   if(result.invalid())
   {
     return result;
@@ -876,9 +876,9 @@ Result<> HierarchicalSmooth::operator()()
   m_MessageHandler.sendInfoMessage("Writing smoothed vertices back to geometry...");
   for(IGeometry::MeshIndexType i = 0; i < numVertices; i++)
   {
-    verticesRef[3 * i + 0] = static_cast<float32>(vs.nodeSmooth(0, i));
-    verticesRef[3 * i + 1] = static_cast<float32>(vs.nodeSmooth(1, i));
-    verticesRef[3 * i + 2] = static_cast<float32>(vs.nodeSmooth(2, i));
+    verticesRef[3 * i + 0] = static_cast<float32>(vs.node_smooth(0, i));
+    verticesRef[3 * i + 1] = static_cast<float32>(vs.node_smooth(1, i));
+    verticesRef[3 * i + 2] = static_cast<float32>(vs.node_smooth(2, i));
   }
 
   return {};

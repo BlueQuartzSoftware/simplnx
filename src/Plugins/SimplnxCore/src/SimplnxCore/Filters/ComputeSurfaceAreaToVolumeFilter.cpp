@@ -128,19 +128,19 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* featureDataArray = dataStructure.getDataAs<Int32Array>(pNumCellsArrayPathValue);
-  if(nullptr == featureDataArray)
+  const auto* featureDataArrayPtr = dataStructure.getDataAs<Int32Array>(pNumCellsArrayPathValue);
+  if(nullptr == featureDataArrayPtr)
   {
     return MakePreflightErrorResult(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pNumCellsArrayPathValue.toString()));
   }
-  const auto* cellFeatureData = dataStructure.getDataAs<AttributeMatrix>(pNumCellsArrayPathValue.getParent());
-  if(cellFeatureData == nullptr)
+  const auto* cellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(pNumCellsArrayPathValue.getParent());
+  if(cellFeatureDataPtr == nullptr)
   {
     return MakePreflightErrorResult(-12802, fmt::format("The selected number of cells array {} is not located in an attribute matrix. Make sure you have selected the number of cells array "
                                                         "located in the cell feature attribute matrix of the selected geometry",
                                                         pNumCellsArrayPathValue.toString()));
   }
-  ShapeType tupleShape = cellFeatureData->getShape();
+  ShapeType tupleShape = cellFeatureDataPtr->getShape();
   // Create the SurfaceAreaVolumeRatio
   {
     auto arrayPath = pNumCellsArrayPathValue.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));

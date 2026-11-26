@@ -70,14 +70,14 @@ Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
 
   auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
 
-  const std::string k_InvalidPhase = "Invalid Phase";
+  const std::string kInvalidPhase = "Invalid Phase";
   const usize numTuples = crystalStructures.getNumberOfTuples();
 
   // Defaults preserve invalid and omitted phase slots.
   for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
   {
     crystalStructures[tupleIndex] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-    materialNames[tupleIndex] = k_InvalidPhase;
+    materialNames[tupleIndex] = kInvalidPhase;
     for(usize i = 0; i < 6; i++)
     {
       latticeConstants.getDataStoreRef().setComponent(tupleIndex, i, 0.0F);
@@ -156,9 +156,9 @@ Result<> ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
     {
       return {};
     }
-    const auto* fComp0 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi1));
-    const auto* fComp1 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi));
-    const auto* fComp2 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi2));
+    const auto* fComp0Ptr = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi1));
+    const auto* fComp1Ptr = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi));
+    const auto* fComp2Ptr = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ang::Phi2));
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::EulerAngles));
     auto& eulerStore = cellEulerAngles.getDataStoreRef();
@@ -173,9 +173,9 @@ Result<> ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
       usize count = std::min(k_ChunkSize, totalCells - offset);
       for(usize i = 0; i < count; i++)
       {
-        eulerBuf[3 * i] = fComp0[offset + i];
-        eulerBuf[3 * i + 1] = fComp1[offset + i];
-        eulerBuf[3 * i + 2] = fComp2[offset + i];
+        eulerBuf[3 * i] = fComp0Ptr[offset + i];
+        eulerBuf[3 * i + 1] = fComp1Ptr[offset + i];
+        eulerBuf[3 * i + 2] = fComp2Ptr[offset + i];
       }
       if(Result<> ioResult = eulerStore.copyFromBuffer(offset * 3, nonstd::span<const float32>(eulerBuf.data(), count * 3)); ioResult.invalid())
       {

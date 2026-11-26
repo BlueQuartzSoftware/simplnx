@@ -73,7 +73,7 @@ private:
   const FeatureFaceCurvatureInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 

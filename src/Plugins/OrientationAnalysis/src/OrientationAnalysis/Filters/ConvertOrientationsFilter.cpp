@@ -99,8 +99,8 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
-  std::vector<size_t> inputCompShape = inputArray->getIDataStore()->getComponentShape();
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
+  std::vector<size_t> inputCompShape = inputArrayPtr->getIDataStore()->getComponentShape();
 
   if(inputCompShape.size() > 1)
   {
@@ -120,9 +120,9 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
-  auto numericType = inputArray->getDataType();
+  auto numericType = inputArrayPtr->getDataType();
   std::vector<size_t> componentDims = {representationElementCount[static_cast<size_t>(outputType)]};
-  auto action = std::make_unique<CreateArrayAction>(numericType, inputArray->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, inputArrayPtr->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
 
   // Create the Output actions
   OutputActions actions;

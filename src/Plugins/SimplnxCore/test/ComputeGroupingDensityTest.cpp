@@ -176,36 +176,36 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: Empty-parent edge case (-1
   // 3 features (indices 1, 2 carry data; 0 is the SIMPL placeholder).
   // 3 parents (index 1 has features assigned; index 2 has NONE).
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setDimensions({1, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeomPtr->setDimensions({1, 1, 1});
 
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {3}, imageGeom->getId());
-  auto* parentAM = AttributeMatrix::Create(dataStructure, "ParentData", {3}, imageGeom->getId());
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {3}, imageGeomPtr->getId());
+  auto* parentAmPtr = AttributeMatrix::Create(dataStructure, "ParentData", {3}, imageGeomPtr->getId());
 
   // Feature volumes: [0, 5, 10]
-  auto* featureVolumes = UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {3}, {1}, featureAM->getId());
-  auto& featureVolumesRef = featureVolumes->getDataStoreRef();
+  auto* featureVolumesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {3}, {1}, featureAmPtr->getId());
+  auto& featureVolumesRef = featureVolumesPtr->getDataStoreRef();
   featureVolumesRef[0] = 0.0f;
   featureVolumesRef[1] = 5.0f;
   featureVolumesRef[2] = 10.0f;
 
   // All non-placeholder features map to parent 1; parent 2 has no features.
-  auto* parentIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {3}, {1}, featureAM->getId());
-  auto& parentIdsRef = parentIds->getDataStoreRef();
+  auto* parentIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {3}, {1}, featureAmPtr->getId());
+  auto& parentIdsRef = parentIdsPtr->getDataStoreRef();
   parentIdsRef[0] = 0;
   parentIdsRef[1] = 1;
   parentIdsRef[2] = 1;
 
   // Trivial contiguous neighbor list — empty for every feature.
-  auto* contiguousNL = NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{3}, featureAM->getId());
-  contiguousNL->setList(0, std::make_shared<std::vector<int32>>(std::vector<int32>{}));
-  contiguousNL->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{}));
-  contiguousNL->setList(2, std::make_shared<std::vector<int32>>(std::vector<int32>{}));
+  auto* contiguousNlPtr = NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{3}, featureAmPtr->getId());
+  contiguousNlPtr->setList(0, std::make_shared<std::vector<int32>>(std::vector<int32>{}));
+  contiguousNlPtr->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{}));
+  contiguousNlPtr->setList(2, std::make_shared<std::vector<int32>>(std::vector<int32>{}));
 
   // Parent volumes: parent 1 sums to 15 (5+10); parent 2 is non-zero but
   // irrelevant — totalCheckVolume==0 path triggers regardless of ParentVolumes[2].
-  auto* parentVolumes = UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {3}, {1}, parentAM->getId());
-  auto& parentVolumesRef = parentVolumes->getDataStoreRef();
+  auto* parentVolumesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {3}, {1}, parentAmPtr->getId());
+  auto& parentVolumesRef = parentVolumesPtr->getDataStoreRef();
   parentVolumesRef[0] = 0.0f;
   parentVolumesRef[1] = 15.0f;
   parentVolumesRef[2] = 7.0f;
@@ -252,17 +252,17 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: Preflight Error - Feature 
 
   // ParentIds in a different AM with mismatched tuple count
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setDimensions({1, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeomPtr->setDimensions({1, 1, 1});
 
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {k_NumFeatures}, imageGeom->getId());
-  auto* parentAM = AttributeMatrix::Create(dataStructure, "ParentData", {k_NumParents}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, featureAM->getId());
-  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, featureAM->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, parentAM->getId());
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {k_NumFeatures}, imageGeomPtr->getId());
+  auto* parentAmPtr = AttributeMatrix::Create(dataStructure, "ParentData", {k_NumParents}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, featureAmPtr->getId());
+  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, featureAmPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, parentAmPtr->getId());
 
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchAM", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {10}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchAM", {10}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {10}, {1}, mismatchAmPtr->getId());
 
   ComputeGroupingDensityFilter filter;
   Arguments args;
@@ -286,18 +286,18 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: Preflight Error - NonConti
 
   // Feature-level arrays are all 6 tuples; NonContiguousNL is 4 tuples in a different AM
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setDimensions({1, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeomPtr->setDimensions({1, 1, 1});
 
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {k_NumFeatures}, imageGeom->getId());
-  auto* parentAM = AttributeMatrix::Create(dataStructure, "ParentData", {k_NumParents}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, featureAM->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {k_NumFeatures}, {1}, featureAM->getId());
-  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, featureAM->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, parentAM->getId());
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {k_NumFeatures}, imageGeomPtr->getId());
+  auto* parentAmPtr = AttributeMatrix::Create(dataStructure, "ParentData", {k_NumParents}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, featureAmPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {k_NumFeatures}, {1}, featureAmPtr->getId());
+  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, featureAmPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, parentAmPtr->getId());
 
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchAM", {4}, imageGeom->getId());
-  NeighborList<int32>::Create(dataStructure, "NonContigNL", ShapeType{4}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchAM", {4}, imageGeomPtr->getId());
+  NeighborList<int32>::Create(dataStructure, "NonContigNL", ShapeType{4}, mismatchAmPtr->getId());
 
   ComputeGroupingDensityFilter filter;
   Arguments args;
@@ -321,15 +321,15 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: Preflight Error - Volumes 
 
   // Volumes placed directly under ImageGeom (no AttributeMatrix parent)
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setDimensions({1, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeomPtr->setDimensions({1, 1, 1});
 
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {k_NumFeatures}, {1}, imageGeom->getId());
-  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {k_NumFeatures}, {1}, imageGeomPtr->getId());
+  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, imageGeomPtr->getId());
 
-  auto* parentAM = AttributeMatrix::Create(dataStructure, "ParentData", {k_NumParents}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, parentAM->getId());
+  auto* parentAmPtr = AttributeMatrix::Create(dataStructure, "ParentData", {k_NumParents}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, parentAmPtr->getId());
 
   ComputeGroupingDensityFilter filter;
   Arguments args;
@@ -353,15 +353,15 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: Preflight Error - Parent V
 
   // ParentVolumes placed directly under ImageGeom (no AM parent)
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setDimensions({1, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeomPtr->setDimensions({1, 1, 1});
 
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {k_NumFeatures}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, featureAM->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {k_NumFeatures}, {1}, featureAM->getId());
-  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, featureAM->getId());
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {k_NumFeatures}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Volumes", {k_NumFeatures}, {1}, featureAmPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "ParentIds", {k_NumFeatures}, {1}, featureAmPtr->getId());
+  NeighborList<int32>::Create(dataStructure, "ContigNL", ShapeType{k_NumFeatures}, featureAmPtr->getId());
 
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "ParentVolumes", {k_NumParents}, {1}, imageGeomPtr->getId());
 
   ComputeGroupingDensityFilter filter;
   Arguments args;
@@ -476,7 +476,7 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: SIMPL Backwards Compatibil
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -488,22 +488,22 @@ TEST_CASE("SimplnxCore::ComputeGroupingDensityFilter: SIMPL Backwards Compatibil
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeGroupingDensityFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeGroupingDensityFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(ComputeGroupingDensityFilter::k_CheckedFeaturesName_Key) == "CheckedFeatures");
       CHECK(args.value<DataPath>(ComputeGroupingDensityFilter::k_ContiguousNeighborListArrayPath_Key) == DataPath({"DataContainer", "FeatureData", "ContiguousNeighborList"}));
       CHECK(args.value<bool>(ComputeGroupingDensityFilter::k_FindCheckedFeatures_Key) == true);

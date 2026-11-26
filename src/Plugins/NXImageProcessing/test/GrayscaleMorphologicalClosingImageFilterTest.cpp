@@ -22,35 +22,35 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Computed
   using morph_test::KernelType;
   auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); };
   const auto setParams = morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalClosingImageFilter>(/*safeBorder=*/false);
-  constexpr auto kClosing = CompositeKind::Closing;
+  constexpr auto k_KClosing = CompositeKind::Closing;
 
   SECTION("safeBorder=false Ball 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {1, 1, 1}, kClosing, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {1, 1, 1}, k_KClosing, setParams);
   }
   SECTION("safeBorder=false Box 3D r{2,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 1}, kClosing, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 1}, k_KClosing, setParams);
   }
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, kClosing, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KClosing, setParams);
   }
   SECTION("Annulus 3D r{2,2,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, kClosing, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_KClosing, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, kClosing, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KClosing, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, kClosing, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KClosing, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, kClosing, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<GrayscaleMorphologicalClosingImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KClosing, setParams);
   }
 }
 
@@ -73,13 +73,13 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr int64 rx = 2;
-  constexpr int64 ry = 1;
-  constexpr int64 rz = 1;
+  constexpr usize k_D = 32;
+  constexpr int64 k_Rx = 2;
+  constexpr int64 k_Ry = 1;
+  constexpr int64 k_Rz = 1;
 
   DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0);
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   GrayscaleMorphologicalClosingImageFilter filter;
@@ -89,7 +89,7 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
   args.insertOrAssign(GrayscaleMorphologicalClosingImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(GrayscaleMorphologicalClosingImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Box)));
   args.insertOrAssign(GrayscaleMorphologicalClosingImageFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(rx), static_cast<uint32>(ry), static_cast<uint32>(rz)}));
+                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
   // Safe Border == false so the skip-OOB closed form below applies; this exercises the composite's OOC
   // streaming of the plain two-pass path on both algorithm iterations.
   args.insertOrAssign(GrayscaleMorphologicalClosingImageFilter::k_SafeBorder_Key, std::make_any<bool>(false));
@@ -101,20 +101,20 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
   auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   auto expectedForSlot = [&](usize s) -> float32 {
-    const int64 Di = static_cast<int64>(D);
-    const int64 x = static_cast<int64>(s % D);
-    const int64 y = static_cast<int64>((s / D) % D);
-    const int64 z = static_cast<int64>(s / (D * D));
+    const int64 di = static_cast<int64>(k_D);
+    const int64 x = static_cast<int64>(s % k_D);
+    const int64 y = static_cast<int64>((s / k_D) % k_D);
+    const int64 z = static_cast<int64>(s / (k_D * k_D));
     // Closing = erode(dilate(ramp)): the dilation corner is the +radius corner, evaluated at the -radius
     // corner of the erosion (all clamped to the image).
-    const int64 cx = std::min<int64>(std::max<int64>(x - rx, 0) + rx, Di - 1);
-    const int64 cy = std::min<int64>(std::max<int64>(y - ry, 0) + ry, Di - 1);
-    const int64 cz = std::min<int64>(std::max<int64>(z - rz, 0) + rz, Di - 1);
-    return static_cast<float32>((cz * Di + cy) * Di + cx);
+    const int64 cx = std::min<int64>(std::max<int64>(x - k_Rx, 0) + k_Rx, di - 1);
+    const int64 cy = std::min<int64>(std::max<int64>(y - k_Ry, 0) + k_Ry, di - 1);
+    const int64 cz = std::min<int64>(std::max<int64>(z - k_Rz, 0) + k_Rz, di - 1);
+    return static_cast<float32>((cz * di + cy) * di + cx);
   };
 
   constexpr usize k_ChunkValues = 65536;

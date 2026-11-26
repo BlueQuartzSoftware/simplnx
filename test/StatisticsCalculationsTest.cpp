@@ -34,16 +34,16 @@ TEST_CASE("simplnx::StatisticsCalculations: Preserve signed classifier conversio
 TEMPLATE_TEST_CASE("simplnx::StatisticsCalculations: Modal lookup uses stored pairs", "[simplnx][StatisticsCalculations]", (std::integral_constant<HistogramBinPolicy, HistogramBinPolicy::Raw>),
                    (std::integral_constant<HistogramBinPolicy, HistogramBinPolicy::LegacyInt32>))
 {
-  constexpr auto policy = TestType::value;
+  constexpr auto k_Policy = TestType::value;
   const std::array<int32, 4> ranges = {1, 3, 3, 6};
   const nonstd::span<const int32> rangeSpan(ranges.data(), ranges.size());
   // floor((mode-1)/2.5): modes 1,3 -> bin 0; mode 5 -> bin 1; modes 0,7 -> -1,2.
-  CHECK(StatisticsCalculations::findModalBinRange<policy>(int32{1}, int32{1}, 2.5F, 2, rangeSpan) == std::make_pair(int32{1}, int32{3}));
-  CHECK(StatisticsCalculations::findModalBinRange<policy>(int32{3}, int32{1}, 2.5F, 2, rangeSpan) == std::make_pair(int32{1}, int32{3}));
-  CHECK(StatisticsCalculations::findModalBinRange<policy>(int32{5}, int32{1}, 2.5F, 2, rangeSpan) == std::make_pair(int32{3}, int32{6}));
-  CHECK_FALSE(StatisticsCalculations::findModalBinRange<policy>(int32{0}, int32{1}, 2.5F, 2, rangeSpan).has_value());
-  CHECK_FALSE(StatisticsCalculations::findModalBinRange<policy>(int32{7}, int32{1}, 2.5F, 2, rangeSpan).has_value());
-  CHECK_FALSE(StatisticsCalculations::findModalBinRange<policy>(int32{1}, int32{1}, 0.0F, 2, rangeSpan).has_value());
+  CHECK(StatisticsCalculations::findModalBinRange<k_Policy>(int32{1}, int32{1}, 2.5F, 2, rangeSpan) == std::make_pair(int32{1}, int32{3}));
+  CHECK(StatisticsCalculations::findModalBinRange<k_Policy>(int32{3}, int32{1}, 2.5F, 2, rangeSpan) == std::make_pair(int32{1}, int32{3}));
+  CHECK(StatisticsCalculations::findModalBinRange<k_Policy>(int32{5}, int32{1}, 2.5F, 2, rangeSpan) == std::make_pair(int32{3}, int32{6}));
+  CHECK_FALSE(StatisticsCalculations::findModalBinRange<k_Policy>(int32{0}, int32{1}, 2.5F, 2, rangeSpan).has_value());
+  CHECK_FALSE(StatisticsCalculations::findModalBinRange<k_Policy>(int32{7}, int32{1}, 2.5F, 2, rangeSpan).has_value());
+  CHECK_FALSE(StatisticsCalculations::findModalBinRange<k_Policy>(int32{1}, int32{1}, 0.0F, 2, rangeSpan).has_value());
 }
 
 TEST_CASE("simplnx::StatisticsCalculations: Floating modal lookup uses stored pairs", "[simplnx][StatisticsCalculations]")

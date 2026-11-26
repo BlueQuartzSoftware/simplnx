@@ -291,9 +291,9 @@ bool WriteSyntheticChannel5Files(const fs::path& cprPath, const fs::path& crcPat
 template <typename T>
 const DataArray<T>& RequireDataArray(const DataStructure& dataStructure, const DataPath& path)
 {
-  const DataArray<T>* array = nullptr;
-  REQUIRE_NOTHROW(array = &dataStructure.getDataRefAs<DataArray<T>>(path));
-  return *array;
+  const DataArray<T>* arrayPtr = nullptr;
+  REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<DataArray<T>>(path));
+  return *arrayPtr;
 }
 
 template <typename T>
@@ -570,12 +570,12 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_EdaxHexagonalAlignmen
     fs::remove(crcPath, errorCode);
   });
   // Include both hexagonal Laue classes, cubic, and unindexed cells in the final partial chunk.
-  constexpr usize cellCount = 65540;
+  constexpr usize k_CellCount = 65540;
   const auto inputPhi2Value = [](usize index) -> float32 {
     // These cells distinguish float64 addition from a float32-rounded shift for both hexagonal Laue classes.
     return index == 2 || index == 3 ? 0.1F : ExpectedPhi2(index);
   };
-  REQUIRE(WriteSyntheticChannel5Files(cprPath, crcPath, cellCount, 1, inputPhi2Value, true));
+  REQUIRE(WriteSyntheticChannel5Files(cprPath, crcPath, k_CellCount, 1, inputPhi2Value, true));
 
   DataStructure dataStructure;
   ReadChannel5DataFilter filter;
@@ -599,9 +599,9 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_EdaxHexagonalAlignmen
   }
   std::vector<float32> eulers(k_ValidationChunkCells * 3);
   const std::array<std::string, 3> rawNames = {ebsdlib::Ctf::phi1, ebsdlib::Ctf::Phi, ebsdlib::Ctf::phi2};
-  for(usize offset = 0; offset < cellCount; offset += k_ValidationChunkCells)
+  for(usize offset = 0; offset < k_CellCount; offset += k_ValidationChunkCells)
   {
-    const usize count = std::min(k_ValidationChunkCells, cellCount - offset);
+    const usize count = std::min(k_ValidationChunkCells, k_CellCount - offset);
     if(compatibleArrays)
     {
       const auto& eulerArrayRef = RequireDataArray<float32>(dataStructure, cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
@@ -660,15 +660,15 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailu
   {
     DataStructure dataStructure;
     ApplySyntheticChannel5RegularActions(dataStructure, cprPath);
-    auto* phasesArray = dataStructure.getDataAs<Int32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
-    auto* eulerArray = dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
-    REQUIRE(phasesArray != nullptr);
-    REQUIRE(eulerArray != nullptr);
-    auto phasesStore = std::make_shared<FailOnWriteCallDataStore<int32>>(phasesArray->getTupleShape(), phasesArray->getComponentShape(), k_PhaseSentinel, 2, k_CompatibleWriteError);
-    auto eulerStore = std::make_shared<DataStore<float32>>(eulerArray->getTupleShape(), eulerArray->getComponentShape(), k_EulerSentinel);
-    auto setDataStoreResult4 = phasesArray->setDataStore(phasesStore);
+    auto* phasesArrayPtr = dataStructure.getDataAs<Int32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
+    auto* eulerArrayPtr = dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
+    REQUIRE(phasesArrayPtr != nullptr);
+    REQUIRE(eulerArrayPtr != nullptr);
+    auto phasesStore = std::make_shared<FailOnWriteCallDataStore<int32>>(phasesArrayPtr->getTupleShape(), phasesArrayPtr->getComponentShape(), k_PhaseSentinel, 2, k_CompatibleWriteError);
+    auto eulerStore = std::make_shared<DataStore<float32>>(eulerArrayPtr->getTupleShape(), eulerArrayPtr->getComponentShape(), k_EulerSentinel);
+    auto setDataStoreResult4 = phasesArrayPtr->setDataStore(phasesStore);
     SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult4);
-    auto setDataStoreResult3 = eulerArray->setDataStore(eulerStore);
+    auto setDataStoreResult3 = eulerArrayPtr->setDataStore(eulerStore);
     SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult3);
 
     std::atomic_bool shouldCancel = false;
@@ -689,17 +689,17 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailu
   {
     DataStructure dataStructure;
     ApplySyntheticChannel5RegularActions(dataStructure, cprPath);
-    auto* phasesArray = dataStructure.getDataAs<Int32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
-    auto* eulerArray = dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
-    REQUIRE(phasesArray != nullptr);
-    REQUIRE(eulerArray != nullptr);
+    auto* phasesArrayPtr = dataStructure.getDataAs<Int32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
+    auto* eulerArrayPtr = dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
+    REQUIRE(phasesArrayPtr != nullptr);
+    REQUIRE(eulerArrayPtr != nullptr);
 
     std::atomic_bool shouldCancel = false;
-    auto phasesStore = std::make_shared<CancelAfterWriteDataStore<int32>>(phasesArray->getTupleShape(), phasesArray->getComponentShape(), k_PhaseSentinel, shouldCancel);
-    auto eulerStore = std::make_shared<DataStore<float32>>(eulerArray->getTupleShape(), eulerArray->getComponentShape(), k_EulerSentinel);
-    auto setDataStoreResult2 = phasesArray->setDataStore(phasesStore);
+    auto phasesStore = std::make_shared<CancelAfterWriteDataStore<int32>>(phasesArrayPtr->getTupleShape(), phasesArrayPtr->getComponentShape(), k_PhaseSentinel, shouldCancel);
+    auto eulerStore = std::make_shared<DataStore<float32>>(eulerArrayPtr->getTupleShape(), eulerArrayPtr->getComponentShape(), k_EulerSentinel);
+    auto setDataStoreResult2 = phasesArrayPtr->setDataStore(phasesStore);
     SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult2);
-    auto setDataStoreResult = eulerArray->setDataStore(eulerStore);
+    auto setDataStoreResult = eulerArrayPtr->setDataStore(eulerStore);
     SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult);
 
     const IFilter::MessageHandler messageHandler = {};

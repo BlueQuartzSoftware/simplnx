@@ -256,7 +256,7 @@ public:
 
     // getNumElementsInAttribute() self-locks, so it runs between the leaf locks (holding the open
     // attribId across it needs no lock — only the H5 calls do).
-    std::vector<T> values(getNumElementsInAttribute(attribId));
+    std::vector<T> values(GetNumElementsInAttribute(attribId));
 
     herr_t error = 0;
     bool compatibleType = false;
@@ -628,7 +628,7 @@ protected:
    * @param attribId Specifies the attribute ID.
    * @return Element count, or 0 after a query failure.
    */
-  static usize getNumElementsInAttribute(hid_t attribId);
+  static usize GetNumElementsInAttribute(hid_t attribId);
 
 private:
   std::filesystem::path m_FilePath;

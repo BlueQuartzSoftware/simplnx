@@ -387,7 +387,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_h5ebsd.tar.gz", "Small_IN100.h5ebsd");
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
@@ -471,7 +471,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EbsdFilter: SIMPL Backwards Compatibility"
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -484,20 +484,20 @@ TEST_CASE("OrientationAnalysis::ReadH5EbsdFilter: SIMPL Backwards Compatibility"
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadH5EbsdFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadH5EbsdFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<std::string>(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key) == "TestName");
       CHECK(args.value<std::string>(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
@@ -526,11 +526,11 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Single sample rotation origin", "[Or
   std::optional<FloatVec3> preflightOrigin;
   for(const auto& action : preflightResult.outputActions.value().actions)
   {
-    if(const auto* update = dynamic_cast<const UpdateImageGeomAction*>(action.get()); update != nullptr)
+    if(const auto* updatePtr = dynamic_cast<const UpdateImageGeomAction*>(action.get()); updatePtr != nullptr)
     {
-      REQUIRE(update->path() == Constants::k_DataContainerPath);
-      REQUIRE(update->origin().has_value());
-      preflightOrigin = update->origin();
+      REQUIRE(updatePtr->path() == Constants::k_DataContainerPath);
+      REQUIRE(updatePtr->origin().has_value());
+      preflightOrigin = updatePtr->origin();
     }
   }
   REQUIRE(preflightOrigin.has_value());

@@ -24,7 +24,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using LaplacianFilter = LaplacianRecursiveGaussianImageFilter;
+using LaplacianFilterType = LaplacianRecursiveGaussianImageFilter;
 
 // Sets the geometry, input, and output keys plus the scalar sigma and the normalize flag on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
@@ -32,11 +32,11 @@ void RunLaplacian(IFilter& filter, DataStructure& ds, const DataPath& inputPath,
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(LaplacianFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(LaplacianFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(LaplacianFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(LaplacianFilter::k_Sigma_Key, std::make_any<float64>(sigma));
-  args.insertOrAssign(LaplacianFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
+  args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(LaplacianFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(sigma));
+  args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -66,16 +66,16 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: resident state requires a complete dataset-scaled reservation",
           "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter][WorkingMemory]")
 {
-  constexpr usize dimX = 512;
-  constexpr usize dimY = 512;
-  constexpr usize dimZ = 32;
-  constexpr usize valueCount = dimX * dimY * dimZ;
+  constexpr usize k_DimX = 512;
+  constexpr usize k_DimY = 512;
+  constexpr usize k_DimZ = 32;
+  constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{dimX, dimY, dimZ};
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
 
   auto float32Result = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float32Result);
-  REQUIRE(float32Result.value() == valueCount * (sizeof(float32) + 2 * sizeof(float32)));
+  REQUIRE(float32Result.value() == k_ValueCount * (sizeof(float32) + 2 * sizeof(float32)));
   REQUIRE(float32Result.value() == 96 * k_MiB);
   auto float64Result = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float64>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float64Result);
@@ -84,7 +84,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: resident st
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(SizeVec3{dimX, dimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(SizeVec3{k_DimX, k_DimY, 1}));
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
@@ -124,14 +124,14 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     DataStructure ds;
     const std::vector<int16> field(3 * 8 * 8, int16{1}); // X = 3 < 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 3, 8, 8, field);
-    LaplacianFilter filter;
+    LaplacianFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
-    args.insertOrAssign(LaplacianFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(LaplacianFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(LaplacianFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(LaplacianFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(LaplacianFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
@@ -144,13 +144,13 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 2, int16{1}); // Z == 2 (> 1, so not 2D) and < 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 2, field);
-    LaplacianFilter filter;
+    LaplacianFilterType filter;
     Arguments args;
-    args.insertOrAssign(LaplacianFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(LaplacianFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(LaplacianFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(LaplacianFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(LaplacianFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
@@ -160,13 +160,13 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 3, int16{1}); // Z == 3 (> 1, so not 2D) and < 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 3, field);
-    LaplacianFilter filter;
+    LaplacianFilterType filter;
     Arguments args;
-    args.insertOrAssign(LaplacianFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(LaplacianFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(LaplacianFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(LaplacianFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(LaplacianFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
@@ -176,13 +176,13 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 1, int16{1}); // Z == 1 -> treated as 2D, so Z is not required to be >= 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 1, field);
-    LaplacianFilter filter;
+    LaplacianFilterType filter;
     Arguments args;
-    args.insertOrAssign(LaplacianFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(LaplacianFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(LaplacianFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(LaplacianFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(LaplacianFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
@@ -191,14 +191,14 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims + type; only sigma is invalid
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 8, field);
-    LaplacianFilter filter;
+    LaplacianFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
-    args.insertOrAssign(LaplacianFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(LaplacianFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(LaplacianFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(LaplacianFilter::k_Sigma_Key, std::make_any<float64>(0.0));
-    args.insertOrAssign(LaplacianFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(LaplacianFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(LaplacianFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(0.0));
+    args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
@@ -221,7 +221,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane
   {
     const ForceInCoreAlgorithmGuard guard;
     ResetAlgorithmPathExecutionCounts();
-    LaplacianFilter filter;
+    LaplacianFilterType filter;
     RunLaplacian(filter, directDs, directInput, 1.75, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     REQUIRE(counts.InCoreOnInMemoryStore == 1);
@@ -234,7 +234,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane
   {
     const ForceOocAlgorithmGuard guard(true);
     ResetAlgorithmPathExecutionCounts();
-    LaplacianFilter filter;
+    LaplacianFilterType filter;
     RunLaplacian(filter, fusedDs, fusedInput, 1.75, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     REQUIRE(counts.OutOfCoreOnInMemoryStore == 1);
@@ -257,11 +257,11 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: FromSIMPLJs
   const Result<Arguments> result = LaplacianRecursiveGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<float64>(LaplacianFilter::k_Sigma_Key) == 2.5);
-  REQUIRE(args.value<bool>(LaplacianFilter::k_NormalizeAcrossScale_Key) == true);
-  REQUIRE(args.value<DataPath>(LaplacianFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
-  REQUIRE(args.value<DataPath>(LaplacianFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
-  REQUIRE(args.value<std::string>(LaplacianFilter::k_OutputImageArrayName_Key) == "LaplacianOut");
+  REQUIRE(args.value<float64>(LaplacianFilterType::k_Sigma_Key) == 2.5);
+  REQUIRE(args.value<bool>(LaplacianFilterType::k_NormalizeAcrossScale_Key) == true);
+  REQUIRE(args.value<DataPath>(LaplacianFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
+  REQUIRE(args.value<DataPath>(LaplacianFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
+  REQUIRE(args.value<std::string>(LaplacianFilterType::k_OutputImageArrayName_Key) == "LaplacianOut");
 }
 
 // -----------------------------------------------------------------------------

@@ -47,11 +47,11 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the r
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
-  const DataPath k_Eulers({"Imported Data", "Eulers"});
-  const DataPath k_Phases({"Imported Data", "Phases"});
-  const DataPath k_Mask({"Imported Data", "Mask"});
-  const DataPath k_CrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
-  const DataPath k_MaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
+  const DataPath kEulers({"Imported Data", "Eulers"});
+  const DataPath kPhases({"Imported Data", "Phases"});
+  const DataPath kMask({"Imported Data", "Mask"});
+  const DataPath kCrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
+  const DataPath kMaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
   auto runWithMask = [&](bool useMask, const std::string& outGeomName) {
     DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -68,11 +68,11 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the r
     args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
     args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
     args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(useMask));
-    args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_Mask));
-    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_Eulers));
-    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_Phases));
-    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructures));
-    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(k_MaterialNames));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(kMask));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(kEulers));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(kPhases));
+    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(kCrystalStructures));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(kMaterialNames));
     args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({outGeomName})));
     args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(1)); // X||a*
     args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(false));
@@ -127,10 +127,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
-  const DataPath k_Eulers({"Imported Data", "Eulers"});
-  const DataPath k_Phases({"Imported Data", "Phases"});
-  const DataPath k_CrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
-  const DataPath k_MaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
+  const DataPath kEulers({"Imported Data", "Eulers"});
+  const DataPath kPhases({"Imported Data", "Phases"});
+  const DataPath kCrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
+  const DataPath kMaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
   // Capture both intensity and composite RGB outputs.
   // They use separate configuration objects and must both honor HexConvention.
@@ -159,10 +159,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
     args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
     args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({intensityName})));
     args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(true));
-    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_Eulers));
-    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_Phases));
-    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructures));
-    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(k_MaterialNames));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(kEulers));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(kPhases));
+    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(kCrystalStructures));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(kMaterialNames));
     args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(convIndex));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -250,10 +250,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker 
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
-  const DataPath k_Eulers({"Imported Data", "Eulers"});
-  const DataPath k_Phases({"Imported Data", "Phases"});
-  const DataPath k_CrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
-  const DataPath k_MaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
+  const DataPath kEulers({"Imported Data", "Eulers"});
+  const DataPath kPhases({"Imported Data", "Phases"});
+  const DataPath kCrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
+  const DataPath kMaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
   auto runPoleFigure = [&](ChoicesParameter::ValueType generationAlgorithm, int32 markerRadius, const std::string& geomName) {
     DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -273,10 +273,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker 
     args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({geomName})));
     args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(false));
-    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_Eulers));
-    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_Phases));
-    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructures));
-    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(k_MaterialNames));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(kEulers));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(kPhases));
+    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(kCrystalStructures));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(kMaterialNames));
     args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(0)); // X||a
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -532,7 +532,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -545,22 +545,22 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WritePoleFigureFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WritePoleFigureFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // The legacy ImageFormat choice is intentionally dropped during conversion (always PNG; deviation D5).
       CHECK(args.value<std::string>(WritePoleFigureFilter::k_Title_Key) == "TestName");
       CHECK(args.value<ChoicesParameter::ValueType>(WritePoleFigureFilter::k_GenerationAlgorithm_Key) == 0);

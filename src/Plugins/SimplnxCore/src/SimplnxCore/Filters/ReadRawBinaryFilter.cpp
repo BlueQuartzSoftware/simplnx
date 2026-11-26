@@ -157,12 +157,12 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
   // ---- Check 8/9/10: Resolve tuple dimensions (AttributeMatrix-aware) ----
   ShapeType tupleDims;
-  const auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(pCreatedAttributeArrayPathValue.getParent());
+  const auto* parentAmPtr = dataStructure.getDataAs<AttributeMatrix>(pCreatedAttributeArrayPathValue.getParent());
 
-  if(parentAM != nullptr)
+  if(parentAmPtr != nullptr)
   {
     // Check 10: AM parent + user dims checked — warn that AM shape overrides
-    tupleDims = parentAM->getShape();
+    tupleDims = parentAmPtr->getShape();
     if(useDims)
     {
       resultOutputActions.warnings().push_back({-78702,

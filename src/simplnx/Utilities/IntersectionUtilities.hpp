@@ -71,24 +71,24 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   Vec3f v0v1 = v1 - v0;
   Vec3f v0v2 = v2 - v0;
   // no need to normalize
-  Vec3f N = v0v1.cross(v0v2); // N
-  float denom = N.dot(N);
+  Vec3f n = v0v1.cross(v0v2); // N
+  float denom = n.dot(n);
 
   // Step 1: finding P
 
   // check if ray and plane are parallel ?
-  float NdotRayDirection = N.dot(rayDirection);
+  float ndotRayDirection = n.dot(rayDirection);
 
-  if(std::fabs(NdotRayDirection) < k_Epsilon) // almost 0
+  if(std::fabs(ndotRayDirection) < k_Epsilon) // almost 0
   {
     return false;
   } // they are parallel so they don't intersect !
 
   // compute d parameter using equation 2
-  float d = -N.dot(v0);
+  float d = -n.dot(v0);
 
   // compute t (equation 3)
-  barycentricCoord[2] = -(N.dot(rayOrigin) + d) / NdotRayDirection;
+  barycentricCoord[2] = -(n.dot(rayOrigin) + d) / ndotRayDirection;
 
   // check if the triangle is in behind the ray
   if(barycentricCoord[2] < 0)
@@ -97,34 +97,34 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   } // the triangle is behind
 
   // compute the intersection point using equation 1
-  Vec3f P = rayOrigin + (rayDirection * barycentricCoord[2]);
+  Vec3f p = rayOrigin + (rayDirection * barycentricCoord[2]);
 
   // Step 2: inside-outside test
-  Vec3f C; // vector perpendicular to triangle's plane
+  Vec3f c; // vector perpendicular to triangle's plane
 
   // edge 0
   Vec3f edge0 = v1 - v0;
-  Vec3f vp0 = P - v0;
-  C = edge0.cross(vp0);
-  if(N.dot(C) < 0)
+  Vec3f vp0 = p - v0;
+  c = edge0.cross(vp0);
+  if(n.dot(c) < 0)
   {
     return false;
   } // P is on the right side
 
   // edge 1
   Vec3f edge1 = v2 - v1;
-  Vec3f vp1 = P - v1;
-  C = edge1.cross(vp1);
-  if((barycentricCoord[0] = N.dot(C)) < 0)
+  Vec3f vp1 = p - v1;
+  c = edge1.cross(vp1);
+  if((barycentricCoord[0] = n.dot(c)) < 0)
   {
     return false;
   } // P is on the right side
 
   // edge 2
   Vec3f edge2 = v0 - v2;
-  Vec3f vp2 = P - v2;
-  C = edge2.cross(vp2);
-  if((barycentricCoord[1] = N.dot(C)) < 0)
+  Vec3f vp2 = p - v2;
+  c = edge2.cross(vp2);
+  if((barycentricCoord[1] = n.dot(c)) < 0)
   {
     return false; // P is on the right side;
   }
@@ -257,10 +257,10 @@ struct MTPointsCache
 template <typename T>
 std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
 {
-  using PointT = Eigen::Vector3<T>;
+  using PointTType = Eigen::Vector3<T>;
   constexpr T epsilon = std::numeric_limits<T>::epsilon();
 
-  PointT crossE2 = dirVec.cross(cache.edge2);
+  PointTType crossE2 = dirVec.cross(cache.edge2);
   T determinant = cache.edge1.dot(crossE2);
 
   if(determinant > -epsilon && determinant < epsilon)
@@ -305,13 +305,13 @@ template <typename T>
 std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin, const Eigen::Vector3<T>& dirVec, const Eigen::Vector3<T>& pointA, const Eigen::Vector3<T>& pointB,
                                                 const Eigen::Vector3<T>& pointC)
 {
-  using PointT = Eigen::Vector3<T>;
+  using PointTType = Eigen::Vector3<T>;
   constexpr T epsilon = std::numeric_limits<T>::epsilon();
 
-  PointT edge1 = pointB - pointA;
-  PointT edge2 = pointC - pointA;
+  PointTType edge1 = pointB - pointA;
+  PointTType edge2 = pointC - pointA;
 
-  PointT crossE2 = dirVec.cross(edge2);
+  PointTType crossE2 = dirVec.cross(edge2);
   T determinant = edge1.dot(crossE2);
 
   if(determinant > -epsilon && determinant < epsilon)
@@ -320,7 +320,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin,
     return {};
   }
 
-  PointT sDist = origin - pointA;
+  PointTType sDist = origin - pointA;
 
   T invDet = 1.0 / determinant;
   T uCoff = invDet * sDist.dot(crossE2);
@@ -333,7 +333,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin,
     return {};
   }
 
-  PointT sCrossE1 = sDist.cross(edge1);
+  PointTType sCrossE1 = sDist.cross(edge1);
 
   T vCoff = invDet * dirVec.dot(sCrossE1);
 

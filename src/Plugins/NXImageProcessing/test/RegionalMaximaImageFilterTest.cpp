@@ -40,13 +40,13 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: flat-image special case
   const bool flatIsMaxima = GENERATE(false, true);
   CAPTURE(flatIsMaxima);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 4;
-  const std::vector<uint8> flatImg(DX * DY * DZ, uint8{100});
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 4;
+  const std::vector<uint8> flatImg(k_Dx * k_Dy * k_Dz, uint8{100});
 
   DataStructure newDs;
-  const DataPath newInput = rt::BuildImageFromPattern<uint8>(newDs, DX, DY, DZ, flatImg);
+  const DataPath newInput = rt::BuildImageFromPattern<uint8>(newDs, k_Dx, k_Dy, k_Dz, flatImg);
   RegionalMaximaImageFilter newFilter;
   rt::RunReconstructionFilter<RegionalMaximaImageFilter>(newFilter, newDs, newInput, MaximaSetter(1.0, 0.0, flatIsMaxima), /*fullyConnected=*/false, /*height=*/0.0);
 
@@ -68,25 +68,25 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 5;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
-  std::vector<int32> pattern(DX * DY * DZ, 10);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 50;
-  pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = 50;
-  pattern[rt::FlatIndex(2, 3, 0, DX, DY)] = 50;
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = 50;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 10);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = 50;
+  pattern[rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)] = 50;
+  pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = 50;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = 50;
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
   RegionalMaximaImageFilter filter;
   rt::RunReconstructionFilter<RegionalMaximaImageFilter>(filter, ds, inputPath, MaximaSetter(1.0, 0.0, true), /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<uint32>>(outputPath).getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == 1); // peak -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == 1); // peak -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == 0); // field -> background
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 1); // peak -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == 1); // peak -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == 0); // field -> background
 }
 
 // -----------------------------------------------------------------------------
@@ -102,18 +102,18 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  constexpr usize DX = 5;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
-  std::vector<int32> pattern(DX * DY * DZ, 10);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 50;
-  pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = 50;
-  pattern[rt::FlatIndex(2, 3, 0, DX, DY)] = 50;
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = 50;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 10);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = 50;
+  pattern[rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)] = 50;
+  pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = 50;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = 50;
 
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   RegionalMaximaImageFilter filter;
@@ -130,9 +130,9 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
   auto& outArray = ds.getDataRefAs<DataArray<uint32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == 1); // peak -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == 1); // peak -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == 0); // field -> background
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 1); // peak -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == 1); // peak -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == 0); // field -> background
 }
 
 // -----------------------------------------------------------------------------

@@ -40,19 +40,19 @@ constexpr int32 k_FailedOpenFileIOError = -25;
 constexpr int32 k_CacheStoreCopyError = -6210;
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-thread_local bool g_ForceFileMetadataFailure = false;
+thread_local bool GForceFileMetadataFailure = false;
 #endif
 
 struct FileMetadata
 {
-  uint64 fileSize = 0;
+  uint64 file_size = 0;
   fs::file_time_type mtime;
 };
 
 std::optional<FileMetadata> ReadFileMetadata(const fs::path& filePath, std::error_code& errorCode)
 {
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-  if(g_ForceFileMetadataFailure)
+  if(GForceFileMetadataFailure)
   {
     errorCode = std::make_error_code(std::errc::io_error);
     return std::nullopt;
@@ -69,7 +69,7 @@ std::optional<FileMetadata> ReadFileMetadata(const fs::path& filePath, std::erro
   {
     return std::nullopt;
   }
-  return FileMetadata{.fileSize = static_cast<uint64>(fileSize), .mtime = mtime};
+  return FileMetadata{.file_size = static_cast<uint64>(fileSize), .mtime = mtime};
 }
 
 template <class T>
@@ -134,21 +134,21 @@ struct RefreshDataArrayStoreFunctor
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const DataPath& path) const
   {
-    auto* dataArray = dataStructure.getDataAs<DataArray<T>>(path);
-    if(dataArray == nullptr || dataArray->getIDataStore() == nullptr)
+    auto* dataArrayPtr = dataStructure.getDataAs<DataArray<T>>(path);
+    if(dataArrayPtr == nullptr || dataArrayPtr->getIDataStore() == nullptr)
     {
       return MakeErrorResult(k_CacheStoreCopyError, fmt::format("Cannot prepare cached numeric array '{}': the array or its source store is unavailable.", path.toString()));
     }
 
-    if(dataArray->getStoreType() == IDataStore::StoreType::Empty)
+    if(dataArrayPtr->getStoreType() == IDataStore::StoreType::Empty)
     {
-      auto plannedResult = DataStoreUtilities::CreatePlannedDataStore<T>(dataStructure, path, dataArray->getTupleShape(), dataArray->getComponentShape(), "");
+      auto plannedResult = DataStoreUtilities::CreatePlannedDataStore<T>(dataStructure, path, dataArrayPtr->getTupleShape(), dataArrayPtr->getComponentShape(), "");
       if(plannedResult.invalid())
       {
         return ConvertResult(std::move(plannedResult));
       }
       auto warnings = std::move(plannedResult.warnings());
-      auto replaceResult = dataArray->setDataStore(std::move(plannedResult.value()));
+      auto replaceResult = dataArrayPtr->setDataStore(std::move(plannedResult.value()));
       PrependWarnings(replaceResult, warnings);
       if(replaceResult.invalid())
       {
@@ -163,7 +163,7 @@ struct RefreshDataArrayStoreFunctor
     Result<std::string> formatResult;
     try
     {
-      const auto bytes = CalculateStoreCopyBytes(dataArray->getTupleShape(), dataArray->getComponentShape(), sizeof(T));
+      const auto bytes = CalculateStoreCopyBytes(dataArrayPtr->getTupleShape(), dataArrayPtr->getComponentShape(), sizeof(T));
       formatResult = ResolveNumericStorageFormat(dataStructure, path, GetDataType<T>(), bytes, "");
     } catch(const std::bad_alloc&)
     {
@@ -182,7 +182,7 @@ struct RefreshDataArrayStoreFunctor
     std::shared_ptr<AbstractDataStore<T>> freshStore;
     try
     {
-      std::shared_ptr<IDataStore> freshBase(dataArray->getIDataStore()->deepCopy(selectedFormat));
+      std::shared_ptr<IDataStore> freshBase(dataArrayPtr->getIDataStore()->deepCopy(selectedFormat));
       freshStore = std::dynamic_pointer_cast<AbstractDataStore<T>>(freshBase);
       if(freshStore == nullptr)
       {
@@ -199,7 +199,7 @@ struct RefreshDataArrayStoreFunctor
       return result;
     }
 
-    auto replaceResult = dataArray->setDataStore(std::move(freshStore));
+    auto replaceResult = dataArrayPtr->setDataStore(std::move(freshStore));
     PrependWarnings(replaceResult, warnings);
     if(replaceResult.invalid())
     {
@@ -248,15 +248,15 @@ Result<> Dream3dPreflightCache::RefreshStores(DataStructure& dataStructure)
   std::unordered_set<DataObject::IdType> visitedIds;
   for(const auto& path : dataStructure.getAllDataPaths())
   {
-    auto* object = dataStructure.getData(path);
-    if(object == nullptr || !visitedIds.insert(object->getId()).second)
+    auto* objectPtr = dataStructure.getData(path);
+    if(objectPtr == nullptr || !visitedIds.insert(objectPtr->getId()).second)
     {
       continue;
     }
 
-    if(auto* dataArray = dynamic_cast<IDataArray*>(object); dataArray != nullptr)
+    if(auto* dataArrayPtr = dynamic_cast<IDataArray*>(objectPtr); dataArrayPtr != nullptr)
     {
-      auto refreshResult = ExecuteDataFunction(RefreshDataArrayStoreFunctor{}, dataArray->getDataType(), dataStructure, path);
+      auto refreshResult = ExecuteDataFunction(RefreshDataArrayStoreFunctor{}, dataArrayPtr->getDataType(), dataStructure, path);
       if(refreshResult.invalid())
       {
         refreshResult.warnings().insert(refreshResult.warnings().begin(), std::make_move_iterator(result.warnings().begin()), std::make_move_iterator(result.warnings().end()));
@@ -267,22 +267,22 @@ Result<> Dream3dPreflightCache::RefreshStores(DataStructure& dataStructure)
         result.warnings().push_back(std::move(warning));
       }
     }
-    else if(auto* stringArray = dynamic_cast<StringArray*>(object); stringArray != nullptr)
+    else if(auto* stringArrayPtr = dynamic_cast<StringArray*>(objectPtr); stringArrayPtr != nullptr)
     {
       // A placeholder cannot expose values. Give it a new placeholder with the
       // same shape. Rebuild a materialized string store from its values.
-      if(stringArray->isPlaceholder())
+      if(stringArrayPtr->isPlaceholder())
       {
-        stringArray->setStore(std::make_shared<EmptyStringStore>(stringArray->getTupleShape()));
+        stringArrayPtr->setStore(std::make_shared<EmptyStringStore>(stringArrayPtr->getTupleShape()));
       }
       else
       {
-        stringArray->setStore(std::make_shared<StringStore>(stringArray->values(), stringArray->getTupleShape()));
+        stringArrayPtr->setStore(std::make_shared<StringStore>(stringArrayPtr->values(), stringArrayPtr->getTupleShape()));
       }
     }
-    else if(auto* neighborList = dynamic_cast<INeighborList*>(object); neighborList != nullptr)
+    else if(auto* neighborListPtr = dynamic_cast<INeighborList*>(objectPtr); neighborListPtr != nullptr)
     {
-      ExecuteDataFunctionNoBool(RefreshNeighborListStoreFunctor{}, neighborList->getDataType(), dataStructure, path);
+      ExecuteDataFunctionNoBool(RefreshNeighborListStoreFunctor{}, neighborListPtr->getDataType(), dataStructure, path);
     }
   }
   return result;
@@ -302,7 +302,7 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::PrepareHandout(NeutralMeta
   return ConvertResultTo<NeutralMetadataHandout>(std::move(refreshResult), std::move(handout));
 }
 
-Result<std::optional<NeutralMetadataHandout>> Dream3dPreflightCache::tryServeFromCache(const CacheKey& key, uint64 fileSize, const fs::file_time_type& mtime, const fs::path& filePath)
+Result<std::optional<NeutralMetadataHandout>> Dream3dPreflightCache::tryServeFromCache(const CacheKeyType& key, uint64 fileSize, const fs::file_time_type& mtime, const fs::path& filePath)
 {
   std::optional<NeutralMetadataHandout> handout;
   std::vector<Warning> diskWarnings;
@@ -349,17 +349,17 @@ Result<> NeutralMetadataHandout::applyImageMetadata(const fs::path& filePath, co
   std::unordered_set<DataObject::IdType> checkedIds;
   for(const auto& path : selectedPaths)
   {
-    auto* geometry = dataStructure.getDataAs<ImageGeom>(path);
-    if(geometry == nullptr || !checkedIds.insert(geometry->getId()).second)
+    auto* geometryPtr = dataStructure.getDataAs<ImageGeom>(path);
+    if(geometryPtr == nullptr || !checkedIds.insert(geometryPtr->getId()).second)
     {
       continue;
     }
-    const auto metadata = deferredImageMetadata.find(geometry->getId());
+    const auto metadata = deferredImageMetadata.find(geometryPtr->getId());
     if(metadata == deferredImageMetadata.end())
     {
       continue;
     }
-    result = MergeResults(std::move(result), detail::ApplyImportedImageMetadata(*geometry, filePath, metadata->second, useDefaultGeometryValues));
+    result = MergeResults(std::move(result), detail::ApplyImportedImageMetadata(*geometryPtr, filePath, metadata->second, useDefaultGeometryValues));
     if(result.invalid())
     {
       return result;
@@ -416,8 +416,8 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchMetadata(const fs::pa
     return result;
   }
 
-  const CacheKey key{MakeKey(filePath), neutral};
-  const auto serve = [&]() { return tryServeFromCache(key, metadata->fileSize, metadata->mtime, filePath); };
+  const CacheKeyType key{MakeKey(filePath), neutral};
+  const auto serve = [&]() { return tryServeFromCache(key, metadata->file_size, metadata->mtime, filePath); };
   auto hit = serve();
   if(hit.invalid())
   {
@@ -455,7 +455,7 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchMetadata(const fs::pa
     entry.master = std::move(disk.value());
     // Ordinary warm hits retain their existing behavior. Neutral hits replay only original disk warnings.
     entry.diskWarnings = neutral ? warnings : std::vector<Warning>{};
-    entry.fileSize = metadata->fileSize;
+    entry.fileSize = metadata->file_size;
     entry.mtime = metadata->mtime;
     entry.lastUsedTick = ++m_Tick;
     while(m_Entries.size() > k_Capacity)
@@ -473,7 +473,7 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchMetadata(const fs::pa
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
 void Dream3dPreflightCache::SetForceFileMetadataFailure(bool forceFailure)
 {
-  g_ForceFileMetadataFailure = forceFailure;
+  GForceFileMetadataFailure = forceFailure;
 }
 #endif
 
@@ -481,8 +481,8 @@ void Dream3dPreflightCache::invalidate(const fs::path& filePath)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   const auto key = MakeKey(filePath);
-  m_Entries.erase(CacheKey{key, false});
-  m_Entries.erase(CacheKey{key, true});
+  m_Entries.erase(CacheKeyType{key, false});
+  m_Entries.erase(CacheKeyType{key, true});
 }
 
 void Dream3dPreflightCache::clear()

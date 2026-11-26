@@ -62,11 +62,11 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Single File Va
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz", k_HexToSqrTestFilesDir);
-  fs::path k_OutPath = fs::path(fmt::format("{}/single", nx::core::unit_test::k_BinaryTestOutputDir));
+  fs::path kOutPath = fs::path(fmt::format("{}/single", nx::core::unit_test::k_BinaryTestOutputDir));
 
-  if(!exists(k_OutPath))
+  if(!exists(kOutPath))
   {
-    fs::create_directories(k_OutPath);
+    fs::create_directories(kOutPath);
   }
 
   {
@@ -75,15 +75,15 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Single File Va
     DataStructure dataStructure;
     Arguments args;
 
-    fs::path k_InPath = fs::path(fmt::format("{}/{}/single/hex_grid.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir));
+    fs::path kInPath = fs::path(fmt::format("{}/{}/single/hex_grid.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir));
 
     // Input Parameters
     args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, std::make_any<bool>(false));
-    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_InputPath_Key, std::make_any<fs::path>(k_InPath));
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_InputPath_Key, std::make_any<fs::path>(kInPath));
     args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
 
     // Output Parameters
-    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(k_OutPath));
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(kOutPath));
     args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::make_any<std::string>("Sqr_"));
 
     // Preflight the filter and check result
@@ -97,7 +97,7 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Single File Va
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
-  REQUIRE(::CompareFiles(fmt::format("{}/{}/single/exemplar/Sqr_SIMPL_hex_grid.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), k_OutPath.string() + "/Sqr_hex_grid.ang"));
+  REQUIRE(::CompareFiles(fmt::format("{}/{}/single/exemplar/Sqr_SIMPL_hex_grid.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), kOutPath.string() + "/Sqr_hex_grid.ang"));
 }
 
 TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File Valid Execution", "[OrientationAnalysis][ConvertHexGridToSquareGridFilter]")
@@ -105,11 +105,11 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File 
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz", k_HexToSqrTestFilesDir);
-  fs::path k_OutPath = fs::path(fmt::format("{}/multi", nx::core::unit_test::k_BinaryTestOutputDir));
+  fs::path kOutPath = fs::path(fmt::format("{}/multi", nx::core::unit_test::k_BinaryTestOutputDir));
 
-  if(!exists(k_OutPath))
+  if(!exists(kOutPath))
   {
-    fs::create_directories(k_OutPath);
+    fs::create_directories(kOutPath);
   }
 
   {
@@ -118,24 +118,24 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File 
     DataStructure dataStructure;
     Arguments args;
 
-    GeneratedFileListParameter::ValueType k_InPath;
-    k_InPath.startIndex = 1;
-    k_InPath.incrementIndex = 1;
-    k_InPath.endIndex = 2;
-    k_InPath.inputPath = fmt::format("{}/{}/multi", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir);
-    k_InPath.filePrefix = "hex_grid";
-    k_InPath.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-    k_InPath.paddingDigits = 0;
-    k_InPath.fileExtension = ".ang";
-    k_InPath.fileSuffix = "";
+    GeneratedFileListParameter::ValueType kInPath;
+    kInPath.startIndex = 1;
+    kInPath.incrementIndex = 1;
+    kInPath.endIndex = 2;
+    kInPath.inputPath = fmt::format("{}/{}/multi", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir);
+    kInPath.filePrefix = "hex_grid";
+    kInPath.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+    kInPath.paddingDigits = 0;
+    kInPath.fileExtension = ".ang";
+    kInPath.fileSuffix = "";
 
     // Input Parameters
     args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_GeneratedFileList_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_InPath));
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_GeneratedFileList_Key, std::make_any<GeneratedFileListParameter::ValueType>(kInPath));
     args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
 
     // Output Parameters
-    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(k_OutPath));
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(kOutPath));
     args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::make_any<std::string>("Sqr_"));
 
     // Preflight the filter and check result
@@ -149,10 +149,10 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
-  REQUIRE((fs::exists(k_OutPath) && fs::is_directory(k_OutPath)));
+  REQUIRE((fs::exists(kOutPath) && fs::is_directory(kOutPath)));
 
-  REQUIRE(::CompareFiles(fmt::format("{}/{}/multi/exemplars/Sqr_SIMPL_hex_grid1.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), k_OutPath.string() + "/Sqr_hex_grid1.ang"));
-  REQUIRE(::CompareFiles(fmt::format("{}/{}/multi/exemplars/Sqr_SIMPL_hex_grid2.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), k_OutPath.string() + "/Sqr_hex_grid2.ang"));
+  REQUIRE(::CompareFiles(fmt::format("{}/{}/multi/exemplars/Sqr_SIMPL_hex_grid1.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), kOutPath.string() + "/Sqr_hex_grid1.ang"));
+  REQUIRE(::CompareFiles(fmt::format("{}/{}/multi/exemplars/Sqr_SIMPL_hex_grid2.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), kOutPath.string() + "/Sqr_hex_grid2.ang"));
 }
 
 TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Cancellation before publication preserves each output", "[OrientationAnalysis][ConvertHexGridToSquareGridFilter]")

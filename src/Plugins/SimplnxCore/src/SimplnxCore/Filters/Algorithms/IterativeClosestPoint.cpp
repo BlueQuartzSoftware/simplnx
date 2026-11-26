@@ -79,33 +79,33 @@ const std::atomic_bool& IterativeClosestPoint::getCancel()
 // -----------------------------------------------------------------------------
 Result<> IterativeClosestPoint::operator()()
 {
-  auto* movingVertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->MovingVertexPath);
-  auto* targetVertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->TargetVertexPath);
+  auto* movingVertexGeomPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->MovingVertexPath);
+  auto* targetVertexGeomPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->TargetVertexPath);
 
-  if(movingVertexGeom == nullptr)
+  if(movingVertexGeomPtr == nullptr)
   {
     return MakeErrorResult(k_MissingVertices, fmt::format("Moving Vertex Geometry not found at path '{}'", m_InputValues->MovingVertexPath.toString()));
   }
-  if(targetVertexGeom == nullptr)
+  if(targetVertexGeomPtr == nullptr)
   {
     return MakeErrorResult(k_MissingVertices, fmt::format("Target Vertex Geometry not found at path '{}'", m_InputValues->TargetVertexPath.toString()));
   }
 
-  if(movingVertexGeom->getVertices() == nullptr)
+  if(movingVertexGeomPtr->getVertices() == nullptr)
   {
     return MakeErrorResult(k_MissingVertices, fmt::format("Moving Vertex Geometry does not contain a vertex array"));
   }
-  if(targetVertexGeom->getVertices() == nullptr)
+  if(targetVertexGeomPtr->getVertices() == nullptr)
   {
     return MakeErrorResult(k_MissingVertices, fmt::format("Target Vertex Geometry does not contain a vertex array"));
   }
 
-  Float32AbstractDataStore& movingStore = movingVertexGeom->getVertices()->getDataStoreRef();
+  Float32AbstractDataStore& movingStore = movingVertexGeomPtr->getVertices()->getDataStoreRef();
   if(movingStore.getNumberOfTuples() == 0)
   {
     return MakeErrorResult(k_EmptyVertices, fmt::format("Moving Vertex Geometry does not contain any vertices"));
   }
-  Float32AbstractDataStore& targetStore = targetVertexGeom->getVertices()->getDataStoreRef();
+  Float32AbstractDataStore& targetStore = targetVertexGeomPtr->getVertices()->getDataStoreRef();
   if(targetStore.getNumberOfTuples() == 0)
   {
     return MakeErrorResult(k_EmptyVertices, fmt::format("Target Vertex Geometry does not contain any vertices"));
@@ -115,25 +115,25 @@ Result<> IterativeClosestPoint::operator()()
   float32* movingCopyPtr = movingVector.data();
   DataStructure tmp;
 
-  usize numMovingVerts = movingVertexGeom->getNumberOfVertices();
+  usize numMovingVerts = movingVertexGeomPtr->getNumberOfVertices();
   std::vector<float32> dynTarget(numMovingVerts * 3, 0.0F);
   float* dynTargetPtr = dynTarget.data();
 
-  using Adaptor = VertexGeomAdaptor<VertexGeom*>;
-  const Adaptor adaptor(targetVertexGeom);
+  using AdaptorType = VertexGeomAdaptor<VertexGeom*>;
+  const AdaptorType adaptor(targetVertexGeomPtr);
 
   m_MessageHandler.sendInfoMessage("Building kd-tree index...");
 
-  using KDtree = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Adaptor<float32, Adaptor>, Adaptor, 3>;
-  KDtree index(3, adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(30));
+  using KDtreeType = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Adaptor<float32, AdaptorType>, AdaptorType, 3>;
+  KDtreeType index(3, adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(30));
   index.buildIndex();
 
   const usize nn = 1;
 
-  using PointCloud = Eigen::Matrix<float, 3, Eigen::Dynamic, Eigen::ColMajor>;
-  using UmeyamaTransform = Eigen::Matrix<float, 4, 4, Eigen::ColMajor>;
+  using PointCloudType = Eigen::Matrix<float, 3, Eigen::Dynamic, Eigen::ColMajor>;
+  using UmeyamaTransformType = Eigen::Matrix<float, 4, 4, Eigen::ColMajor>;
 
-  UmeyamaTransform globalTransform;
+  UmeyamaTransformType globalTransform;
   globalTransform << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
@@ -157,10 +157,10 @@ Result<> IterativeClosestPoint::operator()()
       dynTargetPtr[3 * j + 2] = targetStore[3 * identifier + 2];
     }
 
-    Eigen::Map<PointCloud> moving_(movingCopyPtr, 3, numMovingVerts);
-    Eigen::Map<PointCloud> target_(dynTargetPtr, 3, numMovingVerts);
+    Eigen::Map<PointCloudType> moving(movingCopyPtr, 3, numMovingVerts);
+    Eigen::Map<PointCloudType> target(dynTargetPtr, 3, numMovingVerts);
 
-    UmeyamaTransform transform = Eigen::umeyama(moving_, target_, false);
+    UmeyamaTransformType transform = Eigen::umeyama(moving, target, false);
 
     for(usize j = 0; j < numMovingVerts; j++)
     {

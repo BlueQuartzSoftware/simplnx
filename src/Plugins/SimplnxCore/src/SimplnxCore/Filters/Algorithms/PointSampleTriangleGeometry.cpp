@@ -80,7 +80,7 @@ Result<> PointSampleTriangleGeometry::operator()()
 
   // VS2013 does not implement the iterator constructor for std::discrete_distribution<>, which
   // really is a massively idiotic oversight; hack the equivalent using the unary_op constructor
-  std::discrete_distribution<size_t> triangle_distribution(numTris, -0.5, -0.5 + static_cast<double>(numTris), [&faceAreasStore](double index) { return faceAreasStore[static_cast<size_t>(index)]; });
+  std::discrete_distribution<size_t> triangleDistribution(numTris, -0.5, -0.5 + static_cast<double>(numTris), [&faceAreasStore](double index) { return faceAreasStore[static_cast<size_t>(index)]; });
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   progressThrottle.reset(m_Inputs->pNumberOfSamples, "Sampling Triangles");
@@ -129,7 +129,7 @@ Result<> PointSampleTriangleGeometry::operator()()
     {
       while(true)
       {
-        randomTri = static_cast<int64_t>(triangle_distribution(generator));
+        randomTri = static_cast<int64_t>(triangleDistribution(generator));
         if(randomTri >= numTris || randomTri < 0)
         {
           throw std::out_of_range(fmt::format("Generated Random Triangle Index '{}' was out of range. '0->{}'", randomTri, numTris));
@@ -142,7 +142,7 @@ Result<> PointSampleTriangleGeometry::operator()()
     }
     else
     {
-      randomTri = static_cast<int64_t>(triangle_distribution(generator));
+      randomTri = static_cast<int64_t>(triangleDistribution(generator));
       if(randomTri >= numTris || randomTri < 0)
       {
         throw std::out_of_range(fmt::format("Generated Random Triangle Index '{}' was out of range. '0->{}'", randomTri, numTris));

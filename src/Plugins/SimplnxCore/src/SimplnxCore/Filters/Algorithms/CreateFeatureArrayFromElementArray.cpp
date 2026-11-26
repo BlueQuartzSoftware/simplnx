@@ -22,7 +22,7 @@ constexpr usize k_ChunkTuples = 65536;
  * @param shouldCancel Signals cancellation between chunks.
  * @return Maximum ID, zero after cancellation, or an input or read error.
  */
-Result<int32> findMaximumFeatureId(const Int32AbstractDataStore& featureIdsStore, const std::atomic_bool& shouldCancel)
+Result<int32> FindMaximumFeatureId(const Int32AbstractDataStore& featureIdsStore, const std::atomic_bool& shouldCancel)
 {
   const usize totalTuples = featureIdsStore.getNumberOfTuples();
   auto featureIdsBuffer = std::make_unique<int32[]>(k_ChunkTuples);
@@ -166,9 +166,9 @@ CreateFeatureArrayFromElementArray::CreateFeatureArrayFromElementArray(DataStruc
 Result<> CreateFeatureArrayFromElementArray::operator()()
 {
   const DataPath createdArrayPath = m_InputValues->CellFeatureAttributeMatrixPath.createChildPath(m_InputValues->CreatedArrayName);
-  const auto* selectedCellArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedCellArrayPath);
+  const auto* selectedCellArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedCellArrayPath);
   const auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-  auto* createdArray = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
+  auto* createdArrayPtr = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
 
   const usize totalCellTuples = featureIdsStore.getNumberOfTuples();
   if(totalCellTuples == 0)
@@ -176,7 +176,7 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
     return MakeErrorResult(-81882, "Invalid Input, Feature Ids Array must not be empty");
   }
 
-  auto maximumFeatureIdResult = findMaximumFeatureId(featureIdsStore, m_ShouldCancel);
+  auto maximumFeatureIdResult = FindMaximumFeatureId(featureIdsStore, m_ShouldCancel);
   if(maximumFeatureIdResult.invalid())
   {
     return ConvertResult(std::move(maximumFeatureIdResult));
@@ -194,11 +194,11 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
   {
     for(const auto& childObject : cellFeatureAttrMat)
     {
-      const auto* iArray = dynamic_cast<IArray*>(childObject.second.get());
-      if(iArray != nullptr && iArray->getNumberOfTuples() > requiredFeatureTuples)
+      const auto* iArrayPtr = dynamic_cast<IArray*>(childObject.second.get());
+      if(iArrayPtr != nullptr && iArrayPtr->getNumberOfTuples() > requiredFeatureTuples)
       {
         return MakeErrorResult(-81881, fmt::format("Resizing would cause data loss in {}. Make sure all objects in {} have tuple counts equal to or less then the max Feature ID {}!",
-                                                   iArray->getName(), m_InputValues->CellFeatureAttributeMatrixPath.toString(), requiredFeatureTuples));
+                                                   iArrayPtr->getName(), m_InputValues->CellFeatureAttributeMatrixPath.toString(), requiredFeatureTuples));
       }
     }
 
@@ -209,5 +209,5 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
     }
   }
 
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIdsStore, createdArray, m_ShouldCancel);
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArrayPtr->getDataType(), selectedCellArrayPtr, featureIdsStore, createdArrayPtr, m_ShouldCancel);
 }

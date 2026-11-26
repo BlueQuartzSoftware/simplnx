@@ -101,27 +101,27 @@ public:
     }
 
     uint64 currentPageIndex = std::numeric_limits<uint64>::max();
-    Page* currentPage = nullptr;
+    Page* currentPagePtr = nullptr;
     for(usize index = 0; index < indices.size(); ++index)
     {
       const uint64 recordIndex = indices[index];
       const uint64 pageIndex = recordIndex / m_RecordsPerPage;
-      if(currentPage == nullptr || pageIndex != currentPageIndex)
+      if(currentPagePtr == nullptr || pageIndex != currentPageIndex)
       {
         auto pageResult = loadPage(pageIndex, shouldCancel);
         if(pageResult.invalid())
         {
           return ConvertResult(std::move(pageResult));
         }
-        currentPage = &pageResult.value().get();
+        currentPagePtr = &pageResult.value().get();
         currentPageIndex = pageIndex;
       }
-      if(recordIndex < currentPage->firstRecord || recordIndex - currentPage->firstRecord >= currentPage->recordCount)
+      if(recordIndex < currentPagePtr->firstRecord || recordIndex - currentPagePtr->firstRecord >= currentPagePtr->recordCount)
       {
-        return MakeErrorResult(-6041, fmt::format("Temporary record page-cache bulk read index {} is outside its loaded page range [{}, {}).", recordIndex, currentPage->firstRecord,
-                                                  currentPage->firstRecord + currentPage->recordCount));
+        return MakeErrorResult(-6041, fmt::format("Temporary record page-cache bulk read index {} is outside its loaded page range [{}, {}).", recordIndex, currentPagePtr->firstRecord,
+                                                  currentPagePtr->firstRecord + currentPagePtr->recordCount));
       }
-      values[index] = currentPage->records[static_cast<usize>(recordIndex - currentPage->firstRecord)];
+      values[index] = currentPagePtr->records[static_cast<usize>(recordIndex - currentPagePtr->firstRecord)];
     }
     return {};
   }

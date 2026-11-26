@@ -138,19 +138,19 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(imageGeomPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue));
 
-  ebsdlib::OEM m_Manufacturer = {ebsdlib::OEM::Unknown};
+  ebsdlib::OEM mManufacturer = {ebsdlib::OEM::Unknown};
   std::string manufacturer = reader->getManufacturer();
   if(manufacturer == ebsdlib::Ang::Manufacturer)
   {
-    m_Manufacturer = ebsdlib::OEM::EDAX;
+    mManufacturer = ebsdlib::OEM::EDAX;
   }
   else if(manufacturer == ebsdlib::Ctf::Manufacturer)
   {
-    m_Manufacturer = ebsdlib::OEM::Oxford;
+    mManufacturer = ebsdlib::OEM::Oxford;
   }
 
   std::vector<std::string> names;
-  if(m_Manufacturer == ebsdlib::OEM::EDAX)
+  if(mManufacturer == ebsdlib::OEM::EDAX)
   {
     ebsdlib::AngFields angFeatures;
     reader = ebsdlib::H5AngVolumeReader::New();
@@ -160,7 +160,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
     EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues, FloatVec3(spacing));
     EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
-  else if(m_Manufacturer == ebsdlib::OEM::Oxford)
+  else if(mManufacturer == ebsdlib::OEM::Oxford)
   {
     ebsdlib::CtfFields cfeatures;
     reader = ebsdlib::H5CtfVolumeReader::New();
@@ -174,17 +174,17 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
     return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
   }
 
-  std::set<std::string> m_SelectedArrayNames;
+  std::set<std::string> mSelectedArrayNames;
   for(const auto& selectedArrayName : pReadH5EbsdFilterValue.selectedArrayNames)
   {
-    m_SelectedArrayNames.insert(selectedArrayName);
+    mSelectedArrayNames.insert(selectedArrayName);
   }
 
   std::vector<size_t> cDims = {1ULL};
   for(const auto& name : names)
   {
     // First check to see if the name is in our list of names to read.
-    if(m_SelectedArrayNames.find(name) == m_SelectedArrayNames.end())
+    if(mSelectedArrayNames.find(name) == mSelectedArrayNames.end())
     {
       continue;
     }
@@ -203,7 +203,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
   }
 
   // Only read these arrays if the user wants them
-  if(m_SelectedArrayNames.find(ebsdlib::CellData::EulerAngles) != m_SelectedArrayNames.end())
+  if(mSelectedArrayNames.find(ebsdlib::CellData::EulerAngles) != mSelectedArrayNames.end())
   {
     cDims[0] = 3;
     const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles);
@@ -212,7 +212,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
   }
 
   // Only read the phases if the user wants it.
-  if(m_SelectedArrayNames.find(ebsdlib::H5Ebsd::Phases) != m_SelectedArrayNames.end())
+  if(mSelectedArrayNames.find(ebsdlib::H5Ebsd::Phases) != mSelectedArrayNames.end())
   {
     cDims[0] = 1;
     const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::H5Ebsd::Phases);
@@ -333,8 +333,8 @@ struct ReadH5EbsdFilterParameterConverter
 
   static Result<ValueType> convert(const nlohmann::json& json)
   {
-    static constexpr std::array<StringLiteral, 6> requiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
-    for(const auto& key : requiredKeys)
+    static constexpr std::array<StringLiteral, 6> k_RequiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
+    for(const auto& key : k_RequiredKeys)
     {
       if(!json.contains(key.view()))
       {

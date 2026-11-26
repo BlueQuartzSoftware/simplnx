@@ -134,8 +134,8 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
 
   // Validate the Grid Geometry
   auto gridGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
-  auto featureIdsPath = FeatureIdsPath(*inputGridGeom, filterArgs);
+  const auto* inputGridGeomPtr = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
+  auto featureIdsPath = FeatureIdsPath(*inputGridGeomPtr, filterArgs);
   auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   auto activeArrayPath = pCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 

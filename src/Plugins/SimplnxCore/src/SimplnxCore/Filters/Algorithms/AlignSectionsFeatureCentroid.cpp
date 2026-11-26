@@ -75,9 +75,9 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
     return MakeErrorResult(-53900, message);
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  SizeVec3 dims = gridGeom->getDimensions();
+  SizeVec3 dims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> sdims = {
       static_cast<int64>(dims[0]),
@@ -89,7 +89,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
 
   usize slice = 0;
   usize point = 0;
-  nx::core::FloatVec3 spacing = gridGeom->getSpacing();
+  nx::core::FloatVec3 spacing = gridGeomPtr->getSpacing();
   std::vector<float32> xCentroid(dims[2], 0.0f);
   std::vector<float32> yCentroid(dims[2], 0.0f);
 
@@ -271,8 +271,8 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
     return MakeErrorResult(-53900, fmt::format("Mask Array is not Bool or UInt8: {}", m_InputValues->MaskArrayPath.toString()));
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  SizeVec3 dims = gridGeom->getDimensions();
+  auto* gridGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  SizeVec3 dims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> sdims = {
       static_cast<int64>(dims[0]),
@@ -280,7 +280,7 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
       static_cast<int64>(dims[2]),
   };
 
-  nx::core::FloatVec3 spacing = gridGeom->getSpacing();
+  nx::core::FloatVec3 spacing = gridGeomPtr->getSpacing();
   std::vector<float32> xCentroid(dims[2], 0.0f);
   std::vector<float32> yCentroid(dims[2], 0.0f);
 

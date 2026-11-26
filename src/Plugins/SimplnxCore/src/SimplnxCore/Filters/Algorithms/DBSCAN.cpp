@@ -22,9 +22,9 @@ DBSCAN::DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesg
 Result<> DBSCAN::operator()()
 {
   // Include every scanline input and output in storage-path selection.
-  auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  std::vector<const IArray*> targets = {clusteringArray, featureIdsArray};
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  std::vector<const IArray*> targets = {clusteringArrayPtr, featureIdsArrayPtr};
   if(m_InputValues->UseMask)
   {
     targets.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath));

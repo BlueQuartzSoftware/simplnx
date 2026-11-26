@@ -51,7 +51,7 @@ Result<> ErodeDilateMask::operator()()
   // Precompute face-neighbor index offsets and iteration order
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   // Three adjacent Z slices prevent random per-voxel store reads.
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
@@ -172,7 +172,7 @@ Result<> ErodeDilateMask::operator()()
                 inSlice                                          // +Z: same xy position in next slice
             };
 
-            for(const auto& faceIndex : faceNeighborInternalIdx)
+            for(const auto& faceIndex : k_FaceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
               {

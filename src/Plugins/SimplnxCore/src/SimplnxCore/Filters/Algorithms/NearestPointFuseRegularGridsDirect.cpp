@@ -107,8 +107,8 @@ public:
    */
   void operator()() const
   {
-    using ArrayT = DataArray<T>;
-    CopyData(dynamic_cast<const ArrayT&>(m_Source), dynamic_cast<ArrayT&>(m_Destination), m_SampleGeom, m_ReferenceGeom, m_ShouldCancel, static_cast<T>(m_FillValue));
+    using ArrayTType = DataArray<T>;
+    CopyData(dynamic_cast<const ArrayTType&>(m_Source), dynamic_cast<ArrayTType&>(m_Destination), m_SampleGeom, m_ReferenceGeom, m_ShouldCancel, static_cast<T>(m_FillValue));
   }
 
 private:

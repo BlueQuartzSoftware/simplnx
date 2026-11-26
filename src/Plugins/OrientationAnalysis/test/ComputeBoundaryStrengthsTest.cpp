@@ -25,16 +25,16 @@ namespace fs = std::filesystem;
 
 namespace
 {
-DataPath faceDataPath = DataPath({Constants::k_TriangleDataContainerName, Constants::k_FaceData});
-DataPath faceLabelsPath = faceDataPath.createChildPath(Constants::k_FaceLabels);
-DataPath avgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_AvgQuats});
-DataPath featurePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
-DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
+DataPath FaceDataPath = DataPath({Constants::k_TriangleDataContainerName, Constants::k_FaceData});
+DataPath FaceLabelsPath = FaceDataPath.createChildPath(Constants::k_FaceLabels);
+DataPath AvgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_AvgQuats});
+DataPath FeaturePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
+DataPath CrystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
 
-const std::string k_f1s = "F1List_COMPUTED";
-const std::string k_f1spts = "F1sptList_COMPUTED";
-const std::string k_f7s = "F7List_COMPUTED";
-const std::string k_mPrimes = "mPrimeList_COMPUTED";
+const std::string k_F1s = "F1List_COMPUTED";
+const std::string k_F1spts = "F1sptList_COMPUTED";
+const std::string k_F7s = "F7List_COMPUTED";
+const std::string k_MPrimes = "mPrimeList_COMPUTED";
 
 const std::array<std::string, 4> k_BoundaryMetricOutputNames = {"mPrime", "F1", "F1spt", "F7"};
 const std::array<uint32, 3> k_SymmetryCrystalStructures = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Cubic_High};
@@ -250,14 +250,14 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
 
     // Create default Parameters for the filter.
     args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64Parameter::ValueType>(std::vector<float64>{0, 0, 1}));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabelsPath));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sArrayName_Key, std::make_any<std::string>(k_f1s));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sptsArrayName_Key, std::make_any<std::string>(k_f1spts));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF7sArrayName_Key, std::make_any<std::string>(k_f7s));
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshmPrimesArrayName_Key, std::make_any<std::string>(k_mPrimes));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(FaceLabelsPath));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(AvgQuatsPath));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(FeaturePhasesPath));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(CrystalStructuresPath));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sArrayName_Key, std::make_any<std::string>(k_F1s));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sptsArrayName_Key, std::make_any<std::string>(k_F1spts));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF7sArrayName_Key, std::make_any<std::string>(k_F7s));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshmPrimesArrayName_Key, std::make_any<std::string>(k_MPrimes));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -272,10 +272,10 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_ComputeBoundaryStrengthsFilter.dream3d", unit_test::k_BinaryTestOutputDir)));
   // #endif
 
-  UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("F1s"), faceDataPath.createChildPath(k_f1s));
-  UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("F1spts"), faceDataPath.createChildPath(k_f1spts));
-  UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("F7s"), faceDataPath.createChildPath(k_f7s));
-  UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("mPrimes"), faceDataPath.createChildPath(k_mPrimes));
+  UnitTest::CompareArrays<float32>(dataStructure, FaceDataPath.createChildPath("F1s"), FaceDataPath.createChildPath(k_F1s));
+  UnitTest::CompareArrays<float32>(dataStructure, FaceDataPath.createChildPath("F1spts"), FaceDataPath.createChildPath(k_F1spts));
+  UnitTest::CompareArrays<float32>(dataStructure, FaceDataPath.createChildPath("F7s"), FaceDataPath.createChildPath(k_F7s));
+  UnitTest::CompareArrays<float32>(dataStructure, FaceDataPath.createChildPath("mPrimes"), FaceDataPath.createChildPath(k_MPrimes));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -284,7 +284,7 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: SIMPL Backwards 
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -297,22 +297,22 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: SIMPL Backwards 
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeBoundaryStrengthsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeBoundaryStrengthsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Complex type (DoubleVec3FilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

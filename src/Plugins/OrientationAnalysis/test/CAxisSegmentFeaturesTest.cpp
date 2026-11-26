@@ -142,9 +142,9 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Randomize Feature IDs", "[
   const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
 
   DataStructure dataStructure;
-  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_ExemplarGeomName), std::string(k_ExemplarCellDataName));
+  auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_ExemplarGeomName), std::string(k_ExemplarCellDataName));
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(k_ExemplarGeomPath);
-  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), am->getId(), 0, k_SmallBlockSize); // Hexagonal_High
+  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), amPtr->getId(), 0, k_SmallBlockSize); // Hexagonal_High
 
   CAxisSegmentFeaturesFilter filter;
   Arguments args;
@@ -188,9 +188,9 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: High Tolerance Merges All"
   const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
 
   DataStructure dataStructure;
-  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_ExemplarGeomName), std::string(k_ExemplarCellDataName));
+  auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_ExemplarGeomName), std::string(k_ExemplarCellDataName));
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(k_ExemplarGeomPath);
-  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), am->getId(), 0, k_SmallBlockSize); // Hexagonal_High
+  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), amPtr->getId(), 0, k_SmallBlockSize); // Hexagonal_High
 
   CAxisSegmentFeaturesFilter filter;
   Arguments args;
@@ -233,8 +233,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
     // Quaternions: background = 60° X-rotation, pairs = identity and 30° (EBSDlib order: x,y,z,w)
     const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
     auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(ds, cellDataPath.createChildPath("Quats"), cellShape, {4});
-    auto* quatsArr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
-    auto& quatsStore = quatsArr->getDataStoreRef();
+    auto* quatsArrPtr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
+    auto& quatsStore = quatsArrPtr->getDataStoreRef();
     for(usize i = 0; i < 27; i++)
     {
       quatsStore[i * 4 + 0] = std::sin(bgHalf);
@@ -259,15 +259,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
     }
 
     auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(ds, cellDataPath.createChildPath("Phases"), cellShape, {1});
-    auto* phasesArr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
-    phasesArr->fill(1);
+    auto* phasesArrPtr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
+    phasesArrPtr->fill(1);
 
     const ShapeType ensShape = {2};
-    auto* ensAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
+    auto* ensAmPtr = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
     const DataPath crystStructsPath = geomPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
     auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(ds, crystStructsPath, ensShape, {1});
-    auto* crystArr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAM->getId());
-    auto& crystStore = crystArr->getDataStoreRef();
+    auto* crystArrPtr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAmPtr->getId());
+    auto& crystStore = crystArrPtr->getDataStoreRef();
     crystStore[0] = 999;
     crystStore[1] = 0; // Hexagonal_High
 
@@ -304,14 +304,14 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Generate Test Data", "[Ori
 
     DataStructure ds;
 
-    auto* amBase = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_ExemplarCellDataName));
+    auto* amBasePtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_ExemplarCellDataName));
     auto& geomBase = ds.getDataRefAs<ImageGeom>(DataPath({"Base"}));
-    BuildOrientationTestData(ds, cellShape, geomBase.getId(), amBase->getId(), 0, k_SmallBlockSize); // Hexagonal_High
+    BuildOrientationTestData(ds, cellShape, geomBase.getId(), amBasePtr->getId(), 0, k_SmallBlockSize); // Hexagonal_High
 
-    auto* amMasked = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_ExemplarCellDataName));
+    auto* amMaskedPtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_ExemplarCellDataName));
     auto& geomMasked = ds.getDataRefAs<ImageGeom>(DataPath({"Masked"}));
-    BuildOrientationTestData(ds, cellShape, geomMasked.getId(), amMasked->getId(), 0, k_SmallBlockSize);
-    BuildSphericalMask(ds, cellShape, amMasked->getId());
+    BuildOrientationTestData(ds, cellShape, geomMasked.getId(), amMaskedPtr->getId(), 0, k_SmallBlockSize);
+    BuildSphericalMask(ds, cellShape, amMaskedPtr->getId());
 
     UnitTest::WriteTestDataStructure(ds, outputDir / "small_input.dream3d");
   }
@@ -322,10 +322,10 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Generate Test Data", "[Ori
     const std::array<usize, 3> dims = {k_LargeDim, k_LargeDim, k_LargeDim};
 
     DataStructure ds;
-    auto* am = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_ExemplarGeomName), std::string(k_ExemplarCellDataName));
+    auto* amPtr = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_ExemplarGeomName), std::string(k_ExemplarCellDataName));
     auto& geom = ds.getDataRefAs<ImageGeom>(k_ExemplarGeomPath);
-    BuildOrientationTestData(ds, cellShape, geom.getId(), am->getId(), 0, k_LargeBlockSize); // Hexagonal_High
-    BuildSphericalMask(ds, cellShape, am->getId());
+    BuildOrientationTestData(ds, cellShape, geom.getId(), amPtr->getId(), 0, k_LargeBlockSize); // Hexagonal_High
+    BuildSphericalMask(ds, cellShape, amPtr->getId());
 
     UnitTest::WriteTestDataStructure(ds, outputDir / "large_input.dream3d");
   }
@@ -541,7 +541,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskAll", "[OrientationAnal
 
 namespace
 {
-namespace AnalyticalFixtures
+namespace analytical_fixtures
 {
 const std::string k_GeomName = "ImageGeometry";
 const DataPath k_ImageGeomPath = DataPath({k_GeomName});
@@ -580,11 +580,11 @@ struct FixtureData
 {
   DataStructure ds;
   ImageGeom* geom = nullptr;
-  AttributeMatrix* cellAM = nullptr;
-  AttributeMatrix* ensembleAM = nullptr;
+  AttributeMatrix* cell_am = nullptr;
+  AttributeMatrix* ensemble_am = nullptr;
   Float32Array* quats = nullptr;
   Int32Array* phases = nullptr;
-  UInt32Array* crystalStructures = nullptr;
+  UInt32Array* crystal_structures = nullptr;
 };
 
 // Build valid image, cell, and ensemble arrays. Cells start in phase one with
@@ -601,13 +601,13 @@ FixtureData CreateScaffold(usize dimX, usize dimY, usize dimZ, usize numEnsemble
 
   // ShapeType uses Z, Y, X order.
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
-  td.cellAM = AttributeMatrix::Create(td.ds, "CellData", cellTupleShape, td.geom->getId());
-  td.geom->setCellData(*td.cellAM);
-  td.ensembleAM = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numEnsembles}, td.geom->getId());
+  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", cellTupleShape, td.geom->getId());
+  td.geom->setCellData(*td.cell_am);
+  td.ensemble_am = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numEnsembles}, td.geom->getId());
 
-  td.quats = CreateTestDataArray<float32>(td.ds, k_QuatsName, cellTupleShape, {4}, td.cellAM->getId());
-  td.phases = CreateTestDataArray<int32>(td.ds, k_PhasesName, cellTupleShape, {1}, td.cellAM->getId());
-  td.crystalStructures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numEnsembles}, {1}, td.ensembleAM->getId());
+  td.quats = CreateTestDataArray<float32>(td.ds, k_QuatsName, cellTupleShape, {4}, td.cell_am->getId());
+  td.phases = CreateTestDataArray<int32>(td.ds, k_PhasesName, cellTupleShape, {1}, td.cell_am->getId());
+  td.crystal_structures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numEnsembles}, {1}, td.ensemble_am->getId());
 
   for(usize cellIdx = 0; cellIdx < numCells; cellIdx++)
   {
@@ -619,10 +619,10 @@ FixtureData CreateScaffold(usize dimX, usize dimY, usize dimZ, usize numEnsemble
     (*td.phases)[cellIdx] = 1;
   }
 
-  (*td.crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*td.crystal_structures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   for(usize ensembleIdx = 1; ensembleIdx < numEnsembles; ensembleIdx++)
   {
-    (*td.crystalStructures)[ensembleIdx] = ebsdlib::CrystalStructure::Hexagonal_High;
+    (*td.crystal_structures)[ensembleIdx] = ebsdlib::CrystalStructure::Hexagonal_High;
   }
 
   return td;
@@ -718,7 +718,7 @@ void CheckActiveArray(const DataStructure& dataStructure, usize expectedNumFeatu
 } // namespace AnalyticalFixtures
 } // namespace
 
-using namespace AnalyticalFixtures;
+using namespace analytical_fixtures;
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Pure-Phi Chain, Face)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
@@ -783,12 +783,12 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   {
     std::string label;
     ChoicesParameter::ValueType scheme;
-    std::vector<int32> expectedFeatureIds;
-    usize expectedNumFeatures;
+    std::vector<int32> expected_feature_ids;
+    usize expected_num_features;
   };
   const std::vector<SchemeExpectation> expectations = {
-      {.label = "Face Neighbors", .scheme = segment_features::k_6NeighborIndex, .expectedFeatureIds = {1, 2, 3, 4}, .expectedNumFeatures = 4},
-      {.label = "All Connected Neighbors", .scheme = segment_features::k_26NeighborIndex, .expectedFeatureIds = {1, 2, 3, 1}, .expectedNumFeatures = 3},
+      {.label = "Face Neighbors", .scheme = segment_features::k_6NeighborIndex, .expected_feature_ids = {1, 2, 3, 4}, .expected_num_features = 4},
+      {.label = "All Connected Neighbors", .scheme = segment_features::k_26NeighborIndex, .expected_feature_ids = {1, 2, 3, 1}, .expected_num_features = 3},
   };
 
   for(const auto& expectation : expectations)
@@ -804,8 +804,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
       auto executeResult = RunFilter(scope, td.ds, BuildArgs(10.0f, expectation.scheme, false));
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      CheckFeatureIds(td.ds, expectation.expectedFeatureIds);
-      CheckActiveArray(td.ds, expectation.expectedNumFeatures);
+      CheckFeatureIds(td.ds, expectation.expected_feature_ids);
+      CheckActiveArray(td.ds, expectation.expected_num_features);
       UnitTest::CheckArraysInheritTupleDims(td.ds);
     }
   }
@@ -827,11 +827,11 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   struct MaskVariant
   {
     std::string label;
-    DataType maskType;
+    DataType mask_type;
   };
   const std::vector<MaskVariant> variants = {
-      {.label = "bool mask", .maskType = DataType::boolean},
-      {.label = "uint8 mask", .maskType = DataType::uint8},
+      {.label = "bool mask", .mask_type = DataType::boolean},
+      {.label = "uint8 mask", .mask_type = DataType::uint8},
   };
 
   for(const auto& variant : variants)
@@ -845,9 +845,9 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
       {
         SetPhi(td, cellIdx, phiValues[cellIdx]);
       }
-      if(variant.maskType == DataType::boolean)
+      if(variant.mask_type == DataType::boolean)
       {
-        auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 5}, {1}, td.cellAM->getId());
+        auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 5}, {1}, td.cell_am->getId());
         for(usize cellIdx = 0; cellIdx < maskValues.size(); cellIdx++)
         {
           (*maskArrayPtr)[cellIdx] = (maskValues[cellIdx] != 0);
@@ -855,7 +855,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
       }
       else
       {
-        auto* maskArrayPtr = CreateTestDataArray<uint8>(td.ds, k_MaskName, ShapeType{1, 1, 5}, {1}, td.cellAM->getId());
+        auto* maskArrayPtr = CreateTestDataArray<uint8>(td.ds, k_MaskName, ShapeType{1, 1, 5}, {1}, td.cell_am->getId());
         for(usize cellIdx = 0; cellIdx < maskValues.size(); cellIdx++)
         {
           (*maskArrayPtr)[cellIdx] = maskValues[cellIdx];
@@ -884,7 +884,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   FixtureData td = CreateScaffold(4, 1, 1, 3);
   (*td.phases)[2] = 2;
   (*td.phases)[3] = 2;
-  (*td.crystalStructures)[2] = ebsdlib::CrystalStructure::Hexagonal_Low;
+  (*td.crystal_structures)[2] = ebsdlib::CrystalStructure::Hexagonal_Low;
 
   auto executeResult = RunFilter(scope, td.ds, BuildArgs(10.0f, segment_features::k_6NeighborIndex, false));
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -929,11 +929,11 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   // stale ImageGeom cast.
   DataStructure dataStructure;
   // Reuse k_GeomName so shared arguments resolve the RectGrid path.
-  auto* rectGridGeom = RectGridGeom::Create(dataStructure, k_GeomName);
-  rectGridGeom->setDimensions(SizeVec3{3, 1, 1});
-  auto* xBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "xBounds", ShapeType{4}, ShapeType{1}, rectGridGeom->getId());
-  auto* yBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{2}, ShapeType{1}, rectGridGeom->getId());
-  auto* zBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{2}, ShapeType{1}, rectGridGeom->getId());
+  auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, k_GeomName);
+  rectGridGeomPtr->setDimensions(SizeVec3{3, 1, 1});
+  auto* xBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "xBounds", ShapeType{4}, ShapeType{1}, rectGridGeomPtr->getId());
+  auto* yBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{2}, ShapeType{1}, rectGridGeomPtr->getId());
+  auto* zBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{2}, ShapeType{1}, rectGridGeomPtr->getId());
   const std::vector<float32> xBoundValues = {0.0f, 0.5f, 2.0f, 10.0f};
   for(usize boundIdx = 0; boundIdx < xBoundValues.size(); boundIdx++)
   {
@@ -943,15 +943,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   yBoundsArrayPtr->setValue(1, 1.0f);
   zBoundsArrayPtr->setValue(0, 0.0f);
   zBoundsArrayPtr->setValue(1, 1.0f);
-  auto boundsResult = rectGridGeom->setBounds(xBoundsArrayPtr, yBoundsArrayPtr, zBoundsArrayPtr);
+  auto boundsResult = rectGridGeomPtr->setBounds(xBoundsArrayPtr, yBoundsArrayPtr, zBoundsArrayPtr);
   SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, rectGridGeom->getId());
-  rectGridGeom->setCellData(*cellAM);
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, rectGridGeom->getId());
-  auto* quatsArrayPtr = CreateTestDataArray<float32>(dataStructure, k_QuatsName, ShapeType{1, 1, 3}, {4}, cellAM->getId());
-  auto* phasesArrayPtr = CreateTestDataArray<int32>(dataStructure, k_PhasesName, ShapeType{1, 1, 3}, {1}, cellAM->getId());
-  auto* crystalStructuresArrayPtr = CreateTestDataArray<uint32>(dataStructure, k_CrystalStructuresName, ShapeType{2}, {1}, ensembleAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, rectGridGeomPtr->getId());
+  rectGridGeomPtr->setCellData(*cellAmPtr);
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, rectGridGeomPtr->getId());
+  auto* quatsArrayPtr = CreateTestDataArray<float32>(dataStructure, k_QuatsName, ShapeType{1, 1, 3}, {4}, cellAmPtr->getId());
+  auto* phasesArrayPtr = CreateTestDataArray<int32>(dataStructure, k_PhasesName, ShapeType{1, 1, 3}, {1}, cellAmPtr->getId());
+  auto* crystalStructuresArrayPtr = CreateTestDataArray<uint32>(dataStructure, k_CrystalStructuresName, ShapeType{2}, {1}, ensembleAmPtr->getId());
 
   const std::vector<float32> phiValues = {0.0f, 5.0f, 45.0f};
   for(usize cellIdx = 0; cellIdx < phiValues.size(); cellIdx++)
@@ -984,9 +984,9 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
   // Selected arrays can be outside CellData. FeatureIds must remain in the
   // geometry cell matrix.
   FixtureData td = CreateScaffold(3, 1, 1);
-  auto* orientationAM = AttributeMatrix::Create(td.ds, "OrientationData", ShapeType{1, 1, 3}, td.geom->getId());
-  auto* quatsArrayPtr = CreateTestDataArray<float32>(td.ds, "QuatsElsewhere", ShapeType{1, 1, 3}, {4}, orientationAM->getId());
-  auto* phasesArrayPtr = CreateTestDataArray<int32>(td.ds, "PhasesElsewhere", ShapeType{1, 1, 3}, {1}, orientationAM->getId());
+  auto* orientationAmPtr = AttributeMatrix::Create(td.ds, "OrientationData", ShapeType{1, 1, 3}, td.geom->getId());
+  auto* quatsArrayPtr = CreateTestDataArray<float32>(td.ds, "QuatsElsewhere", ShapeType{1, 1, 3}, {4}, orientationAmPtr->getId());
+  auto* phasesArrayPtr = CreateTestDataArray<int32>(td.ds, "PhasesElsewhere", ShapeType{1, 1, 3}, {1}, orientationAmPtr->getId());
   const std::vector<float32> phiValues = {0.0f, 5.0f, 45.0f};
   for(usize cellIdx = 0; cellIdx < phiValues.size(); cellIdx++)
   {
@@ -1073,7 +1073,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (
   {
     SetPhi(td, cellIdx, phiValues[cellIdx]);
   }
-  auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 5}, {1}, td.cellAM->getId());
+  auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 5}, {1}, td.cell_am->getId());
   const std::vector<uint8> maskValues = {0, 1, 1, 0, 1};
   for(usize cellIdx = 0; cellIdx < maskValues.size(); cellIdx++)
   {
@@ -1124,8 +1124,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Masked Non-Hexagonal
   FixtureData td = CreateScaffold(4, 1, 1, 3);
   (*td.phases)[2] = 2;
   (*td.phases)[3] = 2;
-  (*td.crystalStructures)[2] = ebsdlib::CrystalStructure::Cubic_High;
-  auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 4}, {1}, td.cellAM->getId());
+  (*td.crystal_structures)[2] = ebsdlib::CrystalStructure::Cubic_High;
+  auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 4}, {1}, td.cell_am->getId());
   (*maskArrayPtr)[0] = true;
   (*maskArrayPtr)[1] = true;
   (*maskArrayPtr)[2] = false;
@@ -1145,7 +1145,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - Non-
 
   // C-axis misalignment accepts only hexagonal Laue classes.
   FixtureData td = CreateScaffold(2, 1, 1);
-  (*td.crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  (*td.crystal_structures)[1] = ebsdlib::CrystalStructure::Cubic_High;
 
   auto executeResult = RunFilter(td.ds, BuildArgs(10.0f, segment_features::k_6NeighborIndex, false));
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -1174,7 +1174,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - No F
 
   // An all-masked fixture has no seed and must return -87000.
   FixtureData td = CreateScaffold(3, 1, 1);
-  auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 3}, {1}, td.cellAM->getId());
+  auto* maskArrayPtr = CreateTestDataArray<bool>(td.ds, k_MaskName, ShapeType{1, 1, 3}, {1}, td.cell_am->getId());
   for(usize cellIdx = 0; cellIdx < 3; cellIdx++)
   {
     (*maskArrayPtr)[cellIdx] = false;
@@ -1204,14 +1204,14 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
   // Nine-tuple arrays pass cross-array validation but fail the 10-cell geometry
   // validation.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {9}, {4}, cellAM->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, cellAM->getId());
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {9}, {4}, cellAmPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, cellAmPtr->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   CAxisSegmentFeaturesFilter filter;
   const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "CellData", "Quats"}), DataPath({"DataContainer", "CellData", "Phases"}));
@@ -1227,15 +1227,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
 
   // The selected arrays have ten tuples, but the FeatureIds parent has nine.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* orientationAM = AttributeMatrix::Create(dataStructure, "OrientationData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, orientationAM->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, orientationAM->getId());
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* orientationAmPtr = AttributeMatrix::Create(dataStructure, "OrientationData", {10}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, orientationAmPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, orientationAmPtr->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   CAxisSegmentFeaturesFilter filter;
   const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "OrientationData", "Quats"}), DataPath({"DataContainer", "OrientationData", "Phases"}));
@@ -1251,19 +1251,19 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
 
   // Quats and CellPhases have different tuple counts and must report -651.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
 
   // The separate group gives CellPhases nine tuples instead of ten.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   CAxisSegmentFeaturesFilter filter;
   const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "CellData", "Quats"}), DataPath({"DataContainer", "MismatchData", "Phases"}));
@@ -1277,7 +1277,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: SIMPL Backwards Comp
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1290,22 +1290,22 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: SIMPL Backwards Comp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CAxisSegmentFeaturesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CAxisSegmentFeaturesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<float32>(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key) == 2.5f);
       CHECK(args.value<bool>(CAxisSegmentFeaturesFilter::k_UseMask_Key) == true);

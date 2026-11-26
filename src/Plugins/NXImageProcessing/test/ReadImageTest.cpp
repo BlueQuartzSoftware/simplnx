@@ -63,8 +63,8 @@ public:
     std::error_code errorCode;
     fs::remove(m_Path, errorCode);
 
-    using TiffHandle = std::unique_ptr<TIFF, decltype(&TIFFClose)>;
-    TiffHandle tiff(TIFFOpen(m_Path.string().c_str(), "w"), TIFFClose);
+    using TiffHandleType = std::unique_ptr<TIFF, decltype(&TIFFClose)>;
+    TiffHandleType tiff(TIFFOpen(m_Path.string().c_str(), "w"), TIFFClose);
     REQUIRE(tiff != nullptr);
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, k_Width) == 1);
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, k_Height) == 1);
@@ -215,7 +215,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Origin", "[NXImageProces
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{-32.0, -32.0, 0.0};
+  std::vector<float32> kOrigin{-32.0, -32.0, 0.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
@@ -224,7 +224,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Origin", "[NXImageProces
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -305,7 +305,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Spacing", "[NXImageProce
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Spacing{2.5, 3.0, 1.0};
+  std::vector<float32> kSpacing{2.5, 3.0, 1.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
@@ -315,7 +315,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Spacing", "[NXImageProce
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -351,8 +351,8 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[NX
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{10.0, 20.0, 0.0};
-  std::vector<float32> k_Spacing{2.0, 2.0, 1.0};
+  std::vector<float32> kOrigin{10.0, 20.0, 0.0};
+  std::vector<float32> kSpacing{2.0, 2.0, 1.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
@@ -369,9 +369,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[NX
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
   args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, k_Preprocessed);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
 
@@ -409,8 +409,8 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[N
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{10.0, 20.0, 0.0};
-  std::vector<float32> k_Spacing{2.0, 2.0, 1.0};
+  std::vector<float32> kOrigin{10.0, 20.0, 0.0};
+  std::vector<float32> kSpacing{2.0, 2.0, 1.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
@@ -427,9 +427,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[N
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
   args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, k_Postprocessed);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
 
@@ -469,7 +469,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: DataType_Conversion", "[NXImagePr
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
-  const uint64_t k_DataTypeUInt16 = 1;
+  const uint64_t kDataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -478,7 +478,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: DataType_Conversion", "[NXImagePr
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, k_DataTypeUInt16);
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, kDataTypeUInt16);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -524,7 +524,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[NXI
   cropOptions.xBoundVoxels = {50, 150};
   cropOptions.yBoundVoxels = {50, 150};
 
-  const uint64_t k_DataTypeUInt32 = 2;
+  const uint64_t kDataTypeUInt32 = 2;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -534,7 +534,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[NXI
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, k_DataTypeUInt32);
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, kDataTypeUInt32);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -570,8 +570,8 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_All", "[NXImageProces
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{5.0, 10.0, 0.0};
-  std::vector<float32> k_Spacing{2.0, 2.0, 1.0};
+  std::vector<float32> kOrigin{5.0, 10.0, 0.0};
+  std::vector<float32> kSpacing{2.0, 2.0, 1.0};
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
   auto cropOptions = CropGeometryParameter::ValueType();
@@ -582,20 +582,20 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_All", "[NXImageProces
   cropOptions.xBoundVoxels = {50, 150};
   cropOptions.yBoundVoxels = {50, 150};
 
-  const uint64_t k_DataTypeUInt16 = 1;
+  const uint64_t kDataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
   args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, k_Preprocessed);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, k_DataTypeUInt16);
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, kDataTypeUInt16);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -639,32 +639,32 @@ fs::path ReadImageOutputDir()
 // pagePixels[p] is row-major (top-to-bottom), size == width*height.
 void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels, std::optional<double> xResolution = {})
 {
-  TIFF* tif = TIFFOpen(path.string().c_str(), "w");
-  REQUIRE(tif != nullptr);
+  TIFF* tifPtr = TIFFOpen(path.string().c_str(), "w");
+  REQUIRE(tifPtr != nullptr);
   for(const auto& pixels : pagePixels)
   {
     REQUIRE(pixels.size() == static_cast<size_t>(width) * height);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGEWIDTH, width) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGELENGTH, height) != 0);
     if(xResolution.has_value())
     {
-      REQUIRE(TIFFSetField(tif, TIFFTAG_XRESOLUTION, *xResolution) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_XRESOLUTION, *xResolution) != 0);
     }
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 8) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, 0)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_BITSPERSAMPLE, 8) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tifPtr, 0)) != 0);
     for(uint32_t row = 0; row < height; ++row)
     {
       // TIFFWriteScanline takes a non-const void* but does not modify the buffer.
-      REQUIRE(TIFFWriteScanline(tif, const_cast<uint8_t*>(pixels.data() + static_cast<size_t>(row) * width), row, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tifPtr, const_cast<uint8_t*>(pixels.data() + static_cast<size_t>(row) * width), row, 0) >= 0);
     }
-    REQUIRE(TIFFWriteDirectory(tif) != 0);
+    REQUIRE(TIFFWriteDirectory(tifPtr) != 0);
   }
-  TIFFClose(tif);
+  TIFFClose(tifPtr);
 }
 
 // Writes an attached NRRD: ASCII header lines, a blank line, then raw data bytes.
@@ -688,14 +688,14 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImage
 {
   UnitTest::LoadPlugins();
 
-  constexpr uint32_t width = 5;
-  constexpr uint32_t height = 4;
-  constexpr usize numPages = 3;
+  constexpr uint32_t k_Width = 5;
+  constexpr uint32_t k_Height = 4;
+  constexpr usize k_NumPages = 3;
 
   // Each pixel encodes its page and in-plane position so both the Z ordering and the X-fastest
   // in-plane ordering can be verified: pixel(page p, row y, col x) = p*100 + (y*width + x).
-  std::vector<std::vector<uint8_t>> pagePixels(numPages, std::vector<uint8_t>(static_cast<size_t>(width) * height));
-  for(usize p = 0; p < numPages; ++p)
+  std::vector<std::vector<uint8_t>> pagePixels(k_NumPages, std::vector<uint8_t>(static_cast<size_t>(k_Width) * k_Height));
+  for(usize p = 0; p < k_NumPages; ++p)
   {
     for(size_t i = 0; i < pagePixels[p].size(); ++i)
     {
@@ -704,7 +704,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImage
   }
 
   const fs::path tiffPath = ReadImageOutputDir() / "three_page_zstack.tif";
-  WriteMultiPageTiff(tiffPath, width, height, pagePixels);
+  WriteMultiPageTiff(tiffPath, k_Width, k_Height, pagePixels);
 
   ReadImageFilter filter;
   DataStructure dataStructure;
@@ -725,18 +725,18 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImage
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
-  REQUIRE(geom.getDimensions()[0] == width);
-  REQUIRE(geom.getDimensions()[1] == height);
-  REQUIRE(geom.getDimensions()[2] == numPages);
+  REQUIRE(geom.getDimensions()[0] == k_Width);
+  REQUIRE(geom.getDimensions()[1] == k_Height);
+  REQUIRE(geom.getDimensions()[2] == k_NumPages);
 
   const DataPath arrayPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
   const auto& store = dataStructure.getDataRefAs<DataArray<uint8_t>>(arrayPath).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == static_cast<usize>(width) * height * numPages);
-  for(usize z = 0; z < numPages; ++z)
+  REQUIRE(store.getNumberOfTuples() == static_cast<usize>(k_Width) * k_Height * k_NumPages);
+  for(usize z = 0; z < k_NumPages; ++z)
   {
-    for(usize i = 0; i < static_cast<usize>(width) * height; ++i)
+    for(usize i = 0; i < static_cast<usize>(k_Width) * k_Height; ++i)
     {
-      const usize flatIndex = z * width * height + i;
+      const usize flatIndex = z * k_Width * k_Height + i;
       REQUIRE(store.getValue(flatIndex) == pagePixels[z][i]);
     }
   }
@@ -747,15 +747,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
   const bool convertData = GENERATE(false, true);
   CAPTURE(convertData);
   const fs::path tiffPath = ReadImageOutputDir() / "rgb_then_grayscale.tif";
-  constexpr uint32_t width = 3;
-  constexpr uint32_t height = 2;
+  constexpr uint32_t k_Width = 3;
+  constexpr uint32_t k_Height = 2;
   {
     std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(tiffPath.string().c_str(), "w"), TIFFClose);
     REQUIRE(tiff != nullptr);
     for(const uint16_t components : {uint16_t{3}, uint16_t{1}})
     {
-      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, width) == 1);
-      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, height) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, k_Width) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, k_Height) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_BITSPERSAMPLE, 8) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_SAMPLESPERPIXEL, components) == 1);
@@ -763,9 +763,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_COMPRESSION, COMPRESSION_NONE) == 1);
-      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ROWSPERSTRIP, height) == 1);
-      std::vector<uint8_t> row(width * components, components == 3 ? uint8_t{255} : uint8_t{127});
-      for(uint32_t y = 0; y < height; ++y)
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ROWSPERSTRIP, k_Height) == 1);
+      std::vector<uint8_t> row(k_Width * components, components == 3 ? uint8_t{255} : uint8_t{127});
+      for(uint32_t y = 0; y < k_Height; ++y)
       {
         REQUIRE(TIFFWriteScanline(tiff.get(), row.data(), y, 0) == 1);
       }
@@ -792,7 +792,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
   REQUIRE_NOTHROW(execute = filter.execute(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(execute.result);
   REQUIRE(execute.result.errors()[0].code == -2007); // The page-layout check must reject page 1, not another error path.
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{width, height, 2});
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{k_Width, k_Height, 2});
 
   // Oracle: page 0 has 3*2*3 = 18 white components (255, or 65535 after conversion).
   // Page 1 supplies only 3 bytes per row, but the RGB destination needs 3*3 = 9.
@@ -1021,9 +1021,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round tr
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  const usize X = 4;
-  const usize Y = 3; // 2D image, 3 components
-  std::vector<uint8_t> voxels(X * Y * 3);
+  const usize x = 4;
+  const usize y = 3; // 2D image, 3 components
+  std::vector<uint8_t> voxels(x * y * 3);
   for(usize i = 0; i < voxels.size(); i++)
   {
     voxels[i] = static_cast<uint8_t>(i);
@@ -1080,10 +1080,10 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD permuted directions emits wa
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  const usize X = 6;
-  const usize Y = 5;
-  const usize Z = 4;
-  std::vector<uint16_t> voxels(X * Y * Z);
+  const usize x = 6;
+  const usize y = 5;
+  const usize z = 4;
+  std::vector<uint16_t> voxels(x * y * z);
   for(usize i = 0; i < voxels.size(); i++)
   {
     voxels[i] = static_cast<uint16_t>(i);
@@ -1119,7 +1119,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
     {
       for(usize dx = 0; dx < 3; dx++)
       {
-        const usize src = (1 + dz) * Y * X + (1 + dy) * X + (1 + dx);
+        const usize src = (1 + dz) * y * x + (1 + dy) * x + (1 + dx);
         expected.push_back(static_cast<uint16_t>(src));
       }
     }
@@ -1136,10 +1136,10 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  constexpr usize X = 6;
-  constexpr usize Y = 5;
-  constexpr usize Z = 4;
-  std::vector<uint16_t> voxels(X * Y * Z);
+  constexpr usize k_X = 6;
+  constexpr usize k_Y = 5;
+  constexpr usize k_Z = 4;
+  std::vector<uint16_t> voxels(k_X * k_Y * k_Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
   // spacing {2,3,4}, origin {10,20,30} via axis-aligned space directions + space origin.
@@ -1187,7 +1187,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
     {
       for(usize dx = 1; dx <= 3; dx++)
       {
-        expected.push_back(static_cast<uint16_t>((dz * Y + dy) * X + dx));
+        expected.push_back(static_cast<uint16_t>((dz * k_Y + dy) * k_X + dx));
       }
     }
   }
@@ -1201,10 +1201,10 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  constexpr usize X = 6;
-  constexpr usize Y = 5;
-  constexpr usize Z = 4;
-  std::vector<uint16_t> voxels(X * Y * Z);
+  constexpr usize k_X = 6;
+  constexpr usize k_Y = 5;
+  constexpr usize k_Z = 4;
+  std::vector<uint16_t> voxels(k_X * k_Y * k_Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
   // spacing {2,3,4}, origin {10,20,30}; far corner = origin + dims*spacing = {22,35,46}.
@@ -1235,9 +1235,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamp
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
-  REQUIRE(geom.getDimensions()[0] == X);
-  REQUIRE(geom.getDimensions()[1] == Y);
-  REQUIRE(geom.getDimensions()[2] == Z);
+  REQUIRE(geom.getDimensions()[0] == k_X);
+  REQUIRE(geom.getDimensions()[1] == k_Y);
+  REQUIRE(geom.getDimensions()[2] == k_Z);
   RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
 }
 
@@ -1280,12 +1280,12 @@ fs::path ItkJsonFiltersDir()
 }
 
 // ITKImageReaderFilter param-key STRINGS (hard-coded to avoid linking the ITK plugin).
-constexpr StringLiteral k_ITK_FileName = "file_name";
-constexpr StringLiteral k_ITK_GeometryPath = "output_geometry_path";
-constexpr StringLiteral k_ITK_ArrayName = "image_data_array_name";
-constexpr StringLiteral k_ITK_CellDataName = "cell_attribute_matrix_name";
-constexpr StringLiteral k_ITK_ChangeOrigin = "change_origin";
-constexpr StringLiteral k_ITK_ChangeSpacing = "change_spacing";
+constexpr StringLiteral k_ItkFileName = "file_name";
+constexpr StringLiteral k_ItkGeometryPath = "output_geometry_path";
+constexpr StringLiteral k_ItkArrayName = "image_data_array_name";
+constexpr StringLiteral k_ItkCellDataName = "cell_attribute_matrix_name";
+constexpr StringLiteral k_ItkChangeOrigin = "change_origin";
+constexpr StringLiteral k_ItkChangeSpacing = "change_spacing";
 
 template <class T>
 void RequireStoresEqual(const IDataArray& a, const IDataArray& b)
@@ -1424,28 +1424,28 @@ void WriteMultiPageTiffTyped(const fs::path& path, uint32_t width, uint32_t heig
   static_assert(std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>, "WriteMultiPageTiffTyped supports only uint8_t/uint16_t sample types");
   const uint16_t bitsPerSample = static_cast<uint16_t>(sizeof(T) * 8);
   const uint16_t photometric = (numComponents == 1) ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB;
-  TIFF* tif = TIFFOpen(path.string().c_str(), "w");
-  REQUIRE(tif != nullptr);
+  TIFF* tifPtr = TIFFOpen(path.string().c_str(), "w");
+  REQUIRE(tifPtr != nullptr);
   for(const auto& pixels : pagePixels)
   {
     REQUIRE(pixels.size() == static_cast<size_t>(width) * height * numComponents);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, numComponents) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bitsPerSample) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, photometric) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, 0)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGEWIDTH, width) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGELENGTH, height) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLESPERPIXEL, numComponents) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_BITSPERSAMPLE, bitsPerSample) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PHOTOMETRIC, photometric) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tifPtr, 0)) != 0);
     for(uint32_t row = 0; row < height; ++row)
     {
       // TIFFWriteScanline takes a non-const void* but does not modify the buffer.
-      REQUIRE(TIFFWriteScanline(tif, const_cast<T*>(pixels.data() + static_cast<size_t>(row) * width * numComponents), row, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tifPtr, const_cast<T*>(pixels.data() + static_cast<size_t>(row) * width * numComponents), row, 0) >= 0);
     }
-    REQUIRE(TIFFWriteDirectory(tif) != 0);
+    REQUIRE(TIFFWriteDirectory(tifPtr) != 0);
   }
-  TIFFClose(tif);
+  TIFFClose(tifPtr);
 }
 } // namespace
 

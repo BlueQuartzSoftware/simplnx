@@ -14,11 +14,11 @@ namespace
 {
 // Tests use this process-wide count to verify cached preflight paths without
 // timing assertions. ReadFile() can run on preflight worker threads.
-std::atomic<nx::core::uint64> s_ReadOpenCount{0};
+std::atomic<nx::core::uint64> SReadOpenCount{0};
 
 // Tests can configure a file-access property list to simulate I/O latency.
 // Production leaves this hook empty and uses H5P_DEFAULT.
-std::function<void(hid_t)> s_FaplConfigurator;
+std::function<void(hid_t)> SFaplConfigurator;
 
 /**
  * @brief Creates and configures a file-access property list when tests install a hook.
@@ -27,12 +27,12 @@ std::function<void(hid_t)> s_FaplConfigurator;
  */
 hid_t MakeFaplId()
 {
-  if(!s_FaplConfigurator)
+  if(!SFaplConfigurator)
   {
     return H5P_DEFAULT;
   }
   hid_t faplId = H5Pcreate(H5P_FILE_ACCESS);
-  s_FaplConfigurator(faplId);
+  SFaplConfigurator(faplId);
   return faplId;
 }
 
@@ -53,7 +53,7 @@ namespace nx::core::HDF5
 {
 FileIO FileIO::ReadFile(const std::filesystem::path& filepath)
 {
-  s_ReadOpenCount++;
+  SReadOpenCount++;
   // Keep the property-list lifecycle and file open in one HDF5 critical section.
   hid_t fileId = H5I_INVALID_HID;
   {
@@ -67,18 +67,18 @@ FileIO FileIO::ReadFile(const std::filesystem::path& filepath)
 
 uint64 FileIO::GetReadOpenCount()
 {
-  return s_ReadOpenCount.load();
+  return SReadOpenCount.load();
 }
 
 void FileIO::ResetReadOpenCount()
 {
-  s_ReadOpenCount.store(0);
+  SReadOpenCount.store(0);
 }
 
 void FileIO::SetFaplConfigurator(std::function<void(hid_t)> configurator)
 {
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-  s_FaplConfigurator = std::move(configurator);
+  SFaplConfigurator = std::move(configurator);
 }
 
 FileIO FileIO::WriteFile(const std::filesystem::path& filepath)

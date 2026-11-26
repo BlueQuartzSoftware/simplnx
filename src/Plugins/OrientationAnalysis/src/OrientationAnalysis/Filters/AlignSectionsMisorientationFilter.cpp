@@ -163,11 +163,11 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
 
   std::vector<DataPath> dataPaths;
 
-  const auto* quats = dataStructure.getDataAs<Float32Array>(pQuatsArrayPath);
-  if(quats->getNumberOfComponents() != 4)
+  const auto* quatsPtr = dataStructure.getDataAs<Float32Array>(pQuatsArrayPath);
+  if(quatsPtr->getNumberOfComponents() != 4)
   {
     return MakePreflightErrorResult(::k_InputComponentCountError,
-                                    fmt::format("Quaternion Array at path '{}' has {} components but 4 are required.", pQuatsArrayPath.toString(), quats->getNumberOfComponents()));
+                                    fmt::format("Quaternion Array at path '{}' has {} components but 4 are required.", pQuatsArrayPath.toString(), quatsPtr->getNumberOfComponents()));
   }
   dataPaths.push_back(pQuatsArrayPath);
 
@@ -194,13 +194,13 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
     return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
-  const auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
-  if(inputGeom == nullptr)
+  const auto* inputGeomPtr = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
+  if(inputGeomPtr == nullptr)
   {
     return MakePreflightErrorResult(k_InputRepresentationTypeError, fmt::format("Cannot find selected input Image geometry at path '{}'", inputImageGeometry.toString()));
   }
 
-  if(inputGeom->getCellData() == nullptr)
+  if(inputGeomPtr->getCellData() == nullptr)
   {
     return MakePreflightErrorResult(k_InputRepresentationTypeError, fmt::format("Cannot find cell data Attribute Matrix in the selected Image geometry '{}'", inputImageGeometry.toString()));
   }
@@ -208,7 +208,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   // Handle Array Creation
   if(pStoreAlignmentShifts)
   {
-    const usize dims = inputGeom->getDimensions().getZ();
+    const usize dims = inputGeomPtr->getDimensions().getZ();
     auto pAlignmentAMName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key);
     const DataPath amPath = inputImageGeometry.createChildPath(pAlignmentAMName);
 
@@ -243,7 +243,7 @@ Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStruc
   AlignSectionsMisorientationInputValues inputValues;
 
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputValues.ImageGeometryPath);
+  auto* inputGeomPtr = dataStructure.getDataAs<ImageGeom>(inputValues.ImageGeometryPath);
   inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.quatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);

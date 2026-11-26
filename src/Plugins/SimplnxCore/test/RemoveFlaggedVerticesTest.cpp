@@ -27,7 +27,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_vertices_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path KBaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_vertices_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
 constexpr StringLiteral k_CopyTestName = "copy_test";
 constexpr StringLiteral k_DataName = "data";
@@ -46,42 +46,42 @@ DataStructure CreateFeatureRemovalFixture()
 {
   DataStructure dataStructure;
   dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
-  auto* vertexGeom = VertexGeom::Create(dataStructure, "Vertex");
-  REQUIRE(vertexGeom != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {8}, {3}, vertexGeom->getId());
-  REQUIRE(vertices != nullptr);
-  vertexGeom->setVertices(*vertices);
-  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{8}, vertexGeom->getId());
-  REQUIRE(vertexData != nullptr);
-  vertexGeom->setVertexAttributeMatrix(*vertexData);
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {8}, {1}, vertexData->getId());
-  auto* mask = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {8}, {1}, vertexData->getId());
-  REQUIRE(featureIds != nullptr);
-  REQUIRE(mask != nullptr);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "Vertex");
+  REQUIRE(vertexGeomPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {8}, {3}, vertexGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  vertexGeomPtr->setVertices(*verticesPtr);
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{8}, vertexGeomPtr->getId());
+  REQUIRE(vertexDataPtr != nullptr);
+  vertexGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
+  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {8}, {1}, vertexDataPtr->getId());
+  auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {8}, {1}, vertexDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
   for(usize i = 0; i < 8; ++i)
   {
-    (*featureIds)[i] = static_cast<int32>(i % 4 + 1);
-    (*mask)[i] = i % 4 < 2;
-    vertexGeom->setVertexCoordinate(i, {static_cast<float32>(i), 0.0F, 0.0F});
+    (*featureIdsPtr)[i] = static_cast<int32>(i % 4 + 1);
+    (*maskPtr)[i] = i % 4 < 2;
+    vertexGeomPtr->setVertexCoordinate(i, {static_cast<float32>(i), 0.0F, 0.0F});
   }
 
-  auto* featureData = AttributeMatrix::Create(dataStructure, "Vertex Feature Data", ShapeType{5}, vertexGeom->getId());
-  REQUIRE(featureData != nullptr);
-  auto* numElements = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureData->getId());
-  REQUIRE(numElements != nullptr);
-  numElements->fill(2);
-  (*numElements)[0] = 0;
-  auto* neighbors = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{5}, featureData->getId());
-  REQUIRE(neighbors != nullptr);
-  neighbors->setLists({{}, {2}, {1, 3}, {2, 4}, {3}});
-  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{5}, {"Background", "One", "Two", "Three", "Four"}, featureData->getId()) != nullptr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Feature Data", ShapeType{5}, vertexGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
+  auto* numElementsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureDataPtr->getId());
+  REQUIRE(numElementsPtr != nullptr);
+  numElementsPtr->fill(2);
+  (*numElementsPtr)[0] = 0;
+  auto* neighborsPtr = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{5}, featureDataPtr->getId());
+  REQUIRE(neighborsPtr != nullptr);
+  neighborsPtr->setLists({{}, {2}, {1, 3}, {2, 4}, {3}});
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{5}, {"Background", "One", "Two", "Three", "Four"}, featureDataPtr->getId()) != nullptr);
 
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, "Vertex Ensemble Data", ShapeType{2}, vertexGeom->getId());
-  REQUIRE(ensembleData != nullptr);
-  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleData->getId());
-  REQUIRE(crystalStructures != nullptr);
-  (*crystalStructures)[0] = 999;
-  (*crystalStructures)[1] = 1;
+  auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Ensemble Data", ShapeType{2}, vertexGeomPtr->getId());
+  REQUIRE(ensembleDataPtr != nullptr);
+  auto* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleDataPtr->getId());
+  REQUIRE(crystalStructuresPtr != nullptr);
+  (*crystalStructuresPtr)[0] = 999;
+  (*crystalStructuresPtr)[1] = 1;
   return dataStructure;
 }
 
@@ -168,34 +168,34 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
   args.insertOrAssign(RemoveFlaggedVerticesFilter::k_VertexFeatureIdsPath_Key, std::make_any<DataPath>());
   args.insertOrAssign(RemoveFlaggedVerticesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>());
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
 
   std::vector<usize> vertexTupleDims = {100};
   std::vector<usize> vertexCompDims = {3};
 
   // Create a Vertex Geometry grid for the Scan Data
-  VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry, topLevelGroup->getId());
-  Float32Array* coords = UnitTest::CreateTestDataArray<float>(dataStructure, "coords", vertexTupleDims, vertexCompDims, vertexGeom->getId());
-  vertexGeom->setVertices(*coords); // Add the vertices to the VertexGeom object
+  VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry, topLevelGroupPtr->getId());
+  Float32Array* coordsPtr = UnitTest::CreateTestDataArray<float>(dataStructure, "coords", vertexTupleDims, vertexCompDims, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*coordsPtr); // Add the vertices to the VertexGeom object
 
-  auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, Constants::k_VertexDataGroupName, vertexTupleDims, vertexGeom->getId());
-  vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);
+  auto* vertexAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, Constants::k_VertexDataGroupName, vertexTupleDims, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertexAttributeMatrix(*vertexAttributeMatrixPtr);
 
-  Int32Array* slipVector = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_SlipVector, vertexTupleDims, vertexCompDims, vertexAttributeMatrix->getId());
-  Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
+  Int32Array* slipVectorPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_SlipVector, vertexTupleDims, vertexCompDims, vertexAttributeMatrixPtr->getId());
+  Int32Array* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexAttributeMatrixPtr->getId());
 
-  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataStructure, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
-  conditionalArray->fill(false);
+  BoolArray* conditionalArrayPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexAttributeMatrixPtr->getId());
+  conditionalArrayPtr->fill(false);
   // initialize the coords just to have something other than 0.0
   // Set the first 25 values of the conditional array to true, thus keeping 75 vertices
   for(size_t i = 0; i < vertexTupleDims[0]; i++)
   {
-    coords->initializeTuple(i, static_cast<float>(i));
-    slipVector->initializeTuple(i, static_cast<int32>(i));
-    featureIds->initializeTuple(i, static_cast<int32>(i));
+    coordsPtr->initializeTuple(i, static_cast<float>(i));
+    slipVectorPtr->initializeTuple(i, static_cast<int32>(i));
+    featureIdsPtr->initializeTuple(i, static_cast<int32>(i));
     if(i < 25)
     {
-      conditionalArray->initializeTuple(i, true);
+      conditionalArrayPtr->initializeTuple(i, true);
     }
   }
 
@@ -227,9 +227,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  auto* reducedVertexGeom = dataStructure.getDataAs<VertexGeom>(reducedVertexPath);
+  auto* reducedVertexGeomPtr = dataStructure.getDataAs<VertexGeom>(reducedVertexPath);
 
-  size_t reducedTupleCount = reducedVertexGeom->getNumberOfVertices();
+  size_t reducedTupleCount = reducedVertexGeomPtr->getNumberOfVertices();
   REQUIRE(reducedTupleCount == 75);
 
   auto& reducedFeatureIds = dataStructure.getDataRefAs<Int32Array>(reducedVertexAMPath.createChildPath(Constants::k_FeatureIds));
@@ -240,7 +240,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
 
   for(size_t i = 0; i < reducedTupleCount; i++)
   {
-    Point3D<float> coord = reducedVertexGeom->getVertexCoordinate(i);
+    Point3D<float> coord = reducedVertexGeomPtr->getVertexCoordinate(i);
     float compValue = static_cast<float>(i) + 25.0F;
     REQUIRE(((coord[0] == compValue) && (coord[1] == compValue) && (coord[2] == compValue)));
 
@@ -267,7 +267,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(KBaseDataFilePath);
 
   {
     // Instantiate the filter and an Arguments Object
@@ -320,7 +320,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -333,22 +333,22 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RemoveFlaggedVerticesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RemoveFlaggedVerticesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // The legacy filter copied every non-Vertex Attribute Matrix unchanged, so conversion turns Clear off.
       CHECK(args.value<bool>(RemoveFlaggedVerticesFilter::k_ClearFeatureAttributeMatrix_Key) == false);
       CHECK(args.value<bool>(RemoveFlaggedVerticesFilter::k_RenumberFeatures_Key) == false);
@@ -360,16 +360,16 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: SIMPL Backwards Compatibili
 
       // The converted arguments preflight on a matching geometry that has no Feature Attribute Matrix.
       DataStructure dataStructure;
-      auto* vertexGeom = VertexGeom::Create(dataStructure, "DataContainer");
-      REQUIRE(vertexGeom != nullptr);
-      auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {3}, {3}, vertexGeom->getId());
-      REQUIRE(vertices != nullptr);
-      vertexGeom->setVertices(*vertices);
-      auto* vertexData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{3}, vertexGeom->getId());
-      REQUIRE(vertexData != nullptr);
-      vertexGeom->setVertexAttributeMatrix(*vertexData);
-      REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "TestArray", {3}, {1}, vertexData->getId()) != nullptr);
-      auto preflightResult = filter->preflight(dataStructure, args);
+      auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "DataContainer");
+      REQUIRE(vertexGeomPtr != nullptr);
+      auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {3}, {3}, vertexGeomPtr->getId());
+      REQUIRE(verticesPtr != nullptr);
+      vertexGeomPtr->setVertices(*verticesPtr);
+      auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{3}, vertexGeomPtr->getId());
+      REQUIRE(vertexDataPtr != nullptr);
+      vertexGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
+      REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "TestArray", {3}, {1}, vertexDataPtr->getId()) != nullptr);
+      auto preflightResult = filterPtr->preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
       CHECK(std::any_of(preflightResult.outputValues.begin(), preflightResult.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
     }
@@ -510,15 +510,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: StrictFeatureIds preflight"
 {
   UnitTest::LoadPlugins();
   DataStructure ds = CreateFeatureRemovalFixture();
-  const auto* vertexGeom = ds.getDataAs<VertexGeom>(DataPath({"Vertex"}));
-  REQUIRE(vertexGeom != nullptr);
-  const auto* vertexData = vertexGeom->getVertexAttributeMatrix();
-  REQUIRE(vertexData != nullptr);
-  auto* otherData = AttributeMatrix::Create(ds, "Other Vertex Data", vertexData->getShape(), vertexGeom->getId());
-  REQUIRE(otherData != nullptr);
-  auto* misplacedIds = UnitTest::CreateTestDataArray<int32>(ds, "MisplacedFeatureIds", otherData->getShape(), {1}, otherData->getId());
-  REQUIRE(misplacedIds != nullptr);
-  misplacedIds->fill(1);
+  const auto* vertexGeomPtr = ds.getDataAs<VertexGeom>(DataPath({"Vertex"}));
+  REQUIRE(vertexGeomPtr != nullptr);
+  const auto* vertexDataPtr = vertexGeomPtr->getVertexAttributeMatrix();
+  REQUIRE(vertexDataPtr != nullptr);
+  auto* otherDataPtr = AttributeMatrix::Create(ds, "Other Vertex Data", vertexDataPtr->getShape(), vertexGeomPtr->getId());
+  REQUIRE(otherDataPtr != nullptr);
+  auto* misplacedIdsPtr = UnitTest::CreateTestDataArray<int32>(ds, "MisplacedFeatureIds", otherDataPtr->getShape(), {1}, otherDataPtr->getId());
+  REQUIRE(misplacedIdsPtr != nullptr);
+  misplacedIdsPtr->fill(1);
 
   RemoveFlaggedVerticesFilter filter;
   Arguments args = MakeFeatureRemovalArgs(true, true);
@@ -542,9 +542,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: StrictFeatureIds preflight"
   }
   SECTION("Renumber ON accepts another parent path to the same Vertex Attribute Matrix")
   {
-    auto* alias = DataGroup::Create(ds, "Alias");
-    REQUIRE(alias != nullptr);
-    REQUIRE(ds.setAdditionalParent(vertexData->getId(), alias->getId()));
+    auto* aliasPtr = DataGroup::Create(ds, "Alias");
+    REQUIRE(aliasPtr != nullptr);
+    REQUIRE(ds.setAdditionalParent(vertexDataPtr->getId(), aliasPtr->getId()));
     args.insertOrAssign(RemoveFlaggedVerticesFilter::k_VertexFeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"Alias", "Vertex Data", "FeatureIds"})));
     auto result = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -597,15 +597,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON accepts shared par
 {
   UnitTest::LoadPlugins();
   DataStructure ds = CreateFeatureRemovalFixture();
-  auto* aliases = DataGroup::Create(ds, "Aliases");
-  REQUIRE(aliases != nullptr);
-  const auto* vertexGeom = ds.getDataAs<VertexGeom>(DataPath({"Vertex"}));
-  REQUIRE(vertexGeom != nullptr);
-  const auto* featureAm = ds.getDataAs<AttributeMatrix>(DataPath({"Vertex", "Vertex Feature Data"}));
-  REQUIRE(featureAm != nullptr);
+  auto* aliasesPtr = DataGroup::Create(ds, "Aliases");
+  REQUIRE(aliasesPtr != nullptr);
+  const auto* vertexGeomPtr = ds.getDataAs<VertexGeom>(DataPath({"Vertex"}));
+  REQUIRE(vertexGeomPtr != nullptr);
+  const auto* featureAmPtr = ds.getDataAs<AttributeMatrix>(DataPath({"Vertex", "Vertex Feature Data"}));
+  REQUIRE(featureAmPtr != nullptr);
   // The Feature AM is still a direct child of "Vertex"; it is only selected through a second parent.
-  REQUIRE(ds.setAdditionalParent(vertexGeom->getVertexAttributeMatrix()->getId(), aliases->getId()));
-  REQUIRE(ds.setAdditionalParent(featureAm->getId(), aliases->getId()));
+  REQUIRE(ds.setAdditionalParent(vertexGeomPtr->getVertexAttributeMatrix()->getId(), aliasesPtr->getId()));
+  REQUIRE(ds.setAdditionalParent(featureAmPtr->getId(), aliasesPtr->getId()));
   Arguments args = MakeFeatureRemovalArgs(true, true);
   args.insertOrAssign(RemoveFlaggedVerticesFilter::k_VertexFeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"Aliases", "Vertex Data", "FeatureIds"})));
   args.insertOrAssign(RemoveFlaggedVerticesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Aliases", "Vertex Feature Data"})));
@@ -662,15 +662,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON, renumber OFF exec
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON through a linked root placement", "[SimplnxCore][RemoveFlaggedVerticesFilter][ClearFeatureAM]")
 {
   auto ds = CreateFeatureRemovalFixture();
-  const auto* vertex = ds.getData(DataPath({"Vertex"}));
-  auto* linked = DataGroup::Create(ds, "Linked");
-  auto* nested = DataGroup::Create(ds, "Nested", vertex->getId());
-  REQUIRE(linked != nullptr);
-  REQUIRE(nested != nullptr);
-  REQUIRE(ds.setAdditionalParent(vertex->getId(), linked->getId()));
+  const auto* vertexPtr = ds.getData(DataPath({"Vertex"}));
+  auto* linkedPtr = DataGroup::Create(ds, "Linked");
+  auto* nestedPtr = DataGroup::Create(ds, "Nested", vertexPtr->getId());
+  REQUIRE(linkedPtr != nullptr);
+  REQUIRE(nestedPtr != nullptr);
+  REQUIRE(ds.setAdditionalParent(vertexPtr->getId(), linkedPtr->getId()));
   const DataPath featurePath({"Vertex", "Vertex Feature Data"});
   const auto featureId = ds.getData(featurePath)->getId();
-  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
+  REQUIRE(ds.setAdditionalParent(featureId, nestedPtr->getId()));
   const auto parents = ds.getData(featurePath)->getParentIds();
 
   RemoveFlaggedVerticesFilter filter;
@@ -681,33 +681,33 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON through a linked r
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   const DataPath reducedFeaturePath({"Reduced", "Vertex Feature Data"});
-  const auto* replacement = ds.getDataAs<AttributeMatrix>(reducedFeaturePath);
-  REQUIRE(replacement != nullptr);
-  CHECK(replacement->getId() != featureId);
-  CHECK(replacement->getSize() == 0);
+  const auto* replacementPtr = ds.getDataAs<AttributeMatrix>(reducedFeaturePath);
+  REQUIRE(replacementPtr != nullptr);
+  CHECK(replacementPtr->getId() != featureId);
+  CHECK(replacementPtr->getSize() == 0);
   CHECK(ds.getData(DataPath({"Reduced", "Nested", "Vertex Feature Data"})) == nullptr);
-  const auto* sourceFeature = ds.getData(featurePath);
-  REQUIRE(sourceFeature != nullptr);
-  CHECK(sourceFeature->getParentIds() == parents);
+  const auto* sourceFeaturePtr = ds.getData(featurePath);
+  REQUIRE(sourceFeaturePtr != nullptr);
+  CHECK(sourceFeaturePtr->getParentIds() == parents);
 
   for(const auto& placement :
       {featurePath, DataPath({"Vertex", "Nested", "Vertex Feature Data"}), DataPath({"Linked", "Vertex", "Vertex Feature Data"}), DataPath({"Linked", "Vertex", "Nested", "Vertex Feature Data"})})
   {
     CHECK(ds.getId(placement) == featureId);
-    const auto* counts = ds.getDataAs<Int32Array>(placement.createChildPath("NumElements"));
-    const auto* names = ds.getDataAs<StringArray>(placement.createChildPath("Names"));
-    const auto* neighbors = ds.getDataAs<NeighborList<int32>>(placement.createChildPath("NeighborList"));
-    REQUIRE(counts != nullptr);
-    REQUIRE(names != nullptr);
-    REQUIRE(neighbors != nullptr);
+    const auto* countsPtr = ds.getDataAs<Int32Array>(placement.createChildPath("NumElements"));
+    const auto* namesPtr = ds.getDataAs<StringArray>(placement.createChildPath("Names"));
+    const auto* neighborsPtr = ds.getDataAs<NeighborList<int32>>(placement.createChildPath("NeighborList"));
+    REQUIRE(countsPtr != nullptr);
+    REQUIRE(namesPtr != nullptr);
+    REQUIRE(neighborsPtr != nullptr);
     const std::array<int32, 5> expectedCounts = {0, 2, 2, 2, 2};
     const std::array<std::string, 5> expectedNames = {"Background", "One", "Two", "Three", "Four"};
     const std::array<std::vector<int32>, 5> expectedNeighbors = {{{}, {2}, {1, 3}, {2, 4}, {3}}};
     for(usize i = 0; i < expectedCounts.size(); ++i)
     {
-      CHECK((*counts)[i] == expectedCounts[i]);
-      CHECK((*names)[i] == expectedNames[i]);
-      CHECK(neighbors->getList(i) == expectedNeighbors[i]);
+      CHECK((*countsPtr)[i] == expectedCounts[i]);
+      CHECK((*namesPtr)[i] == expectedNames[i]);
+      CHECK(neighborsPtr->getList(i) == expectedNeighbors[i]);
     }
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
@@ -798,10 +798,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON Feature Id tuple c
 {
   UnitTest::LoadPlugins();
   DataStructure ds = CreateFeatureRemovalFixture();
-  auto* vertexGeom = ds.getDataAs<VertexGeom>(DataPath({"Vertex"}));
-  REQUIRE(vertexGeom != nullptr);
+  auto* vertexGeomPtr = ds.getDataAs<VertexGeom>(DataPath({"Vertex"}));
+  REQUIRE(vertexGeomPtr != nullptr);
   // Keep the Vertex AM internally consistent, but give the geometry one extra vertex.
-  auto resizeResult = vertexGeom->resizeVertexList(9);
+  auto resizeResult = vertexGeomPtr->resizeVertexList(9);
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   RemoveFlaggedVerticesFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRemovalArgs(true, true));
@@ -810,7 +810,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON Feature Id tuple c
   CHECK(result.outputActions.errors().front().code == -67424);
   CHECK(result.outputActions.errors().front().message ==
         "**Vertex Feature Ids** DataArray 'Vertex/Vertex Data/FeatureIds' has 8 tuples, but the selected Vertex Geometry 'Vertex' has 9 vertices. Select a DataArray with one tuple per vertex.");
-  resizeResult = vertexGeom->resizeVertexList(8);
+  resizeResult = vertexGeomPtr->resizeVertexList(8);
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
@@ -878,10 +878,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Feature AM nested alias reg
   const DataPath sourcePath({"Vertex"});
   const DataPath outputPath({"Reduced"});
   const auto featurePath = sourcePath.createChildPath("Vertex Feature Data");
-  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
-  REQUIRE(features != nullptr);
-  const auto featureId = features->getId();
-  const auto shape = features->getShape();
+  const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(featuresPtr != nullptr);
+  const auto featureId = featuresPtr->getId();
+  const auto shape = featuresPtr->getShape();
   const auto countsPath = featurePath.createChildPath("NumElements");
   const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
   std::vector<int32> originalCounts(counts.getSize());
@@ -889,15 +889,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Feature AM nested alias reg
   {
     originalCounts[i] = counts[i];
   }
-  auto* nested = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
-  REQUIRE(nested != nullptr);
-  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nested->getId());
-  REQUIRE(keep != nullptr);
-  (*keep)[0] = 123;
-  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
-  auto* outside = DataGroup::Create(ds, "Outside");
-  REQUIRE(outside != nullptr);
-  REQUIRE(ds.setAdditionalParent(nested->getId(), outside->getId()));
+  auto* nestedPtr = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
+  REQUIRE(nestedPtr != nullptr);
+  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
+  REQUIRE(keepPtr != nullptr);
+  (*keepPtr)[0] = 123;
+  REQUIRE(ds.setAdditionalParent(featureId, nestedPtr->getId()));
+  auto* outsidePtr = DataGroup::Create(ds, "Outside");
+  REQUIRE(outsidePtr != nullptr);
+  REQUIRE(ds.setAdditionalParent(nestedPtr->getId(), outsidePtr->getId()));
   const auto parents = ds.getData(featurePath)->getParentIds();
   auto args = MakeFeatureRemovalArgs(clear, renumber);
   if(selectNested)
@@ -911,12 +911,12 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Feature AM nested alias reg
   const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Vertex Feature Data");
   for(const auto& action : preflight.outputActions.value().actions)
   {
-    const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get());
-    if(copy != nullptr && copy->path() == sourcePath.createChildPath("Misc"))
+    const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
+    if(copyPtr != nullptr && copyPtr->path() == sourcePath.createChildPath("Misc"))
     {
       foundNestedCopy = true;
       bool declaresFeature = false;
-      for(const auto& created : copy->getAllCreatedPaths())
+      for(const auto& created : copyPtr->getAllCreatedPaths())
       {
         if(created.rebase(nestedOutputPath, DataPath{}).has_value())
         {
@@ -929,9 +929,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Feature AM nested alias reg
   REQUIRE(foundNestedCopy);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* outputFeatures = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Vertex Feature Data"));
-  REQUIRE(outputFeatures != nullptr);
-  CHECK(outputFeatures->getSize() == (clear ? 0 : 3));
+  const auto* outputFeaturesPtr = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Vertex Feature Data"));
+  REQUIRE(outputFeaturesPtr != nullptr);
+  CHECK(outputFeaturesPtr->getSize() == (clear ? 0 : 3));
   CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
   CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
   CHECK(ds.getData(featurePath)->getId() == featureId);
@@ -955,10 +955,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject nonnumeric Feature I
   const bool strings = GENERATE(true, false);
   auto ds = CreateFeatureRemovalFixture();
   const auto idsPath = DataPath({"Vertex", "Vertex Data", "FeatureIds"});
-  const auto* original = ds.getDataAs<Int32Array>(idsPath);
-  REQUIRE(original != nullptr);
-  const auto shape = original->getTupleShape();
-  const auto tuples = original->getNumberOfTuples();
+  const auto* originalPtr = ds.getDataAs<Int32Array>(idsPath);
+  REQUIRE(originalPtr != nullptr);
+  const auto shape = originalPtr->getTupleShape();
+  const auto tuples = originalPtr->getNumberOfTuples();
   const auto parentId = ds.getData(idsPath.getParent())->getId();
   REQUIRE(ds.removeData(idsPath));
   if(strings)
@@ -985,15 +985,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject another geometry ele
   UnitTest::LoadPlugins();
   auto ds = CreateFeatureRemovalFixture();
   const auto featurePath = DataPath({"Vertex", "Vertex Feature Data"});
-  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
-  REQUIRE(features != nullptr);
-  auto* other = VertexGeom::Create(ds, "OtherGeometry");
-  REQUIRE(other != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {features->getNumberOfTuples()}, {3}, other->getId());
-  REQUIRE(vertices != nullptr);
-  other->setVertices(*vertices);
-  REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
-  other->setVertexAttributeMatrix(*features);
+  const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(featuresPtr != nullptr);
+  auto* otherPtr = VertexGeom::Create(ds, "OtherGeometry");
+  REQUIRE(otherPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  otherPtr->setVertices(*verticesPtr);
+  REQUIRE(ds.setAdditionalParent(featuresPtr->getId(), otherPtr->getId()));
+  otherPtr->setVertexAttributeMatrix(*featuresPtr);
   RemoveFlaggedVerticesFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRemovalArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -1001,6 +1001,6 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject another geometry ele
   CHECK(result.outputActions.errors()[0].code == -67460);
   CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
-  CHECK(other->getVertexAttributeMatrix() == features);
-  CHECK(features->getSize() > 0);
+  CHECK(otherPtr->getVertexAttributeMatrix() == featuresPtr);
+  CHECK(featuresPtr->getSize() > 0);
 }

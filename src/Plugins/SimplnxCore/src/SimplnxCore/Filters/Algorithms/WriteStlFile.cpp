@@ -25,8 +25,8 @@ using namespace nx::core;
 
 namespace
 {
-using TriStore = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
-using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+using TriStoreType = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
+using VertexStoreType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
 struct LimitBoundAtomicFileFactory;
 
@@ -50,18 +50,18 @@ public:
    */
   Result<usize> createOverflowFile()
   {
-    const fs::path newPath = fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_AtomicFilesList.size(), m_InputPath.extension().string()));
+    const fs::path newPath = fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_atomic_files_list.size(), m_InputPath.extension().string()));
     auto atomicFileResult = AtomicFile::Create(newPath);
     if(atomicFileResult.invalid())
     {
       return {{nonstd::make_unexpected(atomicFileResult.errors())}};
     }
-    m_AtomicFilesList.emplace_back(std::move(atomicFileResult.value()));
+    m_atomic_files_list.emplace_back(std::move(atomicFileResult.value()));
 
-    return {m_AtomicFilesList.size() - 1};
+    return {m_atomic_files_list.size() - 1};
   }
 
-  std::vector<AtomicFile> m_AtomicFilesList;
+  std::vector<AtomicFile> m_atomic_files_list;
 
 private:
   fs::path m_InputPath;
@@ -92,7 +92,7 @@ struct LimitBoundAtomicFileFactory
     {
       return {{nonstd::make_unexpected(atomicFileResult.errors())}};
     }
-    outClass.m_AtomicFilesList.emplace_back(std::move(atomicFileResult.value()));
+    outClass.m_atomic_files_list.emplace_back(std::move(atomicFileResult.value()));
 
     return {std::move(outClass)};
   }
@@ -148,7 +148,7 @@ struct LimitBoundAtomicFileFactory
  * Every stdio failure becomes an error, because a truncated temporary file must never
  * reach the destination through a commit.
  */
-[[nodiscard]] Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+[[nodiscard]] Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStoreType& triangles, const VertexStoreType& vertices,
                                          const std::atomic_bool& shouldCancel, const IGeometry::MeshIndexType startValue = 0)
 {
   Result<> result;
@@ -284,7 +284,7 @@ public:
    * @param startValue Specifies the first triangle.
    * @param shouldCancel Stops before later triangles when true.
    */
-  SingleOutWrapper(WriteStlFile* filter, fs::path path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+  SingleOutWrapper(WriteStlFile* filter, fs::path path, const IGeometry::MeshIndexType endValue, std::string header, const TriStoreType& triangles, const VertexStoreType& vertices,
                    const IGeometry::MeshIndexType startValue, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Path(std::move(path))
@@ -317,8 +317,8 @@ private:
   const fs::path m_Path;
   const IGeometry::MeshIndexType m_EndValue;
   std::string m_Header;
-  const TriStore& m_Triangles;
-  const VertexStore& m_Vertices;
+  const TriStoreType& m_Triangles;
+  const VertexStoreType& m_Vertices;
   const IGeometry::MeshIndexType m_StartValue;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -377,7 +377,7 @@ public:
    * @param maxTriangles Limits triangles in one file.
    * @param shouldCancel Stops before later triangles when true.
    */
-  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const std::string& header, const TriStore& triangles, const VertexStore& vertices,
+  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const std::string& header, const TriStoreType& triangles, const VertexStoreType& vertices,
                         const Int32AbstractDataStore& featureIds, const int32 featureId, const std::vector<usize>& triangleIndices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_LimitBoundAtomicFile(limitBoundAtomicFile)
@@ -405,7 +405,7 @@ public:
   void operator()() const
   {
     // The factory guarantees a valid first AtomicFile.
-    m_Filter->sendThreadSafeProgressMessage(write(m_LimitBoundAtomicFile.m_AtomicFilesList[0].tempFilePath(), 0));
+    m_Filter->sendThreadSafeProgressMessage(write(m_LimitBoundAtomicFile.m_atomic_files_list[0].tempFilePath(), 0));
   }
 
   /**
@@ -514,7 +514,7 @@ public:
           }
           return MergeResults(std::move(result), ConvertResult(std::move(overflowFileResult)));
         }
-        return MergeResults(std::move(result), write(m_LimitBoundAtomicFile.m_AtomicFilesList[overflowFileResult.value()].tempFilePath(), idx));
+        return MergeResults(std::move(result), write(m_LimitBoundAtomicFile.m_atomic_files_list[overflowFileResult.value()].tempFilePath(), idx));
       }
 
       const IGeometry::MeshIndexType triangle = m_TriangleIndices[idx];
@@ -581,8 +581,8 @@ private:
   WriteStlFile* m_Filter = nullptr;
   LimitBoundAtomicFile& m_LimitBoundAtomicFile;
   const std::string m_Header;
-  const TriStore& m_Triangles;
-  const VertexStore& m_Vertices;
+  const TriStoreType& m_Triangles;
+  const VertexStoreType& m_Vertices;
   const Int32AbstractDataStore& m_FeatureIds;
   const int32 m_FeatureId;
   const std::vector<usize>& m_TriangleIndices;
@@ -606,8 +606,8 @@ private:
  * Commits are sequential, so a later failure can leave earlier overflow files
  * published.
  */
-[[nodiscard]] Result<> ExecuteSingleFileOverflow(WriteStlFile* filter, const IGeometry::MeshIndexType nTriangles, const std::string& header, const fs::path& firstFile, const TriStore& triangles,
-                                                 const VertexStore& vertices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
+[[nodiscard]] Result<> ExecuteSingleFileOverflow(WriteStlFile* filter, const IGeometry::MeshIndexType nTriangles, const std::string& header, const fs::path& firstFile, const TriStoreType& triangles,
+                                                 const VertexStoreType& vertices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
 {
   const usize count = nTriangles / maxTriangles;
 
@@ -631,12 +631,12 @@ private:
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
 
-  for(usize i = 0; i < limitedFile.m_AtomicFilesList.size(); i++)
+  for(usize i = 0; i < limitedFile.m_atomic_files_list.size(); i++)
   {
     const usize startValue = i * maxTriangles;
     usize endValue = (i + 1) * maxTriangles;
     endValue = std::min<usize>(endValue, nTriangles);
-    taskRunner.execute(SingleOutWrapper(filter, limitedFile.m_AtomicFilesList[i].tempFilePath(), endValue, header, triangles, vertices, startValue, shouldCancel));
+    taskRunner.execute(SingleOutWrapper(filter, limitedFile.m_atomic_files_list[i].tempFilePath(), endValue, header, triangles, vertices, startValue, shouldCancel));
   }
 
   taskRunner.wait();
@@ -655,7 +655,7 @@ private:
     return MergeResults(std::move(workerResult), MakeErrorResult(-1, "Filter cancelled"));
   }
 
-  for(auto& atomicFile : limitedFile.m_AtomicFilesList)
+  for(auto& atomicFile : limitedFile.m_atomic_files_list)
   {
     if(shouldCancel)
     {
@@ -692,8 +692,8 @@ const std::atomic_bool& WriteStlFile::getCancel()
 Result<> WriteStlFile::operator()()
 {
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
-  const ::VertexStore& vertices = triangleGeom.getVertices()->getDataStoreRef();
-  const ::TriStore& triangles = triangleGeom.getFaces()->getDataStoreRef();
+  const ::VertexStoreType& vertices = triangleGeom.getVertices()->getDataStoreRef();
+  const ::TriStoreType& triangles = triangleGeom.getFaces()->getDataStoreRef();
   const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
 
   auto groupingType = static_cast<GroupingType>(m_InputValues->GroupingType);
@@ -887,7 +887,7 @@ Result<> WriteStlFile::operator()()
   // Publish each temporary file after all workers finish successfully.
   for(auto& limitedAtomicFile : fileList)
   {
-    for(auto& atomicFile : limitedAtomicFile.m_AtomicFilesList)
+    for(auto& atomicFile : limitedAtomicFile.m_atomic_files_list)
     {
       if(m_ShouldCancel)
       {
@@ -908,7 +908,7 @@ Result<> WriteStlFile::operator()()
 
 void WriteStlFile::sendThreadSafeProgressMessage(Result<>&& result)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
 
   // Every worker warning reaches the user, including warnings that arrive after the
   // first error.
@@ -925,7 +925,7 @@ void WriteStlFile::sendThreadSafeProgressMessage(Result<>&& result)
 
 Result<> WriteStlFile::getWorkerResult() const
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   return m_Result;
 }
 

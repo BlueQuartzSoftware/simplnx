@@ -77,15 +77,15 @@ IFilter::PreflightResult IdentifyDuplicateVerticesFilter::preflightImpl(const Da
                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pGeomPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputGeomPath_Key);
-  const auto* geom = dataStructure.getDataAs<INodeGeometry0D>(pGeomPath);
-  if(geom == nullptr || geom->getVertices() == nullptr)
+  const auto* geomPtr = dataStructure.getDataAs<INodeGeometry0D>(pGeomPath);
+  if(geomPtr == nullptr || geomPtr->getVertices() == nullptr)
   {
     return MakePreflightErrorResult(-62910, "Input Geometry must contain a SharedVertexList.");
   }
 
   OutputActions actions;
 
-  actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{geom->getVertices()->getNumberOfTuples()}, std::vector<usize>{1},
+  actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{geomPtr->getVertices()->getNumberOfTuples()}, std::vector<usize>{1},
                                                            filterArgs.value<ArrayCreationParameter::ValueType>(k_DuplicateMaskPath_Key)));
 
   return {std::move(actions)};

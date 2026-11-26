@@ -19,27 +19,27 @@ namespace nx::core
 #if SIMPLNX_BUILD_TESTS
 namespace
 {
-thread_local bool s_FailWriteDiagnosticAllocation = false;
-thread_local bool s_WriteDiagnosticAllocationFailureConsumed = false;
+thread_local bool SFailWriteDiagnosticAllocation = false;
+thread_local bool SWriteDiagnosticAllocationFailureConsumed = false;
 } // namespace
 
 void HDF5::SetWriteDiagnosticAllocationFailure(bool enabled)
 {
-  s_FailWriteDiagnosticAllocation = enabled;
-  s_WriteDiagnosticAllocationFailureConsumed = false;
+  SFailWriteDiagnosticAllocation = enabled;
+  SWriteDiagnosticAllocationFailureConsumed = false;
 }
 
 bool HDF5::WriteDiagnosticAllocationFailureConsumed()
 {
-  return s_WriteDiagnosticAllocationFailureConsumed;
+  return SWriteDiagnosticAllocationFailureConsumed;
 }
 
 void HDF5::FailWriteDiagnosticAllocation()
 {
-  if(s_FailWriteDiagnosticAllocation)
+  if(SFailWriteDiagnosticAllocation)
   {
-    s_FailWriteDiagnosticAllocation = false;
-    s_WriteDiagnosticAllocationFailureConsumed = true;
+    SFailWriteDiagnosticAllocation = false;
+    SWriteDiagnosticAllocationFailureConsumed = true;
     throw std::bad_alloc{};
   }
 }

@@ -53,10 +53,10 @@ struct LookupSizes
  */
 inline Result<LookupPlan> PlanLookups(const LookupSizes& sizes, int32 errorCode)
 {
-  constexpr usize maximumFaces = 262144;
-  constexpr usize maximumPageTuples = 4096;
-  constexpr uint64 maximumBytes = (std::numeric_limits<usize>::max)();
-  const usize desiredFaces = (std::min)(sizes.FaceCount, maximumFaces);
+  constexpr usize k_MaximumFaces = 262144;
+  constexpr usize k_MaximumPageTuples = 4096;
+  constexpr uint64 k_MaximumBytes = (std::numeric_limits<usize>::max)();
+  const usize desiredFaces = (std::min)(sizes.FaceCount, k_MaximumFaces);
   const usize orientationBytes = sizes.OrientationComponents * sizeof(float32);
   const usize featureBytes = sizeof(int32) + orientationBytes;
   const usize pageBytes = featureBytes + sizeof(uint32);
@@ -65,12 +65,12 @@ inline Result<LookupPlan> PlanLookups(const LookupSizes& sizes, int32 errorCode)
   LookupPlan plan;
 
   // A complete cache is optional. Its reservation also covers the ordinary face block.
-  if(sizes.FeatureCount <= maximumBytes / featureBytes && sizes.EnsembleCount <= maximumBytes / sizeof(uint32))
+  if(sizes.FeatureCount <= k_MaximumBytes / featureBytes && sizes.EnsembleCount <= k_MaximumBytes / sizeof(uint32))
   {
     const uint64 featurePayload = static_cast<uint64>(sizes.FeatureCount) * featureBytes;
     const uint64 ensemblePayload = static_cast<uint64>(sizes.EnsembleCount) * sizeof(uint32);
     const uint64 facePayload = static_cast<uint64>(desiredFaces) * sizes.FaceBytes;
-    if(featurePayload <= maximumBytes - ensemblePayload && featurePayload + ensemblePayload <= maximumBytes - facePayload)
+    if(featurePayload <= k_MaximumBytes - ensemblePayload && featurePayload + ensemblePayload <= k_MaximumBytes - facePayload)
     {
       plan.Reservation = budget.tryReserveWorkingMemoryWithoutEviction(featurePayload + ensemblePayload + facePayload);
       if(plan.Reservation.sizeBytes() != 0)
@@ -84,7 +84,7 @@ inline Result<LookupPlan> PlanLookups(const LookupSizes& sizes, int32 errorCode)
     }
   }
 
-  const usize desiredPages = (std::max)(usize{1}, (std::min)({maximumPageTuples, desiredFaces * 2, (std::max)(sizes.FeatureCount, sizes.EnsembleCount)}));
+  const usize desiredPages = (std::max)(usize{1}, (std::min)({k_MaximumPageTuples, desiredFaces * 2, (std::max)(sizes.FeatureCount, sizes.EnsembleCount)}));
   const uint64 desiredBytes = (static_cast<uint64>(desiredFaces) * gatheredFaceBytes) + (static_cast<uint64>(desiredPages) * pageBytes);
   plan.Reservation = budget.reserveWorkingMemory(desiredBytes);
   const uint64 grantedBytes = plan.Reservation.sizeBytes();
@@ -151,9 +151,9 @@ template <typename T, usize Components>
 Result<> GatherLookupTuples(const AbstractDataStore<T>& store, nonstd::span<const int32> indexes, nonstd::span<usize> order, nonstd::span<T> gathered, nonstd::span<T> page,
                             const std::atomic_bool& shouldCancel, int32 errorCode, const DataPath& path, bool reuseOrder = false)
 {
-  constexpr usize maximum = (std::numeric_limits<usize>::max)();
-  if(indexes.size() > maximum / Components || gathered.size() < indexes.size() * Components || order.size() < indexes.size() || page.empty() || page.size() % Components != 0 ||
-     store.getNumberOfComponents() != Components || store.getNumberOfTuples() > maximum / Components)
+  constexpr usize k_Maximum = (std::numeric_limits<usize>::max)();
+  if(indexes.size() > k_Maximum / Components || gathered.size() < indexes.size() * Components || order.size() < indexes.size() || page.empty() || page.size() % Components != 0 ||
+     store.getNumberOfComponents() != Components || store.getNumberOfTuples() > k_Maximum / Components)
   {
     return MakeErrorResult(
         errorCode, fmt::format("Orientation lookup array '{}' requires {} components and complete tuple buffers. Check the selected array and working buffer sizes.", path.toString(), Components));
@@ -181,7 +181,7 @@ Result<> GatherLookupTuples(const AbstractDataStore<T>& store, nonstd::span<cons
     std::ranges::sort(order.first(requests), [&indexes](usize left, usize right) { return indexes[left] < indexes[right]; });
   }
   const usize pageTuples = page.size() / Components;
-  usize loadedPage = maximum;
+  usize loadedPage = k_Maximum;
   Result<> result;
   for(usize request = 0; request < requests; ++request)
   {

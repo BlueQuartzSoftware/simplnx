@@ -29,7 +29,7 @@ namespace
  * @return 'c' or 'd' for a CAD endpoint, 'i' for an interior crossing, or 'n' when absent.
  * @pre The hatch segment is horizontal in the XY plane.
  */
-char determineIntersectCoord(const std::array<float32, 2>& p1, const std::array<float32, 2>& q1, const std::array<float32, 2>& p2, const std::array<float32, 2>& q2, float32& coordX)
+char DetermineIntersectCoord(const std::array<float32, 2>& p1, const std::array<float32, 2>& q1, const std::array<float32, 2>& p2, const std::array<float32, 2>& q2, float32& coordX)
 {
   float32 x1 = p1[0];
   float32 x2 = q1[0];
@@ -97,7 +97,7 @@ struct LineSegment
  * @param intersection Receives one intersection point.
  * @return True when the edge intersects the hatch line.
  */
-bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vector3f& p2, float lineYprime, Eigen::Vector3f& intersection)
+bool LineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vector3f& p2, float lineYprime, Eigen::Vector3f& intersection)
 {
   float y1 = p1.y();
   float y2 = p2.y();
@@ -145,14 +145,14 @@ bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vect
  * The loop connects adjacent sorted crossings. Concave polygons can fill
  * exterior gaps. Malformed or complex CAD meshes can produce incorrect hatches.
  */
-std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& vertices, const std::vector<usize>& edges, float lineSpacing, float angleRadians)
+std::vector<LineSegment> FillPolygonWithParallelLines(const std::vector<float>& vertices, const std::vector<usize>& edges, float lineSpacing, float angleRadians)
 {
   float rotAngle = -angleRadians;
-  Eigen::Matrix3f k_RotationMatrix;
-  k_RotationMatrix << std::cos(rotAngle), -std::sin(rotAngle), 0.0f, std::sin(rotAngle), std::cos(rotAngle), 0.0f, 0.0f, 0.0f, 1.0f;
+  Eigen::Matrix3f kRotationMatrix;
+  kRotationMatrix << std::cos(rotAngle), -std::sin(rotAngle), 0.0f, std::sin(rotAngle), std::cos(rotAngle), 0.0f, 0.0f, 0.0f, 1.0f;
 
-  Eigen::Matrix3f k_InvRotationMatrix;
-  k_InvRotationMatrix << std::cos(angleRadians), -std::sin(angleRadians), 0.0f, std::sin(angleRadians), std::cos(angleRadians), 0.0f, 0.0f, 0.0f, 1.0f;
+  Eigen::Matrix3f kInvRotationMatrix;
+  kInvRotationMatrix << std::cos(angleRadians), -std::sin(angleRadians), 0.0f, std::sin(angleRadians), std::cos(angleRadians), 0.0f, 0.0f, 0.0f, 1.0f;
 
   usize numVerts = vertices.size() / 3;
   usize numEdges = edges.size() / 2;
@@ -162,7 +162,7 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
   for(size_t i = 0; i < numVerts; ++i)
   {
     Eigen::Vector3f pt(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
-    rotatedVertices[i] = k_RotationMatrix * pt; // rotatePoint(vertices[i], rotAngle);
+    rotatedVertices[i] = kRotationMatrix * pt; // rotatePoint(vertices[i], rotAngle);
   }
 
   float minX = std::numeric_limits<float>::infinity();
@@ -196,7 +196,7 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
       const Eigen::Vector3f& p1 = rotatedVertices[edges[edgeIdx * 2]];
       const Eigen::Vector3f& p2 = rotatedVertices[edges[edgeIdx * 2 + 1]];
       Eigen::Vector3f inter;
-      if(lineSegmentHorizontalIntersect(p1, p2, lineY, inter))
+      if(LineSegmentHorizontalIntersect(p1, p2, lineY, inter))
       {
         intersections.push_back({inter});
       }
@@ -218,8 +218,8 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
         continue;
       }
 
-      Eigen::Vector3f origStart = k_InvRotationMatrix * startPt;
-      Eigen::Vector3f origEnd = k_InvRotationMatrix * endPt;
+      Eigen::Vector3f origStart = kInvRotationMatrix * startPt;
+      Eigen::Vector3f origEnd = kInvRotationMatrix * endPt;
 
       LineSegment seg;
       seg.start = origStart;
@@ -243,7 +243,7 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
  * Pre-bucketed indexes avoid scanning the complete CAD edge list for each
  * region-slice pair.
  */
-void extractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INodeGeometry1D::SharedEdgeList& edges, nonstd::span<const usize> regionSliceEdgeIndices, std::vector<float>& outVertices,
+void ExtractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INodeGeometry1D::SharedEdgeList& edges, nonstd::span<const usize> regionSliceEdgeIndices, std::vector<float>& outVertices,
                    std::vector<usize>& outEdges)
 {
   outVertices.clear();
@@ -301,7 +301,7 @@ void extractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INod
  * @param sliceId Identifies the CAD slice.
  * @param lineSegments Provides hatch segments to write.
  */
-void printRegionSliceFiles(int32 regionId, int32 sliceId, const std::vector<LineSegment>& lineSegments)
+void PrintRegionSliceFiles(int32 regionId, int32 sliceId, const std::vector<LineSegment>& lineSegments)
 {
   if(lineSegments.empty())
   {
@@ -343,12 +343,12 @@ const std::atomic_bool& CreateAMScanPaths::getCancel()
 
 Result<> CreateAMScanPaths::operator()()
 {
-  auto& CADLayers = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->CADSliceDataContainerName);
-  INodeGeometry1D::SharedEdgeList& outlineEdges = CADLayers.getEdgesRef();
-  INodeGeometry0D::SharedVertexList& outlineVertices = CADLayers.getVerticesRef();
+  auto& cadLayers = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->CADSliceDataContainerName);
+  INodeGeometry1D::SharedEdgeList& outlineEdges = cadLayers.getEdgesRef();
+  INodeGeometry0D::SharedVertexList& outlineVertices = cadLayers.getVerticesRef();
   auto& cadSliceIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADSliceIdsArrayPath)->getDataStoreRef();
   auto& cadRegionIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADRegionIdsArrayPath)->getDataStoreRef();
-  usize numCADLayerEdges = CADLayers.getNumberOfEdges();
+  usize numCADLayerEdges = cadLayers.getNumberOfEdges();
 
   auto& hatchesEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->HatchDataContainerName);
   Result<> resizeResult = hatchesEdgeGeom.resizeEdgeList(0ULL);
@@ -405,9 +405,9 @@ Result<> CreateAMScanPaths::operator()()
       std::vector<float> outVertices;
       std::vector<usize> outEdges;
 
-      extractRegion(outlineVertices, outlineEdges, sliceBucketsForRegion[sliceId], outVertices, outEdges);
+      ExtractRegion(outlineVertices, outlineEdges, sliceBucketsForRegion[sliceId], outVertices, outEdges);
 
-      regionHatches[sliceId] = ::fillPolygonWithParallelLines(outVertices, outEdges, m_InputValues->HatchSpacing, angle);
+      regionHatches[sliceId] = ::FillPolygonWithParallelLines(outVertices, outEdges, m_InputValues->HatchSpacing, angle);
 
       // printRegionSliceFiles(regionId, sliceId, regionHatches[sliceId]);
       angle = angle + m_InputValues->SliceHatchRotationAngle;

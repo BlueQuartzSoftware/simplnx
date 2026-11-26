@@ -37,22 +37,22 @@ namespace
  */
 struct WidenIntegerArrayToUInt32Fn
 {
-  const DataStructure& dataStructure;
-  const DataPath& srcPath;
+  const DataStructure& data_structure;
+  const DataPath& src_path;
   AbstractDataStore<uint32>& dst;
-  const std::atomic_bool& shouldCancel;
+  const std::atomic_bool& should_cancel;
 
   template <class S>
   Result<> operator()() const
   {
-    const AbstractDataStore<S>& s = dataStructure.getDataRefAs<DataArray<S>>(srcPath).getDataStoreRef();
+    const AbstractDataStore<S>& s = data_structure.getDataRefAs<DataArray<S>>(src_path).getDataStoreRef();
     const usize total = s.getSize();
     constexpr usize k_ChunkValues = 65536;
     auto inBuf = std::make_unique<S[]>(std::min(k_ChunkValues, total));
     auto outBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
     for(usize start = 0; start < total; start += k_ChunkValues)
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return {};
       }
@@ -85,7 +85,7 @@ struct WidenIntegerArrayToUInt32Fn
 Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel)
 {
   const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
-  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{.dataStructure = dataStructure, .srcPath = srcPath, .dst = dst, .shouldCancel = shouldCancel});
+  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{.data_structure = dataStructure, .src_path = srcPath, .dst = dst, .should_cancel = shouldCancel});
 }
 
 /**
@@ -97,21 +97,21 @@ Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const Dat
 struct NarrowUInt32StoreToIntegerArrayFn
 {
   const AbstractDataStore<uint32>& src;
-  DataStructure& dataStructure;
-  const DataPath& dstPath;
-  const std::atomic_bool& shouldCancel;
+  DataStructure& data_structure;
+  const DataPath& dst_path;
+  const std::atomic_bool& should_cancel;
 
   template <class D>
   Result<> operator()() const
   {
-    AbstractDataStore<D>& d = dataStructure.getDataRefAs<DataArray<D>>(dstPath).getDataStoreRef();
+    AbstractDataStore<D>& d = data_structure.getDataRefAs<DataArray<D>>(dst_path).getDataStoreRef();
     const usize total = src.getSize();
     constexpr usize k_ChunkValues = 65536;
     auto inBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
     auto outBuf = std::make_unique<D[]>(std::min(k_ChunkValues, total));
     for(usize start = 0; start < total; start += k_ChunkValues)
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return {};
       }
@@ -140,7 +140,7 @@ struct NarrowUInt32StoreToIntegerArrayFn
 Result<> NarrowUInt32StoreToIntegerArray(const AbstractDataStore<uint32>& src, DataStructure& dataStructure, const DataPath& dstPath, const std::atomic_bool& shouldCancel)
 {
   const auto& dstArray = dataStructure.getDataRefAs<IDataArray>(dstPath);
-  return IntegerOnly::dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{.src = src, .dataStructure = dataStructure, .dstPath = dstPath, .shouldCancel = shouldCancel});
+  return IntegerOnly::dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{.src = src, .data_structure = dataStructure, .dst_path = dstPath, .should_cancel = shouldCancel});
 }
 
 /**
@@ -182,15 +182,15 @@ uint32 MarkerTypeMaxAsUInt32(DataType markerType)
  */
 struct MorphologicalWatershedFromMarkersExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;  // grayscale
-  const DataPath& markerArrayPath; // integer labels
-  const DataPath& outputArrayPath; // marker-type labels
+  DataStructure& data_structure;
+  const DataPath& input_array_path;  // grayscale
+  const DataPath& marker_array_path; // integer labels
+  const DataPath& output_array_path; // marker-type labels
   SizeVec3 dims;
-  bool markWatershedLine;
-  bool fullyConnected;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool mark_watershed_line;
+  bool fully_connected;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T> // T = grayscale type
   Result<> operator()() const
@@ -201,9 +201,9 @@ struct MorphologicalWatershedFromMarkersExecuteFn
     // allowing an exception to escape this execute path.
     try
     {
-      const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
+      const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
       const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
-      const auto& markerArray = dataStructure.getDataRefAs<IDataArray>(markerArrayPath);
+      const auto& markerArray = data_structure.getDataRefAs<IDataArray>(marker_array_path);
       const std::string format = inArray.getDataFormat();
       const std::vector<usize> tupleShape = inArray.getTupleShape();
       auto markerU32 = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
@@ -213,16 +213,16 @@ struct MorphologicalWatershedFromMarkersExecuteFn
         return MakeErrorResult(-79010, "MorphologicalWatershedFromMarkers: failed to allocate a uint32 scratch store.");
       }
 
-      if(Result<> r = WidenIntegerArrayToUInt32(dataStructure, markerArrayPath, *markerU32, shouldCancel); r.invalid())
+      if(Result<> r = WidenIntegerArrayToUInt32(data_structure, marker_array_path, *markerU32, should_cancel); r.invalid())
       {
         return r;
       }
       const uint32 borderSentinel = MarkerTypeMaxAsUInt32(markerArray.getDataType());
-      if(Result<> r = ApplyWatershedFromMarkers<T>(inStore, *markerU32, *outU32, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler); r.invalid())
+      if(Result<> r = ApplyWatershedFromMarkers<T>(inStore, *markerU32, *outU32, dims, mark_watershed_line, fully_connected, borderSentinel, should_cancel, message_handler); r.invalid())
       {
         return r;
       }
-      return NarrowUInt32StoreToIntegerArray(*outU32, dataStructure, outputArrayPath, shouldCancel);
+      return NarrowUInt32StoreToIntegerArray(*outU32, data_structure, output_array_path, should_cancel);
     } catch(const std::bad_alloc&)
     {
       return MakeErrorResult(-79045, "Morphological watershed could not allocate working storage for this volume. Resident execution requires its global working set in RAM; out-of-core execution "
@@ -243,15 +243,15 @@ struct MorphologicalWatershedFromMarkersExecuteFn
  */
 struct MorphologicalWatershedExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   float64 level;
-  bool markWatershedLine;
-  bool fullyConnected;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool mark_watershed_line;
+  bool fully_connected;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T> // T = grayscale type
   Result<> operator()() const
@@ -262,9 +262,9 @@ struct MorphologicalWatershedExecuteFn
     // buffers/cache metadata can also throw. Convert either allocation failure into a filter error.
     try
     {
-      const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
+      const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
       const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
-      auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
+      auto& outArray = data_structure.getDataRefAs<DataArray<uint32>>(output_array_path);
       AbstractDataStore<uint32>& outStore = outArray.getDataStoreRef();
       const std::string format = inArray.getDataFormat();
       const std::vector<usize> tupleShape = inArray.getTupleShape();
@@ -278,7 +278,7 @@ struct MorphologicalWatershedExecuteFn
       // two agree exactly. The reconstruction @pre requires the output store distinct from BOTH the marker and the
       // mask, so hminStore is a separate scratch from markerScratch/inStore.
       const T levelT = static_cast<T>(level); // mirrors ITK's m_Level (InputImagePixelType) truncation
-      const AbstractDataStore<T>* input2 = &inStore;
+      const AbstractDataStore<T>* input2Ptr = &inStore;
       std::shared_ptr<AbstractDataStore<T>> hminStore;
       if(levelT != T{})
       {
@@ -288,16 +288,16 @@ struct MorphologicalWatershedExecuteFn
         {
           return MakeErrorResult(-79020, "MorphologicalWatershed: failed to allocate an HMinima scratch store.");
         }
-        if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerScratch, dims, ReconMarker::PlusHeight, static_cast<float64>(levelT), shouldCancel); r.invalid())
+        if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerScratch, dims, ReconMarker::PlusHeight, static_cast<float64>(levelT), should_cancel); r.invalid())
         {
           return r;
         }
-        if(Result<> r = ApplyMorphologicalReconstruction<T>(*markerScratch, inStore, *hminStore, dims, ReconstructOp::Erosion, fullyConnected, inArray, outArray, shouldCancel, messageHandler);
+        if(Result<> r = ApplyMorphologicalReconstruction<T>(*markerScratch, inStore, *hminStore, dims, ReconstructOp::Erosion, fully_connected, inArray, outArray, should_cancel, message_handler);
            r.invalid())
         {
           return r;
         }
-        input2 = hminStore.get();
+        input2Ptr = hminStore.get();
       }
 
       // (2) rmin = RegionalMinima(input2) -> uint32 (foreground = uint32-max where a regional minimum, background = 0).
@@ -312,18 +312,18 @@ struct MorphologicalWatershedExecuteFn
       {
         // Only min/max feed the flat-image check below, so the parallel min/max reduction replaces the full
         // statistics pass.
-        Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(*input2, shouldCancel);
+        Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(*input2Ptr, should_cancel);
         if(stats.invalid())
         {
           return {nonstd::make_unexpected(std::move(stats.errors()))};
         }
-        if(shouldCancel)
+        if(should_cancel)
         {
           return {};
         }
         if(stats.value().min == stats.value().max)
         {
-          if(Result<> r = FillStore<uint32>(*rminBinary, std::numeric_limits<uint32>::max(), shouldCancel); r.invalid()) // flat image -> all minima
+          if(Result<> r = FillStore<uint32>(*rminBinary, std::numeric_limits<uint32>::max(), should_cancel); r.invalid()) // flat image -> all minima
           {
             return r;
           }
@@ -335,7 +335,7 @@ struct MorphologicalWatershedExecuteFn
           {
             return MakeErrorResult(-79022, "MorphologicalWatershed: failed to allocate a valued regional-minima scratch store.");
           }
-          if(Result<> r = ApplyValuedRegionalExtrema<T>(*input2, *rminValued, dims, RegionalExtremaOp::Minima, fullyConnected, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+          if(Result<> r = ApplyValuedRegionalExtrema<T>(*input2Ptr, *rminValued, dims, RegionalExtremaOp::Minima, fully_connected, inArray, outArray, should_cancel, message_handler); r.invalid())
           {
             return r;
           }
@@ -346,7 +346,7 @@ struct MorphologicalWatershedExecuteFn
           auto binaryBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
           for(usize start = 0; start < total; start += k_ChunkValues)
           {
-            if(shouldCancel)
+            if(should_cancel)
             {
               return {};
             }
@@ -375,7 +375,7 @@ struct MorphologicalWatershedExecuteFn
       {
         return MakeErrorResult(-79023, "MorphologicalWatershed: failed to allocate a connected-component label scratch store.");
       }
-      if(Result<> r = LabelConnectedComponents<uint32>(*rminBinary, *labelStore, dims, [](uint32 v) { return v != 0u; }, fullyConnected, shouldCancel, messageHandler); r.invalid())
+      if(Result<> r = LabelConnectedComponents<uint32>(*rminBinary, *labelStore, dims, [](uint32 v) { return v != 0u; }, fully_connected, should_cancel, message_handler); r.invalid())
       {
         return r;
       }
@@ -383,7 +383,7 @@ struct MorphologicalWatershedExecuteFn
       // (4) out = WatershedFromMarkers(input, label). The markers are uint32 connected-component labels (all < 2^32),
       // so the border sentinel is uint32-max -- no real label can collide with it.
       rminBinary.reset(); // consumed by LabelConnectedComponents (step 3); release it before the flood allocates resident state or external records
-      return ApplyWatershedFromMarkers<T>(inStore, *labelStore, outStore, dims, markWatershedLine, fullyConnected, std::numeric_limits<uint32>::max(), shouldCancel, messageHandler);
+      return ApplyWatershedFromMarkers<T>(inStore, *labelStore, outStore, dims, mark_watershed_line, fully_connected, std::numeric_limits<uint32>::max(), should_cancel, message_handler);
     } catch(const std::bad_alloc&)
     {
       return MakeErrorResult(-79046, "Morphological watershed could not allocate working storage for this volume. Resident execution requires its global working set in RAM; out-of-core execution "
@@ -400,40 +400,40 @@ Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& data
                                                              const DataPath& outputArrayPath, bool markWatershedLine, bool fullyConnected, const std::atomic_bool& shouldCancel,
                                                              const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::MorphologicalWatershedFromMarkersExecuteFn executeFn{.dataStructure = dataStructure,
-                                                               .inputArrayPath = inputArrayPath,
-                                                               .markerArrayPath = markerArrayPath,
-                                                               .outputArrayPath = outputArrayPath,
+  detail::MorphologicalWatershedFromMarkersExecuteFn executeFn{.data_structure = dataStructure,
+                                                               .input_array_path = inputArrayPath,
+                                                               .marker_array_path = markerArrayPath,
+                                                               .output_array_path = outputArrayPath,
                                                                .dims = imageGeom.getDimensions(),
-                                                               .markWatershedLine = markWatershedLine,
-                                                               .fullyConnected = fullyConnected,
-                                                               .shouldCancel = shouldCancel,
-                                                               .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                                               .mark_watershed_line = markWatershedLine,
+                                                               .fully_connected = fullyConnected,
+                                                               .should_cancel = shouldCancel,
+                                                               .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteMorphologicalWatershedImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, float64 level,
                                                   bool markWatershedLine, bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::MorphologicalWatershedExecuteFn executeFn{.dataStructure = dataStructure,
-                                                    .inputArrayPath = inputArrayPath,
-                                                    .outputArrayPath = outputArrayPath,
+  detail::MorphologicalWatershedExecuteFn executeFn{.data_structure = dataStructure,
+                                                    .input_array_path = inputArrayPath,
+                                                    .output_array_path = outputArrayPath,
                                                     .dims = imageGeom.getDimensions(),
                                                     .level = level,
-                                                    .markWatershedLine = markWatershedLine,
-                                                    .fullyConnected = fullyConnected,
-                                                    .shouldCancel = shouldCancel,
-                                                    .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                                    .mark_watershed_line = markWatershedLine,
+                                                    .fully_connected = fullyConnected,
+                                                    .should_cancel = shouldCancel,
+                                                    .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

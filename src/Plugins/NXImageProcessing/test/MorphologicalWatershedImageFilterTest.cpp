@@ -31,7 +31,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using WSFilter = MorphologicalWatershedImageFilter;
+using WsFilterType = MorphologicalWatershedImageFilter;
 
 // Sets the standard geom/input/output keys + Level/MarkWatershedLine/FullyConnected on a shared Arguments, runs
 // preflight + execute, and requires both succeed.
@@ -39,12 +39,12 @@ void RunWatershed(IFilter& filter, DataStructure& ds, const DataPath& inputPath,
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(WSFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(WSFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(WSFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(WSFilter::k_Level_Key, std::make_any<float64>(level));
-  args.insertOrAssign(WSFilter::k_MarkWatershedLine_Key, std::make_any<bool>(markWatershedLine));
-  args.insertOrAssign(WSFilter::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
+  args.insertOrAssign(WsFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(WsFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(WsFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(WsFilterType::k_Level_Key, std::make_any<float64>(level));
+  args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(markWatershedLine));
+  args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -71,14 +71,14 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guard
     const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    WSFilter filter;
+    WsFilterType filter;
     Arguments args;
-    args.insertOrAssign(WSFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(WSFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(WSFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(WSFilter::k_Level_Key, std::make_any<float64>(0.0));
-    args.insertOrAssign(WSFilter::k_MarkWatershedLine_Key, std::make_any<bool>(true));
-    args.insertOrAssign(WSFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WsFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WsFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(WsFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(WsFilterType::k_Level_Key, std::make_any<float64>(0.0));
+    args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
@@ -88,7 +88,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guard
     DataStructure ds;
     const std::vector<float32> field = rt::MakePlateauPattern<float32>(12, 12, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 12, 12, 1, field);
-    WSFilter filter;
+    WsFilterType filter;
     RunWatershed(filter, ds, inputPath, /*level=*/0.0, /*markWatershedLine=*/true, /*fullyConnected=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint32);
@@ -196,44 +196,44 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejec
     const auto outputPath = cellPath.createChildPath("Output");
     const ShapeType tupleShape{1, 2, 3};
     const ShapeType componentShape{1};
-    auto* imageGeom = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-    REQUIRE(imageGeom != nullptr);
-    imageGeom->setDimensions({3, 2, 1});
-    REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-    REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-    auto* cellData = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, imageGeom->getId());
-    REQUIRE(cellData != nullptr);
-    imageGeom->setCellData(*cellData);
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
+    REQUIRE(imageGeomPtr != nullptr);
+    imageGeomPtr->setDimensions({3, 2, 1});
+    REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+    REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+    auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, imageGeomPtr->getId());
+    REQUIRE(cellDataPtr != nullptr);
+    imageGeomPtr->setCellData(*cellDataPtr);
 
     // HDF5 identifies a registered metadata-only format here. The input contains no HDF5 values.
     auto inputStoreResult = EmptyDataStore<int16>::Create(tupleShape, componentShape, plannedFormat);
     SIMPLNX_RESULT_REQUIRE_VALID(inputStoreResult);
-    const auto* inputStore = inputStoreResult.value().get();
-    auto* inputArray = Int16Array::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellData->getId());
-    REQUIRE(inputArray != nullptr);
+    const auto* inputStorePtr = inputStoreResult.value().get();
+    auto* inputArrayPtr = Int16Array::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellDataPtr->getId());
+    REQUIRE(inputArrayPtr != nullptr);
 
     const auto checkInput = [&] {
-      REQUIRE(dataStructure.getDataAs<Int16Array>(inputPath) == inputArray);
-      REQUIRE(inputArray->getIDataStore() == inputStore);
-      REQUIRE(inputArray->getDataType() == DataType::int16);
-      REQUIRE(inputArray->getTupleShape() == tupleShape);
-      REQUIRE(inputArray->getComponentShape() == componentShape);
-      REQUIRE(inputArray->getStoreType() == IDataStore::StoreType::Empty);
-      REQUIRE(inputStore->getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
-      REQUIRE(inputArray->getDataFormat() == plannedFormat);
+      REQUIRE(dataStructure.getDataAs<Int16Array>(inputPath) == inputArrayPtr);
+      REQUIRE(inputArrayPtr->getIDataStore() == inputStorePtr);
+      REQUIRE(inputArrayPtr->getDataType() == DataType::int16);
+      REQUIRE(inputArrayPtr->getTupleShape() == tupleShape);
+      REQUIRE(inputArrayPtr->getComponentShape() == componentShape);
+      REQUIRE(inputArrayPtr->getStoreType() == IDataStore::StoreType::Empty);
+      REQUIRE(inputStorePtr->getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
+      REQUIRE(inputArrayPtr->getDataFormat() == plannedFormat);
     };
     checkInput();
     REQUIRE(dataStructure.getData(outputPath) == nullptr);
     const auto originalIds = dataStructure.getAllDataObjectIds();
 
-    WSFilter filter;
+    WsFilterType filter;
     Arguments args;
-    args.insertOrAssign(WSFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(WSFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(WSFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputPath.getTargetName()));
-    args.insertOrAssign(WSFilter::k_Level_Key, std::make_any<float64>(0.0));
-    args.insertOrAssign(WSFilter::k_MarkWatershedLine_Key, std::make_any<bool>(true));
-    args.insertOrAssign(WSFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WsFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WsFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(WsFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputPath.getTargetName()));
+    args.insertOrAssign(WsFilterType::k_Level_Key, std::make_any<float64>(0.0));
+    args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().size() == 1);

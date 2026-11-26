@@ -30,12 +30,12 @@ namespace
 template <bool UseAddition, bool UseSubtraction>
 struct IncrementalOptions
 {
-  static constexpr bool UsingAddition = UseAddition;
-  static constexpr bool UsingSubtraction = UseSubtraction;
+  static constexpr bool k_UsingAddition = UseAddition;
+  static constexpr bool k_UsingSubtraction = UseSubtraction;
 };
 
-using AdditionT = IncrementalOptions<true, false>;
-using SubtractionT = IncrementalOptions<false, true>;
+using AdditionTType = IncrementalOptions<true, false>;
+using SubtractionTType = IncrementalOptions<false, true>;
 
 // Generated buffers target 65,536 values and retain at least one complete tuple.
 constexpr usize k_InitializationChunkValues = 65536;
@@ -122,7 +122,7 @@ Result<> ValueFill(AbstractDataStore<T>& dataStore, const std::vector<std::strin
  * @pre Value lists have one convertible string per component.
  * @pre Signed generated values remain representable in T.
  */
-template <typename T, class IncrementalOptions = AdditionT>
+template <typename T, class IncrementalOptions = AdditionTType>
 Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues, const std::atomic_bool& shouldCancel)
 {
   const usize numComponents = dataStore.getNumberOfComponents();
@@ -144,7 +144,7 @@ Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std:
           const bool value = values[component];
           if(tupleIndex == 0 && steps[component])
           {
-            values[component] = IncrementalOptions::UsingAddition;
+            values[component] = IncrementalOptions::k_UsingAddition;
           }
           return value;
         },
@@ -156,11 +156,11 @@ Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std:
         dataStore,
         [&values, &steps](usize, usize component) {
           const T value = values[component];
-          if constexpr(IncrementalOptions::UsingAddition)
+          if constexpr(IncrementalOptions::k_UsingAddition)
           {
             values[component] += steps[component];
           }
-          if constexpr(IncrementalOptions::UsingSubtraction)
+          if constexpr(IncrementalOptions::k_UsingSubtraction)
           {
             values[component] -= steps[component];
           }
@@ -233,10 +233,10 @@ Result<> FillIncForwarder(const StepType& stepType, ArgsT&&... args)
   switch(stepType)
   {
   case StepType::Addition: {
-    return ::IncrementalFill<T, AdditionT>(std::forward<ArgsT>(args)...);
+    return ::IncrementalFill<T, AdditionTType>(std::forward<ArgsT>(args)...);
   }
   case StepType::Subtraction: {
-    return ::IncrementalFill<T, SubtractionT>(std::forward<ArgsT>(args)...);
+    return ::IncrementalFill<T, SubtractionTType>(std::forward<ArgsT>(args)...);
   }
   }
   return MakeErrorResult(-11620, "InitializeData received an invalid incremental operation.");
@@ -293,7 +293,7 @@ Result<> FillRandomForwarder(const std::vector<T>& range, usize numComponents, A
  * @param componentValues Provides one or all component values.
  * @return Explicit component values.
  */
-std::vector<std::string> standardizeMultiComponent(const usize numComps, const std::vector<std::string>& componentValues)
+std::vector<std::string> StandardizeMultiComponent(const usize numComps, const std::vector<std::string>& componentValues)
 {
   if(componentValues.size() == numComps)
   {
@@ -332,10 +332,10 @@ struct FillArrayFunctor
     switch(inputValues.initType)
     {
     case InitializeType::FillValue: {
-      return ::ValueFill<T>(dataStore, standardizeMultiComponent(numComp, inputValues.stringValues), shouldCancel);
+      return ::ValueFill<T>(dataStore, StandardizeMultiComponent(numComp, inputValues.stringValues), shouldCancel);
     }
     case InitializeType::Incremental: {
-      return ::FillIncForwarder<T>(inputValues.stepType, dataStore, standardizeMultiComponent(numComp, inputValues.startValues), standardizeMultiComponent(numComp, inputValues.stepValues),
+      return ::FillIncForwarder<T>(inputValues.stepType, dataStore, StandardizeMultiComponent(numComp, inputValues.startValues), StandardizeMultiComponent(numComp, inputValues.stepValues),
                                    shouldCancel);
     }
     case InitializeType::Random: {
@@ -359,8 +359,8 @@ struct FillArrayFunctor
       return ::FillRandomForwarder<T, false>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed, shouldCancel);
     }
     case InitializeType::RangedRandom: {
-      auto randBegin = standardizeMultiComponent(numComp, inputValues.randBegin);
-      auto randEnd = standardizeMultiComponent(numComp, inputValues.randEnd);
+      auto randBegin = StandardizeMultiComponent(numComp, inputValues.randBegin);
+      auto randEnd = StandardizeMultiComponent(numComp, inputValues.randEnd);
 
       std::vector<T> range;
       for(usize comp = 0; comp < numComp; comp++)

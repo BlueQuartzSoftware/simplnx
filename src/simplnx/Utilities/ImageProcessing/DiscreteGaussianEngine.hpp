@@ -191,7 +191,7 @@ inline double ModifiedBesselI1(double y)
 
 inline double ModifiedBesselI(int n, double y)
 {
-  constexpr double ACCURACY = 40.0;
+  constexpr double k_Accuracy = 40.0;
   if(y == 0.0)
   {
     return 0.0;
@@ -200,7 +200,7 @@ inline double ModifiedBesselI(int n, double y)
   double qip = 0.0;
   double accumulator = 0.0;
   double qi = 1.0;
-  for(int j = 2 * (n + static_cast<int>(std::sqrt(ACCURACY * n))); j > 0; j--)
+  for(int j = 2 * (n + static_cast<int>(std::sqrt(k_Accuracy * n))); j > 0; j--)
   {
     const double qim = qip + j * toy * qi;
     qip = qi;

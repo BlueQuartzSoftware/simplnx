@@ -47,8 +47,8 @@ bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelTyp
  */
 struct VertexData
 {
-  usize VertexId = 0;
-  std::array<float32, 3> Position;
+  usize vertex_id = 0;
+  std::array<float32, 3> position;
 };
 
 /**
@@ -57,7 +57,7 @@ struct VertexData
  * @param vert1 Second vector.
  * @param result Local output copy. The caller's array is unchanged.
  */
-void crossProduct(const std::array<float32, 3>& vert0, const std::array<float32, 3> vert1, std::array<float32, 3> result)
+void CrossProduct(const std::array<float32, 3>& vert0, const std::array<float32, 3> vert1, std::array<float32, 3> result)
 {
   result[0] = vert0[1] * vert1[2] - vert0[2] * vert1[1];
   result[1] = vert0[2] * vert1[0] - vert0[0] * vert1[2];
@@ -70,12 +70,12 @@ void crossProduct(const std::array<float32, 3>& vert0, const std::array<float32,
  * @param vert2 Third position.
  * @return Zero because crossProduct() receives its result by value.
  */
-float32 triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1, std::array<float32, 3>& vert2)
+float32 TriangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1, std::array<float32, 3>& vert2)
 {
   const std::array<float32, 3> v01 = {vert1[0] - vert0[0], vert1[1] - vert0[1], vert1[2] - vert0[2]};
   const std::array<float32, 3> v02 = {vert2[0] - vert0[0], vert2[1] - vert0[1], vert2[2] - vert0[2]};
   std::array<float32, 3> cross = {0.0f, 0.0f, 0.0f};
-  crossProduct(v01, v02, cross);
+  CrossProduct(v01, v02, cross);
   float32 const magCP = std::sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
   return 0.5f * magCP;
 }
@@ -89,7 +89,7 @@ float32 triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert
  * Both area results are zero because crossProduct() cannot update its caller.
  * Current call sites also supply zero positions. The first diagonal remains.
  */
-void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<usize, 6>& triangleVtxIDs)
+void GetQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<usize, 6>& triangleVtxIDs)
 {
   // Swap the side vertices when label order indicates back-facing winding.
   if(!isQuadFrontFacing)
@@ -100,8 +100,8 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   }
 
   // Prefer the lower-area diagonal when positions distinguish the alternatives.
-  float32 const thisArea = triangleArea(vData[0].Position, vData[1].Position, vData[2].Position) + triangleArea(vData[0].Position, vData[2].Position, vData[3].Position);
-  float32 const alternateArea = triangleArea(vData[1].Position, vData[2].Position, vData[3].Position) + triangleArea(vData[1].Position, vData[3].Position, vData[0].Position);
+  float32 const thisArea = TriangleArea(vData[0].position, vData[1].position, vData[2].position) + TriangleArea(vData[0].position, vData[2].position, vData[3].position);
+  float32 const alternateArea = TriangleArea(vData[1].position, vData[2].position, vData[3].position) + TriangleArea(vData[1].position, vData[3].position, vData[0].position);
   if(alternateArea < thisArea)
   {
     VertexData const temp = vData[0];
@@ -112,12 +112,12 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   }
 
   // Emit two triangles as a fan from vertex zero.
-  triangleVtxIDs[0] = vData[0].VertexId;
-  triangleVtxIDs[1] = vData[1].VertexId;
-  triangleVtxIDs[2] = vData[2].VertexId;
-  triangleVtxIDs[3] = vData[0].VertexId;
-  triangleVtxIDs[4] = vData[2].VertexId;
-  triangleVtxIDs[5] = vData[3].VertexId;
+  triangleVtxIDs[0] = vData[0].vertex_id;
+  triangleVtxIDs[1] = vData[1].vertex_id;
+  triangleVtxIDs[2] = vData[2].vertex_id;
+  triangleVtxIDs[3] = vData[0].vertex_id;
+  triangleVtxIDs[4] = vData[2].vertex_id;
+  triangleVtxIDs[5] = vData[3].vertex_id;
 }
 } // namespace
 
@@ -340,10 +340,10 @@ Result<> SurfaceNetsDirect::operator()()
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
        !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
-      vData[0] = {.VertexId = vertexIndices[0], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[1] = {.VertexId = vertexIndices[1], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[2] = {.VertexId = vertexIndices[2], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[3] = {.VertexId = vertexIndices[3], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[0] = {.vertex_id = vertexIndices[0], .position = {0.0f, 0.0f, 0.0f}};
+      vData[1] = {.vertex_id = vertexIndices[1], .position = {0.0f, 0.0f, 0.0f}};
+      vData[2] = {.vertex_id = vertexIndices[2], .position = {0.0f, 0.0f, 0.0f}};
+      vData[3] = {.vertex_id = vertexIndices[3], .position = {0.0f, 0.0f, 0.0f}};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
@@ -355,7 +355,7 @@ Result<> SurfaceNetsDirect::operator()()
         quadLabels[1] = -1;
       }
 
-      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
+      GetQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
@@ -400,10 +400,10 @@ Result<> SurfaceNetsDirect::operator()()
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
        !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
-      vData[0] = {.VertexId = vertexIndices[0], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[1] = {.VertexId = vertexIndices[1], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[2] = {.VertexId = vertexIndices[2], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[3] = {.VertexId = vertexIndices[3], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[0] = {.vertex_id = vertexIndices[0], .position = {0.0f, 0.0f, 0.0f}};
+      vData[1] = {.vertex_id = vertexIndices[1], .position = {0.0f, 0.0f, 0.0f}};
+      vData[2] = {.vertex_id = vertexIndices[2], .position = {0.0f, 0.0f, 0.0f}};
+      vData[3] = {.vertex_id = vertexIndices[3], .position = {0.0f, 0.0f, 0.0f}};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
@@ -414,7 +414,7 @@ Result<> SurfaceNetsDirect::operator()()
       {
         quadLabels[1] = -1;
       }
-      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
+      GetQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
@@ -457,10 +457,10 @@ Result<> SurfaceNetsDirect::operator()()
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
        !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
     {
-      vData[0] = {.VertexId = vertexIndices[0], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[1] = {.VertexId = vertexIndices[1], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[2] = {.VertexId = vertexIndices[2], .Position = {0.0f, 0.0f, 0.0f}};
-      vData[3] = {.VertexId = vertexIndices[3], .Position = {0.0f, 0.0f, 0.0f}};
+      vData[0] = {.vertex_id = vertexIndices[0], .position = {0.0f, 0.0f, 0.0f}};
+      vData[1] = {.vertex_id = vertexIndices[1], .position = {0.0f, 0.0f, 0.0f}};
+      vData[2] = {.vertex_id = vertexIndices[2], .position = {0.0f, 0.0f, 0.0f}};
+      vData[3] = {.vertex_id = vertexIndices[3], .position = {0.0f, 0.0f, 0.0f}};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
@@ -471,7 +471,7 @@ Result<> SurfaceNetsDirect::operator()()
       {
         quadLabels[1] = -1;
       }
-      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
+      GetQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 

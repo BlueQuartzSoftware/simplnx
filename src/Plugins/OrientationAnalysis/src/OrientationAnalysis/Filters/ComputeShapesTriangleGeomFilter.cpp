@@ -109,8 +109,8 @@ IFilter::PreflightResult ComputeShapesTriangleGeomFilter::preflightImpl(const Da
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Ensure the Face Feature Attribute Matrix is really an AttributeMatrix
-  const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(pFeatureAttributeMatrixPath);
-  if(featureAttrMatrix == nullptr)
+  const auto* featureAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pFeatureAttributeMatrixPath);
+  if(featureAttrMatrixPtr == nullptr)
   {
     return IFilter::MakePreflightErrorResult(
         -12901, fmt::format("Feature AttributeMatrix does not exist at path '{}' or the path does not point to an AttributeMatrix.", pFeatureAttributeMatrixPath.toString()));
@@ -120,7 +120,7 @@ IFilter::PreflightResult ComputeShapesTriangleGeomFilter::preflightImpl(const Da
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_Omega3sArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrixPtr->getShape(), std::vector<usize>{1}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -128,28 +128,28 @@ IFilter::PreflightResult ComputeShapesTriangleGeomFilter::preflightImpl(const Da
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrixPtr->getShape(), std::vector<usize>{3}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the Axis Euler Angles Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisEulerAnglesArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrixPtr->getShape(), std::vector<usize>{3}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the Aspect Ratios Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{2}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrixPtr->getShape(), std::vector<usize>{2}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the Euler Characteristic Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_EulerCharacteristicArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, featureAttrMatrixPtr->getShape(), std::vector<usize>{1}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

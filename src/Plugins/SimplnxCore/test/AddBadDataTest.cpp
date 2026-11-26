@@ -72,7 +72,7 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: SIMPL Backwards Compatibility", "[Simp
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -85,22 +85,22 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: SIMPL Backwards Compatibility", "[Simp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<AddBadDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<AddBadDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(AddBadDataFilter::k_UseSeed_Key) == true);
       CHECK(args.value<uint64>(AddBadDataFilter::k_SeedValue_Key) == 5);
       CHECK(args.value<bool>(AddBadDataFilter::k_PoissonNoise_Key) == true);
@@ -210,12 +210,12 @@ TEST_CASE("SimplnxCore::AddBadData component contract", "[SimplnxCore][AddBadDat
 TEST_CASE("SimplnxCore::AddBadData: rejects nonnumeric input arrays", "[SimplnxCore][AddBadDataFilter]")
 {
   DataStructure dataStructure;
-  auto* image = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(image != nullptr);
-  image->setDimensions({2, 1, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
-  REQUIRE(cells != nullptr);
-  image->setCellData(*cells);
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({2, 1, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, imagePtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imagePtr->setCellData(*cellsPtr);
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
 
   const AddBadDataFilter filter;
@@ -240,20 +240,20 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Reject nonnumeric cell arrays", "[Simp
   CAPTURE(useStrings);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({1, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 1, 1}, imageGeom->getId());
-  REQUIRE(cellAM != nullptr);
-  imageGeom->setCellData(*cellAM);
-  REQUIRE(Int32Array::Create(dataStructure, "Distances", std::make_shared<DataStore<int32>>(ShapeType{1, 1, 1}, ShapeType{1}, 0), cellAM->getId()) != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({1, 1, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 1, 1}, imageGeomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAmPtr);
+  REQUIRE(Int32Array::Create(dataStructure, "Distances", std::make_shared<DataStore<int32>>(ShapeType{1, 1, 1}, ShapeType{1}, 0), cellAmPtr->getId()) != nullptr);
   if(useStrings)
   {
-    REQUIRE(StringArray::CreateWithValues(dataStructure, "Unsupported", cellAM->getShape(), {"label"}, cellAM->getId()) != nullptr);
+    REQUIRE(StringArray::CreateWithValues(dataStructure, "Unsupported", cellAmPtr->getShape(), {"label"}, cellAmPtr->getId()) != nullptr);
   }
   else
   {
-    REQUIRE(NeighborList<int32>::Create(dataStructure, "Unsupported", cellAM->getShape(), cellAM->getId()) != nullptr);
+    REQUIRE(NeighborList<int32>::Create(dataStructure, "Unsupported", cellAmPtr->getShape(), cellAmPtr->getId()) != nullptr);
   }
 
   AddBadDataFilter filter;

@@ -29,9 +29,9 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto findSummation = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindSummation_Key);
 
   auto inputArrayPath = filterArgs.value<DataPath>(ComputeNeighborListStatisticsFilter::k_InputNeighborListPath_Key);
-  const auto* inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
-  ShapeType tupleDims{inputArray->getNumberOfTuples()};
-  DataType dataType = inputArray->getDataType();
+  const auto* inputArrayPtr = dataStructure.getDataAs<INeighborList>(inputArrayPath);
+  ShapeType tupleDims{inputArrayPtr->getNumberOfTuples()};
+  DataType dataType = inputArrayPtr->getDataType();
   const DataPath outputGroupPath = inputArrayPath.getParent();
 
   OutputActions actions;
@@ -185,8 +185,8 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 
   std::vector<DataPath> dataArrayPaths;
 
-  const auto* inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
-  if(inputArray == nullptr)
+  const auto* inputArrayPtr = dataStructure.getDataAs<INeighborList>(inputArrayPath);
+  if(inputArrayPtr == nullptr)
   {
     return MakePreflightErrorResult(k_MissingInputArray, "Missing input array");
   }

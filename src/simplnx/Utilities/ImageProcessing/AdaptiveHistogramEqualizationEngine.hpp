@@ -637,8 +637,8 @@ Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inpu
       }
 
       const usize outputStart = outputYBegin * dimX + outputXBegin;
-      T* blockOutput = plan.fixedOutput ? outputBuffer.get() + outputStart : outputBuffer.get();
-      blockFunction(inputBuffer.get(), blockOutput, horizontalBuffer.get(), inputXBegin, inputYBegin, inputWidth, inputRows, outputXBegin, outputYBegin, outputColumns, outputRows);
+      T* blockOutputPtr = plan.fixedOutput ? outputBuffer.get() + outputStart : outputBuffer.get();
+      blockFunction(inputBuffer.get(), blockOutputPtr, horizontalBuffer.get(), inputXBegin, inputYBegin, inputWidth, inputRows, outputXBegin, outputYBegin, outputColumns, outputRows);
       if(shouldCancel)
       {
         return {};
@@ -1126,8 +1126,8 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
   [[maybe_unused]] int64 dMin = 0;          // = -span; LUT index for difference d is (d - dMin)
   if constexpr(std::is_integral_v<T>)
   {
-    constexpr usize kMaxAheLutEntries = detail::k_AdaptiveHistogramEqualizationMaximumLutEntries; // ~4M entries (16 MB float), table-size cap
-    constexpr int64 kMaxSpan = static_cast<int64>((kMaxAheLutEntries - 1) / 2);                   // 2*span + 1 <= kMaxAheLutEntries
+    constexpr usize k_KMaxAheLutEntries = detail::k_AdaptiveHistogramEqualizationMaximumLutEntries; // ~4M entries (16 MB float), table-size cap
+    constexpr int64 k_KMaxSpan = static_cast<int64>((k_KMaxAheLutEntries - 1) / 2);                   // 2*span + 1 <= kMaxAheLutEntries
     const T minT = statsResult.value().min;
     const T maxT = statsResult.value().max;
     // Exact span magnitude for any integer width: unsigned subtraction cannot overflow, and maxT >= minT here
@@ -1135,7 +1135,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
     // [min,max] band straddles the int64 sign boundary; that would make the int64 difference in the plane body
     // overflow, so it stays on the exact path instead.
     const uint64 uSpan = static_cast<uint64>(maxT) - static_cast<uint64>(minT);
-    if(uSpan >= 1 && uSpan <= static_cast<uint64>(kMaxSpan) && static_cast<int64>(minT) <= static_cast<int64>(maxT))
+    if(uSpan >= 1 && uSpan <= static_cast<uint64>(k_KMaxSpan) && static_cast<int64>(minT) <= static_cast<int64>(maxT))
     {
       const int64 span = static_cast<int64>(uSpan);
       dMin = -span;
@@ -1274,7 +1274,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
       // arithmetic to the pre-existing per-plane form; only the raw-byte source moved from a per-slot vector to
       // the flattened band ring, indexed by sourceZ's own position rather than by the caller's xyBoxSums slot.
       auto boxFilterPlane = [&](usize sourceZ, usize xyBoxSumSlot) {
-        const uint8* plane = sourcePlanes.data() + (sourceZ % rawRingCapacity) * sliceValues;
+        const uint8* planePtr = sourcePlanes.data() + (sourceZ % rawRingCapacity) * sliceValues;
 
         auto filterRows = [&](const Range& range) {
           for(usize y = range.min(); y < range.max(); ++y)
@@ -1284,18 +1284,18 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
             const usize initialXHi = std::min(rx, dimX - 1);
             for(usize x = 0; x <= initialXHi; ++x)
             {
-              sum += plane[row + x];
+              sum += planePtr[row + x];
             }
             for(usize x = 0; x < dimX; ++x)
             {
               horizontalSums[row + x] = sum;
               if(x >= rx)
               {
-                sum -= plane[row + x - rx];
+                sum -= planePtr[row + x - rx];
               }
               if(rx < dimX - x - 1)
               {
-                sum += plane[row + x + rx + 1];
+                sum += planePtr[row + x + rx + 1];
               }
             }
           }
@@ -1392,8 +1392,8 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
         // coefficient rounding as the general integer path.
         const float unitDifferenceTerm = gLut[static_cast<usize>(1 - dMin)];
 
-        const uint8* centerPlane = sourcePlanes.data() + (z % rawRingCapacity) * sliceValues;
-        uint8* outputSlot = outputBand.data() + (z - bandBaseZ) * sliceValues;
+        const uint8* centerPlanePtr = sourcePlanes.data() + (z % rawRingCapacity) * sliceValues;
+        uint8* outputSlotPtr = outputBand.data() + (z - bandBaseZ) * sliceValues;
         auto calculateOutput = [&](const Range& range) {
           for(usize y = range.min(); y < range.max(); ++y)
           {
@@ -1410,12 +1410,12 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
               const usize xHi = rx >= dimX - x - 1 ? dimX - 1 : x + rx;
               const usize count = (xHi - xLo + 1) * yCount * zCount;
               const usize index = y * dimX + x;
-              const uint8 center = centerPlane[index];
+              const uint8 center = centerPlanePtr[index];
               const float u = static_cast<float>((static_cast<float64>(center) - minValue) / iscale - 0.5);
               const int64 differenceSum = static_cast<int64>(center) * static_cast<int64>(count) - static_cast<int64>(zBoxSums[index]);
               const float64 localSum = static_cast<float64>(unitDifferenceTerm) * static_cast<float64>(differenceSum) + static_cast<float64>(beta * u) * count;
               const float64 result = iscale * (localSum / static_cast<float64>(count) + 0.5) + minValue;
-              outputSlot[index] = static_cast<uint8>(result);
+              outputSlotPtr[index] = static_cast<uint8>(result);
             }
             if(dimZ == 1)
             {

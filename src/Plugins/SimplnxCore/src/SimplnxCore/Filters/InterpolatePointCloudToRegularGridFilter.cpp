@@ -181,8 +181,8 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   const SizeVec3 imageDims = imageGeomRef.getDimensions();
   ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
 
-  const auto* vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
-  std::vector<DataPath> dataArrays = {vertexGeomPath.createChildPath(vertexGeom->getVertices()->getName())};
+  const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
+  std::vector<DataPath> dataArrays = {vertexGeomPath.createChildPath(vertexGeomPtr->getVertices()->getName())};
 
   // Create flat DataArrays for interpolated arrays (output type = float64)
   for(const auto& interpolatePath : interpolatedDataPaths)

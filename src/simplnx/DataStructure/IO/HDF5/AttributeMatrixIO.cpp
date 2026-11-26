@@ -39,9 +39,9 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
   {
     return MakeErrorResult(-1550, fmt::format("Failed to read AttributeMatrix tuple shape for '{}'", objectName));
   }
-  auto* dataObject = data_type::Import(structureReader.getDataStructure(), objectName, tupleShape, importId, parentId);
+  auto* dataObjectPtr = data_type::Import(structureReader.getDataStructure(), objectName, tupleShape, importId, parentId);
 
-  Result<> result = BaseGroupIO::ReadBaseGroupData(structureReader, *dataObject, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  Result<> result = BaseGroupIO::ReadBaseGroupData(structureReader, *dataObjectPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
     return result;

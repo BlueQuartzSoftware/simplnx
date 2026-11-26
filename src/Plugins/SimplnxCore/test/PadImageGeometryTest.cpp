@@ -34,7 +34,7 @@ const std::string k_OutputGeometryPathStr = "Padded Image Geometry";
 
 /* **************************************************************************** */
 /** @brief TEST CASE 0 */
-static Arguments Args_0()
+static Arguments Args0()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -54,7 +54,7 @@ static Arguments Args_0()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 1 */
-static Arguments Args_1()
+static Arguments Args1()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -74,7 +74,7 @@ static Arguments Args_1()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 2 */
-static Arguments Args_2()
+static Arguments Args2()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -94,7 +94,7 @@ static Arguments Args_2()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 3 */
-static Arguments Args_3()
+static Arguments Args3()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -114,7 +114,7 @@ static Arguments Args_3()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 4 */
-static Arguments Args_4()
+static Arguments Args4()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -134,7 +134,7 @@ static Arguments Args_4()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 5 */
-static Arguments Args_5()
+static Arguments Args5()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -154,7 +154,7 @@ static Arguments Args_5()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 6 */
-static Arguments Args_6()
+static Arguments Args6()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -174,7 +174,7 @@ static Arguments Args_6()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 7 */
-static Arguments Args_7()
+static Arguments Args7()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -194,7 +194,7 @@ static Arguments Args_7()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 8 */
-static Arguments Args_8()
+static Arguments Args8()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -214,7 +214,7 @@ static Arguments Args_8()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 9 */
-static Arguments Args_9()
+static Arguments Args9()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -234,7 +234,7 @@ static Arguments Args_9()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 10 */
-static Arguments Args_10()
+static Arguments Args10()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -254,7 +254,7 @@ static Arguments Args_10()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 11 */
-static Arguments Args_11()
+static Arguments Args11()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -274,7 +274,7 @@ static Arguments Args_11()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 12 */
-static Arguments Args_12()
+static Arguments Args12()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -294,7 +294,7 @@ static Arguments Args_12()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 13 */
-static Arguments Args_13()
+static Arguments Args13()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -314,7 +314,7 @@ static Arguments Args_13()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 14 */
-static Arguments Args_14()
+static Arguments Args14()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -334,7 +334,7 @@ static Arguments Args_14()
 
 /* **************************************************************************** */
 /** @brief TEST CASE 15 */
-static Arguments Args_15()
+static Arguments Args15()
 {
   Arguments args;
   args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(pad_image_geometry::k_AttributeMatrixPath));
@@ -357,7 +357,7 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: Valid Filter Execution", "[Simpl
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_2_PadImageGeometry.tar.gz", "7_2_PadImageGeometry");
 
   std::vector<Arguments> args = {
-      Args_0(), Args_1(), Args_2(), Args_3(), Args_4(), Args_5(), Args_6(), Args_7(), Args_8(), Args_9(), Args_10(), Args_11(), Args_12(), Args_13(), Args_14(), Args_15(),
+      Args0(), Args1(), Args2(), Args3(), Args4(), Args5(), Args6(), Args7(), Args8(), Args9(), Args10(), Args11(), Args12(), Args13(), Args14(), Args15(),
   };
 
   for(size_t idx = 0; idx < args.size(); idx++)
@@ -387,7 +387,7 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: SIMPL Backwards Compatibility", 
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -399,22 +399,22 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: SIMPL Backwards Compatibility", 
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<PadImageGeometryFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<PadImageGeometryFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(PadImageGeometryFilter::k_AttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<int32>(PadImageGeometryFilter::k_DefaultFillValue_Key) == 5);
@@ -494,15 +494,15 @@ namespace
 {
 ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
 {
-  auto* geom = ImageGeom::Create(ds, "ValidationImage");
-  REQUIRE(geom != nullptr);
-  geom->setDimensions(dims);
-  REQUIRE(geom->setSpacing(spacing).valid());
-  REQUIRE(geom->setOrigin(origin).valid());
-  auto* cells = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geom->getId());
-  REQUIRE(cells != nullptr);
-  geom->setCellData(*cells);
-  return geom;
+  auto* geomPtr = ImageGeom::Create(ds, "ValidationImage");
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions(dims);
+  REQUIRE(geomPtr->setSpacing(spacing).valid());
+  REQUIRE(geomPtr->setOrigin(origin).valid());
+  auto* cellsPtr = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geomPtr->setCellData(*cellsPtr);
+  return geomPtr;
 }
 } // namespace
 
@@ -547,7 +547,7 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Padding signs regression", "[SimplnxCo
 TEST_CASE("SimplnxCore::PadImageGeometry: Origin result regression", "[SimplnxCore][PadImageGeometry][NumericDomainRed]")
 {
   DataStructure ds;
-  auto* geom = MakeValidationImage(ds, {2, 2, 2}, {3e38f, 1, 1}, {-3e38f, 0, 0});
+  auto* geomPtr = MakeValidationImage(ds, {2, 2, 2}, {3e38f, 1, 1}, {-3e38f, 0, 0});
   auto args = ValidationPaddingArgs();
   args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, true);
   PadImageGeometryFilter filter;
@@ -563,16 +563,16 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Origin result regression", "[SimplnxCo
   CHECK(preflightGeom.getSpacing() == FloatVec3{3e38f, 1, 1});
   CHECK_FALSE(preflightDs.containsData(DataPath({"Padded"})));
   auto result = filter.execute(ds, args);
-  for(const auto* failure : std::array<const Result<>*, 2>{&preflightActionResult, &result.result})
+  for(const auto* failurePtr : std::array<const Result<>*, 2>{&preflightActionResult, &result.result})
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(*failure);
-    REQUIRE(failure->errors().size() == 1);
-    CHECK(failure->errors().front().code == -1557);
-    CHECK(failure->errors().front().message.find("'Padded'") != std::string::npos);
-    CHECK(failure->errors().front().message.find("Origin on the X axis must be finite. Received -inf.") != std::string::npos);
+    SIMPLNX_RESULT_REQUIRE_INVALID(*failurePtr);
+    REQUIRE(failurePtr->errors().size() == 1);
+    CHECK(failurePtr->errors().front().code == -1557);
+    CHECK(failurePtr->errors().front().message.find("'Padded'") != std::string::npos);
+    CHECK(failurePtr->errors().front().message.find("Origin on the X axis must be finite. Received -inf.") != std::string::npos);
   }
-  CHECK(geom->getOrigin() == FloatVec3{-3e38f, 0, 0});
-  CHECK(geom->getSpacing() == FloatVec3{3e38f, 1, 1});
+  CHECK(geomPtr->getOrigin() == FloatVec3{-3e38f, 0, 0});
+  CHECK(geomPtr->getSpacing() == FloatVec3{3e38f, 1, 1});
   CHECK_FALSE(ds.containsData(DataPath({"Padded"})));
 }
 
@@ -580,7 +580,7 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6);
   DataStructure ds;
-  auto* geom = MakeValidationImage(ds, {1, 1, 1});
+  auto* geomPtr = MakeValidationImage(ds, {1, 1, 1});
   auto args = ValidationPaddingArgs();
   const int32 max = std::numeric_limits<int32>::max();
   if(row == 0)
@@ -597,15 +597,15 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
     args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, true);
     args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, VectorInt32Parameter::ValueType{1073741824, 1073741823});
     args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, VectorInt32Parameter::ValueType{1073741824, 1073741823});
-    auto* cells = geom->getCellData();
-    REQUIRE(cells != nullptr);
+    auto* cellsPtr = geomPtr->getCellData();
+    REQUIRE(cellsPtr != nullptr);
     if(row == 1)
     {
-      REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(ds, "Values", {1, 1, 1}, {1}, cells->getId()) != nullptr);
+      REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(ds, "Values", {1, 1, 1}, {1}, cellsPtr->getId()) != nullptr);
     }
     else
     {
-      REQUIRE(UInt8Array::CreateWithStore<UInt8DataStore>(ds, "Values", {1, 1, 1}, {4}, cells->getId()) != nullptr);
+      REQUIRE(UInt8Array::CreateWithStore<UInt8DataStore>(ds, "Values", {1, 1, 1}, {4}, cellsPtr->getId()) != nullptr);
     }
   }
   else if(row == 3)
@@ -641,15 +641,15 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
     CHECK(pre.outputActions.warnings()[0].code == -86031);
     auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    auto* output = ds.getDataAs<ImageGeom>(DataPath({"Padded"}));
-    REQUIRE(output != nullptr);
-    CHECK(output->getDimensions() == SizeVec3{1, 1, 1});
+    auto* outputPtr = ds.getDataAs<ImageGeom>(DataPath({"Padded"}));
+    REQUIRE(outputPtr != nullptr);
+    CHECK(outputPtr->getDimensions() == SizeVec3{1, 1, 1});
     DataStructure executeDs;
-    auto* source = MakeValidationImage(executeDs, {1, 1, 1});
+    auto* sourcePtr = MakeValidationImage(executeDs, {1, 1, 1});
     auto result = filter.execute(executeDs, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     CHECK(result.result.errors()[0].code == -86026);
-    CHECK(source->getDimensions() == SizeVec3{1, 1, 1});
+    CHECK(sourcePtr->getDimensions() == SizeVec3{1, 1, 1});
   }
   else if(row == 1 || row == 2)
   {
@@ -663,14 +663,14 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[S
 {
   const auto row = GENERATE(0, 1, 2, 3, 4);
   DataStructure ds;
-  auto* geom = MakeValidationImage(ds, {2, 2, 1});
-  auto* cells = geom->getCellData();
-  REQUIRE(cells != nullptr);
-  auto* marker = Int32Array::CreateWithStore<Int32DataStore>(ds, "Marker", {1, 2, 2}, {1}, cells->getId());
-  REQUIRE(marker != nullptr);
+  auto* geomPtr = MakeValidationImage(ds, {2, 2, 1});
+  auto* cellsPtr = geomPtr->getCellData();
+  REQUIRE(cellsPtr != nullptr);
+  auto* markerPtr = Int32Array::CreateWithStore<Int32DataStore>(ds, "Marker", {1, 2, 2}, {1}, cellsPtr->getId());
+  REQUIRE(markerPtr != nullptr);
   for(usize idx = 0; idx < 4; ++idx)
   {
-    (*marker)[idx] = static_cast<int32>(idx + 1);
+    (*markerPtr)[idx] = static_cast<int32>(idx + 1);
   }
   auto args = ValidationPaddingArgs();
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, VectorInt32Parameter::ValueType{1, 1});
@@ -679,9 +679,9 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[S
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
   auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
-  auto* dest = ds.getDataAs<Int32Array>(DataPath({"Padded", "Cells", "Marker"}));
-  REQUIRE(dest != nullptr);
-  dest->fill(99);
+  auto* destPtr = ds.getDataAs<Int32Array>(DataPath({"Padded", "Cells", "Marker"}));
+  REQUIRE(destPtr != nullptr);
+  destPtr->fill(99);
   args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, row == 0 ? VectorInt32Parameter::ValueType{-1, 0} : row == 1 ? VectorInt32Parameter::ValueType{1} : VectorInt32Parameter::ValueType{1, 1});
   if(row >= 3)
   {
@@ -698,23 +698,23 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[S
     CHECK_FALSE(ds.containsData(DataPath({"FilteredPadded"})));
     for(usize idx = 0; idx < 8; ++idx)
     {
-      CHECK((*dest)[idx] == 99);
+      CHECK((*destPtr)[idx] == 99);
     }
   }
   else
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    dest = ds.getDataAs<Int32Array>(DataPath({"FilteredPadded", "Cells", "Marker"}));
-    REQUIRE(dest != nullptr);
+    destPtr = ds.getDataAs<Int32Array>(DataPath({"FilteredPadded", "Cells", "Marker"}));
+    REQUIRE(destPtr != nullptr);
     const std::array<int32, 8> expected = {0, 1, 2, 0, 0, 3, 4, 0};
     for(usize idx = 0; idx < 8; ++idx)
     {
-      CHECK((*dest)[idx] == expected[idx]);
+      CHECK((*destPtr)[idx] == expected[idx]);
     }
   }
   for(usize idx = 0; idx < 4; ++idx)
   {
-    CHECK((*marker)[idx] == idx + 1);
+    CHECK((*markerPtr)[idx] == idx + 1);
   }
 }
 
@@ -919,28 +919,28 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Zero padding on enabled axes preserves
   }
 
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Geom");
-  REQUIRE(geom != nullptr);
-  geom->setDimensions({2, 2, 1});
-  REQUIRE(geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 2, 2}, geom->getId());
-  REQUIRE(cellAm != nullptr);
-  geom->setCellData(*cellAm);
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions({2, 2, 1});
+  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 2, 2}, geomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  geomPtr->setCellData(*cellAmPtr);
   const DataPath cellPath({"Geom", "Cell Data"});
-  auto* scalar = Int32Array::Create(dataStructure, "Scalar", DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Scalar"), {1, 2, 2}, {1}), cellAm->getId());
-  auto* vector = Int32Array::Create(dataStructure, "Vector", DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Vector"), {1, 2, 2}, {2}), cellAm->getId());
-  REQUIRE(scalar != nullptr);
-  REQUIRE(vector != nullptr);
+  auto* scalarPtr = Int32Array::Create(dataStructure, "Scalar", DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Scalar"), {1, 2, 2}, {1}), cellAmPtr->getId());
+  auto* vectorPtr = Int32Array::Create(dataStructure, "Vector", DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Vector"), {1, 2, 2}, {2}), cellAmPtr->getId());
+  REQUIRE(scalarPtr != nullptr);
+  REQUIRE(vectorPtr != nullptr);
   const std::vector<int32> inputScalar = {1, 2, 3, 4};
   const std::vector<int32> inputVector = {11, 12, 21, 22, 31, 32, 41, 42};
   for(usize i = 0; i < inputScalar.size(); ++i)
   {
-    (*scalar)[i] = inputScalar[i];
+    (*scalarPtr)[i] = inputScalar[i];
   }
   for(usize i = 0; i < inputVector.size(); ++i)
   {
-    (*vector)[i] = inputVector[i];
+    (*vectorPtr)[i] = inputVector[i];
   }
 
   // X is fastest. A minimum-side cell shifts every source tuple by one on the selected axis.
@@ -976,13 +976,13 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: Nested Feature AM padding warnin
 {
   UnitTest::LoadPlugins();
   auto ds = CreatePadFeatureFixture(false, false);
-  auto* geom = ds.getDataAs<ImageGeom>(DataPath({"Geom"}));
-  REQUIRE(geom != nullptr);
-  auto* group = DataGroup::Create(ds, "Nested", geom->getId());
-  REQUIRE(group != nullptr);
-  auto* features = AttributeMatrix::Create(ds, "Feature Data", {2}, group->getId());
-  REQUIRE(features != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(ds, "Centroids", {2}, {3}, features->getId()) != nullptr);
+  auto* geomPtr = ds.getDataAs<ImageGeom>(DataPath({"Geom"}));
+  REQUIRE(geomPtr != nullptr);
+  auto* groupPtr = DataGroup::Create(ds, "Nested", geomPtr->getId());
+  REQUIRE(groupPtr != nullptr);
+  auto* featuresPtr = AttributeMatrix::Create(ds, "Feature Data", {2}, groupPtr->getId());
+  REQUIRE(featuresPtr != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(ds, "Centroids", {2}, {3}, featuresPtr->getId()) != nullptr);
   PadImageGeometryFilter filter;
   const bool updateOrigin = GENERATE(false, true);
   auto args = MakePadArgs(true, true, true, {2, 0}, {0, 0}, {0, 0}, 0, updateOrigin);

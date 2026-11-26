@@ -123,11 +123,11 @@ bool Parameters::isParameterActive(std::string_view key, const Arguments& args) 
   for(const auto& [groupKey, associatedValue] : groupList)
   {
     const std::any& value = args.at(groupKey);
-    IsActiveFunc func = MapAt(m_Groups, groupKey, "Group key '{}' does not exist in Parameters");
+    IsActiveFunc funcPtr = MapAt(m_Groups, groupKey, "Group key '{}' does not exist in Parameters");
 
-    const IParameter* groupParameter = at(groupKey).get();
+    const IParameter* groupParameterPtr = at(groupKey).get();
 
-    isActive |= func(*groupParameter, value, associatedValue);
+    isActive |= funcPtr(*groupParameterPtr, value, associatedValue);
   }
 
   return isActive;
@@ -159,9 +159,9 @@ std::vector<std::string> Parameters::getKeys() const
   std::vector<std::string> keys;
   for(const auto& item : m_LayoutVector)
   {
-    if(const auto* parameterKey = std::get_if<ParameterKey>(&item); parameterKey != nullptr)
+    if(const auto* parameterKeyPtr = std::get_if<ParameterKey>(&item); parameterKeyPtr != nullptr)
     {
-      keys.push_back(parameterKey->key);
+      keys.push_back(parameterKeyPtr->key);
     }
   }
   return keys;

@@ -100,7 +100,7 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   // The mutex serializes worker access to the non-thread-safe throttle.
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
 
   // Throttles progress updates from array workers.
   ThrottledMessageHandler m_Throttle;

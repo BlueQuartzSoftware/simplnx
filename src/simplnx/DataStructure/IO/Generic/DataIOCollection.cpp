@@ -270,8 +270,8 @@ std::string DataIOCollection::generateManagerListString() const
   // Collect rows before formatting so labels align in the error-message table.
   struct Row
   {
-    std::string displayName;
-    std::string capabilityList;
+    std::string display_name;
+    std::string capability_list;
   };
   std::vector<Row> rows;
   rows.reserve(m_ManagerMap.size());
@@ -331,7 +331,7 @@ std::string DataIOCollection::generateManagerListString() const
   std::string result = "Registered IO managers and their capabilities:";
   for(const auto& row : rows)
   {
-    result += fmt::format("\n  {:<{}} : {}", row.displayName, maxNameWidth, row.capabilityList);
+    result += fmt::format("\n  {:<{}} : {}", row.display_name, maxNameWidth, row.capability_list);
   }
   return result;
 }

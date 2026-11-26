@@ -186,11 +186,11 @@ public:
   template <typename K>
   void convert(usize start, usize end) const
   {
-    const IDataArray* maskArray = m_DataAccess.maskArray();
+    const IDataArray* maskArrayPtr = m_DataAccess.maskArray();
 
     for(usize i = start; i < end; i++)
     {
-      if(maskArray != nullptr && !m_DataAccess.template maskValue<K>(i))
+      if(maskArrayPtr != nullptr && !m_DataAccess.template maskValue<K>(i))
       {
         m_DataAccess.setColor(i, m_InvalidColor[0], m_InvalidColor[1], m_InvalidColor[2]);
         continue;
@@ -204,14 +204,14 @@ public:
 
   void operator()(const Range& range) const
   {
-    const IDataArray* maskArray = m_DataAccess.maskArray();
-    if(maskArray != nullptr)
+    const IDataArray* maskArrayPtr = m_DataAccess.maskArray();
+    if(maskArrayPtr != nullptr)
     {
-      if(maskArray->getDataType() == DataType::boolean)
+      if(maskArrayPtr->getDataType() == DataType::boolean)
       {
         convert<bool>(range.min(), range.max());
       }
-      else if(maskArray->getDataType() == DataType::uint8)
+      else if(maskArrayPtr->getDataType() == DataType::uint8)
       {
         convert<uint8>(range.min(), range.max());
       }
@@ -256,10 +256,10 @@ struct GenerateColorArrayFunctor
 
     auto& colorStoreRef = dataStructure.getDataRefAs<UInt8Array>(inputValues->RgbArrayPath).getDataStoreRef();
 
-    const IDataArray* goodVoxelsArray = nullptr;
+    const IDataArray* goodVoxelsArrayPtr = nullptr;
     if(inputValues->UseMask)
     {
-      goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
+      goodVoxelsArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
     }
 
     const auto& arrayStoreRef = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath).getDataStoreRef();
@@ -272,32 +272,32 @@ struct GenerateColorArrayFunctor
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numTuples);
 
-    const auto* arrayStore = dynamic_cast<const DataStore<ScalarType>*>(&arrayStoreRef);
-    auto* colorStore = dynamic_cast<UInt8DataStore*>(&colorStoreRef);
-    const BoolDataStore* boolMaskStore = nullptr;
-    const UInt8DataStore* uint8MaskStore = nullptr;
-    bool hasContiguousMask = goodVoxelsArray == nullptr;
-    if(goodVoxelsArray != nullptr && goodVoxelsArray->getDataType() == DataType::boolean)
+    const auto* arrayStorePtr = dynamic_cast<const DataStore<ScalarType>*>(&arrayStoreRef);
+    auto* colorStorePtr = dynamic_cast<UInt8DataStore*>(&colorStoreRef);
+    const BoolDataStore* boolMaskStorePtr = nullptr;
+    const UInt8DataStore* uint8MaskStorePtr = nullptr;
+    bool hasContiguousMask = goodVoxelsArrayPtr == nullptr;
+    if(goodVoxelsArrayPtr != nullptr && goodVoxelsArrayPtr->getDataType() == DataType::boolean)
     {
-      const auto* maskArray = dynamic_cast<const BoolArray*>(goodVoxelsArray);
-      boolMaskStore = maskArray == nullptr ? nullptr : dynamic_cast<const BoolDataStore*>(&maskArray->getDataStoreRef());
-      hasContiguousMask = boolMaskStore != nullptr;
+      const auto* maskArrayPtr = dynamic_cast<const BoolArray*>(goodVoxelsArrayPtr);
+      boolMaskStorePtr = maskArrayPtr == nullptr ? nullptr : dynamic_cast<const BoolDataStore*>(&maskArrayPtr->getDataStoreRef());
+      hasContiguousMask = boolMaskStorePtr != nullptr;
     }
-    else if(goodVoxelsArray != nullptr && goodVoxelsArray->getDataType() == DataType::uint8)
+    else if(goodVoxelsArrayPtr != nullptr && goodVoxelsArrayPtr->getDataType() == DataType::uint8)
     {
-      const auto* maskArray = dynamic_cast<const UInt8Array*>(goodVoxelsArray);
-      uint8MaskStore = maskArray == nullptr ? nullptr : dynamic_cast<const UInt8DataStore*>(&maskArray->getDataStoreRef());
-      hasContiguousMask = uint8MaskStore != nullptr;
+      const auto* maskArrayPtr = dynamic_cast<const UInt8Array*>(goodVoxelsArrayPtr);
+      uint8MaskStorePtr = maskArrayPtr == nullptr ? nullptr : dynamic_cast<const UInt8DataStore*>(&maskArrayPtr->getDataStoreRef());
+      hasContiguousMask = uint8MaskStorePtr != nullptr;
     }
 
-    if(arrayStore != nullptr && colorStore != nullptr && hasContiguousMask)
+    if(arrayStorePtr != nullptr && colorStorePtr != nullptr && hasContiguousMask)
     {
-      ContiguousStoreAccess<ScalarType> dataAccess(*arrayStore, *colorStore, goodVoxelsArray, boolMaskStore, uint8MaskStore);
+      ContiguousStoreAccess<ScalarType> dataAccess(*arrayStorePtr, *colorStorePtr, goodVoxelsArrayPtr, boolMaskStorePtr, uint8MaskStorePtr);
       dataAlg.execute(CreateColorMapImpl<ScalarType, ContiguousStoreAccess<ScalarType>>(dataAccess, numTuples, binPoints, controlPoints, numControlColors, inputValues->InvalidColor));
     }
     else
     {
-      AbstractStoreAccess<ScalarType> dataAccess(arrayStoreRef, colorStoreRef, goodVoxelsArray);
+      AbstractStoreAccess<ScalarType> dataAccess(arrayStoreRef, colorStoreRef, goodVoxelsArrayPtr);
       dataAlg.execute(CreateColorMapImpl<ScalarType, AbstractStoreAccess<ScalarType>>(dataAccess, numTuples, binPoints, controlPoints, numControlColors, inputValues->InvalidColor));
     }
     return {};

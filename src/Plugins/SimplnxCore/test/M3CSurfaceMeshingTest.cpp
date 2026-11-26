@@ -299,10 +299,10 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
     {
       const auto& source = dataStructure.getDataRefAs<IDataArray>(sourcePath);
       DataPath transferredPath = faceGroupDataPath.createChildPath(sourcePath.getTargetName());
-      const auto* transferred = dataStructure.getDataAs<IDataArray>(transferredPath);
-      REQUIRE(transferred != nullptr);
-      REQUIRE(transferred->getNumberOfTuples() == numTriangles);
-      REQUIRE(transferred->getNumberOfComponents() == 2 * source.getNumberOfComponents());
+      const auto* transferredPtr = dataStructure.getDataAs<IDataArray>(transferredPath);
+      REQUIRE(transferredPtr != nullptr);
+      REQUIRE(transferredPtr->getNumberOfTuples() == numTriangles);
+      REQUIRE(transferredPtr->getNumberOfComponents() == 2 * source.getNumberOfComponents());
     }
   };
   checkTransferred(selectedCellArrayPaths);
@@ -351,17 +351,17 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({xDim, yDim, zDim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({xDim, yDim, zDim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   const std::vector<usize> tupleDims = {zDim, yDim, xDim};
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleDims, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleDims, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleDims, std::vector<usize>{1}, cellAM->getId());
-  auto& fidStore = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleDims, std::vector<usize>{1}, cellAmPtr->getId());
+  auto& fidStore = featureIdsPtr->getDataStoreRef();
   usize idx = 0;
   for(usize z = 0; z < zDim; z++)
   {
@@ -594,24 +594,24 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: SIMPL Backwards Compatibility",
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "M3CSurfaceMeshingFilter.json";
 
-  auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+  auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
   REQUIRE(pipelineResult.valid());
 
   auto& pipeline = pipelineResult.value();
   REQUIRE(pipeline.size() == 1);
 
-  auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-  REQUIRE(pipelineFilter != nullptr);
+  auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(pipelineFilterPtr != nullptr);
 
-  const IFilter* filter = pipelineFilter->getFilter();
-  REQUIRE(filter != nullptr);
-  REQUIRE(filter->uuid() == FilterTraits<M3CSurfaceMeshingFilter>::uuid);
+  const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+  REQUIRE(filterPtr != nullptr);
+  REQUIRE(filterPtr->uuid() == FilterTraits<M3CSurfaceMeshingFilter>::uuid);
 
-  const Arguments args = pipelineFilter->getArguments();
+  const Arguments args = pipelineFilterPtr->getArguments();
   CHECK(args.value<DataPath>(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key) == DataPath({"DataContainer"}));
   CHECK(args.value<DataPath>(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
   CHECK(args.value<DataPath>(M3CSurfaceMeshingFilter::k_CreatedTriangleGeometryPath_Key) == DataPath({"DataContainer"}));
@@ -671,16 +671,16 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
   SECTION("Cell transfer array tuple mismatch -> error -90201")
   {
     DataStructure dataStructure;
-    auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-    imageGeom->setDimensions({2, 2, 2});
-    REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-    REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAM->getId());
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({2, 2, 2});
+    REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+    REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAmPtr->getId());
     // This transfer array has five tuples, while FeatureIds has eight.
-    auto* badAM = AttributeMatrix::Create(dataStructure, "Bad", std::vector<usize>{5}, imageGeom->getId());
-    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "BadArray", std::vector<usize>{5}, std::vector<usize>{1}, badAM->getId());
+    auto* badAmPtr = AttributeMatrix::Create(dataStructure, "Bad", std::vector<usize>{5}, imageGeomPtr->getId());
+    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "BadArray", std::vector<usize>{5}, std::vector<usize>{1}, badAmPtr->getId());
 
     Arguments args;
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
@@ -710,22 +710,22 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
   SECTION("RectGrid geometry -> preflight fails")
   {
     DataStructure dataStructure;
-    auto* rectGrid = RectGridGeom::Create(dataStructure, "RectGrid");
-    rectGrid->setDimensions({2, 2, 2});
+    auto* rectGridPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+    rectGridPtr->setDimensions({2, 2, 2});
     const char* axes[3] = {"xBounds", "yBounds", "zBounds"};
     Float32Array* bounds[3];
     for(int a = 0; a < 3; a++)
     {
-      bounds[a] = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, axes[a], std::vector<usize>{3}, std::vector<usize>{1}, rectGrid->getId());
+      bounds[a] = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, axes[a], std::vector<usize>{3}, std::vector<usize>{1}, rectGridPtr->getId());
       bounds[a]->setValue(0, 0.0f);
       bounds[a]->setValue(1, 1.0f);
       bounds[a]->setValue(2, 2.0f);
     }
-    const auto boundsResult = rectGrid->setBounds(bounds[0], bounds[1], bounds[2]);
+    const auto boundsResult = rectGridPtr->setBounds(bounds[0], bounds[1], bounds[2]);
     SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, rectGrid->getId());
-    rectGrid->setCellData(*cellAM);
-    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAM->getId());
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, rectGridPtr->getId());
+    rectGridPtr->setCellData(*cellAmPtr);
+    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAmPtr->getId());
 
     Arguments args;
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"RectGrid"})));
@@ -821,15 +821,15 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source vol
   DYNAMIC_SECTION("dims " << dimX << "x" << dimY << "x" << dimZ)
   {
     DataStructure dataStructure;
-    auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-    imageGeom->setDimensions({static_cast<usize>(dimX), static_cast<usize>(dimY), static_cast<usize>(dimZ)});
-    REQUIRE(imageGeom->setSpacing(spacing).valid());
-    REQUIRE(imageGeom->setOrigin(origin).valid());
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({static_cast<usize>(dimX), static_cast<usize>(dimY), static_cast<usize>(dimZ)});
+    REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+    REQUIRE(imageGeomPtr->setOrigin(origin).valid());
     const std::vector<usize> tupleShape = {static_cast<usize>(dimZ), static_cast<usize>(dimY), static_cast<usize>(dimX)};
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-    auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAM->getId());
-    auto& featureIdsRef = featureIds->getDataStoreRef();
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
+    auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
     for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
     {
       featureIdsRef[i] = static_cast<int32>(i) + 1;
@@ -899,15 +899,15 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
   const usize dimZ = 2;
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing(spacing).valid());
-  REQUIRE(imageGeom->setOrigin(origin).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+  REQUIRE(imageGeomPtr->setOrigin(origin).valid());
   const std::vector<usize> tupleShape = {dimZ, dimY, dimX};
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAM->getId());
-  auto& featureIdsRef = featureIds->getDataStoreRef();
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
+  auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
   {
     featureIdsRef[i] = 1;
@@ -1000,10 +1000,10 @@ public:
   ScopedEnvVar(std::string name, const char* value)
   : m_Name(std::move(name))
   {
-    if(const char* previous = std::getenv(m_Name.c_str()); previous != nullptr)
+    if(const char* previousPtr = std::getenv(m_Name.c_str()); previousPtr != nullptr)
     {
       m_HadPrevious = true;
-      m_PreviousValue = previous;
+      m_PreviousValue = previousPtr;
     }
     if(value != nullptr)
     {
@@ -1123,15 +1123,15 @@ template <typename LabelFuncT>
 DataStructure BuildToyVolume(const SizeVec3& dims, const FloatVec3& spacing, const FloatVec3& origin, LabelFuncT&& labeler)
 {
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_SharpEdgesImageGeomPath.getTargetName());
-  imageGeom->setDimensions(dims);
-  REQUIRE(imageGeom->setSpacing(spacing).valid());
-  REQUIRE(imageGeom->setOrigin(origin).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_SharpEdgesImageGeomPath.getTargetName());
+  imageGeomPtr->setDimensions(dims);
+  REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+  REQUIRE(imageGeomPtr->setOrigin(origin).valid());
   const std::vector<usize> tupleShape = {dims[2], dims[1], dims[0]};
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAM->getId());
-  auto& featureIdsRef = featureIds->getDataStoreRef();
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
+  auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   usize idx = 0;
   for(usize z = 0; z < dims[2]; z++)
   {
@@ -1173,9 +1173,9 @@ void RunM3CSharpEdges(DataStructure& dataStructure, bool sharpEdges)
 // in CheckMeshWithinVolume).
 struct VolumeBounds
 {
-  std::array<float32, 3> Lo;
-  std::array<float32, 3> Hi;
-  float32 Tol;
+  std::array<float32, 3> lo;
+  std::array<float32, 3> hi;
+  float32 tol;
 };
 
 VolumeBounds GetVolumeBounds(const DataStructure& dataStructure, const DataPath& imageGeomPath)
@@ -1188,12 +1188,12 @@ VolumeBounds GetVolumeBounds(const DataStructure& dataStructure, const DataPath&
   VolumeBounds bounds{};
   for(usize ax = 0; ax < 3; ax++)
   {
-    bounds.Lo[ax] = origin[ax];
-    bounds.Hi[ax] = origin[ax] + static_cast<float32>(dims[ax]) * spacing[ax];
+    bounds.lo[ax] = origin[ax];
+    bounds.hi[ax] = origin[ax] + static_cast<float32>(dims[ax]) * spacing[ax];
   }
   const float32 maxSpacing = std::max({spacing[0], spacing[1], spacing[2]});
-  const float32 maxMagnitude = std::max({std::abs(bounds.Lo[0]), std::abs(bounds.Lo[1]), std::abs(bounds.Lo[2]), std::abs(bounds.Hi[0]), std::abs(bounds.Hi[1]), std::abs(bounds.Hi[2])});
-  bounds.Tol = std::max(1.0e-4f * maxSpacing, 8.0f * std::numeric_limits<float32>::epsilon() * maxMagnitude);
+  const float32 maxMagnitude = std::max({std::abs(bounds.lo[0]), std::abs(bounds.lo[1]), std::abs(bounds.lo[2]), std::abs(bounds.hi[0]), std::abs(bounds.hi[1]), std::abs(bounds.hi[2])});
+  bounds.tol = std::max(1.0e-4f * maxSpacing, 8.0f * std::numeric_limits<float32>::epsilon() * maxMagnitude);
   return bounds;
 }
 
@@ -1222,13 +1222,13 @@ usize CountWallBridgingTriangles(const DataStructure& dataStructure, const DataP
     bool sharesAPlane = false;
     for(usize ax = 0; ax < 3 && !sharesAPlane; ax++)
     {
-      for(const float32 plane : {bounds.Lo[ax], bounds.Hi[ax]})
+      for(const float32 plane : {bounds.lo[ax], bounds.hi[ax]})
       {
         bool allOnPlane = true;
         for(usize corner = 0; corner < 3 && allOnPlane; corner++)
         {
           const usize vertIndex = triStore[i * 3 + corner];
-          allOnPlane = std::abs(vertStore[vertIndex * 3 + ax] - plane) <= bounds.Tol;
+          allOnPlane = std::abs(vertStore[vertIndex * 3 + ax] - plane) <= bounds.tol;
         }
         if(allOnPlane)
         {
@@ -1254,12 +1254,12 @@ void RequireBoxCornersPresent(const DataStructure& dataStructure, const DataPath
   const auto& vertStore = tri.getVertices()->getDataStoreRef();
   for(int cornerBits = 0; cornerBits < 8; cornerBits++)
   {
-    const std::array<float32, 3> corner = {((cornerBits & 1) != 0) ? bounds.Hi[0] : bounds.Lo[0], ((cornerBits & 2) != 0) ? bounds.Hi[1] : bounds.Lo[1],
-                                           ((cornerBits & 4) != 0) ? bounds.Hi[2] : bounds.Lo[2]};
+    const std::array<float32, 3> corner = {((cornerBits & 1) != 0) ? bounds.hi[0] : bounds.lo[0], ((cornerBits & 2) != 0) ? bounds.hi[1] : bounds.lo[1],
+                                           ((cornerBits & 4) != 0) ? bounds.hi[2] : bounds.lo[2]};
     bool found = false;
     for(usize i = 0; i < tri.getNumberOfVertices() && !found; i++)
     {
-      found = std::abs(vertStore[i * 3 + 0] - corner[0]) <= bounds.Tol && std::abs(vertStore[i * 3 + 1] - corner[1]) <= bounds.Tol && std::abs(vertStore[i * 3 + 2] - corner[2]) <= bounds.Tol;
+      found = std::abs(vertStore[i * 3 + 0] - corner[0]) <= bounds.tol && std::abs(vertStore[i * 3 + 1] - corner[1]) <= bounds.tol && std::abs(vertStore[i * 3 + 2] - corner[2]) <= bounds.tol;
     }
     INFO("box corner (" << corner[0] << ", " << corner[1] << ", " << corner[2] << ") is not a mesh vertex");
     REQUIRE(found);
@@ -1296,8 +1296,8 @@ void RequireMeshReachesBounds(const DataStructure& dataStructure, const DataPath
       minC = std::min(minC, vertStore[i * 3 + ax]);
       maxC = std::max(maxC, vertStore[i * 3 + ax]);
     }
-    REQUIRE(minC == Approx(bounds.Lo[ax]));
-    REQUIRE(maxC == Approx(bounds.Hi[ax]));
+    REQUIRE(minC == Approx(bounds.lo[ax]));
+    REQUIRE(maxC == Approx(bounds.hi[ax]));
   }
 }
 
@@ -1332,9 +1332,9 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges", "[Si
   const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
   const FloatVec3 origin(10.0f, -5.0f, 2.5f);
 
-  using LabelerFn = int32 (*)(usize, usize, usize);
-  const auto [labelerName, labeler] = GENERATE(std::make_tuple("single feature", static_cast<LabelerFn>(SingleFeatureLabeler)),
-                                               std::make_tuple("triple line", static_cast<LabelerFn>(TripleLineLabeler)), std::make_tuple("unique cells", static_cast<LabelerFn>(UniqueCellLabeler)));
+  using LabelerFnType = int32 (*)(usize, usize, usize);
+  const auto [labelerName, labeler] = GENERATE(std::make_tuple("single feature", static_cast<LabelerFnType>(SingleFeatureLabeler)),
+                                               std::make_tuple("triple line", static_cast<LabelerFnType>(TripleLineLabeler)), std::make_tuple("unique cells", static_cast<LabelerFnType>(UniqueCellLabeler)));
 
   DYNAMIC_SECTION(labelerName << ": option off keeps the chamfer")
   {
@@ -1424,12 +1424,12 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on a o
   const float32 zMid = origin[2] + 0.5f * spacing[2];
   for(int cornerBits = 0; cornerBits < 4; cornerBits++)
   {
-    const float32 cx = ((cornerBits & 1) != 0) ? bounds.Hi[0] : bounds.Lo[0];
-    const float32 cy = ((cornerBits & 2) != 0) ? bounds.Hi[1] : bounds.Lo[1];
+    const float32 cx = ((cornerBits & 1) != 0) ? bounds.hi[0] : bounds.lo[0];
+    const float32 cy = ((cornerBits & 2) != 0) ? bounds.hi[1] : bounds.lo[1];
     bool found = false;
     for(usize i = 0; i < tri.getNumberOfVertices() && !found; i++)
     {
-      found = std::abs(vertStore[i * 3 + 0] - cx) <= bounds.Tol && std::abs(vertStore[i * 3 + 1] - cy) <= bounds.Tol && std::abs(vertStore[i * 3 + 2] - zMid) <= bounds.Tol;
+      found = std::abs(vertStore[i * 3 + 0] - cx) <= bounds.tol && std::abs(vertStore[i * 3 + 1] - cy) <= bounds.tol && std::abs(vertStore[i * 3 + 2] - zMid) <= bounds.tol;
     }
     INFO("vertical box edge at (" << cx << ", " << cy << ") has no vertex at z = " << zMid);
     REQUIRE(found);

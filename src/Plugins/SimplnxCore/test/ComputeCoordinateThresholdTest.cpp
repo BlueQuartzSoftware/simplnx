@@ -78,15 +78,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -120,15 +120,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -160,11 +160,11 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bo
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -199,11 +199,11 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bound
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -236,15 +236,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warn
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -295,15 +295,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -344,11 +344,11 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
 
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -445,11 +445,11 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -545,22 +545,22 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Chunk Bound
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr std::array<usize, 3> k_Dimensions = {257, 257, 1};
-  imageGeom->setDimensions(k_Dimensions);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  imageGeomPtr->setDimensions(k_Dimensions);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
   const VectorFloat32Parameter::ValueType minCoord = {1.0f, 255.0f, 0.0f};
   const VectorFloat32Parameter::ValueType maxCoord = {2.0f, 256.0f, 1.0f};
   scope.execute([&] { RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord); });
 
-  const UInt8Array* mask = nullptr;
-  REQUIRE_NOTHROW(mask = &dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
+  const UInt8Array* maskPtr = nullptr;
+  REQUIRE_NOTHROW(maskPtr = &dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
   constexpr usize k_FirstTupleAfterChunkBoundary = 65536;
-  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary - 1] == 0);
-  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary] == 1);
-  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary + 1] == 0);
+  REQUIRE((*maskPtr)[k_FirstTupleAfterChunkBoundary - 1] == 0);
+  REQUIRE((*maskPtr)[k_FirstTupleAfterChunkBoundary] == 1);
+  REQUIRE((*maskPtr)[k_FirstTupleAfterChunkBoundary + 1] == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -569,11 +569,11 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Rec
 {
   DataStructure dataStructure;
 
-  auto* vertexGeom = VertexGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*vertexArray);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*vertexArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     vertices[i * 3 + 0] = i;
@@ -623,11 +623,11 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sph
 {
   DataStructure dataStructure;
 
-  auto* vertexGeom = VertexGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*vertexArray);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*vertexArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     vertices[i * 3 + 0] = i;
@@ -675,15 +675,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Recta
 {
   DataStructure dataStructure;
 
-  auto* geom = EdgeGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
-  geom->setEdgeList(*edgesArray);
+  auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
+  geomPtr->setEdgeList(*edgesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& edges = edgesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& edges = edgesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     edges[(i * 2) + 0] = i;
@@ -736,15 +736,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Spher
 {
   DataStructure dataStructure;
 
-  auto* geom = EdgeGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
-  geom->setEdgeList(*edgesArray);
+  auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
+  geomPtr->setEdgeList(*edgesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& edges = edgesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& edges = edgesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     edges[(i * 2) + 0] = i;
@@ -796,15 +796,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - R
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -843,15 +843,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - S
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -889,15 +889,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Recta
 {
   DataStructure dataStructure;
 
-  auto* geom = QuadGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = QuadGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     faces[i] = i;
@@ -936,15 +936,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
 {
   DataStructure dataStructure;
 
-  auto* geom = QuadGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = QuadGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     faces[i] = i;

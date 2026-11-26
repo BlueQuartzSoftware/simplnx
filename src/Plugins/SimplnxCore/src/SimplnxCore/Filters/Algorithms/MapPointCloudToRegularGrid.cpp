@@ -28,9 +28,9 @@ struct OutOfBoundsType
   static_assert((UseSilent && !UseWarning && !UseError) || (!UseSilent && UseWarning && !UseError) || (!UseSilent && !UseWarning && UseError),
                 "struct `OutOfBoundsType` can only have one true bool in its instantiation");
 
-  static constexpr bool UsingSilent = UseSilent;
-  static constexpr bool UsingWarning = UseWarning;
-  static constexpr bool UsingError = UseError;
+  static constexpr bool k_UsingSilent = UseSilent;
+  static constexpr bool k_UsingWarning = UseWarning;
+  static constexpr bool k_UsingError = UseError;
 };
 
 using SilentType = OutOfBoundsType<true, false, false>;
@@ -70,7 +70,7 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
     }
     else
     {
-      if constexpr(OutOfBoundsType::UsingError)
+      if constexpr(OutOfBoundsType::k_UsingError)
       {
         BoundingBox3Df imageBounds = image.getBoundingBoxf();
         const Point3Df& minPoint = imageBounds.getMinPoint();
@@ -89,7 +89,7 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
 
   progressThrottle.updatePercent(numVerts);
 
-  if constexpr(OutOfBoundsType::UsingWarning)
+  if constexpr(OutOfBoundsType::k_UsingWarning)
   {
     if(count > 0)
     {

@@ -80,12 +80,12 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     std::vector<size_t> tupleShape = {triangleGeom.getNumberOfVertices()};
     std::vector<size_t> compShape = {1};
     // Insert a Node Type array into the DataStructure so the filter works.
-    Int8Array* nodeType = nx::core::UnitTest::CreateTestDataArray<int8_t>(dataStructure, nodeTypeArrayName, tupleShape, compShape, vertexDataGroupId);
+    Int8Array* nodeTypePtr = nx::core::UnitTest::CreateTestDataArray<int8_t>(dataStructure, nodeTypeArrayName, tupleShape, compShape, vertexDataGroupId);
 
     // Assign the `Default Node Type` to all the values
     for(size_t i = 0; i < triangleGeom.getNumberOfVertices(); i++)
     {
-      (*nodeType)[i] = nx::core::NodeType::Default;
+      (*nodeTypePtr)[i] = nx::core::NodeType::Default;
     }
 
     DataPath nodeTypeArrayPath = vertexDataGroupPath.createChildPath(nodeTypeArrayName);
@@ -130,7 +130,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: SIMPL Backwards Compatibility"
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -143,22 +143,22 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: SIMPL Backwards Compatibility"
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<LaplacianSmoothingFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<LaplacianSmoothingFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int32>(LaplacianSmoothingFilter::k_IterationSteps_Key) == 5);
       CHECK(args.value<float32>(LaplacianSmoothingFilter::k_Lambda_Key) == 2.5f);
       CHECK(args.value<bool>(LaplacianSmoothingFilter::k_UseTaubinSmoothing_Key) == true);
@@ -182,52 +182,52 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: Smoothing preserves input edge
   CAPTURE(existingEdges, cancelled);
   DataStructure dataStructure;
   const DataPath geometryPath({"Mesh"});
-  auto* geometry = TriangleGeom::Create(dataStructure, "Mesh");
-  REQUIRE(geometry != nullptr);
+  auto* geometryPtr = TriangleGeom::Create(dataStructure, "Mesh");
+  REQUIRE(geometryPtr != nullptr);
   const DataPath verticesPath = geometryPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
-  auto* vertices = Float32Array::Create(dataStructure, verticesPath.getTargetName(), DataStoreUtilities::CreateDataStore<float32>(dataStructure, verticesPath, {3}, {3}), geometry->getId());
+  auto* verticesPtr = Float32Array::Create(dataStructure, verticesPath.getTargetName(), DataStoreUtilities::CreateDataStore<float32>(dataStructure, verticesPath, {3}, {3}), geometryPtr->getId());
   const DataPath facesPath = geometryPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
-  auto* faces = UInt64Array::Create(dataStructure, facesPath.getTargetName(), DataStoreUtilities::CreateDataStore<uint64>(dataStructure, facesPath, {1}, {3}), geometry->getId());
-  REQUIRE(vertices != nullptr);
-  REQUIRE(faces != nullptr);
+  auto* facesPtr = UInt64Array::Create(dataStructure, facesPath.getTargetName(), DataStoreUtilities::CreateDataStore<uint64>(dataStructure, facesPath, {1}, {3}), geometryPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(facesPtr != nullptr);
   // The triangle has vertices (0,0,0), (2,0,0), (0,3,0) and edges 01,12,20.
   const std::array<float32, 9> coordinates = {0, 0, 0, 2, 0, 0, 0, 3, 0};
   const std::array<uint64, 3> face = {0, 1, 2};
   const std::array<uint64, 6> edgeValues = {0, 1, 1, 2, 2, 0};
-  auto vertexResult = vertices->getDataStoreRef().copyFromBuffer(0, coordinates);
+  auto vertexResult = verticesPtr->getDataStoreRef().copyFromBuffer(0, coordinates);
   SIMPLNX_RESULT_REQUIRE_VALID(vertexResult);
-  auto faceResult = faces->getDataStoreRef().copyFromBuffer(0, face);
+  auto faceResult = facesPtr->getDataStoreRef().copyFromBuffer(0, face);
   SIMPLNX_RESULT_REQUIRE_VALID(faceResult);
-  geometry->setVertices(*vertices);
-  geometry->setFaceList(*faces);
-  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, geometry->getId());
-  REQUIRE(vertexData != nullptr);
-  geometry->setVertexDataId(vertexData->getId());
+  geometryPtr->setVertices(*verticesPtr);
+  geometryPtr->setFaceList(*facesPtr);
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, geometryPtr->getId());
+  REQUIRE(vertexDataPtr != nullptr);
+  geometryPtr->setVertexDataId(vertexDataPtr->getId());
   const DataPath nodePath({"Mesh", "Vertex Data", "Node Types"});
-  auto* nodes = Int8Array::Create(dataStructure, "Node Types", DataStoreUtilities::CreateDataStore<int8>(dataStructure, nodePath, {3}, {1}), vertexData->getId());
-  REQUIRE(nodes != nullptr);
-  nodes->fill(NodeType::Default);
-  auto* edgeData = AttributeMatrix::Create(dataStructure, "CustomEdges", {3}, geometry->getId());
-  REQUIRE(edgeData != nullptr);
-  geometry->setEdgeDataId(edgeData->getId());
+  auto* nodesPtr = Int8Array::Create(dataStructure, "Node Types", DataStoreUtilities::CreateDataStore<int8>(dataStructure, nodePath, {3}, {1}), vertexDataPtr->getId());
+  REQUIRE(nodesPtr != nullptr);
+  nodesPtr->fill(NodeType::Default);
+  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, "CustomEdges", {3}, geometryPtr->getId());
+  REQUIRE(edgeDataPtr != nullptr);
+  geometryPtr->setEdgeDataId(edgeDataPtr->getId());
   const DataPath markerPath({"Mesh", "CustomEdges", "Marker"});
-  auto* marker = Int32Array::Create(dataStructure, "Marker", DataStoreUtilities::CreateDataStore<int32>(dataStructure, markerPath, {3}, {1}), edgeData->getId());
-  REQUIRE(marker != nullptr);
+  auto* markerPtr = Int32Array::Create(dataStructure, "Marker", DataStoreUtilities::CreateDataStore<int32>(dataStructure, markerPath, {3}, {1}), edgeDataPtr->getId());
+  REQUIRE(markerPtr != nullptr);
   const std::array<int32, 3> markers = {11, 22, 33};
-  auto markerResult = marker->getDataStoreRef().copyFromBuffer(0, markers);
+  auto markerResult = markerPtr->getDataStoreRef().copyFromBuffer(0, markers);
   SIMPLNX_RESULT_REQUIRE_VALID(markerResult);
-  const auto edgeDataId = edgeData->getId();
-  const auto markerId = marker->getId();
+  const auto edgeDataId = edgeDataPtr->getId();
+  const auto markerId = markerPtr->getId();
   const DataPath edgesPath = geometryPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName);
   std::optional<DataObject::IdType> edgeId;
   if(existingEdges)
   {
-    auto* edges = UInt64Array::Create(dataStructure, edgesPath.getTargetName(), DataStoreUtilities::CreateDataStore<uint64>(dataStructure, edgesPath, {3}, {2}), geometry->getId());
-    REQUIRE(edges != nullptr);
-    auto edgeResult = edges->getDataStoreRef().copyFromBuffer(0, edgeValues);
+    auto* edgesPtr = UInt64Array::Create(dataStructure, edgesPath.getTargetName(), DataStoreUtilities::CreateDataStore<uint64>(dataStructure, edgesPath, {3}, {2}), geometryPtr->getId());
+    REQUIRE(edgesPtr != nullptr);
+    auto edgeResult = edgesPtr->getDataStoreRef().copyFromBuffer(0, edgeValues);
     SIMPLNX_RESULT_REQUIRE_VALID(edgeResult);
-    geometry->setEdgeList(*edges);
-    edgeId = edges->getId();
+    geometryPtr->setEdgeList(*edgesPtr);
+    edgeId = edgesPtr->getId();
   }
   LaplacianSmoothingInputValues inputValues{};
   inputValues.pTriangleGeometryDataPath = geometryPath;
@@ -237,17 +237,17 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: Smoothing preserves input edge
   IFilter::MessageHandler messageHandler;
   auto result = LaplacianSmoothing(dataStructure, &inputValues, shouldCancel, messageHandler)();
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  CHECK(geometry->getEdgeListId() == edgeId);
-  CHECK(geometry->getEdgeAttributeMatrixId() == edgeDataId);
-  CHECK(geometry->getEdgeAttributeMatrix() == edgeData);
+  CHECK(geometryPtr->getEdgeListId() == edgeId);
+  CHECK(geometryPtr->getEdgeAttributeMatrixId() == edgeDataId);
+  CHECK(geometryPtr->getEdgeAttributeMatrix() == edgeDataPtr);
   CHECK(dataStructure.getId(DataPath({"Mesh", "CustomEdges"})) == edgeDataId);
   CHECK(dataStructure.getId(markerPath) == markerId);
   std::array<int32, 3> actualMarkers{};
-  auto markerRead = marker->getDataStoreRef().copyIntoBuffer(0, actualMarkers);
+  auto markerRead = markerPtr->getDataStoreRef().copyIntoBuffer(0, actualMarkers);
   SIMPLNX_RESULT_REQUIRE_VALID(markerRead);
   CHECK(actualMarkers == markers);
   std::array<float32, 9> actualVertices{};
-  auto vertexRead = vertices->getDataStoreRef().copyIntoBuffer(0, actualVertices);
+  auto vertexRead = verticesPtr->getDataStoreRef().copyIntoBuffer(0, actualVertices);
   SIMPLNX_RESULT_REQUIRE_VALID(vertexRead);
   CHECK(actualVertices == coordinates);
   if(existingEdges)
@@ -262,7 +262,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: Smoothing preserves input edge
   else
   {
     CHECK(dataStructure.getData(edgesPath) == nullptr);
-    CHECK(geometry->getEdges() == nullptr);
+    CHECK(geometryPtr->getEdges() == nullptr);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

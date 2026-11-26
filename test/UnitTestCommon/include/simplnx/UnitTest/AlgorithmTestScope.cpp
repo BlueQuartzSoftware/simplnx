@@ -65,8 +65,8 @@ std::vector<AlgorithmTestScenario> SelectAlgorithmTestScenariosForInMemoryStores
 AlgorithmTestScope::AlgorithmTestScope(AlgorithmTestScenario scenario)
 : m_Scenario(scenario)
 {
-  auto* preferences = Application::GetOrCreateInstance()->getPreferences();
-  const nlohmann::json originalLargeDataSize = preferences->value(Preferences::k_LargeDataSize_Key);
+  auto* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
+  const nlohmann::json originalLargeDataSize = preferencesPtr->value(Preferences::k_LargeDataSize_Key);
   m_PreferencesSentinel = std::make_unique<PreferencesSentinel>(DataStorageMode::ForceInCore, originalLargeDataSize);
 }
 
@@ -81,9 +81,9 @@ void AlgorithmTestScope::requireExpectedStore(const IDataArray& array) const
 
 void AlgorithmTestScope::requireExpectedStore(const INeighborList& array) const
 {
-  const auto* listStore = array.getIListStore();
-  REQUIRE(listStore != nullptr);
-  const bool actualOutOfCore = listStore->isOutOfCore();
+  const auto* listStorePtr = array.getIListStore();
+  REQUIRE(listStorePtr != nullptr);
+  const bool actualOutOfCore = listStorePtr->isOutOfCore();
   INFO("Scenario " << m_Scenario << ": NeighborList '" << array.getName() << "' expected an in-memory list store; actual out-of-core=" << actualOutOfCore);
   REQUIRE_FALSE(actualOutOfCore);
 }

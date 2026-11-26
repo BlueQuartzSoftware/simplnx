@@ -19,9 +19,9 @@ TEST_CASE("NXImageProcessing::NotImageFilter: full-overwrite preflight defers OO
   const auto requireCreateAction = [](const IFilter::PreflightResult& preflightResult) -> const CreateArrayAction& {
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-    const auto* action = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-    REQUIRE(action != nullptr);
-    return *action;
+    const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+    REQUIRE(actionPtr != nullptr);
+    return *actionPtr;
   };
 
   NotImageFilter notFilter;

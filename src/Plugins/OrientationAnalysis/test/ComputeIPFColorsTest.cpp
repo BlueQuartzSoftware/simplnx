@@ -66,24 +66,24 @@ constexpr usize k_InvalidCsCell = 4; // crystal structure 999 -> black
 DataStructure BuildAnalyticalDataset()
 {
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({k_NumCells, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({k_NumCells, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {k_NumCells}, imageGeom->getId());
-  auto* eulersArray = CreateTestDataArray<float32>(dataStructure, "EulerAngles", {k_NumCells}, {3}, cellAM->getId());
-  auto* phasesArray = CreateTestDataArray<int32>(dataStructure, "Phases", {k_NumCells}, {1}, cellAM->getId());
-  auto* maskArray = CreateTestDataArray<bool>(dataStructure, "Mask", {k_NumCells}, {1}, cellAM->getId());
-  auto* maskU8Array = CreateTestDataArray<uint8>(dataStructure, "MaskU8", {k_NumCells}, {1}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_NumCells}, imageGeomPtr->getId());
+  auto* eulersArrayPtr = CreateTestDataArray<float32>(dataStructure, "EulerAngles", {k_NumCells}, {3}, cellAmPtr->getId());
+  auto* phasesArrayPtr = CreateTestDataArray<int32>(dataStructure, "Phases", {k_NumCells}, {1}, cellAmPtr->getId());
+  auto* maskArrayPtr = CreateTestDataArray<bool>(dataStructure, "Mask", {k_NumCells}, {1}, cellAmPtr->getId());
+  auto* maskU8ArrayPtr = CreateTestDataArray<uint8>(dataStructure, "MaskU8", {k_NumCells}, {1}, cellAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {k_NumEnsembles}, imageGeom->getId());
-  auto* crystalStructuresArray = CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {k_NumEnsembles}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {k_NumEnsembles}, imageGeomPtr->getId());
+  auto* crystalStructuresArrayPtr = CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {k_NumEnsembles}, {1}, ensembleAmPtr->getId());
 
-  auto& csStore = crystalStructuresArray->getDataStoreRef();
+  auto& csStore = crystalStructuresArrayPtr->getDataStoreRef();
   csStore[0] = CS::UnknownCrystalStructure;
   csStore[1] = CS::Cubic_High;
   csStore[2] = CS::Hexagonal_High;
 
-  auto& eulerStore = eulersArray->getDataStoreRef();
+  auto& eulerStore = eulersArrayPtr->getDataStoreRef();
   auto setEuler = [&](usize cell, float32 p1, float32 p, float32 p2) {
     eulerStore[cell * 3] = p1;
     eulerStore[cell * 3 + 1] = p;
@@ -96,15 +96,15 @@ DataStructure BuildAnalyticalDataset()
   setEuler(4, 0.3F, 0.4F, 0.5F);
   setEuler(5, 0.7F, 0.8F, 0.9F);
 
-  auto& phaseStore = phasesArray->getDataStoreRef();
+  auto& phaseStore = phasesArrayPtr->getDataStoreRef();
   const std::array<int32, k_NumCells> phases = {1, 1, 2, 1, 0, 2};
   for(usize i = 0; i < k_NumCells; i++)
   {
     phaseStore[i] = phases[i];
   }
 
-  auto& maskStore = maskArray->getDataStoreRef();
-  auto& maskU8Store = maskU8Array->getDataStoreRef();
+  auto& maskStore = maskArrayPtr->getDataStoreRef();
+  auto& maskU8Store = maskU8ArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_NumCells; i++)
   {
     const bool good = (i != k_MaskedCell);
@@ -475,18 +475,18 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell a
   // EulerAngles and Phases have different tuple counts. The disabled mask keeps
   // the preflight check limited to these two arrays.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {10}, {3}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {10}, {3}, cellAmPtr->getId());
 
   // The separate group makes Phases contain nine tuples instead of ten.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   ComputeIPFColorsFilter filter;
   Arguments args;
@@ -508,7 +508,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatib
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -521,22 +521,22 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatib
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeIPFColorsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeIPFColorsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Pipeline loading verifies FloatVec3FilterParameterConverter.
       CHECK(args.value<bool>(ComputeIPFColorsFilter::k_UseMask_Key) == true);
       CHECK(args.value<DataPath>(ComputeIPFColorsFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

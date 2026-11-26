@@ -19,18 +19,18 @@ namespace rt = recon_test;
 
 namespace
 {
-using AsdFilter = ApproximateSignedDistanceMapImageFilter;
+using AsdFilterType = ApproximateSignedDistanceMapImageFilter;
 
 void RunAsd(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float64 insideValue, float64 outsideValue, UnitTest::AlgorithmTestScope* scope = nullptr,
             const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(AsdFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(AsdFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(AsdFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(AsdFilter::k_InsideValue_Key, std::make_any<float64>(insideValue));
-  args.insertOrAssign(AsdFilter::k_OutsideValue_Key, std::make_any<float64>(outsideValue));
+  args.insertOrAssign(AsdFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(AsdFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(AsdFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(AsdFilterType::k_InsideValue_Key, std::make_any<float64>(insideValue));
+  args.insertOrAssign(AsdFilterType::k_OutsideValue_Key, std::make_any<float64>(outsideValue));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope == nullptr ? filter.execute(ds, args) : scope->executeFilter(filter, ds, args);
@@ -46,25 +46,25 @@ TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: sign orie
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize D = 9;
-  std::vector<int32> field(D * D, 0);
+  constexpr usize k_D = 9;
+  std::vector<int32> field(k_D * k_D, 0);
   for(usize y = 3; y <= 5; ++y)
   {
     for(usize x = 3; x <= 5; ++x)
     {
-      field[rt::FlatIndex(x, y, 0, D, D)] = 1; // filled 3x3 object
+      field[rt::FlatIndex(x, y, 0, k_D, k_D)] = 1; // filled 3x3 object
     }
   }
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, D, D, 1, field);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_D, k_D, 1, field);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
-  AsdFilter filter;
+  AsdFilterType filter;
   RunAsd(filter, ds, inputPath, 1.0, 0.0, &scope);
   const auto& out = ds.getDataRefAs<DataArray<float32>>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
-  REQUIRE(out.getValue(rt::FlatIndex(4, 4, 0, D, D)) < 0.0f); // deep interior
-  REQUIRE(out.getValue(rt::FlatIndex(0, 0, 0, D, D)) > 0.0f); // far exterior corner
+  REQUIRE(out.getValue(rt::FlatIndex(4, 4, 0, k_D, k_D)) < 0.0f); // deep interior
+  REQUIRE(out.getValue(rt::FlatIndex(0, 0, 0, k_D, k_D)) > 0.0f); // far exterior corner
 }
 
 // -----------------------------------------------------------------------------
@@ -78,13 +78,13 @@ TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: preflight
 
   auto runPreflight = [](DataStructure& ds, const DataPath& inputPath) {
     const DataPath geomPath = inputPath.getParent().getParent();
-    AsdFilter filter;
+    AsdFilterType filter;
     Arguments args;
-    args.insertOrAssign(AsdFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(AsdFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(AsdFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(AsdFilter::k_InsideValue_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(AsdFilter::k_OutsideValue_Key, std::make_any<float64>(0.0));
+    args.insertOrAssign(AsdFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(AsdFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(AsdFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(AsdFilterType::k_InsideValue_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(AsdFilterType::k_OutsideValue_Key, std::make_any<float64>(0.0));
     return filter.preflight(ds, args);
   };
 
@@ -117,10 +117,10 @@ TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: preflight
     DataStructure ds;
     const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
     const auto& geom = ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent());
-    auto* wrongAM = AttributeMatrix::Create(ds, "WrongCellData", {35}, geom.getId());
+    auto* wrongAmPtr = AttributeMatrix::Create(ds, "WrongCellData", {35}, geom.getId());
     const DataPath wrongPath({"Image Geometry", "WrongCellData", "Short"});
     auto store = DataStoreUtilities::CreateDataStore<int32>(ds, wrongPath, {35}, {1});
-    DataArray<int32>::Create(ds, "Short", store, wrongAM->getId());
+    DataArray<int32>::Create(ds, "Short", store, wrongAmPtr->getId());
     const auto result = runPreflight(ds, wrongPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8001);
@@ -141,11 +141,11 @@ TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: FromSIMPL
   const Result<Arguments> result = ApproximateSignedDistanceMapImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<float64>(AsdFilter::k_InsideValue_Key) == 3.0);
-  REQUIRE(args.value<float64>(AsdFilter::k_OutsideValue_Key) == 7.0);
-  REQUIRE(args.value<DataPath>(AsdFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
-  REQUIRE(args.value<DataPath>(AsdFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
-  REQUIRE(args.value<std::string>(AsdFilter::k_OutputImageArrayName_Key) == "AsdOut");
+  REQUIRE(args.value<float64>(AsdFilterType::k_InsideValue_Key) == 3.0);
+  REQUIRE(args.value<float64>(AsdFilterType::k_OutsideValue_Key) == 7.0);
+  REQUIRE(args.value<DataPath>(AsdFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
+  REQUIRE(args.value<DataPath>(AsdFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
+  REQUIRE(args.value<std::string>(AsdFilterType::k_OutputImageArrayName_Key) == "AsdOut");
 }
 
 // -----------------------------------------------------------------------------

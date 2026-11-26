@@ -105,9 +105,9 @@ std::vector<DataMap::IdType> DataMap::getAllKeys() const
   for(const auto& pair : m_Map)
   {
     keys.push_back(pair.first);
-    if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
+    if(const BaseGroup* groupPtr = dynamic_cast<BaseGroup*>(pair.second.get()))
     {
-      auto childKeys = group->getDataMap().getAllKeys();
+      auto childKeys = groupPtr->getDataMap().getAllKeys();
       keys.insert(keys.end(), childKeys.begin(), childKeys.end());
     }
   }
@@ -120,9 +120,9 @@ std::map<DataMap::IdType, std::weak_ptr<DataObject>> DataMap::getAllItems() cons
   for(const auto& pair : m_Map)
   {
     map[pair.first] = pair.second;
-    if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
+    if(const BaseGroup* groupPtr = dynamic_cast<BaseGroup*>(pair.second.get()))
     {
-      map.merge(group->getDataMap().getAllItems());
+      map.merge(groupPtr->getDataMap().getAllItems());
     }
   }
   return map;
@@ -213,22 +213,22 @@ const DataObject* DataMap::operator[](const std::string& name) const
 
 DataObject& DataMap::at(const std::string& name)
 {
-  DataObject* object = (*this)[name];
-  if(object == nullptr)
+  DataObject* objectPtr = (*this)[name];
+  if(objectPtr == nullptr)
   {
     throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
   }
-  return *object;
+  return *objectPtr;
 }
 
 const DataObject& DataMap::at(const std::string& name) const
 {
-  const DataObject* object = (*this)[name];
-  if(object == nullptr)
+  const DataObject* objectPtr = (*this)[name];
+  if(objectPtr == nullptr)
   {
     throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
   }
-  return *object;
+  return *objectPtr;
 }
 
 DataMap::Iterator DataMap::find(IdType identifier)
@@ -309,8 +309,8 @@ DataMap& DataMap::operator=(const DataMap& rhs)
   auto keys = rhs.getKeys();
   for(auto& key : keys)
   {
-    DataObject* copy = rhs.m_Map.at(key)->shallowCopy();
-    m_Map[key] = std::shared_ptr<DataObject>(copy);
+    DataObject* copyPtr = rhs.m_Map.at(key)->shallowCopy();
+    m_Map[key] = std::shared_ptr<DataObject>(copyPtr);
   }
 
   return *this;

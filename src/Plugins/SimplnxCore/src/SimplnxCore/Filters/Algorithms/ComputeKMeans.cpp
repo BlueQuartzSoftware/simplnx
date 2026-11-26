@@ -29,10 +29,10 @@ Result<> ComputeKMeans::operator()()
 {
   // Include every Scanline input/output; an OOC mask or means array must not
   // accidentally route execution to Direct's element-wise implementation.
-  auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto* meansArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeansArrayPath);
-  std::vector<const IArray*> targets = {clusteringArray, featureIdsArray, meansArray};
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto* meansArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeansArrayPath);
+  std::vector<const IArray*> targets = {clusteringArrayPtr, featureIdsArrayPtr, meansArrayPtr};
   if(m_InputValues->UseMask)
   {
     targets.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath));

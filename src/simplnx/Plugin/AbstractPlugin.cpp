@@ -100,6 +100,6 @@ void AbstractPlugin::addDataIOManager(const IOManagerPointer& ioManager)
 
 void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& value) const
 {
-  Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
-  preferences->addDefaultValues(getName(), std::move(keyName), value);
+  Preferences* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
+  preferencesPtr->addDefaultValues(getName(), std::move(keyName), value);
 }

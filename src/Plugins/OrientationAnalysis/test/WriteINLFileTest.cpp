@@ -287,32 +287,32 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[
   const usize numCells = structures.size();
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({numCells, 1, 1});
-  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, numCells}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {1, 1, numCells}, {1}, cellData->getId());
-  auto* phases = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {1, 1, numCells}, {1}, cellData->getId());
-  auto* eulers = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "EulerAngles", {1, 1, numCells}, {3}, cellData->getId());
-  REQUIRE(featureIds != nullptr);
-  REQUIRE(phases != nullptr);
-  REQUIRE(eulers != nullptr);
-  eulers->fill(0.0F);
-  auto* crystalStructures = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "CrystalStructures", {numCells}, {1});
-  auto* numFeatures = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "NumFeatures", {numCells}, {1});
-  REQUIRE(crystalStructures != nullptr);
-  REQUIRE(numFeatures != nullptr);
-  numFeatures->fill(1);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({numCells, 1, 1});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, numCells}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {1, 1, numCells}, {1}, cellDataPtr->getId());
+  auto* phasesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {1, 1, numCells}, {1}, cellDataPtr->getId());
+  auto* eulersPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "EulerAngles", {1, 1, numCells}, {3}, cellDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(eulersPtr != nullptr);
+  eulersPtr->fill(0.0F);
+  auto* crystalStructuresPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "CrystalStructures", {numCells}, {1});
+  auto* numFeaturesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "NumFeatures", {numCells}, {1});
+  REQUIRE(crystalStructuresPtr != nullptr);
+  REQUIRE(numFeaturesPtr != nullptr);
+  numFeaturesPtr->fill(1);
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Materials", {numCells}, std::vector<std::string>(numCells, "Phase")) != nullptr);
   for(usize i = 0; i < numCells; ++i)
   {
-    (*featureIds)[i] = static_cast<int32>(i);
-    (*phases)[i] = static_cast<int32>(i);
-    (*crystalStructures)[i] = structures[i];
+    (*featureIdsPtr)[i] = static_cast<int32>(i);
+    (*phasesPtr)[i] = static_cast<int32>(i);
+    (*crystalStructuresPtr)[i] = structures[i];
   }
 
   const fs::path outputPath = fs::temp_directory_path() / "nx_all_laue_inl_writer.inl";
@@ -425,7 +425,7 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: SIMPL Backwards Compatibilit
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -438,22 +438,22 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: SIMPL Backwards Compatibilit
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteINLFileFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteINLFileFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteINLFileFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<DataPath>(WriteINLFileFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(WriteINLFileFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

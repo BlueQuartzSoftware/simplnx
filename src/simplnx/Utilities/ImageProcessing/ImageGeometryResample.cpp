@@ -189,11 +189,11 @@ public:
           for(usize x = 0; x < destDims[0]; x++)
           {
             const usize xIndex = xIndices[x];
-            T* destTuple = destRowBuffer.data() + (x * numComponents);
+            T* destTuplePtr = destRowBuffer.data() + (x * numComponents);
             if(xIndex != k_InvalidAxisIndex)
             {
-              const T* srcTuple = srcRowBuffer.data() + (xIndex * numComponents);
-              std::copy_n(srcTuple, numComponents, destTuple);
+              const T* srcTuplePtr = srcRowBuffer.data() + (xIndex * numComponents);
+              std::copy_n(srcTuplePtr, numComponents, destTuplePtr);
             }
           }
         }
@@ -301,12 +301,12 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     destImagePath = DataPath({tempPathVector});
   }
 
-  const AttributeMatrix* selectedCellData = srcImageGeom.getCellData();
-  if(selectedCellData == nullptr)
+  const AttributeMatrix* selectedCellDataPtr = srcImageGeom.getCellData();
+  if(selectedCellDataPtr == nullptr)
   {
     return IFilter::MakePreflightErrorResult(-5851, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()));
   }
-  const std::string cellDataName = selectedCellData->getName();
+  const std::string cellDataName = selectedCellDataPtr->getName();
   ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(
@@ -314,7 +314,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
       srcImageGeom.getUnits()));
 
   const DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-  for(const auto& [identifier, object] : *selectedCellData)
+  for(const auto& [identifier, object] : *selectedCellDataPtr)
   {
     const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
     const DataType dataType = srcArray.getDataType();
@@ -332,8 +332,8 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   if(inputValues.ClearFeatureAttributeMatrix)
   {
     const DataPath& cellFeatureAttributeMatrixPath = inputValues.CellFeatureAttributeMatrix;
-    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
-    if(srcCellFeatureData == nullptr)
+    const auto* srcCellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
+    if(srcCellFeatureDataPtr == nullptr)
     {
       return IFilter::MakePreflightErrorResult(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAttributeMatrixPath.toString()));
     }
@@ -348,7 +348,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     {
       return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
-    if(inputValues.RenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, inputValues.FeatureIdsArrayPath, *selectedCellData))
+    if(inputValues.RenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, inputValues.FeatureIdsArrayPath, *selectedCellDataPtr))
     {
       return IFilter::MakePreflightErrorResult(
           -55505, fmt::format("**Cell Feature Ids** DataArray '{}' must be in the Cell Attribute Matrix '{}' of the selected Image Geometry '{}'. Select the DataArray from that Attribute Matrix.",
@@ -357,10 +357,10 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
 
     ignorePaths.push_back(cellFeatureAttributeMatrixPath);
     const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureDataPtr->getShape()));
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *srcCellFeatureData)
+    for(const auto& [identifier, object] : *srcCellFeatureDataPtr)
     {
       clearedList += "\n" + cellFeatureAttributeMatrixPath.createChildPath(object->getName()).toString();
     }
@@ -449,7 +449,7 @@ Result<> ResampleImageGeom::operator()()
     const std::string srcName = oldDataArray.getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     {
-      const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+      const std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
       m_MessageHandler.sendInfoMessage(fmt::format("Resampling Data Array: '{}'", srcName));
     }
 
@@ -493,7 +493,7 @@ Result<> ResampleImageGeom::operator()()
 
 void ResampleImageGeom::sendThreadSafeProgressMessage(usize completedRows)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(completedRows);
 }
 
@@ -503,8 +503,8 @@ Result<> nx::core::ResampleImageGeometry(DataStructure& dataStructure, const Res
   ResampleImageGeomInputValues resolvedValues = inputValues;
   CalculateResampledSpacing(dataStructure, resolvedValues);
 
-  const auto* cellDataGroup = dataStructure.getDataRefAs<ImageGeom>(resolvedValues.SelectedImageGeometryPath).getCellData();
-  resolvedValues.CellDataGroupPath = resolvedValues.SelectedImageGeometryPath.createChildPath(cellDataGroup->getName());
+  const auto* cellDataGroupPtr = dataStructure.getDataRefAs<ImageGeom>(resolvedValues.SelectedImageGeometryPath).getCellData();
+  resolvedValues.CellDataGroupPath = resolvedValues.SelectedImageGeometryPath.createChildPath(cellDataGroupPtr->getName());
 
   if(resolvedValues.RemoveOriginalImageGeom)
   {

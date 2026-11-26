@@ -117,15 +117,15 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   size_t numComps = 0;
   for(const auto& dataPath : selectedDataArrayPathsValue)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-    numComps += dataArray->getNumberOfComponents();
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
+    numComps += dataArrayPtr->getNumberOfComponents();
   }
 
   // Create the output array
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
-    auto tupleShape = dataArray->getTupleShape();
-    auto action = std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].replaceName(stackedDataArrayName));
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
+    auto tupleShape = dataArrayPtr->getTupleShape();
+    auto action = std::make_unique<CreateArrayAction>(dataArrayPtr->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].replaceName(stackedDataArrayName));
     resultOutputActions.value().appendAction(std::move(action));
   }
 

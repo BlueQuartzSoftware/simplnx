@@ -187,7 +187,7 @@ namespace
  *
  * Bool values convert to zero or one for the feature flood fill.
  */
-Result<> bufferMaskSlice(const AbstractDataStore<uint8>* maskUInt8StorePtr, const AbstractDataStore<bool>* maskBoolStorePtr, int64 sliceOffset, int64 sliceVoxels, std::vector<uint8>& maskBuf)
+Result<> BufferMaskSlice(const AbstractDataStore<uint8>* maskUInt8StorePtr, const AbstractDataStore<bool>* maskBoolStorePtr, int64 sliceOffset, int64 sliceVoxels, std::vector<uint8>& maskBuf)
 {
   if(maskUInt8StorePtr != nullptr)
   {
@@ -283,17 +283,17 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       return ConvertInvalidResult<int32>(std::move(ioResult));
     }
 
-    const uint8* sliceMask = nullptr;
+    const uint8* sliceMaskPtr = nullptr;
     if(m_InputValues->UseMask)
     {
-      if(Result<> ioResult = bufferMaskSlice(maskUInt8StorePtr, maskBoolStorePtr, sliceOffset, sliceVoxels, maskBuf); ioResult.invalid())
+      if(Result<> ioResult = BufferMaskSlice(maskUInt8StorePtr, maskBoolStorePtr, sliceOffset, sliceVoxels, maskBuf); ioResult.invalid())
       {
         return ConvertInvalidResult<int32>(std::move(ioResult));
       }
-      sliceMask = maskBuf.data();
+      sliceMaskPtr = maskBuf.data();
     }
 
-    return formFeaturesForSlice(quatsBuf.data(), phasesBuf.data(), sliceMask, featureIds, dims[0], dims[1], sliceOffset, misorientationTolerance, m_InputValues->UseMask, orientationOps,
+    return formFeaturesForSlice(quatsBuf.data(), phasesBuf.data(), sliceMaskPtr, featureIds, dims[0], dims[1], sliceOffset, misorientationTolerance, m_InputValues->UseMask, orientationOps,
                                 crystalStructures);
   };
 

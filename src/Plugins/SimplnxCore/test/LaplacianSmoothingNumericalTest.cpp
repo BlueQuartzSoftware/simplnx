@@ -45,9 +45,9 @@ private:
 };
 
 /** @brief Stores all three coordinates of the four analytic vertices. */
-using Coordinates = std::array<float32, 12>;
+using CoordinatesType = std::array<float32, 12>;
 /** @brief Stores one classification for each analytic vertex. */
-using NodeTypes = std::array<int8, 4>;
+using NodeTypesType = std::array<int8, 4>;
 
 /** @brief Identifies the graph geometry selected by the filter. */
 const DataPath k_GeometryPath{{"Mesh"}};
@@ -58,7 +58,7 @@ const DataPath k_NodeTypesPath{{"Mesh", "Vertex Data", "Node Types"}};
 /** @brief Identifies the supplied faces or edges that must survive smoothing. */
 const DataPath k_ConnectivityPath{{"Mesh", "Connectivity"}};
 /** @brief Supplies a tetrahedron with centroid (1/2, 1/2, 1/2). */
-constexpr Coordinates k_InputCoordinates{0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F};
+constexpr CoordinatesType k_InputCoordinates{0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F};
 /** @brief Supplies the four faces whose unique edges form the complete four-vertex graph. */
 constexpr std::array<IGeometry::MeshIndexType, 12> k_Faces{0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
 /** @brief Supplies the same complete graph directly as six edges. */
@@ -81,27 +81,27 @@ enum class GeometryKind
 struct NodeTypeCase
 {
   std::string_view name;
-  int8 nodeType;
-  Coordinates expected;
+  int8 node_type;
+  CoordinatesType expected;
 };
 
 // For K4, a uniform pass scales each displacement from the centroid by 1 - 4*lambda/3.
 // These explicit coordinates use that closed form, not the production edge traversal.
 constexpr std::array<NodeTypeCase, 7> k_NodeTypeCases{{
-    {.name = "Unused", .nodeType = NodeType::Unused, .expected = k_InputCoordinates},
+    {.name = "Unused", .node_type = NodeType::Unused, .expected = k_InputCoordinates},
     {.name = "Default",
-     .nodeType = NodeType::Default,
+     .node_type = NodeType::Default,
      .expected = {1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F}},
     {.name = "TriplePoint",
-     .nodeType = NodeType::TriplePoint,
+     .node_type = NodeType::TriplePoint,
      .expected = {1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F}},
-    {.name = "QuadPoint", .nodeType = NodeType::QuadPoint, .expected = {0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
+    {.name = "QuadPoint", .node_type = NodeType::QuadPoint, .expected = {0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
     {.name = "SurfaceDefault",
-     .nodeType = NodeType::SurfaceDefault,
+     .node_type = NodeType::SurfaceDefault,
      .expected = {1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F}},
-    {.name = "SurfaceTriplePoint", .nodeType = NodeType::SurfaceTriplePoint, .expected = {0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
+    {.name = "SurfaceTriplePoint", .node_type = NodeType::SurfaceTriplePoint, .expected = {0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
     {.name = "SurfaceQuadPoint",
-     .nodeType = NodeType::SurfaceQuadPoint,
+     .node_type = NodeType::SurfaceQuadPoint,
      .expected = {5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F}},
 }};
 
@@ -113,21 +113,21 @@ struct IterationCase
 {
   std::string_view name;
   int32 iterations;
-  bool useTaubin;
-  Coordinates expected;
+  bool use_taubin;
+  CoordinatesType expected;
 };
 
 // Two lambda=1/4 passes have centroid factor 4/9. One Taubin pair with a mu factor of -1 has a centroid factor of 8/9.
 constexpr std::array<IterationCase, 4> k_IterationCases{{
-    {.name = "zero plain iterations", .iterations = 0, .useTaubin = false, .expected = k_InputCoordinates},
-    {.name = "zero Taubin iterations", .iterations = 0, .useTaubin = true, .expected = k_InputCoordinates},
+    {.name = "zero plain iterations", .iterations = 0, .use_taubin = false, .expected = k_InputCoordinates},
+    {.name = "zero Taubin iterations", .iterations = 0, .use_taubin = true, .expected = k_InputCoordinates},
     {.name = "two plain iterations",
      .iterations = 2,
-     .useTaubin = false,
+     .use_taubin = false,
      .expected = {5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F, 5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F, 5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F}},
     {.name = "one Taubin iteration",
      .iterations = 1,
-     .useTaubin = true,
+     .use_taubin = true,
      .expected = {1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F}},
 }};
 
@@ -162,7 +162,7 @@ DataArray<T>* CreateInputArray(DataStructure& dataStructure, const DataPath& pat
  * @param kind Selects the connectivity representation.
  * @param nodeTypes Supplies the four vertex classifications.
  */
-void BuildGraph(DataStructure& dataStructure, GeometryKind kind, const NodeTypes& nodeTypes)
+void BuildGraph(DataStructure& dataStructure, GeometryKind kind, const NodeTypesType& nodeTypes)
 {
   INodeGeometry1D* geometryPtr = nullptr;
   if(kind == GeometryKind::Triangle)
@@ -246,7 +246,7 @@ void ExecuteSmoothing(UnitTest::AlgorithmTestScope& scope, DataStructure& dataSt
  * @param expected Supplies all twelve independently derived coordinates.
  * @param exact Requires exact coordinate equality for zero iterations.
  */
-void CheckResult(const DataStructure& dataStructure, GeometryKind kind, const NodeTypes& nodeTypes, const Coordinates& expected, bool exact = false)
+void CheckResult(const DataStructure& dataStructure, GeometryKind kind, const NodeTypesType& nodeTypes, const CoordinatesType& expected, bool exact = false)
 {
   RequireResidentInputs(dataStructure);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_VerticesPath));
@@ -318,8 +318,8 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: every node type uses its analytic la
     // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
-    NodeTypes nodeTypes;
-    nodeTypes.fill(testCase.nodeType);
+    NodeTypesType nodeTypes;
+    nodeTypes.fill(testCase.node_type);
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
     ExecuteSmoothing(scope, dataStructure, 1, false);
@@ -342,10 +342,10 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: iterations and Taubin match analytic
     // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
-    const NodeTypes nodeTypes{NodeType::Default, NodeType::Default, NodeType::Default, NodeType::Default};
+    const NodeTypesType nodeTypes{NodeType::Default, NodeType::Default, NodeType::Default, NodeType::Default};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
-    ExecuteSmoothing(scope, dataStructure, testCase.iterations, testCase.useTaubin);
+    ExecuteSmoothing(scope, dataStructure, testCase.iterations, testCase.use_taubin);
     CheckResult(dataStructure, kind, nodeTypes, testCase.expected, testCase.iterations == 0);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -364,8 +364,8 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: mixed node classes use input-pass co
     // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
-    const NodeTypes nodeTypes{NodeType::Unused, NodeType::Default, NodeType::TriplePoint, NodeType::Unused};
-    const Coordinates expected{0.0F, 0.0F, 0.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 0.0F, 0.0F, 2.0F};
+    const NodeTypesType nodeTypes{NodeType::Unused, NodeType::Default, NodeType::TriplePoint, NodeType::Unused};
+    const CoordinatesType expected{0.0F, 0.0F, 0.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 0.0F, 0.0F, 2.0F};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
     ExecuteSmoothing(scope, dataStructure, 1, false);

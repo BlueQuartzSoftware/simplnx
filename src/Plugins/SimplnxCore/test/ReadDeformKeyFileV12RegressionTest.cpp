@@ -73,16 +73,16 @@ void CheckDeformValues(const DataStructure& dataStructure, usize failedRecord)
 {
   for(usize variable = 0; variable < 12; variable++)
   {
-    const auto* values = dataStructure.getDataAs<Float32Array>(k_RegressionVertexPath.createChildPath(fmt::format("U{}", variable + 1)));
-    REQUIRE(values != nullptr);
-    REQUIRE(values->getNumberOfTuples() == 4);
-    REQUIRE(values->getNumberOfComponents() == 1);
+    const auto* valuesPtr = dataStructure.getDataAs<Float32Array>(k_RegressionVertexPath.createChildPath(fmt::format("U{}", variable + 1)));
+    REQUIRE(valuesPtr != nullptr);
+    REQUIRE(valuesPtr->getNumberOfTuples() == 4);
+    REQUIRE(valuesPtr->getNumberOfComponents() == 1);
     for(usize record = 0; record < 4; record++)
     {
       CAPTURE(variable, record, failedRecord);
       // U1 completes before U2 fails. Every later scalar keeps its initial zero value.
       const bool completed = failedRecord == 0 || record + 1 < failedRecord || (record + 1 == failedRecord && variable == 0);
-      CHECK((*values)[record] == (completed ? k_ExpectedValues[record][variable] : 0.0F));
+      CHECK((*valuesPtr)[record] == (completed ? k_ExpectedValues[record][variable] : 0.0F));
     }
   }
 }
@@ -98,10 +98,10 @@ TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: USRNOD maps every variable a
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   CheckDeformValues(dataStructure, 0);
-  const auto* geometry = dataStructure.getDataAs<QuadGeom>(k_RegressionGeomPath);
-  REQUIRE(geometry != nullptr);
-  CHECK(geometry->getNumberOfVertices() == 4);
-  CHECK(geometry->getNumberOfFaces() == 1);
+  const auto* geometryPtr = dataStructure.getDataAs<QuadGeom>(k_RegressionGeomPath);
+  REQUIRE(geometryPtr != nullptr);
+  CHECK(geometryPtr->getNumberOfVertices() == 4);
+  CHECK(geometryPtr->getNumberOfFaces() == 1);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

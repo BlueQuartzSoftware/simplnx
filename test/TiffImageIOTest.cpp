@@ -60,11 +60,11 @@ private:
   fs::path m_Path;
 };
 
-using TiffHandle = std::unique_ptr<TIFF, decltype(&TIFFClose)>;
+using TiffHandleType = std::unique_ptr<TIFF, decltype(&TIFFClose)>;
 
-TiffHandle CreateTiledTiff(const fs::path& path, uint16_t samplesPerPixel, uint16_t bitsPerSample, uint16_t sampleFormat, uint16_t photometric, uint16_t orientation, uint16_t planarConfig)
+TiffHandleType CreateTiledTiff(const fs::path& path, uint16_t samplesPerPixel, uint16_t bitsPerSample, uint16_t sampleFormat, uint16_t photometric, uint16_t orientation, uint16_t planarConfig)
 {
-  TiffHandle tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
+  TiffHandleType tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
   REQUIRE(tiff != nullptr);
   REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, k_Width) == 1);
   REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, k_Height) == 1);
@@ -83,7 +83,7 @@ TiffHandle CreateTiledTiff(const fs::path& path, uint16_t samplesPerPixel, uint1
 template <class GeneratorT>
 void WriteTiledUInt8(const fs::path& path, uint16_t samplesPerPixel, uint16_t photometric, uint16_t orientation, uint16_t planarConfig, GeneratorT&& generator)
 {
-  TiffHandle tiff = CreateTiledTiff(path, samplesPerPixel, 8, SAMPLEFORMAT_UINT, photometric, orientation, planarConfig);
+  TiffHandleType tiff = CreateTiledTiff(path, samplesPerPixel, 8, SAMPLEFORMAT_UINT, photometric, orientation, planarConfig);
   if(samplesPerPixel == 4)
   {
     const uint16_t extraSample = EXTRASAMPLE_ASSOCALPHA;
@@ -141,7 +141,7 @@ template <class T, class GeneratorT>
 void WriteTiledScalar(const fs::path& path, uint16_t sampleFormat, GeneratorT&& generator)
 {
   static_assert(std::is_trivially_copyable_v<T>);
-  TiffHandle tiff = CreateTiledTiff(path, 1, static_cast<uint16_t>(sizeof(T) * 8), sampleFormat, PHOTOMETRIC_MINISBLACK, ORIENTATION_TOPLEFT, PLANARCONFIG_CONTIG);
+  TiffHandleType tiff = CreateTiledTiff(path, 1, static_cast<uint16_t>(sizeof(T) * 8), sampleFormat, PHOTOMETRIC_MINISBLACK, ORIENTATION_TOPLEFT, PLANARCONFIG_CONTIG);
   std::vector<T> tile(static_cast<usize>(k_TileWidth) * k_TileHeight, T{});
 
   for(uint32_t tileY = 0; tileY < k_Height; tileY += k_TileHeight)
@@ -171,7 +171,7 @@ void WriteTiledScalar(const fs::path& path, uint16_t sampleFormat, GeneratorT&& 
 
 void WriteStrippedUInt8(const fs::path& path)
 {
-  TiffHandle tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
+  TiffHandleType tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
   REQUIRE(tiff != nullptr);
   REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, k_Width) == 1);
   REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, k_Height) == 1);

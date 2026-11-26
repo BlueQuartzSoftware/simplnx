@@ -129,8 +129,8 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  if(clusterArray == nullptr)
+  const auto* clusterArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  if(clusterArrayPtr == nullptr)
   {
     return MakePreflightErrorResult(-7585, "Array to Cluster MUST be a valid DataPath.");
   }
@@ -143,13 +143,13 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
       const auto& maskArray = dataStructure.getDataRefAs<IArray>(maskPath);
       return MakePreflightErrorResult(
           -7588, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Cell Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
-                             pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
+                             pSelectedArrayPathValue.toString(), clusterArrayPtr->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
     }
   }
 
   {
     auto createAction =
-        std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
+        std::make_unique<CreateArrayAction>(DataType::int32, clusterArrayPtr->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -159,7 +159,7 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, tupDims, clusterArray->getComponentShape(), pFeatureAMPathValue.createChildPath(pMeansArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, tupDims, clusterArrayPtr->getComponentShape(), pFeatureAMPathValue.createChildPath(pMeansArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 

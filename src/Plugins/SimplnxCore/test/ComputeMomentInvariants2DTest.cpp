@@ -45,32 +45,32 @@ DataStructure CreateInvalidTestData()
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeometry);
-  constexpr size_t dimsIn[3] = {5, 5, 5};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  constexpr size_t k_DimsIn[3] = {5, 5, 5};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 5;
   dims[1] = 5;
   dims[2] = 5;
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeom->getId());
+  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAm->getId());
-  featureIds->fill(0);
-  (*featureIds)[6] = 1;
-  (*featureIds)[7] = 1;
-  (*featureIds)[8] = 1;
-  (*featureIds)[11] = 1;
-  (*featureIds)[12] = 1;
-  (*featureIds)[13] = 1;
-  (*featureIds)[16] = 1;
-  (*featureIds)[17] = 1;
-  (*featureIds)[18] = 1;
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAmPtr->getId());
+  featureIdsPtr->fill(0);
+  (*featureIdsPtr)[6] = 1;
+  (*featureIdsPtr)[7] = 1;
+  (*featureIdsPtr)[8] = 1;
+  (*featureIdsPtr)[11] = 1;
+  (*featureIdsPtr)[12] = 1;
+  (*featureIdsPtr)[13] = 1;
+  (*featureIdsPtr)[16] = 1;
+  (*featureIdsPtr)[17] = 1;
+  (*featureIdsPtr)[18] = 1;
 
   dims.resize(1);
   dims[0] = 2;
-  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureData, dims, imageGeom->getId());
+  AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureData, dims, imageGeomPtr->getId());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -80,14 +80,14 @@ DataStructure CreateInvalidTestData()
       0, 0, 0, 0, 0;
 #endif
   const std::vector<size_t> compDims(1, 6);
-  UInt32Array* rect = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAm->getId());
-  rect->fill(0);
-  (*rect)[6] = 1;
-  (*rect)[7] = 1;
-  (*rect)[8] = 0;
-  (*rect)[9] = 3;
-  (*rect)[10] = 3;
-  (*rect)[11] = 0;
+  UInt32Array* rectPtr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAmPtr->getId());
+  rectPtr->fill(0);
+  (*rectPtr)[6] = 1;
+  (*rectPtr)[7] = 1;
+  (*rectPtr)[8] = 0;
+  (*rectPtr)[9] = 3;
+  (*rectPtr)[10] = 3;
+  (*rectPtr)[11] = 0;
 
   return dataStructure;
 }
@@ -96,32 +96,32 @@ DataStructure CreateTestData()
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeometry);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
   dims[2] = 5;
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeom->getId());
+  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAm->getId());
-  featureIds->fill(0);
-  (*featureIds)[6] = 1;
-  (*featureIds)[7] = 1;
-  (*featureIds)[8] = 1;
-  (*featureIds)[11] = 1;
-  (*featureIds)[12] = 1;
-  (*featureIds)[13] = 1;
-  (*featureIds)[16] = 1;
-  (*featureIds)[17] = 1;
-  (*featureIds)[18] = 1;
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAmPtr->getId());
+  featureIdsPtr->fill(0);
+  (*featureIdsPtr)[6] = 1;
+  (*featureIdsPtr)[7] = 1;
+  (*featureIdsPtr)[8] = 1;
+  (*featureIdsPtr)[11] = 1;
+  (*featureIdsPtr)[12] = 1;
+  (*featureIdsPtr)[13] = 1;
+  (*featureIdsPtr)[16] = 1;
+  (*featureIdsPtr)[17] = 1;
+  (*featureIdsPtr)[18] = 1;
 
   dims.resize(1);
   dims[0] = 2;
-  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureData, dims, imageGeom->getId());
+  AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureData, dims, imageGeomPtr->getId());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -131,14 +131,14 @@ DataStructure CreateTestData()
       0, 0, 0, 0, 0;
 #endif
   const std::vector<size_t> compDims(1, 6);
-  UInt32Array* rect = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAm->getId());
-  rect->fill(0);
-  (*rect)[6] = 1;
-  (*rect)[7] = 1;
-  (*rect)[8] = 0;
-  (*rect)[9] = 3;
-  (*rect)[10] = 3;
-  (*rect)[11] = 0;
+  UInt32Array* rectPtr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAmPtr->getId());
+  rectPtr->fill(0);
+  (*rectPtr)[6] = 1;
+  (*rectPtr)[7] = 1;
+  (*rectPtr)[8] = 0;
+  (*rectPtr)[9] = 3;
+  (*rectPtr)[10] = 3;
+  (*rectPtr)[11] = 0;
 
   return dataStructure;
 }
@@ -187,10 +187,10 @@ DataStructure CreateUnusedFeatureTestData(int32 liveId)
 
   const auto* rectPtr = dataStructure.getDataAs<UInt32Array>(k_RectCoordsPath);
   REQUIRE((rectPtr != nullptr));
-  constexpr std::array<uint32, 6> expectedRect = {1, 1, 0, 3, 3, 0};
-  for(usize component = 0; component < expectedRect.size(); ++component)
+  constexpr std::array<uint32, 6> k_ExpectedRect = {1, 1, 0, 3, 3, 0};
+  for(usize component = 0; component < k_ExpectedRect.size(); ++component)
   {
-    REQUIRE(((*rectPtr)[(static_cast<usize>(liveId) * 6) + component] == expectedRect.at(component)));
+    REQUIRE(((*rectPtr)[(static_cast<usize>(liveId) * 6) + component] == k_ExpectedRect.at(component)));
     if(liveId == 2)
     {
       const uint32 expectedUnused = component < 3 ? std::numeric_limits<uint32>::max() : 0U;
@@ -227,14 +227,14 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
   UnitTest::AlgorithmTestScope scope(scenario);
   std::array<float32, 2> referenceOmega{};
   std::array<float32, 9> referenceCentral{};
-  constexpr std::array<int32, 2> liveIds = {1, 2};
+  constexpr std::array<int32, 2> k_LiveIds = {1, 2};
 
   // A centered square of side 3 has area 9, mu20 = mu02 = 27/4, and mu22 = 81/16.
-  constexpr float64 expectedOmega1 = 3.0 / numbers::pi;
-  constexpr float64 expectedOmega2 = 9.0 / (numbers::pi * numbers::pi);
-  constexpr std::array<float64, 9> expectedCentral = {9.0, 0.0, 6.75, 0.0, 0.0, 0.0, 6.75, 0.0, 5.0625};
-  constexpr float64 tolerance = 0.00001;
-  for(const int32 liveId : liveIds)
+  constexpr float64 k_ExpectedOmega1 = 3.0 / numbers::pi;
+  constexpr float64 k_ExpectedOmega2 = 9.0 / (numbers::pi * numbers::pi);
+  constexpr std::array<float64, 9> k_ExpectedCentral = {9.0, 0.0, 6.75, 0.0, 0.0, 0.0, 6.75, 0.0, 5.0625};
+  constexpr float64 k_Tolerance = 0.00001;
+  for(const int32 liveId : k_LiveIds)
   {
     CAPTURE(liveId);
     DataStructure dataStructure = CreateUnusedFeatureTestData(liveId);
@@ -258,8 +258,8 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
     scope.requireExpectedStore(*omega1Ptr);
     scope.requireExpectedStore(*omega2Ptr);
     const usize liveFeatureIndex = static_cast<usize>(liveId);
-    CHECK((std::fabs(static_cast<float64>((*omega1Ptr)[liveFeatureIndex]) - expectedOmega1) < tolerance));
-    CHECK((std::fabs(static_cast<float64>((*omega2Ptr)[liveFeatureIndex]) - expectedOmega2) < tolerance));
+    CHECK((std::fabs(static_cast<float64>((*omega1Ptr)[liveFeatureIndex]) - k_ExpectedOmega1) < k_Tolerance));
+    CHECK((std::fabs(static_cast<float64>((*omega2Ptr)[liveFeatureIndex]) - k_ExpectedOmega2) < k_Tolerance));
     CHECK(((*omega1Ptr)[0] == 0.0F));
     CHECK(((*omega2Ptr)[0] == 0.0F));
     CHECK(((*omega1Ptr)[65536] == 0.0F));
@@ -281,11 +281,11 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
     {
       REQUIRE((centralPtr != nullptr));
       scope.requireExpectedStore(*centralPtr);
-      for(usize component = 0; component < expectedCentral.size(); ++component)
+      for(usize component = 0; component < k_ExpectedCentral.size(); ++component)
       {
         CAPTURE(component);
         const float32 value = (*centralPtr)[(liveFeatureIndex * 9) + component];
-        CHECK((std::fabs(static_cast<float64>(value) - expectedCentral.at(component)) < tolerance));
+        CHECK((std::fabs(static_cast<float64>(value) - k_ExpectedCentral.at(component)) < k_Tolerance));
         CHECK(((*centralPtr)[component] == 0.0F));
         CHECK(((*centralPtr)[(usize{65536} * 9) + component] == 0.0F));
         if(liveId == 1)
@@ -330,10 +330,10 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after non-XY rec
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_RectCoordsPath));
   auto& rectRef = dataStructure.getDataRefAs<UInt32Array>(k_RectCoordsPath);
   // A supplied nonempty rectangle with two Z cells exercises the skip branch in an XY geometry.
-  constexpr std::array<uint32, 6> nonXYRect = {0, 0, 0, 0, 0, 1};
-  for(usize component = 0; component < nonXYRect.size(); ++component)
+  constexpr std::array<uint32, 6> k_NonXyRect = {0, 0, 0, 0, 0, 1};
+  for(usize component = 0; component < k_NonXyRect.size(); ++component)
   {
-    rectRef[6 + component] = nonXYRect.at(component);
+    rectRef[6 + component] = k_NonXyRect.at(component);
   }
   const ComputeMomentInvariants2DFilter filter;
   const auto args = CreateUnusedFeatureArguments(saveCentralMoments);
@@ -399,12 +399,12 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
   auto executeResult = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const Float32Array* omega1 = ds.getDataAs<Float32Array>(k_Omega1Path);
-  const Float32Array* omega2 = ds.getDataAs<Float32Array>(k_Omega2Path);
-  REQUIRE(omega1 != nullptr);
-  REQUIRE(omega2 != nullptr);
-  float32 value1 = (*omega1)[1];
-  float32 value2 = (*omega2)[1];
+  const Float32Array* omega1Ptr = ds.getDataAs<Float32Array>(k_Omega1Path);
+  const Float32Array* omega2Ptr = ds.getDataAs<Float32Array>(k_Omega2Path);
+  REQUIRE(omega1Ptr != nullptr);
+  REQUIRE(omega2Ptr != nullptr);
+  float32 value1 = (*omega1Ptr)[1];
+  float32 value2 = (*omega2Ptr)[1];
   REQUIRE(std::fabs(value1 - 0.95493) < 0.00001);
   REQUIRE(std::fabs(value2 - 0.911891) < 0.00001);
 
@@ -443,7 +443,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: SIMPL Backwards Compati
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -456,22 +456,22 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: SIMPL Backwards Compati
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeMomentInvariants2DFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeMomentInvariants2DFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeMomentInvariants2DFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeMomentInvariants2DFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeMomentInvariants2DFilter::k_FeatureRectArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

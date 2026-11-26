@@ -37,7 +37,7 @@ enum class DistanceMapPhase : usize
 };
 
 // The execution owner serializes this callback and outlives all copied workers.
-using DistanceMapProgress = std::function<void(DistanceMapPhase, usize, usize, usize)>;
+using DistanceMapProgressType = std::function<void(DistanceMapPhase, usize, usize, usize)>;
 
 /**
  * @brief Tests for non-positive Feature IDs with bounded reads.
@@ -51,9 +51,9 @@ using DistanceMapProgress = std::function<void(DistanceMapPhase, usize, usize, u
 Result<std::optional<bool>> ContainsBlockedCells(const Int32AbstractDataStore& featureIds, usize bufferSize, const std::atomic_bool& shouldCancel)
 {
   const usize scanBlockSize = std::max<usize>(bufferSize, 1);
-  if(const auto* contiguousStore = dynamic_cast<const DataStore<int32>*>(&featureIds); contiguousStore != nullptr)
+  if(const auto* contiguousStorePtr = dynamic_cast<const DataStore<int32>*>(&featureIds); contiguousStorePtr != nullptr)
   {
-    const nonstd::span<const int32> featureIdSpan = contiguousStore->createSpan();
+    const nonstd::span<const int32> featureIdSpan = contiguousStorePtr->createSpan();
     for(usize offset = 0; offset < featureIdSpan.size(); offset += scanBlockSize)
     {
       if(shouldCancel)
@@ -133,7 +133,7 @@ public:
    */
   ComputeDistanceMapImpl(const ComputeEuclideanDistMapInputValues& inputValues, std::vector<int64>& nearestNeighbors, const int32* featureIds, T* distBuf, AbstractDataStore<T>* outputStore,
                          usize totalVoxels, SizeVec3 dims, FloatVec3 spacing, CopyFromArray::ParallelTaskResult& taskResult, const std::atomic_bool& shouldCancel,
-                         const DistanceMapProgress& reportProgress)
+                         const DistanceMapProgressType& reportProgress)
   : m_InputValues(inputValues)
   , m_NearestNeighbors(nearestNeighbors)
   , m_FeatureIds(featureIds)
@@ -169,7 +169,7 @@ public:
     auto ypoints = static_cast<int64_t>(m_Dims[1]);
     auto zpoints = static_cast<int64_t>(m_Dims[2]);
 
-    float64 Distance = 0.0;
+    float64 distance = 0.0;
     usize count = 1;
     usize changed = 1;
     usize neighpoint = 0;
@@ -182,10 +182,10 @@ public:
     neighbors[4] = xpoints;
     neighbors[5] = xpoints * ypoints;
 
-    std::vector<int64> voxel_NearestNeighbor(m_TotalVoxels, 0);
-    std::vector<float64> voxel_Distance(m_TotalVoxels, 0.0);
+    std::vector<int64> voxelNearestNeighbor(m_TotalVoxels, 0);
+    std::vector<float64> voxelDistance(m_TotalVoxels, 0.0);
 
-    Distance = 0;
+    distance = 0;
     // Initialize each voxel with its nearest seed or blocked state.
     m_ReportProgress(DistanceMapPhase::Initializing, 0, static_cast<usize>(MapType), 0);
     for(usize chunkStart = 0; chunkStart < m_TotalVoxels; chunkStart += k_DistanceMapChunkSize)
@@ -199,13 +199,13 @@ public:
       {
         if(m_NearestNeighbors[voxelTupleIdx * 3 + static_cast<usize>(MapType)] >= 0)
         {
-          voxel_NearestNeighbor[voxelTupleIdx] = static_cast<int64>(voxelTupleIdx);
+          voxelNearestNeighbor[voxelTupleIdx] = static_cast<int64>(voxelTupleIdx);
         }
         else
         {
-          voxel_NearestNeighbor[voxelTupleIdx] = -1;
+          voxelNearestNeighbor[voxelTupleIdx] = -1;
         }
-        voxel_Distance[voxelTupleIdx] = static_cast<float64>(m_DistBuf[voxelTupleIdx]);
+        voxelDistance[voxelTupleIdx] = static_cast<float64>(m_DistBuf[voxelTupleIdx]);
       }
       m_ReportProgress(DistanceMapPhase::Initializing, 1, static_cast<usize>(MapType), 0);
     }
@@ -228,7 +228,7 @@ public:
       }
       count = 0;
       changed = 0;
-      Distance++;
+      distance++;
       ++iteration;
 
       for(int64_t z = 0; z < zpoints; ++z)
@@ -274,7 +274,7 @@ public:
             }
 
             i = zStride + yStride + x;
-            if(voxel_NearestNeighbor[i] == -1 && m_FeatureIds[i] > 0)
+            if(voxelNearestNeighbor[i] == -1 && m_FeatureIds[i] > 0)
             {
               count++;
               for(int32 j = 0; j < 6; j++)
@@ -282,9 +282,9 @@ public:
                 neighpoint = i + neighbors[j];
                 if(mask[j] == 1)
                 {
-                  if(voxel_Distance[neighpoint] != -1.0)
+                  if(voxelDistance[neighpoint] != -1.0)
                   {
-                    voxel_NearestNeighbor[i] = voxel_NearestNeighbor[neighpoint];
+                    voxelNearestNeighbor[i] = voxelNearestNeighbor[neighpoint];
                   }
                 }
               }
@@ -303,10 +303,10 @@ public:
         const usize chunkEnd = std::min(chunkStart + k_DistanceMapChunkSize, m_TotalVoxels);
         for(usize voxelIdx = chunkStart; voxelIdx < chunkEnd; ++voxelIdx)
         {
-          if(voxel_NearestNeighbor[voxelIdx] != -1 && voxel_Distance[voxelIdx] == -1.0 && m_FeatureIds[voxelIdx] > 0)
+          if(voxelNearestNeighbor[voxelIdx] != -1 && voxelDistance[voxelIdx] == -1.0 && m_FeatureIds[voxelIdx] > 0)
           {
             changed++;
-            voxel_Distance[voxelIdx] = Distance;
+            voxelDistance[voxelIdx] = distance;
           }
         }
         m_ReportProgress(DistanceMapPhase::Updating, 1, static_cast<usize>(MapType), iteration);
@@ -346,14 +346,14 @@ public:
             x1 = static_cast<float64>(p) * m_Spacing[0];
             y1 = static_cast<float64>(n) * m_Spacing[1];
             z1 = static_cast<float64>(m) * m_Spacing[2];
-            if(int64_t nearestNeighbor = voxel_NearestNeighbor[zStride + yStride + p]; nearestNeighbor >= 0)
+            if(int64_t nearestNeighbor = voxelNearestNeighbor[zStride + yStride + p]; nearestNeighbor >= 0)
             {
               x2 = m_Spacing[0] * static_cast<float64>(nearestNeighbor % xpoints);                                        // find_xcoord(nearestneighbor);
               y2 = m_Spacing[1] * static_cast<float64>(static_cast<int64_t>(nearestNeighbor * oneOverxpoints) % ypoints); // find_ycoord(nearestneighbor);
               z2 = m_Spacing[2] * floor(nearestNeighbor * oneOverzBlock);                                                 // find_zcoord(nearestneighbor);
               dist = ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)) + ((z1 - z2) * (z1 - z2));
               dist = sqrt(dist);
-              voxel_Distance[zStride + yStride + p] = dist;
+              voxelDistance[zStride + yStride + p] = dist;
             }
           }
         }
@@ -371,8 +371,8 @@ public:
       const usize chunkEnd = std::min(chunkStart + k_DistanceMapChunkSize, m_TotalVoxels);
       for(usize a = chunkStart; a < chunkEnd; ++a)
       {
-        m_NearestNeighbors[a * 3 + static_cast<usize>(MapType)] = voxel_NearestNeighbor[a];
-        m_DistBuf[a] = static_cast<T>(voxel_Distance[a]);
+        m_NearestNeighbors[a * 3 + static_cast<usize>(MapType)] = voxelNearestNeighbor[a];
+        m_DistBuf[a] = static_cast<T>(voxelDistance[a]);
       }
       m_ReportProgress(DistanceMapPhase::Publishing, 1, static_cast<usize>(MapType), 0);
     }
@@ -391,7 +391,7 @@ public:
 private:
   CopyFromArray::ParallelTaskResult& m_TaskResult;
   const std::atomic_bool& m_ShouldCancel;
-  const DistanceMapProgress& m_ReportProgress;
+  const DistanceMapProgressType& m_ReportProgress;
 };
 } // namespace
 
@@ -444,25 +444,25 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
     return ioResult;
   }
 
-  DataStoreType* gbManhattanDistancesStore = nullptr;
+  DataStoreType* gbManhattanDistancesStorePtr = nullptr;
   if(inputValues->DoBoundaries)
   {
-    gbManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->GBDistancesArrayPath)->getDataStore();
-    gbManhattanDistancesStore->fill(static_cast<T>(-1));
+    gbManhattanDistancesStorePtr = dataStructure.template getDataAs<DataArrayType>(inputValues->GBDistancesArrayPath)->getDataStore();
+    gbManhattanDistancesStorePtr->fill(static_cast<T>(-1));
   }
 
-  DataStoreType* tjManhattanDistancesStore = nullptr;
+  DataStoreType* tjManhattanDistancesStorePtr = nullptr;
   if(inputValues->DoTripleLines)
   {
-    tjManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->TJDistancesArrayPath)->getDataStore();
-    tjManhattanDistancesStore->fill(static_cast<T>(-1));
+    tjManhattanDistancesStorePtr = dataStructure.template getDataAs<DataArrayType>(inputValues->TJDistancesArrayPath)->getDataStore();
+    tjManhattanDistancesStorePtr->fill(static_cast<T>(-1));
   }
 
-  DataStoreType* qpManhattanDistancesStore = nullptr;
+  DataStoreType* qpManhattanDistancesStorePtr = nullptr;
   if(inputValues->DoQuadPoints)
   {
-    qpManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->QPDistancesArrayPath)->getDataStore();
-    qpManhattanDistancesStore->fill(static_cast<T>(-1));
+    qpManhattanDistancesStorePtr = dataStructure.template getDataAs<DataArrayType>(inputValues->QPDistancesArrayPath)->getDataStore();
+    qpManhattanDistancesStorePtr->fill(static_cast<T>(-1));
   }
 
   // Each selected map starts at -1 before its local propagation buffer is filled.
@@ -470,7 +470,7 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
   if(inputValues->DoBoundaries)
   {
     gbDistBuf.resize(totalVoxels);
-    ioResult = gbManhattanDistancesStore->copyIntoBuffer(0, nonstd::span<T>(gbDistBuf.data(), totalVoxels));
+    ioResult = gbManhattanDistancesStorePtr->copyIntoBuffer(0, nonstd::span<T>(gbDistBuf.data(), totalVoxels));
     if(ioResult.invalid())
     {
       return ioResult;
@@ -480,7 +480,7 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
   if(inputValues->DoTripleLines)
   {
     tjDistBuf.resize(totalVoxels);
-    ioResult = tjManhattanDistancesStore->copyIntoBuffer(0, nonstd::span<T>(tjDistBuf.data(), totalVoxels));
+    ioResult = tjManhattanDistancesStorePtr->copyIntoBuffer(0, nonstd::span<T>(tjDistBuf.data(), totalVoxels));
     if(ioResult.invalid())
     {
       return ioResult;
@@ -490,7 +490,7 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
   if(inputValues->DoQuadPoints)
   {
     qpDistBuf.resize(totalVoxels);
-    ioResult = qpManhattanDistancesStore->copyIntoBuffer(0, nonstd::span<T>(qpDistBuf.data(), totalVoxels));
+    ioResult = qpManhattanDistancesStorePtr->copyIntoBuffer(0, nonstd::span<T>(qpDistBuf.data(), totalVoxels));
     if(ioResult.invalid())
     {
       return ioResult;
@@ -515,7 +515,7 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
   int64_t neighborPoint = 0;
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   const usize chunkCount = totalVoxels / k_DistanceMapChunkSize + (totalVoxels % k_DistanceMapChunkSize != 0 ? 1 : 0);
   const usize mapCount = static_cast<usize>(inputValues->DoBoundaries) + static_cast<usize>(inputValues->DoTripleLines) + static_cast<usize>(inputValues->DoQuadPoints);
@@ -524,7 +524,7 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
   std::mutex progressMutex;
   std::array<usize, 6> completedUnits = {};
   std::array<bool, 6> announcedPhases = {};
-  const DistanceMapProgress sendThreadSafeProgress = [&](DistanceMapPhase phase, usize delta, usize map, usize iteration) {
+  const DistanceMapProgressType sendThreadSafeProgress = [&](DistanceMapPhase phase, usize delta, usize map, usize iteration) {
     const std::lock_guard<std::mutex> guard(progressMutex);
     const usize phaseIndex = static_cast<usize>(phase);
     completedUnits[phaseIndex] += delta;
@@ -584,7 +584,7 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
         int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
         std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-        for(const auto& faceIndex : faceNeighborInternalIdx)
+        for(const auto& faceIndex : k_FaceNeighborInternalIdx)
         {
           if(!isValidFaceNeighbor[faceIndex])
           {
@@ -596,9 +596,9 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
           if(featureIdsBuf[neighborPoint] != feature && featureIdsBuf[neighborPoint] >= 0)
           {
             add = true;
-            for(const auto& coordination_value : coordination)
+            for(const auto& coordinationValue : coordination)
             {
-              if(featureIdsBuf[neighborPoint] == coordination_value)
+              if(featureIdsBuf[neighborPoint] == coordinationValue)
               {
                 add = false;
                 break;
@@ -654,19 +654,19 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
   ParallelTaskAlgorithm taskRunner;
   if(inputValues->DoBoundaries)
   {
-    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::FeatureBoundary>(*inputValues, nearestNeighbors, featureIdsBuf.data(), gbDistBuf.data(), gbManhattanDistancesStore,
+    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::FeatureBoundary>(*inputValues, nearestNeighbors, featureIdsBuf.data(), gbDistBuf.data(), gbManhattanDistancesStorePtr,
                                                                                                     totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
   }
 
   if(inputValues->DoTripleLines)
   {
-    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::TripleJunction>(*inputValues, nearestNeighbors, featureIdsBuf.data(), tjDistBuf.data(), tjManhattanDistancesStore,
+    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::TripleJunction>(*inputValues, nearestNeighbors, featureIdsBuf.data(), tjDistBuf.data(), tjManhattanDistancesStorePtr,
                                                                                                    totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
   }
 
   if(inputValues->DoQuadPoints)
   {
-    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::QuadPoint>(*inputValues, nearestNeighbors, featureIdsBuf.data(), qpDistBuf.data(), qpManhattanDistancesStore,
+    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::QuadPoint>(*inputValues, nearestNeighbors, featureIdsBuf.data(), qpDistBuf.data(), qpManhattanDistancesStorePtr,
                                                                                               totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
   }
   taskRunner.wait();
@@ -680,12 +680,12 @@ const std::atomic_bool& ComputeEuclideanDistMap::getCancel()
 
 Result<> ComputeEuclideanDistMap::operator()()
 {
-  const auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto* boundaryDistances = m_InputValues->DoBoundaries ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->GBDistancesArrayPath) : nullptr;
-  const auto* tripleJunctionDistances = m_InputValues->DoTripleLines ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->TJDistancesArrayPath) : nullptr;
-  const auto* quadPointDistances = m_InputValues->DoQuadPoints ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->QPDistancesArrayPath) : nullptr;
+  const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto* boundaryDistancesPtr = m_InputValues->DoBoundaries ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->GBDistancesArrayPath) : nullptr;
+  const auto* tripleJunctionDistancesPtr = m_InputValues->DoTripleLines ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->TJDistancesArrayPath) : nullptr;
+  const auto* quadPointDistancesPtr = m_InputValues->DoQuadPoints ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->QPDistancesArrayPath) : nullptr;
   const bool forceDirectAlgorithm = ForceInCoreAlgorithm();
-  const bool usesOutOfCoreStore = AnyOutOfCore({featureIdsArray, boundaryDistances, tripleJunctionDistances, quadPointDistances});
+  const bool usesOutOfCoreStore = AnyOutOfCore({featureIdsArrayPtr, boundaryDistancesPtr, tripleJunctionDistancesPtr, quadPointDistancesPtr});
   const auto executeScanline = [this, usesOutOfCoreStore]() {
     RecordAlgorithmPathExecution(AlgorithmPath::OutOfCore, usesOutOfCoreStore);
     return ComputeEuclideanDistMapScanline(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues)();
@@ -707,7 +707,7 @@ Result<> ComputeEuclideanDistMap::operator()()
 
     const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
     const SizeVec3 dims = imageGeom.getDimensions();
-    Result<std::optional<bool>> hasBlockedCellsResult = ContainsBlockedCells(featureIdsArray->getDataStoreRef(), dims[0] * dims[1], m_ShouldCancel);
+    Result<std::optional<bool>> hasBlockedCellsResult = ContainsBlockedCells(featureIdsArrayPtr->getDataStoreRef(), dims[0] * dims[1], m_ShouldCancel);
     if(hasBlockedCellsResult.invalid())
     {
       return ConvertResult(std::move(hasBlockedCellsResult));

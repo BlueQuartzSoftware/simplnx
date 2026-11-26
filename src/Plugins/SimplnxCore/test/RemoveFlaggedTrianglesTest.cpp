@@ -15,7 +15,7 @@ using namespace nx::core;
 
 namespace
 {
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_triangles_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path KBaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_triangles_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
 constexpr StringLiteral k_RegionIdsName = "Region Ids";
 constexpr StringLiteral k_FaceNormalsName = "Face Normals";
@@ -37,7 +37,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Test Algorithm", "[Simplnx
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(KBaseDataFilePath);
 
   {
     // Instantiate the filter and an Arguments Object
@@ -96,7 +96,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: SIMPL Backwards Compatibil
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -108,22 +108,22 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: SIMPL Backwards Compatibil
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RemoveFlaggedTrianglesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RemoveFlaggedTrianglesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(RemoveFlaggedTrianglesFilter::k_SelectedTriangleGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(RemoveFlaggedTrianglesFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "FaceData", "Mask"}));
       CHECK(args.value<DataPath>(RemoveFlaggedTrianglesFilter::k_CreatedTriangleGeometryPath_Key) == DataPath({"ReducedTriangleGeometry"}));
@@ -136,28 +136,28 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   const bool withEdges = GENERATE(false, true);
   CAPTURE(withEdges);
   DataStructure dataStructure;
-  auto* geom = TriangleGeom::Create(dataStructure, "Triangles");
-  REQUIRE(geom != nullptr);
-  auto* vertices = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", {3}, {3}, geom->getId());
-  geom->setVertices(*vertices);
-  geom->setVertexCoordinate(0, {0, 0, 0});
-  geom->setVertexCoordinate(1, {2, 0, 0});
-  geom->setVertexCoordinate(2, {0, 3, 0});
-  auto* faces = DataArray<IGeometry::MeshIndexType>::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "Faces", {1}, {3}, geom->getId());
-  (*faces)[0] = 0;
-  (*faces)[1] = 1;
-  (*faces)[2] = 2;
-  geom->setFaceList(*faces);
-  auto* faceAM = AttributeMatrix::Create(dataStructure, "FacesCustom", {1}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceAM);
-  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Value", {1}, {1}, faceAM->getId());
-  (*values)[0] = 17;
-  auto* mask = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {1}, {1}, faceAM->getId());
-  (*mask)[0] = false;
+  auto* geomPtr = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(geomPtr != nullptr);
+  auto* verticesPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", {3}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*verticesPtr);
+  geomPtr->setVertexCoordinate(0, {0, 0, 0});
+  geomPtr->setVertexCoordinate(1, {2, 0, 0});
+  geomPtr->setVertexCoordinate(2, {0, 3, 0});
+  auto* facesPtr = DataArray<IGeometry::MeshIndexType>::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "Faces", {1}, {3}, geomPtr->getId());
+  (*facesPtr)[0] = 0;
+  (*facesPtr)[1] = 1;
+  (*facesPtr)[2] = 2;
+  geomPtr->setFaceList(*facesPtr);
+  auto* faceAmPtr = AttributeMatrix::Create(dataStructure, "FacesCustom", {1}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceAmPtr);
+  auto* valuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Value", {1}, {1}, faceAmPtr->getId());
+  (*valuesPtr)[0] = 17;
+  auto* maskPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {1}, {1}, faceAmPtr->getId());
+  (*maskPtr)[0] = false;
   if(withEdges)
   {
-    auto* edgeAM = AttributeMatrix::Create(dataStructure, "EdgesCustom", {0}, geom->getId());
-    geom->setEdgeAttributeMatrix(*edgeAM);
+    auto* edgeAmPtr = AttributeMatrix::Create(dataStructure, "EdgesCustom", {0}, geomPtr->getId());
+    geomPtr->setEdgeAttributeMatrix(*edgeAmPtr);
   }
   const DataPath inputPath({"Triangles"});
   const DataPath facePath = inputPath.createChildPath("FacesCustom");
@@ -171,16 +171,16 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_TriangleDataSelectedArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{facePath.createChildPath("Value")}));
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* reduced = dataStructure.getDataAs<TriangleGeom>(outputPath);
-  REQUIRE(reduced != nullptr);
-  CHECK(reduced->getNumberOfFaces() == 1);
-  CHECK(reduced->getNumberOfVertices() == 3);
-  const auto* outputAM = dataStructure.getDataAs<AttributeMatrix>(outputPath.createChildPath("FacesCustom"));
-  REQUIRE(outputAM != nullptr);
-  CHECK(reduced->getFaceAttributeMatrix() == outputAM);
-  const auto* output = dataStructure.getDataAs<Int32Array>(outputPath.createChildPath("FacesCustom").createChildPath("Value"));
-  REQUIRE(output != nullptr);
+  const auto* reducedPtr = dataStructure.getDataAs<TriangleGeom>(outputPath);
+  REQUIRE(reducedPtr != nullptr);
+  CHECK(reducedPtr->getNumberOfFaces() == 1);
+  CHECK(reducedPtr->getNumberOfVertices() == 3);
+  const auto* outputAmPtr = dataStructure.getDataAs<AttributeMatrix>(outputPath.createChildPath("FacesCustom"));
+  REQUIRE(outputAmPtr != nullptr);
+  CHECK(reducedPtr->getFaceAttributeMatrix() == outputAmPtr);
+  const auto* outputPtr = dataStructure.getDataAs<Int32Array>(outputPath.createChildPath("FacesCustom").createChildPath("Value"));
+  REQUIRE(outputPtr != nullptr);
   // A false removal mask retains the single face and its scalar value 17.
-  CHECK((*output)[0] == 17);
+  CHECK((*outputPtr)[0] == 17);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

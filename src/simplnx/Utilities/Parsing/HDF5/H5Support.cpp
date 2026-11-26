@@ -78,13 +78,13 @@ herr_t nx::core::HDF5::Support::FindAttr(hid_t /*locationID*/, const char* name,
    */
   int32 returnError = 0;
 
-  char* attributeName = reinterpret_cast<char*>(opData);
+  char* attributeNamePtr = reinterpret_cast<char*>(opData);
 
   /* Define a positive value for return value if the attribute was found. This
    * will cause the iterator to immediately return that positive value,
    * indicating short-circuit success
    */
-  if(std::strcmp(name, attributeName) == 0)
+  if(std::strcmp(name, attributeNamePtr) == 0)
   {
     returnError = 1;
   }
@@ -233,6 +233,6 @@ std::mutex& nx::core::HDF5::Support::ApiLock()
 {
   // Keep the process lock alive while static HDF5 handles can still close.
   // Intentional heap lifetime avoids locking a destroyed function-local mutex during shutdown.
-  static std::mutex* s_ApiLock = new std::mutex();
-  return *s_ApiLock;
+  static std::mutex* sApiLockPtr = new std::mutex();
+  return *sApiLockPtr;
 }

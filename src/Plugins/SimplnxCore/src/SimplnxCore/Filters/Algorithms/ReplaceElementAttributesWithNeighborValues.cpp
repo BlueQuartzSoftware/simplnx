@@ -149,7 +149,7 @@ struct ExecuteTemplate
    * @param neighborPoint Identifies the candidate in the complete volume.
    */
   template <typename T>
-  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, T neighborValue, float32 ThresholdValue, T& best, std::vector<int64>& bestNeighbor, usize i, int64 neighborPoint) const
+  void compareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, T neighborValue, float32 ThresholdValue, T& best, std::vector<int64>& bestNeighbor, usize i, int64 neighborPoint) const
   {
     if(comparator->compare1(neighborValue, ThresholdValue) && comparator->compare2(neighborValue, best))
     {
@@ -193,7 +193,7 @@ struct ExecuteTemplate
     // Precompute face-neighbor offsets and their deterministic tie order.
     constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
     const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-    constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+    constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
     usize count = 0;
     bool keepGoing = true;
@@ -206,7 +206,7 @@ struct ExecuteTemplate
     }
 
     // All cell IDataArray siblings receive the selected source tuple.
-    const AttributeMatrix* attrMatrix = imageGeom.getCellData();
+    const AttributeMatrix* attrMatrixPtr = imageGeom.getCellData();
 
     const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
     const usize dimZ = static_cast<usize>(dims[2]);
@@ -300,7 +300,7 @@ struct ExecuteTemplate
               };
 
               // Equal candidates keep the first face in the fixed direction order.
-              for(const auto& faceIndex : faceNeighborInternalIdx)
+              for(const auto& faceIndex : k_FaceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
                 {
@@ -309,7 +309,7 @@ struct ExecuteTemplate
 
                 const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
                 const T neighborValue = inputSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
-                CompareValues<T>(comparator, neighborValue, ThresholdValue, best, sliceBestNeighbor, inSlice, neighborPoint);
+                compareValues<T>(comparator, neighborValue, ThresholdValue, best, sliceBestNeighbor, inSlice, neighborPoint);
               }
               if(sliceBestNeighbor[inSlice] != -1)
               {
@@ -321,7 +321,7 @@ struct ExecuteTemplate
 
         // Immediate transfer limits mark memory to one destination slice. A
         // source in Z-1 can already contain data copied earlier in this pass.
-        for(const auto& [dataId, dataObject] : *attrMatrix)
+        for(const auto& [dataId, dataObject] : *attrMatrixPtr)
         {
           auto* dataArrayPtr = dynamic_cast<IDataArray*>(dataObject.get());
           if(dataArrayPtr == nullptr)
@@ -379,9 +379,9 @@ const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel() 
 
 Result<> ReplaceElementAttributesWithNeighborValues::operator()()
 {
-  auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto* srcIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
-  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray->getDataType(), imageGeom, srcIDataArray, m_InputValues->InputArrayPath, m_InputValues->SelectedComparison, m_InputValues->MinConfidence,
+  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArrayPtr->getDataType(), imageGeom, srcIDataArrayPtr, m_InputValues->InputArrayPath, m_InputValues->SelectedComparison, m_InputValues->MinConfidence,
                              m_InputValues->Loop, m_ShouldCancel, m_MessageHandler);
 }

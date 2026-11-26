@@ -126,16 +126,16 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
 
     auto pNormalsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
 
-    const auto* triangleGeom = dataStructure.getDataAs<INodeGeometry2D>(targetGeomResult.value());
+    const auto* triangleGeomPtr = dataStructure.getDataAs<INodeGeometry2D>(targetGeomResult.value());
 
     const auto* existingNormalsPtr = dataStructure.getDataAs<Float64Array>(pNormalsArrayPath);
     if(existingNormalsPtr != nullptr)
     {
-      if(existingNormalsPtr->getNumberOfTuples() != triangleGeom->getNumberOfFaces() || existingNormalsPtr->getNumberOfComponents() != 3)
+      if(existingNormalsPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces() || existingNormalsPtr->getNumberOfComponents() != 3)
       {
         resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
         resultOutputActions.value().appendAction(
-            std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+            std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
         resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
       }
 
@@ -147,7 +147,7 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
     {
       resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
       resultOutputActions.value().appendAction(
-          std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+          std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
       resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
       return {.outputActions = std::move(resultOutputActions)};
     }

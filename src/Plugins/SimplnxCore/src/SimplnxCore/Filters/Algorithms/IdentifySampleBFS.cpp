@@ -59,7 +59,7 @@ struct IdentifySampleFunctor
 
     int64_t neighborPoint = 0;
     const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimsStateT>(dims);
-    constexpr std::array<FaceNeighborType, k_NeighborCount> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
+    constexpr std::array<FaceNeighborType, k_NeighborCount> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
 
     std::vector<int64> currentVList;
     std::vector<bool> checked(totalPoints, false);
@@ -93,7 +93,7 @@ struct IdentifySampleFunctor
               int64 yIndex = (index / dims[0]) % dims[1];
               int64 zIndex = index / (dims[0] * dims[1]);
               const std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
-              for(const auto& faceIndex : faceNeighborInternalIdx)
+              for(const auto& faceIndex : k_FaceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
                 {
@@ -167,7 +167,7 @@ struct IdentifySampleFunctor
                 int64 zIndex = index / (dims[0] * dims[1]);
                 // Loop over the 6 face neighbors of the voxel
                 const std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
-                for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
+                for(const auto faceIndex : k_FaceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
                 {
                   if(!isValidFaceNeighbor[faceIndex])
                   {
@@ -277,16 +277,16 @@ IdentifySampleBFS::IdentifySampleBFS(DataStructure& dataStructure, const IFilter
 // -----------------------------------------------------------------------------
 Result<> IdentifySampleBFS::operator()()
 {
-  auto* inputData = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-  const auto* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
+  auto* inputDataPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
 
   if(m_InputValues->SliceBySlice)
   {
-    return ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles,
+    return ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->FillHoles,
                                static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
   }
 
-  ProcessVoxels<IdentifySampleFunctor>(inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
+  ProcessVoxels<IdentifySampleFunctor>(inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
 
   return {};
 }

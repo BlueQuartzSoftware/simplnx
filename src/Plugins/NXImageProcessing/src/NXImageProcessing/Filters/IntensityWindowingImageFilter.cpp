@@ -20,16 +20,16 @@ struct IntensityWindowingOperation
 {
   float64 window_minimum = 0.0;
   float64 window_maximum = 255.0;
-  float64 outputMinimum = 0.0;
-  float64 outputMaximum = 255.0;
+  float64 output_minimum = 0.0;
+  float64 output_maximum = 255.0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
     const float64 wMin = window_minimum;
     const float64 wMax = window_maximum;
-    const float64 oMin = outputMinimum;
-    const float64 oMax = outputMaximum;
+    const float64 oMin = output_minimum;
+    const float64 oMax = output_maximum;
     const float64 scale = (oMax - oMin) / (wMax - wMin);
     return [wMin, wMax, oMin, oMax, scale](T value) -> U {
       // Output bounds are Float64 and can exceed a narrow output type; saturate-cast to U to avoid UB.
@@ -120,7 +120,7 @@ Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const IntensityWindowingOperation operation{.window_minimum = windowMinimum, .window_maximum = windowMaximum, .outputMinimum = outputMinimum, .outputMaximum = outputMaximum};
+  const IntensityWindowingOperation operation{.window_minimum = windowMinimum, .window_maximum = windowMaximum, .output_minimum = outputMinimum, .output_maximum = outputMaximum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

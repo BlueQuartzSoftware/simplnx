@@ -166,12 +166,12 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   bool useMask = filterArgs.value<bool>(k_UseMask_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
-  const IDataArray* maskArray = nullptr;
+  const IDataArray* maskArrayPtr = nullptr;
   if(useMask)
   {
     // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
-    maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
-    if(maskArray == nullptr)
+    maskArrayPtr = dataStructure.getDataAs<IDataArray>(maskArrayPath);
+    if(maskArrayPtr == nullptr)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(
                   k_InvalidMaskArrayError, fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
@@ -198,15 +198,15 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
 
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
-    if(maskArray != nullptr && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    if(maskArrayPtr != nullptr && maskArrayPtr->getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
       return {.outputActions = MakeErrorResult<OutputActions>(k_MaskTupleCountError,
                                                               fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
-                                                                          maskArrayPath.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples()))};
+                                                                          maskArrayPath.toString(), maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(), dataArrayPtr->getNumberOfTuples()))};
     }
 
-    auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
+    auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArrayPtr->getName()));
     resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(arrayGroupPath));
 
     {
@@ -216,7 +216,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     }
 
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray->getDataType(), std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)}, std::vector<usize>{2},
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArrayPtr->getDataType(), std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)}, std::vector<usize>{2},
                                                                    arrayGroupPath.createChildPath(pBinRangeName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
@@ -227,7 +227,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     }
     if(pCalculateModalBinRanges)
     {
-      auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataArray->getDataType(), std::vector<usize>{1}, arrayGroupPath.createChildPath(pBinModalBinRangesName));
+      auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataArrayPtr->getDataType(), std::vector<usize>{1}, arrayGroupPath.createChildPath(pBinModalBinRangesName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }

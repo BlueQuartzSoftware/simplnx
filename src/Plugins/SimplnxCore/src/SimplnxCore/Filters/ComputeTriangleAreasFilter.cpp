@@ -103,14 +103,14 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
 
   const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
 
-  const AttributeMatrix* faceAttributeMatrix = triangleGeomPtr->getFaceAttributeMatrix();
-  if(faceAttributeMatrix == nullptr)
+  const AttributeMatrix* faceAttributeMatrixPtr = triangleGeomPtr->getFaceAttributeMatrix();
+  if(faceAttributeMatrixPtr == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
                                                             fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   {
-    DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
+    DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pCalculatedAreasName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
@@ -125,17 +125,17 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
-  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
+  const TriangleGeom* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const AttributeMatrix* faceAttributeMatrixPtr = triangleGeomPtr->getFaceAttributeMatrix();
 
-  DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
+  DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pCalculatedAreasName);
   auto& areaStore = dataStructure.getDataAs<Float64Array>(pCalculatedAreasDataPath)->getDataStoreRef();
 
-  const auto& triStore = triangleGeom->getFaces()->getDataStoreRef();
-  const auto& vertStore = triangleGeom->getVertices()->getDataStoreRef();
-  const DataPath trianglePath = pTriangleGeometryDataPath.createChildPath(triangleGeom->getFaces()->getName());
-  const DataPath vertexPath = pTriangleGeometryDataPath.createChildPath(triangleGeom->getVertices()->getName());
-  const usize numTris = triangleGeom->getNumberOfFaces();
+  const auto& triStore = triangleGeomPtr->getFaces()->getDataStoreRef();
+  const auto& vertStore = triangleGeomPtr->getVertices()->getDataStoreRef();
+  const DataPath trianglePath = pTriangleGeometryDataPath.createChildPath(triangleGeomPtr->getFaces()->getName());
+  const DataPath vertexPath = pTriangleGeometryDataPath.createChildPath(triangleGeomPtr->getVertices()->getName());
+  const usize numTris = triangleGeomPtr->getNumberOfFaces();
 
   const auto addIoContext = [](Result<> result, const DataPath& path, usize offset, usize count, const char* operation) {
     for(auto& error : result.errors())

@@ -50,8 +50,8 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
     }
     for(const auto& path : getSelectedDataPaths(m_InputValues->ImageGeometryPath))
     {
-      const auto* array = m_DataStructure.getDataAs<IDataArray>(path);
-      usesOutOfCoreStore = usesOutOfCoreStore || (array != nullptr && IsOutOfCore(*array));
+      const auto* arrayPtr = m_DataStructure.getDataAs<IDataArray>(path);
+      usesOutOfCoreStore = usesOutOfCoreStore || (arrayPtr != nullptr && IsOutOfCore(*arrayPtr));
     }
     if(!ForceInCoreAlgorithm() && (ForceOocAlgorithm() || usesOutOfCoreStore))
     {
@@ -76,14 +76,14 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
   const usize numCrystalStructures = crystalStructures.getNumberOfTuples();
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3 udims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -370,7 +370,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
@@ -388,7 +388,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     return crystalReadResult;
   }
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3 udims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),

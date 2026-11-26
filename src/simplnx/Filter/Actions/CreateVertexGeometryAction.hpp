@@ -82,16 +82,16 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    static constexpr StringLiteral prefix = "CreateVertexGeometryAction: ";
+    static constexpr StringLiteral k_Prefix = "CreateVertexGeometryAction: ";
     if(getCreatedPath().empty())
     {
-      return MakeErrorResult(-6101, fmt::format("{}Geometry Path cannot be empty", prefix));
+      return MakeErrorResult(-6101, fmt::format("{}Geometry Path cannot be empty", k_Prefix));
     }
 
-    BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
-    if(parentObject != nullptr)
+    BaseGroup* parentObjectPtr = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
+    if(parentObjectPtr != nullptr)
     {
-      return MakeErrorResult(-6102, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
+      return MakeErrorResult(-6102, fmt::format("{}DataObject already exists at path '{}'", k_Prefix, getCreatedPath().toString()));
     }
 
     DataPath parentPath = getCreatedPath().getParent();
@@ -100,60 +100,60 @@ public:
       Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
       if(geomPath.invalid())
       {
-        return MakeErrorResult(-6103, fmt::format("{}Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
+        return MakeErrorResult(-6103, fmt::format("{}Geometry could not be created at path:'{}'", k_Prefix, getCreatedPath().toString()));
       }
     }
     if(!dataStructure.getId(parentPath).has_value())
     {
-      return MakeErrorResult(-6104, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
+      return MakeErrorResult(-6104, fmt::format("{}Parent Id was not available for path:'{}'", k_Prefix, parentPath.toString()));
     }
 
-    auto* const vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
-    if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
+    auto* const verticesPtr = dataStructure.getDataAs<Float32Array>(m_InputVertices);
+    if(m_ArrayHandlingType != ArrayHandlingType::Create && verticesPtr == nullptr)
     {
-      return MakeErrorResult(-6105, fmt::format("{}Could not find vertices array at path '{}'", prefix, m_InputVertices.toString()));
+      return MakeErrorResult(-6105, fmt::format("{}Could not find vertices array at path '{}'", k_Prefix, m_InputVertices.toString()));
     }
 
-    VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
-    if(vertexGeom == nullptr)
+    VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+    if(vertexGeomPtr == nullptr)
     {
       return MakeErrorResult(-6108,
-                             fmt::format("{}Vertex Geometry could not be created at path '{}'. Choose an unused path under a DataGroup or another geometry.", prefix, getCreatedPath().toString()));
+                             fmt::format("{}Vertex Geometry could not be created at path '{}'. Choose an unused path under a DataGroup or another geometry.", k_Prefix, getCreatedPath().toString()));
     }
-    vertexGeom->setUnits(m_Units);
+    vertexGeomPtr->setUnits(m_Units);
 
     ShapeType tupleShape = {m_NumVertices};
 
     if(m_ArrayHandlingType != ArrayHandlingType::Create)
     {
-      tupleShape = vertices->getTupleShape();
+      tupleShape = verticesPtr->getTupleShape();
     }
 
     if(m_ArrayHandlingType == ArrayHandlingType::Copy)
     {
-      std::shared_ptr<DataObject> copy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
+      std::shared_ptr<DataObject> copy = verticesPtr->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(copy);
 
-      vertexGeom->setVertices(*vertexArray);
+      vertexGeomPtr->setVertices(*vertexArray);
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Move)
     {
-      const auto geomId = vertexGeom->getId();
-      const auto verticesId = vertices->getId();
+      const auto geomId = vertexGeomPtr->getId();
+      const auto verticesId = verticesPtr->getId();
       dataStructure.setAdditionalParent(verticesId, geomId);
       const auto oldParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldParentId.has_value())
       {
         return MakeErrorResult(
-            -6106, fmt::format("{}Failed to remove vertices array '{}' from parent at path '{}' while moving array", prefix, m_SharedVertexListName, m_InputVertices.getParent().toString()));
+            -6106, fmt::format("{}Failed to remove vertices array '{}' from parent at path '{}' while moving array", k_Prefix, m_SharedVertexListName, m_InputVertices.getParent().toString()));
       }
       dataStructure.removeParent(verticesId, oldParentId.value());
-      vertexGeom->setVertices(*vertices);
+      vertexGeomPtr->setVertices(*verticesPtr);
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
     {
-      dataStructure.setAdditionalParent(vertices->getId(), vertexGeom->getId());
-      vertexGeom->setVertices(*vertices);
+      dataStructure.setAdditionalParent(verticesPtr->getId(), vertexGeomPtr->getId());
+      vertexGeomPtr->setVertices(*verticesPtr);
     }
     else
     {
@@ -165,20 +165,20 @@ public:
       {
         return result;
       }
-      auto* vertexArray = dataStructure.getDataAs<Float32Array>(vertexPath);
-      if(vertexArray == nullptr)
+      auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(vertexPath);
+      if(vertexArrayPtr == nullptr)
       {
         throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
       }
-      vertexGeom->setVertices(*vertexArray);
+      vertexGeomPtr->setVertices(*vertexArrayPtr);
     }
 
-    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, tupleShape, vertexGeom->getId());
-    if(vertexAttributeMatrix == nullptr)
+    auto* vertexAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, m_VertexDataName, tupleShape, vertexGeomPtr->getId());
+    if(vertexAttributeMatrixPtr == nullptr)
     {
-      return MakeErrorResult(-6107, fmt::format("{}Failed to create attribute matrix: '{}'", prefix, getVertexDataPath().toString()));
+      return MakeErrorResult(-6107, fmt::format("{}Failed to create attribute matrix: '{}'", k_Prefix, getVertexDataPath().toString()));
     }
-    vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);
+    vertexGeomPtr->setVertexAttributeMatrix(*vertexAttributeMatrixPtr);
 
     return {};
   }

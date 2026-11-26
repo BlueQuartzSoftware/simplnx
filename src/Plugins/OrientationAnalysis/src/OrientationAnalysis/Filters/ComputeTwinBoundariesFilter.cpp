@@ -117,8 +117,8 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* faceLabels = dataStructure.getDataAs<IDataArray>(pFaceLabelsArrayPath);
-  if(faceLabels == nullptr)
+  const auto* faceLabelsPtr = dataStructure.getDataAs<IDataArray>(pFaceLabelsArrayPath);
+  if(faceLabelsPtr == nullptr)
   {
     return MakePreflightErrorResult(-94730, "Input Face Labels Array must be valid.");
   }
@@ -127,20 +127,20 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
   if(pBoundariesArrayTypeChoice == 0ULL)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::boolean, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
+        std::make_unique<CreateArrayAction>(DataType::boolean, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   else if(pBoundariesArrayTypeChoice == 1ULL)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
+        std::make_unique<CreateArrayAction>(DataType::uint8, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   if(pFindCoherence)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
+        std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

@@ -55,28 +55,28 @@ nlohmann::json CalculatorParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a object", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a object", k_Prefix, name()));
   }
   if(!json.contains(k_SelectedGroup))
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry,
-                                     fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), k_SelectedGroup.view()));
+                                     fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_SelectedGroup.view()));
   }
   if(!json.contains(k_Equation))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), k_Equation.view()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_Equation.view()));
   }
   if(!json.contains(k_Units))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), k_Units.view()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_Units.view()));
   }
   auto units = json[k_Units].get<std::underlying_type_t<AngleUnits>>();
   if(units != to_underlying(AngleUnits::Radians) && units != to_underlying(AngleUnits::Degrees))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(),
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(),
                                                                                                            k_Units.view(), to_underlying(AngleUnits::Radians), to_underlying(AngleUnits::Degrees)));
   }
   ValueType value;
@@ -87,7 +87,7 @@ Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, V
   if(!selectedGroupPath.has_value())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type,
-                                     fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", prefix, selectedGroupString, k_SelectedGroup));
+                                     fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", k_Prefix, selectedGroupString, k_SelectedGroup));
   }
   value.m_SelectedGroup = selectedGroupPath.value();
   return {{std::move(value)}};
@@ -110,11 +110,11 @@ typename CalculatorParameter::ValueType CalculatorParameter::defaultString() con
 
 Result<> CalculatorParameter::validate(const std::any& value) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   [[maybe_unused]] const auto& structValue = GetAnyRef<ValueType>(value);
   if(StringUtilities::trimmed(structValue.m_Equation).empty())
   {
-    return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", prefix));
+    return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", k_Prefix));
   }
 
   // m_SelectedGroup is only a resolution hint for array name lookups.

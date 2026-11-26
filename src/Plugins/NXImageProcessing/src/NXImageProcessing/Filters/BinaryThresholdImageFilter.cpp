@@ -22,16 +22,16 @@ struct BinaryThresholdOperation
 {
   float64 lower_threshold = 0.0;
   float64 upper_threshold = 255.0;
-  uint8 insideValue = 1;
-  uint8 outsideValue = 0;
+  uint8 inside_value = 1;
+  uint8 outside_value = 0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
     const float64 lo = lower_threshold;
     const float64 hi = upper_threshold;
-    const uint8 inV = insideValue;
-    const uint8 outV = outsideValue;
+    const uint8 inV = inside_value;
+    const uint8 outV = outside_value;
     return [lo, hi, inV, outV](T value) -> U {
       const double d = static_cast<double>(value);
       return static_cast<U>((d >= lo && d <= hi) ? inV : outV);
@@ -124,7 +124,7 @@ Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, c
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  const BinaryThresholdOperation operation{.lower_threshold = lowerThreshold, .upper_threshold = upperThreshold, .insideValue = insideValue, .outsideValue = outsideValue};
+  const BinaryThresholdOperation operation{.lower_threshold = lowerThreshold, .upper_threshold = upperThreshold, .inside_value = insideValue, .outside_value = outsideValue};
   return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

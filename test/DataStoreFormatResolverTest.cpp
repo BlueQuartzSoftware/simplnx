@@ -66,19 +66,19 @@ TEST_CASE("ResolveStorageFormat consults the resolver for every geometry parent"
   DataStructure ds;
   ds.setFormatResolver(std::make_shared<FixedResolver>("RESOLVED"));
 
-  auto* image = ImageGeom::Create(ds, "Image");
-  AttributeMatrix::Create(ds, "CellData", ShapeType{10}, image->getId());
+  auto* imagePtr = ImageGeom::Create(ds, "Image");
+  AttributeMatrix::Create(ds, "CellData", ShapeType{10}, imagePtr->getId());
   const DataPath imgArrayPath({"Image", "CellData", "arr"});
 
-  auto* tri = TriangleGeom::Create(ds, "Tri");
-  AttributeMatrix::Create(ds, "VertexData", ShapeType{5}, tri->getId());
+  auto* triPtr = TriangleGeom::Create(ds, "Tri");
+  AttributeMatrix::Create(ds, "VertexData", ShapeType{5}, triPtr->getId());
   const DataPath triArrayPath({"Tri", "VertexData", "arr"});
 
   DataGroup::Create(ds, "Group");
   const DataPath grpArrayPath({"Group", "arr"});
 
-  auto* rectGrid = RectGridGeom::Create(ds, "RectGrid");
-  AttributeMatrix::Create(ds, "CellData2", ShapeType{8}, rectGrid->getId());
+  auto* rectGridPtr = RectGridGeom::Create(ds, "RectGrid");
+  AttributeMatrix::Create(ds, "CellData2", ShapeType{8}, rectGridPtr->getId());
   const DataPath rectArrayPath({"RectGrid", "CellData2", "arr"});
 
   for(const DataPath& path : {imgArrayPath, triArrayPath, grpArrayPath, rectArrayPath})

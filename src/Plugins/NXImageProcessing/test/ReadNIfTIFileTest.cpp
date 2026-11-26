@@ -35,16 +35,16 @@ struct SyntheticNiftiParams
   std::array<int16_t, 3> dims{1, 1, 1};
   std::array<float, 3> spacing{1.0f, 1.0f, 1.0f};
   std::array<float, 3> origin{0.0f, 0.0f, 0.0f};
-  int16_t niftiDatatype{NIFTI_TYPE_UINT8};
+  int16_t nifti_datatype{NIFTI_TYPE_UINT8};
   int16_t bitpix{8};
-  float sclSlope{0.0f};
-  float sclInter{0.0f};
+  float scl_slope{0.0f};
+  float scl_inter{0.0f};
   int16_t rank{3};      // dim[0]; override to 1/2/4 for rejection tests
-  int16_t qformCode{1}; // set to 0 to disable qform
-  float quaternB{0.0f};
-  float quaternC{0.0f};
-  float quaternD{0.0f};
-  int16_t sformCode{0};                        // >0 enables srow_* population
+  int16_t qform_code{1}; // set to 0 to disable qform
+  float quatern_b{0.0f};
+  float quatern_c{0.0f};
+  float quatern_d{0.0f};
+  int16_t sform_code{0};                        // >0 enables srow_* population
   std::array<std::array<float, 4>, 3> sform{}; // 3x4 affine when sformCode > 0
 };
 
@@ -67,22 +67,22 @@ nifti_1_header MakeHeader(const SyntheticNiftiParams& p)
   hdr.pixdim[3] = p.spacing[2];
   hdr.pixdim[4] = 0.0f;
 
-  hdr.datatype = p.niftiDatatype;
+  hdr.datatype = p.nifti_datatype;
   hdr.bitpix = p.bitpix;
   hdr.vox_offset = 352.0f;
-  hdr.scl_slope = p.sclSlope;
-  hdr.scl_inter = p.sclInter;
+  hdr.scl_slope = p.scl_slope;
+  hdr.scl_inter = p.scl_inter;
 
-  hdr.qform_code = p.qformCode;
+  hdr.qform_code = p.qform_code;
   hdr.qoffset_x = p.origin[0];
   hdr.qoffset_y = p.origin[1];
   hdr.qoffset_z = p.origin[2];
-  hdr.quatern_b = p.quaternB;
-  hdr.quatern_c = p.quaternC;
-  hdr.quatern_d = p.quaternD;
+  hdr.quatern_b = p.quatern_b;
+  hdr.quatern_c = p.quatern_c;
+  hdr.quatern_d = p.quatern_d;
 
-  hdr.sform_code = p.sformCode;
-  if(p.sformCode > 0)
+  hdr.sform_code = p.sform_code;
+  if(p.sform_code > 0)
   {
     for(int i = 0; i < 4; i++)
     {
@@ -169,26 +169,26 @@ std::vector<uint8_t> ToBytesByteSwapped(std::vector<T> values)
 
 void WriteNiftiFile(const fs::path& path, const nifti_1_header& hdr, const std::vector<uint8_t>& voxelBytes, bool gzipped)
 {
-  static constexpr std::array<uint8_t, 4> zeroExtension{0, 0, 0, 0};
+  static constexpr std::array<uint8_t, 4> k_ZeroExtension{0, 0, 0, 0};
 
   if(gzipped)
   {
-    gzFile gz = gzopen(path.string().c_str(), "wb");
-    REQUIRE(gz != nullptr);
-    REQUIRE(gzwrite(gz, &hdr, static_cast<unsigned int>(sizeof(hdr))) == static_cast<int>(sizeof(hdr)));
-    REQUIRE(gzwrite(gz, zeroExtension.data(), 4) == 4);
+    gzFile gzPtr = gzopen(path.string().c_str(), "wb");
+    REQUIRE(gzPtr != nullptr);
+    REQUIRE(gzwrite(gzPtr, &hdr, static_cast<unsigned int>(sizeof(hdr))) == static_cast<int>(sizeof(hdr)));
+    REQUIRE(gzwrite(gzPtr, k_ZeroExtension.data(), 4) == 4);
     if(!voxelBytes.empty())
     {
-      REQUIRE(gzwrite(gz, voxelBytes.data(), static_cast<unsigned int>(voxelBytes.size())) == static_cast<int>(voxelBytes.size()));
+      REQUIRE(gzwrite(gzPtr, voxelBytes.data(), static_cast<unsigned int>(voxelBytes.size())) == static_cast<int>(voxelBytes.size()));
     }
-    gzclose(gz);
+    gzclose(gzPtr);
   }
   else
   {
     std::ofstream ofs(path, std::ios::binary);
     REQUIRE(ofs.is_open());
     ofs.write(reinterpret_cast<const char*>(&hdr), sizeof(hdr));
-    ofs.write(reinterpret_cast<const char*>(zeroExtension.data()), 4);
+    ofs.write(reinterpret_cast<const char*>(k_ZeroExtension.data()), 4);
     if(!voxelBytes.empty())
     {
       ofs.write(reinterpret_cast<const char*>(voxelBytes.data()), static_cast<std::streamsize>(voxelBytes.size()));
@@ -278,7 +278,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .n
   params.dims = dims;
   params.spacing = spacing;
   params.origin = origin;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -310,16 +310,16 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .n
       const auto actualDims = geom.getDimensions();
       const auto actualSpacing = geom.getSpacing();
       const auto actualOrigin = geom.getOrigin();
-      constexpr float tol = 1e-5f;
+      constexpr float k_Tol = 1e-5f;
       REQUIRE(actualDims[0] == static_cast<usize>(dims[0]));
       REQUIRE(actualDims[1] == static_cast<usize>(dims[1]));
       REQUIRE(actualDims[2] == static_cast<usize>(dims[2]));
-      REQUIRE(std::fabs(actualSpacing[0] - spacing[0]) < tol);
-      REQUIRE(std::fabs(actualSpacing[1] - spacing[1]) < tol);
-      REQUIRE(std::fabs(actualSpacing[2] - spacing[2]) < tol);
-      REQUIRE(std::fabs(actualOrigin[0] - origin[0]) < tol);
-      REQUIRE(std::fabs(actualOrigin[1] - origin[1]) < tol);
-      REQUIRE(std::fabs(actualOrigin[2] - origin[2]) < tol);
+      REQUIRE(std::fabs(actualSpacing[0] - spacing[0]) < k_Tol);
+      REQUIRE(std::fabs(actualSpacing[1] - spacing[1]) < k_Tol);
+      REQUIRE(std::fabs(actualSpacing[2] - spacing[2]) < k_Tol);
+      REQUIRE(std::fabs(actualOrigin[0] - origin[0]) < k_Tol);
+      REQUIRE(std::fabs(actualOrigin[1] - origin[1]) < k_Tol);
+      REQUIRE(std::fabs(actualOrigin[2] - origin[2]) < k_Tol);
 
       RequireArrayEquals<uint8>(dataStructure, arrPath, voxels);
 
@@ -342,10 +342,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform"
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.nifti_datatype = NIFTI_TYPE_INT16;
   params.bitpix = 16;
-  params.sclSlope = 0.25f;
-  params.sclInter = 10.0f;
+  params.scl_slope = 0.25f;
+  params.scl_inter = 10.0f;
   nifti_1_header hdr = MakeHeader(params);
 
   const fs::path outDir = OutputDir();
@@ -371,7 +371,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform"
     std::vector<float> expected(numVoxels);
     for(usize i = 0; i < numVoxels; i++)
     {
-      expected[i] = static_cast<float>(voxels[i]) * params.sclSlope + params.sclInter;
+      expected[i] = static_cast<float>(voxels[i]) * params.scl_slope + params.scl_inter;
     }
     RequireFloatArrayApproxEquals(dataStructure, arrPath, expected);
   }
@@ -405,7 +405,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: float32 round trip", "[NXImag
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_FLOAT32;
+  params.nifti_datatype = NIFTI_TYPE_FLOAT32;
   params.bitpix = 32;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -447,7 +447,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.nifti_datatype = NIFTI_TYPE_RGB24;
   params.bitpix = 24;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -492,7 +492,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", 
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_RGBA32;
+  params.nifti_datatype = NIFTI_TYPE_RGBA32;
   params.bitpix = 32;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -545,7 +545,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams o
   params.dims = dims;
   params.spacing = spacing;
   params.origin = origin;
-  params.niftiDatatype = NIFTI_TYPE_UINT16;
+  params.nifti_datatype = NIFTI_TYPE_UINT16;
   params.bitpix = 16;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -585,13 +585,13 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams o
   REQUIRE(outDims[1] == 3);
   REQUIRE(outDims[2] == 2);
   // Origin shifts by start * spacing
-  constexpr float tol = 1e-5f;
-  REQUIRE(std::fabs(outOrigin[0] - 1.0f) < tol);
-  REQUIRE(std::fabs(outOrigin[1] - 1.0f) < tol);
-  REQUIRE(std::fabs(outOrigin[2] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < tol);
+  constexpr float k_Tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[1] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[2] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < k_Tol);
 
   std::vector<uint16_t> expected;
   expected.reserve(3 * 3 * 2);
@@ -637,7 +637,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps p
   params.dims = dims;
   params.spacing = spacing;
   params.origin = origin;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -726,7 +726,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.nifti_datatype = NIFTI_TYPE_RGB24;
   params.bitpix = 24;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -862,7 +862,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
     {
       SyntheticNiftiParams params;
       params.dims = {2, 2, 2};
-      params.niftiDatatype = NIFTI_TYPE_UINT8;
+      params.nifti_datatype = NIFTI_TYPE_UINT8;
       params.bitpix = 8;
       params.rank = rank;
       nifti_1_header hdr = MakeHeader(params);
@@ -883,7 +883,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
   {
     SyntheticNiftiParams params;
     params.dims = {2, 2, 2};
-    params.niftiDatatype = NIFTI_TYPE_COMPLEX64;
+    params.nifti_datatype = NIFTI_TYPE_COMPLEX64;
     params.bitpix = 64;
     nifti_1_header hdr = MakeHeader(params);
 
@@ -902,7 +902,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
   {
     SyntheticNiftiParams params;
     params.dims = {4, 4, 4};
-    params.niftiDatatype = NIFTI_TYPE_UINT8;
+    params.nifti_datatype = NIFTI_TYPE_UINT8;
     params.bitpix = 8;
     nifti_1_header hdr = MakeHeader(params);
 
@@ -936,10 +936,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacin
   params.dims = dims;
   params.spacing = {1.0f, 1.0f, 1.0f}; // pixdim deliberately different from sform
   params.origin = {0.0f, 0.0f, 0.0f};  // qoffset deliberately different
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
-  params.qformCode = 0; // force sform path
-  params.sformCode = 1; // NIFTI_XFORM_SCANNER_ANAT
+  params.qform_code = 0; // force sform path
+  params.sform_code = 1; // NIFTI_XFORM_SCANNER_ANAT
   params.sform = {{{sx, 0.0f, 0.0f, tOrigin[0]}, {0.0f, sy, 0.0f, tOrigin[1]}, {0.0f, 0.0f, sz, tOrigin[2]}}};
 
   nifti_1_header hdr = MakeHeader(params);
@@ -962,13 +962,13 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacin
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   const auto outOrigin = geom.getOrigin();
   const auto outSpacing = geom.getSpacing();
-  constexpr float tol = 1e-5f;
-  REQUIRE(std::fabs(outOrigin[0] - tOrigin[0]) < tol);
-  REQUIRE(std::fabs(outOrigin[1] - tOrigin[1]) < tol);
-  REQUIRE(std::fabs(outOrigin[2] - tOrigin[2]) < tol);
-  REQUIRE(std::fabs(outSpacing[0] - sx) < tol);
-  REQUIRE(std::fabs(outSpacing[1] - sy) < tol);
-  REQUIRE(std::fabs(outSpacing[2] - sz) < tol);
+  constexpr float k_Tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0] - tOrigin[0]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[1] - tOrigin[1]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[2] - tOrigin[2]) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[0] - sx) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[1] - sy) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[2] - sz) < k_Tol);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warning", "[NXImageProcessing][ReadNIfTIFileFilter]")
@@ -982,10 +982,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warnin
 
   SyntheticNiftiParams params;
   params.dims = {2, 2, 2};
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
-  params.qformCode = 0;
-  params.sformCode = 1;
+  params.qform_code = 0;
+  params.sform_code = 1;
   params.sform = {{{c, -s, 0.0f, 0.0f}, {s, c, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}}};
 
   nifti_1_header hdr = MakeHeader(params);
@@ -1025,10 +1025,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false fall
   SyntheticNiftiParams params;
   params.dims = {2, 2, 2};
   params.spacing = {1.0f, 1.0f, 1.0f};
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
-  params.qformCode = 0;
-  params.sformCode = 1;
+  params.qform_code = 0;
+  params.sform_code = 1;
   params.sform = {{{5.0f, 0.0f, 0.0f, 100.0f}, {0.0f, 5.0f, 0.0f, 200.0f}, {0.0f, 0.0f, 5.0f, 300.0f}}};
 
   nifti_1_header hdr = MakeHeader(params);
@@ -1049,13 +1049,13 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false fall
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   const auto outOrigin = geom.getOrigin();
   const auto outSpacing = geom.getSpacing();
-  constexpr float tol = 1e-5f;
-  REQUIRE(std::fabs(outOrigin[0]) < tol);
-  REQUIRE(std::fabs(outOrigin[1]) < tol);
-  REQUIRE(std::fabs(outOrigin[2]) < tol);
-  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < tol);
+  constexpr float k_Tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[1]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[2]) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < k_Tol);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip", "[NXImageProcessing][ReadNIfTIFileFilter]")
@@ -1073,7 +1073,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip"
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_UINT16;
+  params.nifti_datatype = NIFTI_TYPE_UINT16;
   params.bitpix = 16;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -1122,7 +1122,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native 
 
       SyntheticNiftiParams params;
       params.dims = dims;
-      params.niftiDatatype = niftiDatatype;
+      params.nifti_datatype = niftiDatatype;
       params.bitpix = bitpix;
       nifti_1_header hdr = MakeHeader(params);
 
@@ -1161,7 +1161,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native 
 
     SyntheticNiftiParams params;
     params.dims = dims;
-    params.niftiDatatype = NIFTI_TYPE_FLOAT64;
+    params.nifti_datatype = NIFTI_TYPE_FLOAT64;
     params.bitpix = 64;
     nifti_1_header hdr = MakeHeader(params);
 
@@ -1209,7 +1209,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImagePr
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -1361,10 +1361,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: identity scaling transform is
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.nifti_datatype = NIFTI_TYPE_INT16;
   params.bitpix = 16;
-  params.sclSlope = 1.0f; // identity
-  params.sclInter = 0.0f;
+  params.scl_slope = 1.0f; // identity
+  params.scl_inter = 0.0f;
   nifti_1_header hdr = MakeHeader(params);
 
   const fs::path filePath = OutputDir() / "identity_scale.nii";
@@ -1401,7 +1401,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: header cache is reused across
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -1612,30 +1612,30 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite
   CAPTURE(kind, applyScaling);
   SyntheticNiftiParams params;
   params.dims = {2, 1, 1};
-  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.nifti_datatype = NIFTI_TYPE_INT16;
   params.bitpix = 16;
-  params.sclSlope = 2.0f;
-  params.sclInter = 10.0f;
+  params.scl_slope = 2.0f;
+  params.scl_inter = 10.0f;
   const std::array<float, 3> invalidValues{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()};
   if(kind < 3)
   {
-    params.sclSlope = invalidValues[kind];
+    params.scl_slope = invalidValues[kind];
   }
   else if(kind < 6)
   {
-    params.sclInter = invalidValues[kind - 3];
+    params.scl_inter = invalidValues[kind - 3];
   }
   else if(kind == 8)
   {
-    params.sclSlope = 1.0f;
-    params.sclInter = invalidValues[0];
+    params.scl_slope = 1.0f;
+    params.scl_inter = invalidValues[0];
   }
   else
   {
-    params.sclSlope = 0.0f;
+    params.scl_slope = 0.0f;
     if(kind == 7)
     {
-      params.sclInter = invalidValues[0];
+      params.scl_inter = invalidValues[0];
     }
   }
   const std::vector<int16> voxels{-7, 23};
@@ -1699,23 +1699,23 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 pr
   CAPTURE(kind);
   SyntheticNiftiParams params;
   params.dims = {2, 1, 1};
-  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.nifti_datatype = NIFTI_TYPE_RGB24;
   params.bitpix = 24;
-  params.sclSlope = 2.0f;
-  params.sclInter = 10.0f;
+  params.scl_slope = 2.0f;
+  params.scl_inter = 10.0f;
   switch(kind)
   {
   case 0:
-    params.sclSlope = std::numeric_limits<float>::quiet_NaN();
+    params.scl_slope = std::numeric_limits<float>::quiet_NaN();
     break;
   case 1:
-    params.sclSlope = std::numeric_limits<float>::infinity();
+    params.scl_slope = std::numeric_limits<float>::infinity();
     break;
   case 2:
-    params.sclInter = std::numeric_limits<float>::quiet_NaN();
+    params.scl_inter = std::numeric_limits<float>::quiet_NaN();
     break;
   case 3:
-    params.sclInter = -std::numeric_limits<float>::infinity();
+    params.scl_inter = -std::numeric_limits<float>::infinity();
     break;
   default:
     break;
@@ -1776,7 +1776,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: preserves representable large
   SyntheticNiftiParams params;
   if(useSform)
   {
-    params.sformCode = 1;
+    params.sform_code = 1;
     params.sform = {{{spacing, 0, 0, 0}, {0, 3, 0, 0}, {0, 0, 4, 0}}};
   }
   else

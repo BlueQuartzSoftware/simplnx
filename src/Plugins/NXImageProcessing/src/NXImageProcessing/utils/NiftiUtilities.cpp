@@ -114,17 +114,17 @@ std::optional<NiftiTypeInfo> NiftiDatatypeToSimplnx(int16 niftiDatatype)
 Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, bool useAffineIfPresent)
 {
   const std::string pathStr = filePath.string();
-  gzFile gz = gzopen(pathStr.c_str(), "rb");
-  if(gz == nullptr)
+  gzFile gzPtr = gzopen(pathStr.c_str(), "rb");
+  if(gzPtr == nullptr)
   {
     return MakeErrorResult<NiftiMetadata>(-34700, fmt::format("Could not open NIfTI file for reading: '{}'", pathStr));
   }
 
-  gzbuffer(gz, k_GzReadBufferSize);
+  gzbuffer(gzPtr, k_GzReadBufferSize);
 
   nifti_1_header hdr{};
-  int bytesRead = gzread(gz, &hdr, k_HeaderSize);
-  gzclose(gz);
+  int bytesRead = gzread(gzPtr, &hdr, k_HeaderSize);
+  gzclose(gzPtr);
 
   if(bytesRead != static_cast<int>(k_HeaderSize))
   {

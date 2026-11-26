@@ -98,21 +98,21 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
       parentPath = filterArgs.value<DataPath>(k_NewPath_Key);
       // Scope AM check since we fully expect it to be a nullptr
       {
-        const auto* possibleAM = dataStructure.getDataAs<AttributeMatrix>(parentPath);
-        if(possibleAM != nullptr)
+        const auto* possibleAmPtr = dataStructure.getDataAs<AttributeMatrix>(parentPath);
+        if(possibleAmPtr != nullptr)
         {
           for(const auto& path : dataArrayPaths)
           {
-            const auto* possibleIArray = dataStructure.getDataAs<IArray>(path);
-            if(possibleIArray != nullptr)
+            const auto* possibleIArrayPtr = dataStructure.getDataAs<IArray>(path);
+            if(possibleIArrayPtr != nullptr)
             {
-              if(possibleAM->getShape() != possibleIArray->getTupleShape())
+              if(possibleAmPtr->getShape() != possibleIArrayPtr->getTupleShape())
               {
                 resultOutputActions.warnings().push_back(Warning{
                     .code = -27361,
                     .message = fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a runtime error if the sizing remains "
                                            "the same at time of this filters execution. Proceed with caution.",
-                                           possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumberOfTuples())});
+                                           possibleIArrayPtr->getName(), possibleIArrayPtr->getNumberOfTuples(), possibleAmPtr->getName(), possibleAmPtr->getNumberOfTuples())});
               }
             }
           }

@@ -17,13 +17,13 @@ using namespace nx::core;
 TEST_CASE("simplnx::AppendUnchangedAttributeMatricesWarning: reports source paths and excludes aliases by ID", "[simplnx][FilterUtilities]")
 {
   DataStructure dataStructure;
-  const auto* source = DataGroup::Create(dataStructure, "Source");
-  REQUIRE(source != nullptr);
-  const auto* nested = DataGroup::Create(dataStructure, "Nested", source->getId());
-  REQUIRE(nested != nullptr);
-  const auto* selected = AttributeMatrix::Create(dataStructure, "Selected Features", {3}, source->getId());
-  REQUIRE(selected != nullptr);
-  REQUIRE(dataStructure.setAdditionalParent(selected->getId(), nested->getId()));
+  const auto* sourcePtr = DataGroup::Create(dataStructure, "Source");
+  REQUIRE(sourcePtr != nullptr);
+  const auto* nestedPtr = DataGroup::Create(dataStructure, "Nested", sourcePtr->getId());
+  REQUIRE(nestedPtr != nullptr);
+  const auto* selectedPtr = AttributeMatrix::Create(dataStructure, "Selected Features", {3}, sourcePtr->getId());
+  REQUIRE(selectedPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(selectedPtr->getId(), nestedPtr->getId()));
 
   const DataPath selectedPath({"Source", "Selected Features"});
   const DataPath nestedPath({"Source", "Nested"});
@@ -31,8 +31,8 @@ TEST_CASE("simplnx::AppendUnchangedAttributeMatricesWarning: reports source path
 
   SECTION("Copied matrices appear in path order")
   {
-    REQUIRE(AttributeMatrix::Create(dataStructure, "Other Features", {2}, nested->getId()) != nullptr);
-    REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble", {2}, source->getId()) != nullptr);
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Other Features", {2}, nestedPtr->getId()) != nullptr);
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble", {2}, sourcePtr->getId()) != nullptr);
     AppendUnchangedAttributeMatricesWarning(dataStructure, {selectedPath, nestedPath, DataPath({"Source", "Ensemble"})}, {selectedPath}, "cropped geometry", result);
     REQUIRE(result.warnings().size() == 1);
     CHECK(result.warnings().front().code == -4041);

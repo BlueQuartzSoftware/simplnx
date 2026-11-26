@@ -42,11 +42,11 @@ namespace
  */
 float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
 {
-  std::vector<unsigned char> m_LatoBold;
-  fonts::Base64Decode(fonts::k_LatoBoldBase64, m_LatoBold);
+  std::vector<unsigned char> mLatoBold;
+  fonts::Base64Decode(fonts::k_LatoBoldBase64, mLatoBold);
 
   canvas_ity::canvas tempContext(imageSize, imageSize);
-  tempContext.set_font(m_LatoBold.data(), static_cast<int>(m_LatoBold.size()), fontPtSize);
+  tempContext.set_font(mLatoBold.data(), static_cast<int>(mLatoBold.size()), fontPtSize);
   return tempContext.measure_text("X");
 }
 

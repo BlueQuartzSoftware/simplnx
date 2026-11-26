@@ -28,10 +28,10 @@ inline bool CompareBaseGroup(const BaseGroup& exemplarObject, const BaseGroup& t
     {
       return false;
     }
-    const DataObject* exemplarChild = exemplarObject[childName];
-    const DataObject* testChild = testObject[childName];
+    const DataObject* exemplarChildPtr = exemplarObject[childName];
+    const DataObject* testChildPtr = testObject[childName];
     // Recursive. Could have issues with a deeply nested DataStructure
-    if(!CompareDataObject(*exemplarChild, *testChild))
+    if(!CompareDataObject(*exemplarChildPtr, *testChildPtr))
     {
       return false;
     }

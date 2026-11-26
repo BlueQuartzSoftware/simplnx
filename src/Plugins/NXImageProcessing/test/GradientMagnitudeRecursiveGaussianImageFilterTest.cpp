@@ -21,7 +21,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using GradMagFilter = GradientMagnitudeRecursiveGaussianImageFilter;
+using GradMagFilterType = GradientMagnitudeRecursiveGaussianImageFilter;
 
 // Sets the geometry, input, and output keys plus the scalar sigma and the normalize flag on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
@@ -29,11 +29,11 @@ void RunGradMag(IFilter& filter, DataStructure& ds, const DataPath& inputPath, f
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(GradMagFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(GradMagFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(GradMagFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(GradMagFilter::k_Sigma_Key, std::make_any<float64>(sigma));
-  args.insertOrAssign(GradMagFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
+  args.insertOrAssign(GradMagFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(GradMagFilterType::k_Sigma_Key, std::make_any<float64>(sigma));
+  args.insertOrAssign(GradMagFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -74,14 +74,14 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: pre
     DataStructure ds;
     const std::vector<int16> field(3 * 8 * 8, int16{1}); // X = 3 < 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 3, 8, 8, field);
-    GradMagFilter filter;
+    GradMagFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
-    args.insertOrAssign(GradMagFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(GradMagFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradMagFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradMagFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(GradMagFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(GradMagFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradMagFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(GradMagFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
@@ -94,13 +94,13 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: pre
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 2, int16{1}); // Z == 2 (> 1, so not 2D) and < 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 2, field);
-    GradMagFilter filter;
+    GradMagFilterType filter;
     Arguments args;
-    args.insertOrAssign(GradMagFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(GradMagFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradMagFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradMagFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(GradMagFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(GradMagFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradMagFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(GradMagFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
@@ -110,13 +110,13 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: pre
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 3, int16{1}); // Z == 3 (> 1, so not 2D) and < 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 3, field);
-    GradMagFilter filter;
+    GradMagFilterType filter;
     Arguments args;
-    args.insertOrAssign(GradMagFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(GradMagFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradMagFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradMagFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(GradMagFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(GradMagFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradMagFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(GradMagFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
@@ -126,13 +126,13 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: pre
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 1, int16{1}); // Z == 1 -> treated as 2D, so Z is not required to be >= 4
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 1, field);
-    GradMagFilter filter;
+    GradMagFilterType filter;
     Arguments args;
-    args.insertOrAssign(GradMagFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(GradMagFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradMagFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradMagFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(GradMagFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(GradMagFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradMagFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(GradMagFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
@@ -141,14 +141,14 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: pre
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims + type; only sigma is invalid
     const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 8, field);
-    GradMagFilter filter;
+    GradMagFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
-    args.insertOrAssign(GradMagFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(GradMagFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradMagFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradMagFilter::k_Sigma_Key, std::make_any<float64>(0.0));
-    args.insertOrAssign(GradMagFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    args.insertOrAssign(GradMagFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(GradMagFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(GradMagFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradMagFilterType::k_Sigma_Key, std::make_any<float64>(0.0));
+    args.insertOrAssign(GradMagFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
@@ -170,7 +170,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: fus
   {
     const ForceInCoreAlgorithmGuard guard;
     ResetAlgorithmPathExecutionCounts();
-    GradMagFilter filter;
+    GradMagFilterType filter;
     RunGradMag(filter, directDs, directInput, 1.75, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     REQUIRE(counts.InCoreOnInMemoryStore == 1);
@@ -183,7 +183,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: fus
   {
     const ForceOocAlgorithmGuard guard(true);
     ResetAlgorithmPathExecutionCounts();
-    GradMagFilter filter;
+    GradMagFilterType filter;
     RunGradMag(filter, fusedDs, fusedInput, 1.75, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     REQUIRE(counts.OutOfCoreOnInMemoryStore == 1);
@@ -207,11 +207,11 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: Fro
   const Result<Arguments> result = GradientMagnitudeRecursiveGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<float64>(GradMagFilter::k_Sigma_Key) == 2.5);
-  REQUIRE(args.value<bool>(GradMagFilter::k_NormalizeAcrossScale_Key) == true);
-  REQUIRE(args.value<DataPath>(GradMagFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
-  REQUIRE(args.value<DataPath>(GradMagFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
-  REQUIRE(args.value<std::string>(GradMagFilter::k_OutputImageArrayName_Key) == "GradMagOut");
+  REQUIRE(args.value<float64>(GradMagFilterType::k_Sigma_Key) == 2.5);
+  REQUIRE(args.value<bool>(GradMagFilterType::k_NormalizeAcrossScale_Key) == true);
+  REQUIRE(args.value<DataPath>(GradMagFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
+  REQUIRE(args.value<DataPath>(GradMagFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
+  REQUIRE(args.value<std::string>(GradMagFilterType::k_OutputImageArrayName_Key) == "GradMagOut");
 }
 
 // -----------------------------------------------------------------------------

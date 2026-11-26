@@ -87,57 +87,57 @@ nlohmann::json ReadH5EbsdFileParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ReadH5EbsdFileParameter' Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'ReadH5EbsdFileParameter' Error: ";
 
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", k_Prefix.view(), name()));
   }
   // Validate numeric json entries
   std::vector<const char*> keys = {k_StartSlice.c_str(), k_EndSlice.c_str(), k_EulerRepresentation.c_str()};
-  for(const char* key : keys)
+  for(const char* keyPtr : keys)
   {
-    if(!json.contains(key))
+    if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
-    if(!json[key].is_number_integer())
+    if(!json[keyPtr].is_number_integer())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", k_Prefix.view(), keyPtr));
     }
   }
 
   keys = {k_InputFilePath.c_str()};
-  for(const char* key : keys)
+  for(const char* keyPtr : keys)
   {
-    if(!json.contains(key))
+    if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
-    if(!json[key].is_string())
+    if(!json[keyPtr].is_string())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), keyPtr));
     }
   }
 
   keys = {k_UseRecommendedTransform.c_str()};
-  for(const char* key : keys)
+  for(const char* keyPtr : keys)
   {
-    if(!json.contains(key))
+    if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
-    if(!json[key].is_boolean())
+    if(!json[keyPtr].is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), keyPtr));
     }
   }
 
-  auto ordering_check = json[k_EulerRepresentation].get<int32>();
-  if(ordering_check != ebsdlib::AngleRepresentation::Radians && ordering_check != ebsdlib::AngleRepresentation::Degrees)
+  auto orderingCheck = json[k_EulerRepresentation].get<int32>();
+  if(orderingCheck != ebsdlib::AngleRepresentation::Radians && orderingCheck != ebsdlib::AngleRepresentation::Degrees)
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
-                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(), k_UseRecommendedTransform.view(),
+                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_UseRecommendedTransform.view(),
                                                  ebsdlib::AngleRepresentation::Radians, ebsdlib::AngleRepresentation::Degrees));
   }
 
@@ -158,7 +158,7 @@ Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& jso
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_HDF5DataPaths));
+      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", k_Prefix, name(), k_HDF5DataPaths));
     }
     auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
     std::vector<std::string> dataPaths;
@@ -167,7 +167,7 @@ Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& jso
     {
       if(dataPath.empty())
       {
-        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as HDF5 DataPath", prefix.view(), dataPath)});
+        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as HDF5 DataPath", k_Prefix.view(), dataPath)});
         continue;
       }
       dataPaths.push_back(dataPath);

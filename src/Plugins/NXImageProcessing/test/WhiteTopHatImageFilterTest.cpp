@@ -21,35 +21,35 @@ TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Computed-expected (safeBor
   using morph_test::KernelType;
   auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); };
   const auto setParams = morph_test::CompositeKernelParamSetter<WhiteTopHatImageFilter>(/*safeBorder=*/false);
-  constexpr auto kWhiteTopHat = CompositeKind::WhiteTopHat;
+  constexpr auto k_KWhiteTopHat = CompositeKind::WhiteTopHat;
 
   SECTION("safeBorder=false Ball 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {1, 1, 1}, kWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Ball, {1, 1, 1}, k_KWhiteTopHat, setParams);
   }
   SECTION("safeBorder=false Box 3D r{2,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 1}, kWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 1}, k_KWhiteTopHat, setParams);
   }
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, kWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KWhiteTopHat, setParams);
   }
   SECTION("Annulus 3D r{2,2,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, kWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_KWhiteTopHat, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, kWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KWhiteTopHat, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, kWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KWhiteTopHat, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, kWhiteTopHat, setParams);
+    morph_test::RunMorphologyCompositeComputedExpected<WhiteTopHatImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KWhiteTopHat, setParams);
   }
 }
 
@@ -72,13 +72,13 @@ TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Ramp computed-expected (bo
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr int64 rx = 2;
-  constexpr int64 ry = 1;
-  constexpr int64 rz = 1;
+  constexpr usize k_D = 32;
+  constexpr int64 k_Rx = 2;
+  constexpr int64 k_Ry = 1;
+  constexpr int64 k_Rz = 1;
 
   DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0);
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, k_D, 0.0, 1.0);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   WhiteTopHatImageFilter filter;
@@ -88,7 +88,7 @@ TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Ramp computed-expected (bo
   args.insertOrAssign(WhiteTopHatImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(WhiteTopHatImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Box)));
   args.insertOrAssign(WhiteTopHatImageFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(rx), static_cast<uint32>(ry), static_cast<uint32>(rz)}));
+                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
   // Safe Border == false so the skip-OOB closed form below applies; this exercises the composite's OOC
   // streaming of the plain two-pass path (plus the subtract) on both algorithm iterations.
   args.insertOrAssign(WhiteTopHatImageFilter::k_SafeBorder_Key, std::make_any<bool>(false));
@@ -100,18 +100,18 @@ TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Ramp computed-expected (bo
   auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   auto expectedForSlot = [&](usize s) -> float32 {
-    const int64 Di = static_cast<int64>(D);
-    const int64 x = static_cast<int64>(s % D);
-    const int64 y = static_cast<int64>((s / D) % D);
-    const int64 z = static_cast<int64>(s / (D * D));
-    const int64 ox = std::max<int64>(std::min<int64>(x + rx, Di - 1) - rx, 0);
-    const int64 oy = std::max<int64>(std::min<int64>(y + ry, Di - 1) - ry, 0);
-    const int64 oz = std::max<int64>(std::min<int64>(z + rz, Di - 1) - rz, 0);
-    const int64 openingIdx = (oz * Di + oy) * Di + ox;
+    const int64 di = static_cast<int64>(k_D);
+    const int64 x = static_cast<int64>(s % k_D);
+    const int64 y = static_cast<int64>((s / k_D) % k_D);
+    const int64 z = static_cast<int64>(s / (k_D * k_D));
+    const int64 ox = std::max<int64>(std::min<int64>(x + k_Rx, di - 1) - k_Rx, 0);
+    const int64 oy = std::max<int64>(std::min<int64>(y + k_Ry, di - 1) - k_Ry, 0);
+    const int64 oz = std::max<int64>(std::min<int64>(z + k_Rz, di - 1) - k_Rz, 0);
+    const int64 openingIdx = (oz * di + oy) * di + ox;
     return static_cast<float32>(static_cast<int64>(s) - openingIdx);
   };
 

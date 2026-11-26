@@ -22,25 +22,25 @@ TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: hand-computed interi
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 7;
-  constexpr usize DY = 7;
-  constexpr usize DZ = 1;
-  constexpr int32 field = 100;
-  constexpr int32 hole = 0;
+  constexpr usize k_Dx = 7;
+  constexpr usize k_Dy = 7;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 100;
+  constexpr int32 k_Hole = 0;
 
-  std::vector<int32> pattern(DX * DY * DZ, field);
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
   // Isolated interior hole (all four face-neighbors are bright field) -> a regional minimum not connected to the
   // border -> must be FILLED to the surrounding level (100).
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = hole;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = k_Hole;
   // A dark 2x2 region anchored at the (0,0) corner. Voxels (0,0),(1,0),(0,1) are on the 2D border; (1,1) is a
   // non-border voxel but is connected to the border through the dark region -> the whole region is NOT filled.
-  pattern[rt::FlatIndex(0, 0, 0, DX, DY)] = hole;
-  pattern[rt::FlatIndex(1, 0, 0, DX, DY)] = hole;
-  pattern[rt::FlatIndex(0, 1, 0, DX, DY)] = hole;
-  pattern[rt::FlatIndex(1, 1, 0, DX, DY)] = hole;
+  pattern[rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)] = k_Hole;
+  pattern[rt::FlatIndex(1, 0, 0, k_Dx, k_Dy)] = k_Hole;
+  pattern[rt::FlatIndex(0, 1, 0, k_Dx, k_Dy)] = k_Hole;
+  pattern[rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)] = k_Hole;
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   GrayscaleFillholeImageFilter filter;
   rt::RunReconstructionFilter<GrayscaleFillholeImageFilter>(filter, ds, inputPath, rt::FullyConnectedParamSetter<GrayscaleFillholeImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
@@ -48,10 +48,10 @@ TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: hand-computed interi
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == field); // interior hole filled
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == hole);  // border voxel of the border region
-  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, DX, DY)) == hole);  // non-border voxel of the border region, still not filled
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == field); // untouched field voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Field); // interior hole filled
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == k_Hole);  // border voxel of the border region
+  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)) == k_Hole);  // non-border voxel of the border region, still not filled
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Field); // untouched field voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -70,21 +70,21 @@ TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: hand-computed interi
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 7;
-  constexpr usize DY = 7;
-  constexpr usize DZ = 1;
-  constexpr int32 field = 100;
-  constexpr int32 hole = 0;
-  std::vector<int32> pattern(DX * DY * DZ, field);
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = hole; // isolated interior hole -> filled
+  constexpr usize k_Dx = 7;
+  constexpr usize k_Dy = 7;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 100;
+  constexpr int32 k_Hole = 0;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = k_Hole; // isolated interior hole -> filled
   // A dark 2x2 region anchored at the (0,0) corner: connected to the border through the dark region -> NOT filled.
-  pattern[rt::FlatIndex(0, 0, 0, DX, DY)] = hole;
-  pattern[rt::FlatIndex(1, 0, 0, DX, DY)] = hole;
-  pattern[rt::FlatIndex(0, 1, 0, DX, DY)] = hole;
-  pattern[rt::FlatIndex(1, 1, 0, DX, DY)] = hole;
+  pattern[rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)] = k_Hole;
+  pattern[rt::FlatIndex(1, 0, 0, k_Dx, k_Dy)] = k_Hole;
+  pattern[rt::FlatIndex(0, 1, 0, k_Dx, k_Dy)] = k_Hole;
+  pattern[rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)] = k_Hole;
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   GrayscaleFillholeImageFilter filter;
@@ -101,10 +101,10 @@ TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: hand-computed interi
   auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == field); // interior hole filled
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == hole);  // border voxel of the border region
-  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, DX, DY)) == hole);  // non-border voxel of the border region, still not filled
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == field); // untouched field voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Field); // interior hole filled
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == k_Hole);  // border voxel of the border region
+  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)) == k_Hole);  // non-border voxel of the border region, still not filled
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Field); // untouched field voxel
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 

@@ -149,7 +149,7 @@ Result<> MergeTwins::groupFeaturesExecute()
       return {};
     }
 
-    bool m_PatchGrouping = false;
+    bool mPatchGrouping = false;
     parentCount++;
     Result<int32> seedResult = getSeed(parentCount);
     if(seedResult.invalid())
@@ -193,7 +193,7 @@ Result<> MergeTwins::groupFeaturesExecute()
               }
               if(groupingResult.value())
               {
-                if(!m_PatchGrouping)
+                if(!mPatchGrouping)
                 {
                   groupList.push_back(neighborFeatureIdx);
                 }

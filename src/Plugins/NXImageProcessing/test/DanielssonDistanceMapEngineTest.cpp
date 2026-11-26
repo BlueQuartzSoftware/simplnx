@@ -405,27 +405,27 @@ TEMPLATE_TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: axis seed pl
   const FloatVec3 spacing = useSpacing ? FloatVec3{2.0f, 1.5f, 3.0f} : FloatVec3{1.0f, 1.0f, 1.0f};
   CAPTURE(squared, useSpacing);
 
-  constexpr usize DX = 6;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 4;
+  constexpr usize k_Dx = 6;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 4;
   auto runAxis = [&](int axis) {
-    std::vector<int32> pattern(DX * DY * DZ, 0);
-    for(usize z = 0; z < DZ; ++z)
+    std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 0);
+    for(usize z = 0; z < k_Dz; ++z)
     {
-      for(usize y = 0; y < DY; ++y)
+      for(usize y = 0; y < k_Dy; ++y)
       {
-        for(usize x = 0; x < DX; ++x)
+        for(usize x = 0; x < k_Dx; ++x)
         {
           const bool seed = (axis == 0 && x == 0) || (axis == 1 && y == 0) || (axis == 2 && z == 0);
           if(seed)
           {
-            pattern[FlatIndex(x, y, z, DX, DY)] = 1;
+            pattern[FlatIndex(x, y, z, k_Dx, k_Dy)] = 1;
           }
         }
       }
     }
-    const std::vector<float32> oracle = ExactEdtOracle(pattern, DX, DY, DZ, squared, useSpacing, spacing);
-    const std::vector<float32> got = RunInCore<T>(pattern, DX, DY, DZ, squared, useSpacing, spacing);
+    const std::vector<float32> oracle = ExactEdtOracle(pattern, k_Dx, k_Dy, k_Dz, squared, useSpacing, spacing);
+    const std::vector<float32> got = RunInCore<T>(pattern, k_Dx, k_Dy, k_Dz, squared, useSpacing, spacing);
     for(usize i = 0; i < got.size(); ++i)
     {
       INFO("axis " << axis << " index " << i);
@@ -451,31 +451,31 @@ TEMPLATE_TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: axis seed pl
 // distance is exactly (k-x) along x -- 4SED-exact and hand-obvious.
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: half-space == exact EDT", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
-  constexpr usize DX = 8;
-  constexpr usize DY = 4;
-  constexpr usize DZ = 3;
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 4;
+  constexpr usize k_Dz = 3;
   constexpr usize k_PlaneIndex = 5;
-  std::vector<int32> pattern(DX * DY * DZ, 0);
-  for(usize z = 0; z < DZ; ++z)
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 0);
+  for(usize z = 0; z < k_Dz; ++z)
   {
-    for(usize y = 0; y < DY; ++y)
+    for(usize y = 0; y < k_Dy; ++y)
     {
-      for(usize x = k_PlaneIndex; x < DX; ++x)
+      for(usize x = k_PlaneIndex; x < k_Dx; ++x)
       {
-        pattern[FlatIndex(x, y, z, DX, DY)] = 1;
+        pattern[FlatIndex(x, y, z, k_Dx, k_Dy)] = 1;
       }
     }
   }
-  const std::vector<float32> got = RunInCore<int32>(pattern, DX, DY, DZ, /*squared=*/true, /*useSpacing=*/false, FloatVec3{1.0f, 1.0f, 1.0f});
-  for(usize z = 0; z < DZ; ++z)
+  const std::vector<float32> got = RunInCore<int32>(pattern, k_Dx, k_Dy, k_Dz, /*squared=*/true, /*useSpacing=*/false, FloatVec3{1.0f, 1.0f, 1.0f});
+  for(usize z = 0; z < k_Dz; ++z)
   {
-    for(usize y = 0; y < DY; ++y)
+    for(usize y = 0; y < k_Dy; ++y)
     {
-      for(usize x = 0; x < DX; ++x)
+      for(usize x = 0; x < k_Dx; ++x)
       {
         const int64 d = (x >= k_PlaneIndex) ? 0 : static_cast<int64>(k_PlaneIndex - x);
         INFO("x=" << x << " y=" << y << " z=" << z);
-        REQUIRE(got[FlatIndex(x, y, z, DX, DY)] == static_cast<float32>(d * d));
+        REQUIRE(got[FlatIndex(x, y, z, k_Dx, k_Dy)] == static_cast<float32>(d * d));
       }
     }
   }
@@ -584,22 +584,22 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: rolling z-neighbor ed
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: pre-cancel preserves poison output", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
-  constexpr usize kDimX = 5;
-  constexpr usize kDimY = 4;
-  constexpr usize kDimZ = 3;
-  constexpr float32 kPoison = -12345.0f;
-  DataStore<int32> inputStore(ShapeType{kDimZ, kDimY, kDimX}, ShapeType{1}, 0);
-  DataStore<float32> outputStore(ShapeType{kDimZ, kDimY, kDimX}, ShapeType{1}, kPoison);
+  constexpr usize k_KDimX = 5;
+  constexpr usize k_KDimY = 4;
+  constexpr usize k_KDimZ = 3;
+  constexpr float32 k_KPoison = -12345.0f;
+  DataStore<int32> inputStore(ShapeType{k_KDimZ, k_KDimY, k_KDimX}, ShapeType{1}, 0);
+  DataStore<float32> outputStore(ShapeType{k_KDimZ, k_KDimY, k_KDimX}, ShapeType{1}, k_KPoison);
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
 
-  DanielssonDistanceSlab<int32> engine(inputStore, outputStore, SizeVec3{kDimX, kDimY, kDimZ}, /*squaredDistance=*/true, /*useSpacing=*/false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel,
+  DanielssonDistanceSlab<int32> engine(inputStore, outputStore, SizeVec3{k_KDimX, k_KDimY, k_KDimZ}, /*squaredDistance=*/true, /*useSpacing=*/false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel,
                                        messageHandler);
   const Result<> result = engine();
   REQUIRE(result.valid());
   for(const float32 value : outputStore)
   {
-    REQUIRE(value == kPoison);
+    REQUIRE(value == k_KPoison);
   }
 }
 
@@ -626,8 +626,8 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: in-core pre-cancel pr
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: mixed storage selects an OOC working format", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
-  constexpr const char* kInputOocFormat = "HDF5-OOC-Input";
-  constexpr const char* kOutputOocFormat = "HDF5-OOC-Output";
+  constexpr const char* k_KInputOocFormat = "HDF5-OOC-Input";
+  constexpr const char* k_KOutputOocFormat = "HDF5-OOC-Output";
 
   SECTION("resident input and resident output preserve the input format")
   {
@@ -639,46 +639,46 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: mixed storage selects
   SECTION("resident input and OOC output select the output format")
   {
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, kOutputOocFormat);
-    REQUIRE(selectedFormat == kOutputOocFormat);
+        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
+    REQUIRE(selectedFormat == k_KOutputOocFormat);
   }
 
   SECTION("OOC input and resident output select the input format")
   {
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore);
-    REQUIRE(selectedFormat == kInputOocFormat);
+        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore);
+    REQUIRE(selectedFormat == k_KInputOocFormat);
   }
 
   SECTION("OOC input takes precedence when both endpoints are OOC")
   {
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::OutOfCore, kOutputOocFormat);
-    REQUIRE(selectedFormat == kInputOocFormat);
+        nx::core::ImageProcessing::detail::SelectDanielssonWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
+    REQUIRE(selectedFormat == k_KInputOocFormat);
   }
 }
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 512;
-  constexpr usize dimY = 512;
-  constexpr usize dimZ = 32;
-  constexpr usize sliceValues = dimX * dimY;
-  constexpr usize valueCount = sliceValues * dimZ;
-  constexpr usize visitCount = (2 * dimX - 2) + (2 * dimY - 2) + (2 * dimZ - 2);
-  constexpr usize expectedBytes =
-      valueCount * (3 * sizeof(int32) + sizeof(uint8)) + sliceValues * sizeof(uint8) + sliceValues * sizeof(float32) + visitCount * sizeof(ImageProcessing::detail::AxisVisit);
+  constexpr usize k_DimX = 512;
+  constexpr usize k_DimY = 512;
+  constexpr usize k_DimZ = 32;
+  constexpr usize k_SliceValues = k_DimX * k_DimY;
+  constexpr usize k_ValueCount = k_SliceValues * k_DimZ;
+  constexpr usize k_VisitCount = (2 * k_DimX - 2) + (2 * k_DimY - 2) + (2 * k_DimZ - 2);
+  constexpr usize k_ExpectedBytes =
+      k_ValueCount * (3 * sizeof(int32) + sizeof(uint8)) + k_SliceValues * sizeof(uint8) + k_SliceValues * sizeof(float32) + k_VisitCount * sizeof(ImageProcessing::detail::AxisVisit);
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{dimX, dimY, dimZ};
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateDanielssonResidentWorkingMemoryBytes<uint8>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
-  REQUIRE(requiredResult.value() == expectedBytes);
+  REQUIRE(requiredResult.value() == k_ExpectedBytes);
   auto calculateDanielssonResidentWorkingMemoryBytesResult = ImageProcessing::detail::CalculateDanielssonResidentWorkingMemoryBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(calculateDanielssonResidentWorkingMemoryBytesResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseDanielssonResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseDanielssonResidentState(SizeVec3{dimX, dimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseDanielssonResidentState(SizeVec3{k_DimX, k_DimY, 1}));
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
@@ -707,20 +707,20 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: resident state requir
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: the slab path reads each input plane once and the resident path reads the span",
           "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
-  constexpr usize sliceValues = dimX * dimY;
-  constexpr usize valueCount = sliceValues * dimZ;
-  constexpr usize visitCount = (2 * dimX - 2) + (2 * dimY - 2) + (2 * dimZ - 2);
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
+  constexpr usize k_SliceValues = k_DimX * k_DimY;
+  constexpr usize k_ValueCount = k_SliceValues * k_DimZ;
+  constexpr usize k_VisitCount = (2 * k_DimX - 2) + (2 * k_DimY - 2) + (2 * k_DimZ - 2);
   constexpr uint64 k_RequiredBytes =
-      valueCount * (3 * sizeof(int32) + sizeof(uint8)) + sliceValues * sizeof(uint8) + sliceValues * sizeof(float32) + visitCount * sizeof(ImageProcessing::detail::AxisVisit);
+      k_ValueCount * (3 * sizeof(int32) + sizeof(uint8)) + k_SliceValues * sizeof(uint8) + k_SliceValues * sizeof(float32) + k_VisitCount * sizeof(ImageProcessing::detail::AxisVisit);
   constexpr uint64 k_PartialBudgetBytes = 8192;
   constexpr uint64 k_CompleteBudgetBytes = 4 * k_RequiredBytes;
-  const SizeVec3 dims{dimX, dimY, dimZ};
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
   const FloatVec3 spacing{1.0f, 1.0f, 1.0f};
-  const std::vector<int32> pattern = MakePattern(dimX, dimY, dimZ);
-  const std::vector<float32> expected = RunInCore<uint8>(pattern, dimX, dimY, dimZ, true, false, spacing);
+  const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
+  const std::vector<float32> expected = RunInCore<uint8>(pattern, k_DimX, k_DimY, k_DimZ, true, false, spacing);
   const auto requiredResult = ImageProcessing::detail::CalculateDanielssonResidentWorkingMemoryBytes<uint8>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == k_RequiredBytes);
@@ -731,8 +731,8 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: the slab path reads e
   auto run = [&](uint64 budgetBytes) {
     manager.clear();
     manager.setBudgetBytes(budgetBytes);
-    ReadCountingDataStore<uint8> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, uint8{0});
-    DataStore<float32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
+    ReadCountingDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0});
+    DataStore<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
     for(usize index = 0; index < pattern.size(); ++index)
     {
       inputStore.setValue(index, static_cast<uint8>(pattern[index]));
@@ -754,7 +754,7 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: the slab path reads e
 
   // The partial budget selects the slab, which streams each input plane exactly once. The complete budget selects the
   // resident engine, which reads the in-memory input through its span and performs no bulk transfers.
-  REQUIRE(run(k_PartialBudgetBytes) == dimZ);
+  REQUIRE(run(k_PartialBudgetBytes) == k_DimZ);
   REQUIRE(run(k_CompleteBudgetBytes) == 0);
   manager.setBudgetBytes(previousBudget);
 }
@@ -803,12 +803,12 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: 2D planner bounds blo
   REQUIRE(overwide.coreRows == 1);
   REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_Danielsson2DResidentLimit);
 
-  constexpr usize kSmallLimit = 6000;
-  const auto forcedTiled = ImageProcessing::detail::BuildDanielsson2DBufferPlan(100, 8, sizeof(uint8), kSmallLimit);
+  constexpr usize k_KSmallLimit = 6000;
+  const auto forcedTiled = ImageProcessing::detail::BuildDanielsson2DBufferPlan(100, 8, sizeof(uint8), k_KSmallLimit);
   REQUIRE(forcedTiled.valid);
   REQUIRE(forcedTiled.coreCols < 100);
   REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= kSmallLimit);
+  REQUIRE(forcedTiled.residentBytes <= k_KSmallLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildDanielsson2DBufferPlan(1, 1, sizeof(uint64));
   REQUIRE(oneCell.valid);

@@ -37,23 +37,23 @@ namespace
 void BuildFillBadDataTestData(DataStructure& ds, usize dimX, usize dimY, usize dimZ, usize blockSize, bool addLargeDefect = false)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "DataContainer");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "DataContainer");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({"DataContainer", "CellData", "FeatureIds"});
   auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellShape, {1});
-  auto* featureIdsArray = DataArray<int32>::Create(ds, "FeatureIds", featureIdsDataStore, cellAM->getId());
-  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+  auto* featureIdsArrayPtr = DataArray<int32>::Create(ds, "FeatureIds", featureIdsDataStore, cellAmPtr->getId());
+  auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
 
   const DataPath phasesPath = DataPath({"DataContainer", "CellData", "Phases"});
   auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, phasesPath, cellShape, {1});
-  auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, cellAM->getId());
-  auto& phasesStore = phasesArray->getDataStoreRef();
+  auto* phasesArrayPtr = DataArray<int32>::Create(ds, "Phases", phasesDataStore, cellAmPtr->getId());
+  auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
   const usize blocksPerDim = dimX / blockSize;
   const usize sliceSize = dimY * dimX;
@@ -542,8 +542,8 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: Preflight Feature Data Modification W
 TEST_CASE("SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size", "[Core][FillBadDataFilter]")
 {
   DataStructure dataStructure;
-  const DataPath k_GeomPath({"DataContainer"});
-  const DataPath k_FeatureIdsPath({"DataContainer", "CellData", "FeatureIds"});
+  const DataPath kGeomPath({"DataContainer"});
+  const DataPath kFeatureIdsPath({"DataContainer", "CellData", "FeatureIds"});
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeomPtr->setDimensions({1, 1, 1});
@@ -555,8 +555,8 @@ TEST_CASE("SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size", 
   Arguments args;
   args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(0));
   args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(kFeatureIdsPath));
   args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
@@ -576,28 +576,28 @@ TEST_CASE("SimplnxCore::FillBadData::AllBadData_TerminatesWithoutHang", "[Core][
   UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
-  const DataPath k_GeomPath({"DataContainer"});
-  const DataPath k_CellDataPath = k_GeomPath.createChildPath("CellData");
-  const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath("FeatureIds");
-  const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
+  const DataPath kGeomPath({"DataContainer"});
+  const DataPath kCellDataPath = kGeomPath.createChildPath("CellData");
+  const DataPath kFeatureIdsPath = kCellDataPath.createChildPath("FeatureIds");
+  const DataPath kPhasesPath = kCellDataPath.createChildPath("Phases");
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeomPtr->setDimensions({3, 3, 1});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 3, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 3, 3}, {1}, cellDataPtr->getId());
-  auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {1, 3, 3}, {1}, cellDataPtr->getId());
+  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 3, 3}, {1}, cellDataPtr->getId());
+  auto* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {1, 3, 3}, {1}, cellDataPtr->getId());
   // Every voxel is bad data (featureId 0 -> marked for fill); there is no good neighbor to fill from.
-  featureIds->fill(0);
-  phases->fill(1);
+  featureIdsPtr->fill(0);
+  phasesPtr->fill(1);
 
   FillBadDataFilter filter;
   Arguments args;
   args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1));
   args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(kFeatureIdsPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(kPhasesPath));
   args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -678,7 +678,7 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility", "[Sim
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -691,22 +691,22 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility", "[Sim
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<FillBadDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<FillBadDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int32>(FillBadDataFilter::k_MinAllowedDefectSize_Key) == 5);
       CHECK(args.value<bool>(FillBadDataFilter::k_StoreAsNewPhase_Key) == true);
       CHECK(args.value<DataPath>(FillBadDataFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
@@ -791,8 +791,8 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"DataContainer", "CellData"}));
   const DataPath ignoredArrayPath = DataPath({"DataContainer", "CellData", "IgnoredArray"});
   auto ignoredDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, ignoredArrayPath, cellAM.getShape(), {1});
-  auto* ignoredArray = DataArray<int32>::Create(dataStructure, "IgnoredArray", ignoredDataStore, cellAM.getId());
-  auto& ignoredStore = ignoredArray->getDataStoreRef();
+  auto* ignoredArrayPtr = DataArray<int32>::Create(dataStructure, "IgnoredArray", ignoredDataStore, cellAM.getId());
+  auto& ignoredStore = ignoredArrayPtr->getDataStoreRef();
   ignoredStore.fill(k_Sentinel);
 
   // Record bad-voxel count before fill using bulk reads
@@ -801,11 +801,11 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   const usize totalTuples = fidsStore.getNumberOfTuples();
   usize badCount = 0;
   {
-    constexpr usize kChunk = 40000;
-    auto buf = std::make_unique<int32[]>(kChunk);
-    for(usize off = 0; off < totalTuples; off += kChunk)
+    constexpr usize k_KChunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_KChunk);
+    for(usize off = 0; off < totalTuples; off += k_KChunk)
     {
-      const usize count = std::min(kChunk, totalTuples - off);
+      const usize count = std::min(k_KChunk, totalTuples - off);
       auto fidsStoreReadResult = fidsStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(fidsStoreReadResult);
       for(usize i = 0; i < count; i++)
@@ -842,11 +842,11 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   const auto& featureIdsAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
   {
     const auto& fidsAfterStore = featureIdsAfter.getDataStoreRef();
-    constexpr usize kChunk = 40000;
-    auto buf = std::make_unique<int32[]>(kChunk);
-    for(usize off = 0; off < totalTuples; off += kChunk)
+    constexpr usize k_KChunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_KChunk);
+    for(usize off = 0; off < totalTuples; off += k_KChunk)
     {
-      const usize count = std::min(kChunk, totalTuples - off);
+      const usize count = std::min(k_KChunk, totalTuples - off);
       auto fidsAfterStoreReadResult = fidsAfterStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(fidsAfterStoreReadResult);
       for(usize i = 0; i < count; i++)
@@ -864,11 +864,11 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   const auto& ignoredAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "IgnoredArray"}));
   {
     const auto& ignoredAfterStore = ignoredAfter.getDataStoreRef();
-    constexpr usize kChunk = 40000;
-    auto buf = std::make_unique<int32[]>(kChunk);
-    for(usize off = 0; off < totalTuples; off += kChunk)
+    constexpr usize k_KChunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_KChunk);
+    for(usize off = 0; off < totalTuples; off += k_KChunk)
     {
-      const usize count = std::min(kChunk, totalTuples - off);
+      const usize count = std::min(k_KChunk, totalTuples - off);
       auto ignoredAfterStoreReadResult = ignoredAfterStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(ignoredAfterStoreReadResult);
       for(usize i = 0; i < count; i++)

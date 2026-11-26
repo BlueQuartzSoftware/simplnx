@@ -40,7 +40,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: Valid Filter Execution",
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadEnsembleInfoFilter filter;
   DataStructure ds;
-  DataGroup* topLevelGroup = DataGroup::Create(ds, Constants::k_DataContainer);
+  DataGroup* topLevelGroupPtr = DataGroup::Create(ds, Constants::k_DataContainer);
   Arguments args;
   args.insertOrAssign(ReadEnsembleInfoFilter::k_ParentGroupPath_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
@@ -70,19 +70,19 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: Valid Filter Execution",
   auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const auto* crystalStructures = ds.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_CrystalStructures}));
-  REQUIRE(crystalStructures != nullptr);
-  REQUIRE(crystalStructures->getNumberOfTuples() == 3);
-  REQUIRE((*crystalStructures)[0] == 999);
-  REQUIRE((*crystalStructures)[1] == 1);
-  REQUIRE((*crystalStructures)[2] == 0);
+  const auto* crystalStructuresPtr = ds.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_CrystalStructures}));
+  REQUIRE(crystalStructuresPtr != nullptr);
+  REQUIRE(crystalStructuresPtr->getNumberOfTuples() == 3);
+  REQUIRE((*crystalStructuresPtr)[0] == 999);
+  REQUIRE((*crystalStructuresPtr)[1] == 1);
+  REQUIRE((*crystalStructuresPtr)[2] == 0);
 
-  const auto* phaseTypes = ds.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_Phases}));
-  REQUIRE(phaseTypes != nullptr);
-  REQUIRE(phaseTypes->getNumberOfTuples() == 3);
-  REQUIRE((*phaseTypes)[0] == 999);
-  REQUIRE((*phaseTypes)[1] == 0);
-  REQUIRE((*phaseTypes)[2] == 3);
+  const auto* phaseTypesPtr = ds.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_Phases}));
+  REQUIRE(phaseTypesPtr != nullptr);
+  REQUIRE(phaseTypesPtr->getNumberOfTuples() == 3);
+  REQUIRE((*phaseTypesPtr)[0] == 999);
+  REQUIRE((*phaseTypesPtr)[1] == 0);
+  REQUIRE((*phaseTypesPtr)[2] == 3);
 
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
@@ -94,7 +94,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadEnsembleInfoFilter filter;
   DataStructure ds;
-  DataGroup* topLevelGroup = DataGroup::Create(ds, Constants::k_DataContainer);
+  DataGroup* topLevelGroupPtr = DataGroup::Create(ds, Constants::k_DataContainer);
   Arguments args;
   args.insertOrAssign(ReadEnsembleInfoFilter::k_ParentGroupPath_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
@@ -205,7 +205,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: SIMPL Backwards Compatib
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -218,22 +218,22 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: SIMPL Backwards Compatib
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadEnsembleInfoFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadEnsembleInfoFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(ReadEnsembleInfoFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<DataPath>(ReadEnsembleInfoFilter::k_ParentGroupPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<std::string>(ReadEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");

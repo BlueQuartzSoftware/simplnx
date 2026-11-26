@@ -151,13 +151,13 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     }
   }
 
-  const auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
-  if(vertexAM == nullptr)
+  const auto* vertexAmPtr = vertexGeom.getVertexAttributeMatrix();
+  if(vertexAmPtr == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())),
             .outputValues = {}};
   }
-  auto tupleShape = vertexAM->getShape();
+  auto tupleShape = vertexAmPtr->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName, VertexGeom::k_SharedVertexListName);
   DataPath croppedVertexDataPath = action->getVertexDataPath();

@@ -81,8 +81,8 @@ public:
       // A recovery placeholder has no inline values. Preserve warnings and skip it.
       return result;
     }
-    DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(storeResult.value()), parentId);
-    if(data == nullptr)
+    DataArray<K>* dataPtr = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(storeResult.value()), parentId);
+    if(dataPtr == nullptr)
     {
       auto errorResult = MakeErrorResult(-400, fmt::format("Cannot import numeric dataset '{}' into the DataStructure.", datasetReader.getObjectPath()));
       errorResult.warnings() = std::move(result.warnings());
@@ -144,8 +144,8 @@ public:
       return MakeErrorResult(-150200, fmt::format("Imported DataStructure Object at path '{}' does not exist.", dataPath.toString()));
     }
 
-    auto* dataArray = dataStructure.getDataAs<data_type>(dataPath);
-    if(dataArray == nullptr)
+    auto* dataArrayPtr = dataStructure.getDataAs<data_type>(dataPath);
+    if(dataArrayPtr == nullptr)
     {
       return MakeErrorResult(-150201, fmt::format("Imported DataStructure Object at path '{}' is not of the expected type.", dataPath.toString()));
     }
@@ -168,32 +168,32 @@ public:
     switch(type)
     {
     case DataType::float32:
-      return importDataStore<float32>(dataArray, dataPath, datasetReader);
+      return importDataStore<float32>(dataArrayPtr, dataPath, datasetReader);
     case DataType::float64:
-      return importDataStore<float64>(dataArray, dataPath, datasetReader);
+      return importDataStore<float64>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int8:
-      return importDataStore<int8>(dataArray, dataPath, datasetReader);
+      return importDataStore<int8>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int16:
-      return importDataStore<int16>(dataArray, dataPath, datasetReader);
+      return importDataStore<int16>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int32:
-      return importDataStore<int32>(dataArray, dataPath, datasetReader);
+      return importDataStore<int32>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int64:
-      return importDataStore<int64>(dataArray, dataPath, datasetReader);
+      return importDataStore<int64>(dataArrayPtr, dataPath, datasetReader);
     case DataType::uint8: {
       if(isBoolArray)
       {
-        return importDataStore<bool>(dataArray, dataPath, datasetReader);
+        return importDataStore<bool>(dataArrayPtr, dataPath, datasetReader);
       }
 
-      return importDataStore<uint8>(dataArray, dataPath, datasetReader);
+      return importDataStore<uint8>(dataArrayPtr, dataPath, datasetReader);
     }
     break;
     case DataType::uint16:
-      return importDataStore<uint16>(dataArray, dataPath, datasetReader);
+      return importDataStore<uint16>(dataArrayPtr, dataPath, datasetReader);
     case DataType::uint32:
-      return importDataStore<uint32>(dataArray, dataPath, datasetReader);
+      return importDataStore<uint32>(dataArrayPtr, dataPath, datasetReader);
     case DataType::uint64:
-      return importDataStore<uint64>(dataArray, dataPath, datasetReader);
+      return importDataStore<uint64>(dataArrayPtr, dataPath, datasetReader);
     default:
       return MakeErrorResult(-150209, fmt::format("Undetermined DataArray type: '{}'", dataTypeStr));
     }

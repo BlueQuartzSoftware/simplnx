@@ -143,26 +143,26 @@ void AppendRetainedAttributeMatricesWarning(const DataStructure& dataStructure, 
     }
   };
   excludeMatrix(clearedMatrix);
-  const auto* geometry = dataStructure.getDataAs<IGeometry>(geometryPath);
-  if(const auto* grid = dynamic_cast<const IGridGeometry*>(geometry); grid != nullptr)
+  const auto* geometryPtr = dataStructure.getDataAs<IGeometry>(geometryPath);
+  if(const auto* gridPtr = dynamic_cast<const IGridGeometry*>(geometryPtr); gridPtr != nullptr)
   {
-    excludeMatrix(grid->getCellData());
+    excludeMatrix(gridPtr->getCellData());
   }
-  if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(geometry); nodes != nullptr)
+  if(const auto* nodesPtr = dynamic_cast<const INodeGeometry0D*>(geometryPtr); nodesPtr != nullptr)
   {
-    excludeMatrix(nodes->getVertexAttributeMatrix());
+    excludeMatrix(nodesPtr->getVertexAttributeMatrix());
   }
-  if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(geometry); edges != nullptr)
+  if(const auto* edgesPtr = dynamic_cast<const INodeGeometry1D*>(geometryPtr); edgesPtr != nullptr)
   {
-    excludeMatrix(edges->getEdgeAttributeMatrix());
+    excludeMatrix(edgesPtr->getEdgeAttributeMatrix());
   }
-  if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(geometry); faces != nullptr)
+  if(const auto* facesPtr = dynamic_cast<const INodeGeometry2D*>(geometryPtr); facesPtr != nullptr)
   {
-    excludeMatrix(faces->getFaceAttributeMatrix());
+    excludeMatrix(facesPtr->getFaceAttributeMatrix());
   }
-  if(const auto* polyhedra = dynamic_cast<const INodeGeometry3D*>(geometry); polyhedra != nullptr)
+  if(const auto* polyhedraPtr = dynamic_cast<const INodeGeometry3D*>(geometryPtr); polyhedraPtr != nullptr)
   {
-    excludeMatrix(polyhedra->getPolyhedraAttributeMatrix());
+    excludeMatrix(polyhedraPtr->getPolyhedraAttributeMatrix());
   }
   AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), excludedPaths, "transformed geometry", resultOutputActions, true);
 }
@@ -216,7 +216,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
-  const AttributeMatrix* sourceFeatureAm = nullptr;
+  const AttributeMatrix* sourceFeatureAmPtr = nullptr;
   const bool clearFeatureAttributeMatrix = inputValues.ClearFeatureAttributeMatrix;
   const bool renumberFeatures = clearFeatureAttributeMatrix && inputValues.RenumberFeatures;
   const bool replacesImageGeometry = imageGeomPtr != nullptr && ResamplesImageGeometry(inputValues);
@@ -224,15 +224,15 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   {
     const auto& geometry = dataStructure.getDataRefAs<IGeometry>(pSelectedGeometryPathValue);
     const auto& featureAmPath = inputValues.FeatureAttributeMatrixPath;
-    sourceFeatureAm = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
-    if(sourceFeatureAm == nullptr || !geometry.contains(sourceFeatureAm))
+    sourceFeatureAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(sourceFeatureAmPtr == nullptr || !geometry.contains(sourceFeatureAmPtr))
     {
       return IFilter::MakePreflightErrorResult(-67451, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected {} '{}'. Select an Attribute Matrix that is a direct "
                                                                    "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
                                                                    featureAmPath.toString(), imageGeomPtr != nullptr ? "Image Geometry" : "Geometry", pSelectedGeometryPathValue.toString()));
     }
 
-    if(saveTransform && dataStructure.getData(transformMatrixDataPath.getParent()) == sourceFeatureAm)
+    if(saveTransform && dataStructure.getData(transformMatrixDataPath.getParent()) == sourceFeatureAmPtr)
     {
       return IFilter::MakePreflightErrorResult(
           -67456,
@@ -243,29 +243,29 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
 
     // Each registered element AM has its own element count, including lower-dimensional node data.
     std::vector<std::pair<const AttributeMatrix*, usize>> elementMatrices;
-    if(const auto* grid = dynamic_cast<const IGridGeometry*>(&geometry); grid != nullptr)
+    if(const auto* gridPtr = dynamic_cast<const IGridGeometry*>(&geometry); gridPtr != nullptr)
     {
-      elementMatrices.emplace_back(grid->getCellData(), grid->getNumberOfCells());
+      elementMatrices.emplace_back(gridPtr->getCellData(), gridPtr->getNumberOfCells());
     }
-    if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(&geometry); nodes != nullptr)
+    if(const auto* nodesPtr = dynamic_cast<const INodeGeometry0D*>(&geometry); nodesPtr != nullptr)
     {
-      elementMatrices.emplace_back(nodes->getVertexAttributeMatrix(), nodes->getNumberOfVertices());
+      elementMatrices.emplace_back(nodesPtr->getVertexAttributeMatrix(), nodesPtr->getNumberOfVertices());
     }
-    if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(&geometry); edges != nullptr)
+    if(const auto* edgesPtr = dynamic_cast<const INodeGeometry1D*>(&geometry); edgesPtr != nullptr)
     {
-      elementMatrices.emplace_back(edges->getEdgeAttributeMatrix(), edges->getNumberOfEdges());
+      elementMatrices.emplace_back(edgesPtr->getEdgeAttributeMatrix(), edgesPtr->getNumberOfEdges());
     }
-    if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(&geometry); faces != nullptr)
+    if(const auto* facesPtr = dynamic_cast<const INodeGeometry2D*>(&geometry); facesPtr != nullptr)
     {
-      elementMatrices.emplace_back(faces->getFaceAttributeMatrix(), faces->getNumberOfFaces());
+      elementMatrices.emplace_back(facesPtr->getFaceAttributeMatrix(), facesPtr->getNumberOfFaces());
     }
-    if(const auto* cells = dynamic_cast<const INodeGeometry3D*>(&geometry); cells != nullptr)
+    if(const auto* cellsPtr = dynamic_cast<const INodeGeometry3D*>(&geometry); cellsPtr != nullptr)
     {
-      elementMatrices.emplace_back(cells->getPolyhedraAttributeMatrix(), cells->getNumberOfPolyhedra());
+      elementMatrices.emplace_back(cellsPtr->getPolyhedraAttributeMatrix(), cellsPtr->getNumberOfPolyhedra());
     }
     for(const auto& [elementAm, count] : elementMatrices)
     {
-      if(elementAm == sourceFeatureAm)
+      if(elementAm == sourceFeatureAmPtr)
       {
         return IFilter::MakePreflightErrorResult(
             -67452,
@@ -281,12 +281,12 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     if(renumberFeatures)
     {
       const auto& featureIdsPath = inputValues.FeatureIdsPath;
-      const auto* idsAm = dataStructure.getDataAs<AttributeMatrix>(featureIdsPath.getParent());
+      const auto* idsAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureIdsPath.getParent());
       // Feature Ids must label elements, so they must be in a registered element AM of the geometry.
       std::optional<usize> elementCount;
       for(const auto& [elementAm, count] : elementMatrices)
       {
-        if(idsAm != nullptr && elementAm == idsAm)
+        if(idsAmPtr != nullptr && elementAm == idsAmPtr)
         {
           elementCount = count;
           break;
@@ -296,7 +296,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       if(imageGeomPtr != nullptr)
       {
         // Execution resamples the geometry's registered Cell AM. The selected AM must identify that same object.
-        validLocation = validLocation && idsAm == dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
+        validLocation = validLocation && idsAmPtr == dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
       }
       if(!validLocation)
       {
@@ -321,7 +321,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     }
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *sourceFeatureAm)
+    for(const auto& [identifier, object] : *sourceFeatureAmPtr)
     {
       const auto childPath = featureAmPath.createChildPath(object->getName());
       clearedList += "\n" + childPath.toString();
@@ -608,9 +608,9 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       const auto excludedPath = clearFeatureAttributeMatrix ? inputValues.FeatureAttributeMatrixPath : DataPath{};
       if(clearFeatureAttributeMatrix)
       {
-        ignorePaths.push_back(srcImagePath.createChildPath(sourceFeatureAm->getName()));
-        const auto destFeatureAmPath = destImagePath.createChildPath(sourceFeatureAm->getName());
-        resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAm->getShape()));
+        ignorePaths.push_back(srcImagePath.createChildPath(sourceFeatureAmPtr->getName()));
+        const auto destFeatureAmPath = destImagePath.createChildPath(sourceFeatureAmPtr->getName());
+        resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAmPtr->getShape()));
       }
 
       // copy over the rest of the data from the src Image Geometry into the Target Image Geometry
@@ -655,7 +655,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
 
   if(!replacesImageGeometry && (pTransformationMatrixTypeValue != detail::k_NoTransformIdx || renumberFeatures))
   {
-    AppendRetainedAttributeMatricesWarning(dataStructure, pSelectedGeometryPathValue, sourceFeatureAm, resultOutputActions);
+    AppendRetainedAttributeMatricesWarning(dataStructure, pSelectedGeometryPathValue, sourceFeatureAmPtr, resultOutputActions);
   }
 
   // Are we saving the transform matrix
@@ -768,9 +768,9 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   bool usesOutOfCoreStore = false;
   for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
-    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
-    const auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
-    usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(*srcDataArray) || IsOutOfCore(*destDataArray);
+    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(*srcDataArrayPtr) || IsOutOfCore(*destDataArrayPtr);
   }
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
@@ -876,10 +876,10 @@ Result<> ApplyTransformationToGeometry::operator()()
   }
 
   auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
-  auto* nodeGeometry0D = m_DataStructure.getDataAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto* nodeGeometry0DPtr = m_DataStructure.getDataAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
   if(m_InputValues->TranslateGeometryToGlobalOrigin)
   {
-    auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0D->getBoundingBox();
+    auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0DPtr->getBoundingBox();
     Point3Df minPoint = boundingBox.getMinPoint();
     const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
     const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
@@ -927,8 +927,8 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
   {
     return result;
   }
-  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(inputValues.SelectedGeometryPath);
-  const bool resamplesImage = imageGeom != nullptr && ResamplesImageGeometry(inputValues);
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(inputValues.SelectedGeometryPath);
+  const bool resamplesImage = imageGeomPtr != nullptr && ResamplesImageGeometry(inputValues);
   if(!renumberFeatures)
   {
     if(inputValues.ClearFeatureAttributeMatrix && !resamplesImage)
@@ -945,7 +945,7 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
     pathVector.back() = "." + pathVector.back();
     const DataPath destImagePath(pathVector);
     const auto destFeatureAmPath = destImagePath.createChildPath(inputValues.FeatureAttributeMatrixPath.getTargetName());
-    const auto destFeatureIdsPath = destImagePath.createChildPath(imageGeom->getCellData()->getName()).createChildPath(inputValues.FeatureIdsPath.getTargetName());
+    const auto destFeatureIdsPath = destImagePath.createChildPath(imageGeomPtr->getCellData()->getName()).createChildPath(inputValues.FeatureIdsPath.getTargetName());
     return MergeResults(std::move(result), Sampling::RenumberFeatures(dataStructure, destFeatureAmPath, inputValues.FeatureIdsPath, destFeatureIdsPath, messageHandler, shouldCancel));
   }
 

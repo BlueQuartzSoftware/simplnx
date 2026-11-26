@@ -22,20 +22,20 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed cen
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 5;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
-  constexpr int32 field = 10;
-  constexpr int32 peak = 50;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 10;
+  constexpr int32 k_Peak = 50;
 
-  std::vector<int32> pattern(DX * DY * DZ, field);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(2, 3, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = peak;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = k_Peak;
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   ValuedRegionalMaximaImageFilter filter;
   rt::RunReconstructionFilter<ValuedRegionalMaximaImageFilter>(filter, ds, inputPath, rt::FullyConnectedParamSetter<ValuedRegionalMaximaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
@@ -44,9 +44,9 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed cen
   const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
   const int32 markerMin = std::numeric_limits<int32>::lowest();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == peak);      // peak plateau kept at value
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == peak);      // peak plateau kept at value
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == markerMin); // field is not a regional maximum
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == markerMin); // field is not a regional maximum
 }
 
 // -----------------------------------------------------------------------------
@@ -62,21 +62,21 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed cen
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  constexpr usize DX = 5;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
-  constexpr int32 field = 10;
-  constexpr int32 peak = 50;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 10;
+  constexpr int32 k_Peak = 50;
 
-  std::vector<int32> pattern(DX * DY * DZ, field);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(2, 3, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = peak;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = k_Peak;
 
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   ValuedRegionalMaximaImageFilter filter;
@@ -94,9 +94,9 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed cen
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   const int32 markerMin = std::numeric_limits<int32>::lowest();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == peak);      // peak plateau kept at value
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == peak);      // peak plateau kept at value
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == markerMin); // field is not a regional maximum
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == markerMin); // field is not a regional maximum
 }
 
 // -----------------------------------------------------------------------------
@@ -108,12 +108,12 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: flat image unchan
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 3;
-  const std::vector<int32> pattern(DX * DY * DZ, 77);
+  constexpr usize k_Dx = 6;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 3;
+  const std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 77);
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   ValuedRegionalMaximaImageFilter filter;
   rt::RunReconstructionFilter<ValuedRegionalMaximaImageFilter>(filter, ds, inputPath, rt::FullyConnectedParamSetter<ValuedRegionalMaximaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);

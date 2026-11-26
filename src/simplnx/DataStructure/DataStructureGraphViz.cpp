@@ -24,7 +24,7 @@ namespace
  * @param outputStream Stream that receives the escaped label text.
  * @param label Unescaped label text.
  */
-void writeGraphVizLabel(std::ostream& outputStream, std::string_view label)
+void WriteGraphVizLabel(std::ostream& outputStream, std::string_view label)
 {
   for(const unsigned char character : label)
   {
@@ -64,7 +64,7 @@ void writeGraphVizLabel(std::ostream& outputStream, std::string_view label)
  * @param outputStream Stream that receives the identifier.
  * @param identifier DataObject identifier.
  */
-void writeGraphVizNodeId(std::ostream& outputStream, DataObject::IdType identifier)
+void WriteGraphVizNodeId(std::ostream& outputStream, DataObject::IdType identifier)
 {
   outputStream << "\"node_" << identifier << '"';
 }
@@ -102,9 +102,9 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
       continue;
     }
 
-    writeGraphVizNodeId(outputStream, objectPtr->getId());
+    WriteGraphVizNodeId(outputStream, objectPtr->getId());
     outputStream << " [label=\"";
-    writeGraphVizLabel(outputStream, objectPtr->getName());
+    WriteGraphVizLabel(outputStream, objectPtr->getName());
     outputStream << "\"];\n";
 
     const auto* groupPtr = dynamic_cast<const BaseGroup*>(objectPtr);
@@ -116,9 +116,9 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
     const std::vector<const DataObject*> childObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
     for(const DataObject* childPtr : childObjectPtrs)
     {
-      writeGraphVizNodeId(outputStream, objectPtr->getId());
+      WriteGraphVizNodeId(outputStream, objectPtr->getId());
       outputStream << " -> ";
-      writeGraphVizNodeId(outputStream, childPtr->getId());
+      WriteGraphVizNodeId(outputStream, childPtr->getId());
       outputStream << ";\n";
     }
     for(const DataObject* childPtr : std::ranges::reverse_view(childObjectPtrs))

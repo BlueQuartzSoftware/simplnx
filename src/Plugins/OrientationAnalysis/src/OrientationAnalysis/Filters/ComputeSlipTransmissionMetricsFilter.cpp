@@ -155,7 +155,7 @@ constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArra
 constexpr StringLiteral k_F1ListArrayNameKey = "F1ListArrayName";
 constexpr StringLiteral k_F1sptListArrayNameKey = "F1sptListArrayName";
 constexpr StringLiteral k_F7ListArrayNameKey = "F7ListArrayName";
-constexpr StringLiteral k_mPrimeListArrayNameKey = "mPrimeListArrayName";
+constexpr StringLiteral k_MPrimeListArrayNameKey = "mPrimeListArrayName";
 } // namespace SIMPL
 } // namespace
 
@@ -173,7 +173,7 @@ Result<Arguments> ComputeSlipTransmissionMetricsFilter::FromSIMPLJson(const nloh
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_F1ListArrayNameKey, k_F1ListArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_F1sptListArrayNameKey, k_F1sptListArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_F7ListArrayNameKey, k_F7ListArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_mPrimeListArrayNameKey, k_mPrimeListArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MPrimeListArrayNameKey, k_mPrimeListArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

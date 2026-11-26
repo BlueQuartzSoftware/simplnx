@@ -51,17 +51,17 @@ void BuildLargeTestData(DataStructure& dataStructure, bool includeBlockedCells =
 {
   const ShapeType cellTupleShape = {k_LargeDimZ, k_LargeDimY, k_LargeDimX};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_LargeGeomPath.getTargetName());
-  imageGeom->setDimensions({k_LargeDimX, k_LargeDimY, k_LargeDimZ});
-  REQUIRE(imageGeom->setSpacing({0.5F, 0.75F, 1.25F}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_LargeGeomPath.getTargetName());
+  imageGeomPtr->setDimensions({k_LargeDimX, k_LargeDimY, k_LargeDimZ});
+  REQUIRE(imageGeomPtr->setSpacing({0.5F, 0.75F, 1.25F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_LargeFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIds = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, featureIdsStore, cellData->getId());
-  auto& featureIdsRef = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, featureIdsStore, cellDataPtr->getId());
+  auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
 
   constexpr usize k_BlocksX = k_LargeDimX / k_LargeBlockSize;
   constexpr usize k_BlocksY = k_LargeDimY / k_LargeBlockSize;
@@ -178,10 +178,10 @@ uint64 HashDataStoreBytes(const AbstractDataStore<T>& dataStore)
     const usize count = std::min(buffer.size(), dataStore.getSize() - offset);
     auto dataStoreReadResult = dataStore.copyIntoBuffer(offset, nonstd::span<T>(buffer.data(), count));
     SIMPLNX_RESULT_REQUIRE_VALID(dataStoreReadResult);
-    const auto* bytes = reinterpret_cast<const uint8*>(buffer.data());
+    const auto* bytesPtr = reinterpret_cast<const uint8*>(buffer.data());
     for(usize byteIndex = 0; byteIndex < count * sizeof(T); byteIndex++)
     {
-      hash ^= bytes[byteIndex];
+      hash ^= bytesPtr[byteIndex];
       hash *= k_Prime;
     }
   }
@@ -197,12 +197,12 @@ uint64 HashDataStoreBytes(const AbstractDataStore<T>& dataStore)
  */
 std::array<uint64, 3> HashDistanceMaps(const DataStructure& dataStructure, bool calcManhattanDist, bool calculateAllMaps)
 {
-  const std::array<std::string, 3> k_OutputNames = {k_GBDistancesArrayName, k_TJDistancesArrayName, k_QPDistancesArrayName};
+  const std::array<std::string, 3> kOutputNames = {k_GBDistancesArrayName, k_TJDistancesArrayName, k_QPDistancesArrayName};
   std::array<uint64, 3> hashes = {};
-  const usize outputCount = calculateAllMaps ? k_OutputNames.size() : 1;
+  const usize outputCount = calculateAllMaps ? kOutputNames.size() : 1;
   for(usize outputIndex = 0; outputIndex < outputCount; outputIndex++)
   {
-    const DataPath outputPath = k_LargeCellDataPath.createChildPath(k_OutputNames[outputIndex]);
+    const DataPath outputPath = k_LargeCellDataPath.createChildPath(kOutputNames[outputIndex]);
     if(calcManhattanDist)
     {
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath));
@@ -233,17 +233,17 @@ void BuildComparisonTestData(DataStructure& dataStructure, bool includeBlockedCe
   constexpr usize k_BlocksY = k_DimY / k_BlockSize;
   const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_LargeGeomPath.getTargetName());
-  imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  REQUIRE(imageGeom->setSpacing({0.5F, 0.75F, 1.25F}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_LargeGeomPath.getTargetName());
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  REQUIRE(imageGeomPtr->setSpacing({0.5F, 0.75F, 1.25F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_LargeFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIds = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, featureIdsStore, cellData->getId());
-  auto& featureIdsRef = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, featureIdsStore, cellDataPtr->getId());
+  auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
 
   std::vector<int32> sliceBuffer(k_SliceSize);
   for(usize z = 0; z < k_DimZ; z++)
@@ -318,7 +318,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
 
   // Load the Small IN100 exemplar for the output-selection matrix.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
-  const DataPath k_CellFeatureDataAM = k_DataContainerPath.createChildPath("CellFeatureData");
+  const DataPath kCellFeatureDataAm = k_DataContainerPath.createChildPath("CellFeatureData");
 
   // Each scenario creates one selected map and compares it with its exemplar.
   auto [scenarioName, doBoundaries, doTripleLines, doQuadPoints, expectedArrayName] = GENERATE(std::make_tuple("Boundaries only (GB distances)", true, false, false, k_GBDistancesArrayName),
@@ -498,7 +498,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMapFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -511,22 +511,22 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMapFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeEuclideanDistMapFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeEuclideanDistMapFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeEuclideanDistMapFilter::k_CalcManhattanDist_Key) == true);
       CHECK(args.value<bool>(ComputeEuclideanDistMapFilter::k_DoBoundaries_Key) == true);
       CHECK(args.value<bool>(ComputeEuclideanDistMapFilter::k_DoTripleLines_Key) == true);

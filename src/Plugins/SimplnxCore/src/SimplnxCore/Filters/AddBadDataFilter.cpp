@@ -170,8 +170,8 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   }
 
   const auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
-  const auto* cellAM = imgGeomPtr->getCellData();
-  if(cellAM == nullptr)
+  const auto* cellAmPtr = imgGeomPtr->getCellData();
+  if(cellAmPtr == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
   }

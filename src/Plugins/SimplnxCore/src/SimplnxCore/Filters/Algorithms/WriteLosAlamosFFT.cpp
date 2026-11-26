@@ -20,7 +20,7 @@ using namespace nx::core;
 
 namespace
 {
-using ull = unsigned long long int;
+using UllType = unsigned long long int;
 
 // Tuple chunks limit DataStore transfers and formatted text memory.
 constexpr usize k_ChunkTuples = 65536;
@@ -141,7 +141,7 @@ Result<> WriteChunkedData(std::ofstream& file, const fs::path& outputPath, const
       const float32 phi = input.eulerAngles()[eulerIndex + 1] * 180.0f * Constants::k_1OverPiF;
       const float32 phi2 = input.eulerAngles()[eulerIndex + 2] * 180.0f * Constants::k_1OverPiF;
 
-      fmt::format_to(std::back_inserter(textBuffer), "{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<ull>(x + 1), static_cast<ull>(y + 1), static_cast<ull>(z + 1),
+      fmt::format_to(std::back_inserter(textBuffer), "{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<UllType>(x + 1), static_cast<UllType>(y + 1), static_cast<UllType>(z + 1),
                      input.featureIds()[chunkIndex], input.cellPhases()[chunkIndex]);
 
       x++;
@@ -189,7 +189,7 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
   const usize totalTuples = dims[0] * dims[1] * dims[2];
   const float32* eulerAnglesPtr = eulerAnglesStore.data();
   const int32* featureIdsPtr = featureIdsStore.data();
-  const int32* cellPhases = cellPhasesStore.data();
+  const int32* cellPhasesPtr = cellPhasesStore.data();
 
   for(usize tupleOffset = 0; tupleOffset < totalTuples; tupleOffset += k_ChunkTuples)
   {
@@ -199,9 +199,9 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
     }
 
     const usize tupleCount = std::min(k_ChunkTuples, totalTuples - tupleOffset);
-    const float32* eulerAnglesChunk = eulerAnglesPtr + (tupleOffset * k_EulerComponents);
-    const int32* featureIdsChunk = featureIdsPtr + tupleOffset;
-    const int32* cellPhasesChunk = cellPhases + tupleOffset;
+    const float32* eulerAnglesChunkPtr = eulerAnglesPtr + (tupleOffset * k_EulerComponents);
+    const int32* featureIdsChunkPtr = featureIdsPtr + tupleOffset;
+    const int32* cellPhasesChunkPtr = cellPhasesPtr + tupleOffset;
 
     usize x = tupleOffset % dims[0];
     const usize yzIndex = tupleOffset / dims[0];
@@ -211,12 +211,12 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
     for(usize chunkIndex = 0; chunkIndex < tupleCount; ++chunkIndex)
     {
       const usize eulerIndex = chunkIndex * k_EulerComponents;
-      const float32 phi1 = eulerAnglesChunk[eulerIndex] * 180.0f * Constants::k_1OverPiF;
-      const float32 phi = eulerAnglesChunk[eulerIndex + 1] * 180.0f * Constants::k_1OverPiF;
-      const float32 phi2 = eulerAnglesChunk[eulerIndex + 2] * 180.0f * Constants::k_1OverPiF;
+      const float32 phi1 = eulerAnglesChunkPtr[eulerIndex] * 180.0f * Constants::k_1OverPiF;
+      const float32 phi = eulerAnglesChunkPtr[eulerIndex + 1] * 180.0f * Constants::k_1OverPiF;
+      const float32 phi2 = eulerAnglesChunkPtr[eulerIndex + 2] * 180.0f * Constants::k_1OverPiF;
 
-      file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<ull>(x + 1), static_cast<ull>(y + 1), static_cast<ull>(z + 1), featureIdsChunk[chunkIndex],
-                          cellPhasesChunk[chunkIndex]);
+      file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<UllType>(x + 1), static_cast<UllType>(y + 1), static_cast<UllType>(z + 1), featureIdsChunkPtr[chunkIndex],
+                          cellPhasesChunkPtr[chunkIndex]);
 
       x++;
       if(x == dims[0])
@@ -252,12 +252,12 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
 struct WriterContext
 {
   std::ofstream& File;
-  const fs::path& OutputPath;
+  const fs::path& output_path;
   const SizeVec3& Dims;
-  const Float32Array& EulerAngles;
-  const Int32Array& FeatureIds;
-  const Int32Array& CellPhases;
-  const std::atomic_bool& ShouldCancel;
+  const Float32Array& euler_angles;
+  const Int32Array& feature_ids;
+  const Int32Array& cell_phases;
+  const std::atomic_bool& should_cancel;
 };
 
 /**
@@ -284,16 +284,16 @@ public:
    */
   Result<> operator()()
   {
-    const auto* eulerAngles = dynamic_cast<const DataStore<float32>*>(&m_Context.EulerAngles.getDataStoreRef());
-    const auto* featureIds = dynamic_cast<const DataStore<int32>*>(&m_Context.FeatureIds.getDataStoreRef());
-    const auto* cellPhases = dynamic_cast<const DataStore<int32>*>(&m_Context.CellPhases.getDataStoreRef());
-    if(eulerAngles == nullptr || featureIds == nullptr || cellPhases == nullptr)
+    const auto* eulerAnglesPtr = dynamic_cast<const DataStore<float32>*>(&m_Context.euler_angles.getDataStoreRef());
+    const auto* featureIdsPtr = dynamic_cast<const DataStore<int32>*>(&m_Context.feature_ids.getDataStoreRef());
+    const auto* cellPhasesPtr = dynamic_cast<const DataStore<int32>*>(&m_Context.cell_phases.getDataStoreRef());
+    if(eulerAnglesPtr == nullptr || featureIdsPtr == nullptr || cellPhasesPtr == nullptr)
     {
-      ChunkedInput input(m_Context.EulerAngles.getDataStoreRef(), m_Context.FeatureIds.getDataStoreRef(), m_Context.CellPhases.getDataStoreRef());
-      return WriteChunkedData(m_Context.File, m_Context.OutputPath, m_Context.Dims, input, m_Context.ShouldCancel);
+      ChunkedInput input(m_Context.euler_angles.getDataStoreRef(), m_Context.feature_ids.getDataStoreRef(), m_Context.cell_phases.getDataStoreRef());
+      return WriteChunkedData(m_Context.File, m_Context.output_path, m_Context.Dims, input, m_Context.should_cancel);
     }
 
-    return WriteDirectData(m_Context.File, m_Context.OutputPath, m_Context.Dims, *eulerAngles, *featureIds, *cellPhases, m_Context.ShouldCancel);
+    return WriteDirectData(m_Context.File, m_Context.output_path, m_Context.Dims, *eulerAnglesPtr, *featureIdsPtr, *cellPhasesPtr, m_Context.should_cancel);
   }
 
 private:
@@ -322,8 +322,8 @@ public:
    */
   Result<> operator()()
   {
-    ChunkedInput input(m_Context.EulerAngles.getDataStoreRef(), m_Context.FeatureIds.getDataStoreRef(), m_Context.CellPhases.getDataStoreRef());
-    return WriteChunkedData(m_Context.File, m_Context.OutputPath, m_Context.Dims, input, m_Context.ShouldCancel);
+    ChunkedInput input(m_Context.euler_angles.getDataStoreRef(), m_Context.feature_ids.getDataStoreRef(), m_Context.cell_phases.getDataStoreRef());
+    return WriteChunkedData(m_Context.File, m_Context.output_path, m_Context.Dims, input, m_Context.should_cancel);
   }
 
 private:
@@ -366,7 +366,7 @@ Result<> WriteLosAlamosFFT::operator()()
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
   WriterContext context{
-      .File = file, .OutputPath = m_InputValues->OutputFile, .Dims = dims, .EulerAngles = cellEulerAngles, .FeatureIds = featureIds, .CellPhases = cellPhases, .ShouldCancel = m_ShouldCancel};
+      .File = file, .output_path = m_InputValues->OutputFile, .Dims = dims, .euler_angles = cellEulerAngles, .feature_ids = featureIds, .cell_phases = cellPhases, .should_cancel = m_ShouldCancel};
   Result<> writeResult = DispatchAlgorithm<WriteLosAlamosFFTDirect, WriteLosAlamosFFTScanline>({&cellEulerAngles, &featureIds, &cellPhases}, context);
   if(writeResult.invalid())
   {

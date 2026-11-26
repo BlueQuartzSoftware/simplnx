@@ -182,11 +182,11 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
       return MakePreflightErrorResult(-56353, fmt::format("Relaxation Iterations must be >= 0 when Apply smoothing operations is on. Current value: {}.", smoothingIterations));
     }
   }
-  constexpr usize numElements = 0;
+  constexpr usize k_NumElements = 0;
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, 1, pVertexGroupDataName, pFaceGroupDataName,
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, k_NumElements, 1, pVertexGroupDataName, pFaceGroupDataName,
                                                                                        TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
@@ -198,7 +198,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   }
   // Create the face Labels DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2},
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{k_NumElements}, std::vector<usize>{2},
                                                                  pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
@@ -211,7 +211,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
     // Double the size of the DataArray because we need the value from both sides of the triangle.
     compShape.insert(compShape.begin(), 2);
 
-    auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, createdDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{k_NumElements}, compShape, createdDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -224,7 +224,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
       // Double the size of the DataArray because we need the value from both sides of the triangle.
       compShape.insert(compShape.begin(), 2);
 
-      auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, createdDataPath);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{k_NumElements}, compShape, createdDataPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }

@@ -23,7 +23,7 @@ namespace
 {
 // Name of the per-feature bounding-box array that the extract path creates in the feature Attribute Matrix
 // through ComputeFeatureRectFilter and deletes again before the first crop.
-const std::string k_boundsName = "tempBounds";
+const std::string k_BoundsName = "tempBounds";
 } // namespace
 
 namespace nx::core
@@ -198,7 +198,7 @@ Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.CreatedImageGeometryPrefix = filterArgs.value<std::string>(k_CreatedImageGeometryPrefix_Key);
-  inputValues.TempBoundsPath = inputValues.FlaggedFeaturesArrayPath.replaceName(k_boundsName);
+  inputValues.TempBoundsPath = inputValues.FlaggedFeaturesArrayPath.replaceName(k_BoundsName);
 
   // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeometryPath).getCellDataPath();

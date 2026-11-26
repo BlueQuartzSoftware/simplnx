@@ -37,7 +37,7 @@ constexpr std::array<char, 62> k_Chars = {'0', '1', '2', '3', '4', '5', '6', '7'
  * @brief Gets the persistent random generator for the current thread.
  * @return Per-thread random generator.
  */
-std::mt19937_64& getRandomGenerator()
+std::mt19937_64& GetRandomGenerator()
 {
   thread_local std::mt19937_64 generator(std::random_device{}());
   return generator;
@@ -47,10 +47,10 @@ std::mt19937_64& getRandomGenerator()
  * @brief Creates a random name for one temporary output directory.
  * @return A 24-character alphanumeric directory name.
  */
-std::string createRandomDirectoryName()
+std::string CreateRandomDirectoryName()
 {
   std::uniform_int_distribution<std::uint32_t> distribution(0, k_Chars.size() - 1);
-  std::mt19937_64& generator = getRandomGenerator();
+  std::mt19937_64& generator = GetRandomGenerator();
 
   std::string randomDirectoryName;
   randomDirectoryName.reserve(24);
@@ -102,7 +102,7 @@ bool SetExtendedAttribute(const fs::path& path, const std::string& key, const st
  * @param path Temporary directory path.
  * @return True when all applicable attributes were set.
  */
-bool setIgnoreFileSyncAttributes(const fs::path& path)
+bool SetIgnoreFileSyncAttributes(const fs::path& path)
 {
   // https://help.dropbox.com/sync/ignored-files
   const bool dropboxResult = SetExtendedAttribute(path, "com.dropbox.ignored", "1");
@@ -153,10 +153,10 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
       return ConvertInvalidResult<AtomicFile>(std::move(result));
     }
 
-    constexpr usize kMaxCreateAttempts = 32;
-    for(usize attempt = 0; attempt < kMaxCreateAttempts; ++attempt)
+    constexpr usize k_KMaxCreateAttempts = 32;
+    for(usize attempt = 0; attempt < k_KMaxCreateAttempts; ++attempt)
     {
-      const fs::path temporaryDirectory = outputDirectory / createRandomDirectoryName();
+      const fs::path temporaryDirectory = outputDirectory / CreateRandomDirectoryName();
       std::error_code createError;
       if(fs::create_directory(temporaryDirectory, createError))
       {
@@ -171,11 +171,11 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
     if(atomicFile.m_TempFilePath.empty())
     {
       return MakeErrorResult<AtomicFile>(-15784,
-                                         fmt::format("Could not create a unique temporary output directory beside '{}' after {} attempts.", atomicFile.m_FilePath.string(), kMaxCreateAttempts));
+                                         fmt::format("Could not create a unique temporary output directory beside '{}' after {} attempts.", atomicFile.m_FilePath.string(), k_KMaxCreateAttempts));
     }
 
     // A cloud-sync hint is optional and must not add diagnostics to an embedding application.
-    static_cast<void>(setIgnoreFileSyncAttributes(atomicFile.m_TempFilePath.parent_path()));
+    static_cast<void>(SetIgnoreFileSyncAttributes(atomicFile.m_TempFilePath.parent_path()));
   }
 
   return {std::move(atomicFile)}; // NOLINT(modernize-use-designated-initializers) Result stores inherited aggregate state.

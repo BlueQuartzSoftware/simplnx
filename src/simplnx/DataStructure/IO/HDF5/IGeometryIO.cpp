@@ -27,8 +27,8 @@ Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader,
 
 Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& /*dataStructureGroup*/)
 {
-  auto* geom = dataStructure.getDataAs<IGeometry>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<IGeometry>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50590, fmt::format("Failed to finish importing IGeometry at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }

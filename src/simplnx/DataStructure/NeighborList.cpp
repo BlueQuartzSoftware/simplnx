@@ -112,15 +112,15 @@ NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
     return *this;
   }
 
-  const auto* destination = getDataStructure();
+  const auto* destinationPtr = getDataStructure();
   const auto paths = getDataPaths();
-  if(destination == nullptr || paths.empty() || destination->getData(paths.front()) != this)
+  if(destinationPtr == nullptr || paths.empty() || destinationPtr->getData(paths.front()) != this)
   {
     throw std::runtime_error("NeighborList assignment to '" + getName() + "' requires an available destination array path");
   }
   // Tuple count supplies the existing lower-bound estimate without reading any list values.
   const auto bytes = CalculateStoreCopyBytes(rhs.getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destination, paths.front(), GetDataType<T>(), bytes, "");
+  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
   m_Store = rhs.m_Store->deepCopy(format);
   m_IsAllocated = rhs.m_IsAllocated;
   m_InitValue = rhs.m_InitValue;
@@ -203,15 +203,15 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     }
   }
 
-  const auto* destination = getDataStructure();
+  const auto* destinationPtr = getDataStructure();
   const auto paths = getDataPaths();
-  if(destination == nullptr || paths.empty() || destination->getData(paths.front()) != this)
+  if(destinationPtr == nullptr || paths.empty() || destinationPtr->getData(paths.front()) != this)
   {
     return k_MissingCopyDestinationError;
   }
   // Parent order selects the first available path. The estimate does not read list values.
   const auto bytes = CalculateStoreCopyBytes(getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destination, paths.front(), GetDataType<T>(), bytes, "");
+  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
   auto copy = m_Store->deepCopy(format);
   Result<> resizeResult = copy->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(arraySize - indicesSize)});
   if(resizeResult.invalid())

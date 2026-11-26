@@ -475,9 +475,9 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
     return {result};
   }
 
-  if(const auto* inMemoryStore = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStore != nullptr)
+  if(const auto* inMemoryStorePtr = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStorePtr != nullptr)
   {
-    const nonstd::span<const T> values = inMemoryStore->createSpan();
+    const nonstd::span<const T> values = inMemoryStorePtr->createSpan();
     const T firstValue = values.front();
     std::pair<T, T> minMax{firstValue, firstValue};
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -894,11 +894,11 @@ Result<ArrayStatistics<T>> ComputeNormalizeStatistics(const AbstractDataStore<T>
     return {stats};
   }
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  if(const auto* inMemoryStore = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStore != nullptr)
+  if(const auto* inMemoryStorePtr = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStorePtr != nullptr)
   {
     const usize blockCount = total / detail::k_NormalizeStatisticsBlockValues + static_cast<usize>((total % detail::k_NormalizeStatisticsBlockValues) != 0);
     std::vector<detail::NormalizeStatisticsBlock<T>> blocks(blockCount);
-    const nonstd::span<const T> values = inMemoryStore->createSpan();
+    const nonstd::span<const T> values = inMemoryStorePtr->createSpan();
     auto reduceBlocks = [&](const Range& range) {
       for(usize blockIndex = range.min(); blockIndex < range.max(); ++blockIndex)
       {

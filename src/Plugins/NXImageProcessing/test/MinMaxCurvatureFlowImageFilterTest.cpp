@@ -20,7 +20,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using MinMaxFilter = MinMaxCurvatureFlowImageFilter;
+using MinMaxFilterType = MinMaxCurvatureFlowImageFilter;
 
 // Sets the geometry, input, and output keys plus TimeStep, NumberOfIterations, and StencilRadius on the Arguments.
 // The helper runs preflight and execute, and requires that both steps succeed.
@@ -28,12 +28,12 @@ void RunMinMaxCurvatureFlow(IFilter& filter, DataStructure& ds, const DataPath& 
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(MinMaxFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(MinMaxFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(MinMaxFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(MinMaxFilter::k_TimeStep_Key, std::make_any<float64>(timeStep));
-  args.insertOrAssign(MinMaxFilter::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
-  args.insertOrAssign(MinMaxFilter::k_StencilRadius_Key, std::make_any<int32>(stencilRadius));
+  args.insertOrAssign(MinMaxFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(MinMaxFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(MinMaxFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(MinMaxFilterType::k_TimeStep_Key, std::make_any<float64>(timeStep));
+  args.insertOrAssign(MinMaxFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
+  args.insertOrAssign(MinMaxFilterType::k_StencilRadius_Key, std::make_any<int32>(stencilRadius));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -79,14 +79,14 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards",
     DataStructure ds;
     const std::vector<int32> field = MakeRamp<int32>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, field);
-    MinMaxFilter filter;
+    MinMaxFilterType filter;
     Arguments args;
-    args.insertOrAssign(MinMaxFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(MinMaxFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(MinMaxFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(MinMaxFilter::k_TimeStep_Key, std::make_any<float64>(0.05));
-    args.insertOrAssign(MinMaxFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    args.insertOrAssign(MinMaxFilter::k_StencilRadius_Key, std::make_any<int32>(2));
+    args.insertOrAssign(MinMaxFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(MinMaxFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(MinMaxFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(MinMaxFilterType::k_TimeStep_Key, std::make_any<float64>(0.05));
+    args.insertOrAssign(MinMaxFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    args.insertOrAssign(MinMaxFilterType::k_StencilRadius_Key, std::make_any<int32>(2));
     const auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   }
@@ -99,14 +99,14 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards",
     const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<float32>::Create(ds, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    MinMaxFilter filter;
+    MinMaxFilterType filter;
     Arguments args;
-    args.insertOrAssign(MinMaxFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(MinMaxFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(MinMaxFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(MinMaxFilter::k_TimeStep_Key, std::make_any<float64>(0.05));
-    args.insertOrAssign(MinMaxFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    args.insertOrAssign(MinMaxFilter::k_StencilRadius_Key, std::make_any<int32>(2));
+    args.insertOrAssign(MinMaxFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(MinMaxFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(MinMaxFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(MinMaxFilterType::k_TimeStep_Key, std::make_any<float64>(0.05));
+    args.insertOrAssign(MinMaxFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    args.insertOrAssign(MinMaxFilterType::k_StencilRadius_Key, std::make_any<int32>(2));
     const auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
@@ -116,7 +116,7 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards",
     DataStructure ds;
     const std::vector<float32> field = MakeRamp<float32>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, field);
-    MinMaxFilter filter;
+    MinMaxFilterType filter;
     RunMinMaxCurvatureFlow(filter, ds, inputPath, 0.05, 5u, 2);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
@@ -155,19 +155,19 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: StencilRadius 0 cl
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12;
-  constexpr usize DY = 12;
-  constexpr usize DZ = 12;
-  const std::vector<float32> field = MakeRamp<float32>(DX, DY, DZ);
+  constexpr usize k_Dx = 12;
+  constexpr usize k_Dy = 12;
+  constexpr usize k_Dz = 12;
+  const std::vector<float32> field = MakeRamp<float32>(k_Dx, k_Dy, k_Dz);
 
   DataStructure ds0;
-  const DataPath input0 = rt::BuildImageFromPattern<float32>(ds0, DX, DY, DZ, field);
-  MinMaxFilter filter0;
+  const DataPath input0 = rt::BuildImageFromPattern<float32>(ds0, k_Dx, k_Dy, k_Dz, field);
+  MinMaxFilterType filter0;
   RunMinMaxCurvatureFlow(filter0, ds0, input0, /*timeStep=*/0.05, /*numberOfIterations=*/5u, /*stencilRadius=*/0);
 
   DataStructure ds1;
-  const DataPath input1 = rt::BuildImageFromPattern<float32>(ds1, DX, DY, DZ, field);
-  MinMaxFilter filter1;
+  const DataPath input1 = rt::BuildImageFromPattern<float32>(ds1, k_Dx, k_Dy, k_Dz, field);
+  MinMaxFilterType filter1;
   RunMinMaxCurvatureFlow(filter1, ds1, input1, /*timeStep=*/0.05, /*numberOfIterations=*/5u, /*stencilRadius=*/1);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
@@ -184,12 +184,12 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: constant image is 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 7.0f));
-  MinMaxFilter filter;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 7.0f));
+  MinMaxFilterType filter;
   RunMinMaxCurvatureFlow(filter, ds, inputPath, /*timeStep=*/0.05, /*numberOfIterations=*/5u, /*stencilRadius=*/2);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
@@ -205,12 +205,12 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: zero iterations is
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  MinMaxFilter filter;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  MinMaxFilterType filter;
   RunMinMaxCurvatureFlow(filter, ds, inputPath, /*timeStep=*/0.05, /*numberOfIterations=*/0u, /*stencilRadius=*/2);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});

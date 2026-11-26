@@ -959,18 +959,18 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkSt
       for(int rowOffset = -1; rowOffset <= 1; ++rowOffset)
       {
         const int64 sourceY = std::clamp<int64>(static_cast<int64>(y) + rowOffset, 0, static_cast<int64>(dimY) - 1);
-        uint8* rowValues = inputTile.get() + static_cast<usize>(rowOffset + 1) * currentStride;
-        if(Result<> result = source.copyIntoBuffer(static_cast<usize>(sourceY) * dimX + readBegin, nonstd::span<uint8>(rowValues + destinationOffset, readCount)); result.invalid())
+        uint8* rowValuesPtr = inputTile.get() + static_cast<usize>(rowOffset + 1) * currentStride;
+        if(Result<> result = source.copyIntoBuffer(static_cast<usize>(sourceY) * dimX + readBegin, nonstd::span<uint8>(rowValuesPtr + destinationOffset, readCount)); result.invalid())
         {
           return ConvertResultTo<bool>(std::move(result), false);
         }
         if(xBegin == 0)
         {
-          rowValues[0] = rowValues[1];
+          rowValuesPtr[0] = rowValuesPtr[1];
         }
         if(coreEnd == dimX)
         {
-          rowValues[columnCount + 1] = rowValues[columnCount];
+          rowValuesPtr[columnCount + 1] = rowValuesPtr[columnCount];
         }
       }
 
@@ -1133,8 +1133,8 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
     }
   }
 
-  BinaryThinningWorkStore* source = firstWork.get();
-  BinaryThinningWorkStore* destination = secondWork.get();
+  BinaryThinningWorkStore* sourcePtr = firstWork.get();
+  BinaryThinningWorkStore* destinationPtr = secondWork.get();
   usize completedIterations = 0;
   bool changed = true;
   while(changed)
@@ -1148,8 +1148,8 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
       }
       const std::string passLabel = fmt::format("Binary Thinning Iteration {} Pass {} Values", completedIterations + 1, step);
       progressThrottle.reset(volumeValues, passLabel);
-      auto stepResult = plan.useTiles ? ApplyBinaryThinningExternalSubstepTiles(*source, *destination, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle) :
-                                        ApplyBinaryThinningExternalSubstepBlocks(*source, *destination, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle);
+      auto stepResult = plan.useTiles ? ApplyBinaryThinningExternalSubstepTiles(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle) :
+                                        ApplyBinaryThinningExternalSubstepBlocks(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle);
       if(stepResult.invalid())
       {
         return ConvertResult(std::move(stepResult));
@@ -1159,7 +1159,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
         return {};
       }
       changed = changed || stepResult.value();
-      std::swap(source, destination);
+      std::swap(sourcePtr, destinationPtr);
     }
 
     ++completedIterations;
@@ -1176,7 +1176,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
         return {};
       }
       const usize count = std::min(transferValues, volumeValues - start);
-      if(Result<> result = source->copyIntoBuffer(start, nonstd::span<uint8>(binaryValues.get(), count)); result.invalid())
+      if(Result<> result = sourcePtr->copyIntoBuffer(start, nonstd::span<uint8>(binaryValues.get(), count)); result.invalid())
       {
         return result;
       }

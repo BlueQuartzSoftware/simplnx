@@ -31,8 +31,8 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
 
 Result<> INodeGeom2dIO::FinishImportingNodeGeom2dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
 {
-  auto* geom = dataStructure.getDataAs<INodeGeometry2D>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<INodeGeometry2D>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50591, fmt::format("Failed to finish importing INodeGeometry2D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }

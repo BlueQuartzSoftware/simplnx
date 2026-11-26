@@ -40,17 +40,17 @@ nlohmann::json ArrayCreationParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
   }
   auto string = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string));
   }
   return {{std::move(*path)}};
 }
@@ -85,8 +85,8 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object != nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr != nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
   }
@@ -97,8 +97,8 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
 Result<std::any> ArrayCreationParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
 namespace SIMPLConversion

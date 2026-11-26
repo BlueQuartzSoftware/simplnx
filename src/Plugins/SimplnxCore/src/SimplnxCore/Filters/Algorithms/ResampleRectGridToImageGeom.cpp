@@ -38,13 +38,13 @@ Result<> ResampleRectGridToImageGeom::operator()()
   {
     return MakeErrorResult(-7367, fmt::format("Could not retrieve origin value from input rectilinear grid geometry at path {}", m_InputValues->RectilinearGridPath.toString()));
   }
-  const Float32Array* xGridValues = rectGridGeom.getXBounds();
-  const Float32Array* yGridValues = rectGridGeom.getYBounds();
-  const Float32Array* zGridValues = rectGridGeom.getZBounds();
+  const Float32Array* xGridValuesPtr = rectGridGeom.getXBounds();
+  const Float32Array* yGridValuesPtr = rectGridGeom.getYBounds();
+  const Float32Array* zGridValuesPtr = rectGridGeom.getZBounds();
   FloatVec3 origin = rectGridGeom.getOrigin().value();
   const SizeVec3 rectGridDims = rectGridGeom.getDimensions();
   const SizeVec3 imageGeomDims = imageGeom.getDimensions();
-  const std::vector<float32> max = {xGridValues->back(), yGridValues->back(), zGridValues->back()};
+  const std::vector<float32> max = {xGridValuesPtr->back(), yGridValuesPtr->back(), zGridValuesPtr->back()};
   const std::vector<float32> imageGeomSpacing = {(max[0] - origin[0]) / imageGeomDims[0], (max[1] - origin[1]) / imageGeomDims[1], (max[2] - origin[2]) / imageGeomDims[2]};
 
   if(auto result = imageGeom.setSpacing(imageGeomSpacing); result.invalid())
@@ -79,7 +79,7 @@ Result<> ResampleRectGridToImageGeom::operator()()
     auto& destDataArray = dynamic_cast<IArray&>(destCellDataAM.at(srcName));
     m_MessageHandler.sendInfoMessage(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
 
-    CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, taskResult, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValues, yGridValues, zGridValues);
+    CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, taskResult, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValuesPtr, yGridValuesPtr, zGridValuesPtr);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

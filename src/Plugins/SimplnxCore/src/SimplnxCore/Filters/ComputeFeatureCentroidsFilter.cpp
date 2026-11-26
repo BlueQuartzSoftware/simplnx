@@ -110,12 +110,12 @@ IFilter::PreflightResult ComputeFeatureCentroidsFilter::preflightImpl(const Data
   // Feature Data:
   // Validating the Feature Attribute Matrix and trying to find a child of the Group
   // that is an IDataArray subclass, so we can get the proper tuple shape
-  const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
-  if(featureAttrMatrix == nullptr)
+  const auto* featureAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
+  if(featureAttrMatrixPtr == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-12700, fmt::format("Cannot find the selected feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
-  ShapeType tupleShape = featureAttrMatrix->getShape();
+  ShapeType tupleShape = featureAttrMatrixPtr->getShape();
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {

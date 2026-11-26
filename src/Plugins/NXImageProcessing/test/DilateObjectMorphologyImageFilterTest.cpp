@@ -49,7 +49,7 @@ const std::vector<omt::ObjCase> k_ParityConfigs = {{.label = "3D r{1,1,1}", .rad
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected grid (Ball/Box/Cross)", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
-  constexpr auto kDilate = ImageProcessing::ObjectMorphOp::Dilate;
+  constexpr auto k_KDilate = ImageProcessing::ObjectMorphOp::Dilate;
   const std::vector<std::pair<const char*, KernelType>> kernels = {{"Ball", KernelType::Ball}, {"Box", KernelType::Box}, {"Cross", KernelType::Cross}};
 
   SECTION("ObjectValue=1 (uint8)")
@@ -63,7 +63,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
         DYNAMIC_SECTION("kernel=" << kernel.first << " " << cfg.label)
         {
           const std::array<int32, 3> radius = {static_cast<int32>(cfg.radius[0]), static_cast<int32>(cfg.radius[1]), static_cast<int32>(cfg.radius[2])};
-          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, kDilate, uint8{1}, uint8{0}, setParams);
+          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, k_KDilate, uint8{1}, uint8{0}, setParams);
         }
       }
     }
@@ -79,7 +79,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
         DYNAMIC_SECTION("kernel=" << kernel.first << " " << cfg.label)
         {
           const std::array<int32, 3> radius = {static_cast<int32>(cfg.radius[0]), static_cast<int32>(cfg.radius[1]), static_cast<int32>(cfg.radius[2])};
-          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, int32>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, kDilate, int32{7}, int32{0}, setParams);
+          omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, int32>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kernel.second, radius, k_KDilate, int32{7}, int32{0}, setParams);
         }
       }
     }
@@ -95,19 +95,19 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Annulus compute
 {
   const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(ds, dx, dy, dz, uint8{1}, uint8{0}); };
   const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0);
-  constexpr auto kDilate = ImageProcessing::ObjectMorphOp::Dilate;
+  constexpr auto k_KDilate = ImageProcessing::ObjectMorphOp::Dilate;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, kDilate, uint8{1}, uint8{0}, setParams);
+    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KDilate, uint8{1}, uint8{0}, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, kDilate, uint8{1}, uint8{0}, setParams);
+    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KDilate, uint8{1}, uint8{0}, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, kDilate, uint8{1}, uint8{0}, setParams);
+    omt::RunObjectMorphologyComputedExpected<DilateObjectMorphologyImageFilter, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KDilate, uint8{1}, uint8{0}, setParams);
   }
 }
 
@@ -139,39 +139,39 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr uint8 objectValue = 1;
-  constexpr uint8 backgroundValue = 0;
-  constexpr usize lo = 8;
-  constexpr usize hi = 23; // solid object cube [8,23]^3 (interior block, does not touch the image edge)
+  constexpr usize k_D = 32;
+  constexpr uint8 k_ObjectValue = 1;
+  constexpr uint8 k_BackgroundValue = 0;
+  constexpr usize k_Lo = 8;
+  constexpr usize k_Hi = 23; // solid object cube [8,23]^3 (interior block, does not touch the image edge)
 
   // Build the block pattern once in memory (bulk-fill the array from it; keep it for the oracle).
-  std::vector<uint8> input(D * D * D, backgroundValue);
-  for(usize z = lo; z <= hi; ++z)
+  std::vector<uint8> input(k_D * k_D * k_D, k_BackgroundValue);
+  for(usize z = k_Lo; z <= k_Hi; ++z)
   {
-    for(usize y = lo; y <= hi; ++y)
+    for(usize y = k_Lo; y <= k_Hi; ++y)
     {
-      for(usize x = lo; x <= hi; ++x)
+      for(usize x = k_Lo; x <= k_Hi; ++x)
       {
-        input[omt::FlatIndex(x, y, z, D, D)] = objectValue;
+        input[omt::FlatIndex(x, y, z, k_D, k_D)] = k_ObjectValue;
       }
     }
   }
 
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({D, D, D});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  const ShapeType cellShape = {D, D, D};
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({k_D, k_D, k_D});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  const ShapeType cellShape = {k_D, k_D, k_D};
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<uint8>(ds, inputPath, cellShape, {1});
-  auto* inputArray = DataArray<uint8>::Create(ds, "Input", store, cellAM->getId());
+  auto* inputArrayPtr = DataArray<uint8>::Create(ds, "Input", store, cellAmPtr->getId());
   {
     constexpr usize k_ChunkValues = 65536;
-    auto& ref = inputArray->getDataStoreRef();
+    auto& ref = inputArrayPtr->getDataStoreRef();
     for(usize start = 0; start < input.size(); start += k_ChunkValues)
     {
       const usize count = std::min(k_ChunkValues, input.size() - start);
@@ -188,7 +188,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
   args.insertOrAssign(DilateObjectMorphologyImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(DilateObjectMorphologyImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(KernelType::Ball)));
   args.insertOrAssign(DilateObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{2, 2, 2}));
-  args.insertOrAssign(DilateObjectMorphologyImageFilter::k_ObjectValue_Key, std::make_any<float64>(static_cast<float64>(objectValue)));
+  args.insertOrAssign(DilateObjectMorphologyImageFilter::k_ObjectValue_Key, std::make_any<float64>(static_cast<float64>(k_ObjectValue)));
 
   auto executeResult = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -197,10 +197,10 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expect
   auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
-  const std::vector<uint8> expected = omt::ObjectMorphologyOracle<uint8>(input, D, D, D, KernelType::Ball, {2, 2, 2}, ImageProcessing::ObjectMorphOp::Dilate, objectValue, backgroundValue);
+  const std::vector<uint8> expected = omt::ObjectMorphologyOracle<uint8>(input, k_D, k_D, k_D, KernelType::Ball, {2, 2, 2}, ImageProcessing::ObjectMorphOp::Dilate, k_ObjectValue, k_BackgroundValue);
 
   // Stream the output in bounded chunks and compare.
   constexpr usize k_ChunkValues = 65536;

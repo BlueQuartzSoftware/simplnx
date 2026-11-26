@@ -50,12 +50,12 @@ const std::string k_ExemplarDataContainerName("Exemplar Coordination Number");
 
 struct CoordinationLiteralFixture
 {
-  DataStructure dataStructure;
-  DataPath geometryPath;
-  DataPath featureIdsPath;
-  DataPath transferredValuesPath;
-  DataPath ignoredValuesPath;
-  MultiArraySelectionParameter::ValueType ignoredPaths;
+  DataStructure data_structure;
+  DataPath geometry_path;
+  DataPath feature_ids_path;
+  DataPath transferred_values_path;
+  DataPath ignored_values_path;
+  MultiArraySelectionParameter::ValueType ignored_paths;
 };
 
 /**
@@ -70,35 +70,35 @@ CoordinationLiteralFixture CreateCoordinationLiteralFixture(const usize dimX, co
 {
   REQUIRE(inputFeatureIds.size() == dimX * dimY * dimZ);
   CoordinationLiteralFixture fixture;
-  fixture.geometryPath = DataPath({"Coordination Literal Geometry"});
-  const DataPath cellDataPath = fixture.geometryPath.createChildPath("Cell Data");
-  fixture.featureIdsPath = cellDataPath.createChildPath("Feature Ids");
-  fixture.transferredValuesPath = cellDataPath.createChildPath("Transferred Values");
-  fixture.ignoredValuesPath = cellDataPath.createChildPath("Ignored Values");
-  fixture.ignoredPaths = {fixture.ignoredValuesPath};
+  fixture.geometry_path = DataPath({"Coordination Literal Geometry"});
+  const DataPath cellDataPath = fixture.geometry_path.createChildPath("Cell Data");
+  fixture.feature_ids_path = cellDataPath.createChildPath("Feature Ids");
+  fixture.transferred_values_path = cellDataPath.createChildPath("Transferred Values");
+  fixture.ignored_values_path = cellDataPath.createChildPath("Ignored Values");
+  fixture.ignored_paths = {fixture.ignored_values_path};
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
 
-  auto* imageGeomPtr = ImageGeom::Create(fixture.dataStructure, fixture.geometryPath.getTargetName());
+  auto* imageGeomPtr = ImageGeom::Create(fixture.data_structure, fixture.geometry_path.getTargetName());
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({dimX, dimY, dimZ});
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellDataPtr = AttributeMatrix::Create(fixture.dataStructure, cellDataPath.getTargetName(), cellTupleShape, imageGeomPtr->getId());
+  auto* cellDataPtr = AttributeMatrix::Create(fixture.data_structure, cellDataPath.getTargetName(), cellTupleShape, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(fixture.dataStructure, fixture.featureIdsPath, cellTupleShape, {1});
-  auto* featureIdsArrayPtr = Int32Array::Create(fixture.dataStructure, fixture.featureIdsPath.getTargetName(), featureIdsStore, cellDataPtr->getId());
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(fixture.data_structure, fixture.feature_ids_path, cellTupleShape, {1});
+  auto* featureIdsArrayPtr = Int32Array::Create(fixture.data_structure, fixture.feature_ids_path.getTargetName(), featureIdsStore, cellDataPtr->getId());
   REQUIRE(featureIdsArrayPtr != nullptr);
   featureIdsStore->fill(0);
 
-  auto transferredValuesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.dataStructure, fixture.transferredValuesPath, cellTupleShape, {1});
-  auto* transferredValuesArrayPtr = Int32Array::Create(fixture.dataStructure, fixture.transferredValuesPath.getTargetName(), transferredValuesStore, cellDataPtr->getId());
+  auto transferredValuesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.data_structure, fixture.transferred_values_path, cellTupleShape, {1});
+  auto* transferredValuesArrayPtr = Int32Array::Create(fixture.data_structure, fixture.transferred_values_path.getTargetName(), transferredValuesStore, cellDataPtr->getId());
   REQUIRE(transferredValuesArrayPtr != nullptr);
   transferredValuesStore->fill(0);
 
-  auto ignoredValuesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.dataStructure, fixture.ignoredValuesPath, cellTupleShape, {1});
-  auto* ignoredValuesArrayPtr = Int32Array::Create(fixture.dataStructure, fixture.ignoredValuesPath.getTargetName(), ignoredValuesStore, cellDataPtr->getId());
+  auto ignoredValuesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.data_structure, fixture.ignored_values_path, cellTupleShape, {1});
+  auto* ignoredValuesArrayPtr = Int32Array::Create(fixture.data_structure, fixture.ignored_values_path.getTargetName(), ignoredValuesStore, cellDataPtr->getId());
   REQUIRE(ignoredValuesArrayPtr != nullptr);
   ignoredValuesStore->fill(0);
 
@@ -127,14 +127,14 @@ Result<> RunCoordinationLiteralFixture(CoordinationLiteralFixture& fixture, int3
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CoordinationNumber_Key, std::make_any<int32>(threshold));
   args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_Loop_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(fixture.featureIdsPath));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(fixture.ignoredPaths));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(fixture.geometryPath));
+  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(fixture.feature_ids_path));
+  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(fixture.ignored_paths));
+  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(fixture.geometry_path));
 
-  const auto preflightResult = filter.preflight(fixture.dataStructure, args);
+  const auto preflightResult = filter.preflight(fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(fixture.dataStructure, args);
-  UnitTest::CheckArraysInheritTupleDims(fixture.dataStructure);
+  const auto executeResult = filter.execute(fixture.data_structure, args);
+  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
   return executeResult.result;
 }
 
@@ -174,8 +174,8 @@ void CheckCoordinationValues(const DataArray<T>& arrayRef, const std::array<T, N
 template <typename T, usize N>
 void CheckCoordinationValues(const CoordinationLiteralFixture& fixture, const DataPath& path, const std::array<T, N>& expectedValues, usize componentCount = 1)
 {
-  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<DataArray<T>>(path));
-  CheckCoordinationValues(fixture.dataStructure.getDataRefAs<DataArray<T>>(path), expectedValues, componentCount);
+  REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<DataArray<T>>(path));
+  CheckCoordinationValues(fixture.data_structure.getDataRefAs<DataArray<T>>(path), expectedValues, componentCount);
 }
 
 /**
@@ -191,16 +191,16 @@ void CheckCoordinationValues(const CoordinationLiteralFixture& fixture, const Da
 template <typename T, usize N>
 DataPath AddCoordinationSibling(CoordinationLiteralFixture& fixture, const std::string& name, const std::array<T, N>& inputValues, usize componentCount)
 {
-  const DataPath cellDataPath = fixture.featureIdsPath.getParent();
-  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath));
-  const auto& cellDataRef = fixture.dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath);
+  const DataPath cellDataPath = fixture.feature_ids_path.getParent();
+  REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<AttributeMatrix>(cellDataPath));
+  const auto& cellDataRef = fixture.data_structure.getDataRefAs<AttributeMatrix>(cellDataPath);
   const DataPath path = cellDataPath.createChildPath(name);
-  auto store = DataStoreUtilities::CreateDataStore<T>(fixture.dataStructure, path, cellDataRef.getShape(), {componentCount});
+  auto store = DataStoreUtilities::CreateDataStore<T>(fixture.data_structure, path, cellDataRef.getShape(), {componentCount});
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(store->getSize() == N);
   auto storeWriteResult = store->copyFromBuffer(0, nonstd::span<const T>(inputValues.data(), inputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(storeWriteResult);
-  REQUIRE(DataArray<T>::Create(fixture.dataStructure, name, store, cellDataRef.getId()) != nullptr);
+  REQUIRE(DataArray<T>::Create(fixture.data_structure, name, store, cellDataRef.getId()) != nullptr);
   return path;
 }
 
@@ -214,15 +214,15 @@ DataPath AddCoordinationSibling(CoordinationLiteralFixture& fixture, const std::
 template <typename T>
 DataPath AddCoordinationAlias(CoordinationLiteralFixture& fixture, const DataPath& originalPath)
 {
-  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<DataArray<T>>(originalPath));
-  const auto& originalArrayRef = fixture.dataStructure.getDataRefAs<DataArray<T>>(originalPath);
+  REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<DataArray<T>>(originalPath));
+  const auto& originalArrayRef = fixture.data_structure.getDataRefAs<DataArray<T>>(originalPath);
   const DataPath parentPath = originalPath.getParent();
-  REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<AttributeMatrix>(parentPath));
-  const auto& cellDataRef = fixture.dataStructure.getDataRefAs<AttributeMatrix>(parentPath);
+  REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<AttributeMatrix>(parentPath));
+  const auto& cellDataRef = fixture.data_structure.getDataRefAs<AttributeMatrix>(parentPath);
   const DataPath aliasPath = parentPath.createChildPath(originalPath.getTargetName() + " Alias");
   auto store = originalArrayRef.getDataStorePtr().lock();
   REQUIRE(store != nullptr);
-  auto* aliasArrayPtr = DataArray<T>::Create(fixture.dataStructure, aliasPath.getTargetName(), store, cellDataRef.getId());
+  auto* aliasArrayPtr = DataArray<T>::Create(fixture.data_structure, aliasPath.getTargetName(), store, cellDataRef.getId());
   REQUIRE(aliasArrayPtr != nullptr);
   REQUIRE(aliasArrayPtr != &originalArrayRef);
   REQUIRE(aliasArrayPtr->getId() != originalArrayRef.getId());
@@ -382,21 +382,21 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
   const usize sliceSize = dimX * dimY;
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1});
-  auto* featureIdsArray = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAM->getId());
-  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+  auto* featureIdsArrayPtr = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAmPtr->getId());
+  auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
 
   auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3});
-  auto* eulerArray = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAM->getId());
-  auto& eulerStore = eulerArray->getDataStoreRef();
+  auto* eulerArrayPtr = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAmPtr->getId());
+  auto& eulerStore = eulerArrayPtr->getDataStoreRef();
 
   const usize blocksPerDimX = dimX / blockSize;
   const usize blocksPerDimY = dimY / blockSize;
@@ -518,18 +518,18 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Literal Scan Order"
     DYNAMIC_SECTION(label)
     {
       CoordinationLiteralFixture fixture = CreateCoordinationLiteralFixture(dimensions[0], dimensions[1], dimensions[2]);
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.featureIdsPath));
-      const auto& featureIdsArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.featureIdsPath);
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.feature_ids_path));
+      const auto& featureIdsArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.feature_ids_path);
       REQUIRE(featureIdsArrayRef.getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
 
       ExecuteCoordinationLiteralFixture(fixture);
 
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.featureIdsPath));
-      const auto& actualFeatureIdsArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.featureIdsPath);
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.transferredValuesPath));
-      const auto& actualTransferredValuesArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.transferredValuesPath);
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(fixture.ignoredValuesPath));
-      const auto& actualIgnoredValuesArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(fixture.ignoredValuesPath);
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.feature_ids_path));
+      const auto& actualFeatureIdsArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.feature_ids_path);
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.transferred_values_path));
+      const auto& actualTransferredValuesArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.transferred_values_path);
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(fixture.ignored_values_path));
+      const auto& actualIgnoredValuesArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(fixture.ignored_values_path);
       CheckCoordinationValues(actualFeatureIdsArrayRef, k_ExpectedFeatureIds);
       CheckCoordinationValues(actualTransferredValuesArrayRef, k_ExpectedTransferredValues);
       CheckCoordinationValues(actualIgnoredValuesArrayRef, k_ExpectedIgnoredValues);
@@ -547,37 +547,37 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Z Decisions and Thr
     auto fixture = CreateCoordinationLiteralFixture(1, 1, 3, {1, 0, 2});
     ExecuteCoordinationLiteralFixture(fixture);
     // Cell 1 sees the zero from cell 0, so Feature ID 2 supplies its only positive neighbor.
-    CheckCoordinationValues(fixture, fixture.featureIdsPath, std::array<int32, 3>{0, 2, 2});
-    CheckCoordinationValues(fixture, fixture.transferredValuesPath, std::array<int32, 3>{20, 30, 30});
-    CheckCoordinationValues(fixture, fixture.ignoredValuesPath, std::array<int32, 3>{100, 200, 300});
+    CheckCoordinationValues(fixture, fixture.feature_ids_path, std::array<int32, 3>{0, 2, 2});
+    CheckCoordinationValues(fixture, fixture.transferred_values_path, std::array<int32, 3>{20, 30, 30});
+    CheckCoordinationValues(fixture, fixture.ignored_values_path, std::array<int32, 3>{100, 200, 300});
   }
 
   SECTION("Ignoring FeatureIds keeps decisions fixed while sibling copies remain immediate")
   {
     auto fixture = CreateCoordinationLiteralFixture(4, 1, 1);
-    fixture.ignoredPaths.push_back(fixture.featureIdsPath);
+    fixture.ignored_paths.push_back(fixture.feature_ids_path);
     ExecuteCoordinationLiteralFixture(fixture);
-    CheckCoordinationValues(fixture, fixture.featureIdsPath, std::array<int32, 4>{1, 0, 0, 1});
-    CheckCoordinationValues(fixture, fixture.transferredValuesPath, std::array<int32, 4>{20, 20, 40, 40});
-    CheckCoordinationValues(fixture, fixture.ignoredValuesPath, std::array<int32, 4>{100, 200, 300, 400});
+    CheckCoordinationValues(fixture, fixture.feature_ids_path, std::array<int32, 4>{1, 0, 0, 1});
+    CheckCoordinationValues(fixture, fixture.transferred_values_path, std::array<int32, 4>{20, 20, 40, 40});
+    CheckCoordinationValues(fixture, fixture.ignored_values_path, std::array<int32, 4>{100, 200, 300, 400});
   }
 
   SECTION("Threshold two retains the last zero-neighbor source")
   {
     auto fixture = CreateCoordinationLiteralFixture(3, 1, 1, {0, 1, 0});
     ExecuteCoordinationLiteralFixture(fixture, 2);
-    CheckCoordinationValues(fixture, fixture.featureIdsPath, std::array<int32, 3>{0, 0, 0});
-    CheckCoordinationValues(fixture, fixture.transferredValuesPath, std::array<int32, 3>{10, 30, 30});
-    CheckCoordinationValues(fixture, fixture.ignoredValuesPath, std::array<int32, 3>{100, 200, 300});
+    CheckCoordinationValues(fixture, fixture.feature_ids_path, std::array<int32, 3>{0, 0, 0});
+    CheckCoordinationValues(fixture, fixture.transferred_values_path, std::array<int32, 3>{10, 30, 30});
+    CheckCoordinationValues(fixture, fixture.ignored_values_path, std::array<int32, 3>{100, 200, 300});
   }
 
   SECTION("Threshold zero does not transfer cells without an opposite-state neighbor")
   {
     auto fixture = CreateCoordinationLiteralFixture(3, 1, 1, {1, 1, 1});
     ExecuteCoordinationLiteralFixture(fixture, 0);
-    CheckCoordinationValues(fixture, fixture.featureIdsPath, std::array<int32, 3>{1, 1, 1});
-    CheckCoordinationValues(fixture, fixture.transferredValuesPath, std::array<int32, 3>{10, 20, 30});
-    CheckCoordinationValues(fixture, fixture.ignoredValuesPath, std::array<int32, 3>{100, 200, 300});
+    CheckCoordinationValues(fixture, fixture.feature_ids_path, std::array<int32, 3>{1, 1, 1});
+    CheckCoordinationValues(fixture, fixture.transferred_values_path, std::array<int32, 3>{10, 20, 30});
+    CheckCoordinationValues(fixture, fixture.ignored_values_path, std::array<int32, 3>{100, 200, 300});
   }
 }
 
@@ -595,25 +595,25 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Immediate Component
       const DataPath boolPath = AddCoordinationSibling(fixture, "Boolean Components", k_BoolInput, 2);
       const DataPath ignoredComponentPath = AddCoordinationSibling(fixture, "Ignored Numeric Components", k_ComponentInput, 2);
       const DataPath ignoredBoolPath = AddCoordinationSibling(fixture, "Ignored Boolean Components", k_BoolInput, 2);
-      fixture.ignoredPaths.push_back(ignoredComponentPath);
-      fixture.ignoredPaths.push_back(ignoredBoolPath);
+      fixture.ignored_paths.push_back(ignoredComponentPath);
+      fixture.ignored_paths.push_back(ignoredBoolPath);
 
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Float32Array>(componentPath));
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Float32Array>(ignoredComponentPath));
-      REQUIRE(fixture.dataStructure.getDataRefAs<Float32Array>(componentPath).getIDataStore() != fixture.dataStructure.getDataRefAs<Float32Array>(ignoredComponentPath).getIDataStore());
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(boolPath));
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<BoolArray>(ignoredBoolPath));
-      REQUIRE(fixture.dataStructure.getDataRefAs<BoolArray>(boolPath).getIDataStore() != fixture.dataStructure.getDataRefAs<BoolArray>(ignoredBoolPath).getIDataStore());
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Float32Array>(componentPath));
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Float32Array>(ignoredComponentPath));
+      REQUIRE(fixture.data_structure.getDataRefAs<Float32Array>(componentPath).getIDataStore() != fixture.data_structure.getDataRefAs<Float32Array>(ignoredComponentPath).getIDataStore());
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(boolPath));
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<BoolArray>(ignoredBoolPath));
+      REQUIRE(fixture.data_structure.getDataRefAs<BoolArray>(boolPath).getIDataStore() != fixture.data_structure.getDataRefAs<BoolArray>(ignoredBoolPath).getIDataStore());
 
       ExecuteCoordinationLiteralFixture(fixture);
       // Cells copy sources 2, 0, 3, 1 in order. The original source tuples are therefore 2, 2, 3, 2.
-      CheckCoordinationValues(fixture, fixture.featureIdsPath, std::array<int32, 4>{1, 1, 0, 1});
-      CheckCoordinationValues(fixture, fixture.transferredValuesPath, std::array<int32, 4>{30, 30, 40, 30});
+      CheckCoordinationValues(fixture, fixture.feature_ids_path, std::array<int32, 4>{1, 1, 0, 1});
+      CheckCoordinationValues(fixture, fixture.transferred_values_path, std::array<int32, 4>{30, 30, 40, 30});
       CheckCoordinationValues(fixture, componentPath, k_ComponentExpected, 2);
       CheckCoordinationValues(fixture, boolPath, k_BoolExpected, 2);
       CheckCoordinationValues(fixture, ignoredComponentPath, k_ComponentInput, 2);
       CheckCoordinationValues(fixture, ignoredBoolPath, k_BoolInput, 2);
-      CheckCoordinationValues(fixture, fixture.ignoredValuesPath, std::array<int32, 4>{100, 200, 300, 400});
+      CheckCoordinationValues(fixture, fixture.ignored_values_path, std::array<int32, 4>{100, 200, 300, 400});
     }
   }
 }
@@ -626,38 +626,38 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Shared Store Aliase
   struct AliasCase
   {
     std::string_view name;
-    bool aliasesFeatureIds;
-    bool ignoresOriginal;
-    bool ignoresAlias;
+    bool aliases_feature_ids;
+    bool ignores_original;
+    bool ignores_alias;
   };
-  const std::array<AliasCase, 6> aliasCases = {{{.name = "Selected scalar and component aliases", .aliasesFeatureIds = false, .ignoresOriginal = false, .ignoresAlias = false},
-                                                {.name = "Selected FeatureIds and selected alias", .aliasesFeatureIds = true, .ignoresOriginal = false, .ignoresAlias = false},
-                                                {.name = "Ignored FeatureIds and selected alias", .aliasesFeatureIds = true, .ignoresOriginal = true, .ignoresAlias = false},
-                                                {.name = "Selected FeatureIds and ignored alias", .aliasesFeatureIds = true, .ignoresOriginal = false, .ignoresAlias = true},
-                                                {.name = "FeatureIds and alias both ignored", .aliasesFeatureIds = true, .ignoresOriginal = true, .ignoresAlias = true},
-                                                {.name = "Selected scalar and ignored alias", .aliasesFeatureIds = false, .ignoresOriginal = false, .ignoresAlias = true}}};
+  const std::array<AliasCase, 6> aliasCases = {{{.name = "Selected scalar and component aliases", .aliases_feature_ids = false, .ignores_original = false, .ignores_alias = false},
+                                                {.name = "Selected FeatureIds and selected alias", .aliases_feature_ids = true, .ignores_original = false, .ignores_alias = false},
+                                                {.name = "Ignored FeatureIds and selected alias", .aliases_feature_ids = true, .ignores_original = true, .ignores_alias = false},
+                                                {.name = "Selected FeatureIds and ignored alias", .aliases_feature_ids = true, .ignores_original = false, .ignores_alias = true},
+                                                {.name = "FeatureIds and alias both ignored", .aliases_feature_ids = true, .ignores_original = true, .ignores_alias = true},
+                                                {.name = "Selected scalar and ignored alias", .aliases_feature_ids = false, .ignores_original = false, .ignores_alias = true}}};
 
   for(const auto& aliasCase : aliasCases)
   {
     DYNAMIC_SECTION(aliasCase.name)
     {
       auto fixture = CreateCoordinationLiteralFixture(2, 2, 1, {0, 0, 1, 0});
-      const DataPath originalPath = aliasCase.aliasesFeatureIds ? fixture.featureIdsPath : fixture.transferredValuesPath;
+      const DataPath originalPath = aliasCase.aliases_feature_ids ? fixture.feature_ids_path : fixture.transferred_values_path;
       const DataPath aliasPath = AddCoordinationAlias<int32>(fixture, originalPath);
-      if(aliasCase.ignoresOriginal)
+      if(aliasCase.ignores_original)
       {
-        fixture.ignoredPaths.push_back(originalPath);
+        fixture.ignored_paths.push_back(originalPath);
       }
-      if(aliasCase.ignoresAlias)
+      if(aliasCase.ignores_alias)
       {
-        fixture.ignoredPaths.push_back(aliasPath);
+        fixture.ignored_paths.push_back(aliasPath);
       }
 
       DataPath componentPath;
       DataPath componentAliasPath;
       DataPath boolPath;
       DataPath boolAliasPath;
-      if(!aliasCase.aliasesFeatureIds && !aliasCase.ignoresAlias)
+      if(!aliasCase.aliases_feature_ids && !aliasCase.ignores_alias)
       {
         componentPath = AddCoordinationSibling(fixture, "Numeric Components", k_ComponentInput, 2);
         componentAliasPath = AddCoordinationAlias<float32>(fixture, componentPath);
@@ -666,13 +666,13 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Shared Store Aliase
       }
 
       ExecuteCoordinationLiteralFixture(fixture);
-      const bool featureIdsStayFixed = aliasCase.aliasesFeatureIds && aliasCase.ignoresOriginal && aliasCase.ignoresAlias;
+      const bool featureIdsStayFixed = aliasCase.aliases_feature_ids && aliasCase.ignores_original && aliasCase.ignores_alias;
       const std::array<int32, 4> expectedFeatureIds = featureIdsStayFixed ? std::array<int32, 4>{0, 0, 1, 0} : std::array<int32, 4>{1, 1, 0, 1};
       const std::array<int32, 4> expectedScalars = featureIdsStayFixed ? std::array<int32, 4>{30, 20, 40, 40} : std::array<int32, 4>{30, 30, 40, 30};
-      CheckCoordinationValues(fixture, fixture.featureIdsPath, expectedFeatureIds);
-      CheckCoordinationValues(fixture, fixture.transferredValuesPath, expectedScalars);
-      CheckCoordinationValues(fixture, aliasPath, aliasCase.aliasesFeatureIds ? expectedFeatureIds : expectedScalars);
-      CheckCoordinationValues(fixture, fixture.ignoredValuesPath, std::array<int32, 4>{100, 200, 300, 400});
+      CheckCoordinationValues(fixture, fixture.feature_ids_path, expectedFeatureIds);
+      CheckCoordinationValues(fixture, fixture.transferred_values_path, expectedScalars);
+      CheckCoordinationValues(fixture, aliasPath, aliasCase.aliases_feature_ids ? expectedFeatureIds : expectedScalars);
+      CheckCoordinationValues(fixture, fixture.ignored_values_path, std::array<int32, 4>{100, 200, 300, 400});
       if(!componentPath.empty())
       {
         CheckCoordinationValues(fixture, componentPath, k_ComponentExpected, 2);
@@ -688,27 +688,27 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Bulk Storage Failur
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
-  using Fault = CoordinationBulkFailureStore::Fault;
-  const std::array<std::pair<std::string_view, Fault>, 6> faultCases = {{{"Success control", Fault::None},
-                                                                         {"FeatureIds initial read", Fault::InitialFeatureIdsRead},
-                                                                         {"Sibling destination read", Fault::DestinationRead},
-                                                                         {"Sibling next-Z read", Fault::NextSliceRead},
-                                                                         {"Sibling previous-Z read after committed slice", Fault::PreviousSliceRead},
-                                                                         {"Sibling destination write", Fault::DestinationWrite}}};
+  using FaultType = CoordinationBulkFailureStore::Fault;
+  const std::array<std::pair<std::string_view, FaultType>, 6> faultCases = {{{"Success control", FaultType::None},
+                                                                         {"FeatureIds initial read", FaultType::InitialFeatureIdsRead},
+                                                                         {"Sibling destination read", FaultType::DestinationRead},
+                                                                         {"Sibling next-Z read", FaultType::NextSliceRead},
+                                                                         {"Sibling previous-Z read after committed slice", FaultType::PreviousSliceRead},
+                                                                         {"Sibling destination write", FaultType::DestinationWrite}}};
 
   for(const auto& [label, fault] : faultCases)
   {
     DYNAMIC_SECTION(label)
     {
       auto fixture = CreateCoordinationLiteralFixture(2, 1, 2, {0, 0, 1, 0});
-      const bool failsFeatureIds = fault == Fault::InitialFeatureIdsRead;
-      const DataPath faultArrayPath = failsFeatureIds ? fixture.featureIdsPath : fixture.transferredValuesPath;
+      const bool failsFeatureIds = fault == FaultType::InitialFeatureIdsRead;
+      const DataPath faultArrayPath = failsFeatureIds ? fixture.feature_ids_path : fixture.transferred_values_path;
       auto faultStore = std::make_shared<CoordinationBulkFailureStore>();
       const std::array<int32, 4> inputValues = failsFeatureIds ? std::array<int32, 4>{0, 0, 1, 0} : std::array<int32, 4>{10, 20, 30, 40};
       auto faultStoreWriteResult = faultStore->copyFromBuffer(0, nonstd::span<const int32>(inputValues.data(), inputValues.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(faultStoreWriteResult);
-      REQUIRE_NOTHROW(fixture.dataStructure.getDataRefAs<Int32Array>(faultArrayPath));
-      auto& faultArrayRef = fixture.dataStructure.getDataRefAs<Int32Array>(faultArrayPath);
+      REQUIRE_NOTHROW(fixture.data_structure.getDataRefAs<Int32Array>(faultArrayPath));
+      auto& faultArrayRef = fixture.data_structure.getDataRefAs<Int32Array>(faultArrayPath);
       auto faultArrayRefSetStoreResult = faultArrayRef.setDataStore(faultStore);
       SIMPLNX_RESULT_REQUIRE_VALID(faultArrayRefSetStoreResult);
       REQUIRE(faultArrayRef.getIDataStore() == faultStore.get());
@@ -719,13 +719,13 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Bulk Storage Failur
       const Result<> result = RunCoordinationLiteralFixture(fixture);
       INFO(fmt::format("{}: reads={} writes={} completedWrites={} rejected={} rejectedOffset={} nextReadAfterWrite={}", label, faultStore->getReadCount(), faultStore->getWriteCount(),
                        faultStore->getCompletedWriteCount(), faultStore->getFailureCount(), faultStore->getRejectedOffset(), faultStore->hasReadNextAfterWrite()));
-      if(fault == Fault::None)
+      if(fault == FaultType::None)
       {
         SIMPLNX_RESULT_REQUIRE_VALID(result);
         CHECK(faultStore->getFailureCount() == 0);
         CHECK(faultStore->getCompletedWriteCount() == 2);
-        CheckCoordinationValues(fixture, fixture.featureIdsPath, std::array<int32, 4>{1, 1, 0, 1});
-        CheckCoordinationValues(fixture, fixture.transferredValuesPath, std::array<int32, 4>{30, 30, 40, 30});
+        CheckCoordinationValues(fixture, fixture.feature_ids_path, std::array<int32, 4>{1, 1, 0, 1});
+        CheckCoordinationValues(fixture, fixture.transferred_values_path, std::array<int32, 4>{30, 30, 40, 30});
       }
       else
       {
@@ -734,8 +734,8 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Bulk Storage Failur
         CHECK(result.errors()[0].code == CoordinationBulkFailureStore::k_ErrorCode);
         CHECK(result.errors()[0].message == CoordinationBulkFailureStore::k_ErrorMessage);
         CHECK(faultStore->getFailureCount() == 1);
-        CHECK(faultStore->getRejectedOffset() == (fault == Fault::NextSliceRead ? 2 : 0));
-        if(fault == Fault::PreviousSliceRead)
+        CHECK(faultStore->getRejectedOffset() == (fault == FaultType::NextSliceRead ? 2 : 0));
+        if(fault == FaultType::PreviousSliceRead)
         {
           CHECK(faultStore->getCompletedWriteCount() == 1);
           CHECK(faultStore->hasReadNextAfterWrite());
@@ -743,24 +743,24 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Bulk Storage Failur
         else
         {
           CHECK(faultStore->getCompletedWriteCount() == 0);
-          if(fault == Fault::InitialFeatureIdsRead || fault == Fault::DestinationRead)
+          if(fault == FaultType::InitialFeatureIdsRead || fault == FaultType::DestinationRead)
           {
             CHECK(faultStore->getReadCount() == 1);
             CHECK(faultStore->getWriteCount() == 0);
           }
-          if(fault == Fault::NextSliceRead)
+          if(fault == FaultType::NextSliceRead)
           {
             CHECK(faultStore->getReadCount() == 2);
             CHECK(faultStore->getWriteCount() == 0);
           }
-          if(fault == Fault::DestinationWrite)
+          if(fault == FaultType::DestinationWrite)
           {
             CHECK(faultStore->getWriteCount() == 1);
           }
         }
       }
-      CheckCoordinationValues(fixture, fixture.ignoredValuesPath, std::array<int32, 4>{100, 200, 300, 400});
-      UnitTest::CheckArraysInheritTupleDims(fixture.dataStructure);
+      CheckCoordinationValues(fixture, fixture.ignored_values_path, std::array<int32, 4>{100, 200, 300, 400});
+      UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
     }
   }
 }
@@ -881,7 +881,7 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: SIMPL Backwards Com
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
   const std::vector<std::pair<std::string, fs::path>> fixtures = {
@@ -893,19 +893,19 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: SIMPL Backwards Com
   {
     DYNAMIC_SECTION(label)
     {
-      const auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      const auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       const auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
-      const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ErodeDilateCoordinationNumberFilter>::uuid);
-      CHECK(pipelineFilter->getComments().empty());
+      const auto* pipelineFilterPtr = dynamic_cast<const PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ErodeDilateCoordinationNumberFilter>::uuid);
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int32>(ErodeDilateCoordinationNumberFilter::k_CoordinationNumber_Key) == 5);
       CHECK(args.value<bool>(ErodeDilateCoordinationNumberFilter::k_Loop_Key));
       CHECK(args.value<DataPath>(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));

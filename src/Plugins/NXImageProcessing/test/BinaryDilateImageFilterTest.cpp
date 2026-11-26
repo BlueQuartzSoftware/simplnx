@@ -28,8 +28,8 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
 
   DataStructure ds;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 8, 8, 8); // values in [0,199] -> NOT binary
-  constexpr uint8 fg = 1;
-  constexpr uint8 bg = 0;
+  constexpr uint8 k_Fg = 1;
+  constexpr uint8 k_Bg = 0;
   const AbstractDataStore<uint8>* inputStorePtr = nullptr;
   REQUIRE_NOTHROW(inputStorePtr = &ds.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef());
   REQUIRE(inputStorePtr != nullptr);
@@ -38,7 +38,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
   for(usize i = 0; i < inputStorePtr->getSize(); ++i)
   {
     const uint8 value = inputStorePtr->getValue(i);
-    if(value != bg && value != fg)
+    if(value != k_Bg && value != k_Fg)
     {
       expectedIndex = i;
       expectedValue = value;
@@ -53,8 +53,8 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
   args.insertOrAssign(BinaryDilateImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(BinaryDilateImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
   args.insertOrAssign(BinaryDilateImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(BinaryDilateImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(fg)));
-  args.insertOrAssign(BinaryDilateImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(bg)));
+  args.insertOrAssign(BinaryDilateImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
+  args.insertOrAssign(BinaryDilateImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
   args.insertOrAssign(BinaryDilateImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(ds, args);
@@ -66,7 +66,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
   const std::string expectedMessage =
       fmt::format("Binary morphology requires a binary image containing only the foreground ({}) or background ({}) value, but input array '{}' contains the value {} at index {}. Threshold or "
                   "relabel the input first.",
-                  static_cast<int64>(fg), static_cast<int64>(bg), inputPath.toString(), static_cast<int64>(expectedValue), expectedIndex);
+                  static_cast<int64>(k_Fg), static_cast<int64>(k_Bg), inputPath.toString(), static_cast<int64>(expectedValue), expectedIndex);
   REQUIRE(executeResult.result.errors()[0].message == expectedMessage);
 }
 
@@ -96,15 +96,15 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr uint8 fg = 1;
-  constexpr uint8 bg = 0;
-  constexpr bool b2f = false;
+  constexpr usize k_D = 32;
+  constexpr uint8 k_Fg = 1;
+  constexpr uint8 k_Bg = 0;
+  constexpr bool k_B2f = false;
   const std::array<int32, 3> radius = {2, 1, 1};
   const auto kernelType = morph_test::KernelType::Box;
 
   DataStructure ds;
-  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, D, fg, bg);
+  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, k_D, k_Fg, k_Bg);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   BinaryDilateImageFilter filter;
@@ -115,9 +115,9 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
   args.insertOrAssign(BinaryDilateImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
   args.insertOrAssign(BinaryDilateImageFilter::k_KernelRadius_Key,
                       std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
-  args.insertOrAssign(BinaryDilateImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(fg)));
-  args.insertOrAssign(BinaryDilateImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(bg)));
-  args.insertOrAssign(BinaryDilateImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(b2f));
+  args.insertOrAssign(BinaryDilateImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
+  args.insertOrAssign(BinaryDilateImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
+  args.insertOrAssign(BinaryDilateImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(k_B2f));
 
   auto executeResult = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -126,7 +126,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
   auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   // Stream the ACTUAL input into memory (bulk) and compute the independent fgCount oracle over it -- structurally
@@ -141,7 +141,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
     SIMPLNX_RESULT_REQUIRE_VALID(r);
   }
   const morph_test::StructuringElement se = morph_test::MakeStructuringElement(kernelType, radius);
-  const std::vector<uint8> expected = morph_test::BinaryMorphologyFgOracle<uint8>(input, D, D, D, se, ImageProcessing::MorphOp::Dilate, fg, bg, b2f);
+  const std::vector<uint8> expected = morph_test::BinaryMorphologyFgOracle<uint8>(input, k_D, k_D, k_D, se, ImageProcessing::MorphOp::Dilate, k_Fg, k_Bg, k_B2f);
 
   // Stream the output in bounded chunks and compare (avoids per-element OOC access and per-voxel assertions).
   auto buffer = std::make_unique<uint8[]>(k_ChunkValues);

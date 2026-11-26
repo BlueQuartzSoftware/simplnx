@@ -183,7 +183,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: SIMPL Backwards Compatib
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -196,22 +196,22 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: SIMPL Backwards Compatib
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureClusteringFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureClusteringFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<bool>(ComputeFeatureClusteringFilter::k_SetRandomSeed_Key) == true);
@@ -342,22 +342,22 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: positive bin count domain", "[
 TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Complete reference pair normalization", "[SimplnxCore][ComputeFeatureClusteringFilter]")
 {
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({1, 1, 1});
-  REQUIRE(geometry->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  auto* features = AttributeMatrix::Create(dataStructure, "Features", {4}, geometry->getId());
-  REQUIRE(features != nullptr);
-  auto* ensembles = AttributeMatrix::Create(dataStructure, "Ensembles", {2}, geometry->getId());
-  REQUIRE(ensembles != nullptr);
-  auto* phases = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {4}, {1}, features->getId());
-  auto* centroids = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Centroids", {4}, {3}, features->getId());
-  REQUIRE(phases != nullptr);
-  REQUIRE(centroids != nullptr);
-  phases->fill(1);
-  (*phases)[0] = 0;
-  centroids->fill(0.0f);
-  (*centroids)[9] = 0.5f;
+  auto* geometryPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometryPtr != nullptr);
+  geometryPtr->setDimensions({1, 1, 1});
+  REQUIRE(geometryPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {4}, geometryPtr->getId());
+  REQUIRE(featuresPtr != nullptr);
+  auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, "Ensembles", {2}, geometryPtr->getId());
+  REQUIRE(ensemblesPtr != nullptr);
+  auto* phasesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {4}, {1}, featuresPtr->getId());
+  auto* centroidsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Centroids", {4}, {3}, featuresPtr->getId());
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(centroidsPtr != nullptr);
+  phasesPtr->fill(1);
+  (*phasesPtr)[0] = 0;
+  centroidsPtr->fill(0.0f);
+  (*centroidsPtr)[9] = 0.5f;
 
   ComputeFeatureClusteringFilter filter;
   Arguments args = filter.getDefaultArguments();

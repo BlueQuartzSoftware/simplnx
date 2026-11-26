@@ -174,8 +174,8 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   }
   const usize cellCount = imageGeom.getNumberOfCells();
 
-  constexpr std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
-  for(const auto& [arrayKey, errorCode] : arrayKeys)
+  constexpr std::array<std::pair<StringLiteral, int32>, 3> k_ArrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
+  for(const auto& [arrayKey, errorCode] : k_ArrayKeys)
   {
     const auto arrayPath = filterArgs.value<DataPath>(arrayKey);
     const auto& array = dataStructure.getDataRefAs<IDataArray>(arrayPath);

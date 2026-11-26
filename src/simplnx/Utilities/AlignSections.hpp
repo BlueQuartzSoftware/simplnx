@@ -94,7 +94,7 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
   std::mutex m_MessageMutex;
   const IFilter::MessageHandler m_ThreadSafeMessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 

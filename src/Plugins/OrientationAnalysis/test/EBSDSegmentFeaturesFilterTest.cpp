@@ -75,7 +75,7 @@ constexpr usize k_LargeDim = 200;
 constexpr usize k_LargeBlockSize = 25;
 
 template <typename T>
-DataArray<T>& createEbsdInputArray(DataStructure& dataStructure, const DataPath& path, const AttributeMatrix& parent, usize componentCount)
+DataArray<T>& CreateEbsdInputArray(DataStructure& dataStructure, const DataPath& path, const AttributeMatrix& parent, usize componentCount)
 {
   auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, parent.getShape(), {componentCount});
   REQUIRE((store != nullptr));
@@ -84,7 +84,7 @@ DataArray<T>& createEbsdInputArray(DataStructure& dataStructure, const DataPath&
   return *arrayPtr;
 }
 
-void checkExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
+void CheckExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
 {
   const DataPath geometryPath({"Group", "Geometry"});
   const DataPath cellDataPath = geometryPath.createChildPath("Geometry Cell Data");
@@ -97,9 +97,9 @@ void checkExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
   const DataPath featureIdsPath = cellDataPath.createChildPath("Geometry FeatureIds");
   const DataPath featureDataPath = geometryPath.createChildPath("Geometry Feature Data");
   const DataPath activePath = featureDataPath.createChildPath("Active");
-  constexpr std::array<int32, 5> inputPhases = {1, 1, 0, 1, 1};
-  constexpr std::array<int32, 5> inputDecoy = {73, 74, 75, 76, 77};
-  constexpr std::array<uint32, 2> inputCrystals = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
+  constexpr std::array<int32, 5> k_InputPhases = {1, 1, 0, 1, 1};
+  constexpr std::array<int32, 5> k_InputDecoy = {73, 74, 75, 76, 77};
+  constexpr std::array<uint32, 2> k_InputCrystals = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
 
   DataStructure dataStructure;
   auto* groupPtr = DataGroup::Create(dataStructure, "Group");
@@ -117,20 +117,20 @@ void checkExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
   REQUIRE((ensemblesPtr != nullptr));
   geometryPtr->setCellData(*cellsPtr);
 
-  auto& quats = createEbsdInputArray<float32>(dataStructure, quatsPath, *externalPtr, 4);
-  auto& phases = createEbsdInputArray<int32>(dataStructure, phasesPath, *externalPtr, 1);
-  auto& decoy = createEbsdInputArray<int32>(dataStructure, decoyPath, *externalPtr, 1);
-  auto& crystals = createEbsdInputArray<uint32>(dataStructure, crystalsPath, *ensemblesPtr, 1);
+  auto& quats = CreateEbsdInputArray<float32>(dataStructure, quatsPath, *externalPtr, 4);
+  auto& phases = CreateEbsdInputArray<int32>(dataStructure, phasesPath, *externalPtr, 1);
+  auto& decoy = CreateEbsdInputArray<int32>(dataStructure, decoyPath, *externalPtr, 1);
+  auto& crystals = CreateEbsdInputArray<uint32>(dataStructure, crystalsPath, *ensemblesPtr, 1);
   quats.fill(0.0F);
-  for(usize cell = 0; cell < inputPhases.size(); ++cell)
+  for(usize cell = 0; cell < k_InputPhases.size(); ++cell)
   {
     quats[(cell * 4) + 3] = 1.0F;
-    phases[cell] = inputPhases.at(cell);
-    decoy[cell] = inputDecoy.at(cell);
+    phases[cell] = k_InputPhases.at(cell);
+    decoy[cell] = k_InputDecoy.at(cell);
   }
-  for(usize phase = 0; phase < inputCrystals.size(); ++phase)
+  for(usize phase = 0; phase < k_InputCrystals.size(); ++phase)
   {
-    crystals[phase] = inputCrystals.at(phase);
+    crystals[phase] = k_InputCrystals.at(phase);
   }
   for(const IDataArray* arrayPtr : std::array<const IDataArray*, 4>{&quats, &phases, &decoy, &crystals})
   {
@@ -198,26 +198,26 @@ void checkExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
 
   // Identity quaternions have zero misorientation. Phase zero separates two
   // connected pairs, so deterministic labels are [1, 1, 0, 2, 2].
-  constexpr std::array<int32, 5> expectedFeatureIds = {1, 1, 0, 2, 2};
-  constexpr std::array<uint8, 3> expectedActive = {0, 1, 1};
-  for(usize cell = 0; cell < inputPhases.size(); ++cell)
+  constexpr std::array<int32, 5> k_ExpectedFeatureIds = {1, 1, 0, 2, 2};
+  constexpr std::array<uint8, 3> k_ExpectedActive = {0, 1, 1};
+  for(usize cell = 0; cell < k_InputPhases.size(); ++cell)
   {
     CAPTURE(cell);
-    CHECK((featureIds[cell] == expectedFeatureIds.at(cell)));
-    CHECK((decoy[cell] == inputDecoy.at(cell)));
-    CHECK((phases[cell] == inputPhases.at(cell)));
+    CHECK((featureIds[cell] == k_ExpectedFeatureIds.at(cell)));
+    CHECK((decoy[cell] == k_InputDecoy.at(cell)));
+    CHECK((phases[cell] == k_InputPhases.at(cell)));
     for(usize component = 0; component < 4; ++component)
     {
       CHECK((quats[(cell * 4) + component] == (component == 3 ? 1.0F : 0.0F)));
     }
   }
-  for(usize feature = 0; feature < expectedActive.size(); ++feature)
+  for(usize feature = 0; feature < k_ExpectedActive.size(); ++feature)
   {
-    CHECK((active[feature] == expectedActive.at(feature)));
+    CHECK((active[feature] == k_ExpectedActive.at(feature)));
   }
-  for(usize phase = 0; phase < inputCrystals.size(); ++phase)
+  for(usize phase = 0; phase < k_InputCrystals.size(); ++phase)
   {
-    CHECK((crystals[phase] == inputCrystals.at(phase)));
+    CHECK((crystals[phase] == k_InputCrystals.at(phase)));
   }
   CHECK((dataStructure.getDataAs<DataGroup>(DataPath({"Geometry"})) == nullptr));
   CHECK((dataStructure.getDataAs<IDataArray>(DataPath({"Geometry FeatureIds"})) == nullptr));
@@ -247,7 +247,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: external quaternions 
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  checkExternalQuaternions(&scope);
+  CheckExternalQuaternions(&scope);
 }
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: external quaternions keep Feature Ids in geometry cell data with real OOC stores",
@@ -256,7 +256,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: external quaternions 
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   REQUIRE_FALSE(ForceInCoreAlgorithm());
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
-  checkExternalQuaternions(nullptr);
+  CheckExternalQuaternions(nullptr);
 }
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: No Valid Voxels Returns Error", "[OrientationAnalysis][EBSDSegmentFeatures]")
@@ -369,9 +369,9 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Randomize Feature IDs", "[O
   const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
 
   DataStructure dataStructure;
-  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
+  auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(k_GeomPath);
-  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), am->getId(), 1, k_SmallBlockSize); // Cubic_High
+  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), amPtr->getId(), 1, k_SmallBlockSize); // Cubic_High
 
   EBSDSegmentFeaturesFilter filter;
   Arguments args;
@@ -415,9 +415,9 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: High Tolerance Merges All",
   const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
 
   DataStructure dataStructure;
-  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
+  auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(k_GeomPath);
-  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), am->getId(), 1, k_SmallBlockSize); // Cubic_High
+  BuildOrientationTestData(dataStructure, cellShape, geom.getId(), amPtr->getId(), 1, k_SmallBlockSize); // Cubic_High
 
   EBSDSegmentFeaturesFilter filter;
   Arguments args;
@@ -463,8 +463,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
     // quaternions in EbsdLib x,y,z,w order.
     const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
     auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(ds, cellDataPath.createChildPath("Quats"), cellShape, {4});
-    auto* quatsArr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
-    auto& quatsStore = quatsArr->getDataStoreRef();
+    auto* quatsArrPtr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
+    auto& quatsStore = quatsArrPtr->getDataStoreRef();
     for(usize i = 0; i < 27; i++)
     {
       quatsStore[i * 4 + 0] = std::sin(bgHalf);
@@ -489,15 +489,15 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
     }
 
     auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(ds, cellDataPath.createChildPath("Phases"), cellShape, {1});
-    auto* phasesArr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
-    phasesArr->fill(1);
+    auto* phasesArrPtr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
+    phasesArrPtr->fill(1);
 
     const ShapeType ensShape = {2};
-    auto* ensAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
+    auto* ensAmPtr = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
     const DataPath crystStructsPath = geomPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
     auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(ds, crystStructsPath, ensShape, {1});
-    auto* crystArr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAM->getId());
-    auto& crystStore = crystArr->getDataStoreRef();
+    auto* crystArrPtr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAmPtr->getId());
+    auto& crystStore = crystArrPtr->getDataStoreRef();
     crystStore[0] = 999;
     crystStore[1] = 1;
 
@@ -535,18 +535,18 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[Orie
 
     DataStructure ds;
 
-    auto* amBase = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_CellDataName));
+    auto* amBasePtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_CellDataName));
     auto& geomBase = ds.getDataRefAs<ImageGeom>(DataPath({"Base"}));
-    BuildOrientationTestData(ds, cellShape, geomBase.getId(), amBase->getId(), 1, k_SmallBlockSize);
+    BuildOrientationTestData(ds, cellShape, geomBase.getId(), amBasePtr->getId(), 1, k_SmallBlockSize);
 
-    auto* amMasked = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_CellDataName));
+    auto* amMaskedPtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_CellDataName));
     auto& geomMasked = ds.getDataRefAs<ImageGeom>(DataPath({"Masked"}));
-    BuildOrientationTestData(ds, cellShape, geomMasked.getId(), amMasked->getId(), 1, k_SmallBlockSize);
-    BuildSphericalMask(ds, cellShape, amMasked->getId());
+    BuildOrientationTestData(ds, cellShape, geomMasked.getId(), amMaskedPtr->getId(), 1, k_SmallBlockSize);
+    BuildSphericalMask(ds, cellShape, amMaskedPtr->getId());
 
-    auto* amPeriodic = BuildSegmentFeaturesTestGeometry(ds, dims, "Periodic", std::string(k_CellDataName));
+    auto* amPeriodicPtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Periodic", std::string(k_CellDataName));
     auto& geomPeriodic = ds.getDataRefAs<ImageGeom>(DataPath({"Periodic"}));
-    BuildOrientationTestData(ds, cellShape, geomPeriodic.getId(), amPeriodic->getId(), 1, k_SmallBlockSize, true); // wrapBoundary
+    BuildOrientationTestData(ds, cellShape, geomPeriodic.getId(), amPeriodicPtr->getId(), 1, k_SmallBlockSize, true); // wrapBoundary
 
     UnitTest::WriteTestDataStructure(ds, outputDir / "small_input.dream3d");
   }
@@ -558,9 +558,9 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[Orie
     const std::array<usize, 3> dims = {k_LargeDim, k_LargeDim, k_LargeDim};
 
     DataStructure ds;
-    auto* am = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_GeomName), std::string(k_CellDataName));
+    auto* amPtr = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_GeomName), std::string(k_CellDataName));
     auto& geom = ds.getDataRefAs<ImageGeom>(k_GeomPath);
-    BuildOrientationTestData(ds, cellShape, geom.getId(), am->getId(), 1, k_LargeBlockSize, true); // wrapBoundary
+    BuildOrientationTestData(ds, cellShape, geom.getId(), amPtr->getId(), 1, k_LargeBlockSize, true); // wrapBoundary
 
     UnitTest::WriteTestDataStructure(ds, outputDir / "large_input.dream3d");
   }
@@ -808,7 +808,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: SIMPL Backwards Compa
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -821,22 +821,22 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: SIMPL Backwards Compa
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<EBSDSegmentFeaturesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<EBSDSegmentFeaturesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<bool>(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key) == true);
@@ -865,15 +865,15 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Masked Voxel 0 Seed V
   // getSeed() must reject the masked first cell. Otherwise, the driver creates
   // a phantom feature and shifts later identifiers.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-  imageGeom->setDimensions({5, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 5}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{1, 1, 5}, {4}, cellAM->getId());
-  auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{1, 1, 5}, {1}, cellAM->getId());
-  auto* maskArrayPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 5}, {1}, cellAM->getId());
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeom->getId());
-  auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAM->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+  imageGeomPtr->setDimensions({5, 1, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 5}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{1, 1, 5}, {4}, cellAmPtr->getId());
+  auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{1, 1, 5}, {1}, cellAmPtr->getId());
+  auto* maskArrayPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 5}, {1}, cellAmPtr->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeomPtr->getId());
+  auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAmPtr->getId());
 
   const std::vector<float32> phiDegrees = {0.0f, 20.0f, 22.0f, 0.0f, 90.0f};
   const std::vector<bool> maskValues = {false, true, true, false, true};
@@ -935,14 +935,14 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Boundary Wra
   // boundary.
   auto runFilter = [&scope](bool isPeriodic) -> std::vector<int32> {
     DataStructure dataStructure;
-    auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-    imageGeom->setDimensions({4, 1, 1});
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 4}, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-    auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{1, 1, 4}, {4}, cellAM->getId());
-    auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{1, 1, 4}, {1}, cellAM->getId());
-    auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeom->getId());
-    auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAM->getId());
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+    imageGeomPtr->setDimensions({4, 1, 1});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 4}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{1, 1, 4}, {4}, cellAmPtr->getId());
+    auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{1, 1, 4}, {1}, cellAmPtr->getId());
+    auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeomPtr->getId());
+    auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAmPtr->getId());
 
     const std::vector<float32> phiDegrees = {0.0f, 30.0f, 30.0f, 2.0f};
     for(usize cellIdx = 0; cellIdx < phiDegrees.size(); cellIdx++)
@@ -1010,14 +1010,14 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Cross Slice 
   auto runFilter = [&scope, source, target](bool isPeriodic, ChoicesParameter::ValueType neighborScheme) -> std::vector<int32> {
     CAPTURE(isPeriodic, neighborScheme);
     DataStructure dataStructure;
-    auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-    imageGeom->setDimensions({3, 3, 4});
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{4, 3, 3}, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-    auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{4, 3, 3}, {4}, cellAM->getId());
-    auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{4, 3, 3}, {1}, cellAM->getId());
-    auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeom->getId());
-    auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAM->getId());
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+    imageGeomPtr->setDimensions({3, 3, 4});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{4, 3, 3}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{4, 3, 3}, {4}, cellAmPtr->getId());
+    auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{4, 3, 3}, {1}, cellAmPtr->getId());
+    auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeomPtr->getId());
+    auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAmPtr->getId());
 
     std::vector<float32> phiDegrees(36);
     for(usize i = 0; i < phiDegrees.size(); i++)
@@ -1098,15 +1098,15 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Execute Error - All C
 
   // An all-masked fixture has no seed and must return -87000.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-  imageGeom->setDimensions({3, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{1, 1, 3}, {4}, cellAM->getId());
-  auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{1, 1, 3}, {1}, cellAM->getId());
-  auto* maskArrayPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 3}, {1}, cellAM->getId());
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeom->getId());
-  auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAM->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+  imageGeomPtr->setDimensions({3, 1, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{1, 1, 3}, {4}, cellAmPtr->getId());
+  auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{1, 1, 3}, {1}, cellAmPtr->getId());
+  auto* maskArrayPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 3}, {1}, cellAmPtr->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeomPtr->getId());
+  auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAmPtr->getId());
 
   for(usize cellIdx = 0; cellIdx < 3; cellIdx++)
   {

@@ -27,7 +27,7 @@ using namespace H5Support;
 namespace
 {
 
-std::string s_OutputFilePath;
+std::string SOutputFilePath;
 
 const herr_t k_GroupDoesNotExist = -5;
 const herr_t k_DatasetDoesNotExist = -10;
@@ -35,7 +35,7 @@ const herr_t k_DatasetDoesNotExist = -10;
 herr_t ValidateGroupPath(const char* groupPath)
 {
   UNSCOPED_INFO(fmt::format("Validating Group: /{}", groupPath));
-  hid_t outFileId = H5Utilities::openFile(s_OutputFilePath, true);
+  hid_t outFileId = H5Utilities::openFile(SOutputFilePath, true);
   H5ScopedFileSentinel scopedFileSentinel(outFileId, true);
 
   return (H5Utilities::objectExists(outFileId, groupPath) ? 1 : k_GroupDoesNotExist);
@@ -45,7 +45,7 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
 {
   UNSCOPED_INFO(fmt::format("Validating Dataset: /{}", datasetPath));
 
-  hid_t outFileId = H5Utilities::openFile(s_OutputFilePath, true);
+  hid_t outFileId = H5Utilities::openFile(SOutputFilePath, true);
   H5ScopedFileSentinel scopedFileSentinel(outFileId, true);
 
   if(!H5Utilities::objectExists(outFileId, datasetPath))
@@ -195,7 +195,7 @@ const std::string k_InputPath = fmt::format("{}/Small_IN100", unit_test::k_TestF
 const std::string k_FilePrefix = "Slice_";
 const std::string k_FileSuffix;
 const std::string k_FileExtension = ".ang";
-GeneratedFileListParameter::ValueType k_FileListInfo = {.startIndex = k_StartIndex,
+GeneratedFileListParameter::ValueType KFileListInfo = {.startIndex = k_StartIndex,
                                                         .endIndex = k_EndIndex,
                                                         .incrementIndex = k_IncrementIndex,
                                                         .paddingDigits = k_PaddingDigits,
@@ -218,7 +218,7 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
   REQUIRE(fs::exists(inputPath));
 
   // Set the global variable, so we have access to it later
-  s_OutputFilePath = fmt::format("{}/ebsd_to_h5ebsd_test.h5ebsd", unit_test::k_BinaryTestOutputDir);
+  SOutputFilePath = fmt::format("{}/ebsd_to_h5ebsd_test.h5ebsd", unit_test::k_BinaryTestOutputDir);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EbsdToH5EbsdFilter filter;
@@ -230,8 +230,8 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
   args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32Parameter::ValueType>(0.25F));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(s_OutputFilePath)));
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(SOutputFilePath)));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(KFileListInfo));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -275,7 +275,7 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication pr
       args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
-      args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(KFileListInfo));
 
       auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);

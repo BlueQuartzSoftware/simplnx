@@ -308,8 +308,8 @@ Result<std::unique_ptr<AxisProjectionWorkStore<TIn>>> CreateAxisProjectionTransp
     return {std::make_unique<AxisProjectionWorkStore<TIn>>(std::move(temporaryResult.value()))};
   }
 
-  const AbstractDataStore<TIn>* typedEndpoint = in.getStoreType() == IDataStore::StoreType::OutOfCore ? &in : nullptr;
-  const std::string dataFormat = typedEndpoint != nullptr ? typedEndpoint->getDataFormat() : out.getDataFormat();
+  const AbstractDataStore<TIn>* typedEndpointPtr = in.getStoreType() == IDataStore::StoreType::OutOfCore ? &in : nullptr;
+  const std::string dataFormat = typedEndpointPtr != nullptr ? typedEndpointPtr->getDataFormat() : out.getDataFormat();
   if(dataFormat.empty())
   {
     return MakeErrorResult<std::unique_ptr<AxisProjectionWorkStore<TIn>>>(
@@ -1092,8 +1092,8 @@ Result<TOut> ReduceExternalMedianPencil(const StoreT& store, usize valueOffset, 
     {
       return {TOut{}};
     }
-    const auto* bytes = reinterpret_cast<const std::byte*>(inputBuffer.data());
-    Result<> appendResult = sorter->append(static_cast<uint64>(count), nonstd::span<const std::byte>(bytes, count * sizeof(TIn)), shouldCancel, ExternalSortProgressCallback{});
+    const auto* bytesPtr = reinterpret_cast<const std::byte*>(inputBuffer.data());
+    Result<> appendResult = sorter->append(static_cast<uint64>(count), nonstd::span<const std::byte>(bytesPtr, count * sizeof(TIn)), shouldCancel, ExternalSortProgressCallback{});
     if(appendResult.invalid())
     {
       return MakeErrorResult<TOut>(
@@ -1341,7 +1341,7 @@ Result<> ApplyAxisProjectionInMemory(const DataStore<TIn>& in, AbstractDataStore
     return {};
   }
 
-  const TIn* const inputValues = in.data();
+  const TIn* const inputValuesPtr = in.data();
   std::vector<TOut> outputValues(shape.outputSlots);
 
   auto executePencils = [&](auto inputBaseForSlot, usize inputStride) {
@@ -1372,7 +1372,7 @@ Result<> ApplyAxisProjectionInMemory(const DataStore<TIn>& in, AbstractDataStore
             const usize blockEnd = blockStart + std::min(k_CancelCheckValues, shape.projectionExtent - blockStart);
             for(usize projectionIndex = blockStart; projectionIndex < blockEnd; ++projectionIndex)
             {
-              reduce.accumulate(state, inputValues[inputBase + projectionIndex * inputStride]);
+              reduce.accumulate(state, inputValuesPtr[inputBase + projectionIndex * inputStride]);
             }
           }
           outputValues[slot] = reduce.finalize(state);
@@ -1381,7 +1381,7 @@ Result<> ApplyAxisProjectionInMemory(const DataStore<TIn>& in, AbstractDataStore
         {
           for(usize projectionIndex = 0; projectionIndex < shape.projectionExtent; ++projectionIndex)
           {
-            pencil[projectionIndex] = inputValues[inputBase + projectionIndex * inputStride];
+            pencil[projectionIndex] = inputValuesPtr[inputBase + projectionIndex * inputStride];
           }
           outputValues[slot] = reduce.template reducePencil<TIn, TOut>(nonstd::span<TIn>(pencil.data(), pencil.size()));
         }
@@ -1518,8 +1518,8 @@ Result<> ApplyAxisProjectionResident(const AbstractDataStore<TIn>& in, AbstractD
           {
             return;
           }
-          TIn* pencilStart = slab.data() + localSlot * dimX;
-          outBuffer[localSlot] = reduceStagedPencil(nonstd::span<TIn>(pencilStart, dimX));
+          TIn* pencilStartPtr = slab.data() + localSlot * dimX;
+          outBuffer[localSlot] = reduceStagedPencil(nonstd::span<TIn>(pencilStartPtr, dimX));
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
@@ -1693,9 +1693,9 @@ Result<> ApplyAxisProjection(const AbstractDataStore<TIn>& in, AbstractDataStore
   const bool usesOutOfCoreEndpoint = in.getStoreType() == IDataStore::StoreType::OutOfCore || out.getStoreType() == IDataStore::StoreType::OutOfCore;
   if(!usesOutOfCoreEndpoint)
   {
-    if(const auto* inMemoryStore = dynamic_cast<const DataStore<TIn>*>(&in); inMemoryStore != nullptr)
+    if(const auto* inMemoryStorePtr = dynamic_cast<const DataStore<TIn>*>(&in); inMemoryStorePtr != nullptr)
     {
-      return detail::ApplyAxisProjectionInMemory(*inMemoryStore, out, shape, projDim, reduce, shouldCancel);
+      return detail::ApplyAxisProjectionInMemory(*inMemoryStorePtr, out, shape, projDim, reduce, shouldCancel);
     }
   }
   if(shape.dimZ == 1 && usesOutOfCoreEndpoint)

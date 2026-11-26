@@ -23,11 +23,11 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: In-place discards si
 
   // Add a second array "Extra" alongside "Input" in the same cell-data Attribute Matrix.
   const DataPath cellDataPath = inputPath.getParent();
-  auto* cellAM = ds.getDataAs<AttributeMatrix>(cellDataPath);
-  REQUIRE(cellAM != nullptr);
-  const ShapeType cellShape = cellAM->getShape();
+  auto* cellAmPtr = ds.getDataAs<AttributeMatrix>(cellDataPath);
+  REQUIRE(cellAmPtr != nullptr);
+  const ShapeType cellShape = cellAmPtr->getShape();
   auto extraStore = DataStoreUtilities::CreateDataStore<int16>(ds, cellDataPath.createChildPath("Extra"), cellShape, {1});
-  REQUIRE(DataArray<int16>::Create(ds, "Extra", extraStore, cellAM->getId()) != nullptr);
+  REQUIRE(DataArray<int16>::Create(ds, "Extra", extraStore, cellAmPtr->getId()) != nullptr);
 
   MaximumProjectionImageFilter filter;
   Arguments args;
@@ -83,15 +83,15 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (pr
   {
     DataStructure ds;
     const ShapeType cellShape = {4, 4, 4};
-    auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-    imageGeom->setDimensions({4, 4, 4});
-    REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-    REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-    auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
+    auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+    imageGeomPtr->setDimensions({4, 4, 4});
+    REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+    REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+    auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
     const DataPath inputPath({"Image Geometry", "CellData", "Input"});
     auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {3}); // 3-component (non-scalar)
-    DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
+    DataArray<float32>::Create(ds, "Input", store, cellAmPtr->getId());
     Arguments args;
     args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
     args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));

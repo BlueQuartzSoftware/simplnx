@@ -62,10 +62,10 @@ Result<> ComputeIPFColorsScanline::operator()()
   normRefDir = normRefDir.normalize();
   std::array<double, 3> refDir = {normRefDir[0], normRefDir[1], normRefDir[2]};
 
-  const IDataArray* maskArray = nullptr;
+  const IDataArray* maskArrayPtr = nullptr;
   if(m_InputValues->useMask)
   {
-    maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
+    maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
   }
 
   const auto& eulersStore = eulers.getDataStoreRef();
@@ -79,8 +79,8 @@ Result<> ComputeIPFColorsScanline::operator()()
 
   std::unique_ptr<bool[]> boolMaskBuf;
   std::unique_ptr<uint8[]> uint8MaskBuf;
-  const bool hasBoolMask = maskArray != nullptr && maskArray->getDataType() == DataType::boolean;
-  const bool hasUint8Mask = maskArray != nullptr && maskArray->getDataType() == DataType::uint8;
+  const bool hasBoolMask = maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::boolean;
+  const bool hasUint8Mask = maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::uint8;
   if(hasBoolMask)
   {
     boolMaskBuf = std::make_unique<bool[]>(k_ChunkTuples);
@@ -114,14 +114,14 @@ Result<> ComputeIPFColorsScanline::operator()()
 
     if(hasBoolMask)
     {
-      if(Result<> ioResult = dynamic_cast<const BoolArray*>(maskArray)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<bool>(boolMaskBuf.get(), count)); ioResult.invalid())
+      if(Result<> ioResult = dynamic_cast<const BoolArray*>(maskArrayPtr)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<bool>(boolMaskBuf.get(), count)); ioResult.invalid())
       {
         return ConvertResult(std::move(ioResult));
       }
     }
     else if(hasUint8Mask)
     {
-      if(Result<> ioResult = dynamic_cast<const UInt8Array*>(maskArray)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<uint8>(uint8MaskBuf.get(), count)); ioResult.invalid())
+      if(Result<> ioResult = dynamic_cast<const UInt8Array*>(maskArrayPtr)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<uint8>(uint8MaskBuf.get(), count)); ioResult.invalid())
       {
         return ConvertResult(std::move(ioResult));
       }

@@ -128,18 +128,18 @@ void BuildOctantWithNumCells(DataStructure& ds)
 {
   const ShapeType cellTupleShape = {k_Dim, k_Dim, k_Dim};
 
-  auto* imageGeom = ImageGeom::Create(ds, k_GeomName);
-  imageGeom->setDimensions({k_Dim, k_Dim, k_Dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, k_GeomName);
+  imageGeomPtr->setDimensions({k_Dim, k_Dim, k_Dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({k_GeomName, Constants::k_CellData, Constants::k_FeatureIds});
   auto fidsStore = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
-  auto* featureIds = DataArray<int32>::Create(ds, Constants::k_FeatureIds, fidsStore, cellAM->getId());
-  auto& fidsRef = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = DataArray<int32>::Create(ds, Constants::k_FeatureIds, fidsStore, cellAmPtr->getId());
+  auto& fidsRef = featureIdsPtr->getDataStoreRef();
 
   std::vector<int32> featureCounts(k_NumOctantFeatures + 1, 0);
   const usize sliceSize = k_Dim * k_Dim;
@@ -165,13 +165,13 @@ void BuildOctantWithNumCells(DataStructure& ds)
     SIMPLNX_RESULT_REQUIRE_VALID(fidsRefWriteResult);
   }
 
-  auto* cellFeatureAM = AttributeMatrix::Create(ds, Constants::k_CellFeatureData, {static_cast<usize>(k_NumOctantFeatures + 1)}, imageGeom->getId());
+  auto* cellFeatureAmPtr = AttributeMatrix::Create(ds, Constants::k_CellFeatureData, {static_cast<usize>(k_NumOctantFeatures + 1)}, imageGeomPtr->getId());
 
   // NumCells is small (9 tuples) — per-element writes are fine
   const DataPath numCellsPath = DataPath({k_GeomName, Constants::k_CellFeatureData, Constants::k_NumElements});
   auto numCellsStore = DataStoreUtilities::CreateDataStore<int32>(ds, numCellsPath, {static_cast<usize>(k_NumOctantFeatures + 1)}, {1});
-  auto* numCells = DataArray<int32>::Create(ds, Constants::k_NumElements, numCellsStore, cellFeatureAM->getId());
-  auto& numCellsRef = numCells->getDataStoreRef();
+  auto* numCellsPtr = DataArray<int32>::Create(ds, Constants::k_NumElements, numCellsStore, cellFeatureAmPtr->getId());
+  auto& numCellsRef = numCellsPtr->getDataStoreRef();
   std::vector<int32> localNumCells(featureCounts.begin(), featureCounts.end());
   auto numCellsRefWriteResult = numCellsRef.copyFromBuffer(0, nonstd::span<const int32>(localNumCells.data(), localNumCells.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(numCellsRefWriteResult);
@@ -262,15 +262,15 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O fai
   // Exercise each failed operation on the second batch, after the first batch was written.
   const int failure = GENERATE(0, 1, 2); // NumCells read, ratio write, sphericity write.
   CAPTURE(failure);
-  constexpr usize numFeatures = 7;
-  constexpr float32 unwritten = -47.0f;
+  constexpr usize k_NumFeatures = 7;
+  constexpr float32 k_Unwritten = -47.0f;
   DataStructure dataStructure;
-  const auto occupiedFeatures = surface_area_to_volume_test::BuildSparseFeatureSurfaceData(dataStructure, numFeatures);
+  const auto occupiedFeatures = surface_area_to_volume_test::BuildSparseFeatureSurfaceData(dataStructure, k_NumFeatures);
   const DataPath featurePath({"ImageGeom", "CellFeatureData"});
   const DataPath countsPath = featurePath.createChildPath("NumCells");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
   const auto featureId = dataStructure.getDataRefAs<AttributeMatrix>(featurePath).getId();
-  auto countsStorePtr = std::make_shared<SurfaceMetricTransferStore<int32>>(numFeatures, 0);
+  auto countsStorePtr = std::make_shared<SurfaceMetricTransferStore<int32>>(k_NumFeatures, 0);
   countsStorePtr->failReadOn(failure == 0 ? 2 : 0);
   for(const usize feature : occupiedFeatures)
   {
@@ -279,9 +279,9 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O fai
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
   const auto replacement = dataStructure.getDataRefAs<Int32Array>(countsPath).setDataStore(countsStorePtr);
   SIMPLNX_RESULT_REQUIRE_VALID(replacement);
-  auto ratioStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, unwritten);
+  auto ratioStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(k_NumFeatures, k_Unwritten);
   ratioStorePtr->failWriteOn(failure == 1 ? 2 : 0);
-  auto sphericityStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(numFeatures, unwritten);
+  auto sphericityStorePtr = std::make_shared<SurfaceMetricTransferStore<float32>>(k_NumFeatures, k_Unwritten);
   sphericityStorePtr->failWriteOn(failure == 2 ? 2 : 0);
   REQUIRE(Float32Array::Create(dataStructure, "SurfaceAreaVolumeRatio", ratioStorePtr, featureId) != nullptr);
   REQUIRE(Float32Array::Create(dataStructure, "Sphericity", sphericityStorePtr, featureId) != nullptr);
@@ -306,7 +306,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O fai
   const double expectedSphericity = 4.0 * piValue * sphereRadius * sphereRadius / 62.0;
   CHECK(ratioStorePtr->getValue(0) == 0.0f);
   CHECK(sphericityStorePtr->getValue(0) == 0.0f);
-  for(usize feature = 1; feature < numFeatures; ++feature)
+  for(usize feature = 1; feature < k_NumFeatures; ++feature)
   {
     CAPTURE(feature);
     const bool occupied = std::ranges::binary_search(occupiedFeatures, feature);
@@ -323,7 +323,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O fai
     }
     else
     {
-      CHECK(ratioStorePtr->getValue(feature) == unwritten);
+      CHECK(ratioStorePtr->getValue(feature) == k_Unwritten);
     }
     if(feature < 3)
     {
@@ -331,7 +331,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeScanline: later metric I/O fai
     }
     else
     {
-      CHECK(sphericityStorePtr->getValue(feature) == unwritten);
+      CHECK(sphericityStorePtr->getValue(feature) == k_Unwritten);
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -571,14 +571,14 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolume", "[SimplnxCore][ComputeSurfa
     ComputeSurfaceAreaToVolumeFilter filter;
     Arguments args;
 
-    const DataPath k_FeatureIdsArrayPath2({k_DataContainer, k_CellData, k_FeatureIds});
-    const DataPath k_CellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
-    const DataPath k_NumElementsArrayPath({k_DataContainer, k_CellFeatureData, k_NumElements});
-    const DataPath k_SelectedGeometryPath({k_DataContainer});
+    const DataPath kFeatureIdsArrayPath2({k_DataContainer, k_CellData, k_FeatureIds});
+    const DataPath kCellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
+    const DataPath kNumElementsArrayPath({k_DataContainer, k_CellFeatureData, k_NumElements});
+    const DataPath kSelectedGeometryPath({k_DataContainer});
 
-    args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
-    args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_NumCellsArrayPath_Key, std::make_any<DataPath>(k_NumElementsArrayPath));
-    args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_SelectedGeometryPath));
+    args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(kFeatureIdsArrayPath2));
+    args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_NumCellsArrayPath_Key, std::make_any<DataPath>(kNumElementsArrayPath));
+    args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(kSelectedGeometryPath));
     args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_CalculateSphericity_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<std::string>(k_SurfaceAreaVolumeRationArrayNameNX));
     args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SphericityArrayName_Key, std::make_any<std::string>(k_SphericityArrayNameNX));
@@ -690,22 +690,22 @@ const DataPath k_MetricSphericityPath = k_MetricFeaturePath.createChildPath("Ana
 Arguments BuildSurfaceMetricFixture(DataStructure& dataStructure, const FloatVec3& spacing, const std::vector<int32>& featureIds, const std::vector<int32>& counts, bool calculateSphericity)
 {
   REQUIRE(featureIds.size() == 125);
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_MetricGeometryPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({5, 5, 5});
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  REQUIRE(imageGeom->setSpacing(spacing).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_MetricCellPath.getTargetName(), {5, 5, 5}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
-  auto* featureData = AttributeMatrix::Create(dataStructure, k_MetricFeaturePath.getTargetName(), {counts.size()}, imageGeom->getId());
-  REQUIRE(featureData != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_MetricGeometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({5, 5, 5});
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_MetricCellPath.getTargetName(), {5, 5, 5}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, k_MetricFeaturePath.getTargetName(), {counts.size()}, imageGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
   auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_MetricIdsPath, {5, 5, 5}, {1});
   auto countsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_MetricCountsPath, {counts.size()}, {1});
   REQUIRE(idsStore != nullptr);
   REQUIRE(countsStore != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, k_MetricIdsPath.getTargetName(), idsStore, cellData->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, k_MetricCountsPath.getTargetName(), countsStore, featureData->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, k_MetricIdsPath.getTargetName(), idsStore, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, k_MetricCountsPath.getTargetName(), countsStore, featureDataPtr->getId()) != nullptr);
   const auto idsWrite = idsStore->copyFromBuffer(0, nonstd::span<const int32>(featureIds.data(), featureIds.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
   const auto countsWrite = countsStore->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
@@ -725,19 +725,19 @@ template <typename T>
 std::vector<T> ReadSurfaceMetricArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const UnitTest::AlgorithmTestScope& scope)
 {
   CAPTURE(path.toString());
-  const DataArray<T>* array = nullptr;
-  REQUIRE_NOTHROW(array = &dataStructure.getDataRefAs<DataArray<T>>(path));
-  scope.requireExpectedStore(*array);
-  REQUIRE(array->getTupleShape() == tupleShape);
-  REQUIRE(array->getComponentShape() == ShapeType{1});
-  REQUIRE(array->getDataType() == GetDataType<T>());
-  const AttributeMatrix* parent = nullptr;
-  REQUIRE_NOTHROW(parent = &dataStructure.getDataRefAs<AttributeMatrix>(path.getParent()));
-  REQUIRE(array->getParentIds().size() == 1);
-  REQUIRE(array->getParentIds().front() == parent->getId());
-  const auto& store = array->getDataStoreRef();
+  const DataArray<T>* arrayPtr = nullptr;
+  REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<DataArray<T>>(path));
+  scope.requireExpectedStore(*arrayPtr);
+  REQUIRE(arrayPtr->getTupleShape() == tupleShape);
+  REQUIRE(arrayPtr->getComponentShape() == ShapeType{1});
+  REQUIRE(arrayPtr->getDataType() == GetDataType<T>());
+  const AttributeMatrix* parentPtr = nullptr;
+  REQUIRE_NOTHROW(parentPtr = &dataStructure.getDataRefAs<AttributeMatrix>(path.getParent()));
+  REQUIRE(arrayPtr->getParentIds().size() == 1);
+  REQUIRE(arrayPtr->getParentIds().front() == parentPtr->getId());
+  const auto& store = arrayPtr->getDataStoreRef();
 
-  std::vector<T> values(array->getSize());
+  std::vector<T> values(arrayPtr->getSize());
   const auto readResult = store.copyIntoBuffer(0, nonstd::span<T>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   return values;
@@ -752,18 +752,18 @@ void RequireSurfaceMetricGeometry(DataStructure& dataStructure, const ImageGeom&
   REQUIRE(imageGeom.getSpacing() == spacing);
   REQUIRE(imageGeom.getOrigin() == origin);
   REQUIRE(imageGeom.getCellDataPath() == k_MetricCellPath);
-  const AttributeMatrix* cellData = nullptr;
-  const AttributeMatrix* featureData = nullptr;
-  REQUIRE_NOTHROW(cellData = &dataStructure.getDataRefAs<AttributeMatrix>(k_MetricCellPath));
-  REQUIRE_NOTHROW(featureData = &dataStructure.getDataRefAs<AttributeMatrix>(k_MetricFeaturePath));
-  REQUIRE(imageGeom.getCellData() == cellData);
+  const AttributeMatrix* cellDataPtr = nullptr;
+  const AttributeMatrix* featureDataPtr = nullptr;
+  REQUIRE_NOTHROW(cellDataPtr = &dataStructure.getDataRefAs<AttributeMatrix>(k_MetricCellPath));
+  REQUIRE_NOTHROW(featureDataPtr = &dataStructure.getDataRefAs<AttributeMatrix>(k_MetricFeaturePath));
+  REQUIRE(imageGeom.getCellData() == cellDataPtr);
   const ShapeType cellShape{5, 5, 5};
-  REQUIRE(cellData->getShape() == cellShape);
-  REQUIRE(featureData->getShape() == ShapeType{featureCount});
-  REQUIRE(cellData->getParentIds().size() == 1);
-  REQUIRE(cellData->getParentIds().front() == imageGeom.getId());
-  REQUIRE(featureData->getParentIds().size() == 1);
-  REQUIRE(featureData->getParentIds().front() == imageGeom.getId());
+  REQUIRE(cellDataPtr->getShape() == cellShape);
+  REQUIRE(featureDataPtr->getShape() == ShapeType{featureCount});
+  REQUIRE(cellDataPtr->getParentIds().size() == 1);
+  REQUIRE(cellDataPtr->getParentIds().front() == imageGeom.getId());
+  REQUIRE(featureDataPtr->getParentIds().size() == 1);
+  REQUIRE(featureDataPtr->getParentIds().front() == imageGeom.getId());
 }
 } // namespace
 
@@ -784,11 +784,11 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical interior fe
     featureIds[93] = 3;
     const std::vector<int32> counts{0, 122, 1, 2};
     const auto args = BuildSurfaceMetricFixture(dataStructure, spacing, featureIds, counts, calculateSphericity);
-    const ImageGeom* imageGeom = nullptr;
-    REQUIRE_NOTHROW(imageGeom = &dataStructure.getDataRefAs<ImageGeom>(k_MetricGeometryPath));
-    REQUIRE(imageGeom->getIndex(1.5f, 1.5f, 1.5f) == std::optional<usize>{31});
-    REQUIRE(imageGeom->getIndex(2.5f, 3.5f, 3.5f) == std::optional<usize>{92});
-    REQUIRE(imageGeom->getIndex(3.5f, 3.5f, 3.5f) == std::optional<usize>{93});
+    const ImageGeom* imageGeomPtr = nullptr;
+    REQUIRE_NOTHROW(imageGeomPtr = &dataStructure.getDataRefAs<ImageGeom>(k_MetricGeometryPath));
+    REQUIRE(imageGeomPtr->getIndex(1.5f, 1.5f, 1.5f) == std::optional<usize>{31});
+    REQUIRE(imageGeomPtr->getIndex(2.5f, 3.5f, 3.5f) == std::optional<usize>{92});
+    REQUIRE(imageGeomPtr->getIndex(3.5f, 3.5f, 3.5f) == std::optional<usize>{93});
     REQUIRE(ReadSurfaceMetricArray<int32>(dataStructure, k_MetricIdsPath, {5, 5, 5}, scope) == featureIds);
     REQUIRE(ReadSurfaceMetricArray<int32>(dataStructure, k_MetricCountsPath, {4}, scope) == counts);
 
@@ -829,7 +829,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolumeFilter: analytical interior fe
     }
     REQUIRE(ReadSurfaceMetricArray<int32>(dataStructure, k_MetricIdsPath, {5, 5, 5}, scope) == featureIds);
     REQUIRE(ReadSurfaceMetricArray<int32>(dataStructure, k_MetricCountsPath, {4}, scope) == counts);
-    RequireSurfaceMetricGeometry(dataStructure, *imageGeom, spacing, counts.size());
+    RequireSurfaceMetricGeometry(dataStructure, *imageGeomPtr, spacing, counts.size());
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

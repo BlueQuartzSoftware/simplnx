@@ -593,7 +593,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: metadata cache correctnes
 namespace
 {
 // Minimal uncompressed TIFF. The normal writer does not support 2 or 5 samples.
-void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel, bool zeroXResolution = false)
+void WriteC02Tile(const fs::path& path, const std::vector<uint8>& pixel, bool zeroXResolution = false)
 {
   const uint32 count = static_cast<uint32>(pixel.size());
   uint16 extras = 0;
@@ -621,14 +621,14 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel, bool ze
   };
   struct TiffEntry
   {
-    uint16 Tag;
-    uint16 Type;
+    uint16 tag;
+    uint16 type;
     uint32 Count;
     uint32 Value;
   };
   auto entry = [&](const TiffEntry& item) {
-    u16(item.Tag);
-    u16(item.Type);
+    u16(item.tag);
+    u16(item.type);
     u32(item.Count);
     u32(item.Value);
   };
@@ -637,8 +637,8 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel, bool ze
   u16(42);
   u32(8);
   u16(entries);
-  entry({.Tag = 256, .Type = 4, .Count = 1, .Value = 2});
-  entry({.Tag = 257, .Type = 4, .Count = 1, .Value = 2});
+  entry({.tag = 256, .type = 4, .Count = 1, .Value = 2});
+  entry({.tag = 257, .type = 4, .Count = 1, .Value = 2});
   uint32 bitsValue = bitsOffset;
   if(count == 1)
   {
@@ -648,21 +648,21 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel, bool ze
   {
     bitsValue = 0x00080008;
   }
-  entry({.Tag = 258, .Type = 3, .Count = count, .Value = bitsValue});
-  entry({.Tag = 259, .Type = 3, .Count = 1, .Value = 1});
-  entry({.Tag = 262, .Type = 3, .Count = 1, .Value = count < 3 ? 1U : 2U});
-  entry({.Tag = 273, .Type = 4, .Count = 1, .Value = pixelsOffset});
-  entry({.Tag = 277, .Type = 3, .Count = 1, .Value = count});
-  entry({.Tag = 278, .Type = 4, .Count = 1, .Value = 2});
-  entry({.Tag = 279, .Type = 4, .Count = 1, .Value = 4 * count});
+  entry({.tag = 258, .type = 3, .Count = count, .Value = bitsValue});
+  entry({.tag = 259, .type = 3, .Count = 1, .Value = 1});
+  entry({.tag = 262, .type = 3, .Count = 1, .Value = count < 3 ? 1U : 2U});
+  entry({.tag = 273, .type = 4, .Count = 1, .Value = pixelsOffset});
+  entry({.tag = 277, .type = 3, .Count = 1, .Value = count});
+  entry({.tag = 278, .type = 4, .Count = 1, .Value = 2});
+  entry({.tag = 279, .type = 4, .Count = 1, .Value = 4 * count});
   if(zeroXResolution)
   {
-    entry({.Tag = 282, .Type = 5, .Count = 1, .Value = resolutionOffset});
+    entry({.tag = 282, .type = 5, .Count = 1, .Value = resolutionOffset});
   }
-  entry({.Tag = 284, .Type = 3, .Count = 1, .Value = 1});
+  entry({.tag = 284, .type = 3, .Count = 1, .Value = 1});
   if(extras != 0)
   {
-    entry({.Tag = 338, .Type = 3, .Count = extras, .Value = 2});
+    entry({.tag = 338, .type = 3, .Count = extras, .Value = 2});
   }
   u32(0);
   if(count > 2)
@@ -711,8 +711,8 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale rejects unsupported c
   const auto count = GENERATE(2, 5);
   const fs::path dir = FijiOutputDir();
   const std::string name = fmt::format("c02_bad_{}.tif", count);
-  writeC02Tile(dir / name, std::vector<uint8>(count, 42));
-  writeC02Tile(dir / "c02_before_bad.tif", {64});
+  WriteC02Tile(dir / name, std::vector<uint8>(count, 42));
+  WriteC02Tile(dir / "c02_before_bad.tif", {64});
   const fs::path cfg = dir / fmt::format("c02_bad_{}.txt", count);
   WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_before_bad.tif; ; (0, 0)", fmt::format("{}; ; (2, 0)", name)});
   const ImportFijiMontageFilter filter;
@@ -731,9 +731,9 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: accepted components and graysca
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   const fs::path dir = FijiOutputDir();
-  writeC02Tile(dir / "c02_scalar.tif", {64});
-  writeC02Tile(dir / "c02_rgb.tif", {200, 100, 50});
-  writeC02Tile(dir / "c02_rgba.tif", {200, 100, 50, 3});
+  WriteC02Tile(dir / "c02_scalar.tif", {64});
+  WriteC02Tile(dir / "c02_rgb.tif", {200, 100, 50});
+  WriteC02Tile(dir / "c02_rgba.tif", {200, 100, 50, 3});
   const fs::path cfg = dir / "c02_mixed.txt";
   WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_scalar.tif; ; (0, 0)", "c02_rgb.tif; ; (2, 0)", "c02_rgba.tif; ; (4, 0)"});
   const ImportFijiMontageFilter filter;
@@ -782,7 +782,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: real OOC grayscale", "[NXImageP
   for(const auto& [name, pixel] : inputs)
   {
     const std::string file = "c02_ooc_" + name + ".tif";
-    writeC02Tile(dir / file, pixel);
+    WriteC02Tile(dir / file, pixel);
     const fs::path cfg = dir / ("c02_ooc_" + name + ".txt");
     WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", file + "; ; (0, 0)"});
     const ImportFijiMontageFilter filter;
@@ -824,9 +824,9 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: datatype conversion before gray
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
   const fs::path dir = FijiOutputDir();
-  writeC02Tile(dir / "c02_type_scalar.tif", {64});
-  writeC02Tile(dir / "c02_type_rgb.tif", {200, 100, 50});
-  writeC02Tile(dir / "c02_type_rgba.tif", {200, 100, 50, 3});
+  WriteC02Tile(dir / "c02_type_scalar.tif", {64});
+  WriteC02Tile(dir / "c02_type_rgb.tif", {200, 100, 50});
+  WriteC02Tile(dir / "c02_type_rgba.tif", {200, 100, 50, 3});
   const fs::path cfg = dir / "c02_type_mixed.txt";
   WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_type_scalar.tif; ; (0, 0)", "c02_type_rgb.tif; ; (2, 0)", "c02_type_rgba.tif; ; (4, 0)"});
   const ImportFijiMontageFilter filter;
@@ -940,10 +940,10 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: failed color tile retains scala
   const usize components = GENERATE(usize{3}, usize{4});
   CAPTURE(components);
   const fs::path dir = FijiOutputDir();
-  writeC02Tile(dir / "c02_partial_good.tif", {64, 64, 64});
+  WriteC02Tile(dir / "c02_partial_good.tif", {64, 64, 64});
   const std::string badName = fmt::format("c02_partial_bad_{}.tif", components);
   const fs::path badPath = dir / badName;
-  writeC02Tile(badPath, std::vector<uint8>(components, 42));
+  WriteC02Tile(badPath, std::vector<uint8>(components, 42));
   const auto size = fs::file_size(badPath);
   REQUIRE(size > 4 * components);
   fs::resize_file(badPath, size - (4 * components));
@@ -1003,10 +1003,10 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: failed color tile real OOC zero
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, 1);
   const fs::path dir = FijiOutputDir();
-  writeC02Tile(dir / "c02_ooc_partial_good.tif", {64, 64, 64});
+  WriteC02Tile(dir / "c02_ooc_partial_good.tif", {64, 64, 64});
   const std::string badName = fmt::format("c02_ooc_partial_bad_{}.tif", components);
   const fs::path badPath = dir / badName;
-  writeC02Tile(badPath, std::vector<uint8>(components, 42));
+  WriteC02Tile(badPath, std::vector<uint8>(components, 42));
   const auto size = fs::file_size(badPath);
   REQUIRE(size > 4 * components);
   fs::resize_file(badPath, size - (4 * components));
@@ -1058,7 +1058,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: imports arbitrary components wh
   CAPTURE(components);
   const fs::path dir = FijiOutputDir();
   const std::string filename = fmt::format("unconverted_{}.tif", components);
-  writeC02Tile(dir / filename, std::vector<uint8>(components, 42));
+  WriteC02Tile(dir / filename, std::vector<uint8>(components, 42));
   const fs::path config = dir / fmt::format("unconverted_{}.txt", components);
   WriteConfig(config, {"dim = 2", "# Define the image coordinates", filename + "; ; (0, 0)"});
   const ImportFijiMontageFilter filter;
@@ -1082,7 +1082,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: imports arbitrary components wh
 TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale action clone preserves file components", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   const fs::path dir = FijiOutputDir();
-  writeC02Tile(dir / "clone_rgb.tif", {200, 100, 50});
+  WriteC02Tile(dir / "clone_rgb.tif", {200, 100, 50});
   const fs::path config = dir / "clone_rgb.txt";
   WriteConfig(config, {"dim = 2", "# Define the image coordinates", "clone_rgb.tif; ; (0, 0)"});
   const ImportFijiMontageFilter filter;
@@ -1096,11 +1096,11 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale action clone preserve
   bool foundArrayAction = false;
   for(const auto& action : preflight.outputActions.value().actions)
   {
-    const auto* arrayAction = dynamic_cast<const CreateArrayAction*>(action.get());
-    if(arrayAction != nullptr && arrayAction->path() == path)
+    const auto* arrayActionPtr = dynamic_cast<const CreateArrayAction*>(action.get());
+    if(arrayActionPtr != nullptr && arrayActionPtr->path() == path)
     {
       foundArrayAction = true;
-      REQUIRE(arrayAction->componentDims() == ShapeType{1});
+      REQUIRE(arrayActionPtr->componentDims() == ShapeType{1});
     }
     auto clone = action->clone();
     REQUIRE(clone != nullptr);
@@ -1110,13 +1110,13 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale action clone preserve
     SIMPLNX_RESULT_REQUIRE_VALID(cloneResult);
   }
   REQUIRE(foundArrayAction);
-  for(const auto* data : {&originalData, &clonedData})
+  for(const auto* dataPtr : {&originalData, &clonedData})
   {
-    REQUIRE_NOTHROW(data->getDataRefAs<UInt8Array>(path));
-    const auto& array = data->getDataRefAs<UInt8Array>(path);
+    REQUIRE_NOTHROW(dataPtr->getDataRefAs<UInt8Array>(path));
+    const auto& array = dataPtr->getDataRefAs<UInt8Array>(path);
     REQUIRE(array.getComponentShape() == ShapeType{3});
     REQUIRE(array.getNumberOfTuples() == 4);
-    UnitTest::CheckArraysInheritTupleDims(*data);
+    UnitTest::CheckArraysInheritTupleDims(*dataPtr);
   }
 }
 
@@ -1138,7 +1138,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: tile geometry uses config
 {
   const auto dir = FijiOutputDir();
   const auto tile = dir / "ZeroResolution.tif";
-  writeC02Tile(tile, {9}, true);
+  WriteC02Tile(tile, {9}, true);
   const auto tileIO = CreateImageIO(tile);
   SIMPLNX_RESULT_REQUIRE_VALID(tileIO);
   const auto metadata = tileIO.value()->readMetadata(tile);

@@ -248,10 +248,10 @@ struct ParsedRow
 {
   std::string filter;
   std::string type;
-  std::string inDims;
-  std::string inVoxels;
-  std::optional<double> newIncoreMs;
-  std::optional<double> newOocMs;
+  std::string in_dims;
+  std::string in_voxels;
+  std::optional<double> new_incore_ms;
+  std::optional<double> new_ooc_ms;
   std::string notes;
 };
 
@@ -298,10 +298,10 @@ Result<std::vector<ParsedRow>> ReadCsv(const std::string& path)
     ParsedRow r;
     r.filter = at(f, "filter");
     r.type = at(f, "type");
-    r.inDims = (col.contains("in_dims")) ? at(f, "in_dims") : std::string{};
-    r.inVoxels = (col.contains("in_voxels")) ? at(f, "in_voxels") : std::string{};
-    r.newIncoreMs = ParseMs(at(f, "new_incore_ms"));
-    r.newOocMs = ParseMs(at(f, "new_ooc_ms"));
+    r.in_dims = (col.contains("in_dims")) ? at(f, "in_dims") : std::string{};
+    r.in_voxels = (col.contains("in_voxels")) ? at(f, "in_voxels") : std::string{};
+    r.new_incore_ms = ParseMs(at(f, "new_incore_ms"));
+    r.new_ooc_ms = ParseMs(at(f, "new_ooc_ms"));
     r.notes = (col.contains("notes")) ? at(f, "notes") : std::string{};
     rows.push_back(std::move(r));
   }
@@ -346,7 +346,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   BenchmarkRow row;
   row.filter = spec.name;
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   const DataPath geom({"Image Geometry"});
   const std::string cellAmName = "CellData";
@@ -388,7 +388,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   {
     const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceInCore);
     std::string note;
-    row.newIncoreMs = RunConfig(filterList, spec.newFilterUuid, dsInCore, baseInCore, spec, geom, inputPath, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
+    row.newIncoreMs = RunConfig(filterListPtr, spec.newFilterUuid, dsInCore, baseInCore, spec, geom, inputPath, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
     if(!note.empty())
     {
       addNote("new-incore " + note);
@@ -420,7 +420,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
       const std::unordered_set<DataObject::IdType> baseOoc = SnapshotIds(dsOoc);
       const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.oocThreshold);
       std::string note;
-      row.newOocMs = RunConfig(filterList, spec.newFilterUuid, dsOoc, baseOoc, spec, geom, oocInput, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
+      row.newOocMs = RunConfig(filterListPtr, spec.newFilterUuid, dsOoc, baseOoc, spec, geom, oocInput, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
       if(!note.empty())
       {
         addNote("new-ooc " + note);
@@ -443,19 +443,19 @@ std::vector<BenchmarkRow> RunSweep(const std::vector<const BenchmarkFilterSpec*>
 {
   std::vector<BenchmarkRow> rows;
   rows.reserve(specs.size());
-  for(const auto* spec : specs)
+  for(const auto* specPtr : specs)
   {
-    fmt::print("=== {} ===\n", spec->name);
+    fmt::print("=== {} ===\n", specPtr->name);
     std::fflush(stdout);
     BenchmarkRow row;
     try
     {
       // RunFilterBenchmark already isolates per-config failures; this guard defends against any unexpected throw so
       // one bad filter can never abort the whole sweep.
-      row = RunFilterBenchmark(*spec, opts);
+      row = RunFilterBenchmark(*specPtr, opts);
     } catch(const std::exception& ex)
     {
-      row.filter = spec->name;
+      row.filter = specPtr->name;
       row.notes = std::string("unhandled exception: ") + ex.what();
     }
     if(opts.oocRequested)
@@ -467,10 +467,10 @@ std::vector<BenchmarkRow> RunSweep(const std::vector<const BenchmarkFilterSpec*>
         DataStoreUtilities::GetIOCollection().shutdownManagers();
       } catch(const std::exception& ex)
       {
-        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}': {}", spec->name, ex.what()));
+        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}': {}", specPtr->name, ex.what()));
       } catch(...)
       {
-        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}' with an unknown exception", spec->name));
+        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}' with an unknown exception", specPtr->name));
       }
     }
     fmt::print("{:<32} type={:<8} dims={:<16} new={:>10} ooc={:>10}{}\n", row.filter, row.type.empty() ? "?" : row.type, row.inDims.empty() ? "?" : row.inDims, MsCell(row.newIncoreMs),
@@ -518,9 +518,9 @@ void PrintSummary(const std::vector<BenchmarkRow>& rows)
     fmt::print("  (no OOC timings -- run with --mode ooc on a build with an out-of-core backend)\n");
   }
   std::sort(byOoc.begin(), byOoc.end(), [](const BenchmarkRow* a, const BenchmarkRow* b) { return (*a->newOocMs / *a->newIncoreMs) > (*b->newOocMs / *b->newIncoreMs); });
-  for(const BenchmarkRow* r : byOoc)
+  for(const BenchmarkRow* rPtr : byOoc)
   {
-    fmt::print("  {:<32} ooc/incore={:6.3f}   (ooc={:.2f} ms, incore={:.2f} ms)\n", r->filter, *r->newOocMs / *r->newIncoreMs, *r->newOocMs, *r->newIncoreMs);
+    fmt::print("  {:<32} ooc/incore={:6.3f}   (ooc={:.2f} ms, incore={:.2f} ms)\n", rPtr->filter, *rPtr->newOocMs / *rPtr->newIncoreMs, *rPtr->newOocMs, *rPtr->newIncoreMs);
   }
 }
 
@@ -554,22 +554,22 @@ Result<> MergeCsv(const std::string& incoreCsv, const std::string& oocCsv, const
     BenchmarkRow row;
     row.filter = in.filter;
     row.type = in.type;
-    row.inDims = in.inDims;
+    row.inDims = in.in_dims;
     row.inVoxels = 0;
     try
     {
-      row.inVoxels = in.inVoxels.empty() ? 0ULL : std::stoull(in.inVoxels);
+      row.inVoxels = in.in_voxels.empty() ? 0ULL : std::stoull(in.in_voxels);
     } catch(const std::exception&)
     {
       row.inVoxels = 0;
     }
-    row.newIncoreMs = in.newIncoreMs;
+    row.newIncoreMs = in.new_incore_ms;
     std::string notes = in.notes;
 
     const auto it = oocByKey.find(key(in));
     if(it != oocByKey.end())
     {
-      row.newOocMs = it->second->newOocMs;
+      row.newOocMs = it->second->new_ooc_ms;
       if(!it->second->notes.empty())
       {
         notes = notes.empty() ? it->second->notes : (notes + "; " + it->second->notes);

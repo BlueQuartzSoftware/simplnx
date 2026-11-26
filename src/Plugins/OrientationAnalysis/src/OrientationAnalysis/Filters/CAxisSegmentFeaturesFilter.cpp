@@ -126,8 +126,8 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
 
   // Validate the Grid Geometry
   auto gridGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
-  DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
+  const auto* inputGridGeomPtr = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
+  DataPath inputCellDataPath = inputGridGeomPtr->getCellDataPath();
   auto featureIdsPath = inputCellDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   auto cellFeatureAMPath = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   auto activeArrayPath = cellFeatureAMPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
@@ -154,20 +154,20 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   // The cell arrays must have one tuple per geometry cell.
   // The previous check only compares the selected arrays with each other.
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
-  if(quats.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
+  if(quats.getNumberOfTuples() != inputGridGeomPtr->getNumberOfCells())
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-652, fmt::format("The selected cell arrays have {} tuples but the selected geometry '{}' has {} cells.", quats.getNumberOfTuples(),
-                                                                              gridGeomPath.toString(), inputGridGeom->getNumberOfCells()))};
+                                                                              gridGeomPath.toString(), inputGridGeomPtr->getNumberOfCells()))};
   }
 
   // Use the cell AttributeMatrix shape for FeatureIds.
   // The AttributeMatrix must also match the geometry traversed by the flood fill.
   const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(inputCellDataPath);
-  if(cellDataAM.getNumberOfTuples() != inputGridGeom->getNumberOfCells())
+  if(cellDataAM.getNumberOfTuples() != inputGridGeomPtr->getNumberOfCells())
   {
     return {.outputActions =
                 MakeErrorResult<OutputActions>(-653, fmt::format("The geometry's cell AttributeMatrix '{}' has {} tuples but the selected geometry '{}' has {} cells.", inputCellDataPath.toString(),
-                                                                 cellDataAM.getNumberOfTuples(), gridGeomPath.toString(), inputGridGeom->getNumberOfCells()))};
+                                                                 cellDataAM.getNumberOfTuples(), gridGeomPath.toString(), inputGridGeomPtr->getNumberOfCells()))};
   }
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellDataAM.getShape(), std::vector<usize>{1}, featureIdsPath);
 

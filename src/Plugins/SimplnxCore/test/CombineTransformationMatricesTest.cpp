@@ -73,43 +73,43 @@ const DataPath k_Combined4TransformPath({k_Combined4TransformName});
 void CreateTestImageGeometry(DataStructure& dataStructure, const std::string& geomName, const Vec3<usize>& dims, const Vec3<float32>& origin, const Vec3<float32>& spacing,
                              const std::vector<usize>& cDims)
 {
-  ImageGeom* geom = ImageGeom::Create(dataStructure, geomName);
-  geom->setDimensions(dims);
-  REQUIRE(geom->setSpacing(spacing).valid());
-  REQUIRE(geom->setOrigin(origin).valid());
+  ImageGeom* geomPtr = ImageGeom::Create(dataStructure, geomName);
+  geomPtr->setDimensions(dims);
+  REQUIRE(geomPtr->setSpacing(spacing).valid());
+  REQUIRE(geomPtr->setOrigin(origin).valid());
 
   auto dimsVec = dims.toContainer<std::vector<usize>>();
   auto amDims = std::vector<usize>(dimsVec.rbegin(), dimsVec.rend());
-  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, amDims, geom->getId());
-  geom->setCellData(*am);
-  UInt32Array* testArray = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_CellArrayName, amDims, cDims, am->getId());
+  AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, amDims, geomPtr->getId());
+  geomPtr->setCellData(*amPtr);
+  UInt32Array* testArrayPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_CellArrayName, amDims, cDims, amPtr->getId());
 
   usize numComps = std::accumulate(cDims.begin(), cDims.end(), 1ULL, std::multiplies<>());
-  std::generate(testArray->begin(), testArray->end(), [n = 0, numComps]() mutable { return static_cast<uint32>(1 + (n++ / numComps)); });
+  std::generate(testArrayPtr->begin(), testArrayPtr->end(), [n = 0, numComps]() mutable { return static_cast<uint32>(1 + (n++ / numComps)); });
 }
 
 void CreateTestVertexGeometry(DataStructure& dataStructure, const std::string& geomName)
 {
-  VertexGeom* geom = VertexGeom::Create(dataStructure, geomName);
-  Float32Array* vertices = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, VertexGeom::k_SharedVertexListName, {16}, {3}, geom->getId());
-  std::iota(vertices->begin(), vertices->end(), 0.0f);
-  geom->setVertices(*vertices);
-  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, VertexGeom::k_VertexAttributeMatrixName, {16}, geom->getId());
-  geom->setVertexAttributeMatrix(*am);
-  Int64Array* testArray = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, k_CellArrayName, {16}, {2}, am->getId());
-  std::iota(testArray->begin(), testArray->end(), static_cast<int64_t>(0));
+  VertexGeom* geomPtr = VertexGeom::Create(dataStructure, geomName);
+  Float32Array* verticesPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, VertexGeom::k_SharedVertexListName, {16}, {3}, geomPtr->getId());
+  std::iota(verticesPtr->begin(), verticesPtr->end(), 0.0f);
+  geomPtr->setVertices(*verticesPtr);
+  AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, VertexGeom::k_VertexAttributeMatrixName, {16}, geomPtr->getId());
+  geomPtr->setVertexAttributeMatrix(*amPtr);
+  Int64Array* testArrayPtr = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, k_CellArrayName, {16}, {2}, amPtr->getId());
+  std::iota(testArrayPtr->begin(), testArrayPtr->end(), static_cast<int64_t>(0));
 }
 
 void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemplaryGeomPath, const DataPath& resultGeomPath)
 {
-  const auto* exemplaryGeom = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
-  const auto* resultGeom = dataStructure.getDataAs<ImageGeom>(resultGeomPath);
-  UnitTest::CompareImageGeometry(exemplaryGeom, resultGeom, UnitTest::EPSILON);
+  const auto* exemplaryGeomPtr = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
+  const auto* resultGeomPtr = dataStructure.getDataAs<ImageGeom>(resultGeomPath);
+  UnitTest::CompareImageGeometry(exemplaryGeomPtr, resultGeomPtr, UnitTest::EPSILON);
 
-  REQUIRE_NOTHROW(exemplaryGeom->getCellDataRef());
-  REQUIRE_NOTHROW(resultGeom->getCellDataRef());
-  auto exemplaryAM = exemplaryGeom->getCellDataRef();
-  auto resultAM = resultGeom->getCellDataRef();
+  REQUIRE_NOTHROW(exemplaryGeomPtr->getCellDataRef());
+  REQUIRE_NOTHROW(resultGeomPtr->getCellDataRef());
+  auto exemplaryAM = exemplaryGeomPtr->getCellDataRef();
+  auto resultAM = resultGeomPtr->getCellDataRef();
   REQUIRE(exemplaryAM.getShape() == resultAM.getShape());
 
   auto exemplaryCellArrayPath = exemplaryGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
@@ -189,14 +189,14 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  auto* stepByStepGeom = dataStructure.getDataAs<ImageGeom>(k_StepByStepGeomPath);
-  auto* combinedGeom = dataStructure.getDataAs<ImageGeom>(k_CombinedGeomPath);
-  UnitTest::CompareImageGeometry(stepByStepGeom, combinedGeom);
+  auto* stepByStepGeomPtr = dataStructure.getDataAs<ImageGeom>(k_StepByStepGeomPath);
+  auto* combinedGeomPtr = dataStructure.getDataAs<ImageGeom>(k_CombinedGeomPath);
+  UnitTest::CompareImageGeometry(stepByStepGeomPtr, combinedGeomPtr);
 
-  REQUIRE_NOTHROW(stepByStepGeom->getCellDataRef());
-  REQUIRE_NOTHROW(combinedGeom->getCellDataRef());
-  auto stepByStepAM = stepByStepGeom->getCellDataRef();
-  auto combinedAM = combinedGeom->getCellDataRef();
+  REQUIRE_NOTHROW(stepByStepGeomPtr->getCellDataRef());
+  REQUIRE_NOTHROW(combinedGeomPtr->getCellDataRef());
+  auto stepByStepAM = stepByStepGeomPtr->getCellDataRef();
+  auto combinedAM = combinedGeomPtr->getCellDataRef();
   REQUIRE(stepByStepAM.getShape() == combinedAM.getShape());
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_StepByStepCellArrayPath));
@@ -435,19 +435,19 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  auto* stepByStepGeom = dataStructure.getDataAs<VertexGeom>(k_StepByStepGeomPath);
-  auto* combinedGeom = dataStructure.getDataAs<VertexGeom>(k_CombinedGeomPath);
+  auto* stepByStepGeomPtr = dataStructure.getDataAs<VertexGeom>(k_StepByStepGeomPath);
+  auto* combinedGeomPtr = dataStructure.getDataAs<VertexGeom>(k_CombinedGeomPath);
 
-  REQUIRE_NOTHROW(stepByStepGeom->getVertexAttributeMatrixRef());
-  REQUIRE_NOTHROW(combinedGeom->getVertexAttributeMatrixRef());
-  auto stepByStepAM = stepByStepGeom->getVertexAttributeMatrixRef();
-  auto combinedAM = combinedGeom->getVertexAttributeMatrixRef();
+  REQUIRE_NOTHROW(stepByStepGeomPtr->getVertexAttributeMatrixRef());
+  REQUIRE_NOTHROW(combinedGeomPtr->getVertexAttributeMatrixRef());
+  auto stepByStepAM = stepByStepGeomPtr->getVertexAttributeMatrixRef();
+  auto combinedAM = combinedGeomPtr->getVertexAttributeMatrixRef();
   REQUIRE(stepByStepAM.getShape() == combinedAM.getShape());
 
-  REQUIRE_NOTHROW(stepByStepGeom->getVerticesRef());
-  REQUIRE_NOTHROW(combinedGeom->getVerticesRef());
-  auto stepByStepVertices = stepByStepGeom->getVerticesRef();
-  auto combinedVertices = combinedGeom->getVerticesRef();
+  REQUIRE_NOTHROW(stepByStepGeomPtr->getVerticesRef());
+  REQUIRE_NOTHROW(combinedGeomPtr->getVerticesRef());
+  auto stepByStepVertices = stepByStepGeomPtr->getVerticesRef();
+  auto combinedVertices = combinedGeomPtr->getVerticesRef();
   UnitTest::CompareDataArrays<float32>(stepByStepVertices, combinedVertices);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(k_StepByStepGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName)));

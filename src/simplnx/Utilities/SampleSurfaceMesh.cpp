@@ -26,8 +26,8 @@ namespace
  */
 struct FeatureBoundingVolume
 {
-  BoundingBox3Df Box;
-  float32 Radius = 0.0f;
+  BoundingBox3Df box;
+  float32 radius = 0.0f;
 };
 
 /**
@@ -85,7 +85,7 @@ public:
       for(usize featureId = 0; featureId < numFeatures; featureId++)
       {
         const FeatureBoundingVolume& featureBounds = m_FeatureBounds[featureId];
-        char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceLists[featureId], m_FaceBBs, point, featureBounds.Box, featureBounds.Radius);
+        char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceLists[featureId], m_FaceBBs, point, featureBounds.box, featureBounds.radius);
         if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
         {
           assignedFeature = static_cast<OutputT>(featureId);
@@ -318,7 +318,7 @@ struct SampleSurfaceMeshFunctor
       BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(triangleGeom, faceLists[featureId]));
       // The ray starts at the sample point, not the box center. Use the full diagonal with a margin.
       float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) * 1.01F;
-      featureBounds.emplace_back(FeatureBoundingVolume{.Box = boundingBox, .Radius = radius});
+      featureBounds.emplace_back(FeatureBoundingVolume{.box = boundingBox, .radius = radius});
     }
 
     if(shouldCancel)
@@ -361,12 +361,12 @@ const IFilter::MessageHandler& SampleSurfaceMesh::getMessageHandler() const
 
 void SampleSurfaceMesh::resetProgress(usize maxProgress, std::string label)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.reset(maxProgress, std::move(label));
 }
 
 void SampleSurfaceMesh::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }

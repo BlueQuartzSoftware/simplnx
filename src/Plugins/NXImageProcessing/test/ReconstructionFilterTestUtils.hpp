@@ -176,13 +176,13 @@ inline DataPath BuildImageFromPattern(DataStructure& ds, usize dimX, usize dimY,
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
-  imageGeomPtr->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   constexpr usize k_ChunkValues = 65536;
   for(usize start = 0; start < pattern.size(); start += k_ChunkValues)

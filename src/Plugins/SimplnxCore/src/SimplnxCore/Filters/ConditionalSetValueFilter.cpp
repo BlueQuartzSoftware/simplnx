@@ -109,12 +109,12 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   if(useConditionalValue)
   {
     // Validate that the Conditional Array is of the correct type
-    const auto* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
+    const auto* dataObjectPtr = dataStructure.getDataAs<IDataArray>(pConditionalPath);
 
-    if(dataObject->getDataType() != nx::core::DataType::boolean && dataObject->getDataType() != nx::core::DataType::uint8 && dataObject->getDataType() != nx::core::DataType::int8)
+    if(dataObjectPtr->getDataType() != nx::core::DataType::boolean && dataObjectPtr->getDataType() != nx::core::DataType::uint8 && dataObjectPtr->getDataType() != nx::core::DataType::int8)
     {
       return MakePreflightErrorResult(::k_IncorrectInputArrayType,
-                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObject->getTypeName()));
+                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObjectPtr->getTypeName()));
     }
   }
 

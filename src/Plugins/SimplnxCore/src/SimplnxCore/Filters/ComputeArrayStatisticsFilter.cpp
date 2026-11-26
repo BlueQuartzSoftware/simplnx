@@ -67,9 +67,9 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto computeByIndexValue = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key);
   auto standardizeDataValue = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_StandardizeData_Key);
   auto inputArrayPath = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key);
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(inputArrayPath);
   auto destinationAttributeMatrixValue = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
-  DataType dataType = inputArray->getDataType();
+  DataType dataType = inputArrayPtr->getDataType();
 
   OutputActions actions;
 
@@ -147,7 +147,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   if(standardizeDataValue)
   {
     auto arrayPath = filterArgs.value<std::string>(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key);
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.replaceName(arrayPath));
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArrayPtr->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.replaceName(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(pFindNumUniqueValuesValue)

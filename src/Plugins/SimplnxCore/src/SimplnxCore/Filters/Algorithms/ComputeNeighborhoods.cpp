@@ -202,7 +202,7 @@ ComputeNeighborhoods::~ComputeNeighborhoods() noexcept = default;
 // -----------------------------------------------------------------------------
 void ComputeNeighborhoods::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementCount(counter);
 }
 

@@ -85,7 +85,7 @@ bool RequireDataArrayEqualZero(const DataArray<T>& data)
   return true;
 }
 
-Arguments convertLegacyNumericArguments(float64 value, bool hasRemoveValue)
+Arguments ConvertLegacyNumericArguments(float64 value, bool hasRemoveValue)
 {
   const nlohmann::json arrayPath = {{"Data Container Name", "DataContainer"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "TestArray"}};
   nlohmann::json legacyJson = {{"ReplaceValue", value}};
@@ -106,9 +106,9 @@ Arguments convertLegacyNumericArguments(float64 value, bool hasRemoveValue)
 }
 
 template <typename T>
-void requireLegacyIntegerValue(float64 value, bool hasRemoveValue, T expected)
+void RequireLegacyIntegerValue(float64 value, bool hasRemoveValue, T expected)
 {
-  const auto args = convertLegacyNumericArguments(value, hasRemoveValue);
+  const auto args = ConvertLegacyNumericArguments(value, hasRemoveValue);
   for(const auto key : std::array<StringLiteral, 2>{ConditionalSetValueFilter::k_ReplaceValue_Key, ConditionalSetValueFilter::k_RemoveValue_Key})
   {
     if(!hasRemoveValue && key.view() == ConditionalSetValueFilter::k_RemoveValue_Key.view())
@@ -124,9 +124,9 @@ void requireLegacyIntegerValue(float64 value, bool hasRemoveValue, T expected)
 }
 
 template <typename T>
-void requireLegacyIntegerError(float64 value, bool hasRemoveValue, int32 expectedCode)
+void RequireLegacyIntegerError(float64 value, bool hasRemoveValue, int32 expectedCode)
 {
-  const auto args = convertLegacyNumericArguments(value, hasRemoveValue);
+  const auto args = ConvertLegacyNumericArguments(value, hasRemoveValue);
   for(const auto key : std::array<StringLiteral, 2>{ConditionalSetValueFilter::k_ReplaceValue_Key, ConditionalSetValueFilter::k_RemoveValue_Key})
   {
     if(!hasRemoveValue && key.view() == ConditionalSetValueFilter::k_RemoveValue_Key.view())
@@ -142,7 +142,7 @@ void requireLegacyIntegerError(float64 value, bool hasRemoveValue, int32 expecte
   }
 }
 
-Arguments convertLegacyBooleanArguments(float64 removeValue, bool masked, float64 replaceValue)
+Arguments ConvertLegacyBooleanArguments(float64 removeValue, bool masked, float64 replaceValue)
 {
   const nlohmann::json selectedPath = {{"Data Container Name", "DataContainer"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "TestArray"}};
   nlohmann::json legacyJson = {{"ReplaceValue", replaceValue}};
@@ -165,7 +165,7 @@ Arguments convertLegacyBooleanArguments(float64 removeValue, bool masked, float6
 }
 
 template <typename Execute>
-void requireBooleanExecution(const Arguments& args, bool removeTruth, bool replaceTruth, bool masked, bool outOfCore, const Execute& execute)
+void RequireBooleanExecution(const Arguments& args, bool removeTruth, bool replaceTruth, bool masked, bool outOfCore, const Execute& execute)
 {
   DataStructure dataStructure;
   auto* groupPtr = DataGroup::Create(dataStructure, "DataContainer");
@@ -270,11 +270,11 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
   nx::core::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  DataObject* ciDataObject = dataStructure.getData(ciDataPath);
+  DataObject* ciDataObjectPtr = dataStructure.getData(ciDataPath);
 
-  DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
+  DataArray<float32>* ciDataArrayPtr = dynamic_cast<Float32Array*>(ciDataObjectPtr);
   // Initialize the selected values before conditional replacement.
-  ciDataArray->fill(10.0);
+  ciDataArrayPtr->fill(10.0);
 
   // A true mask selects every tuple.
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
@@ -296,7 +296,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
+  REQUIRE(RequireDataArrayEqualZero(*ciDataArrayPtr));
 
   // The optional output supports manual inspection of the replaced values.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -404,20 +404,20 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
   DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
   // Create arrays of each numeric type for the range checks.
-  DataGroup* levelOneGroup = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelOne}));
-  REQUIRE(levelOneGroup != nullptr);
-  DataGroup* levelTwoGroup = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelTwo}));
-  REQUIRE(levelTwoGroup != nullptr);
+  DataGroup* levelOneGroupPtr = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelOne}));
+  REQUIRE(levelOneGroupPtr != nullptr);
+  DataGroup* levelTwoGroupPtr = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelTwo}));
+  REQUIRE(levelTwoGroupPtr != nullptr);
 
-  UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelOneGroup);
-  UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelTwoGroup);
+  UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelOneGroupPtr);
+  UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelTwoGroupPtr);
 
   // A true mask makes each range check reach the selected array.
   ShapeType tupleShape = {imageDims[2], imageDims[1], imageDims[0]};
-  BoolArray* conditionalArray1 = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelOneGroup->getId());
-  conditionalArray1->fill(true);
-  BoolArray* conditionalArray2 = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelTwoGroup->getId());
-  conditionalArray2->fill(true);
+  BoolArray* conditionalArray1Ptr = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelOneGroupPtr->getId());
+  conditionalArray1Ptr->fill(true);
+  BoolArray* conditionalArray2Ptr = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelTwoGroupPtr->getId());
+  conditionalArray2Ptr->fill(true);
 
   DataPath conditionalDataPath({k_LevelZero, k_LevelOne, k_ConditionalArray});
 
@@ -494,9 +494,9 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[Conditiona
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
-  auto* ciDataArray = dataStructure.getDataAs<Float32Array>(ciDataPath);
+  auto* ciDataArrayPtr = dataStructure.getDataAs<Float32Array>(ciDataPath);
   // Initialize the selected values before unconditional replacement.
-  ciDataArray->fill(10.0);
+  ciDataArrayPtr->fill(10.0);
 
   const std::string removeStr = "10.0";
   const auto removeVal = static_cast<float32>(StringInterpretationUtilities::Convert<float32>(removeStr).value());
@@ -641,23 +641,23 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Legacy Float32 midpoint round
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Legacy numeric arguments retain integer interpretation", "[SimplnxCore][ConditionalSetValueFilter][BackwardsCompatibility]")
 {
   const bool hasRemoveValue = GENERATE(true, false);
-  requireLegacyIntegerValue<int64>(1e-7, hasRemoveValue, 0);
-  requireLegacyIntegerValue<int64>(-1e-7, hasRemoveValue, 0);
-  requireLegacyIntegerValue<int8>(1e-7, hasRemoveValue, 0);
-  requireLegacyIntegerValue<int8>(-1e-7, hasRemoveValue, 0);
-  requireLegacyIntegerValue<uint64>(1e-7, hasRemoveValue, 0);
-  requireLegacyIntegerValue<uint8>(1e-7, hasRemoveValue, 0);
-  requireLegacyIntegerValue<int64>(1e18, hasRemoveValue, 1000000000000000000);
-  requireLegacyIntegerValue<uint64>(1e18, hasRemoveValue, 1000000000000000000ULL);
-  requireLegacyIntegerValue<int64>(1000000000000000256.0, hasRemoveValue, 1000000000000000256);
-  requireLegacyIntegerValue<uint64>(1000000000000000256.0, hasRemoveValue, 1000000000000000256ULL);
-  requireLegacyIntegerValue<int64>(-9223372036854775808.0, hasRemoveValue, std::numeric_limits<int64>::lowest());
-  requireLegacyIntegerError<int64>(9223372036854775808.0, hasRemoveValue, -10352);
-  requireLegacyIntegerError<int64>(-9223372036854777856.0, hasRemoveValue, -10352);
-  requireLegacyIntegerError<uint64>(18446744073709551616.0, hasRemoveValue, -10352);
-  requireLegacyIntegerError<uint64>(-1e-7, hasRemoveValue, -10350);
-  requireLegacyIntegerError<int8>(1e18, hasRemoveValue, -10353);
-  requireLegacyIntegerError<uint8>(1e18, hasRemoveValue, -10353);
+  RequireLegacyIntegerValue<int64>(1e-7, hasRemoveValue, 0);
+  RequireLegacyIntegerValue<int64>(-1e-7, hasRemoveValue, 0);
+  RequireLegacyIntegerValue<int8>(1e-7, hasRemoveValue, 0);
+  RequireLegacyIntegerValue<int8>(-1e-7, hasRemoveValue, 0);
+  RequireLegacyIntegerValue<uint64>(1e-7, hasRemoveValue, 0);
+  RequireLegacyIntegerValue<uint8>(1e-7, hasRemoveValue, 0);
+  RequireLegacyIntegerValue<int64>(1e18, hasRemoveValue, 1000000000000000000);
+  RequireLegacyIntegerValue<uint64>(1e18, hasRemoveValue, 1000000000000000000ULL);
+  RequireLegacyIntegerValue<int64>(1000000000000000256.0, hasRemoveValue, 1000000000000000256);
+  RequireLegacyIntegerValue<uint64>(1000000000000000256.0, hasRemoveValue, 1000000000000000256ULL);
+  RequireLegacyIntegerValue<int64>(-9223372036854775808.0, hasRemoveValue, std::numeric_limits<int64>::lowest());
+  RequireLegacyIntegerError<int64>(9223372036854775808.0, hasRemoveValue, -10352);
+  RequireLegacyIntegerError<int64>(-9223372036854777856.0, hasRemoveValue, -10352);
+  RequireLegacyIntegerError<uint64>(18446744073709551616.0, hasRemoveValue, -10352);
+  RequireLegacyIntegerError<uint64>(-1e-7, hasRemoveValue, -10350);
+  RequireLegacyIntegerError<int8>(1e18, hasRemoveValue, -10353);
+  RequireLegacyIntegerError<uint8>(1e18, hasRemoveValue, -10353);
 }
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Legacy Boolean numeric execution", "[SimplnxCore][ConditionalSetValueFilter][BackwardsCompatibility]")
@@ -670,12 +670,12 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Legacy Boolean numeric execut
     CAPTURE(value, truth);
     for(const bool masked : {false, true})
     {
-      const auto args = convertLegacyBooleanArguments(0.0, masked, value);
-      requireBooleanExecution(args, false, truth, masked, false,
+      const auto args = ConvertLegacyBooleanArguments(0.0, masked, value);
+      RequireBooleanExecution(args, false, truth, masked, false,
                               [&](const auto& filter, auto& dataStructure, const auto& executionArgs) { return scope.executeFilter(filter, dataStructure, executionArgs); });
     }
-    const auto args = convertLegacyBooleanArguments(value, false, truth ? 0.0 : 1.0);
-    requireBooleanExecution(args, truth, !truth, false, false,
+    const auto args = ConvertLegacyBooleanArguments(value, false, truth ? 0.0 : 1.0);
+    RequireBooleanExecution(args, truth, !truth, false, false,
                             [&](const auto& filter, auto& dataStructure, const auto& executionArgs) { return scope.executeFilter(filter, dataStructure, executionArgs); });
   }
 }
@@ -691,14 +691,14 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Boolean text execution contro
     CAPTURE(text, truth);
     for(const bool masked : {false, true})
     {
-      auto args = convertLegacyBooleanArguments(0.0, masked, 0.0);
+      auto args = ConvertLegacyBooleanArguments(0.0, masked, 0.0);
       args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>(text));
-      requireBooleanExecution(args, false, truth, masked, false,
+      RequireBooleanExecution(args, false, truth, masked, false,
                               [&](const auto& filter, auto& dataStructure, const auto& executionArgs) { return scope.executeFilter(filter, dataStructure, executionArgs); });
     }
-    auto args = convertLegacyBooleanArguments(0.0, false, truth ? 0.0 : 1.0);
+    auto args = ConvertLegacyBooleanArguments(0.0, false, truth ? 0.0 : 1.0);
     args.insertOrAssign(ConditionalSetValueFilter::k_RemoveValue_Key, std::make_any<std::string>(text));
-    requireBooleanExecution(args, truth, !truth, false, false,
+    RequireBooleanExecution(args, truth, !truth, false, false,
                             [&](const auto& filter, auto& dataStructure, const auto& executionArgs) { return scope.executeFilter(filter, dataStructure, executionArgs); });
   }
 }
@@ -709,18 +709,18 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: real-store legacy Boolean exe
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   for(const bool masked : {false, true})
   {
-    const auto args = convertLegacyBooleanArguments(0.0, masked, 0.99999999);
-    requireBooleanExecution(args, false, true, masked, true, [](const auto& filter, auto& dataStructure, const auto& executionArgs) { return filter.execute(dataStructure, executionArgs); });
+    const auto args = ConvertLegacyBooleanArguments(0.0, masked, 0.99999999);
+    RequireBooleanExecution(args, false, true, masked, true, [](const auto& filter, auto& dataStructure, const auto& executionArgs) { return filter.execute(dataStructure, executionArgs); });
   }
-  const auto args = convertLegacyBooleanArguments(-0.99999999, false, 0.0);
-  requireBooleanExecution(args, true, false, false, true, [](const auto& filter, auto& dataStructure, const auto& executionArgs) { return filter.execute(dataStructure, executionArgs); });
+  const auto args = ConvertLegacyBooleanArguments(-0.99999999, false, 0.0);
+  RequireBooleanExecution(args, true, false, false, true, [](const auto& filter, auto& dataStructure, const auto& executionArgs) { return filter.execute(dataStructure, executionArgs); });
 }
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ConditionalSetValueFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -733,20 +733,20 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ConditionalSetValueFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ConditionalSetValueFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ConditionalSetValueFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ConditionalSetValueFilter::k_ConditionalArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       const auto replacementResult = StringInterpretationUtilities::Convert<float64>(args.value<std::string>(ConditionalSetValueFilter::k_ReplaceValue_Key));

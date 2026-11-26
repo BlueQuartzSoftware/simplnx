@@ -21,22 +21,22 @@ namespace fs = std::filesystem;
 
 namespace
 {
-const DataPath sampleImageGeomPath({"Sample ImageGeom"});
-const std::string sampleCellDataName = "Sample CellData";
-const DataPath sampleCellDataPath = sampleImageGeomPath.createChildPath(sampleCellDataName);
-const DataPath sampleDataArrayPath = sampleCellDataPath.createChildPath("sampleDataArray");
-const DataPath sampleBoolArrayPath = sampleCellDataPath.createChildPath("sampleBoolArray");
-const DataPath sampleMultiComponentArrayPath = sampleCellDataPath.createChildPath("sampleMultiComponentArray");
-const DataPath sampleNeighborListPath = sampleCellDataPath.createChildPath("sampleNeighborList");
+const DataPath k_SampleImageGeomPath({"Sample ImageGeom"});
+const std::string k_SampleCellDataName = "Sample CellData";
+const DataPath k_SampleCellDataPath = k_SampleImageGeomPath.createChildPath(k_SampleCellDataName);
+const DataPath k_SampleDataArrayPath = k_SampleCellDataPath.createChildPath("sampleDataArray");
+const DataPath k_SampleBoolArrayPath = k_SampleCellDataPath.createChildPath("sampleBoolArray");
+const DataPath k_SampleMultiComponentArrayPath = k_SampleCellDataPath.createChildPath("sampleMultiComponentArray");
+const DataPath k_SampleNeighborListPath = k_SampleCellDataPath.createChildPath("sampleNeighborList");
 
-const DataPath refImageGeomPath({"Reference ImageGeom"});
-const std::string refCellDataName = "Reference CellData";
-const DataPath refCellDataPath = refImageGeomPath.createChildPath(refCellDataName);
-const DataPath refDataArrayPath = refCellDataPath.createChildPath("refDataArray");
-const DataPath copiedDataArrayPath = refCellDataPath.createChildPath("sampleDataArray");
-const DataPath copiedBoolArrayPath = refCellDataPath.createChildPath("sampleBoolArray");
-const DataPath copiedMultiComponentArrayPath = refCellDataPath.createChildPath("sampleMultiComponentArray");
-const DataPath copiedNeighborListPath = refCellDataPath.createChildPath("sampleNeighborList");
+const DataPath k_RefImageGeomPath({"Reference ImageGeom"});
+const std::string k_RefCellDataName = "Reference CellData";
+const DataPath k_RefCellDataPath = k_RefImageGeomPath.createChildPath(k_RefCellDataName);
+const DataPath k_RefDataArrayPath = k_RefCellDataPath.createChildPath("refDataArray");
+const DataPath k_CopiedDataArrayPath = k_RefCellDataPath.createChildPath("sampleDataArray");
+const DataPath k_CopiedBoolArrayPath = k_RefCellDataPath.createChildPath("sampleBoolArray");
+const DataPath k_CopiedMultiComponentArrayPath = k_RefCellDataPath.createChildPath("sampleMultiComponentArray");
+const DataPath k_CopiedNeighborListPath = k_RefCellDataPath.createChildPath("sampleNeighborList");
 
 DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::DimensionType refDims, CreateImageGeometryAction::OriginType refOrigin, CreateImageGeometryAction::SpacingType refSpacing)
 {
@@ -47,49 +47,49 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
   const CreateImageGeometryAction::DimensionType attrMatrixDims = {dims.rbegin(), dims.rend()};
 
-  auto sampleAction = CreateImageGeometryAction(sampleImageGeomPath, dims, origin, spacing, sampleCellDataName, IGeometry::LengthUnit::Micrometer);
+  auto sampleAction = CreateImageGeometryAction(k_SampleImageGeomPath, dims, origin, spacing, k_SampleCellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> sampleActionResult = sampleAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(sampleActionResult);
 
-  auto sampleDataAction = CreateArrayAction(DataType::float64, attrMatrixDims, {1}, sampleDataArrayPath);
+  auto sampleDataAction = CreateArrayAction(DataType::float64, attrMatrixDims, {1}, k_SampleDataArrayPath);
   Result<> sampleDataActionResult = sampleDataAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(sampleDataActionResult);
 
-  auto* sampleDataStore = dataStructure.getDataAs<Float64Array>(sampleDataArrayPath)->getDataStore();
-  std::iota(sampleDataStore->begin(), sampleDataStore->end(), 1.0);
+  auto* sampleDataStorePtr = dataStructure.getDataAs<Float64Array>(k_SampleDataArrayPath)->getDataStore();
+  std::iota(sampleDataStorePtr->begin(), sampleDataStorePtr->end(), 1.0);
 
-  auto* sampleBoolArray =
-      UnitTest::CreateTestDataArray<bool>(dataStructure, sampleBoolArrayPath.getTargetName(), attrMatrixDims, {1}, dataStructure.getDataRefAs<AttributeMatrix>(sampleCellDataPath).getId());
-  REQUIRE(sampleBoolArray != nullptr);
-  for(usize index = 0; index < sampleBoolArray->getNumberOfTuples(); index++)
+  auto* sampleBoolArrayPtr =
+      UnitTest::CreateTestDataArray<bool>(dataStructure, k_SampleBoolArrayPath.getTargetName(), attrMatrixDims, {1}, dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
+  REQUIRE(sampleBoolArrayPtr != nullptr);
+  for(usize index = 0; index < sampleBoolArrayPtr->getNumberOfTuples(); index++)
   {
-    (*sampleBoolArray)[index] = index % 2 == 0;
+    (*sampleBoolArrayPtr)[index] = index % 2 == 0;
   }
 
-  auto* sampleMultiComponentArray =
-      UnitTest::CreateTestDataArray<int32>(dataStructure, sampleMultiComponentArrayPath.getTargetName(), attrMatrixDims, {3}, dataStructure.getDataRefAs<AttributeMatrix>(sampleCellDataPath).getId());
-  REQUIRE(sampleMultiComponentArray != nullptr);
-  for(usize index = 0; index < sampleMultiComponentArray->getNumberOfTuples(); index++)
+  auto* sampleMultiComponentArrayPtr =
+      UnitTest::CreateTestDataArray<int32>(dataStructure, k_SampleMultiComponentArrayPath.getTargetName(), attrMatrixDims, {3}, dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
+  REQUIRE(sampleMultiComponentArrayPtr != nullptr);
+  for(usize index = 0; index < sampleMultiComponentArrayPtr->getNumberOfTuples(); index++)
   {
-    (*sampleMultiComponentArray)[index * 3] = static_cast<int32>(index);
-    (*sampleMultiComponentArray)[index * 3 + 1] = static_cast<int32>(index + 100);
-    (*sampleMultiComponentArray)[index * 3 + 2] = static_cast<int32>(index + 200);
+    (*sampleMultiComponentArrayPtr)[index * 3] = static_cast<int32>(index);
+    (*sampleMultiComponentArrayPtr)[index * 3 + 1] = static_cast<int32>(index + 100);
+    (*sampleMultiComponentArrayPtr)[index * 3 + 2] = static_cast<int32>(index + 200);
   }
 
-  auto* sampleNeighborList =
-      NeighborList<int32>::Create(dataStructure, sampleNeighborListPath.getTargetName(), attrMatrixDims, dataStructure.getDataRefAs<AttributeMatrix>(sampleCellDataPath).getId());
-  sampleNeighborList->setList(0, std::vector<int32>{1, 2, 3});
+  auto* sampleNeighborListPtr =
+      NeighborList<int32>::Create(dataStructure, k_SampleNeighborListPath.getTargetName(), attrMatrixDims, dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
+  sampleNeighborListPtr->setList(0, std::vector<int32>{1, 2, 3});
 
-  auto refAction = CreateImageGeometryAction(refImageGeomPath, std::move(refDims), std::move(refOrigin), std::move(refSpacing), refCellDataName, IGeometry::LengthUnit::Micrometer);
+  auto refAction = CreateImageGeometryAction(k_RefImageGeomPath, std::move(refDims), std::move(refOrigin), std::move(refSpacing), k_RefCellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> refActionResult = refAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(refActionResult);
 
-  auto refDataAction = CreateArrayAction(DataType::int32, attrMatrixDims, {1}, refDataArrayPath);
+  auto refDataAction = CreateArrayAction(DataType::int32, attrMatrixDims, {1}, k_RefDataArrayPath);
   Result<> refDataActionResult = refDataAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(refDataActionResult);
 
-  auto* refDataStore = dataStructure.getDataAs<Int32Array>(refDataArrayPath)->getDataStore();
-  std::iota(refDataStore->begin(), refDataStore->end(), 26);
+  auto* refDataStorePtr = dataStructure.getDataAs<Int32Array>(k_RefDataArrayPath)->getDataStore();
+  std::iota(refDataStorePtr->begin(), refDataStorePtr->end(), 26);
 
   return dataStructure;
 }
@@ -113,21 +113,21 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
 
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_UseFill_Key, std::make_any<bool>(true));
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_FillValue_Key, std::make_any<float64>(9.8));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(sampleImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(sampleCellDataPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(refImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(refCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(k_SampleImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_SampleCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(k_RefImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(dataStructure.getData(copiedNeighborListPath) == nullptr);
+  REQUIRE(dataStructure.getData(k_CopiedNeighborListPath) == nullptr);
 
-  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(sampleDataArrayPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  REQUIRE(dataStructure.getData(copiedNeighborListPath) == nullptr);
+  REQUIRE(dataStructure.getData(k_CopiedNeighborListPath) == nullptr);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(copiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
   REQUIRE(copiedArray[0] == 13.0);
   REQUIRE(copiedArray[1] == 14.0);
   REQUIRE(copiedArray[2] == 15.0);
@@ -154,8 +154,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
   REQUIRE(copiedArray[23] == 9.8);
   REQUIRE(copiedArray[24] == 9.8);
 
-  auto& copiedBoolArray = dataStructure.getDataRefAs<BoolArray>(copiedBoolArrayPath);
-  auto& copiedMultiComponentArray = dataStructure.getDataRefAs<Int32Array>(copiedMultiComponentArrayPath);
+  auto& copiedBoolArray = dataStructure.getDataRefAs<BoolArray>(k_CopiedBoolArrayPath);
+  auto& copiedMultiComponentArray = dataStructure.getDataRefAs<Int32Array>(k_CopiedMultiComponentArrayPath);
   REQUIRE(copiedBoolArray[0] == true);
   REQUIRE(copiedBoolArray[3] == static_cast<bool>(9.8));
   REQUIRE(copiedMultiComponentArray[0] == 12);
@@ -183,19 +183,19 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Exe
 
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_UseFill_Key, std::make_any<bool>(true));
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_FillValue_Key, std::make_any<float64>(9.8));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(sampleImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(sampleCellDataPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(refImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(refCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(k_SampleImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_SampleCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(k_RefImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(sampleDataArrayPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(copiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
   for(const auto& value : copiedArray)
   {
     REQUIRE(value == 9.8);
@@ -222,19 +222,19 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Executi
 
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_UseFill_Key, std::make_any<bool>(true));
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_FillValue_Key, std::make_any<float64>(9.8));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(sampleImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(sampleCellDataPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(refImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(refCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(k_SampleImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_SampleCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(k_RefImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(sampleDataArrayPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(copiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
   REQUIRE(copiedArray[0] == 7.0);
   REQUIRE(copiedArray[1] == 7.0);
   REQUIRE(copiedArray[2] == 7.0);
@@ -282,19 +282,19 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid E
 
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_UseFill_Key, std::make_any<bool>(true));
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_FillValue_Key, std::make_any<float64>(9.8));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(sampleImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(sampleCellDataPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(refImageGeomPath));
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(refCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(k_SampleImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_SampleCellDataPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(k_RefImageGeomPath));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(sampleDataArrayPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(copiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
   REQUIRE(copiedArray[0] == 9.8);
   REQUIRE(copiedArray[1] == 9.8);
   REQUIRE(copiedArray[2] == 9.8);
@@ -328,7 +328,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: SIMPL Backwards Comp
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -341,22 +341,22 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: SIMPL Backwards Comp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<NearestPointFuseRegularGridsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<NearestPointFuseRegularGridsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<DataPath>(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key) == DataPath({"DataContainer"}));

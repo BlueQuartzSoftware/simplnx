@@ -91,7 +91,7 @@ public:
  * @param usedDirect Receives true when the direct probe runs.
  * @return Result from the selected probe.
  */
-Result<> dispatchDataArraysForTest(std::initializer_list<const IDataArray*> arrays, bool& usedDirect)
+Result<> DispatchDataArraysForTest(std::initializer_list<const IDataArray*> arrays, bool& usedDirect)
 {
   return DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>(arrays, usedDirect);
 }
@@ -103,7 +103,7 @@ Result<> dispatchDataArraysForTest(std::initializer_list<const IDataArray*> arra
  *
  * An empty list verifies the default direct path without a storage target.
  */
-Result<> dispatchEmptyForTest(bool& usedDirect)
+Result<> DispatchEmptyForTest(bool& usedDirect)
 {
   return DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({}, usedDirect);
 }
@@ -175,7 +175,7 @@ private:
   AlgorithmPathExecutionCounts m_Counts;
 };
 
-void checkDispatchCounts(const AlgorithmPathExecutionCounts& expected)
+void CheckDispatchCounts(const AlgorithmPathExecutionCounts& expected)
 {
   const auto actual = GetAlgorithmPathExecutionCounts();
   CHECK(actual.InCore == expected.InCore);
@@ -190,51 +190,51 @@ void checkDispatchCounts(const AlgorithmPathExecutionCounts& expected)
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residency", "[OrientationAnalysis][AlgorithmDispatch]")
 {
   DataStructure dataStructure;
-  auto* dataArray = DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Data", {1}, {1});
-  auto* inMemoryList = NeighborList<int32>::Create(dataStructure, "InMemoryList", {1});
+  auto* dataArrayPtr = DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Data", {1}, {1});
+  auto* inMemoryListPtr = NeighborList<int32>::Create(dataStructure, "InMemoryList", {1});
   auto outOfCoreStore = std::make_shared<TestOutOfCoreListStore>(ShapeType{1});
-  auto* outOfCoreList = NeighborList<int32>::Create(dataStructure, "OutOfCoreList", outOfCoreStore);
+  auto* outOfCoreListPtr = NeighborList<int32>::Create(dataStructure, "OutOfCoreList", outOfCoreStore);
   auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, "Strings", {1}, {"value"});
 
-  REQUIRE(dataArray != nullptr);
-  REQUIRE(inMemoryList != nullptr);
-  REQUIRE(outOfCoreList != nullptr);
+  REQUIRE(dataArrayPtr != nullptr);
+  REQUIRE(inMemoryListPtr != nullptr);
+  REQUIRE(outOfCoreListPtr != nullptr);
   REQUIRE(stringArrayPtr != nullptr);
 
   UnitTest::AlgorithmTestScope inMemoryScope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
-  inMemoryScope.requireExpectedStore(*inMemoryList);
+  inMemoryScope.requireExpectedStore(*inMemoryListPtr);
 
   bool usedDirect = false;
-  const std::initializer_list<const IDataArray*> namedDataArrays = {dataArray};
+  const std::initializer_list<const IDataArray*> namedDataArrays = {dataArrayPtr};
   CHECK_FALSE(AnyOutOfCore(namedDataArrays));
-  REQUIRE(dispatchDataArraysForTest(namedDataArrays, usedDirect).valid());
+  REQUIRE(DispatchDataArraysForTest(namedDataArrays, usedDirect).valid());
   CHECK(usedDirect);
 
-  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({inMemoryList}, usedDirect).valid());
+  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({inMemoryListPtr}, usedDirect).valid());
   CHECK(usedDirect);
 
-  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({outOfCoreList}, usedDirect).valid());
+  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({outOfCoreListPtr}, usedDirect).valid());
   CHECK_FALSE(usedDirect);
 
-  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({dataArray, outOfCoreList}, usedDirect).valid());
+  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({dataArrayPtr, outOfCoreListPtr}, usedDirect).valid());
   CHECK_FALSE(usedDirect);
-  CHECK(AnyOutOfCore({dataArray, outOfCoreList}));
+  CHECK(AnyOutOfCore({dataArrayPtr, outOfCoreListPtr}));
 
-  const AlgorithmArrayTargets namedTargets = {dataArray, outOfCoreList};
+  const AlgorithmArrayTargets namedTargets = {dataArrayPtr, outOfCoreListPtr};
   REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>(namedTargets, usedDirect).valid());
   CHECK_FALSE(usedDirect);
   CHECK(AnyOutOfCore(namedTargets));
 
-  std::vector<const IArray*> dynamicTargetPointers = {dataArray, outOfCoreList};
+  std::vector<const IArray*> dynamicTargetPointers = {dataArrayPtr, outOfCoreListPtr};
   const AlgorithmArrayTargets dynamicTargets(std::move(dynamicTargetPointers));
   REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>(dynamicTargets, usedDirect).valid());
   CHECK_FALSE(usedDirect);
   CHECK(AnyOutOfCore(dynamicTargets));
 
-  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({nullptr, dataArray, stringArrayPtr}, usedDirect).valid());
+  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({nullptr, dataArrayPtr, stringArrayPtr}, usedDirect).valid());
   CHECK(usedDirect);
 
-  REQUIRE(dispatchEmptyForTest(usedDirect).valid());
+  REQUIRE(DispatchEmptyForTest(usedDirect).valid());
   CHECK(usedDirect);
   CHECK_FALSE(AnyOutOfCore({}));
 }
@@ -242,31 +242,31 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residenc
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin boundary", "[OrientationAnalysis][AlgorithmDispatch]")
 {
   UnitTest::LoadPlugins();
-  using Path = UnitTest::AlgorithmDispatchPath;
+  using PathType = UnitTest::AlgorithmDispatchPath;
   struct SelectionCase
   {
-    bool ForceInCore = false;
-    bool ForceOoc = false;
-    Path ExpectedPath = Path::Direct;
-    AlgorithmPathExecutionCounts ExpectedCounts{};
+    bool force_in_core = false;
+    bool force_ooc = false;
+    PathType expected_path = PathType::Direct;
+    AlgorithmPathExecutionCounts expected_counts{};
   };
   const std::array<SelectionCase, 4> cases = {{
-      {.ForceInCore = false,
-       .ForceOoc = false,
-       .ExpectedPath = Path::Direct,
-       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
-      {.ForceInCore = false,
-       .ForceOoc = true,
-       .ExpectedPath = Path::Scanline,
-       .ExpectedCounts = {.InCore = 0, .OutOfCore = 1, .InCoreOnInMemoryStore = 0, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 1, .OutOfCoreOnOutOfCoreStore = 0}},
-      {.ForceInCore = true,
-       .ForceOoc = false,
-       .ExpectedPath = Path::Direct,
-       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
-      {.ForceInCore = true,
-       .ForceOoc = true,
-       .ExpectedPath = Path::Direct,
-       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.force_in_core = false,
+       .force_ooc = false,
+       .expected_path = PathType::Direct,
+       .expected_counts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.force_in_core = false,
+       .force_ooc = true,
+       .expected_path = PathType::Scanline,
+       .expected_counts = {.InCore = 0, .OutOfCore = 1, .InCoreOnInMemoryStore = 0, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 1, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.force_in_core = true,
+       .force_ooc = false,
+       .expected_path = PathType::Direct,
+       .expected_counts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.force_in_core = true,
+       .force_ooc = true,
+       .expected_path = PathType::Direct,
+       .expected_counts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
   }};
   const bool originalInCore = ForceInCoreAlgorithm();
   const bool originalOoc = ForceOocAlgorithm();
@@ -279,23 +279,23 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin
 
   for(const auto& selection : cases)
   {
-    CAPTURE(selection.ForceInCore, selection.ForceOoc);
-    ForceInCoreAlgorithm() = selection.ForceInCore;
-    ForceOocAlgorithm() = selection.ForceOoc;
+    CAPTURE(selection.force_in_core, selection.force_ooc);
+    ForceInCoreAlgorithm() = selection.force_in_core;
+    ForceOocAlgorithm() = selection.force_ooc;
     ResetAlgorithmPathExecutionCounts();
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == selection.ExpectedPath);
-    checkDispatchCounts(selection.ExpectedCounts);
+    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == selection.expected_path);
+    CheckDispatchCounts(selection.expected_counts);
   }
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch records the selected plugin path", "[OrientationAnalysis][AlgorithmDispatch]")
 {
-  using Path = UnitTest::AlgorithmDispatchPath;
+  using PathType = UnitTest::AlgorithmDispatchPath;
 
   ResetAlgorithmPathExecutionCounts();
   {
     const ForceInCoreAlgorithmGuard forceDirect;
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Direct);
+    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == PathType::Direct);
   }
   const auto directCounts = GetAlgorithmPathExecutionCounts();
   CHECK(directCounts.InCore == 1);
@@ -308,7 +308,7 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch records the selected plugin pa
   ResetAlgorithmPathExecutionCounts();
   {
     const ForceOocAlgorithmGuard forceScanline(true);
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Scanline);
+    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == PathType::Scanline);
   }
   const auto scanlineCounts = GetAlgorithmPathExecutionCounts();
   CHECK(scanlineCounts.InCore == 0);
@@ -323,14 +323,14 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch records the selected plugin pa
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScenario selects configured algorithm paths", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using Scenario = UnitTest::AlgorithmTestScenario;
+  using ScenarioType = UnitTest::AlgorithmTestScenario;
 
   const std::vector allScenarios = {
-      Scenario::InCoreAlgorithmOnInMemoryStore,
-      Scenario::OutOfCoreAlgorithmOnInMemoryStore,
+      ScenarioType::InCoreAlgorithmOnInMemoryStore,
+      ScenarioType::OutOfCoreAlgorithmOnInMemoryStore,
   };
-  const std::vector oocScenarios = {Scenario::OutOfCoreAlgorithmOnInMemoryStore};
-  const std::vector inCoreScenarios = {Scenario::InCoreAlgorithmOnInMemoryStore};
+  const std::vector oocScenarios = {ScenarioType::OutOfCoreAlgorithmOnInMemoryStore};
+  const std::vector inCoreScenarios = {ScenarioType::InCoreAlgorithmOnInMemoryStore};
 
   CHECK(UnitTest::SelectAlgorithmTestScenarios(allScenarios, 0) == allScenarios);
   CHECK(UnitTest::SelectAlgorithmTestScenarios(allScenarios, 1) == oocScenarios);
@@ -341,14 +341,14 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScenario selects configured algorit
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScenario helpers encode the supported test matrices", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using Scenario = UnitTest::AlgorithmTestScenario;
+  using ScenarioType = UnitTest::AlgorithmTestScenario;
 
   const std::vector bothInMemoryScenarios = {
-      Scenario::InCoreAlgorithmOnInMemoryStore,
-      Scenario::OutOfCoreAlgorithmOnInMemoryStore,
+      ScenarioType::InCoreAlgorithmOnInMemoryStore,
+      ScenarioType::OutOfCoreAlgorithmOnInMemoryStore,
   };
-  const std::vector inCoreInMemoryScenario = {Scenario::InCoreAlgorithmOnInMemoryStore};
-  const std::vector outOfCoreInMemoryScenario = {Scenario::OutOfCoreAlgorithmOnInMemoryStore};
+  const std::vector inCoreInMemoryScenario = {ScenarioType::InCoreAlgorithmOnInMemoryStore};
+  const std::vector outOfCoreInMemoryScenario = {ScenarioType::OutOfCoreAlgorithmOnInMemoryStore};
 
   CHECK(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores(0) == bothInMemoryScenarios);
   CHECK(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores(1) == outOfCoreInMemoryScenario);
@@ -357,8 +357,8 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScenario helpers encode the support
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScope witnesses only the target execution and restores state", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using Scenario = UnitTest::AlgorithmTestScenario;
-  using Path = UnitTest::AlgorithmDispatchPath;
+  using ScenarioType = UnitTest::AlgorithmTestScenario;
+  using PathType = UnitTest::AlgorithmDispatchPath;
 
   UnitTest::LoadPlugins();
   ResetAlgorithmPathExecutionCounts();
@@ -366,9 +366,9 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope witnesses only the target exe
 
   {
     const ForceOocAlgorithmGuard originalForceState(true);
-    UnitTest::AlgorithmTestScope scope(Scenario::InCoreAlgorithmOnInMemoryStore);
+    UnitTest::AlgorithmTestScope scope(ScenarioType::InCoreAlgorithmOnInMemoryStore);
     const auto selectedPath = scope.execute([] { return UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); });
-    CHECK(selectedPath == Path::Direct);
+    CHECK(selectedPath == PathType::Direct);
     CHECK(ForceOocAlgorithm());
     CHECK_FALSE(ForceInCoreAlgorithm());
   }
@@ -385,16 +385,16 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope witnesses only the target exe
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScope runs OOC algorithm on in-memory storage", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using Scenario = UnitTest::AlgorithmTestScenario;
-  using Path = UnitTest::AlgorithmDispatchPath;
+  using ScenarioType = UnitTest::AlgorithmTestScenario;
+  using PathType = UnitTest::AlgorithmDispatchPath;
 
   UnitTest::LoadPlugins();
-  UnitTest::AlgorithmTestScope scope(Scenario::OutOfCoreAlgorithmOnInMemoryStore);
+  UnitTest::AlgorithmTestScope scope(ScenarioType::OutOfCoreAlgorithmOnInMemoryStore);
   DataStructure dataStructure;
-  auto* values = DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {1}, {1});
-  REQUIRE(values != nullptr);
-  scope.requireExpectedStore(*values);
-  CHECK(scope.execute([] { return UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); }) == Path::Scanline);
+  auto* valuesPtr = DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {1}, {1});
+  REQUIRE(valuesPtr != nullptr);
+  scope.requireExpectedStore(*valuesPtr);
+  CHECK(scope.execute([] { return UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); }) == PathType::Scanline);
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the target throws", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
@@ -407,27 +407,27 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the targe
   CAPTURE(scenario, hadMode, hadThreshold, originalForceInCore, originalForceOutOfCore);
 
   UnitTest::LoadPlugins();
-  auto* preferences = Application::GetOrCreateInstance()->getPreferences();
-  const AlgorithmScopeStateGuard restoreTestState(*preferences);
+  auto* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
+  const AlgorithmScopeStateGuard restoreTestState(*preferencesPtr);
 
   if(hadMode)
   {
-    preferences->setDataStorageMode(DataStorageMode::Adaptive);
+    preferencesPtr->setDataStorageMode(DataStorageMode::Adaptive);
   }
   else
   {
-    preferences->removeValue(Preferences::k_DataStorageMode_Key);
+    preferencesPtr->removeValue(Preferences::k_DataStorageMode_Key);
   }
   if(hadThreshold)
   {
-    preferences->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
+    preferencesPtr->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
   }
   else
   {
-    preferences->removeValue(Preferences::k_LargeDataSize_Key);
+    preferencesPtr->removeValue(Preferences::k_LargeDataSize_Key);
   }
-  const auto originalMode = preferences->value(Preferences::k_DataStorageMode_Key);
-  const auto originalThreshold = preferences->value(Preferences::k_LargeDataSize_Key);
+  const auto originalMode = preferencesPtr->value(Preferences::k_DataStorageMode_Key);
+  const auto originalThreshold = preferencesPtr->value(Preferences::k_LargeDataSize_Key);
   const AlgorithmPathExecutionCounts originalCounts{
       .InCore = 11, .OutOfCore = 13, .InCoreOnInMemoryStore = 17, .InCoreOnOutOfCoreStore = 19, .OutOfCoreOnInMemoryStore = 23, .OutOfCoreOnOutOfCoreStore = 29};
   ForceInCoreAlgorithm() = originalForceInCore;
@@ -449,10 +449,10 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the targe
         scope.execute([&] {
           CHECK(ForceInCoreAlgorithm() == !expectsOutOfCore);
           CHECK(ForceOocAlgorithm() == expectsOutOfCore);
-          checkDispatchCounts({});
-          REQUIRE(preferences->dataStorageMode() == DataStorageMode::ForceInCore);
-          REQUIRE(preferences->value(Preferences::k_LargeDataSize_Key).type() == originalThreshold.type());
-          REQUIRE(preferences->value(Preferences::k_LargeDataSize_Key) == originalThreshold);
+          CheckDispatchCounts({});
+          REQUIRE(preferencesPtr->dataStorageMode() == DataStorageMode::ForceInCore);
+          REQUIRE(preferencesPtr->value(Preferences::k_LargeDataSize_Key).type() == originalThreshold.type());
+          REQUIRE(preferencesPtr->value(Preferences::k_LargeDataSize_Key) == originalThreshold);
           // The synthetic event tests scope cleanup; it does not represent a filter execution.
           RecordAlgorithmPathExecution(expectsOutOfCore ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, false);
           throw;
@@ -467,14 +467,14 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the targe
     REQUIRE(caughtExpectedException);
     CHECK(ForceInCoreAlgorithm() == originalForceInCore);
     CHECK(ForceOocAlgorithm() == originalForceOutOfCore);
-    checkDispatchCounts(originalCounts);
-    CHECK(preferences->dataStorageMode() == DataStorageMode::ForceInCore);
+    CheckDispatchCounts(originalCounts);
+    CHECK(preferencesPtr->dataStorageMode() == DataStorageMode::ForceInCore);
   }
 
-  CHECK(preferences->contains(Preferences::k_DataStorageMode_Key) == hadMode);
-  CHECK(preferences->value(Preferences::k_DataStorageMode_Key).type() == originalMode.type());
-  CHECK(preferences->value(Preferences::k_DataStorageMode_Key) == originalMode);
-  CHECK(preferences->contains(Preferences::k_LargeDataSize_Key) == hadThreshold);
-  CHECK(preferences->value(Preferences::k_LargeDataSize_Key).type() == originalThreshold.type());
-  CHECK(preferences->value(Preferences::k_LargeDataSize_Key) == originalThreshold);
+  CHECK(preferencesPtr->contains(Preferences::k_DataStorageMode_Key) == hadMode);
+  CHECK(preferencesPtr->value(Preferences::k_DataStorageMode_Key).type() == originalMode.type());
+  CHECK(preferencesPtr->value(Preferences::k_DataStorageMode_Key) == originalMode);
+  CHECK(preferencesPtr->contains(Preferences::k_LargeDataSize_Key) == hadThreshold);
+  CHECK(preferencesPtr->value(Preferences::k_LargeDataSize_Key).type() == originalThreshold.type());
+  CHECK(preferencesPtr->value(Preferences::k_LargeDataSize_Key) == originalThreshold);
 }

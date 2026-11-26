@@ -83,7 +83,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
   OutputActions deleteActions;
   for(const auto& dataObjectPath : dataObjectPaths)
   {
-    const auto* dataObject = dataStructure.getDataAs<DataObject>(dataObjectPath);
+    const auto* dataObjectPtr = dataStructure.getDataAs<DataObject>(dataObjectPath);
 
     // switch(deletionType)
     //{
@@ -96,7 +96,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
     //   // - Node will be deleted
     //  - IN CURRENT STATE BEHAVES MORE LIKE REMOVE START NODE AND ALL CHILDREN
 
-    if(dataObject->getParentIds().size() > 1)
+    if(dataObjectPtr->getParentIds().size() > 1)
     {
       return {.outputActions = ConvertResultTo<OutputActions>(
                   MakeWarningVoidResult(-61501, fmt::format("The object is multi-parented, deleting this data could affect other unintended nodes. Consider using the Delete DataPath instead.")), {})};

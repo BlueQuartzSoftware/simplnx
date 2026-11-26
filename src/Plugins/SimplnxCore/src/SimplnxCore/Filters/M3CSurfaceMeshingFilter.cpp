@@ -161,23 +161,23 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // The number of vertices and faces is not known until execute; create empty and resize in the algorithm.
-  constexpr usize numElements = 0;
+  constexpr usize k_NumElements = 0;
 
   // Create the Triangle Geometry
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, numElements, pVertexGroupDataName, pFaceGroupDataName,
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, k_NumElements, k_NumElements, pVertexGroupDataName, pFaceGroupDataName,
                                                                                        TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
   // NodeTypes (int8, 1 component) on the vertex AttributeMatrix
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int8, std::vector<usize>{numElements}, std::vector<usize>{1},
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int8, std::vector<usize>{k_NumElements}, std::vector<usize>{1},
                                                                  pTriangleGeometryPath.createChildPath(pVertexGroupDataName).createChildPath(pNodeTypesName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // FaceLabels (int32, 2 components) on the face AttributeMatrix
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2},
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{k_NumElements}, std::vector<usize>{2},
                                                                  pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
@@ -190,7 +190,7 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     auto compShape = iDataArray.getComponentShape();
     compShape.insert(compShape.begin(), 2);
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{k_NumElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   for(const auto& selectedDataPath : pFeatureDataPaths)
@@ -199,7 +199,7 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     auto compShape = iDataArray.getComponentShape();
     compShape.insert(compShape.begin(), 2);
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{k_NumElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

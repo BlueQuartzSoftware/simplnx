@@ -89,8 +89,8 @@ IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Ensure the Face Feature Attribute Matrix is really an AttributeMatrix
-  const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(pFeatureAttributeMatrixPath);
-  if(featureAttrMatrix == nullptr)
+  const auto* featureAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pFeatureAttributeMatrixPath);
+  if(featureAttrMatrixPtr == nullptr)
   {
     return IFilter::MakePreflightErrorResult(
         -12801, fmt::format("Feature AttributeMatrix does not exist at path '{}' or the path does not point to an AttributeMatrix.", pFeatureAttributeMatrixPath.toString()));
@@ -100,7 +100,7 @@ IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const D
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VolumesArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrixPtr->getShape(), std::vector<usize>{1}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

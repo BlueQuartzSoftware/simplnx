@@ -86,7 +86,7 @@ private:
   fs::perms m_OriginalPermissions = fs::perms::unknown;
 };
 
-void requireFile(const fs::path& path)
+void RequireFile(const fs::path& path)
 {
   std::ofstream stream(path);
   REQUIRE(stream.is_open());
@@ -111,7 +111,7 @@ TEST_CASE("FileUtilities::CreateOutputDirectories reports the full creation erro
 {
   const PathFixture fixture;
   const auto filePath = fixture.path() / "file";
-  requireFile(filePath);
+  RequireFile(filePath);
   const auto outputPath = filePath / "out";
   std::error_code expectedError;
   REQUIRE_FALSE(fs::create_directories(outputPath, expectedError));
@@ -135,7 +135,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission checks writable ances
   const auto existingDirectory = fixture.path() / "existing";
   REQUIRE(fs::create_directory(existingDirectory));
   const auto existingFile = existingDirectory / "file";
-  requireFile(existingFile);
+  RequireFile(existingFile);
   const auto missingDirectory = existingDirectory / "new" / "deep";
   const auto missingFile = missingDirectory / "out.txt";
 

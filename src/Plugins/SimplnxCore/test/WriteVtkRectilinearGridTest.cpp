@@ -146,25 +146,25 @@ private:
 
 BoolArray& CreateBulkBoolInput(DataStructure& ds, std::shared_ptr<AbstractDataStore<bool>> store = nullptr)
 {
-  auto* image = ImageGeom::Create(ds, k_BulkImagePath.getTargetName());
-  REQUIRE(image != nullptr);
-  image->setDimensions({k_BoolCount, 1, 1});
-  REQUIRE(image->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, k_BulkCellDataPath.getTargetName(), ShapeType{1, 1, k_BoolCount}, image->getId());
-  REQUIRE(cellAM != nullptr);
-  image->setCellData(*cellAM);
+  auto* imagePtr = ImageGeom::Create(ds, k_BulkImagePath.getTargetName());
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({k_BoolCount, 1, 1});
+  REQUIRE(imagePtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(ds, k_BulkCellDataPath.getTargetName(), ShapeType{1, 1, k_BoolCount}, imagePtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  imagePtr->setCellData(*cellAmPtr);
   if(store == nullptr)
   {
-    store = std::make_shared<DataStore<bool>>(cellAM->getShape(), ShapeType{1}, false);
+    store = std::make_shared<DataStore<bool>>(cellAmPtr->getShape(), ShapeType{1}, false);
   }
-  auto* values = BoolArray::Create(ds, k_BulkBoolPath.getTargetName(), std::move(store), cellAM->getId());
-  REQUIRE(values != nullptr);
+  auto* valuesPtr = BoolArray::Create(ds, k_BulkBoolPath.getTargetName(), std::move(store), cellAmPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
   for(usize valueIdx = 0; valueIdx < k_BoolCount; valueIdx++)
   {
-    (*values)[valueIdx] = valueIdx % 3 == 1;
+    (*valuesPtr)[valueIdx] = valueIdx % 3 == 1;
   }
-  return *values;
+  return *valuesPtr;
 }
 
 Arguments CreateWriterArguments(const fs::path& outputPath, bool binary)
@@ -304,18 +304,18 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates",
   const DataPath imagePath({"SmallImage"});
   const DataPath cellPath = imagePath.createChildPath("CellData");
   const DataPath valuesPath = cellPath.createChildPath("Values");
-  auto* image = ImageGeom::Create(dataStructure, imagePath.getTargetName());
-  REQUIRE(image != nullptr);
-  image->setDimensions({3, 3, 3});
-  REQUIRE(image->setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F}).valid());
-  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), ShapeType{3, 3, 3}, image->getId());
-  REQUIRE(cellData != nullptr);
-  image->setCellData(*cellData);
+  auto* imagePtr = ImageGeom::Create(dataStructure, imagePath.getTargetName());
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({3, 3, 3});
+  REQUIRE(imagePtr->setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F}).valid());
+  REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), ShapeType{3, 3, 3}, imagePtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imagePtr->setCellData(*cellDataPtr);
   auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, valuesPath, {3, 3, 3}, {1});
-  auto* values = Float32Array::Create(dataStructure, valuesPath.getTargetName(), store, cellData->getId());
-  REQUIRE(values != nullptr);
-  values->fill(0.0F);
+  auto* valuesPtr = Float32Array::Create(dataStructure, valuesPath.getTargetName(), store, cellDataPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
+  valuesPtr->fill(0.0F);
 
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "VtkAsciiSmallCoordinates.vtk";
   const WriteVtkRectilinearGridFilter filter;
@@ -583,7 +583,7 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -596,22 +596,22 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteVtkRectilinearGridFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteVtkRectilinearGridFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteVtkRectilinearGridFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<bool>(WriteVtkRectilinearGridFilter::k_WriteBinaryFile_Key) == true);
       // Complex type (DataContainerFromMultiSelectionFilterParameterConverter) - verified by successful pipeline loading
@@ -626,16 +626,16 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Legacy scalar component l
   const bool binary = GENERATE(false, true);
   CAPTURE(components, binary);
   DataStructure dataStructure;
-  auto* image = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(image != nullptr);
-  image->setDimensions({1, 1, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{1, 1, 1}, image->getId());
-  REQUIRE(cells != nullptr);
-  image->setCellData(*cells);
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({1, 1, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{1, 1, 1}, imagePtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imagePtr->setCellData(*cellsPtr);
   const DataPath arrayPath({"Image", "Cells", "Values"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, arrayPath, ShapeType{1, 1, 1}, ShapeType{components});
-  auto* values = Float32Array::Create(dataStructure, "Values", store, cells->getId());
-  REQUIRE(values != nullptr);
+  auto* valuesPtr = Float32Array::Create(dataStructure, "Values", store, cellsPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
 
   WriteVtkRectilinearGridFilter filter;
   auto args = filter.getDefaultArguments();

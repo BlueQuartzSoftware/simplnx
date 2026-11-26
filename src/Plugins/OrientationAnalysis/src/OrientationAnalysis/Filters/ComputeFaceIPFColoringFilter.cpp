@@ -121,8 +121,8 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
                 MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto* const faceLabels = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
-  if(faceLabels == nullptr)
+  const auto* const faceLabelsPtr = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
+  if(faceLabelsPtr == nullptr)
   {
     return MakePreflightErrorResult(-2431, fmt::format("Could not find the face labels data array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()));
   }
@@ -137,11 +137,11 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   }
 
   DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pFirstFaceIPFColorsArrayNameValue);
-  auto firstAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
+  auto firstAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabelsPtr->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(firstAction));
 
   faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSecondFaceIPFColorsArrayNameValue);
-  auto secondAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
+  auto secondAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabelsPtr->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(secondAction));
 
   return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};

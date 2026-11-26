@@ -22,7 +22,7 @@ namespace
  * A row includes the full extent of each dimension from firstRowDim onward.
  * The function does not split a row across chunks.
  */
-nx::core::usize computeRowsForByteTarget(nonstd::span<const nx::core::usize> dims, nx::core::usize firstRowDim, nx::core::usize unitBytes, nx::core::usize targetBytes, nx::core::usize maxRows)
+nx::core::usize ComputeRowsForByteTarget(nonstd::span<const nx::core::usize> dims, nx::core::usize firstRowDim, nx::core::usize unitBytes, nx::core::usize targetBytes, nx::core::usize maxRows)
 {
   nx::core::usize rowBytes = unitBytes;
   for(nx::core::usize i = firstRowDim; i < dims.size(); ++i)
@@ -62,11 +62,11 @@ bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, 
     if(dims.size() >= 3)
     {
       chunk[0] = 1;
-      chunk[1] = computeRowsForByteTarget(dims, /*firstRowDim=*/2, unitBytes, opts.targetBytes, dims[1]);
+      chunk[1] = ComputeRowsForByteTarget(dims, /*firstRowDim=*/2, unitBytes, opts.targetBytes, dims[1]);
     }
     else
     {
-      chunk[0] = computeRowsForByteTarget(dims, /*firstRowDim=*/1, unitBytes, opts.targetBytes, dims[0]);
+      chunk[0] = ComputeRowsForByteTarget(dims, /*firstRowDim=*/1, unitBytes, opts.targetBytes, dims[0]);
     }
     return true;
   }

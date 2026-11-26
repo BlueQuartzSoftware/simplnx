@@ -177,27 +177,27 @@ struct FailureState
 {
   FaultKind primary = FaultKind::None;
   FaultKind secondary = FaultKind::None;
-  CopyPhase secondaryPhase = CopyPhase::CommitWrite;
-  CancelAt cancelAt = CancelAt::None;
-  usize primaryPlane = 1;
-  usize secondaryZ = 1;
-  bool messagePrimary = false;
-  bool aggregateFailure = false;
-  bool diagnosticMatch = true;
+  CopyPhase secondary_phase = CopyPhase::CommitWrite;
+  CancelAt cancel_at = CancelAt::None;
+  usize primary_plane = 1;
+  usize secondary_z = 1;
+  bool message_primary = false;
+  bool aggregate_failure = false;
+  bool diagnostic_match = true;
   bool armed = false;
-  bool primaryFired = false;
-  bool secondaryFired = false;
-  bool cancelFired = false;
-  usize aggregateCalls = 0;
-  usize recordFactories = 0;
-  usize liveRecords = 0;
-  usize recordReads = 0;
-  usize recordWrites = 0;
+  bool primary_fired = false;
+  bool secondary_fired = false;
+  bool cancel_fired = false;
+  usize aggregate_calls = 0;
+  usize record_factories = 0;
+  usize live_records = 0;
+  usize record_reads = 0;
+  usize record_writes = 0;
   usize reads = 0;
   usize writes = 0;
-  usize successfulWrites = 0;
-  usize progressCalls = 0;
-  usize errorCalls = 0;
+  usize successful_writes = 0;
+  usize progress_calls = 0;
+  usize error_calls = 0;
   const IDataArray* selected = nullptr;
   std::atomic_bool cancel = false;
 };
@@ -220,7 +220,7 @@ public:
   , m_State(state)
   , m_Plane(plane)
   {
-    ++m_State.liveRecords;
+    ++m_State.live_records;
   }
 
   RecordDecorator(const RecordDecorator&) = delete;
@@ -233,7 +233,7 @@ public:
    */
   ~RecordDecorator() noexcept override
   {
-    --m_State.liveRecords;
+    --m_State.live_records;
   }
   uint64 recordSize() const override
   {
@@ -265,14 +265,14 @@ public:
    */
   Result<uint64> read(uint64 offset, uint64 count, nonstd::span<std::byte> records, const std::atomic_bool& cancel) const override
   {
-    ++m_State.recordReads;
-    if(!m_State.messagePrimary && m_Plane == m_State.primaryPlane && m_State.primary != FaultKind::None && !m_State.primaryFired)
+    ++m_State.record_reads;
+    if(!m_State.message_primary && m_Plane == m_State.primary_plane && m_State.primary != FaultKind::None && !m_State.primary_fired)
     {
-      m_State.primaryFired = true;
-      if(m_State.cancelAt == CancelAt::WithPrimary)
+      m_State.primary_fired = true;
+      if(m_State.cancel_at == CancelAt::WithPrimary)
       {
         m_State.cancel = true;
-        m_State.cancelFired = true;
+        m_State.cancel_fired = true;
       }
       return ConvertResultTo<uint64>(RaiseFault(m_State.primary, true), 0);
     }
@@ -289,13 +289,13 @@ public:
    */
   Result<> write(uint64 offset, uint64 count, nonstd::span<const std::byte> records, const std::atomic_bool& cancel) override
   {
-    ++m_State.recordWrites;
+    ++m_State.record_writes;
     auto result = m_Delegate->write(offset, count, records, cancel);
-    if(result.valid() && m_Plane == m_State.primaryPlane && m_State.cancelAt == CancelAt::RecordWrite)
+    if(result.valid() && m_Plane == m_State.primary_plane && m_State.cancel_at == CancelAt::RecordWrite)
     {
       // Cancel after a real flush, while the unchanged per-plane CCL is still active.
       m_State.cancel = true;
-      m_State.cancelFired = true;
+      m_State.cancel_fired = true;
     }
     return result;
   }
@@ -371,7 +371,7 @@ public:
       return ConvertInvalidResult<std::unique_ptr<ITemporaryRecordStore>>(std::move(result));
     }
     // With hole filling disabled, each plane creates exactly one equivalence store.
-    const usize plane = m_State.recordFactories++;
+    const usize plane = m_State.record_factories++;
     return {std::unique_ptr<ITemporaryRecordStore>(new RecordDecorator(std::move(result.value()), m_State, plane))};
   }
 
@@ -467,20 +467,20 @@ public:
     {
       ++m_State.reads;
       const usize z = start / (k_X * k_Y);
-      const bool gather = m_State.recordFactories == 0 && !m_State.primaryFired;
+      const bool gather = m_State.record_factories == 0 && !m_State.primary_fired;
       const CopyPhase phase = gather ? CopyPhase::GatherRead : CopyPhase::CommitRead;
-      if((gather && m_State.cancelAt == CancelAt::Gather && z == 1) || (!gather && m_State.cancelAt == CancelAt::CommitRead && z == 0))
+      if((gather && m_State.cancel_at == CancelAt::Gather && z == 1) || (!gather && m_State.cancel_at == CancelAt::CommitRead && z == 0))
       {
         m_State.cancel = true;
-        m_State.cancelFired = true;
+        m_State.cancel_fired = true;
       }
-      if(m_State.secondary != FaultKind::None && phase == m_State.secondaryPhase && z == m_State.secondaryZ && !m_State.secondaryFired)
+      if(m_State.secondary != FaultKind::None && phase == m_State.secondary_phase && z == m_State.secondary_z && !m_State.secondary_fired)
       {
-        m_State.secondaryFired = true;
-        if(m_State.cancelAt == CancelAt::WithSecondary)
+        m_State.secondary_fired = true;
+        if(m_State.cancel_at == CancelAt::WithSecondary)
         {
           m_State.cancel = true;
-          m_State.cancelFired = true;
+          m_State.cancel_fired = true;
         }
         return RaiseFault(m_State.secondary, false);
       }
@@ -502,13 +502,13 @@ public:
     {
       ++m_State.writes;
       const usize z = start / (k_X * k_Y);
-      if(m_State.secondary != FaultKind::None && m_State.secondaryPhase == CopyPhase::CommitWrite && z == m_State.secondaryZ && !m_State.secondaryFired)
+      if(m_State.secondary != FaultKind::None && m_State.secondary_phase == CopyPhase::CommitWrite && z == m_State.secondary_z && !m_State.secondary_fired)
       {
-        m_State.secondaryFired = true;
-        if(m_State.cancelAt == CancelAt::WithSecondary)
+        m_State.secondary_fired = true;
+        if(m_State.cancel_at == CancelAt::WithSecondary)
         {
           m_State.cancel = true;
-          m_State.cancelFired = true;
+          m_State.cancel_fired = true;
         }
         return RaiseFault(m_State.secondary, false);
       }
@@ -516,7 +516,7 @@ public:
     auto result = DataStore<T>::copyFromBuffer(start, values);
     if(m_State.armed && result.valid())
     {
-      ++m_State.successfulWrites;
+      ++m_State.successful_writes;
     }
     return result;
   }
@@ -616,14 +616,14 @@ IdentifySampleInputValues Inputs()
  */
 IFilter::MessageHandler Messages(FailureState& state, HandlerKind handler)
 {
-  if(handler == HandlerKind::Empty && !state.messagePrimary && state.cancelAt != CancelAt::BeforePlane)
+  if(handler == HandlerKind::Empty && !state.message_primary && state.cancel_at != CancelAt::BeforePlane)
   {
     return {};
   }
   return IFilter::MessageHandler{[&state, handler](const IFilter::Message& message) {
     if(message.type == IFilter::Message::Type::Error)
     {
-      ++state.errorCalls;
+      ++state.error_calls;
       if(handler == HandlerKind::ErrorThrow)
       {
         throw PlaneFailure(303);
@@ -631,17 +631,17 @@ IFilter::MessageHandler Messages(FailureState& state, HandlerKind handler)
     }
     if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Identifying Sample Slices: "))
     {
-      ++state.progressCalls;
-      if(message.message == fmt::format("Identifying Sample Slices: {}/{}", state.primaryPlane, k_X))
+      ++state.progress_calls;
+      if(message.message == fmt::format("Identifying Sample Slices: {}/{}", state.primary_plane, k_X))
       {
-        if(state.cancelAt == CancelAt::BeforePlane)
+        if(state.cancel_at == CancelAt::BeforePlane)
         {
           state.cancel = true;
-          state.cancelFired = true;
+          state.cancel_fired = true;
         }
-        if(state.messagePrimary && state.primary != FaultKind::None)
+        if(state.message_primary && state.primary != FaultKind::None)
         {
-          state.primaryFired = true;
+          state.primary_fired = true;
           (void)RaiseFault(state.primary, true);
         }
       }
@@ -660,8 +660,8 @@ void FailDiagnostic(void* context, const IDataArray* mask)
   auto& state = *static_cast<FailureState*>(context);
   if(mask == state.selected)
   {
-    ++state.aggregateCalls;
-    if(state.aggregateFailure)
+    ++state.aggregate_calls;
+    if(state.aggregate_failure)
     {
       throw AllocationFailure(404);
     }
@@ -744,7 +744,7 @@ Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlan
   DataStructure data = CreateFailureFixture<T>(store);
   REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
   auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
-  state.selected = state.diagnosticMatch ? &mask : nullptr;
+  state.selected = state.diagnostic_match ? &mask : nullptr;
   auto inputs = Inputs();
   auto messages = Messages(state, handler);
   IdentifySampleCCL algorithm(data, messages, state.cancel, &inputs);
@@ -771,10 +771,10 @@ Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlan
     REQUIRE(overrideManager.selected());
     state.armed = true;
     const auto disarm = MakeScopeGuard([&]() noexcept { state.armed = false; });
-    if(state.cancelAt == CancelAt::Pre)
+    if(state.cancel_at == CancelAt::Pre)
     {
       state.cancel = true;
-      state.cancelFired = true;
+      state.cancel_fired = true;
     }
     outcome = CaptureOutcome([&] { return algorithm(); });
   }
@@ -782,10 +782,10 @@ Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlan
   REQUIRE(mask.getDataStore() == store.get());
   REQUIRE(budget.reservedWorkingMemoryBytes() == occupied.sizeBytes());
   RequireReleased(counts);
-  REQUIRE(state.liveRecords == 0);
-  REQUIRE(state.errorCalls == 0);
-  REQUIRE(state.successfulWrites == successfulZ);
-  if(state.cancelAt == CancelAt::Pre)
+  REQUIRE(state.live_records == 0);
+  REQUIRE(state.error_calls == 0);
+  REQUIRE(state.successful_writes == successfulZ);
+  if(state.cancel_at == CancelAt::Pre)
   {
     REQUIRE(counts.allocationEvents == 0);
     REQUIRE(counts.extraRequestCount == 0);
@@ -863,7 +863,7 @@ void RequireDual(const Outcome& outcome, const FailureState& state)
   else
   {
     const auto& message = result.errors()[0].message;
-    REQUIRE(message.find(state.messagePrimary ? "reporting plane" : "classifying plane") != std::string::npos);
+    REQUIRE(message.find(state.message_primary ? "reporting plane" : "classifying plane") != std::string::npos);
     REQUIRE(message.find("plane 1") != std::string::npos);
   }
   if(state.secondary == FaultKind::Result)
@@ -874,16 +874,16 @@ void RequireDual(const Outcome& outcome, const FailureState& state)
   else
   {
     const auto& message = result.errors()[1].message;
-    REQUIRE(message.find(state.secondaryPhase == CopyPhase::CommitRead ? "reading completed prefix" : "writing completed prefix") != std::string::npos);
-    REQUIRE(message.find(fmt::format("starting at plane 0 with 1 planes at Z {}", state.secondaryZ)) != std::string::npos);
+    REQUIRE(message.find(state.secondary_phase == CopyPhase::CommitRead ? "reading completed prefix" : "writing completed prefix") != std::string::npos);
+    REQUIRE(message.find(fmt::format("starting at plane 0 with 1 planes at Z {}", state.secondary_z)) != std::string::npos);
   }
-  REQUIRE(state.primaryFired);
-  REQUIRE(state.secondaryFired);
-  REQUIRE(state.aggregateCalls == static_cast<usize>(state.diagnosticMatch));
-  REQUIRE(state.recordFactories == (state.messagePrimary ? 1 : 2));
-  REQUIRE(state.recordReads >= 1);
-  REQUIRE(state.reads == k_Z + state.secondaryZ + 1);
-  REQUIRE(state.writes == state.secondaryZ + static_cast<usize>(state.secondaryPhase == CopyPhase::CommitWrite));
+  REQUIRE(state.primary_fired);
+  REQUIRE(state.secondary_fired);
+  REQUIRE(state.aggregate_calls == static_cast<usize>(state.diagnostic_match));
+  REQUIRE(state.record_factories == (state.message_primary ? 1 : 2));
+  REQUIRE(state.record_reads >= 1);
+  REQUIRE(state.reads == k_Z + state.secondary_z + 1);
+  REQUIRE(state.writes == state.secondary_z + static_cast<usize>(state.secondary_phase == CopyPhase::CommitWrite));
 }
 } // namespace
 
@@ -901,7 +901,7 @@ TEST_CASE("IdentifySample batch retains both terminal failures in primary order"
     FailureState state;
     state.primary = primary;
     state.secondary = secondary;
-    state.secondaryPhase = phase;
+    state.secondary_phase = phase;
     const auto outcome = useBool ? RunFailure<bool>(state, handler, 1, 1) : RunFailure<uint8>(state, handler, 1, 1);
     RequireDual(outcome, state);
   }
@@ -913,12 +913,12 @@ TEST_CASE("IdentifySample batch captures a progress callback failure before publ
   const auto primary = GENERATE(FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   const auto secondary = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation);
   FailureState state;
-  state.messagePrimary = true;
+  state.message_primary = true;
   state.primary = primary;
   state.secondary = secondary;
   const auto outcome = RunFailure<uint8>(state, HandlerKind::ErrorThrow, 1, 1);
   RequireDual(outcome, state);
-  REQUIRE(state.progressCalls == 2);
+  REQUIRE(state.progress_calls == 2);
 }
 
 TEST_CASE("IdentifySample batch preserves lone plane failures and skips an empty prefix", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
@@ -929,12 +929,12 @@ TEST_CASE("IdentifySample batch preserves lone plane failures and skips an empty
   const bool useBool = GENERATE(false, true);
   FailureState state;
   state.primary = kind;
-  state.primaryPlane = plane;
+  state.primary_plane = plane;
   const auto outcome = useBool ? RunFailure<bool>(state, HandlerKind::Empty, plane, plane == 0 ? 0 : k_Z) : RunFailure<uint8>(state, HandlerKind::Empty, plane, plane == 0 ? 0 : k_Z);
-  REQUIRE(state.primaryFired);
-  REQUIRE_FALSE(state.secondaryFired);
-  REQUIRE(state.recordFactories == plane + 1);
-  REQUIRE(state.aggregateCalls == 0);
+  REQUIRE(state.primary_fired);
+  REQUIRE_FALSE(state.secondary_fired);
+  REQUIRE(state.record_factories == plane + 1);
+  REQUIRE(state.aggregate_calls == 0);
   REQUIRE(state.reads == (plane == 0 ? k_Z : 2 * k_Z));
   REQUIRE(state.writes == (plane == 0 ? 0 : k_Z));
   if(kind == FaultKind::Result)
@@ -963,16 +963,16 @@ TEST_CASE("IdentifySample batch preserves lone gather and commit exceptions", "[
   const auto kind = GENERATE(FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   FailureState state;
   state.secondary = kind;
-  state.secondaryPhase = phase;
-  state.secondaryZ = 0;
+  state.secondary_phase = phase;
+  state.secondary_z = 0;
   const auto outcome = RunFailure<uint8>(state, HandlerKind::Empty, phase == CopyPhase::GatherRead ? 0 : 8, 0);
   REQUIRE_FALSE(outcome.result.has_value());
   REQUIRE(outcome.thrown == kind);
   REQUIRE(outcome.payload == 202);
-  REQUIRE(state.secondaryFired);
-  REQUIRE_FALSE(state.primaryFired);
-  REQUIRE(state.aggregateCalls == 0);
-  REQUIRE(state.recordFactories == (phase == CopyPhase::GatherRead ? 0 : 8));
+  REQUIRE(state.secondary_fired);
+  REQUIRE_FALSE(state.primary_fired);
+  REQUIRE(state.aggregate_calls == 0);
+  REQUIRE(state.record_factories == (phase == CopyPhase::GatherRead ? 0 : 8));
   REQUIRE(state.reads == (phase == CopyPhase::GatherRead ? 1 : k_Z + 1));
   REQUIRE(state.writes == static_cast<usize>(phase == CopyPhase::CommitWrite));
 }
@@ -986,12 +986,12 @@ TEST_CASE("IdentifySample batch preserves primary when diagnostic assembly fails
   FailureState state;
   state.primary = primary;
   state.secondary = secondary;
-  state.aggregateFailure = true;
+  state.aggregate_failure = true;
   const auto outcome = RunFailure<uint8>(state, handler, 1, 1);
-  REQUIRE(state.primaryFired);
-  REQUIRE(state.secondaryFired);
-  REQUIRE(state.aggregateCalls == 1);
-  REQUIRE(state.recordFactories == 2);
+  REQUIRE(state.primary_fired);
+  REQUIRE(state.secondary_fired);
+  REQUIRE(state.aggregate_calls == 1);
+  REQUIRE(state.record_factories == 2);
   REQUIRE(state.reads == k_Z + 2);
   REQUIRE(state.writes == 2);
   if(primary == FaultKind::Result)
@@ -1020,16 +1020,16 @@ TEST_CASE("IdentifySample batch cancellation publishes only completed planes", "
   const bool useBool = GENERATE(false, true);
   const usize completed = point == CancelAt::CommitRead ? 8 : (point == CancelAt::BeforePlane || point == CancelAt::RecordWrite ? 1 : 0);
   FailureState state;
-  state.cancelAt = point;
+  state.cancel_at = point;
   const auto outcome =
       useBool ? RunFailure<bool>(state, HandlerKind::Capturing, completed, completed == 0 ? 0 : k_Z) : RunFailure<uint8>(state, HandlerKind::Capturing, completed, completed == 0 ? 0 : k_Z);
-  REQUIRE(state.cancelFired);
+  REQUIRE(state.cancel_fired);
   REQUIRE(outcome.result.has_value());
   SIMPLNX_RESULT_REQUIRE_VALID(outcome.result.value());
-  REQUIRE(state.aggregateCalls == 0);
-  REQUIRE_FALSE(state.primaryFired);
-  REQUIRE_FALSE(state.secondaryFired);
-  REQUIRE(state.recordFactories == (point == CancelAt::RecordWrite ? 2 : completed));
+  REQUIRE(state.aggregate_calls == 0);
+  REQUIRE_FALSE(state.primary_fired);
+  REQUIRE_FALSE(state.secondary_fired);
+  REQUIRE(state.record_factories == (point == CancelAt::RecordWrite ? 2 : completed));
   if(point == CancelAt::Gather)
   {
     // Cancellation set by the Z=1 read must stop before another gather read.
@@ -1038,7 +1038,7 @@ TEST_CASE("IdentifySample batch cancellation publishes only completed planes", "
   }
   if(point == CancelAt::RecordWrite)
   {
-    REQUIRE(state.recordWrites == 2);
+    REQUIRE(state.record_writes == 2);
   }
 }
 
@@ -1049,9 +1049,9 @@ TEST_CASE("IdentifySample batch failures take precedence over cancellation", "[.
   FailureState state;
   state.primary = FaultKind::Result;
   state.secondary = FaultKind::Standard;
-  state.cancelAt = cancelAt;
+  state.cancel_at = cancelAt;
   const auto outcome = RunFailure<uint8>(state, HandlerKind::Empty, 1, 1);
-  REQUIRE(state.cancelFired);
+  REQUIRE(state.cancel_fired);
   RequireDual(outcome, state);
 }
 
@@ -1062,16 +1062,16 @@ TEST_CASE("IdentifySample lone progress failure still publishes the completed pr
   const usize plane = GENERATE(usize{0}, usize{1});
   FailureState state;
   state.primary = kind;
-  state.messagePrimary = true;
-  state.primaryPlane = plane;
+  state.message_primary = true;
+  state.primary_plane = plane;
   const auto outcome = RunFailure<uint8>(state, HandlerKind::Capturing, plane, plane == 0 ? 0 : k_Z);
-  REQUIRE(state.primaryFired);
+  REQUIRE(state.primary_fired);
   REQUIRE_FALSE(outcome.result.has_value());
   REQUIRE(outcome.thrown == kind);
   REQUIRE(outcome.payload == 101);
-  REQUIRE(state.recordFactories == plane);
-  REQUIRE(state.progressCalls == plane + 1);
-  REQUIRE(state.aggregateCalls == 0);
+  REQUIRE(state.record_factories == plane);
+  REQUIRE(state.progress_calls == plane + 1);
+  REQUIRE(state.aggregate_calls == 0);
 }
 
 TEST_CASE("IdentifySample cancellation cannot hide a lone publication failure", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
@@ -1080,14 +1080,14 @@ TEST_CASE("IdentifySample cancellation cannot hide a lone publication failure", 
   const auto kind = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   FailureState state;
   state.secondary = kind;
-  state.secondaryPhase = CopyPhase::CommitWrite;
-  state.cancelAt = CancelAt::CommitRead;
+  state.secondary_phase = CopyPhase::CommitWrite;
+  state.cancel_at = CancelAt::CommitRead;
   const auto outcome = RunFailure<uint8>(state, HandlerKind::Empty, 8, 1);
-  REQUIRE(state.cancelFired);
-  REQUIRE(state.secondaryFired);
-  REQUIRE_FALSE(state.primaryFired);
-  REQUIRE(state.recordFactories == 8);
-  REQUIRE(state.aggregateCalls == 0);
+  REQUIRE(state.cancel_fired);
+  REQUIRE(state.secondary_fired);
+  REQUIRE_FALSE(state.primary_fired);
+  REQUIRE(state.record_factories == 8);
+  REQUIRE(state.aggregate_calls == 0);
   REQUIRE(state.reads == k_Z + 2);
   REQUIRE(state.writes == 2);
   if(kind == FaultKind::Result)
@@ -1120,10 +1120,10 @@ struct AllocationControl
 {
   const IDataArray* selected = nullptr;
   usize calls = 0;
-  usize failOn = 1;
-  usize lastValues = 0;
+  usize fail_on = 1;
+  usize last_values = 0;
   uint64 occupied = 0;
-  bool reservationMissing = false;
+  bool reservation_missing = false;
 
   /**
    * @brief Checks the real reservation before failing the selected extra allocation.
@@ -1140,9 +1140,9 @@ struct AllocationControl
       return;
     }
     ++control.calls;
-    control.lastValues = values;
-    control.reservationMissing = control.reservationMissing || CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() != control.occupied + values;
-    if(control.calls == control.failOn)
+    control.last_values = values;
+    control.reservation_missing = control.reservation_missing || CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() != control.occupied + values;
+    if(control.calls == control.fail_on)
     {
       throw AllocationFailure(505);
     }
@@ -1157,7 +1157,7 @@ struct OwnerObservations
 {
   LogicalCounters counts;
   uint64 occupied = 0;
-  bool invalidOrder = false;
+  bool invalid_order = false;
 
   /**
    * @brief Checks release order against live manager bytes, then records the logical event.
@@ -1178,11 +1178,11 @@ struct OwnerObservations
     const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
     if(event == IdentifySampleSliceEventForTesting::ExtraPlanesReleased)
     {
-      observation.invalidOrder = observation.invalidOrder || reserved != observation.occupied + values * elementBytes;
+      observation.invalid_order = observation.invalid_order || reserved != observation.occupied + values * elementBytes;
     }
     if(event == IdentifySampleSliceEventForTesting::ExtraReservationReleased)
     {
-      observation.invalidOrder = observation.invalidOrder || reserved != observation.occupied || observation.counts.extraLiveBytes != 0;
+      observation.invalid_order = observation.invalid_order || reserved != observation.occupied || observation.counts.extraLiveBytes != 0;
     }
     LogicalCounters::Observe(&observation.counts, mask, event, values, elementBytes, success);
   }
@@ -1211,7 +1211,7 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
   IdentifySampleCCL algorithm(data, messages, state.cancel, &inputs);
   AllocationControl control;
   control.selected = matchIdentity ? &mask : nullptr;
-  control.failOn = failOn;
+  control.fail_on = failOn;
   OwnerObservations observations;
   observations.counts.selected = &mask;
   auto& budget = CacheMemoryBudgetManager::instance();
@@ -1236,8 +1236,8 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
     outcome = CaptureOutcome([&] { return algorithm(); });
   }
   REQUIRE(budget.reservedWorkingMemoryBytes() == occupied.sizeBytes());
-  REQUIRE_FALSE(control.reservationMissing);
-  REQUIRE_FALSE(observations.invalidOrder);
+  REQUIRE_FALSE(control.reservation_missing);
+  REQUIRE_FALSE(observations.invalid_order);
   RequireReleased(observations.counts);
   if(matchIdentity && hasHeadroom)
   {
@@ -1245,7 +1245,7 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
     REQUIRE(outcome.thrown == FaultKind::Allocation);
     REQUIRE(outcome.payload == 505);
     REQUIRE(control.calls == failOn);
-    REQUIRE(control.lastValues == 7 * k_Y * k_Z);
+    REQUIRE(control.last_values == 7 * k_Y * k_Z);
     REQUIRE(observations.counts.extraRetainCount == failOn);
     REQUIRE(observations.counts.extraAllocationCount == failOn - 1);
     REQUIRE(observations.counts.batchCount == failOn - 1);
@@ -1450,11 +1450,11 @@ TEST_CASE("IdentifySample diagnostic control ignores another mask identity", "[.
   FailureState state;
   state.primary = FaultKind::Result;
   state.secondary = FaultKind::Standard;
-  state.aggregateFailure = true;
-  state.diagnosticMatch = false;
+  state.aggregate_failure = true;
+  state.diagnostic_match = false;
   const auto outcome = RunFailure<uint8>(state, HandlerKind::Empty, 1, 1);
   RequireDual(outcome, state);
-  REQUIRE(state.aggregateCalls == 0);
+  REQUIRE(state.aggregate_calls == 0);
 }
 
 namespace
@@ -1478,7 +1478,7 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
   state.secondary = expectCcl && dual ? FaultKind::Standard : FaultKind::None;
   if(expectCcl && dual)
   {
-    state.cancelAt = CancelAt::WithPrimary;
+    state.cancel_at = CancelAt::WithPrimary;
   }
   auto store = std::make_shared<MaskStore<T>>(state);
   DataStructure data = CreateFailureFixture<T>(store);
@@ -1533,12 +1533,12 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
   REQUIRE(mask.getDataStore() == store.get());
   REQUIRE(budget.reservedWorkingMemoryBytes() == occupied.sizeBytes());
   RequireReleased(counts);
-  REQUIRE(state.liveRecords == 0);
+  REQUIRE(state.live_records == 0);
   if(expectCcl)
   {
-    REQUIRE(state.primaryFired);
-    REQUIRE(state.secondaryFired == dual);
-    REQUIRE(state.recordFactories == 2);
+    REQUIRE(state.primary_fired);
+    REQUIRE(state.secondary_fired == dual);
+    REQUIRE(state.record_factories == 2);
     REQUIRE(errors.size() == (dual ? 2 : 1));
     REQUIRE(errors[0].code == ExpectedCode(primary, true));
     if(primary == FaultKind::Result)
@@ -1558,7 +1558,7 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
     }
     if(dual)
     {
-      REQUIRE(state.cancelFired);
+      REQUIRE(state.cancel_fired);
       REQUIRE(errors[1].code == -2);
       REQUIRE(errors[1].message.find("secondary copy payload 202") != std::string::npos);
       REQUIRE(errors[1].message.find("writing completed prefix starting at plane 0 with 1 planes at Z 1") != std::string::npos);
@@ -1570,9 +1570,9 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
   {
     REQUIRE(errors.empty());
     REQUIRE(warnings.empty());
-    REQUIRE_FALSE(state.primaryFired);
-    REQUIRE_FALSE(state.secondaryFired);
-    REQUIRE(state.recordFactories == 0);
+    REQUIRE_FALSE(state.primary_fired);
+    REQUIRE_FALSE(state.secondary_fired);
+    REQUIRE(state.record_factories == 0);
     RequirePrefix<T>(data, k_X, k_Z);
   }
 }
@@ -1746,14 +1746,14 @@ struct OrthogonalTransferState
 {
   OrthogonalStop stop = OrthogonalStop::ReadFailure;
   FaultKind fault = FaultKind::None;
-  usize triggerCopy = 0;
+  usize trigger_copy = 0;
   bool armed = false;
   bool fired = false;
   usize reads = 0;
   usize writes = 0;
-  usize transferCount = 0;
-  usize sliceMessages = 0;
-  bool sliceOrderMatches = true;
+  usize transfer_count = 0;
+  usize slice_messages = 0;
+  bool slice_order_matches = true;
   std::atomic_bool cancel = false;
   // Two XZ planes require thirteen read rows and thirteen write rows each.
   std::array<OrthogonalTransfer, 2 * 13 * 2> transfers{};
@@ -1767,8 +1767,8 @@ struct OrthogonalTransferState
    */
   OrthogonalTransfer& beginTransfer(bool write, usize start, usize count)
   {
-    REQUIRE(transferCount < transfers.size());
-    auto& transfer = transfers[transferCount++];
+    REQUIRE(transfer_count < transfers.size());
+    auto& transfer = transfers[transfer_count++];
     transfer = {.write = write, .start = start, .count = count, .success = false};
     return transfer;
   }
@@ -1817,14 +1817,14 @@ public:
     }
     auto& transfer = m_State.beginTransfer(false, start, values.size());
     const usize call = ++m_State.reads;
-    if(m_State.stop == OrthogonalStop::ReadFailure && call == m_State.triggerCopy)
+    if(m_State.stop == OrthogonalStop::ReadFailure && call == m_State.trigger_copy)
     {
       m_State.fired = true;
       return RaiseFault(m_State.fault, false);
     }
     auto result = DataStore<T>::copyIntoBuffer(start, values);
     transfer.success = result.valid();
-    if(result.valid() && m_State.stop == OrthogonalStop::ReadCancel && call == m_State.triggerCopy)
+    if(result.valid() && m_State.stop == OrthogonalStop::ReadCancel && call == m_State.trigger_copy)
     {
       m_State.fired = true;
       m_State.cancel = true;
@@ -1849,14 +1849,14 @@ public:
     }
     auto& transfer = m_State.beginTransfer(true, start, values.size());
     const usize call = ++m_State.writes;
-    if(m_State.stop == OrthogonalStop::WriteFailure && call == m_State.triggerCopy)
+    if(m_State.stop == OrthogonalStop::WriteFailure && call == m_State.trigger_copy)
     {
       m_State.fired = true;
       return RaiseFault(m_State.fault, false);
     }
     auto result = DataStore<T>::copyFromBuffer(start, values);
     transfer.success = result.valid();
-    if(result.valid() && m_State.stop == OrthogonalStop::WriteCancel && call == m_State.triggerCopy)
+    if(result.valid() && m_State.stop == OrthogonalStop::WriteCancel && call == m_State.trigger_copy)
     {
       m_State.fired = true;
       m_State.cancel = true;
@@ -1925,7 +1925,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   OrthogonalTransferState state;
   state.stop = stop;
   state.fault = fault;
-  state.triggerCopy = copiesPerPlane + (plane == 1 && stop != OrthogonalStop::WriteCancel ? 2 : 1);
+  state.trigger_copy = copiesPerPlane + (plane == 1 && stop != OrthogonalStop::WriteCancel ? 2 : 1);
   auto store = std::make_shared<OrthogonalMaskStore<T>>(ShapeType{dimensions[2], dimensions[1], dimensions[0]}, state);
   DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(plane, 19, store);
   // The early isolated cell makes a successful first-row write distinguishable from unchanged input.
@@ -1944,8 +1944,8 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   const IFilter::MessageHandler messages{[&state](const IFilter::Message& message) {
     if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Identifying Sample Slices: "))
     {
-      state.sliceOrderMatches = state.sliceOrderMatches && message.message.starts_with(fmt::format("Identifying Sample Slices: {}/19", state.sliceMessages + 1));
-      ++state.sliceMessages;
+      state.slice_order_matches = state.slice_order_matches && message.message.starts_with(fmt::format("Identifying Sample Slices: {}/19", state.slice_messages + 1));
+      ++state.slice_messages;
       if(state.stop == OrthogonalStop::MessageCancel && message.message.starts_with("Identifying Sample Slices: 1/19"))
       {
         state.fired = true;
@@ -1984,15 +1984,15 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   REQUIRE_FALSE(state.armed);
   REQUIRE(collection.begin()->second == originalManager);
   REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == reserved);
-  REQUIRE(recordState.liveRecords == 0);
+  REQUIRE(recordState.live_records == 0);
   REQUIRE(state.fired);
-  REQUIRE(state.sliceOrderMatches);
-  REQUIRE(state.sliceMessages == (stop == OrthogonalStop::WriteCancel ? 2 : 1));
+  REQUIRE(state.slice_order_matches);
+  REQUIRE(state.slice_messages == (stop == OrthogonalStop::WriteCancel ? 2 : 1));
   const bool readFailure = stop == OrthogonalStop::ReadFailure;
   const bool writeFailure = stop == OrthogonalStop::WriteFailure;
   const bool writeCancel = stop == OrthogonalStop::WriteCancel;
   REQUIRE(state.cancel.load() == (!readFailure && !writeFailure));
-  REQUIRE(recordState.recordFactories == (writeFailure || writeCancel ? 2 : 1));
+  REQUIRE(recordState.record_factories == (writeFailure || writeCancel ? 2 : 1));
   if(fault == FaultKind::Standard)
   {
     REQUIRE(exceptionMessage == "secondary copy payload 202");
@@ -2002,7 +2002,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   const usize secondWriteCount = writeFailure ? (plane == 0 ? 1 : 2) : (writeCancel ? copiesPerPlane : 0);
   REQUIRE(state.reads == copiesPerPlane + secondReadCount);
   REQUIRE(state.writes == copiesPerPlane + secondWriteCount);
-  REQUIRE(state.transferCount == state.reads + state.writes);
+  REQUIRE(state.transfer_count == state.reads + state.writes);
   usize transferIdx = 0;
   for(usize fixed = 0; fixed < 2; ++fixed)
   {
@@ -2011,7 +2011,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
       const usize copyCount = fixed == 0 ? copiesPerPlane : (write ? secondWriteCount : secondReadCount);
       for(usize row = 0; row < copyCount; ++row)
       {
-        REQUIRE(transferIdx < state.transferCount);
+        REQUIRE(transferIdx < state.transfer_count);
         const auto& transfer = state.transfers[transferIdx++];
         const usize expectedStart = plane == 0 ? fixed * dimensions[0] * dimensions[1] : row * dimensions[0] * dimensions[1] + fixed * dimensions[0];
         const usize expectedCount = plane == 0 ? dimensions[0] * dimensions[1] : dimensions[0];
@@ -2024,7 +2024,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
       }
     }
   }
-  REQUIRE(transferIdx == state.transferCount);
+  REQUIRE(transferIdx == state.transfer_count);
   RequireReleased(counts);
   REQUIRE(counts.allocationEvents == 1);
   REQUIRE(counts.namedCarrierPeak == 11 * 13 * sizeof(T));

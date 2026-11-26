@@ -122,14 +122,14 @@ void RequireMhaArrayEquals(const DataStructure& ds, const DataPath& arrPath, con
 
 namespace
 {
-void executeMhaWithSavedTransform(const ReadMhaFileFilter& filter, DataStructure& dataStructure, const Arguments& args)
+void ExecuteMhaWithSavedTransform(const ReadMhaFileFilter& filter, DataStructure& dataStructure, const Arguments& args)
 {
   auto result = filter.execute(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 }
 
-void checkMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
+void CheckMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
 {
   const fs::path inputPath = MhaOutputDir() / ("nested-saved-transform-" + Uuid::GenerateV4().str() + ".mha");
   const auto removeInput = MakeScopeGuard([&inputPath]() noexcept {
@@ -174,11 +174,11 @@ void checkMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScope
   const auto before = GetAlgorithmPathExecutionCounts();
   if(algorithmTestScopePtr != nullptr)
   {
-    algorithmTestScopePtr->execute([&] { executeMhaWithSavedTransform(filter, dataStructure, args); });
+    algorithmTestScopePtr->execute([&] { ExecuteMhaWithSavedTransform(filter, dataStructure, args); });
   }
   else
   {
-    executeMhaWithSavedTransform(filter, dataStructure, args);
+    ExecuteMhaWithSavedTransform(filter, dataStructure, args);
   }
   if(algorithmTestScopePtr == nullptr)
   {
@@ -195,10 +195,10 @@ void checkMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScope
   const auto& matrix = UnitTest::GetRequiredData<Float32Array>(dataStructure, matrixPath);
   REQUIRE((matrix.getNumberOfTuples() == 1));
   REQUIRE((matrix.getNumberOfComponents() == 16));
-  constexpr std::array<float32, 16> expectedMatrix = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
-  for(usize index = 0; index < expectedMatrix.size(); ++index)
+  constexpr std::array<float32, 16> k_ExpectedMatrix = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+  for(usize index = 0; index < k_ExpectedMatrix.size(); ++index)
   {
-    CHECK((matrix[index] == expectedMatrix.at(index)));
+    CHECK((matrix[index] == k_ExpectedMatrix.at(index)));
   }
   const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(dataStructure, pixelsPath);
   REQUIRE((pixels.getTupleShape() == ShapeType{2, 2, 2}));
@@ -228,7 +228,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: nested geometry preserves saved
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
-  checkMhaSavedTransformPath(&algorithmTestScope);
+  CheckMhaSavedTransformPath(&algorithmTestScope);
 }
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: nested geometry preserves saved transform child path with real OOC stores", "[NXImageProcessing][ReadMhaFileFilter][NestedPaths][.OocStoreContract]")
@@ -237,7 +237,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: nested geometry preserves saved
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   REQUIRE_FALSE(ForceInCoreAlgorithm());
   REQUIRE_FALSE(ForceOocAlgorithm());
-  checkMhaSavedTransformPath(nullptr);
+  CheckMhaSavedTransformPath(nullptr);
 }
 
 TEST_CASE("NXImageProcessing::MetaImageUtilities: ElementType string -> DataType map", "[NXImageProcessing][ReadMhaFileFilter]")
@@ -334,10 +334,10 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: detached .mhd resolves sibling
   {
     std::ofstream ofs(mhd, std::ios::binary);
     REQUIRE(ofs.is_open());
-    for(const char* line :
+    for(const char* linePtr :
         {"ObjectType = Image", "NDims = 2", "BinaryData = True", "CompressedData = False", "ElementSpacing = 1 1", "DimSize = 2 2", "ElementType = MET_UCHAR", "ElementDataFile = vol_detached.raw"})
     {
-      ofs << line << "\n";
+      ofs << linePtr << "\n";
     }
   }
   const auto result = mhd::ReadMetaImageHeader(mhd);
@@ -619,10 +619,10 @@ Result<> RunReadMhaFile(DataStructure& ds, const fs::path& inputFile, const Crop
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> fileValues(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> fileValues(k_X * k_Y * k_Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(-5));
   const fs::path p = MhaOutputDir() / "algo_scalar3d.mha";
   WriteMhaAttached(p,
@@ -630,10 +630,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]",
                     "ElementType = MET_SHORT", "ElementDataFile = LOCAL"},
                    ToBytes(fileValues));
 
-  DataStructure ds = BuildMhaTarget(DataType::int16, {X, Y, Z}, 1);
+  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
   REQUIRE(RunReadMhaFile(ds, p).valid());
   const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == X * Y * Z);
+  REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   for(usize i = 0; i < fileValues.size(); i++)
   {
     REQUIRE(store.getValue(i) == fileValues[i]);
@@ -642,10 +642,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]",
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: big-endian data is byteswapped", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 1;
-  std::vector<int16_t> logical(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 1;
+  std::vector<int16_t> logical(k_X * k_Y * k_Z);
   for(usize i = 0; i < logical.size(); i++)
   {
     logical[i] = static_cast<int16_t>(static_cast<int>(i) * 257 - 1000);
@@ -663,7 +663,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: big-endian data is byteswapped", "[NX
                    {"ObjectType = Image", "NDims = 2", "BinaryData = True", "BinaryDataByteOrderMSB = True", "CompressedData = False", "ElementSpacing = 1 1", "DimSize = 4 3",
                     "ElementType = MET_SHORT", "ElementDataFile = LOCAL"},
                    data);
-  DataStructure ds = BuildMhaTarget(DataType::int16, {X, Y, Z}, 1);
+  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
   REQUIRE(RunReadMhaFile(ds, p).valid());
   const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
   for(usize i = 0; i < logical.size(); i++)
@@ -676,20 +676,20 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: numeric CompressedData = 1 round-trip
 {
   // Regression for the ParseBool fix: "CompressedData = 1" must decode as zlib, not be
   // read raw (which short-read errored before).
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> fileValues(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> fileValues(k_X * k_Y * k_Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(-5));
   const fs::path p = MhaOutputDir() / "algo_numeric_compressed.mha";
   WriteMhaAttached(p,
                    {"ObjectType = Image", "NDims = 3", "BinaryData = True", "BinaryDataByteOrderMSB = False", "CompressedData = 1", "ElementSpacing = 1 1 1", "DimSize = 4 3 2",
                     "ElementType = MET_SHORT", "ElementDataFile = LOCAL"},
                    ZlibCompress(ToBytes(fileValues)));
-  DataStructure ds = BuildMhaTarget(DataType::int16, {X, Y, Z}, 1);
+  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
   REQUIRE(RunReadMhaFile(ds, p).valid());
   const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == X * Y * Z);
+  REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   for(usize i = 0; i < fileValues.size(); i++)
   {
     REQUIRE(store.getValue(i) == fileValues[i]);
@@ -700,10 +700,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps 
 {
   // Regression for the ParseBool fix: the numeric-form true "T" must engage the byteswap
   // just like "True"; the old whole-string check left it off and produced wrong values.
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 1;
-  std::vector<int16_t> logical(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 1;
+  std::vector<int16_t> logical(k_X * k_Y * k_Z);
   for(usize i = 0; i < logical.size(); i++)
   {
     logical[i] = static_cast<int16_t>(static_cast<int>(i) * 257 - 1000);
@@ -721,7 +721,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps 
                    {"ObjectType = Image", "NDims = 2", "BinaryData = True", "BinaryDataByteOrderMSB = T", "CompressedData = False", "ElementSpacing = 1 1", "DimSize = 4 3", "ElementType = MET_SHORT",
                     "ElementDataFile = LOCAL"},
                    data);
-  DataStructure ds = BuildMhaTarget(DataType::int16, {X, Y, Z}, 1);
+  DataStructure ds = BuildMhaTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
   REQUIRE(RunReadMhaFile(ds, p).valid());
   const auto& store = ds.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
   for(usize i = 0; i < logical.size(); i++)
@@ -732,22 +732,22 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps 
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: multi-component interleaves channels", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize comp = 2;
-  constexpr usize X = 4;
-  constexpr usize Y = 2;
-  constexpr usize Z = 1;
-  std::vector<float32> fileValues(comp * X * Y);
+  constexpr usize k_Comp = 2;
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 2;
+  constexpr usize k_Z = 1;
+  std::vector<float32> fileValues(k_Comp * k_X * k_Y);
   std::iota(fileValues.begin(), fileValues.end(), 0.0f);
   const fs::path p = MhaOutputDir() / "algo_multicomp.mha";
   WriteMhaAttached(p,
                    {"ObjectType = Image", "NDims = 2", "BinaryData = True", "BinaryDataByteOrderMSB = False", "CompressedData = False", "ElementNumberOfChannels = 2", "ElementSpacing = 1 1",
                     "DimSize = 4 2", "ElementType = MET_FLOAT", "ElementDataFile = LOCAL"},
                    ToBytes(fileValues));
-  DataStructure ds = BuildMhaTarget(DataType::float32, {X, Y, Z}, comp);
+  DataStructure ds = BuildMhaTarget(DataType::float32, {k_X, k_Y, k_Z}, k_Comp);
   REQUIRE(RunReadMhaFile(ds, p).valid());
   const auto& store = ds.getDataRefAs<DataArray<float32>>(AlgoImageDataPath()).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == X * Y);
-  REQUIRE(store.getNumberOfComponents() == comp);
+  REQUIRE(store.getNumberOfTuples() == k_X * k_Y);
+  REQUIRE(store.getNumberOfComponents() == k_Comp);
   for(usize i = 0; i < fileValues.size(); i++)
   {
     REQUIRE(store.getValue(i) == fileValues[i]);
@@ -756,10 +756,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: multi-component interleaves channels"
 
 TEST_CASE("NXImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the requested region", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> fileValues(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> fileValues(k_X * k_Y * k_Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(0)); // value == flat file position (X-fastest)
   const fs::path p = MhaOutputDir() / "algo_crop.mha";
   WriteMhaAttached(
@@ -789,9 +789,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zli
 {
   UnitTest::LoadPlugins();
 
-  const usize X = 4;
-  const usize Y = 3;
-  std::vector<uint8_t> voxels(X * Y);
+  const usize x = 4;
+  const usize y = 3;
+  std::vector<uint8_t> voxels(x * y);
   for(usize i = 0; i < voxels.size(); i++)
   {
     voxels[i] = static_cast<uint8_t>(i * 3 + 1);
@@ -865,10 +865,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round t
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
-  constexpr usize X = 6;
-  constexpr usize Y = 5;
-  constexpr usize Z = 4;
-  std::vector<uint16_t> voxels(X * Y * Z);
+  constexpr usize k_X = 6;
+  constexpr usize k_Y = 5;
+  constexpr usize k_Z = 4;
+  std::vector<uint16_t> voxels(k_X * k_Y * k_Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
   // spacing {2,3,4}, origin {10,20,30}; far corner = origin + dims*spacing = {22,35,46}.
@@ -898,9 +898,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps o
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
-  REQUIRE(geom.getDimensions()[0] == X);
-  REQUIRE(geom.getDimensions()[1] == Y);
-  REQUIRE(geom.getDimensions()[2] == Z);
+  REQUIRE(geom.getDimensions()[0] == k_X);
+  REQUIRE(geom.getDimensions()[1] == k_Y);
+  REQUIRE(geom.getDimensions()[2] == k_Z);
   RequireMhaArrayEquals<uint16>(ds, arrPath, voxels);
 }
 
@@ -970,12 +970,12 @@ fs::path ItkMhaInputDir()
 }
 
 // ITKImageReaderFilter param-key STRINGS (hard-coded to avoid linking the ITK plugin).
-constexpr StringLiteral k_ITK_FileName = "file_name";
-constexpr StringLiteral k_ITK_GeometryPath = "output_geometry_path";
-constexpr StringLiteral k_ITK_ArrayName = "image_data_array_name";
-constexpr StringLiteral k_ITK_CellDataName = "cell_attribute_matrix_name";
-constexpr StringLiteral k_ITK_ChangeOrigin = "change_origin";
-constexpr StringLiteral k_ITK_ChangeSpacing = "change_spacing";
+constexpr StringLiteral k_ItkFileName = "file_name";
+constexpr StringLiteral k_ItkGeometryPath = "output_geometry_path";
+constexpr StringLiteral k_ItkArrayName = "image_data_array_name";
+constexpr StringLiteral k_ItkCellDataName = "cell_attribute_matrix_name";
+constexpr StringLiteral k_ItkChangeOrigin = "change_origin";
+constexpr StringLiteral k_ItkChangeSpacing = "change_spacing";
 
 template <class T>
 void RequireStoresEqual(const IDataArray& a, const IDataArray& b)
@@ -1087,10 +1087,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: OOC output matches in-core (sca
   SECTION("float32 scalar (compressed)")
   {
     // 40x40x20 == 32000 tuples (128 KiB); large enough for a forced-OOC store to span chunks.
-    constexpr usize X = 40;
-    constexpr usize Y = 40;
-    constexpr usize Z = 20;
-    std::vector<float32> voxels(X * Y * Z);
+    constexpr usize k_X = 40;
+    constexpr usize k_Y = 40;
+    constexpr usize k_Z = 20;
+    std::vector<float32> voxels(k_X * k_Y * k_Z);
     for(usize i = 0; i < voxels.size(); i++)
     {
       voxels[i] = static_cast<float32>(i) * 0.25f - 1234.5f; // finite (no NaN/inf) so == is exact
@@ -1106,9 +1106,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: OOC output matches in-core (sca
   SECTION("uint8 multi-component (ElementNumberOfChannels=3, raw)")
   {
     // 2D image (Z=1): 48x32 == 1536 tuples x 3 components == 4608 bytes.
-    constexpr usize X = 48;
-    constexpr usize Y = 32;
-    std::vector<uint8> voxels(3 * X * Y);
+    constexpr usize k_X = 48;
+    constexpr usize k_Y = 32;
+    std::vector<uint8> voxels(3 * k_X * k_Y);
     for(usize i = 0; i < voxels.size(); i++)
     {
       voxels[i] = static_cast<uint8>((i * 3 + 7) % 251);

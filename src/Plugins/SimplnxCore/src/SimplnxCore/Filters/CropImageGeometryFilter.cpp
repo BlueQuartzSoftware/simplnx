@@ -23,16 +23,16 @@ namespace
 {
 struct CropImageGeometryFilterCache
 {
-  uint64 xMin;
-  uint64 xMax;
-  uint64 yMax;
-  uint64 yMin;
-  uint64 zMax;
-  uint64 zMin;
+  uint64 x_min;
+  uint64 x_max;
+  uint64 y_max;
+  uint64 y_min;
+  uint64 z_max;
+  uint64 z_min;
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, CropImageGeometryFilterCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, CropImageGeometryFilterCache> SHeaderCache;
 
 /**
  * @brief
@@ -43,10 +43,10 @@ std::map<int32, CropImageGeometryFilterCache> s_HeaderCache;
 FloatVec3 GetCurrentVolumeDataContainerResolutions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
 {
   FloatVec3 data = {0, 0, 0};
-  const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  if(image != nullptr)
+  const auto* imagePtr = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
+  if(imagePtr != nullptr)
   {
-    data = image->getSpacing();
+    data = imagePtr->getSpacing();
   }
   return data;
 }
@@ -54,15 +54,15 @@ FloatVec3 GetCurrentVolumeDataContainerResolutions(const DataStructure& dataStru
 
 //------------------------------------------------------------------------------
 CropImageGeometryFilter::CropImageGeometryFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 CropImageGeometryFilter::~CropImageGeometryFilter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -184,7 +184,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
 
   ImageGeometryCropBounds bounds;
   IFilter::PreflightResult result = PreflightImageGeometryCrop(dataStructure, options, bounds);
-  s_HeaderCache[m_InstanceId] = {.xMin = bounds.xMin, .xMax = bounds.xMax, .yMax = bounds.yMax, .yMin = bounds.yMin, .zMax = bounds.zMax, .zMin = bounds.zMin};
+  SHeaderCache[m_InstanceId] = {.x_min = bounds.xMin, .x_max = bounds.xMax, .y_max = bounds.yMax, .y_min = bounds.yMin, .z_max = bounds.zMax, .z_min = bounds.zMin};
   return result;
 }
 
@@ -206,12 +206,12 @@ Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.CropYDim = filterArgs.value<BoolParameter::ValueType>(k_CropYDim_Key);
   inputValues.CropZDim = filterArgs.value<BoolParameter::ValueType>(k_CropZDim_Key);
 
-  inputValues.XMin = s_HeaderCache[m_InstanceId].xMin;
-  inputValues.XMax = s_HeaderCache[m_InstanceId].xMax;
-  inputValues.YMin = s_HeaderCache[m_InstanceId].yMin;
-  inputValues.YMax = s_HeaderCache[m_InstanceId].yMax;
-  inputValues.ZMin = s_HeaderCache[m_InstanceId].zMin;
-  inputValues.ZMax = s_HeaderCache[m_InstanceId].zMax;
+  inputValues.XMin = SHeaderCache[m_InstanceId].x_min;
+  inputValues.XMax = SHeaderCache[m_InstanceId].x_max;
+  inputValues.YMin = SHeaderCache[m_InstanceId].y_min;
+  inputValues.YMax = SHeaderCache[m_InstanceId].y_max;
+  inputValues.ZMin = SHeaderCache[m_InstanceId].z_min;
+  inputValues.ZMax = SHeaderCache[m_InstanceId].z_max;
 
   return CropImageGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

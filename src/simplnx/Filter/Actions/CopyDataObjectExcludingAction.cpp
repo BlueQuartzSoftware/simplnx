@@ -15,17 +15,17 @@ void PruneCopiedLinks(DataStructure& dataStructure, const BaseGroup& source, Bas
   {
     if(child->getId() == excludedId)
     {
-      if(const auto* copiedChild = copy[child->getName()]; copiedChild != nullptr)
+      if(const auto* copiedChildPtr = copy[child->getName()]; copiedChildPtr != nullptr)
       {
-        [[maybe_unused]] const bool removed = dataStructure.removeParent(copiedChild->getId(), copy.getId());
+        [[maybe_unused]] const bool removed = dataStructure.removeParent(copiedChildPtr->getId(), copy.getId());
         assert(removed);
       }
     }
-    else if(const auto* sourceGroup = dynamic_cast<const BaseGroup*>(child.get()); sourceGroup != nullptr)
+    else if(const auto* sourceGroupPtr = dynamic_cast<const BaseGroup*>(child.get()); sourceGroupPtr != nullptr)
     {
-      if(auto* copiedGroup = dynamic_cast<BaseGroup*>(copy[child->getName()]); copiedGroup != nullptr)
+      if(auto* copiedGroupPtr = dynamic_cast<BaseGroup*>(copy[child->getName()]); copiedGroupPtr != nullptr)
       {
-        PruneCopiedLinks(dataStructure, *sourceGroup, *copiedGroup, excludedId);
+        PruneCopiedLinks(dataStructure, *sourceGroupPtr, *copiedGroupPtr, excludedId);
       }
     }
   }
@@ -46,10 +46,10 @@ Result<> CopyDataObjectExcludingAction::apply(DataStructure& dataStructure, Mode
   auto result = CopyDataObjectAction::apply(dataStructure, mode);
   if(result.valid() && excludedId.has_value())
   {
-    if(const auto* source = dataStructure.getDataAs<BaseGroup>(path()); source != nullptr)
+    if(const auto* sourcePtr = dataStructure.getDataAs<BaseGroup>(path()); sourcePtr != nullptr)
     {
       auto& copy = dataStructure.getDataRefAs<BaseGroup>(newPath());
-      PruneCopiedLinks(dataStructure, *source, copy, *excludedId);
+      PruneCopiedLinks(dataStructure, *sourcePtr, copy, *excludedId);
     }
   }
   return result;

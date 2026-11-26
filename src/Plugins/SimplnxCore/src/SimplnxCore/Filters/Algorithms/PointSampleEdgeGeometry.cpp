@@ -52,7 +52,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-Result<std::tuple<float32, float32, float32, float32>> computeEdgeVector(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex)
+Result<std::tuple<float32, float32, float32, float32>> ComputeEdgeVector(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex)
 {
   const usize endpoint1 = edges[2 * edgeIndex];
   const usize endpoint2 = edges[2 * edgeIndex + 1];
@@ -68,32 +68,32 @@ Result<std::tuple<float32, float32, float32, float32>> computeEdgeVector(const F
   return {std::make_tuple(dx, dy, dz, dist)};
 }
 
-usize computeNumSamplePoints(float32 dist, float32 samplingRes)
+usize ComputeNumSamplePoints(float32 dist, float32 samplingRes)
 {
   return static_cast<usize>(dist / samplingRes) + 1;
 }
 
-Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex, float32 samplingRes)
+Result<usize> CountSamplesForEdge(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex, float32 samplingRes)
 {
-  auto result = computeEdgeVector(edgeVertices, edges, edgeIndex);
+  auto result = ComputeEdgeVector(edgeVertices, edges, edgeIndex);
   if(result.invalid())
   {
     return ConvertResultTo<usize>(std::move(ConvertResult(std::move(result))), {});
   }
   auto [dx, dy, dz, dist] = result.value();
-  return {computeNumSamplePoints(dist, samplingRes)};
+  return {ComputeNumSamplePoints(dist, samplingRes)};
 }
 
-[[nodiscard]] Result<> sampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, float32 samplingRes, Float32Array& vertices, UInt64Array* pointEdgeIdsArrayPtr,
+[[nodiscard]] Result<> SampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, float32 samplingRes, Float32Array& vertices, UInt64Array* pointEdgeIdsArrayPtr,
                                   Float32Array* cumulativeSampleDistArrayPtr, int64& vertCount)
 {
-  auto result = computeEdgeVector(edgeVertices, edges, edgeIndex);
+  auto result = ComputeEdgeVector(edgeVertices, edges, edgeIndex);
   if(result.invalid())
   {
     return ConvertResult(std::move(result));
   }
   auto [dx, dy, dz, dist] = result.value();
-  auto sampleCount = static_cast<int32>(computeNumSamplePoints(dist, samplingRes));
+  auto sampleCount = static_cast<int32>(ComputeNumSamplePoints(dist, samplingRes));
   const float32 step = dist / static_cast<float32>(sampleCount);
 
   const float32 delX = step * dx / dist;
@@ -174,7 +174,7 @@ Result<> PointSampleEdgeGeometry::operator()()
     {
       return {};
     }
-    auto result = countSamplesForEdge(edgeVertices, edges, i, m_InputValues->ScanVectorSamplingRes);
+    auto result = CountSamplesForEdge(edgeVertices, edges, i, m_InputValues->ScanVectorSamplingRes);
     if(result.invalid())
     {
       return ConvertResult(std::move(result));
@@ -207,7 +207,7 @@ Result<> PointSampleEdgeGeometry::operator()()
     {
       return {};
     }
-    Result<> sampleResult = sampleEdge(i, edgeVertices, edges, m_InputValues->ScanVectorSamplingRes, vertices, vertexEdgeIdsDataArrayPtr, cumulativeSampleDistArrayPtr, vertCount);
+    Result<> sampleResult = SampleEdge(i, edgeVertices, edges, m_InputValues->ScanVectorSamplingRes, vertices, vertexEdgeIdsDataArrayPtr, cumulativeSampleDistArrayPtr, vertCount);
     if(sampleResult.invalid())
     {
       return sampleResult;
@@ -221,19 +221,19 @@ Result<> PointSampleEdgeGeometry::operator()()
   for(const auto& selectedArrayPath : m_InputValues->pSelectedDataArrayPaths)
   {
     DataPath createdArrayPath = vertexAttrMatPath.createChildPath(selectedArrayPath.getTargetName());
-    const auto* selectedEdgeArray = m_DataStructure.getDataAs<IDataArray>(selectedArrayPath);
-    auto* createdVertexArray = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
+    const auto* selectedEdgeArrayPtr = m_DataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    auto* createdVertexArrayPtr = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
 
-    if(maxEdgeId >= selectedEdgeArray->getNumberOfTuples())
+    if(maxEdgeId >= selectedEdgeArrayPtr->getNumberOfTuples())
     {
       return MakeErrorResult(-45362, fmt::format("Generated Vertex Array '{}' has a maximum EdgeId value of {}. This is greater than the number of tuples ({}) in data array '{}'",
-                                                 vertexEdgeIdsDataPath.toString(), maxEdgeId, selectedEdgeArray->getNumberOfTuples(), selectedArrayPath.toString()));
+                                                 vertexEdgeIdsDataPath.toString(), maxEdgeId, selectedEdgeArrayPtr->getNumberOfTuples(), selectedArrayPath.toString()));
     }
 
     m_MessageHandler.sendInfoMessage(fmt::format("Copying data into vertex array '{}'...", createdArrayPath.toString()));
     ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0, createdVertexArray->getNumberOfTuples());
-    ExecuteParallelFunction<::CopyEdgeDataToVertexData>(selectedEdgeArray->getDataType(), dataAlg, selectedEdgeArray, createdVertexArray, vertexEdgeIdsDataStore, m_ShouldCancel);
+    dataAlg.setRange(0, createdVertexArrayPtr->getNumberOfTuples());
+    ExecuteParallelFunction<::CopyEdgeDataToVertexData>(selectedEdgeArrayPtr->getDataType(), dataAlg, selectedEdgeArrayPtr, createdVertexArrayPtr, vertexEdgeIdsDataStore, m_ShouldCancel);
   }
 
   return {};

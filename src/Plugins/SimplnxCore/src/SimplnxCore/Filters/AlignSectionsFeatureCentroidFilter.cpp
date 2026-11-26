@@ -155,12 +155,12 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
     return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, fmt::format("Reference Slice value ({}) must be ZERO or greater.", pReferenceSliceValue));
   }
 
-  const auto* gridGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
-  if(gridGeom == nullptr)
+  const auto* gridGeomPtr = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
+  if(gridGeomPtr == nullptr)
   {
     return MakePreflightErrorResult(-68070, fmt::format("The selected Image Geometry '{}' was not found or is not an Image Geometry.", inputImageGeometry.toString()));
   }
-  const usize dims = gridGeom->getDimensions().getZ();
+  const usize dims = gridGeomPtr->getDimensions().getZ();
   if(filterArgs.value<bool>(k_UseReferenceSlice_Key) && static_cast<usize>(pReferenceSliceValue) >= dims)
   {
     return MakePreflightErrorResult(k_ReferenceSliceExceedsZDimension, fmt::format("Reference Slice value ({}) is too large. Image Geometry '{}' has Z dimension {}. Use a value from 0 to {}.",

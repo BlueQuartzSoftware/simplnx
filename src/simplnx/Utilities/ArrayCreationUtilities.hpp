@@ -253,8 +253,8 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     }
   }
 
-  auto dataArray = DataArray<T>::Create(dataStructure, name, store, dataObjectId);
-  if(dataArray == nullptr)
+  auto dataArrayPtr = DataArray<T>::Create(dataStructure, name, store, dataObjectId);
+  if(dataArrayPtr == nullptr)
   {
     if(dataStructure.getId(path).has_value())
     {

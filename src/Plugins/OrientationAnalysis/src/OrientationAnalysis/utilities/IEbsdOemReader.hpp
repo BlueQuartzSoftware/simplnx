@@ -149,16 +149,16 @@ public:
     auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
     auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::MaterialName));
     auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
-    Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
+    Float32Array::store_type* latticeConstantsPtr = latticeConstantsArray.getDataStore();
 
     crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
     materialNames[0] = "Invalid Phase";
-    latticeConstants->setComponent(0, 0, 0.0f);
-    latticeConstants->setComponent(0, 1, 0.0f);
-    latticeConstants->setComponent(0, 2, 0.0f);
-    latticeConstants->setComponent(0, 3, 0.0f);
-    latticeConstants->setComponent(0, 4, 0.0f);
-    latticeConstants->setComponent(0, 5, 0.0f);
+    latticeConstantsPtr->setComponent(0, 0, 0.0f);
+    latticeConstantsPtr->setComponent(0, 1, 0.0f);
+    latticeConstantsPtr->setComponent(0, 2, 0.0f);
+    latticeConstantsPtr->setComponent(0, 3, 0.0f);
+    latticeConstantsPtr->setComponent(0, 4, 0.0f);
+    latticeConstantsPtr->setComponent(0, 5, 0.0f);
     for(const auto& phase : phases)
     {
       const int32 phaseId = phase->getPhaseIndex();
@@ -166,12 +166,12 @@ public:
       materialNames[phaseId] = phase->getMaterialName();
       std::vector<float32> lc = phase->getLatticeConstants();
 
-      latticeConstants->setComponent(phaseId, 0, lc[0]);
-      latticeConstants->setComponent(phaseId, 1, lc[1]);
-      latticeConstants->setComponent(phaseId, 2, lc[2]);
-      latticeConstants->setComponent(phaseId, 3, lc[3]);
-      latticeConstants->setComponent(phaseId, 4, lc[4]);
-      latticeConstants->setComponent(phaseId, 5, lc[5]);
+      latticeConstantsPtr->setComponent(phaseId, 0, lc[0]);
+      latticeConstantsPtr->setComponent(phaseId, 1, lc[1]);
+      latticeConstantsPtr->setComponent(phaseId, 2, lc[2]);
+      latticeConstantsPtr->setComponent(phaseId, 3, lc[3]);
+      latticeConstantsPtr->setComponent(phaseId, 4, lc[4]);
+      latticeConstantsPtr->setComponent(phaseId, 5, lc[5]);
     }
 
     return {};

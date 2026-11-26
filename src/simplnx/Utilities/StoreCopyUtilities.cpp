@@ -53,7 +53,7 @@ usize CheckedProduct(const ShapeType& shape)
 /**
  * @brief Names a manager capability query for one store category.
  */
-using StoreCapability = bool (IDataIOManager::*)(const std::string&) const;
+using StoreCapabilityType = bool (IDataIOManager::*)(const std::string&) const;
 
 /**
  * @brief Selects the first manager that advertises the requested store capability.
@@ -62,7 +62,7 @@ using StoreCapability = bool (IDataIOManager::*)(const std::string&) const;
  * @return Selected manager, or null for built-in string storage.
  * @throws std::runtime_error If the build rejects an unavailable format.
  */
-std::shared_ptr<IDataIOManager> SelectManager(std::string& format, StoreCapability capability)
+std::shared_ptr<IDataIOManager> SelectManager(std::string& format, StoreCapabilityType capability)
 {
   const std::string memoryFormat = Preferences::k_InMemoryFormat.str();
   if(format.empty())
@@ -109,8 +109,8 @@ struct CopyNumericFunctor
   template <typename T>
   std::unique_ptr<IDataStore> operator()(const IDataStore& source, std::string format) const
   {
-    const auto* typedSource = dynamic_cast<const AbstractDataStore<T>*>(&source);
-    if(typedSource == nullptr)
+    const auto* typedSourcePtr = dynamic_cast<const AbstractDataStore<T>*>(&source);
+    if(typedSourcePtr == nullptr)
     {
       throw std::runtime_error("Source numeric store has incompatible type");
     }
@@ -128,12 +128,12 @@ struct CopyNumericFunctor
       {
         throw std::runtime_error(result.errors().front().message);
       }
-      result.value()->setInitValue(typedSource->getInitValue());
+      result.value()->setInitValue(typedSourcePtr->getInitValue());
       return std::move(result.value());
     }
     auto destination = manager->dataStoreCreationFnc(format)(source.getDataType(), source.getTupleShape(), source.getComponentShape(), std::nullopt, DataStoreInitializationMode::Default);
-    auto* typedDestination = dynamic_cast<AbstractDataStore<T>*>(destination.get());
-    if(typedDestination == nullptr || destination->getDataType() != source.getDataType() || destination->getTupleShape() != source.getTupleShape() ||
+    auto* typedDestinationPtr = dynamic_cast<AbstractDataStore<T>*>(destination.get());
+    if(typedDestinationPtr == nullptr || destination->getDataType() != source.getDataType() || destination->getTupleShape() != source.getTupleShape() ||
        destination->getComponentShape() != source.getComponentShape() || destination->getNumberOfTuples() != source.getNumberOfTuples() ||
        destination->getNumberOfComponents() != source.getNumberOfComponents() || destination->getStoreType() == IDataStore::StoreType::Empty)
     {
@@ -149,7 +149,7 @@ struct CopyNumericFunctor
     if(bytes != 0)
     {
       // This four-argument overload owns the transfer buffer. Backend adapters can also allocate one complete tuple.
-      const auto result = typedDestination->copyFrom(0, *typedSource, 0, source.getNumberOfTuples());
+      const auto result = typedDestinationPtr->copyFrom(0, *typedSourcePtr, 0, source.getNumberOfTuples());
       if(result.invalid())
       {
         std::string message = "Numeric transfer failed";
@@ -160,7 +160,7 @@ struct CopyNumericFunctor
         throw std::runtime_error(message);
       }
     }
-    typedDestination->setInitValue(typedSource->getInitValue());
+    typedDestinationPtr->setInitValue(typedSourcePtr->getInitValue());
     return destination;
   }
 };
@@ -181,14 +181,14 @@ struct CopyListFunctor
   template <typename T>
   std::unique_ptr<IListStore> operator()(const IListStore& source, std::string format) const
   {
-    const auto* typedSource = dynamic_cast<const AbstractListStore<T>*>(&source);
+    const auto* typedSourcePtr = dynamic_cast<const AbstractListStore<T>*>(&source);
     const auto count = CheckedProduct(source.getTupleShape());
-    if(typedSource == nullptr || count != source.getNumberOfTuples())
+    if(typedSourcePtr == nullptr || count != source.getNumberOfTuples())
     {
       throw std::runtime_error("Source list store has incompatible type or shape metadata");
     }
     auto manager = SelectManager(format, &IDataIOManager::hasListStoreCreationFnc);
-    if(dynamic_cast<const EmptyListStore<T>*>(typedSource) != nullptr)
+    if(dynamic_cast<const EmptyListStore<T>*>(typedSourcePtr) != nullptr)
     {
       return std::make_unique<EmptyListStore<T>>(source.getTupleShape());
     }
@@ -197,9 +197,9 @@ struct CopyListFunctor
       throw std::runtime_error("List tuple index exceeds the int32 store interface");
     }
     auto destination = manager->listStoreCreationFnc(format)(GetDataType<T>(), source.getTupleShape());
-    auto* typedDestination = dynamic_cast<AbstractListStore<T>*>(destination.get());
-    if(typedDestination == nullptr || destination->getTupleShape() != source.getTupleShape() || destination->getNumberOfTuples() != count ||
-       dynamic_cast<EmptyListStore<T>*>(typedDestination) != nullptr)
+    auto* typedDestinationPtr = dynamic_cast<AbstractListStore<T>*>(destination.get());
+    if(typedDestinationPtr == nullptr || destination->getTupleShape() != source.getTupleShape() || destination->getNumberOfTuples() != count ||
+       dynamic_cast<EmptyListStore<T>*>(typedDestinationPtr) != nullptr)
     {
       throw std::runtime_error("List factory returned an incompatible destination");
     }
@@ -210,7 +210,7 @@ struct CopyListFunctor
     for(usize index = 0; index < count; ++index)
     {
       const auto tupleIndex = static_cast<int32>(index);
-      typedDestination->setList(tupleIndex, typedSource->getList(tupleIndex));
+      typedDestinationPtr->setList(tupleIndex, typedSourcePtr->getList(tupleIndex));
     }
     return destination;
   }

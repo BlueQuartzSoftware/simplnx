@@ -255,7 +255,7 @@ bool DataObject::hasParent(const DataPath& parentPath) const
 
 std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Type>& dataObjectTypes)
 {
-  static const std::map<Type, std::string> k_TypeToStringMap = {{Type::DataObject, "DataObject"},
+  static const std::map<Type, std::string> kTypeToStringMap = {{Type::DataObject, "DataObject"},
                                                                 {Type::DynamicListArray, "DynamicListArray"},
                                                                 {Type::ScalarData, "ScalarData"},
                                                                 {Type::BaseGroup, "BaseGroup"},
@@ -287,7 +287,7 @@ std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Ty
   std::set<std::string> stringValues;
   for(auto objType : dataObjectTypes)
   {
-    stringValues.insert(k_TypeToStringMap.at(objType));
+    stringValues.insert(kTypeToStringMap.at(objType));
   }
   return stringValues;
 }
@@ -327,13 +327,13 @@ std::vector<DataPath> DataObject::getDataPaths() const
   std::vector<DataPath> paths;
   for(const auto& parentId : m_ParentList)
   {
-    const auto* parent = getDataStructure()->getData(parentId);
-    if(parent == nullptr)
+    const auto* parentPtr = getDataStructure()->getData(parentId);
+    if(parentPtr == nullptr)
     {
       continue;
     }
 
-    auto parentPaths = parent->getDataPaths();
+    auto parentPaths = parentPtr->getDataPaths();
     for(auto& dataPath : parentPaths)
     {
       paths.push_back(dataPath.createChildPath(m_Name));

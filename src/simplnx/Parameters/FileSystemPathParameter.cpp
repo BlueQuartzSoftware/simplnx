@@ -124,7 +124,7 @@ FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const 
 , m_DefaultValue(std::move(defaultValue))
 , m_PathType(pathType)
 , m_AvailableExtensions(std::move(extensionsType))
-, m_acceptAllExtensions(acceptAllExtensions)
+, m_AcceptAllExtensions(acceptAllExtensions)
 {
   ExtensionsType validatedExtensions;
   for(const auto& ext : m_AvailableExtensions)
@@ -166,7 +166,7 @@ IParameter::VersionType FileSystemPathParameter::getVersion() const
 //-----------------------------------------------------------------------------
 bool FileSystemPathParameter::acceptAllExtensions() const
 {
-  return m_acceptAllExtensions;
+  return m_AcceptAllExtensions;
 }
 
 //-----------------------------------------------------------------------------
@@ -180,11 +180,11 @@ nlohmann::json FileSystemPathParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> FileSystemPathParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'FileSystemPathParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'FileSystemPathParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
   }
   auto pathString = json.get<std::string>();
   std::filesystem::path path = pathString;
@@ -194,7 +194,7 @@ Result<std::any> FileSystemPathParameter::fromJsonImpl(const nlohmann::json& jso
 //-----------------------------------------------------------------------------
 IParameter::UniquePointer FileSystemPathParameter::clone() const
 {
-  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AvailableExtensions, m_PathType, m_acceptAllExtensions);
+  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AvailableExtensions, m_PathType, m_AcceptAllExtensions);
 }
 
 //-----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
       return nx::core::MakeErrorResult(-3001, fmt::format("{} File System Path must not be empty", prefix));
     }
 
-    if(!m_acceptAllExtensions && (m_PathType == nx::core::FileSystemPathParameter::PathType::InputFile || m_PathType == nx::core::FileSystemPathParameter::PathType::OutputFile))
+    if(!m_AcceptAllExtensions && (m_PathType == nx::core::FileSystemPathParameter::PathType::InputFile || m_PathType == nx::core::FileSystemPathParameter::PathType::OutputFile))
     {
       if(!path.has_extension())
       {

@@ -22,16 +22,16 @@ struct SigmoidOperation
 {
   float64 alpha = 1.0;
   float64 beta = 0.0;
-  float64 outputMaximum = 255.0;
-  float64 outputMinimum = 0.0;
+  float64 output_maximum = 255.0;
+  float64 output_minimum = 0.0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
     const float64 a = alpha;
     const float64 b = beta;
-    const float64 oMax = outputMaximum;
-    const float64 oMin = outputMinimum;
+    const float64 oMax = output_maximum;
+    const float64 oMin = output_minimum;
     return [a, b, oMax, oMin](T value) -> U {
       // Output bounds are Float64 and can exceed a narrow output type; saturate-cast to U to avoid UB.
       const double d = static_cast<double>(value);
@@ -113,7 +113,7 @@ Result<> SigmoidImageFilter::executeImpl(DataStructure& dataStructure, const Arg
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
 
-  const SigmoidOperation operation{.alpha = alpha, .beta = beta, .outputMaximum = outputMaximum, .outputMinimum = outputMinimum};
+  const SigmoidOperation operation{.alpha = alpha, .beta = beta, .output_maximum = outputMaximum, .output_minimum = outputMinimum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

@@ -31,7 +31,7 @@ const std::string k_InterpolatedGroupName = "InterpolatedData";
 const DataPath k_InterpGroupPath = k_ImageGeomPath.createChildPath(k_InterpolatedGroupName);
 
 // Convert a linear voxel index (in a 4x4x1 grid with spacing=1, origin=0) to cell-center coordinates
-void setVertexCoordsForVoxelIndex(Float32Array& vertices, usize vertexIdx, uint64 voxelIndex, usize dimX = 4, usize dimY = 4)
+void SetVertexCoordsForVoxelIndex(Float32Array& vertices, usize vertexIdx, uint64 voxelIndex, usize dimX = 4, usize dimY = 4)
 {
   usize x = voxelIndex % dimX;
   usize y = (voxelIndex / dimX) % dimY;
@@ -45,53 +45,53 @@ void setVertexCoordsForVoxelIndex(Float32Array& vertices, usize vertexIdx, uint6
 
 // Create a test DataStructure with a 4x4x1 ImageGeom and a VertexGeom with known data.
 // Vertex coordinates are set to map to the given voxel indices.
-DataStructure createTestDataStructure(const std::vector<uint64>& voxelIndices, const std::vector<float64>& faceAreas, bool allMasked = true, usize maskedOutIndex = 0)
+DataStructure CreateTestDataStructure(const std::vector<uint64>& voxelIndices, const std::vector<float64>& faceAreas, bool allMasked = true, usize maskedOutIndex = 0)
 {
   DataStructure ds;
   usize numVertices = voxelIndices.size();
 
   // Vertex Geometry
-  auto* vertexGeom = VertexGeom::Create(ds, "VertexGeom");
-  auto* vertices = Float32Array::CreateWithStore<DataStore<float32>>(ds, "SharedVertexList", {numVertices}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*vertices);
+  auto* vertexGeomPtr = VertexGeom::Create(ds, "VertexGeom");
+  auto* verticesPtr = Float32Array::CreateWithStore<DataStore<float32>>(ds, "SharedVertexList", {numVertices}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*verticesPtr);
 
   // Set vertex coordinates to map to the desired voxel indices
   for(usize i = 0; i < numVertices; i++)
   {
-    setVertexCoordsForVoxelIndex(*vertices, i, voxelIndices[i]);
+    SetVertexCoordsForVoxelIndex(*verticesPtr, i, voxelIndices[i]);
   }
 
-  auto* vertexAM = AttributeMatrix::Create(ds, "VertexData", {numVertices}, vertexGeom->getId());
-  vertexGeom->setVertexAttributeMatrix(*vertexAM);
+  auto* vertexAmPtr = AttributeMatrix::Create(ds, "VertexData", {numVertices}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertexAttributeMatrix(*vertexAmPtr);
 
-  auto* faceArr = Float64Array::CreateWithStore<DataStore<float64>>(ds, "FaceAreas", {numVertices}, {1}, vertexAM->getId());
+  auto* faceArrPtr = Float64Array::CreateWithStore<DataStore<float64>>(ds, "FaceAreas", {numVertices}, {1}, vertexAmPtr->getId());
   for(usize i = 0; i < numVertices; i++)
   {
-    (*faceArr)[i] = faceAreas[i];
+    (*faceArrPtr)[i] = faceAreas[i];
   }
 
-  auto* maskArr = BoolArray::CreateWithStore<DataStore<bool>>(ds, "Mask", {numVertices}, {1}, vertexAM->getId());
-  maskArr->fill(true);
+  auto* maskArrPtr = BoolArray::CreateWithStore<DataStore<bool>>(ds, "Mask", {numVertices}, {1}, vertexAmPtr->getId());
+  maskArrPtr->fill(true);
   if(!allMasked)
   {
-    auto& maskStore = maskArr->getDataStoreRef();
+    auto& maskStore = maskArrPtr->getDataStoreRef();
     maskStore.setValue(maskedOutIndex, false);
   }
 
   // Image Geometry: 4x4x1
-  auto* imageGeom = ImageGeom::Create(ds, "ImageGeom");
-  imageGeom->setDimensions({4, 4, 1});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "ImageGeom");
+  imageGeomPtr->setDimensions({4, 4, 1});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   // Cell data attribute matrix (required for getCellDataPath())
-  auto* cellAM = AttributeMatrix::Create(ds, k_InterpolatedGroupName, {1, 4, 4}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, k_InterpolatedGroupName, {1, 4, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   return ds;
 }
 
-Arguments getBaseArgs(bool useMask, uint64 technique, const std::vector<float32>& kernelSize, bool findLength = false, bool findMin = false, bool findMax = false, bool findMean = false,
+Arguments GetBaseArgs(bool useMask, uint64 technique, const std::vector<float32>& kernelSize, bool findLength = false, bool findMin = false, bool findMax = false, bool findMean = false,
                       bool findStdDev = false, bool findSum = false)
 {
   using F = InterpolatePointCloudToRegularGridFilter;
@@ -137,10 +137,10 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform No Spr
   std::vector<uint64> voxelIndices = {0, 0, 5, 10, 15};
   std::vector<float64> faceAreas = {10.0, 20.0, 30.0, 40.0, 50.0};
 
-  DataStructure dataStructure = createTestDataStructure(voxelIndices, faceAreas);
+  DataStructure dataStructure = CreateTestDataStructure(voxelIndices, faceAreas);
 
   InterpolatePointCloudToRegularGridFilter filter;
-  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f}, true, true, true, true, true, true);
+  Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f}, true, true, true, true, true, true);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -208,10 +208,10 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform With K
   std::vector<uint64> voxelIndices = {5};
   std::vector<float64> faceAreas = {10.0};
 
-  DataStructure dataStructure = createTestDataStructure(voxelIndices, faceAreas);
+  DataStructure dataStructure = CreateTestDataStructure(voxelIndices, faceAreas);
 
   InterpolatePointCloudToRegularGridFilter filter;
-  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {2.0f, 2.0f, 2.0f}, true);
+  Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {2.0f, 2.0f, 2.0f}, true);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -252,10 +252,10 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian With 
   std::vector<uint64> voxelIndices = {5, 6};
   std::vector<float64> faceAreas = {10.0, 20.0};
 
-  DataStructure dataStructure = createTestDataStructure(voxelIndices, faceAreas);
+  DataStructure dataStructure = CreateTestDataStructure(voxelIndices, faceAreas);
 
   InterpolatePointCloudToRegularGridFilter filter;
-  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {2.0f, 2.0f, 2.0f});
+  Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {2.0f, 2.0f, 2.0f});
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -267,13 +267,13 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian With 
   auto& interpFA = dataStructure.getDataRefAs<Float64Array>(k_InterpGroupPath.createChildPath("FaceAreas"));
 
   // Voxel 5 (x=1,y=1): vertex0 at dx=0 w=1.0, vertex1 at dx=1 w=exp(-0.5)
-  float64 w_center = 1.0;
-  float64 w_adj = std::exp(-0.5);
-  float64 expected5 = (w_center * 10.0 + w_adj * 20.0) / (w_center + w_adj);
+  float64 wCenter = 1.0;
+  float64 wAdj = std::exp(-0.5);
+  float64 expected5 = (wCenter * 10.0 + wAdj * 20.0) / (wCenter + wAdj);
   REQUIRE(interpFA[5] == Approx(expected5).epsilon(1e-6));
 
   // Voxel 6 (x=2,y=1): vertex0 at dx=-1 w=exp(-0.5), vertex1 at dx=0 w=1.0
-  float64 expected6 = (w_adj * 10.0 + w_center * 20.0) / (w_adj + w_center);
+  float64 expected6 = (wAdj * 10.0 + wCenter * 20.0) / (wAdj + wCenter);
   REQUIRE(interpFA[6] == Approx(expected6).epsilon(1e-6));
 
   // Voxel 5 should be < 15 (weighted toward 10.0 since vertex 0 is at center)
@@ -293,10 +293,10 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Masked Vertice
   std::vector<uint64> voxelIndices = {0, 0, 5, 10, 15};
   std::vector<float64> faceAreas = {10.0, 20.0, 30.0, 40.0, 50.0};
 
-  DataStructure dataStructure = createTestDataStructure(voxelIndices, faceAreas, false, 1);
+  DataStructure dataStructure = CreateTestDataStructure(voxelIndices, faceAreas, false, 1);
 
   InterpolatePointCloudToRegularGridFilter filter;
-  Arguments args = getBaseArgs(true, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f}, true);
+  Arguments args = GetBaseArgs(true, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f}, true);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -326,7 +326,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Non-Float64 In
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = createTestDataStructure({0, 0, 5}, {10.0, 20.0, 30.0});
+  DataStructure dataStructure = CreateTestDataStructure({0, 0, 5}, {10.0, 20.0, 30.0});
   auto* vertexDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_VertexDataPath);
   REQUIRE(vertexDataPtr != nullptr);
 
@@ -343,7 +343,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Non-Float64 In
   (*int32ArrayPtr)[2] = 4;
 
   InterpolatePointCloudToRegularGridFilter filter;
-  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f}, true);
+  Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f}, true);
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key,
                       std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_VertexDataPath.createChildPath("F32"), k_VertexDataPath.createChildPath("I32")}));
 
@@ -353,10 +353,10 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Non-Float64 In
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  for(const auto* arrayName : {"F32", "I32"})
+  for(const auto* arrayNamePtr : {"F32", "I32"})
   {
-    CAPTURE(arrayName);
-    const auto* outputArrayPtr = dataStructure.getDataAs<Float64Array>(k_InterpGroupPath.createChildPath(arrayName));
+    CAPTURE(arrayNamePtr);
+    const auto* outputArrayPtr = dataStructure.getDataAs<Float64Array>(k_InterpGroupPath.createChildPath(arrayNamePtr));
     REQUIRE(outputArrayPtr != nullptr);
 
     // With no kernel spreading, voxel 0 receives (1 + 2) / 2, voxel 5 receives 4, and voxel 1 receives no contributions.
@@ -370,9 +370,9 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Boolean Interp
 {
   UnitTest::LoadPlugins();
 
-  DataStructure dataStructure = createTestDataStructure({0, 5}, {10.0, 20.0});
+  DataStructure dataStructure = CreateTestDataStructure({0, 5}, {10.0, 20.0});
   InterpolatePointCloudToRegularGridFilter filter;
-  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f});
+  Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f});
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_MaskPath}));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_CopyArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
@@ -386,9 +386,9 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Boolean Copy A
 {
   UnitTest::LoadPlugins();
 
-  DataStructure dataStructure = createTestDataStructure({0, 5}, {10.0, 20.0});
+  DataStructure dataStructure = CreateTestDataStructure({0, 5}, {10.0, 20.0});
   InterpolatePointCloudToRegularGridFilter filter;
-  Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f});
+  Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Uniform, {0.5f, 0.5f, 0.5f});
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_CopyArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_MaskPath}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -403,19 +403,19 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter
 
   std::vector<uint64> voxelIndices = {0, 5};
   std::vector<float64> faceAreas = {10.0, 20.0};
-  DataStructure dataStructure = createTestDataStructure(voxelIndices, faceAreas);
+  DataStructure dataStructure = CreateTestDataStructure(voxelIndices, faceAreas);
 
   InterpolatePointCloudToRegularGridFilter filter;
 
   SECTION("Invalid Kernel Size")
   {
-    Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {-1.0f, 1.0f, 1.0f});
+    Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {-1.0f, 1.0f, 1.0f});
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("Invalid Gaussian Sigma")
   {
-    Arguments args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {1.0f, 1.0f, 1.0f});
+    Arguments args = GetBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {1.0f, 1.0f, 1.0f});
     args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0.0f, 0.0f, 0.0f}));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
@@ -426,7 +426,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: SIMPL Backward
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -438,22 +438,22 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: SIMPL Backward
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key) == true);
       CHECK(args.value<ChoicesParameter::ValueType>(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key) == 0);
       CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));

@@ -39,18 +39,18 @@ IFilter::MessageHandler MakeConsoleMessageHandler(std::string label)
 DataPath BuildRampImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<float32>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const usize total = ref.getSize();
   std::cout << "  [build] filling " << dimX << "x" << dimY << "x" << dimZ << " ramp (" << total << " values) via bulk I/O..." << '\n';
@@ -80,9 +80,9 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   std::cout << "\n[TEST] ThresholdImageFilter: Small Correctness (in-memory)" << '\n';
 
-  constexpr usize kDim = 10;
+  constexpr usize k_KDim = 10;
   DataStructure ds;
-  const DataPath inputPath = BuildRampImage(ds, kDim, kDim, kDim);
+  const DataPath inputPath = BuildRampImage(ds, k_KDim, k_KDim, k_KDim);
 
   const float64 lower = 100.0;
   const float64 upper = 500.0;

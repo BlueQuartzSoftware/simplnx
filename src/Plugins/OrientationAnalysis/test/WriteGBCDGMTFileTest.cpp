@@ -77,7 +77,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   UnitTest::LoadPlugins();
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
@@ -126,7 +126,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
     }
 
     // Compare the Output Pole Figure
-    auto importDataFilter = filterList->createFilter(k_ReadCSVFileFilterHandle);
+    auto importDataFilter = filterListPtr->createFilter(k_ReadCSVFileFilterHandle);
     REQUIRE(nullptr != importDataFilter);
 
     {
@@ -212,7 +212,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
     }
 
     // Compare the Output Pole Figure
-    auto importDataFilter = filterList->createFilter(k_ReadCSVFileFilterHandle);
+    auto importDataFilter = filterListPtr->createFilter(k_ReadCSVFileFilterHandle);
     REQUIRE(nullptr != importDataFilter);
 
     {
@@ -298,7 +298,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
     }
 
     // Compare the Output Pole Figure
-    auto importDataFilter = filterList->createFilter(k_ReadCSVFileFilterHandle);
+    auto importDataFilter = filterListPtr->createFilter(k_ReadCSVFileFilterHandle);
     REQUIRE(nullptr != importDataFilter);
 
     {
@@ -442,7 +442,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: SIMPL Backwards Compatib
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -455,22 +455,22 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: SIMPL Backwards Compatib
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteGBCDGMTFileFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteGBCDGMTFileFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int32>(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key) == 5);
       // Complex type (AxisAngleFilterParameterConverter<float32>) - verified by successful pipeline loading
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteGBCDGMTFileFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
@@ -489,10 +489,10 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid GBCD Component S
   DataStructure dataStructure;
   const DataPath gbcdPath({"Malformed GBCD"});
   const DataPath crystalStructuresPath({"Crystal Structures"});
-  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, componentShape);
-  REQUIRE(gbcd != nullptr);
-  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {2}, {1});
-  REQUIRE(crystalStructures != nullptr);
+  auto* gbcdPtr = UnitTest::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, componentShape);
+  REQUIRE(gbcdPtr != nullptr);
+  auto* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {2}, {1});
+  REQUIRE(crystalStructuresPtr != nullptr);
 
   WriteGBCDGMTFileFilter filter;
   Arguments args = filter.getDefaultArguments();

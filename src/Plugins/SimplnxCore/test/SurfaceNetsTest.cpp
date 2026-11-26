@@ -91,14 +91,14 @@ struct SurfaceNetsFixture
 
   static void Create(DataStructure& dataStructure, bool useConfiguredStores, bool featureIdsInMemory = false, bool selectedCellOnly = false)
   {
-    auto* image = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
-    REQUIRE(image != nullptr);
-    image->setDimensions(SizeVec3{4, 3, 2});
-    auto* cellData = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), k_CellShape, image->getId());
-    REQUIRE(cellData != nullptr);
-    image->setCellData(*cellData);
-    auto* featureData = AttributeMatrix::Create(dataStructure, std::string(k_SmallFeatureName), k_FeatureShape, image->getId());
-    REQUIRE(featureData != nullptr);
+    auto* imagePtr = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
+    REQUIRE(imagePtr != nullptr);
+    imagePtr->setDimensions(SizeVec3{4, 3, 2});
+    auto* cellDataPtr = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), k_CellShape, imagePtr->getId());
+    REQUIRE(cellDataPtr != nullptr);
+    imagePtr->setCellData(*cellDataPtr);
+    auto* featureDataPtr = AttributeMatrix::Create(dataStructure, std::string(k_SmallFeatureName), k_FeatureShape, imagePtr->getId());
+    REQUIRE(featureDataPtr != nullptr);
 
     std::shared_ptr<AbstractDataStore<int32>> featureIdsStore;
     if(useConfiguredStores && !featureIdsInMemory)
@@ -109,7 +109,7 @@ struct SurfaceNetsFixture
     {
       featureIdsStore = std::make_shared<DataStore<int32>>(k_CellShape, ShapeType{1}, std::optional<int32>{});
     }
-    REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellData->getId()) != nullptr);
+    REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId()) != nullptr);
     auto cellIntStore = useConfiguredStores ? DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_SmallCellIntPath, k_CellShape, {2}) :
                                               std::make_shared<DataStore<int32>>(k_CellShape, ShapeType{2}, std::optional<int32>{});
     auto cellFloatStore = useConfiguredStores && !selectedCellOnly ? DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_SmallCellFloatPath, k_CellShape, {3}) :
@@ -118,10 +118,10 @@ struct SurfaceNetsFixture
                                                                     std::make_shared<DataStore<bool>>(k_CellShape, ShapeType{1}, std::optional<bool>{});
     auto featureStore = useConfiguredStores && !selectedCellOnly ? DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_SmallFeatureVectorPath, k_FeatureShape, {3}) :
                                                                    std::make_shared<DataStore<float32>>(k_FeatureShape, ShapeType{3}, std::optional<float32>{});
-    REQUIRE(Int32Array::Create(dataStructure, "CellInt", cellIntStore, cellData->getId()) != nullptr);
-    REQUIRE(Float32Array::Create(dataStructure, "CellFloat", cellFloatStore, cellData->getId()) != nullptr);
-    REQUIRE(BoolArray::Create(dataStructure, "CellBool", cellBoolStore, cellData->getId()) != nullptr);
-    REQUIRE(Float32Array::Create(dataStructure, "FeatureVector", featureStore, featureData->getId()) != nullptr);
+    REQUIRE(Int32Array::Create(dataStructure, "CellInt", cellIntStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(Float32Array::Create(dataStructure, "CellFloat", cellFloatStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(BoolArray::Create(dataStructure, "CellBool", cellBoolStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(Float32Array::Create(dataStructure, "FeatureVector", featureStore, featureDataPtr->getId()) != nullptr);
 
     std::array<int32, 24> featureIds{};
     std::array<int32, 48> cellInts{};
@@ -374,25 +374,25 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Feature DataArray tuple bounds", "[Si
   UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({2, 1, 1});
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
-  auto* cellAM = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), {1, 1, 2}, imageGeom->getId());
-  REQUIRE(cellAM != nullptr);
-  imageGeom->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 1, 1});
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), {1, 1, 2}, imageGeomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAmPtr);
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_SmallFeatureIdsPath, {1, 1, 2}, {1});
-  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellAM->getId());
-  REQUIRE(featureIds != nullptr);
-  (*featureIds)[0] = 1;
-  (*featureIds)[1] = 2;
-  auto* featureAM = AttributeMatrix::Create(dataStructure, std::string(k_SmallFeatureName), {2}, imageGeom->getId());
-  REQUIRE(featureAM != nullptr);
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  (*featureIdsPtr)[0] = 1;
+  (*featureIdsPtr)[1] = 2;
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, std::string(k_SmallFeatureName), {2}, imageGeomPtr->getId());
+  REQUIRE(featureAmPtr != nullptr);
   auto featureStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_SmallFeatureVectorPath, {2}, {3});
-  auto* featureValues = Float32Array::Create(dataStructure, "FeatureVector", featureStore, featureAM->getId());
-  REQUIRE(featureValues != nullptr);
-  featureValues->fill(7.0F);
+  auto* featureValuesPtr = Float32Array::Create(dataStructure, "FeatureVector", featureStore, featureAmPtr->getId());
+  REQUIRE(featureValuesPtr != nullptr);
+  featureValuesPtr->fill(7.0F);
 
   SurfaceNetsFilter filter;
   auto args = SurfaceNetsFixture::ArgumentsFor(false);
@@ -417,20 +417,20 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data tuple count validation", "[
 
   SECTION("Cell Feature Ids have too few tuples")
   {
-    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
-    REQUIRE(otherAM != nullptr);
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Feature Ids", ShapeType{12}, {1}, otherAM->getId());
-    REQUIRE(featureIds != nullptr);
-    featureIds->fill(1);
+    auto* otherAmPtr = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
+    REQUIRE(otherAmPtr != nullptr);
+    auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Feature Ids", ShapeType{12}, {1}, otherAmPtr->getId());
+    REQUIRE(featureIdsPtr != nullptr);
+    featureIdsPtr->fill(1);
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Other Cell Data", "Other Feature Ids"})));
   }
   SECTION("Selected cell DataArray has too few tuples")
   {
-    auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
-    REQUIRE(otherAM != nullptr);
-    auto* cellValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Cell Values", ShapeType{12}, {1}, otherAM->getId());
-    REQUIRE(cellValues != nullptr);
-    cellValues->fill(7);
+    auto* otherAmPtr = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
+    REQUIRE(otherAmPtr != nullptr);
+    auto* cellValuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Cell Values", ShapeType{12}, {1}, otherAmPtr->getId());
+    REQUIRE(cellValuesPtr != nullptr);
+    cellValuesPtr->fill(7);
     args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key,
                         std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{k_SmallCellIntPath, DataPath({"Other Cell Data", "Other Cell Values"})}));
     expectedCode = -56351;
@@ -464,16 +464,16 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell arrays in another Attribute Matr
   const DataPath otherDataPath({"Other Cell Data"});
   const DataPath featureIdsPath = otherDataPath.createChildPath("Other Feature Ids");
   const DataPath cellValuesPath = otherDataPath.createChildPath("Other Cell Values");
-  auto* otherAM = AttributeMatrix::Create(dataStructure, otherDataPath.getTargetName(), SurfaceNetsFixture::k_CellShape);
-  REQUIRE(otherAM != nullptr);
+  auto* otherAmPtr = AttributeMatrix::Create(dataStructure, otherDataPath.getTargetName(), SurfaceNetsFixture::k_CellShape);
+  REQUIRE(otherAmPtr != nullptr);
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, SurfaceNetsFixture::k_CellShape, {1});
-  auto* featureIds = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, otherAM->getId());
-  REQUIRE(featureIds != nullptr);
-  featureIds->fill(1);
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, otherAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  featureIdsPtr->fill(1);
   auto cellValuesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellValuesPath, SurfaceNetsFixture::k_CellShape, {1});
-  auto* cellValues = Int32Array::Create(dataStructure, cellValuesPath.getTargetName(), cellValuesStore, otherAM->getId());
-  REQUIRE(cellValues != nullptr);
-  cellValues->fill(7);
+  auto* cellValuesPtr = Int32Array::Create(dataStructure, cellValuesPath.getTargetName(), cellValuesStore, otherAmPtr->getId());
+  REQUIRE(cellValuesPtr != nullptr);
+  cellValuesPtr->fill(7);
 
   SurfaceNetsFilter filter;
   auto args = SurfaceNetsFixture::ArgumentsFor(false);
@@ -483,13 +483,13 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell arrays in another Attribute Matr
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(k_SmallOutputPath);
-  REQUIRE(triangleGeom != nullptr);
-  REQUIRE(triangleGeom->getNumberOfFaces() > 0);
-  const auto* copiedValues = dataStructure.getDataAs<Int32Array>(k_SmallOutputPath.createChildPath(k_FaceDataGroupName).createChildPath(cellValuesPath.getTargetName()));
-  REQUIRE(copiedValues != nullptr);
-  REQUIRE(copiedValues->getNumberOfTuples() == triangleGeom->getNumberOfFaces());
-  REQUIRE(copiedValues->getNumberOfComponents() == 2);
+  const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(k_SmallOutputPath);
+  REQUIRE(triangleGeomPtr != nullptr);
+  REQUIRE(triangleGeomPtr->getNumberOfFaces() > 0);
+  const auto* copiedValuesPtr = dataStructure.getDataAs<Int32Array>(k_SmallOutputPath.createChildPath(k_FaceDataGroupName).createChildPath(cellValuesPath.getTargetName()));
+  REQUIRE(copiedValuesPtr != nullptr);
+  REQUIRE(copiedValuesPtr->getNumberOfTuples() == triangleGeomPtr->getNumberOfFaces());
+  REQUIRE(copiedValuesPtr->getNumberOfComponents() == 2);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -653,25 +653,25 @@ TEST_CASE("SimplnxCore::SurfaceNets: pre-cancelled scanline does not write", "[S
 
 TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[SimplnxCore][SurfaceNetsFilter][OOC]")
 {
-  constexpr usize kComponents = detail::kTransferPageValues + 1;
-  constexpr usize kValuesPerFace = kComponents * 2;
+  constexpr usize k_KComponents = detail::kTransferPageValues + 1;
+  constexpr usize k_KValuesPerFace = k_KComponents * 2;
   DataStructure dataStructure;
   const DataPath sourcePath({"Direct Source"});
   const DataPath destinationPath({"Direct Destination"});
-  auto* source = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{kComponents});
-  auto* destination = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, kComponents});
-  REQUIRE(source != nullptr);
-  REQUIRE(destination != nullptr);
+  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_KComponents});
+  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_KComponents});
+  REQUIRE(sourcePtr != nullptr);
+  REQUIRE(destinationPtr != nullptr);
 
-  auto sourceValues = std::make_unique<int32[]>(3 * kComponents);
+  auto sourceValues = std::make_unique<int32[]>(3 * k_KComponents);
   for(usize tuple = 0; tuple < 3; tuple++)
   {
-    for(usize component = 0; component < kComponents; component++)
+    for(usize component = 0; component < k_KComponents; component++)
     {
-      sourceValues[tuple * kComponents + component] = static_cast<int32>(tuple * 1000000 + component);
+      sourceValues[tuple * k_KComponents + component] = static_cast<int32>(tuple * 1000000 + component);
     }
   }
-  auto sourceWriteResult = source->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * kComponents));
+  auto sourceWriteResult = sourcePtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * k_KComponents));
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
@@ -684,40 +684,40 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[Simpl
 
   for(const usize component : {usize{0}, detail::kTransferPageValues - 1, detail::kTransferPageValues})
   {
-    RequireLargeTransferValue(destination->getDataStoreRef(), component, static_cast<int32>(component));
-    RequireLargeTransferValue(destination->getDataStoreRef(), kComponents + component, static_cast<int32>(1000000 + component));
-    RequireLargeTransferValue(destination->getDataStoreRef(), kValuesPerFace + component, static_cast<int32>(2000000 + component));
-    RequireLargeTransferValue(destination->getDataStoreRef(), kValuesPerFace + kComponents + component, 0);
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), component, static_cast<int32>(component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KComponents + component, static_cast<int32>(1000000 + component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + component, static_cast<int32>(2000000 + component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + k_KComponents + component, 0);
   }
 }
 
 TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[SimplnxCore][SurfaceNetsFilter][OOC]")
 {
-  constexpr usize kComponents = detail::kTransferPageValues + 1;
-  constexpr usize kValuesPerFace = kComponents * 2;
+  constexpr usize k_KComponents = detail::kTransferPageValues + 1;
+  constexpr usize k_KValuesPerFace = k_KComponents * 2;
   DataStructure dataStructure;
   const DataPath featureIdsPath({"Feature Ids"});
   const DataPath sourcePath({"Feature Source"});
   const DataPath destinationPath({"Feature Destination"});
-  auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, featureIdsPath.getTargetName(), ShapeType{3}, ShapeType{1});
-  auto* source = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{kComponents});
-  auto* destination = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, kComponents});
-  REQUIRE(featureIds != nullptr);
-  REQUIRE(source != nullptr);
-  REQUIRE(destination != nullptr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, featureIdsPath.getTargetName(), ShapeType{3}, ShapeType{1});
+  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_KComponents});
+  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_KComponents});
+  REQUIRE(featureIdsPtr != nullptr);
+  REQUIRE(sourcePtr != nullptr);
+  REQUIRE(destinationPtr != nullptr);
 
   const std::array<int32, 3> featureIdsValues = {2, 0, 1};
-  auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featureIdsValues.data(), featureIdsValues.size()));
+  auto featureIdsWriteResult = featureIdsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featureIdsValues.data(), featureIdsValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
-  auto sourceValues = std::make_unique<int32[]>(3 * kComponents);
+  auto sourceValues = std::make_unique<int32[]>(3 * k_KComponents);
   for(usize feature = 0; feature < 3; feature++)
   {
-    for(usize component = 0; component < kComponents; component++)
+    for(usize component = 0; component < k_KComponents; component++)
     {
-      sourceValues[feature * kComponents + component] = static_cast<int32>(feature * 1000000 + component);
+      sourceValues[feature * k_KComponents + component] = static_cast<int32>(feature * 1000000 + component);
     }
   }
-  auto sourceWriteResult = source->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * kComponents));
+  auto sourceWriteResult = sourcePtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(sourceValues.get(), 3 * k_KComponents));
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
@@ -730,10 +730,10 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[Simp
 
   for(const usize component : {usize{0}, detail::kTransferPageValues - 1, detail::kTransferPageValues})
   {
-    RequireLargeTransferValue(destination->getDataStoreRef(), component, static_cast<int32>(2000000 + component));
-    RequireLargeTransferValue(destination->getDataStoreRef(), kComponents + component, static_cast<int32>(component));
-    RequireLargeTransferValue(destination->getDataStoreRef(), kValuesPerFace + component, static_cast<int32>(1000000 + component));
-    RequireLargeTransferValue(destination->getDataStoreRef(), kValuesPerFace + kComponents + component, 0);
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), component, static_cast<int32>(2000000 + component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KComponents + component, static_cast<int32>(component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + component, static_cast<int32>(1000000 + component));
+    RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_KValuesPerFace + k_KComponents + component, 0);
   }
 }
 #endif
@@ -824,11 +824,11 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 668786);
-  REQUIRE(vertices->getNumberOfTuples() == 319447);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex and triangle lists.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath));
@@ -933,10 +933,10 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-    IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
-    REQUIRE(triangle->getNumberOfTuples() == 668786);
-    REQUIRE(vertices->getNumberOfTuples() == 319447);
+    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+    REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+    REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
   }
 
   // Compare the shared vertex and triangle lists.
@@ -1041,11 +1041,11 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 668786);
-  REQUIRE(vertices->getNumberOfTuples() == 319447);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex and triangle lists.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath));
@@ -1149,11 +1149,11 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 668786);
-  REQUIRE(vertices->getNumberOfTuples() == 319447);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex and triangle lists.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath));

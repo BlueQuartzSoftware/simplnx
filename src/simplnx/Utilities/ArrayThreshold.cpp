@@ -6,14 +6,14 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_Type_Tag = "type";
-constexpr StringLiteral k_Inverted_Tag = "inverted";
-constexpr StringLiteral k_Union_Tag = "union";
-constexpr StringLiteral k_Value_Tag = "value";
-constexpr StringLiteral k_ArrayPath_Tag = "array_path";
-constexpr StringLiteral k_ComponentIndex_Tag = "component_index";
-constexpr StringLiteral k_Comparison_Tag = "comparison";
-constexpr StringLiteral k_Thresholds_Tag = "thresholds";
+constexpr StringLiteral k_TypeTag = "type";
+constexpr StringLiteral k_InvertedTag = "inverted";
+constexpr StringLiteral k_UnionTag = "union";
+constexpr StringLiteral k_ValueTag = "value";
+constexpr StringLiteral k_ArrayPathTag = "array_path";
+constexpr StringLiteral k_ComponentIndexTag = "component_index";
+constexpr StringLiteral k_ComparisonTag = "comparison";
+constexpr StringLiteral k_ThresholdsTag = "thresholds";
 
 // Types
 constexpr StringLiteral k_ArrayType = "array";
@@ -51,8 +51,8 @@ void IArrayThreshold::setUnionOperator(UnionOperator unionType)
 nlohmann::json IArrayThreshold::toJson() const
 {
   nlohmann::json json;
-  json[k_Inverted_Tag] = isInverted();
-  json[k_Union_Tag] = getUnionOperator();
+  json[k_InvertedTag] = isInverted();
+  json[k_UnionTag] = getUnionOperator();
 
   return json;
 }
@@ -140,37 +140,37 @@ std::set<DataPath> ArrayThreshold::getRequiredPaths() const
 nlohmann::json ArrayThreshold::toJson() const
 {
   auto json = IArrayThreshold::toJson();
-  json[k_Type_Tag] = k_ArrayType;
-  json[k_ArrayPath_Tag] = getArrayPath().toString();
-  json[k_ComponentIndex_Tag] = getComponentIndex();
-  json[k_Value_Tag] = getComparisonValue();
-  json[k_Comparison_Tag] = getComparisonType();
+  json[k_TypeTag] = k_ArrayType;
+  json[k_ArrayPathTag] = getArrayPath().toString();
+  json[k_ComponentIndexTag] = getComponentIndex();
+  json[k_ValueTag] = getComparisonValue();
+  json[k_ComparisonTag] = getComparisonType();
 
   return json;
 }
 
 std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& json)
 {
-  if(json[k_Type_Tag] != k_ArrayType)
+  if(json[k_TypeTag] != k_ArrayType)
   {
     return {};
   }
   try
   {
     auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setInverted(json[k_Inverted_Tag].get<bool>());
-    threshold->setUnionOperator(static_cast<UnionOperator>(json[k_Union_Tag].get<int32>()));
+    threshold->setInverted(json[k_InvertedTag].get<bool>());
+    threshold->setUnionOperator(static_cast<UnionOperator>(json[k_UnionTag].get<int32>()));
 
-    auto arrayPath = DataPath::FromString(json[k_ArrayPath_Tag].get<std::string>());
+    auto arrayPath = DataPath::FromString(json[k_ArrayPathTag].get<std::string>());
     if(!arrayPath.has_value())
     {
       return nullptr;
     }
     threshold->setArrayPath(arrayPath.value());
-    usize componentIndex = json.contains(k_ComponentIndex_Tag) ? json[k_ComponentIndex_Tag].get<usize>() : 0;
+    usize componentIndex = json.contains(k_ComponentIndexTag) ? json[k_ComponentIndexTag].get<usize>() : 0;
     threshold->setComponentIndex(componentIndex);
-    threshold->setComparisonType(static_cast<ComparisonType>(json[k_Comparison_Tag].get<int32>()));
-    threshold->setComparisonValue(json[k_Value_Tag].get<ComparisonValue>());
+    threshold->setComparisonType(static_cast<ComparisonType>(json[k_ComparisonTag].get<int32>()));
+    threshold->setComparisonValue(json[k_ValueTag].get<ComparisonValue>());
 
     return threshold;
   } catch(std::exception& e)
@@ -233,35 +233,35 @@ std::set<DataPath> ArrayThresholdSet::getRequiredPaths() const
 nlohmann::json ArrayThresholdSet::toJson() const
 {
   auto json = IArrayThreshold::toJson();
-  json[k_Type_Tag] = k_CollectionType;
+  json[k_TypeTag] = k_CollectionType;
 
   nlohmann::json collection = nlohmann::json::array();
   for(const auto& threshold : getArrayThresholds())
   {
     collection.push_back(threshold->toJson());
   }
-  json[k_Thresholds_Tag] = collection;
+  json[k_ThresholdsTag] = collection;
 
   return json;
 }
 
 std::shared_ptr<ArrayThresholdSet> ArrayThresholdSet::FromJson(const nlohmann::json& json)
 {
-  if(json[k_Type_Tag] != k_CollectionType)
+  if(json[k_TypeTag] != k_CollectionType)
   {
     return nullptr;
   }
   try
   {
     auto thresholdSet = std::make_shared<ArrayThresholdSet>();
-    thresholdSet->setInverted(json[k_Inverted_Tag].get<bool>());
-    thresholdSet->setUnionOperator(static_cast<UnionOperator>(json[k_Union_Tag].get<int32>()));
+    thresholdSet->setInverted(json[k_InvertedTag].get<bool>());
+    thresholdSet->setUnionOperator(static_cast<UnionOperator>(json[k_UnionTag].get<int32>()));
 
     CollectionType collection;
-    const auto& jsonCollection = json[k_Thresholds_Tag];
+    const auto& jsonCollection = json[k_ThresholdsTag];
     for(const auto& jsonThreshold : jsonCollection)
     {
-      const auto& type = jsonThreshold[k_Type_Tag];
+      const auto& type = jsonThreshold[k_TypeTag];
       if(type == k_CollectionType)
       {
         auto item = ArrayThresholdSet::FromJson(jsonThreshold);

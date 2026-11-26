@@ -32,27 +32,27 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 11;
-  constexpr usize DY = 11;
-  constexpr usize DZ = 1;
-  constexpr int32 field = 100; // bright background
-  constexpr int32 dark = 0;
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 100; // bright background
+  constexpr int32 k_Dark = 0;
 
-  std::vector<int32> pattern(DX * DY * DZ, field);
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
   // A 5x5 dark square (interior) -- larger than a radius-1 Ball, so its interior survives dilation and is regrown.
   for(usize y = 3; y <= 7; ++y)
   {
     for(usize x = 3; x <= 7; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = dark;
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Dark;
     }
   }
   // An isolated 1-voxel dark dot -- smaller than the structuring element, so dilation fills it with no seed to
   // reconstruct from.
-  pattern[rt::FlatIndex(9, 1, 0, DX, DY)] = dark;
+  pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Dark;
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   ClosingByReconstructionImageFilter filter;
   rt::RunReconstructionFilter<ClosingByReconstructionImageFilter>(filter, ds, inputPath, BallSetter(/*preserveIntensities=*/false), /*fullyConnected=*/false, /*height=*/0.0);
@@ -60,10 +60,10 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, DX, DY)) == field); // isolated dark dot removed (filled to field)
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == dark);  // dark square center preserved
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == dark);  // dark square corner regrown
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, DX, DY)) == field); // untouched bright field
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Field); // isolated dark dot removed (filled to field)
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Dark);  // dark square center preserved
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Dark);  // dark square corner regrown
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Field); // untouched bright field
 }
 
 // -----------------------------------------------------------------------------
@@ -82,23 +82,23 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed 
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 11;
-  constexpr usize DY = 11;
-  constexpr usize DZ = 1;
-  constexpr int32 field = 100; // bright background
-  constexpr int32 dark = 0;
-  std::vector<int32> pattern(DX * DY * DZ, field);
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 100; // bright background
+  constexpr int32 k_Dark = 0;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
   for(usize y = 3; y <= 7; ++y)
   {
     for(usize x = 3; x <= 7; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = dark; // 5x5 dark square -- larger than the SE, regrown exactly
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Dark; // 5x5 dark square -- larger than the SE, regrown exactly
     }
   }
-  pattern[rt::FlatIndex(9, 1, 0, DX, DY)] = dark; // isolated 1-voxel dark dot -- smaller than the SE, filled
+  pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Dark; // isolated 1-voxel dark dot -- smaller than the SE, filled
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   ClosingByReconstructionImageFilter filter;
@@ -115,10 +115,10 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed 
   auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, DX, DY)) == field); // isolated dark dot filled to field
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == dark);  // dark square center preserved
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == dark);  // dark square corner regrown
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, DX, DY)) == field); // untouched bright field
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Field); // isolated dark dot filled to field
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Dark);  // dark square center preserved
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Dark);  // dark square corner regrown
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Field); // untouched bright field
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 

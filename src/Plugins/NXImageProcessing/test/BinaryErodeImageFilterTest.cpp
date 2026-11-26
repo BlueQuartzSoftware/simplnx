@@ -55,19 +55,19 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Reports the first non-bina
 
   DataStructure ds;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 16, 16, 16);
-  constexpr uint8 fg = 1;
-  constexpr uint8 bg = 0;
-  constexpr uint8 value = 9;
-  constexpr usize index = 1200;
+  constexpr uint8 k_Fg = 1;
+  constexpr uint8 k_Bg = 0;
+  constexpr uint8 k_Value = 9;
+  constexpr usize k_Index = 1200;
   AbstractDataStore<uint8>* inputStorePtr = nullptr;
   REQUIRE_NOTHROW(inputStorePtr = &ds.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef());
   REQUIRE(inputStorePtr != nullptr);
   for(usize i = 0; i < inputStorePtr->getSize(); ++i)
   {
-    inputStorePtr->setValue(i, (i % usize{3} == usize{0}) ? fg : bg);
+    inputStorePtr->setValue(i, (i % usize{3} == usize{0}) ? k_Fg : k_Bg);
   }
   inputStorePtr->setValue(usize{3000}, uint8{7});
-  inputStorePtr->setValue(index, value);
+  inputStorePtr->setValue(k_Index, k_Value);
 
   BinaryErodeImageFilter filter;
   Arguments args;
@@ -76,8 +76,8 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Reports the first non-bina
   args.insertOrAssign(BinaryErodeImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(fg)));
-  args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(bg)));
+  args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
+  args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
   args.insertOrAssign(BinaryErodeImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(ds, args);
@@ -89,7 +89,7 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Reports the first non-bina
   const std::string expectedMessage =
       fmt::format("Binary morphology requires a binary image containing only the foreground ({}) or background ({}) value, but input array '{}' contains the value {} at index {}. Threshold or "
                   "relabel the input first.",
-                  static_cast<int64>(fg), static_cast<int64>(bg), inputPath.toString(), static_cast<int64>(value), index);
+                  static_cast<int64>(k_Fg), static_cast<int64>(k_Bg), inputPath.toString(), static_cast<int64>(k_Value), k_Index);
   REQUIRE(executeResult.result.errors()[0].message == expectedMessage);
 }
 
@@ -119,15 +119,15 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Computed-expected (both al
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr uint8 fg = 1;
-  constexpr uint8 bg = 0;
-  constexpr bool b2f = true; // erosion default
+  constexpr usize k_D = 32;
+  constexpr uint8 k_Fg = 1;
+  constexpr uint8 k_Bg = 0;
+  constexpr bool k_B2f = true; // erosion default
   const std::array<int32, 3> radius = {2, 1, 1};
   const auto kernelType = morph_test::KernelType::Box;
 
   DataStructure ds;
-  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, D, fg, bg);
+  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, k_D, k_Fg, k_Bg);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   BinaryErodeImageFilter filter;
@@ -138,9 +138,9 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Computed-expected (both al
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key,
                       std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
-  args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(fg)));
-  args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(bg)));
-  args.insertOrAssign(BinaryErodeImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(b2f));
+  args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
+  args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
+  args.insertOrAssign(BinaryErodeImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(k_B2f));
 
   auto executeResult = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -149,7 +149,7 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Computed-expected (both al
   auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   // Stream the ACTUAL input into memory (bulk) and compute the independent fgCount oracle over it -- structurally
@@ -164,7 +164,7 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Computed-expected (both al
     SIMPLNX_RESULT_REQUIRE_VALID(r);
   }
   const morph_test::StructuringElement se = morph_test::MakeStructuringElement(kernelType, radius);
-  const std::vector<uint8> expected = morph_test::BinaryMorphologyFgOracle<uint8>(input, D, D, D, se, ImageProcessing::MorphOp::Erode, fg, bg, b2f);
+  const std::vector<uint8> expected = morph_test::BinaryMorphologyFgOracle<uint8>(input, k_D, k_D, k_D, se, ImageProcessing::MorphOp::Erode, k_Fg, k_Bg, k_B2f);
 
   // Stream the output in bounded chunks and compare (avoids per-element OOC access and per-voxel assertions).
   auto buffer = std::make_unique<uint8[]>(k_ChunkValues);

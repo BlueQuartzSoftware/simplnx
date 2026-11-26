@@ -143,9 +143,9 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
 
   std::vector<DataPath> dataArrays;
 
-  const auto* triangles = dataStructure.getDataAs<TriangleGeom>(triangleGeomPath);
-  const DataPath triangleMatrixPath = triangles->getFaceAttributeMatrixDataPath();
-  const auto* triangleMatrix = dataStructure.getDataAs<AttributeMatrix>(triangleMatrixPath);
+  const auto* trianglesPtr = dataStructure.getDataAs<TriangleGeom>(triangleGeomPath);
+  const DataPath triangleMatrixPath = trianglesPtr->getFaceAttributeMatrixDataPath();
+  const auto* triangleMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(triangleMatrixPath);
 
   {
     dataArrays.push_back(surfaceMeshPrincipalCurvature1Path);
@@ -156,7 +156,7 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
   }
 
   // auto* dataArray = dataStructure.getDataAs<IDataArray>(triangles->getFaceAttributeMatrixDataPath());
-  ShapeType tupleShape = triangleMatrix->getShape();
+  ShapeType tupleShape = triangleMatrixPtr->getShape();
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;

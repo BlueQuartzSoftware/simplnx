@@ -183,17 +183,17 @@ Result<> ComputeVectorColors::operator()()
     return ComputeVectorColorsInChunks<uint8>(vectors, cellVectorColors, nullptr, m_ShouldCancel);
   }
 
-  const auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-  if(maskArray != nullptr)
+  const auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+  if(maskArrayPtr != nullptr)
   {
-    switch(maskArray->getDataType())
+    switch(maskArrayPtr->getDataType())
     {
     case DataType::boolean: {
-      const auto& mask = maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>();
+      const auto& mask = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<bool>>();
       return ComputeVectorColorsInChunks(vectors, cellVectorColors, &mask, m_ShouldCancel);
     }
     case DataType::uint8: {
-      const auto& mask = maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+      const auto& mask = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
       return ComputeVectorColorsInChunks(vectors, cellVectorColors, &mask, m_ShouldCancel);
     }
     default:

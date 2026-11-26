@@ -24,10 +24,10 @@ void CleanupCreatedSupport(DataStructure& dataStructure, TriangleGeom& geometry,
     if(!childExisted[index])
     {
       // Look up the exact new ID even when a failed producer cleared its association.
-      const auto* child = dataStructure.getData(supportPaths[index]);
-      if(child != nullptr)
+      const auto* childPtr = dataStructure.getData(supportPaths[index]);
+      if(childPtr != nullptr)
       {
-        const auto createdId = child->getId();
+        const auto createdId = childPtr->getId();
         if(!dataStructure.removeData(createdId))
         {
           throw std::runtime_error(fmt::format("Cannot remove temporary support object {} from geometry '{}'.", createdId, geometryPath.toString()));

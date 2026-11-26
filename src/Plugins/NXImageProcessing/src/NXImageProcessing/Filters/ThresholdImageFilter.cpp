@@ -24,14 +24,14 @@ struct ThresholdOperation
 {
   float64 lower = 0.0;
   float64 upper = 1.0;
-  float64 outsideValue = 0.0;
+  float64 outside_value = 0.0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
     const T lowerT = static_cast<T>(lower);
     const T upperT = static_cast<T>(upper);
-    const U outsideValueU = static_cast<U>(outsideValue);
+    const U outsideValueU = static_cast<U>(outside_value);
     return [lowerT, upperT, outsideValueU](T value) -> U { return (value < lowerT || value > upperT) ? outsideValueU : static_cast<U>(value); };
   }
 };
@@ -118,7 +118,7 @@ Result<> ThresholdImageFilter::executeImpl(DataStructure& dataStructure, const A
   auto upper = filterArgs.value<float64>(k_Upper_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
 
-  const ThresholdOperation operation{.lower = lower, .upper = upper, .outsideValue = outsideValue};
+  const ThresholdOperation operation{.lower = lower, .upper = upper, .outside_value = outsideValue};
 
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }

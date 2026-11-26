@@ -21,18 +21,18 @@ PartitionGeometry::PartitionGeometry(DataStructure& dataStructure, const IFilter
 Result<> PartitionGeometry::operator()()
 {
   const DataPath partitionIdsPath = m_InputValues->InputGeomCellAMPath.createChildPath(m_InputValues->PartitionIdsArrayName);
-  const auto* partitionIdsArray = m_DataStructure.getDataAs<Int32Array>(partitionIdsPath);
+  const auto* partitionIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(partitionIdsPath);
 
-  const IDataArray* partitionGridFeatureIdsArray = nullptr;
+  const IDataArray* partitionGridFeatureIdsArrayPtr = nullptr;
   const auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
   if(partitioningMode != PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
   {
     const DataPath partitionGridFeatureIdsPath =
         m_InputValues->PartitionGridGeomPath.createChildPath(m_InputValues->PartitionGridCellAMName).createChildPath(m_InputValues->PartitionGridFeatureIDsArrayName);
-    partitionGridFeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(partitionGridFeatureIdsPath);
+    partitionGridFeatureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(partitionGridFeatureIdsPath);
   }
 
-  const IDataArray* verticesArray = nullptr;
+  const IDataArray* verticesArrayPtr = nullptr;
   const IGeometry& geometry = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->InputGeometryToPartition);
   switch(geometry.getGeomType())
   {
@@ -43,14 +43,14 @@ Result<> PartitionGeometry::operator()()
   case IGeometry::Type::Tetrahedral:
   case IGeometry::Type::Hexahedral: {
     const auto& nodeGeom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->InputGeometryToPartition);
-    verticesArray = nodeGeom.getVertices();
+    verticesArrayPtr = nodeGeom.getVertices();
     break;
   }
   default:
     break;
   }
 
-  const IDataArray* maskArray = m_InputValues->UseVertexMask ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->VertexMaskPath) : nullptr;
-  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({partitionIdsArray, partitionGridFeatureIdsArray, verticesArray, maskArray}, m_DataStructure, m_MessageHandler,
+  const IDataArray* maskArrayPtr = m_InputValues->UseVertexMask ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->VertexMaskPath) : nullptr;
+  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({partitionIdsArrayPtr, partitionGridFeatureIdsArrayPtr, verticesArrayPtr, maskArrayPtr}, m_DataStructure, m_MessageHandler,
                                                                                m_ShouldCancel, m_InputValues);
 }

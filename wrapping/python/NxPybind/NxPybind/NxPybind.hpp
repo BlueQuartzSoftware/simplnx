@@ -137,10 +137,10 @@ std::string GetFixedPythonTypeCasterName()
   using namespace boost::mp11;
 
   std::string typeName = py::detail::make_caster<T>::name.text;
-  using Types = ParamTypeListT<T>;
-  static constexpr usize N = mp_size<Types>::value;
-  mp_for_each<mp_iota_c<N>>([&](auto I) {
-    using CurrentType = mp_at_c<Types, static_cast<usize>(I)>;
+  using TypesType = ParamTypeListT<T>;
+  static constexpr usize k_N = mp_size<TypesType>::value;
+  mp_for_each<mp_iota_c<k_N>>([&](auto I) {
+    using CurrentType = mp_at_c<TypesType, static_cast<usize>(I)>;
     usize index = typeName.find('%');
     if(index == std::string::npos)
     {
@@ -199,12 +199,12 @@ public:
 
   static Internals& Instance()
   {
-    auto* ptr = py::get_shared_data(k_Key);
-    if(ptr == nullptr)
+    auto* ptrPtr = py::get_shared_data(k_Key);
+    if(ptrPtr == nullptr)
     {
       throw std::runtime_error("Unable to acquire simplnx internals");
     }
-    return *static_cast<Internals*>(ptr);
+    return *static_cast<Internals*>(ptrPtr);
   }
 
   PyParameterInfo& at(const Uuid& uuid)
@@ -259,16 +259,16 @@ public:
     static_assert(std::is_base_of_v<AbstractPlugin, T>);
 
     const T* pluginPtr = plugin.get();
-    FilterList* filterList = m_App->getFilterList();
+    FilterList* filterListPtr = m_App->getFilterList();
     Uuid pluginUuid = plugin->getId();
-    if(filterList->containsPlugin(pluginUuid))
+    if(filterListPtr->containsPlugin(pluginUuid))
     {
-      pluginPtr = dynamic_cast<const T*>(filterList->getPlugin(pluginUuid));
+      pluginPtr = dynamic_cast<const T*>(filterListPtr->getPlugin(pluginUuid));
     }
     else
     {
       auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
-      filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
+      filterListPtr->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
     }
 
     return pluginPtr;
@@ -718,7 +718,7 @@ public:
     for(py::handle filterTypeHandle : filters)
     {
       FilterCreationFunc filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointer {
-        py::gil_scoped_acquire global_interpreter_lock;
+        py::gil_scoped_acquire globalInterpreterLock;
         return std::make_unique<PyFilter>(filterType());
       };
       plugin->addFilter(filterCreationFunc);
@@ -765,22 +765,22 @@ inline void Internals::loadPythonPlugin(py::module_& mod)
 
 inline void Internals::reloadPythonPlugins()
 {
-  FilterList* filterList = m_App->getFilterList();
+  FilterList* filterListPtr = m_App->getFilterList();
   for(auto&& [id, plugin] : m_PythonPlugins)
   {
-    filterList->removePlugin(id);
+    filterListPtr->removePlugin(id);
     plugin->reload();
     auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
-    filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
+    filterListPtr->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
   }
 }
 
 inline void Internals::unloadPythonPlugins()
 {
-  FilterList* filterList = m_App->getFilterList();
+  FilterList* filterListPtr = m_App->getFilterList();
   for(auto&& [id, plugin] : m_PythonPlugins)
   {
-    filterList->removePlugin(id);
+    filterListPtr->removePlugin(id);
   }
   m_PythonPlugins.clear();
 }

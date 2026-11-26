@@ -144,9 +144,9 @@ struct CopyDataFunctor
         {
           continue;
         }
-        const T* srcTuple = inBuffer.get() + i * numComps;
-        T* dstTuple = outBuffer.get() + outTuples * numComps;
-        std::copy(srcTuple, srcTuple + numComps, dstTuple);
+        const T* srcTuplePtr = inBuffer.get() + i * numComps;
+        T* dstTuplePtr = outBuffer.get() + outTuples * numComps;
+        std::copy(srcTuplePtr, srcTuplePtr + numComps, dstTuplePtr);
         outTuples++;
         if(outTuples == k_ChunkTuples)
         {
@@ -213,7 +213,7 @@ Result<> ExtractVertexGeometry::operator()()
 
   // Stream the mask for counting, coordinates, and each included array.
   // Repeated reads avoid a cell-sized keep bitmap.
-  const IDataArray* maskIDataArray = nullptr;
+  const IDataArray* maskIDataArrayPtr = nullptr;
   if(m_InputValues->UseMask)
   {
     if(m_ShouldCancel)
@@ -231,7 +231,7 @@ Result<> ExtractVertexGeometry::operator()()
       return MakeErrorResult(-53900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", maskArrayPath.toString()));
     }
 
-    maskIDataArray = m_DataStructure.getDataAs<IDataArray>(maskArrayPath);
+    maskIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(maskArrayPath);
 
     // Count selected tuples with one bounded flag chunk.
     const usize chunkTuples = std::min(totalCells, k_ChunkTuples);
@@ -244,7 +244,7 @@ Result<> ExtractVertexGeometry::operator()()
         return {};
       }
       const usize count = std::min(k_ChunkTuples, totalCells - chunkStart);
-      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArray->getDataType(), maskIDataArray, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
+      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArrayPtr->getDataType(), maskIDataArrayPtr, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
       if(maskResult.invalid())
       {
         return maskResult;
@@ -287,7 +287,7 @@ Result<> ExtractVertexGeometry::operator()()
         return {};
       }
       const usize count = std::min(k_ChunkTuples, totalCells - chunkStart);
-      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArray->getDataType(), maskIDataArray, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
+      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArrayPtr->getDataType(), maskIDataArrayPtr, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
       if(maskResult.invalid())
       {
         return maskResult;
@@ -329,10 +329,10 @@ Result<> ExtractVertexGeometry::operator()()
       return {};
     }
 
-    const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
-    DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArray->getName());
-    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
-    Result<> copyResult = ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskIDataArray);
+    const auto* srcIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
+    DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArrayPtr->getName());
+    auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
+    Result<> copyResult = ExecuteDataFunction(CopyDataFunctor{}, srcIDataArrayPtr->getDataType(), srcIDataArrayPtr, destDataArrayPtr, maskIDataArrayPtr);
     if(copyResult.invalid())
     {
       return copyResult;

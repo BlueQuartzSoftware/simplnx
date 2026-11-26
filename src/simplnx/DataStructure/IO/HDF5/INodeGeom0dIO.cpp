@@ -38,8 +38,8 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
 
 Result<> INodeGeom0dIO::FinishImportingNodeGeom0dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
 {
-  auto* geom = dataStructure.getDataAs<INodeGeometry0D>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<INodeGeometry0D>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50590, fmt::format("Failed to finish importing INodeGeometry0D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
@@ -55,7 +55,7 @@ Result<> INodeGeom0dIO::FinishImportingNodeGeom0dData(DataStructure& dataStructu
     if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
     {
       auto value = unitsAttr.value();
-      geom->setUnits(static_cast<IGeometry::LengthUnit>(value));
+      geomPtr->setUnits(static_cast<IGeometry::LengthUnit>(value));
     }
   }
 

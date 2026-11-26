@@ -82,7 +82,7 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: SIMPL Backwards 
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -94,22 +94,22 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: SIMPL Backwards 
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeVertexToTriangleDistancesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeVertexToTriangleDistancesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeVertexToTriangleDistancesFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"VertexDataContainer"}));
       CHECK(args.value<DataPath>(ComputeVertexToTriangleDistancesFilter::k_SelectedTriangleGeometryPath_Key) == DataPath({"TriangleDataContainer"}));
       CHECK(args.value<DataPath>(ComputeVertexToTriangleDistancesFilter::k_TriangleNormalsArrayPath_Key) == DataPath({"TriangleDataContainer", "FaceData", "Normals"}));
@@ -122,30 +122,30 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: SIMPL Backwards 
 TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: Triangle Normals requires 3 components", "[SimplnxCore][ComputeVertexToTriangleDistancesFilter][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* triangleGeom = TriangleGeom::Create(dataStructure, "Triangles");
-  REQUIRE(triangleGeom != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeom->getId());
-  triangleGeom->setVertices(*vertices);
-  triangleGeom->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
-  triangleGeom->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
-  triangleGeom->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
-  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeom->getId());
-  (*faces)[0] = 0;
-  (*faces)[1] = 1;
-  (*faces)[2] = 2;
-  triangleGeom->setFaceList(*faces);
-  auto* faceData = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeom->getId());
-  REQUIRE(faceData != nullptr);
-  triangleGeom->setFaceAttributeMatrix(*faceData);
-  UnitTest::CreateTestDataArray<float64>(dataStructure, "Normals", {1}, {1}, faceData->getId());
-  auto* vertexGeom = VertexGeom::Create(dataStructure, "Query Points");
-  REQUIRE(vertexGeom != nullptr);
-  auto* queryVertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {1}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*queryVertices);
-  vertexGeom->setVertexCoordinate(0, {0.25F, 0.25F, 1.0F});
-  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", {1}, vertexGeom->getId());
-  REQUIRE(vertexData != nullptr);
-  vertexGeom->setVertexAttributeMatrix(*vertexData);
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(triangleGeomPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeomPtr->getId());
+  triangleGeomPtr->setVertices(*verticesPtr);
+  triangleGeomPtr->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
+  triangleGeomPtr->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
+  triangleGeomPtr->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
+  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeomPtr->getId());
+  (*facesPtr)[0] = 0;
+  (*facesPtr)[1] = 1;
+  (*facesPtr)[2] = 2;
+  triangleGeomPtr->setFaceList(*facesPtr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeomPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
+  UnitTest::CreateTestDataArray<float64>(dataStructure, "Normals", {1}, {1}, faceDataPtr->getId());
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "Query Points");
+  REQUIRE(vertexGeomPtr != nullptr);
+  auto* queryVerticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {1}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*queryVerticesPtr);
+  vertexGeomPtr->setVertexCoordinate(0, {0.25F, 0.25F, 1.0F});
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {1}, vertexGeomPtr->getId());
+  REQUIRE(vertexDataPtr != nullptr);
+  vertexGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
 
   ComputeVertexToTriangleDistancesFilter filter;
   auto args = filter.getDefaultArguments();

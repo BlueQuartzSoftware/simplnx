@@ -42,10 +42,10 @@ nlohmann::json DataObjectNameParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> DataObjectNameParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'DataObjectNameParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'DataObjectNameParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
   }
   auto string = json.get<ValueType>();
   return {{string}};

@@ -141,12 +141,12 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   for(const auto& path : pSelectedDataArrayPathsValue)
   {
     const DataPath destPath = destCellDataPath.createChildPath(path.getTargetName());
-    const auto* srcArray = dataStructure.getDataAs<IArray>(path);
+    const auto* srcArrayPtr = dataStructure.getDataAs<IArray>(path);
 
     if(srcCellDataPath != path.getParent())
     {
       const usize numGeomCells = rectGridGeom.getNumberOfCells();
-      const usize numArrayElements = srcArray->getNumberOfTuples() * srcArray->getNumberOfComponents();
+      const usize numArrayElements = srcArrayPtr->getNumberOfTuples() * srcArrayPtr->getNumberOfComponents();
       if(numGeomCells == numArrayElements)
       {
         resultOutputActions.warnings().push_back({-7365, fmt::format("Data Object at path '{}' is not a cell level array but has the same number of elements as the parent geometry and will be copied "
@@ -164,17 +164,17 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
       }
     }
 
-    IArray::ArrayType arrayType = srcArray->getArrayType();
+    IArray::ArrayType arrayType = srcArrayPtr->getArrayType();
     if(arrayType == IArray::ArrayType::DataArray)
     {
-      const auto* srcDataArray = dataStructure.getDataAs<IDataArray>(path);
-      auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArray->getDataType(), cellTupleShape, srcDataArray->getComponentShape(), destPath);
+      const auto* srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(path);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArrayPtr->getDataType(), cellTupleShape, srcDataArrayPtr->getComponentShape(), destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::NeighborListArray)
     {
-      const auto* srcDataArray = dataStructure.getDataAs<INeighborList>(path);
-      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), cellTupleShape, destPath);
+      const auto* srcDataArrayPtr = dataStructure.getDataAs<INeighborList>(path);
+      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArrayPtr->getDataType(), cellTupleShape, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::StringArray)

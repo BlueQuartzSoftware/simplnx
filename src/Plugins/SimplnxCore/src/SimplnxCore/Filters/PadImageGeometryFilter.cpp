@@ -263,12 +263,12 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   // not need to manually copy these arrays to the destination image geometry
   {
     // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellData = srcImageGeom.getCellData();
-    if(selectedCellData == nullptr)
+    const AttributeMatrix* selectedCellDataPtr = srcImageGeom.getCellData();
+    if(selectedCellDataPtr == nullptr)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
-    std::string cellDataName = selectedCellData->getName();
+    std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, destGeomDims.toContainer<CreateImageGeometryAction::DimensionType>(),
@@ -278,7 +278,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
     // in the destination image geometry's attribute matrix
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-    for(const auto& [identifier, object] : *selectedCellData)
+    for(const auto& [identifier, object] : *selectedCellDataPtr)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();

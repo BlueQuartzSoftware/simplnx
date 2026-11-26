@@ -164,18 +164,18 @@ template <class T>
 inline DataPath BuildObjectImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T objectValue, T backgroundValue)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const std::vector<T> pattern = MakeObjectPattern<T>(dimX, dimY, dimZ, objectValue, backgroundValue);
   for(usize i = 0; i < pattern.size(); ++i)
@@ -197,18 +197,18 @@ template <class T>
 inline DataPath BuildObjectImageWithExtraLabel(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T objectValue, T extraLabel, T backgroundValue)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -243,11 +243,11 @@ inline std::vector<T> RunApplyObjectMorphology(const std::vector<T>& input, usiz
                                                T objectValue, T backgroundValue)
 {
   DataStructure ds;
-  auto* inArray = UnitTest::CreateTestDataArray<T>(ds, "in", {dimZ, dimY, dimX}, {1});
-  auto* outArray = UnitTest::CreateTestDataArray<T>(ds, "out", {dimZ, dimY, dimX}, {1});
+  auto* inArrayPtr = UnitTest::CreateTestDataArray<T>(ds, "in", {dimZ, dimY, dimX}, {1});
+  auto* outArrayPtr = UnitTest::CreateTestDataArray<T>(ds, "out", {dimZ, dimY, dimX}, {1});
   for(usize i = 0; i < input.size(); ++i)
   {
-    inArray->getDataStoreRef().setValue(i, input[i]);
+    inArrayPtr->getDataStoreRef().setValue(i, input[i]);
   }
 
   const StructuringElement se = MakeStructuringElement(kernelType, radius);
@@ -255,14 +255,14 @@ inline std::vector<T> RunApplyObjectMorphology(const std::vector<T>& input, usiz
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ImageProcessing::ApplyObjectMorphology<T>(inArray->getDataStoreRef(), outArray->getDataStoreRef(), SizeVec3{dimX, dimY, dimZ}, se, boxOffsets, op, objectValue,
-                                                                    backgroundValue, *inArray, *outArray, shouldCancel, messageHandler);
+  const Result<> result = ImageProcessing::ApplyObjectMorphology<T>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), SizeVec3{dimX, dimY, dimZ}, se, boxOffsets, op, objectValue,
+                                                                    backgroundValue, *inArrayPtr, *outArrayPtr, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
   std::vector<T> out(input.size());
   for(usize i = 0; i < out.size(); ++i)
   {
-    out[i] = outArray->getDataStoreRef().getValue(i);
+    out[i] = outArrayPtr->getDataStoreRef().getValue(i);
   }
   return out;
 }
@@ -319,19 +319,19 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Obje
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize dim = 4;
-  const ShapeType cellShape = {dim, dim, dim};
+  constexpr usize k_Dim = 4;
+  const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({k_Dim, k_Dim, k_Dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {3}); // 3-component (non-scalar)
-  DataArray<T>::Create(ds, "Input", store, cellAM->getId());
+  DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
 
   NewFilterT filter;
   Arguments args;
@@ -445,9 +445,9 @@ inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, c
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   // --- geometry dims + input snapshot (for the deterministic oracle; the filter writes a separate Output array) ---
-  const auto* imageGeom = ds.getDataAs<ImageGeom>(geom);
-  REQUIRE(imageGeom != nullptr);
-  const SizeVec3 dims = imageGeom->getDimensions();
+  const auto* imageGeomPtr = ds.getDataAs<ImageGeom>(geom);
+  REQUIRE(imageGeomPtr != nullptr);
+  const SizeVec3 dims = imageGeomPtr->getDimensions();
   const usize dimX = dims[0];
   const usize dimY = dims[1];
   const usize dimZ = dims[2];

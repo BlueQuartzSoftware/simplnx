@@ -152,8 +152,8 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   // Ensure that if pMaskValue is TRUE that the Mask Path is valid
   if(pUseMask)
   {
-    const DataObject* maskArray = dataStructure.getData(pMaskArrayPath);
-    if(nullptr == maskArray)
+    const DataObject* maskArrayPtr = dataStructure.getData(pMaskArrayPath);
+    if(nullptr == maskArrayPtr)
     {
       Error result = {.code = -500,
                       .message =

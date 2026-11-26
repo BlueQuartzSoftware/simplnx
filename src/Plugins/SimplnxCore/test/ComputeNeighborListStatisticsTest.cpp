@@ -19,7 +19,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData"});
   DataPath inputArrayPath({"TestData", "Neighbor List"});
   std::string length = "Length";
@@ -38,13 +38,13 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
   DataPath summationOutputPath = statsDataPath.createChildPath(summation);
 
   usize numTuples = 3;
-  auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", ShapeType{numTuples}, topLevelGroup->getId());
+  auto* neighborListPtr = NeighborList<float32>::Create(dataStructure, "Neighbor List", ShapeType{numTuples}, topLevelGroupPtr->getId());
   std::vector<float32> list1 = {117, 875, 1035, 3905, 4214};
   std::vector<float32> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
   std::vector<float32> list3 = {309, 775, 2625, 2818, 3061, 3751, 4235, 4817};
-  neighborList->setList(0, std::make_shared<std::vector<float32>>(list1));
-  neighborList->setList(1, std::make_shared<std::vector<float32>>(list2));
-  neighborList->setList(2, std::make_shared<std::vector<float32>>(list3));
+  neighborListPtr->setList(0, std::make_shared<std::vector<float32>>(list1));
+  neighborListPtr->setList(1, std::make_shared<std::vector<float32>>(list2));
+  neighborListPtr->setList(2, std::make_shared<std::vector<float32>>(list3));
 
   ComputeNeighborListStatisticsFilter filter;
   Arguments args;
@@ -75,48 +75,48 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check resulting values
-  auto* lengthArray = dataStructure.getDataAs<UInt64Array>(lengthOutputPath);
-  REQUIRE(lengthArray != nullptr);
-  auto* minArray = dataStructure.getDataAs<Float32Array>(minimumOutputPath);
-  REQUIRE(minArray != nullptr);
-  auto* maxArray = dataStructure.getDataAs<Float32Array>(maximumOutputPath);
-  REQUIRE(maxArray != nullptr);
-  auto* meanArray = dataStructure.getDataAs<Float32Array>(meanOutputPath);
-  REQUIRE(meanArray != nullptr);
-  auto* medianArray = dataStructure.getDataAs<Float32Array>(medianOutputPath);
-  REQUIRE(medianArray != nullptr);
-  auto* stdArray = dataStructure.getDataAs<Float32Array>(stdDevOutputPath);
-  REQUIRE(stdArray != nullptr);
-  auto* sumArray = dataStructure.getDataAs<Float32Array>(summationOutputPath);
-  REQUIRE(sumArray != nullptr);
+  auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(lengthOutputPath);
+  REQUIRE(lengthArrayPtr != nullptr);
+  auto* minArrayPtr = dataStructure.getDataAs<Float32Array>(minimumOutputPath);
+  REQUIRE(minArrayPtr != nullptr);
+  auto* maxArrayPtr = dataStructure.getDataAs<Float32Array>(maximumOutputPath);
+  REQUIRE(maxArrayPtr != nullptr);
+  auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(meanOutputPath);
+  REQUIRE(meanArrayPtr != nullptr);
+  auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(medianOutputPath);
+  REQUIRE(medianArrayPtr != nullptr);
+  auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(stdDevOutputPath);
+  REQUIRE(stdArrayPtr != nullptr);
+  auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(summationOutputPath);
+  REQUIRE(sumArrayPtr != nullptr);
 
-  auto lengthVal1 = (*lengthArray)[0];
-  auto lengthVal2 = (*lengthArray)[1];
-  auto lengthVal3 = (*lengthArray)[2];
+  auto lengthVal1 = (*lengthArrayPtr)[0];
+  auto lengthVal2 = (*lengthArrayPtr)[1];
+  auto lengthVal3 = (*lengthArrayPtr)[2];
 
-  auto minVal1 = (*minArray)[0];
-  auto minVal2 = (*minArray)[1];
-  auto minVal3 = (*minArray)[2];
+  auto minVal1 = (*minArrayPtr)[0];
+  auto minVal2 = (*minArrayPtr)[1];
+  auto minVal3 = (*minArrayPtr)[2];
 
-  auto maxVal1 = (*maxArray)[0];
-  auto maxVal2 = (*maxArray)[1];
-  auto maxVal3 = (*maxArray)[2];
+  auto maxVal1 = (*maxArrayPtr)[0];
+  auto maxVal2 = (*maxArrayPtr)[1];
+  auto maxVal3 = (*maxArrayPtr)[2];
 
-  auto meanVal1 = (*meanArray)[0];
-  auto meanVal2 = (*meanArray)[1];
-  auto meanVal3 = (*meanArray)[2];
+  auto meanVal1 = (*meanArrayPtr)[0];
+  auto meanVal2 = (*meanArrayPtr)[1];
+  auto meanVal3 = (*meanArrayPtr)[2];
 
-  auto meadianVal1 = (*medianArray)[0];
-  auto meadianVal2 = (*medianArray)[1];
-  auto meadianVal3 = (*medianArray)[2];
+  auto meadianVal1 = (*medianArrayPtr)[0];
+  auto meadianVal2 = (*medianArrayPtr)[1];
+  auto meadianVal3 = (*medianArrayPtr)[2];
 
-  auto stdVal1 = (*stdArray)[0];
-  auto stdVal2 = (*stdArray)[1];
-  auto stdVal3 = (*stdArray)[2];
+  auto stdVal1 = (*stdArrayPtr)[0];
+  auto stdVal2 = (*stdArrayPtr)[1];
+  auto stdVal3 = (*stdArrayPtr)[2];
 
-  auto sumVal1 = (*sumArray)[0];
-  auto sumVal2 = (*sumArray)[1];
-  auto sumVal3 = (*sumArray)[2];
+  auto sumVal1 = (*sumArrayPtr)[0];
+  auto sumVal2 = (*sumArrayPtr)[1];
+  auto sumVal3 = (*sumArrayPtr)[2];
 
   REQUIRE(lengthVal1 == 5);
   REQUIRE(lengthVal2 == 9);
@@ -154,7 +154,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData"});
   DataPath inputArrayPath({"TestData", "Data Array"});
   std::string length = "Length";
@@ -173,8 +173,8 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array
   DataPath summationOutputPath = statsDataPath.createChildPath(summation);
 
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{0}, std::vector<usize>{3}, 0.0f);
-  auto* dataArray = DataArray<float32>::Create(dataStructure, "Data Array", std::move(dataStore), topLevelGroup->getId());
-  dataArray->fill(10.0f);
+  auto* dataArrayPtr = DataArray<float32>::Create(dataStructure, "Data Array", std::move(dataStore), topLevelGroupPtr->getId());
+  dataArrayPtr->fill(10.0f);
 
   ComputeNeighborListStatisticsFilter filter;
   Arguments args;
@@ -211,7 +211,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: SIMPL Backwards Com
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -223,22 +223,22 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: SIMPL Backwards Com
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeNeighborListStatisticsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeNeighborListStatisticsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindLength_Key) == true);
       CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMinimum_Key) == true);
       CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMaximum_Key) == true);

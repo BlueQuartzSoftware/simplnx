@@ -79,8 +79,8 @@ public:
 
   Uuid uuid() const override
   {
-    static constexpr Uuid uuid = *Uuid::FromString("907b9eb7-c48e-4666-9d9d-21cc70f426f1");
-    return uuid;
+    static constexpr Uuid k_Uuid = *Uuid::FromString("907b9eb7-c48e-4666-9d9d-21cc70f426f1");
+    return k_Uuid;
   }
 
   std::string humanName() const override
@@ -130,26 +130,26 @@ TEST_CASE("PipelineTest:Execute Pipeline")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
-  const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
-  REQUIRE(test1Plugin != nullptr);
-  auto testFilter1 = filterList->createFilter(k_Test1FilterHandle);
+  const AbstractPlugin* test1PluginPtr = app->getPlugin(k_Test1PluginId);
+  REQUIRE(test1PluginPtr != nullptr);
+  auto testFilter1 = filterListPtr->createFilter(k_Test1FilterHandle);
   REQUIRE(testFilter1 != nullptr);
-  FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
+  FilterHandle tf1Handle(testFilter1->uuid(), test1PluginPtr->getId());
 
-  const AbstractPlugin* test2Plugin = app->getPlugin(k_Test2PluginId);
-  REQUIRE(test2Plugin != nullptr);
-  auto testFilter2 = filterList->createFilter(k_Test2FilterHandle);
+  const AbstractPlugin* test2PluginPtr = app->getPlugin(k_Test2PluginId);
+  REQUIRE(test2PluginPtr != nullptr);
+  auto testFilter2 = filterListPtr->createFilter(k_Test2FilterHandle);
   REQUIRE(testFilter2 != nullptr);
-  FilterHandle tf2Handle(testFilter2->uuid(), test2Plugin->getId());
+  FilterHandle tf2Handle(testFilter2->uuid(), test2PluginPtr->getId());
 
   Pipeline pipeline;
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_front(tf1Handle));
 
-  PipelineFilter* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-  REQUIRE(filterNode != nullptr);
+  PipelineFilter* filterNodePtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(filterNodePtr != nullptr);
 
   Arguments args;
   GeneratedFileListParameter::ValueType defaultValue;
@@ -168,7 +168,7 @@ TEST_CASE("PipelineTest:Execute Pipeline")
   }
 
   args.insert("param3", std::move(defaultValue));
-  filterNode->setArguments(args);
+  filterNodePtr->setArguments(args);
 
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_back(tf2Handle));
@@ -179,15 +179,15 @@ TEST_CASE("PipelineTest:Simplnx Pipeline")
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
 
-  auto* filterList = app->getFilterList();
-  REQUIRE(filterList->size() != 0);
+  auto* filterListPtr = app->getFilterList();
+  REQUIRE(filterListPtr->size() != 0);
 
-  const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
-  REQUIRE(test1Plugin != nullptr);
+  const AbstractPlugin* test1PluginPtr = app->getPlugin(k_Test1PluginId);
+  REQUIRE(test1PluginPtr != nullptr);
 
-  auto testFilter1 = filterList->createFilter(k_Test1FilterHandle);
+  auto testFilter1 = filterListPtr->createFilter(k_Test1FilterHandle);
   REQUIRE(testFilter1 != nullptr);
-  FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
+  FilterHandle tf1Handle(testFilter1->uuid(), test1PluginPtr->getId());
 
   Pipeline pipeline;
   std::unique_ptr<PipelineFilter> node = PipelineFilter::Create(tf1Handle);
@@ -203,27 +203,27 @@ TEST_CASE("PipelineTest:Simplnx Pipeline")
 
   // Test Moving nodex
   {
-    constexpr Pipeline::index_type fromIndex = 1;
-    constexpr Pipeline::index_type toIndex = 3;
+    constexpr Pipeline::index_type k_FromIndex = 1;
+    constexpr Pipeline::index_type k_ToIndex = 3;
 
-    auto* movedNode = pipeline.at(fromIndex);
+    auto* movedNodePtr = pipeline.at(k_FromIndex);
 
-    REQUIRE(pipeline.move(fromIndex, toIndex));
+    REQUIRE(pipeline.move(k_FromIndex, k_ToIndex));
 
     // Check node index
     {
-      auto nodeIter = pipeline.find(movedNode);
+      auto nodeIter = pipeline.find(movedNodePtr);
       const auto nodeIndex = nodeIter - pipeline.begin();
-      REQUIRE(nodeIndex == toIndex);
+      REQUIRE(nodeIndex == k_ToIndex);
     }
 
-    REQUIRE(pipeline.move(toIndex, fromIndex));
+    REQUIRE(pipeline.move(k_ToIndex, k_FromIndex));
 
     // Check node index
     {
-      auto nodeIter = pipeline.find(movedNode);
+      auto nodeIter = pipeline.find(movedNodePtr);
       const auto nodeIndex = nodeIter - pipeline.begin();
-      REQUIRE(nodeIndex == fromIndex);
+      REQUIRE(nodeIndex == k_FromIndex);
     }
   }
 }
@@ -260,21 +260,21 @@ TEST_CASE("PipelineTest:PipelineJson")
   usize size = pipeline2.size();
   for(usize i = 0; i < size; i++)
   {
-    const auto* originalNode = dynamic_cast<const PipelineFilter*>(pipeline.at(i));
+    const auto* originalNodePtr = dynamic_cast<const PipelineFilter*>(pipeline.at(i));
 
     const AbstractPipelineNode* nodePtr = pipeline2.at(i);
     REQUIRE(nodePtr != nullptr);
-    const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(nodePtr);
-    REQUIRE(pipelineFilter != nullptr);
-    const IFilter* filter = pipelineFilter->getFilter();
-    REQUIRE(filter != nullptr);
+    const auto* pipelineFilterPtr = dynamic_cast<const PipelineFilter*>(nodePtr);
+    REQUIRE(pipelineFilterPtr != nullptr);
+    const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+    REQUIRE(filterPtr != nullptr);
 
-    Uuid expectedUuid = originalNode->getFilter()->uuid();
-    REQUIRE(filter->uuid() == expectedUuid);
+    Uuid expectedUuid = originalNodePtr->getFilter()->uuid();
+    REQUIRE(filterPtr->uuid() == expectedUuid);
 
-    Arguments expectedArgs = originalNode->getArguments();
+    Arguments expectedArgs = originalNodePtr->getArguments();
 
-    Arguments args = pipelineFilter->getArguments();
+    Arguments args = pipelineFilterPtr->getArguments();
 
     REQUIRE(args.size() == expectedArgs.size());
 
@@ -317,18 +317,18 @@ TEST_CASE("PipelineTest:Rename Output")
     group1Name = "Bizz";
     args1.insertOrAssign("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
-    auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-    REQUIRE(filterNode != nullptr);
-    filterNode->setArguments(args1);
+    auto* filterNodePtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+    REQUIRE(filterNodePtr != nullptr);
+    filterNodePtr->setArguments(args1);
   }
 
   REQUIRE(pipeline.preflight(false, true));
 
   // Check Node 2 arguments
   {
-    auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
-    REQUIRE(filterNode2 != nullptr);
-    auto args2Alt = filterNode2->getArguments();
+    auto* filterNode2Ptr = dynamic_cast<PipelineFilter*>(pipeline.at(1));
+    REQUIRE(filterNode2Ptr != nullptr);
+    auto args2Alt = filterNode2Ptr->getArguments();
     const auto& inPath = std::any_cast<DataPath>(args2Alt.at("data_object_path"));
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath == targetPath);
@@ -360,18 +360,18 @@ TEST_CASE("PipelineTest:Not Renaming")
     group1Name = "Bizz";
     args1.insertOrAssign("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
-    auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-    REQUIRE(filterNode != nullptr);
-    filterNode->setArguments(args1);
+    auto* filterNodePtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+    REQUIRE(filterNodePtr != nullptr);
+    filterNodePtr->setArguments(args1);
   }
 
   REQUIRE(pipeline.preflight(false, false));
 
   // Check Node 2 arguments
   {
-    auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
-    REQUIRE(filterNode2 != nullptr);
-    auto args2Alt = filterNode2->getArguments();
+    auto* filterNode2Ptr = dynamic_cast<PipelineFilter*>(pipeline.at(1));
+    REQUIRE(filterNode2Ptr != nullptr);
+    auto args2Alt = filterNode2Ptr->getArguments();
     const auto& inPath = std::any_cast<DataPath>(args2Alt.at("data_object_path"));
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath != targetPath);
@@ -389,15 +389,15 @@ TEST_CASE("PipelineTest:PipelineDeferredActionTest")
   REQUIRE(pipeline.preflight(dataStructure, false));
 
   // should be deleted in preflight
-  DataObject* preflightObject = dataStructure.getData(k_DeferredActionPath);
-  REQUIRE(preflightObject == nullptr);
+  DataObject* preflightObjectPtr = dataStructure.getData(k_DeferredActionPath);
+  REQUIRE(preflightObjectPtr == nullptr);
 
   // DeferredActionTestFilter checks the k_DeferredActionPath hasn't been deleted until after execute
   REQUIRE(pipeline.execute(dataStructure, false));
 
   // after execute the object will be deleted
-  DataObject* executeObject = dataStructure.getData(k_DeferredActionPath);
-  REQUIRE(executeObject == nullptr);
+  DataObject* executeObjectPtr = dataStructure.getData(k_DeferredActionPath);
+  REQUIRE(executeObjectPtr == nullptr);
 }
 
 TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[SimplnxCore][PipelineCopyState]")

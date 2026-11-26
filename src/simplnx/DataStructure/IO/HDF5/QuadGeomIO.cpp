@@ -23,8 +23,8 @@ std::string QuadGeomIO::getTypeName() const
 Result<> QuadGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                               const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* geometry = QuadGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
-  return INodeGeom2dIO::ReadNodeGeom2dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  auto* geometryPtr = QuadGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  return INodeGeom2dIO::ReadNodeGeom2dData(structureReader, *geometryPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
 Result<> QuadGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const

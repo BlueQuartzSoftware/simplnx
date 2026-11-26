@@ -103,62 +103,62 @@ usize TriangleGeom::getNumberOfVerticesPerFace() const
 
 Result<> TriangleGeom::findElementSizes(bool recalculate)
 {
-  auto* triangleSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
-  if(triangleSizes != nullptr && !recalculate)
+  auto* triangleSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  if(triangleSizesPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(triangleSizes == nullptr)
+  if(triangleSizesPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
-    triangleSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
-    if(triangleSizes == nullptr)
+    triangleSizesPtr = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(triangleSizesPtr == nullptr)
     {
       m_ElementSizesId.reset();
       return MakeErrorResult(-2230, "TriangleGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 
-  GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
-  m_ElementSizesId = triangleSizes->getId();
+  GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizesPtr);
+  m_ElementSizesId = triangleSizesPtr->getId();
 
   return {};
 }
 
 Result<> TriangleGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* trianglesContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
-  if(trianglesContainingVert != nullptr && !recalculate)
+  auto* trianglesContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  if(trianglesContainingVertPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(trianglesContainingVert == nullptr)
+  if(trianglesContainingVertPtr == nullptr)
   {
-    trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
-    if(trianglesContainingVert == nullptr)
+    trianglesContainingVertPtr = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+    if(trianglesContainingVertPtr == nullptr)
     {
       m_CellContainingVertDataArrayId.reset();
       return MakeErrorResult(-2231, "TriangleGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
+  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVertPtr, getNumberOfVertices());
   if(findResult.invalid())
   {
     m_CellContainingVertDataArrayId.reset();
     return findResult;
   }
-  m_CellContainingVertDataArrayId = trianglesContainingVert->getId();
+  m_CellContainingVertDataArrayId = trianglesContainingVertPtr->getId();
 
   return {};
 }
 
 Result<> TriangleGeom::findElementNeighbors(bool recalculate)
 {
-  auto* triangleNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
-  if(triangleNeighbors != nullptr && !recalculate)
+  auto* triangleNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  if(triangleNeighborsPtr != nullptr && !recalculate)
   {
     return {};
   }
@@ -169,19 +169,19 @@ Result<> TriangleGeom::findElementNeighbors(bool recalculate)
     m_CellNeighborsDataArrayId.reset();
     return result;
   }
-  if(triangleNeighbors == nullptr)
+  if(triangleNeighborsPtr == nullptr)
   {
-    triangleNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
-    if(triangleNeighbors == nullptr)
+    triangleNeighborsPtr = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
+    if(triangleNeighborsPtr == nullptr)
     {
       m_CellNeighborsDataArrayId.reset();
       return MakeErrorResult(-2232, "TriangleGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
-  m_CellNeighborsDataArrayId = triangleNeighbors->getId();
+  m_CellNeighborsDataArrayId = triangleNeighborsPtr->getId();
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, Type::Triangle);
+  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighborsPtr, Type::Triangle);
   if(findResult.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
@@ -193,25 +193,25 @@ Result<> TriangleGeom::findElementNeighbors(bool recalculate)
 
 Result<> TriangleGeom::findElementCentroids(bool recalculate)
 {
-  auto* triangleCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
-  if(triangleCentroids != nullptr && !recalculate)
+  auto* triangleCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
+  if(triangleCentroidsPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(triangleCentroids == nullptr)
+  if(triangleCentroidsPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
-    triangleCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
+    triangleCentroidsPtr = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
   }
-  if(triangleCentroids == nullptr)
+  if(triangleCentroidsPtr == nullptr)
   {
     m_CellCentroidsDataArrayId.reset();
     return MakeErrorResult(-2233, "TriangleGeom Error: Unable to find or create a valid element centroids array or data store.");
   }
 
-  GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
-  m_CellCentroidsDataArrayId = triangleCentroids->getId();
+  GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroidsPtr);
+  m_CellCentroidsDataArrayId = triangleCentroidsPtr->getId();
 
   return {};
 }
@@ -236,60 +236,60 @@ void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pC
 
 Result<> TriangleGeom::findEdges(bool recalculate)
 {
-  auto* edgeList = getDataStructureRef().getDataAsUnsafe<UInt64Array>(m_EdgeDataArrayId);
-  if(edgeList != nullptr && !recalculate)
+  auto* edgeListPtr = getDataStructureRef().getDataAsUnsafe<UInt64Array>(m_EdgeDataArrayId);
+  if(edgeListPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(edgeList == nullptr)
+  if(edgeListPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-    edgeList = DataArray<uint64>::Create(*getDataStructure(), k_SharedEdgeListName, std::move(dataStore), getId());
-    if(edgeList == nullptr)
+    edgeListPtr = DataArray<uint64>::Create(*getDataStructure(), k_SharedEdgeListName, std::move(dataStore), getId());
+    if(edgeListPtr == nullptr)
     {
       m_EdgeDataArrayId.reset();
       return MakeErrorResult(-2234, "TriangleGeom Error: Unable to find or create a valid shared edges array or data store.");
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
+  auto findResult = GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeListPtr);
   if(findResult.invalid())
   {
     m_EdgeDataArrayId.reset();
     return findResult;
   }
-  m_EdgeDataArrayId = edgeList->getId();
+  m_EdgeDataArrayId = edgeListPtr->getId();
 
   return {};
 }
 
 Result<> TriangleGeom::findUnsharedEdges(bool recalculate)
 {
-  auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
-  if(unsharedEdgeList != nullptr && !recalculate)
+  auto* unsharedEdgeListPtr = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
+  if(unsharedEdgeListPtr != nullptr && !recalculate)
   {
     return {};
   }
 
-  if(unsharedEdgeList == nullptr)
+  if(unsharedEdgeListPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-    unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdgesListName, std::move(dataStore), getId());
+    unsharedEdgeListPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdgesListName, std::move(dataStore), getId());
   }
-  if(unsharedEdgeList == nullptr)
+  if(unsharedEdgeListPtr == nullptr)
   {
     m_UnsharedEdgeListId.reset();
     return MakeErrorResult(-2235, "TriangleGeom Error: Unable to find or create a valid unshared edges array or data store.");
   }
 
-  auto findResult = GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
+  auto findResult = GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeListPtr);
   if(findResult.invalid())
   {
     m_UnsharedEdgeListId.reset();
     return findResult;
   }
-  m_UnsharedEdgeListId = unsharedEdgeList->getId();
+  m_UnsharedEdgeListId = unsharedEdgeListPtr->getId();
 
   return {};
 }

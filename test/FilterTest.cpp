@@ -541,9 +541,9 @@ TEST_CASE("IFilter: Preflight cancellation preserves diagnostics and output valu
     REQUIRE(executeResult.result.warnings().size() == 2);
     REQUIRE(executeResult.result.warnings().front().code == k_PreflightWarningCode);
     REQUIRE(executeResult.result.warnings()[1].code == -1);
-    REQUIRE(executeResult.outputValues.size() == 1);
-    REQUIRE(executeResult.outputValues.front().name == k_PreflightValueName.view());
-    REQUIRE(executeResult.outputValues.front().value == k_PreflightValueText.view());
+    REQUIRE(executeResult.output_values.size() == 1);
+    REQUIRE(executeResult.output_values.front().name == k_PreflightValueName.view());
+    REQUIRE(executeResult.output_values.front().value == k_PreflightValueText.view());
   }
 
   SECTION("A successful preflight reports cancellation")
@@ -559,21 +559,21 @@ TEST_CASE("IFilter: Preflight cancellation preserves diagnostics and output valu
     REQUIRE(executeResult.result.warnings().size() == 2);
     REQUIRE(executeResult.result.warnings().front().code == k_PreflightWarningCode);
     REQUIRE(executeResult.result.warnings()[1].code == -1);
-    REQUIRE(executeResult.outputValues.size() == 1);
-    REQUIRE(executeResult.outputValues.front().name == k_PreflightValueName.view());
-    REQUIRE(executeResult.outputValues.front().value == k_PreflightValueText.view());
+    REQUIRE(executeResult.output_values.size() == 1);
+    REQUIRE(executeResult.output_values.front().name == k_PreflightValueName.view());
+    REQUIRE(executeResult.output_values.front().value == k_PreflightValueText.view());
   }
 }
 
 TEST_CASE("IFilter: A deferred-action error precedes post-execution validation", "[simplnx][IFilter]")
 {
   DataStructure dataStructure;
-  auto* imageGeometry = ImageGeom::Create(dataStructure, "Invalid Image Geometry");
-  REQUIRE(imageGeometry != nullptr);
-  imageGeometry->setDimensions({2, 2, 2});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1}, imageGeometry->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeometry->setCellData(*cellData);
+  auto* imageGeometryPtr = ImageGeom::Create(dataStructure, "Invalid Image Geometry");
+  REQUIRE(imageGeometryPtr != nullptr);
+  imageGeometryPtr->setDimensions({2, 2, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1}, imageGeometryPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeometryPtr->setCellData(*cellDataPtr);
 
   Result<> geometryValidationResult = dataStructure.validateGeometries();
   REQUIRE(geometryValidationResult.invalid());
@@ -592,7 +592,7 @@ TEST_CASE("IFilter: A deferred-action error precedes post-execution validation",
   REQUIRE(executeResult.result.warnings().size() == 2);
   REQUIRE(executeResult.result.warnings()[0].code == k_PreflightWarningCode);
   REQUIRE(executeResult.result.warnings()[1].code == k_DeferredWarningCode);
-  REQUIRE(executeResult.outputValues.size() == 1);
-  REQUIRE(executeResult.outputValues.front().name == k_PreflightValueName.view());
-  REQUIRE(executeResult.outputValues.front().value == k_PreflightValueText.view());
+  REQUIRE(executeResult.output_values.size() == 1);
+  REQUIRE(executeResult.output_values.front().name == k_PreflightValueName.view());
+  REQUIRE(executeResult.output_values.front().value == k_PreflightValueText.view());
 }

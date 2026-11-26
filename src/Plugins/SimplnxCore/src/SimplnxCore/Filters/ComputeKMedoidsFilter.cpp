@@ -117,8 +117,8 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  if(clusterArray == nullptr)
+  const auto* clusterArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  if(clusterArrayPtr == nullptr)
   {
     return MakePreflightErrorResult(-7584, "Array to Cluster MUST be a valid DataPath.");
   }
@@ -126,8 +126,8 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   {
     return MakePreflightErrorResult(-7585, "The number of initial clusters must be between 1 and INT32_MAX - 1.");
   }
-  if(clusterArray->getNumberOfComponents() == 0 || (pInitClustersValue + 1) > std::numeric_limits<usize>::max() ||
-     static_cast<usize>(pInitClustersValue + 1) > std::numeric_limits<usize>::max() / clusterArray->getNumberOfComponents())
+  if(clusterArrayPtr->getNumberOfComponents() == 0 || (pInitClustersValue + 1) > std::numeric_limits<usize>::max() ||
+     static_cast<usize>(pInitClustersValue + 1) > std::numeric_limits<usize>::max() / clusterArrayPtr->getNumberOfComponents())
   {
     return MakePreflightErrorResult(-7586, "The medoids output dimensions overflow the supported address range.");
   }
@@ -140,13 +140,13 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
       const auto& maskArray = dataStructure.getDataRefAs<IArray>(maskPath);
       return MakePreflightErrorResult(
           -7589, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
-                             pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
+                             pSelectedArrayPathValue.toString(), clusterArrayPtr->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
     }
   }
 
   {
     auto createAction =
-        std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
+        std::make_unique<CreateArrayAction>(DataType::int32, clusterArrayPtr->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -156,7 +156,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
-    auto createAction = std::make_unique<CreateArrayAction>(clusterArray->getDataType(), tupDims, clusterArray->getComponentShape(), pFeatureAMPathValue.createChildPath(pMedoidsArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(clusterArrayPtr->getDataType(), tupDims, clusterArrayPtr->getComponentShape(), pFeatureAMPathValue.createChildPath(pMedoidsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 

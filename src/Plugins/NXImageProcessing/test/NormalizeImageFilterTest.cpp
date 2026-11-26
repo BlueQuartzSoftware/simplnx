@@ -122,12 +122,12 @@ TEST_CASE("NXImageProcessing::NormalizeImageFilter: ITK real-image golden (defau
 TEST_CASE("NXImageProcessing::NormalizeImage: rejects nonnumeric input arrays", "[NXImageProcessing][NormalizeImageFilter]")
 {
   DataStructure dataStructure;
-  auto* image = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(image != nullptr);
-  image->setDimensions({2, 1, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
-  REQUIRE(cells != nullptr);
-  image->setCellData(*cells);
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({2, 1, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, imagePtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imagePtr->setCellData(*cellsPtr);
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
 
   const NormalizeImageFilter filter;

@@ -21,7 +21,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using DGFilter = DiscreteGaussianImageFilter;
+using DgFilterType = DiscreteGaussianImageFilter;
 
 // Sets the standard geom/input/output keys + Variance/MaximumKernelWidth/MaximumError/UseImageSpacing on a shared
 // Arguments, runs preflight + execute, and requires both succeed.
@@ -30,13 +30,13 @@ void RunDG(IFilter& filter, DataStructure& ds, const DataPath& inputPath, const 
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(DGFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(DGFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(DGFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(DGFilter::k_Variance_Key, std::make_any<std::vector<float64>>(variance));
-  args.insertOrAssign(DGFilter::k_MaximumKernelWidth_Key, std::make_any<uint32>(maxKernelWidth));
-  args.insertOrAssign(DGFilter::k_MaximumError_Key, std::make_any<std::vector<float64>>(maxError));
-  args.insertOrAssign(DGFilter::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
+  args.insertOrAssign(DgFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(DgFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(DgFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(DgFilterType::k_Variance_Key, std::make_any<std::vector<float64>>(variance));
+  args.insertOrAssign(DgFilterType::k_MaximumKernelWidth_Key, std::make_any<uint32>(maxKernelWidth));
+  args.insertOrAssign(DgFilterType::k_MaximumError_Key, std::make_any<std::vector<float64>>(maxError));
+  args.insertOrAssign(DgFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -81,15 +81,15 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[
     const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    DGFilter filter;
+    DgFilterType filter;
     Arguments args;
-    args.insertOrAssign(DGFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(DGFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(DGFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(DGFilter::k_Variance_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
-    args.insertOrAssign(DGFilter::k_MaximumKernelWidth_Key, std::make_any<uint32>(32u));
-    args.insertOrAssign(DGFilter::k_MaximumError_Key, std::make_any<std::vector<float64>>(std::vector<float64>{0.01, 0.01, 0.01}));
-    args.insertOrAssign(DGFilter::k_UseImageSpacing_Key, std::make_any<bool>(false));
+    args.insertOrAssign(DgFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(DgFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(DgFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(DgFilterType::k_Variance_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
+    args.insertOrAssign(DgFilterType::k_MaximumKernelWidth_Key, std::make_any<uint32>(32u));
+    args.insertOrAssign(DgFilterType::k_MaximumError_Key, std::make_any<std::vector<float64>>(std::vector<float64>{0.01, 0.01, 0.01}));
+    args.insertOrAssign(DgFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
@@ -99,7 +99,7 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[
     DataStructure ds;
     const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 1, field);
-    DGFilter filter;
+    DgFilterType filter;
     RunDG(filter, ds, inputPath, {1.0, 1.0, 1.0}, 32, {0.01, 0.01, 0.01}, /*useImageSpacing=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
@@ -123,13 +123,13 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: FromSIMPLJson", "[NXI
   const Result<Arguments> result = DiscreteGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DGFilter::k_Variance_Key) == std::vector<float64>{2.0, 3.0, 4.0});
-  REQUIRE(args.value<uint32>(DGFilter::k_MaximumKernelWidth_Key) == 40u);
-  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DGFilter::k_MaximumError_Key) == std::vector<float64>{0.02, 0.03, 0.04});
-  REQUIRE(args.value<bool>(DGFilter::k_UseImageSpacing_Key) == true);
-  REQUIRE(args.value<DataPath>(DGFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
-  REQUIRE(args.value<DataPath>(DGFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
-  REQUIRE(args.value<std::string>(DGFilter::k_OutputImageArrayName_Key) == "DGOut");
+  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DgFilterType::k_Variance_Key) == std::vector<float64>{2.0, 3.0, 4.0});
+  REQUIRE(args.value<uint32>(DgFilterType::k_MaximumKernelWidth_Key) == 40u);
+  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DgFilterType::k_MaximumError_Key) == std::vector<float64>{0.02, 0.03, 0.04});
+  REQUIRE(args.value<bool>(DgFilterType::k_UseImageSpacing_Key) == true);
+  REQUIRE(args.value<DataPath>(DgFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
+  REQUIRE(args.value<DataPath>(DgFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
+  REQUIRE(args.value<std::string>(DgFilterType::k_OutputImageArrayName_Key) == "DGOut");
 }
 
 namespace

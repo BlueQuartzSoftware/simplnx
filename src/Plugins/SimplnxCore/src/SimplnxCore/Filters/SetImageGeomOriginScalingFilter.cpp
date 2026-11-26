@@ -102,9 +102,9 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   std::optional<FloatVec3> optOrigin;
   std::optional<FloatVec3> optSpacing;
 
-  const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  FloatVec3 originVec = srcImageGeom->getOrigin();
-  FloatVec3 spacingVec = srcImageGeom->getSpacing();
+  const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
+  FloatVec3 originVec = srcImageGeomPtr->getOrigin();
+  FloatVec3 spacingVec = srcImageGeomPtr->getSpacing();
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -139,7 +139,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
 
   if(centerOrigin)
   {
-    const auto dims = srcImageGeom->getDimensions();
+    const auto dims = srcImageGeomPtr->getDimensions();
     const BoundingBox3Df bounds(
         std::array<float32, 6>{originVec[0], originVec[1], originVec[2], originVec[0] + dims[0] * spacingVec[0], originVec[1] + dims[1] * spacingVec[1], originVec[2] + dims[2] * spacingVec[2]});
     const auto center = bounds.center();
@@ -159,11 +159,11 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
-  preflightUpdatedValues.push_back({"Input Geometry  [Before Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(),
-                                                                                                                                    srcImageGeom->getOrigin(), srcImageGeom->getUnits())});
+  preflightUpdatedValues.push_back({"Input Geometry  [Before Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
+                                                                                                                                    srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
 
   preflightUpdatedValues.push_back(
-      {"Image Geometry [After Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), spacingVec, originVec, srcImageGeom->getUnits())});
+      {"Image Geometry [After Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), spacingVec, originVec, srcImageGeomPtr->getUnits())});
 
   return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }

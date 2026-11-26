@@ -157,10 +157,10 @@ Result<> ComputeGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.CellIntensityArrayName = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
 
-  auto* gbcdArray = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
+  auto* gbcdArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
   // A disk-backed GBCD selects the phase-slice scanline executor. A resident
   // GBCD selects the full-cache direct executor.
-  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArray}, dataStructure, messageHandler, shouldCancel, &inputValues);
+  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArrayPtr}, dataStructure, messageHandler, shouldCancel, &inputValues);
 }
 
 namespace

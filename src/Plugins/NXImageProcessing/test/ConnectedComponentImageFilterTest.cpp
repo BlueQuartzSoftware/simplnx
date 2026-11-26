@@ -20,7 +20,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using CCFilter = ConnectedComponentImageFilter;
+using CcFilterType = ConnectedComponentImageFilter;
 
 // Sets the geometry, input, and output keys plus the FullyConnected flag on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
@@ -28,10 +28,10 @@ void RunCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bool f
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(CCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(CCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(CCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(CCFilter::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
+  args.insertOrAssign(CcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(CcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(ds, args);
@@ -95,12 +95,12 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", 
     const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    CCFilter filter;
+    CcFilterType filter;
     Arguments args;
-    args.insertOrAssign(CCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(CCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(CCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CCFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(CcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
@@ -110,12 +110,12 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", 
     DataStructure ds;
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, std::vector<float32>(36, 1.0f));
     const DataPath geomPath = inputPath.getParent().getParent();
-    CCFilter filter;
+    CcFilterType filter;
     Arguments args;
-    args.insertOrAssign(CCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(CCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(CCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CCFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(CcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
   }
@@ -124,7 +124,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", 
     DataStructure ds;
     const std::vector<uint8> field = MakeBlobField<uint8>(12, 12, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 12, 12, 1, field);
-    CCFilter filter;
+    CcFilterType filter;
     RunCC(filter, ds, inputPath, /*fullyConnected=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint32);

@@ -275,10 +275,10 @@ constexpr usize k_FullyAssociativeCacheSlotLimit = 16;
  */
 struct SliceSlot
 {
-  usize Z = k_UnloadedSlice;
-  std::vector<int32> FeatureIds;
-  std::vector<int32> CellPhases;
-  std::vector<float32> Quats;
+  usize z = k_UnloadedSlice;
+  std::vector<int32> feature_ids;
+  std::vector<int32> cell_phases;
+  std::vector<float32> quats;
 };
 
 /**
@@ -290,13 +290,13 @@ struct SliceSlot
  */
 struct InputBlock
 {
-  usize BlockIndex = k_UnloadedBlock;
-  usize TupleStart = 0;
-  usize TupleCount = 0;
-  uint64 LastUse = 0;
-  std::vector<int32> FeatureIds;
-  std::vector<int32> CellPhases;
-  std::vector<float32> Quats;
+  usize block_index = k_UnloadedBlock;
+  usize tuple_start = 0;
+  usize tuple_count = 0;
+  uint64 last_use = 0;
+  std::vector<int32> feature_ids;
+  std::vector<int32> cell_phases;
+  std::vector<float32> quats;
 };
 
 /**
@@ -338,9 +338,9 @@ public:
 
     for(InputBlock& slot : m_Slots)
     {
-      slot.FeatureIds.resize(m_BlockTuples);
-      slot.CellPhases.resize(m_BlockTuples);
-      slot.Quats.resize(m_BlockTuples * 4);
+      slot.feature_ids.resize(m_BlockTuples);
+      slot.cell_phases.resize(m_BlockTuples);
+      slot.quats.resize(m_BlockTuples * 4);
     }
   }
 
@@ -362,48 +362,48 @@ public:
     // CacheSlots entries.
     const usize endWay = std::min(firstWay + m_WaysPerSet, m_Slots.size());
 
-    InputBlock* replacement = nullptr;
+    InputBlock* replacementPtr = nullptr;
     for(usize way = firstWay; way < endWay; way++)
     {
       InputBlock& slot = m_Slots[way];
-      if(slot.BlockIndex == blockIndex)
+      if(slot.block_index == blockIndex)
       {
-        slot.LastUse = m_NextUse++;
+        slot.last_use = m_NextUse++;
         return {&slot};
       }
 
-      if(slot.BlockIndex == k_UnloadedBlock)
+      if(slot.block_index == k_UnloadedBlock)
       {
-        replacement = &slot;
+        replacementPtr = &slot;
         break;
       }
-      if(replacement == nullptr || slot.LastUse < replacement->LastUse)
+      if(replacementPtr == nullptr || slot.last_use < replacementPtr->last_use)
       {
-        replacement = &slot;
+        replacementPtr = &slot;
       }
     }
 
     assert(replacement != nullptr);
     const usize tupleStart = blockIndex * m_BlockTuples;
     const usize tupleCount = std::min(m_BlockTuples, m_TotalTuples - tupleStart);
-    if(Result<> result = m_FeatureIdsStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacement->FeatureIds.data(), tupleCount)); result.invalid())
+    if(Result<> result = m_FeatureIdsStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacementPtr->feature_ids.data(), tupleCount)); result.invalid())
     {
       return ConvertInvalidResult<const InputBlock*>(std::move(result));
     }
-    if(Result<> result = m_CellPhasesStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacement->CellPhases.data(), tupleCount)); result.invalid())
+    if(Result<> result = m_CellPhasesStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacementPtr->cell_phases.data(), tupleCount)); result.invalid())
     {
       return ConvertInvalidResult<const InputBlock*>(std::move(result));
     }
-    if(Result<> result = m_QuatsStore.copyIntoBuffer(tupleStart * 4, nonstd::span<float32>(replacement->Quats.data(), tupleCount * 4)); result.invalid())
+    if(Result<> result = m_QuatsStore.copyIntoBuffer(tupleStart * 4, nonstd::span<float32>(replacementPtr->quats.data(), tupleCount * 4)); result.invalid())
     {
       return ConvertInvalidResult<const InputBlock*>(std::move(result));
     }
 
-    replacement->BlockIndex = blockIndex;
-    replacement->TupleStart = tupleStart;
-    replacement->TupleCount = tupleCount;
-    replacement->LastUse = m_NextUse++;
-    return {replacement};
+    replacementPtr->block_index = blockIndex;
+    replacementPtr->tuple_start = tupleStart;
+    replacementPtr->tuple_count = tupleCount;
+    replacementPtr->last_use = m_NextUse++;
+    return {replacementPtr};
   }
 
 private:
@@ -521,8 +521,8 @@ private:
       for(usize col = minCol; col < maxCol; col++)
       {
         const usize pointInSlice = row * m_XPoints + col;
-        const int32 featureId = focalSlice.FeatureIds[pointInSlice];
-        const int32 cellPhase = focalSlice.CellPhases[pointInSlice];
+        const int32 featureId = focalSlice.feature_ids[pointInSlice];
+        const int32 cellPhase = focalSlice.cell_phases[pointInSlice];
 
         if(featureId <= 0 || cellPhase <= 0)
         {
@@ -532,10 +532,10 @@ private:
 
         ebsdlib::QuatD q1;
         const usize q1Idx = pointInSlice * 4;
-        q1[0] = focalSlice.Quats[q1Idx];
-        q1[1] = focalSlice.Quats[q1Idx + 1];
-        q1[2] = focalSlice.Quats[q1Idx + 2];
-        q1[3] = focalSlice.Quats[q1Idx + 3];
+        q1[0] = focalSlice.quats[q1Idx];
+        q1[1] = focalSlice.quats[q1Idx + 1];
+        q1[2] = focalSlice.quats[q1Idx + 2];
+        q1[3] = focalSlice.quats[q1Idx + 3];
 
         const uint32 laueClass = m_CrystalStructures[static_cast<usize>(cellPhase)];
         float32 totalMisorientation = 0.0F;
@@ -556,16 +556,16 @@ private:
             for(usize nx = neighborXMin;; nx++)
             {
               const usize neighborInSlice = ny * m_XPoints + nx;
-              const int32 neighborFeatureId = neighborSlice.FeatureIds[neighborInSlice];
-              const bool neighborContributes = m_UseFeatureIds ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborSlice.CellPhases[neighborInSlice] == cellPhase);
+              const int32 neighborFeatureId = neighborSlice.feature_ids[neighborInSlice];
+              const bool neighborContributes = m_UseFeatureIds ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborSlice.cell_phases[neighborInSlice] == cellPhase);
               if(neighborContributes)
               {
                 const usize q2Idx = neighborInSlice * 4;
                 ebsdlib::QuatD q2;
-                q2[0] = neighborSlice.Quats[q2Idx];
-                q2[1] = neighborSlice.Quats[q2Idx + 1];
-                q2[2] = neighborSlice.Quats[q2Idx + 2];
-                q2[3] = neighborSlice.Quats[q2Idx + 3];
+                q2[0] = neighborSlice.quats[q2Idx];
+                q2[1] = neighborSlice.quats[q2Idx + 1];
+                q2[2] = neighborSlice.quats[q2Idx + 2];
+                q2[3] = neighborSlice.quats[q2Idx + 3];
 
                 ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass]->calculateMisorientation(q1, q2);
                 totalMisorientation += (axisAngle[3] * nx::core::Constants::k_180OverPiF);
@@ -660,27 +660,27 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
   std::vector<SliceSlot> sliceSlots(plan.WindowSlices);
   for(SliceSlot& slot : sliceSlots)
   {
-    slot.FeatureIds.resize(plan.SliceTuples);
-    slot.CellPhases.resize(plan.SliceTuples);
-    slot.Quats.resize(quaternionSliceValues);
+    slot.feature_ids.resize(plan.SliceTuples);
+    slot.cell_phases.resize(plan.SliceTuples);
+    slot.quats.resize(quaternionSliceValues);
   }
   std::vector<float32> outputSlice(plan.SliceTuples);
 
   auto loadSlice = [&](usize z, SliceSlot& slot) -> Result<> {
     const usize offset = z * plan.SliceTuples;
-    if(Result<> result = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.FeatureIds.data(), plan.SliceTuples)); result.invalid())
+    if(Result<> result = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.feature_ids.data(), plan.SliceTuples)); result.invalid())
     {
       return result;
     }
-    if(Result<> result = cellPhasesStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.CellPhases.data(), plan.SliceTuples)); result.invalid())
+    if(Result<> result = cellPhasesStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.cell_phases.data(), plan.SliceTuples)); result.invalid())
     {
       return result;
     }
-    if(Result<> result = quatsStore.copyIntoBuffer(offset * 4, nonstd::span<float32>(slot.Quats.data(), quaternionSliceValues)); result.invalid())
+    if(Result<> result = quatsStore.copyIntoBuffer(offset * 4, nonstd::span<float32>(slot.quats.data(), quaternionSliceValues)); result.invalid())
     {
       return result;
     }
-    slot.Z = z;
+    slot.z = z;
     return {};
   };
 
@@ -806,23 +806,23 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
       const usize focalCount = std::min(plan.BlockTuples, plan.SliceTuples - pointInSliceStart);
       const usize focalTupleStart = planeOffset + pointInSliceStart;
 
-      const InputBlock* focalInputBlock = nullptr;
+      const InputBlock* focalInputBlockPtr = nullptr;
       for(usize focalOffset = 0; focalOffset < focalCount; focalOffset++)
       {
         const usize focalTuple = focalTupleStart + focalOffset;
-        if(focalInputBlock == nullptr || focalTuple < focalInputBlock->TupleStart || focalTuple >= focalInputBlock->TupleStart + focalInputBlock->TupleCount)
+        if(focalInputBlockPtr == nullptr || focalTuple < focalInputBlockPtr->tuple_start || focalTuple >= focalInputBlockPtr->tuple_start + focalInputBlockPtr->tuple_count)
         {
           auto blockResult = inputCache.getBlock(focalTuple);
           if(blockResult.invalid())
           {
             return ConvertResult(std::move(blockResult));
           }
-          focalInputBlock = blockResult.value();
+          focalInputBlockPtr = blockResult.value();
         }
 
-        const usize localFocalTuple = focalTuple - focalInputBlock->TupleStart;
-        const int32 featureId = focalInputBlock->FeatureIds[localFocalTuple];
-        const int32 cellPhase = focalInputBlock->CellPhases[localFocalTuple];
+        const usize localFocalTuple = focalTuple - focalInputBlockPtr->tuple_start;
+        const int32 featureId = focalInputBlockPtr->feature_ids[localFocalTuple];
+        const int32 cellPhase = focalInputBlockPtr->cell_phases[localFocalTuple];
 
         if(featureId <= 0 || cellPhase <= 0)
         {
@@ -832,10 +832,10 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
 
         ebsdlib::QuatD q1;
         const usize q1Idx = localFocalTuple * 4;
-        q1[0] = focalInputBlock->Quats[q1Idx];
-        q1[1] = focalInputBlock->Quats[q1Idx + 1];
-        q1[2] = focalInputBlock->Quats[q1Idx + 2];
-        q1[3] = focalInputBlock->Quats[q1Idx + 3];
+        q1[0] = focalInputBlockPtr->quats[q1Idx];
+        q1[1] = focalInputBlockPtr->quats[q1Idx + 1];
+        q1[2] = focalInputBlockPtr->quats[q1Idx + 2];
+        q1[3] = focalInputBlockPtr->quats[q1Idx + 3];
 
         const uint32 laueClass = crystalStructures[static_cast<usize>(cellPhase)];
         float32 totalMisorientation = 0.0F;
@@ -865,22 +865,22 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
                 return ConvertResult(std::move(blockResult));
               }
               const InputBlock& neighborBlock = *blockResult.value();
-              const usize localSegmentStart = segmentTuple - neighborBlock.TupleStart;
-              const usize segmentCount = std::min(neighborXEnd - segmentX, neighborBlock.TupleCount - localSegmentStart);
+              const usize localSegmentStart = segmentTuple - neighborBlock.tuple_start;
+              const usize segmentCount = std::min(neighborXEnd - segmentX, neighborBlock.tuple_count - localSegmentStart);
 
               for(usize segmentOffset = 0; segmentOffset < segmentCount; segmentOffset++)
               {
                 const usize localNeighborTuple = localSegmentStart + segmentOffset;
-                const int32 neighborFeatureId = neighborBlock.FeatureIds[localNeighborTuple];
-                const bool neighborContributes = inputValues.UseFeatureIds ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborBlock.CellPhases[localNeighborTuple] == cellPhase);
+                const int32 neighborFeatureId = neighborBlock.feature_ids[localNeighborTuple];
+                const bool neighborContributes = inputValues.UseFeatureIds ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborBlock.cell_phases[localNeighborTuple] == cellPhase);
                 if(neighborContributes)
                 {
                   const usize q2Idx = localNeighborTuple * 4;
                   ebsdlib::QuatD q2;
-                  q2[0] = neighborBlock.Quats[q2Idx];
-                  q2[1] = neighborBlock.Quats[q2Idx + 1];
-                  q2[2] = neighborBlock.Quats[q2Idx + 2];
-                  q2[3] = neighborBlock.Quats[q2Idx + 3];
+                  q2[0] = neighborBlock.quats[q2Idx];
+                  q2[1] = neighborBlock.quats[q2Idx + 1];
+                  q2[2] = neighborBlock.quats[q2Idx + 2];
+                  q2[3] = neighborBlock.quats[q2Idx + 3];
 
                   ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass]->calculateMisorientation(q1, q2);
                   totalMisorientation += (axisAngle[3] * nx::core::Constants::k_180OverPiF);

@@ -110,15 +110,15 @@ TEST_CASE("Save Filters To Json")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
-  REQUIRE(filterList != nullptr);
+  auto* filterListPtr = app->getFilterList();
+  REQUIRE(filterListPtr != nullptr);
 
-  const auto& handles = filterList->getFilterHandles();
+  const auto& handles = filterListPtr->getFilterHandles();
   REQUIRE(!handles.empty());
 
   for(const auto& handle : handles)
   {
-    auto coreFilter = filterList->createFilter(handle);
+    auto coreFilter = filterListPtr->createFilter(handle);
     REQUIRE(coreFilter != nullptr);
 
     Arguments args;
@@ -137,16 +137,16 @@ TEST_CASE("Save Pipeline To Json")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
-  REQUIRE(filterList != nullptr);
+  auto* filterListPtr = app->getFilterList();
+  REQUIRE(filterListPtr != nullptr);
 
-  const auto& handles = filterList->getFilterHandles();
+  const auto& handles = filterListPtr->getFilterHandles();
   REQUIRE(!handles.empty());
 
   Pipeline pipeline;
   for(const auto& handle : handles)
   {
-    auto coreFilter = filterList->createFilter(handle);
+    auto coreFilter = filterListPtr->createFilter(handle);
     REQUIRE(coreFilter != nullptr);
 
     Arguments args;
@@ -166,10 +166,10 @@ TEST_CASE("Save Pipeline To Json")
 TEST_CASE("PlaceholderFilter")
 {
   auto app = Application::GetOrCreateInstance();
-  FilterList* filterList = app->getFilterList();
-  filterList->addPlugin(std::make_shared<InMemoryPluginLoader>(std::make_shared<TestPlugin>()));
-  REQUIRE(filterList->containsPlugin(TestPlugin::k_ID));
-  auto filterHandles = filterList->getFilterHandles();
+  FilterList* filterListPtr = app->getFilterList();
+  filterListPtr->addPlugin(std::make_shared<InMemoryPluginLoader>(std::make_shared<TestPlugin>()));
+  REQUIRE(filterListPtr->containsPlugin(TestPlugin::k_ID));
+  auto filterHandles = filterListPtr->getFilterHandles();
   auto testFilterIter = std::find_if(filterHandles.cbegin(), filterHandles.cend(), [](const FilterHandle& handle) { return handle.getFilterId() == TestFilter::k_ID; });
   REQUIRE(testFilterIter != filterHandles.cend());
 
@@ -178,8 +178,8 @@ TEST_CASE("PlaceholderFilter")
 
   nlohmann::json pipelineJson = pipeline.toJson();
 
-  filterList->removePlugin(TestPlugin::k_ID);
-  REQUIRE(!filterList->containsPlugin(TestPlugin::k_ID));
+  filterListPtr->removePlugin(TestPlugin::k_ID);
+  REQUIRE(!filterListPtr->containsPlugin(TestPlugin::k_ID));
 
   auto placeholderPipelineResult = Pipeline::FromJson(pipelineJson, true);
   SIMPLNX_RESULT_REQUIRE_VALID(placeholderPipelineResult);
@@ -188,16 +188,16 @@ TEST_CASE("PlaceholderFilter")
   REQUIRE(placeholderPipeline.size() == 1);
   REQUIRE(placeholderPipeline.containsPlaceholder());
 
-  AbstractPipelineNode* node = placeholderPipeline.at(0);
-  REQUIRE(node != nullptr);
-  REQUIRE(node->getType() == AbstractPipelineNode::NodeType::Filter);
+  AbstractPipelineNode* nodePtr = placeholderPipeline.at(0);
+  REQUIRE(nodePtr != nullptr);
+  REQUIRE(nodePtr->getType() == AbstractPipelineNode::NodeType::Filter);
 
-  auto* filterNode = dynamic_cast<AbstractPipelineFilter*>(node);
-  REQUIRE(filterNode != nullptr);
-  REQUIRE(filterNode->getFilterType() == AbstractPipelineFilter::FilterType::Placeholder);
+  auto* filterNodePtr = dynamic_cast<AbstractPipelineFilter*>(nodePtr);
+  REQUIRE(filterNodePtr != nullptr);
+  REQUIRE(filterNodePtr->getFilterType() == AbstractPipelineFilter::FilterType::Placeholder);
 
-  auto* placeholderFilter = dynamic_cast<PlaceholderFilter*>(filterNode);
-  REQUIRE(placeholderFilter != nullptr);
+  auto* placeholderFilterPtr = dynamic_cast<PlaceholderFilter*>(filterNodePtr);
+  REQUIRE(placeholderFilterPtr != nullptr);
 
   nlohmann::json placeholderPipelineJson = placeholderPipeline.toJson();
 

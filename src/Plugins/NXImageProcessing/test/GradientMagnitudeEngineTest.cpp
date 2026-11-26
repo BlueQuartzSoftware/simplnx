@@ -395,23 +395,23 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: checked true-2-D plans st
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][GradientMagnitudeEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 512;
-  constexpr usize dimY = 512;
-  constexpr usize dimZ = 32;
-  constexpr usize sliceValues = dimX * dimY;
-  constexpr usize valueCount = sliceValues * dimZ;
+  constexpr usize k_DimX = 512;
+  constexpr usize k_DimY = 512;
+  constexpr usize k_DimZ = 32;
+  constexpr usize k_SliceValues = k_DimX * k_DimY;
+  constexpr usize k_ValueCount = k_SliceValues * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{dimX, dimY, dimZ};
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = gradient_detail::CalculateGradientMagnitudeResidentWorkingMemoryBytes<float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
-  REQUIRE(requiredResult.value() == valueCount * (sizeof(float32) + sizeof(float32)) + sliceValues * (3 * sizeof(float32) + sizeof(float32)));
+  REQUIRE(requiredResult.value() == k_ValueCount * (sizeof(float32) + sizeof(float32)) + k_SliceValues * (3 * sizeof(float32) + sizeof(float32)));
   REQUIRE(requiredResult.value() == 68 * k_MiB);
   const auto overflowResult = gradient_detail::CalculateGradientMagnitudeResidentWorkingMemoryBytes<float64>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(gradient_detail::ShouldUseGradientMagnitudeResidentState(dims));
-  REQUIRE_FALSE(gradient_detail::ShouldUseGradientMagnitudeResidentState(SizeVec3{dimX, dimY, 1}));
+  REQUIRE_FALSE(gradient_detail::ShouldUseGradientMagnitudeResidentState(SizeVec3{k_DimX, k_DimY, 1}));
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
   auto& manager = CacheMemoryBudgetManager::instance();
@@ -439,18 +439,18 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: resident state requires a
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: real-OOC selector uses resident state only after a complete grant", "[NXImageProcessing][GradientMagnitudeEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
   constexpr uint64 k_PartialBudgetBytes = 4096;
   constexpr uint64 k_CompleteBudgetBytes = 16384;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  std::vector<float32> field(dimX * dimY * dimZ);
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  std::vector<float32> field(k_DimX * k_DimY * k_DimZ);
   for(usize index = 0; index < field.size(); ++index)
   {
     field[index] = static_cast<float32>((index * 19 + 3) % 127 - 63);
   }
-  const std::vector<float32> expected = RunGradMag<float32>(field, dimX, dimY, dimZ, true, {0.5f, 1.5f, 2.0f});
+  const std::vector<float32> expected = RunGradMag<float32>(field, k_DimX, k_DimY, k_DimZ, true, {0.5f, 1.5f, 2.0f});
 
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
@@ -458,8 +458,8 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: real-OOC selector uses re
   auto run = [&](uint64 budgetBytes) {
     manager.clear();
     manager.setBudgetBytes(budgetBytes);
-    OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-    OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, -12345.0f);
+    OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+    OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -12345.0f);
     for(usize index = 0; index < field.size(); ++index)
     {
       inputStore.setValue(index, field[index]);
@@ -479,8 +479,8 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: real-OOC selector uses re
 
   const auto partialTransfers = run(k_PartialBudgetBytes);
   REQUIRE(partialTransfers[0] > 1);
-  REQUIRE(partialTransfers[1] == dimX * dimY);
-  REQUIRE(partialTransfers[2] == dimX * dimY);
+  REQUIRE(partialTransfers[1] == k_DimX * k_DimY);
+  REQUIRE(partialTransfers[2] == k_DimX * k_DimY);
   const auto completeTransfers = run(k_CompleteBudgetBytes);
   REQUIRE(completeTransfers[0] == 1);
   REQUIRE(completeTransfers[1] == field.size());

@@ -401,9 +401,9 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
   const std::string& name = path[last];
   // The resolver selects the backing storage.
   auto listStore = DataStoreUtilities::CreateListStore<T>(dataStructure, path, tupleShape, mode, dataFormat);
-  NeighborList<T>* neighborList = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
+  NeighborList<T>* neighborListPtr = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
 
-  if(neighborList == nullptr)
+  if(neighborListPtr == nullptr)
   {
     return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", k_Prefix, path.toString()));
   }
@@ -1993,18 +1993,18 @@ public:
     Result<> result;
     if(m_ArrayType == IArray::ArrayType::NeighborListArray)
     {
-      using NeighborListT = NeighborList<T>;
-      auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+      using NeighborListTType = NeighborList<T>;
+      auto* destArrayPtr = dynamic_cast<NeighborListTType*>(m_DestCellArray);
       // NeighborList copies need an initialized destination list.
-      if(destArray->getVectors().empty() || destArray->getList(0).empty())
+      if(destArrayPtr->getVectors().empty() || destArrayPtr->getList(0).empty())
       {
-        destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+        destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
       }
-      std::vector<const NeighborListT*> castedArrays;
+      std::vector<const NeighborListTType*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const NeighborListT* { return dynamic_cast<const NeighborListT*>(elem); });
-      result = CombineData<NeighborListT>(castedArrays, m_InputTupleShapes, *destArray, m_NewDestDims, m_Direction, m_Mirror, &m_TaskResult);
+                     [](const IArray* elem) -> const NeighborListTType* { return dynamic_cast<const NeighborListTType*>(elem); });
+      result = CombineData<NeighborListTType>(castedArrays, m_InputTupleShapes, *destArrayPtr, m_NewDestDims, m_Direction, m_Mirror, &m_TaskResult);
     }
     else if(m_ArrayType == IArray::ArrayType::DataArray)
     {
@@ -2116,27 +2116,27 @@ private:
         // The bool copy path must not instantiate the unsupported NeighborList<bool> type.
         if constexpr(!std::is_same_v<T, bool>)
         {
-          using NeighborListT = NeighborList<T>;
-          auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+          using NeighborListTType = NeighborList<T>;
+          auto* destArrayPtr = dynamic_cast<NeighborListTType*>(m_DestCellArray);
           // The destination list must be initialized before the tuple copy.
-          destArray->setList(i, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+          destArrayPtr->setList(i, typename NeighborListTType::SharedVectorType(new typename NeighborListTType::VectorType));
           if(oldIndexI >= 0)
           {
-            copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
+            copySucceeded = CopyData<NeighborListTType>(*dynamic_cast<const NeighborListTType*>(m_InputCellArray), *destArrayPtr, i, oldIndexI, 1);
           }
         }
       }
       else if(m_ArrayType == IArray::ArrayType::DataArray)
       {
         using DataArrayType = DataArray<T>;
-        auto* destArray = dynamic_cast<DataArrayType*>(m_DestCellArray);
+        auto* destArrayPtr = dynamic_cast<DataArrayType*>(m_DestCellArray);
         if(oldIndexI >= 0)
         {
-          copySucceeded = CopyData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
+          copySucceeded = CopyData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *destArrayPtr, i, oldIndexI, 1);
         }
         else
         {
-          destArray->initializeTuple(i, 0);
+          destArrayPtr->initializeTuple(i, 0);
         }
       }
       else if(m_ArrayType == IArray::ArrayType::StringArray)
@@ -2302,12 +2302,12 @@ private:
    */
   Result<> mapDataArray(const std::vector<usize>& zIndices, const std::vector<usize>& yIndices, const std::vector<usize>& xIndices) const
   {
-    auto* destArray = dynamic_cast<DataArray<T>*>(m_DestCellArray);
-    const auto* srcArray = dynamic_cast<const DataArray<T>*>(m_InputCellArray);
-    auto& destStore = destArray->getDataStoreRef();
-    const auto& srcStore = srcArray->getDataStoreRef();
+    auto* destArrayPtr = dynamic_cast<DataArray<T>*>(m_DestCellArray);
+    const auto* srcArrayPtr = dynamic_cast<const DataArray<T>*>(m_InputCellArray);
+    auto& destStore = destArrayPtr->getDataStoreRef();
+    const auto& srcStore = srcArrayPtr->getDataStoreRef();
 
-    const usize numComponents = destArray->getNumberOfComponents();
+    const usize numComponents = destArrayPtr->getNumberOfComponents();
     const usize destRowLength = m_ImageGeomDims[0] * numComponents;
     const usize srcRowLength = m_RectGridDims[0] * numComponents;
 
@@ -2352,8 +2352,8 @@ private:
           const int64 rectGridIndex = static_cast<int64>((m_RectGridDims[0] * m_RectGridDims[1] * zIndex) + (m_RectGridDims[0] * yIndex) + xIndex);
           if(rectGridIndex >= 0)
           {
-            const T* srcTuple = srcRowBuffer.data() + (xIndex * numComponents);
-            std::copy_n(srcTuple, numComponents, destRowBuffer.data() + (x * numComponents));
+            const T* srcTuplePtr = srcRowBuffer.data() + (xIndex * numComponents);
+            std::copy_n(srcTuplePtr, numComponents, destRowBuffer.data() + (x * numComponents));
           }
         }
 
@@ -2404,13 +2404,13 @@ private:
           {
             if(m_ArrayType == IArray::ArrayType::NeighborListArray)
             {
-              using NeighborListT = NeighborList<T>;
-              auto* destArrayPtr = dynamic_cast<NeighborListT*>(m_DestCellArray);
+              using NeighborListTType = NeighborList<T>;
+              auto* destArrayPtr = dynamic_cast<NeighborListTType*>(m_DestCellArray);
               // NeighborList tuple copies require an initialized destination list.
-              destArrayPtr->setList(imageIndex, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+              destArrayPtr->setList(imageIndex, typename NeighborListTType::SharedVectorType(new typename NeighborListTType::VectorType));
               if(rectGridIndex >= 0)
               {
-                copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArrayPtr, imageIndex, rectGridIndex, 1);
+                copySucceeded = CopyData<NeighborListTType>(*dynamic_cast<const NeighborListTType*>(m_InputCellArray), *destArrayPtr, imageIndex, rectGridIndex, 1);
               }
             }
           }

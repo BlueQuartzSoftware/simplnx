@@ -22,7 +22,7 @@ namespace
  * @brief Checks if a backwards compatibility fixture exists for the given filter
  * in any of the plugin simpl_conversion directories.
  */
-bool hasBackwardsCompatFixture(const std::string& filterName)
+bool HasBackwardsCompatFixture(const std::string& filterName)
 {
   // Check all plugin directories for a 6_5 fixture
   // Includes both in-tree plugins and known external plugins
@@ -51,9 +51,9 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
-  auto plugins = filterList->getLoadedPlugins();
+  auto plugins = filterListPtr->getLoadedPlugins();
 
   std::cout << '\n';
   std::cout << "| Plugin | Filter Name | SIMPL UUID | SIMPLNX UUID | Has Fixture |" << '\n';
@@ -65,16 +65,16 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
   usize withoutFixture = 0;
   std::set<Uuid> seenNxUuids;
 
-  for(const auto* plugin : plugins)
+  for(const auto* pluginPtr : plugins)
   {
-    const std::string pluginName = plugin->getName();
-    auto simplMap = plugin->getSimplToSimplnxMap();
+    const std::string pluginName = pluginPtr->getName();
+    auto simplMap = pluginPtr->getSimplToSimplnxMap();
 
     for(const auto& [simplUuid, simplData] : simplMap)
     {
       totalEntries++;
 
-      IFilter::UniquePointer filter = filterList->createFilter(simplData.simplnxUuid);
+      IFilter::UniquePointer filter = filterListPtr->createFilter(simplData.simplnxUuid);
       std::string filterClassName = filter ? filter->className() : "UNKNOWN";
       std::string nxUuid = simplData.simplnxUuid.str();
       std::string simplUuidStr = simplUuid.str();
@@ -85,7 +85,7 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
       bool hasFixture = false;
       if(filter)
       {
-        hasFixture = hasBackwardsCompatFixture(filterClassName);
+        hasFixture = HasBackwardsCompatFixture(filterClassName);
       }
 
       if(isFirstOccurrence)
@@ -124,18 +124,18 @@ TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][In
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
-  auto plugins = filterList->getLoadedPlugins();
+  auto plugins = filterListPtr->getLoadedPlugins();
 
   std::vector<std::string> missingFixtures;
 
   // Track unique NX filters (multiple SIMPL UUIDs may map to the same NX filter)
   std::set<Uuid> seenNxUuids;
 
-  for(const auto* plugin : plugins)
+  for(const auto* pluginPtr : plugins)
   {
-    auto simplMap = plugin->getSimplToSimplnxMap();
+    auto simplMap = pluginPtr->getSimplToSimplnxMap();
 
     for(const auto& [simplUuid, simplData] : simplMap)
     {
@@ -146,7 +146,7 @@ TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][In
       }
       seenNxUuids.insert(simplData.simplnxUuid);
 
-      IFilter::UniquePointer filter = filterList->createFilter(simplData.simplnxUuid);
+      IFilter::UniquePointer filter = filterListPtr->createFilter(simplData.simplnxUuid);
       if(filter == nullptr)
       {
         continue;
@@ -154,9 +154,9 @@ TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][In
 
       const std::string filterClassName = filter->className();
 
-      if(!hasBackwardsCompatFixture(filterClassName))
+      if(!HasBackwardsCompatFixture(filterClassName))
       {
-        missingFixtures.emplace_back(fmt::format("{} ({})", filterClassName, plugin->getName()));
+        missingFixtures.emplace_back(fmt::format("{} ({})", filterClassName, pluginPtr->getName()));
       }
     }
   }

@@ -49,8 +49,8 @@ using RotationRepresentationType = RotateSampleRefFrame::RotationRepresentation;
 // principal-90 rotations from any off-axis or non-90-degree rotation (e.g. 1 degree gives ~0.017).
 constexpr float32 k_Rotation90Tolerance = 1.0e-4f;
 
-constexpr int32 k_NonPrincipalRotation_Error = -6850;
-constexpr int32 k_SliceBySliceReordersSlices_Error = -6851;
+constexpr int32 k_NonPrincipalRotationError = -6850;
+constexpr int32 k_SliceBySliceReordersSlicesError = -6851;
 
 // -----------------------------------------------------------------------------
 // Returns true if the 3x3 rotation block is a proper signed axis-permutation matrix (determinant +1
@@ -231,7 +231,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   const ImageRotationUtilities::Matrix3fR rotationBlock = rotationMatrix.block(0, 0, 3, 3);
   if(!IsLosslessGridRotation(rotationBlock, k_Rotation90Tolerance))
   {
-    return MakePreflightErrorResult(k_NonPrincipalRotation_Error,
+    return MakePreflightErrorResult(k_NonPrincipalRotationError,
                                     "Rotate Sample Reference Frame only supports rotations that map the voxel grid exactly onto itself: the 90/180/270-degree rotations about the X, Y, or Z axis "
                                     "(and, more generally, any rotation of the octahedral symmetry group, such as 120 degrees about (111)). The requested rotation would produce a lossy resampled "
                                     "result. For an arbitrary rotation use the 'Apply Transformation To Geometry' filter instead.");
@@ -244,7 +244,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   auto sliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
   if(sliceBySlice && (std::fabs(std::fabs(rotationBlock(2, 2)) - 1.0f) >= k_Rotation90Tolerance))
   {
-    return MakePreflightErrorResult(k_SliceBySliceReordersSlices_Error,
+    return MakePreflightErrorResult(k_SliceBySliceReordersSlicesError,
                                     "The 'Perform Slice By Slice Transform' option requires a rotation that preserves the Z (slice) axis: a rotation about the Z axis, or a 180-degree rotation about "
                                     "the X or Y axis. The requested rotation reorders slices, which is incompatible with a slice-by-slice transform.");
   }
@@ -310,25 +310,25 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using
     // the appropriate methods.
     // These values should have been updated during the preflightImpl(...) method
-    const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
+    const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(),
-                                                                                                                          srcImageGeom->getOrigin(), srcImageGeom->getUnits())});
+    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
+                                                                                                                          srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
     preflightUpdatedValues.push_back({"Rotated Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(
-                                                                         dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeom->getUnits())});
+                                                                         dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeomPtr->getUnits())});
   }
 
   // The cleared Feature AM keeps its source shape because rotation preserves Feature membership and sizes.
   if(clearFeatureAttributeMatrix)
   {
-    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
-    if(srcCellFeatureData == nullptr || !selectedImageGeom.contains(srcCellFeatureData))
+    const auto* srcCellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
+    if(srcCellFeatureDataPtr == nullptr || !selectedImageGeom.contains(srcCellFeatureDataPtr))
     {
       return MakePreflightErrorResult(-67441, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'. Select an Attribute Matrix that is a direct "
                                                           "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
                                                           cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
     }
-    if(selectedImageGeom.getCellData() == srcCellFeatureData)
+    if(selectedImageGeom.getCellData() == srcCellFeatureDataPtr)
     {
       return MakePreflightErrorResult(
           -67442,
@@ -342,13 +342,13 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
       return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     // Ignore every path to the Feature AM, including selections through another parent.
-    const auto featureAmPaths = srcCellFeatureData->getDataPaths();
+    const auto featureAmPaths = srcCellFeatureDataPtr->getDataPaths();
     ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
     const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureDataPtr->getShape()));
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *srcCellFeatureData)
+    for(const auto& [identifier, object] : *srcCellFeatureDataPtr)
     {
       clearedList += "\n" + cellFeatureAttributeMatrixPath.createChildPath(object->getName()).toString();
     }

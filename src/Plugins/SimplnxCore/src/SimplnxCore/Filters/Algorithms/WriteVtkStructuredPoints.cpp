@@ -95,7 +95,7 @@ Result<> WriteBinaryDirect(std::ofstream& outputStream, const DataStore<T>& data
 {
   const usize totalValues = dataStore.getSize();
   const usize chunkCapacity = BinaryChunkValueCapacity<T>();
-  const T* source = dataStore.data();
+  const T* sourcePtr = dataStore.data();
   std::unique_ptr<T[]> chunkBuffer;
   if constexpr(endian::native == endian::little && sizeof(T) > 1)
   {
@@ -110,14 +110,14 @@ Result<> WriteBinaryDirect(std::ofstream& outputStream, const DataStore<T>& data
     }
 
     const usize count = std::min(chunkCapacity, totalValues - offset);
-    const T* writeBuffer = source + offset;
+    const T* writeBufferPtr = sourcePtr + offset;
     if constexpr(endian::native == endian::little && sizeof(T) > 1)
     {
-      std::transform(writeBuffer, writeBuffer + count, chunkBuffer.get(), [](T value) { return nx::core::byteswap(value); });
-      writeBuffer = chunkBuffer.get();
+      std::transform(writeBufferPtr, writeBufferPtr + count, chunkBuffer.get(), [](T value) { return nx::core::byteswap(value); });
+      writeBufferPtr = chunkBuffer.get();
     }
 
-    outputStream.write(reinterpret_cast<const char*>(writeBuffer), static_cast<std::streamsize>(count * sizeof(T)));
+    outputStream.write(reinterpret_cast<const char*>(writeBufferPtr), static_cast<std::streamsize>(count * sizeof(T)));
     auto writeResult = CheckOutputStream(outputStream, outputPath, arrayPath);
     if(writeResult.invalid())
     {
@@ -255,7 +255,7 @@ Result<> WriteAsciiDirect(std::ofstream& outputStream, const DataStore<T>& dataS
 {
   const usize totalValues = dataStore.getSize();
   constexpr usize k_ChunkCapacity = k_AsciiChunkValues;
-  const T* source = dataStore.data();
+  const T* sourcePtr = dataStore.data();
   usize currentItemCount = 0;
 
   for(usize offset = 0; offset < totalValues; offset += k_ChunkCapacity)
@@ -266,7 +266,7 @@ Result<> WriteAsciiDirect(std::ofstream& outputStream, const DataStore<T>& dataS
     }
 
     const usize count = std::min(k_ChunkCapacity, totalValues - offset);
-    WriteAsciiValues(outputStream, source + offset, count, currentItemCount);
+    WriteAsciiValues(outputStream, sourcePtr + offset, count, currentItemCount);
     auto writeResult = CheckOutputStream(outputStream, outputPath, arrayPath);
     if(writeResult.invalid())
     {
@@ -350,13 +350,13 @@ struct WriteVtkDataDirectFunctor
     }
 
     const auto& dataStore = dataArray.getDataStoreRef();
-    const auto* directStore = dynamic_cast<const DataStore<T>*>(&dataStore);
-    if(directStore == nullptr)
+    const auto* directStorePtr = dynamic_cast<const DataStore<T>*>(&dataStore);
+    if(directStorePtr == nullptr)
     {
       return binary ? WriteBinaryBulk(outputStream, dataStore, outputPath, arrayPath, shouldCancel) : WriteAsciiBulk(outputStream, dataStore, outputPath, arrayPath, shouldCancel);
     }
 
-    return binary ? WriteBinaryDirect(outputStream, *directStore, outputPath, arrayPath, shouldCancel) : WriteAsciiDirect(outputStream, *directStore, outputPath, arrayPath, shouldCancel);
+    return binary ? WriteBinaryDirect(outputStream, *directStorePtr, outputPath, arrayPath, shouldCancel) : WriteAsciiDirect(outputStream, *directStorePtr, outputPath, arrayPath, shouldCancel);
   }
 };
 

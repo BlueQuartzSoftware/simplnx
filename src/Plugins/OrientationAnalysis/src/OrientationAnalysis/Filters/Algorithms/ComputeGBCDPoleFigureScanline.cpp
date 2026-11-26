@@ -127,7 +127,7 @@ public:
                 auto location2 = static_cast<int32>((misEuler1[1] - m_GbcdLimits[1]) / m_GbcdDeltas[1]);
                 auto location3 = static_cast<int32>((misEuler1[2] - m_GbcdLimits[2]) / m_GbcdDeltas[2]);
                 rotNormal = sym1 * vec;
-                nhCheck = getSquareCoord(rotNormal.data(), sqCoord.data());
+                nhCheck = GetSquareCoord(rotNormal.data(), sqCoord.data());
                 auto location4 = static_cast<int32>((sqCoord[0] - m_GbcdLimits[3]) / m_GbcdDeltas[3]);
                 auto location5 = static_cast<int32>((sqCoord[1] - m_GbcdLimits[4]) / m_GbcdDeltas[4]);
                 if(location1 >= 0 && location2 >= 0 && location3 >= 0 && location4 >= 0 && location5 >= 0 && location1 < m_GbcdSizes[0] && location2 < m_GbcdSizes[1] && location3 < m_GbcdSizes[2] &&
@@ -153,7 +153,7 @@ public:
                 auto location2 = static_cast<int32>((misEuler1[1] - m_GbcdLimits[1]) / m_GbcdDeltas[1]);
                 auto location3 = static_cast<int32>((misEuler1[2] - m_GbcdLimits[2]) / m_GbcdDeltas[2]);
                 rotNormal2 = sym1 * vec2;
-                nhCheck = getSquareCoord(rotNormal2.data(), sqCoord.data());
+                nhCheck = GetSquareCoord(rotNormal2.data(), sqCoord.data());
                 auto location4 = static_cast<int32>((sqCoord[0] - m_GbcdLimits[3]) / m_GbcdDeltas[3]);
                 auto location5 = static_cast<int32>((sqCoord[1] - m_GbcdLimits[4]) / m_GbcdDeltas[4]);
                 if(location1 >= 0 && location2 >= 0 && location3 >= 0 && location4 >= 0 && location5 >= 0 && location1 < m_GbcdSizes[0] && location2 < m_GbcdSizes[1] && location3 < m_GbcdSizes[2] &&
@@ -185,7 +185,7 @@ public:
   }
 
 private:
-  static bool getSquareCoord(float32* crystalNormal, float32* sqCoord)
+  static bool GetSquareCoord(float32* crystalNormal, float32* sqCoord)
   {
     bool nhCheck = false;
     float32 adjust = 1.0;

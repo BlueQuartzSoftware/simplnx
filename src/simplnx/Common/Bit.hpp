@@ -26,10 +26,10 @@ enum class endian : uint8
 
 inline endian checkEndian()
 {
-  constexpr uint32_t i = 0x01020304;
-  const auto* u8 = reinterpret_cast<const std::byte*>(&i);
+  constexpr uint32_t k_I = 0x01020304;
+  const auto* u8Ptr = reinterpret_cast<const std::byte*>(&k_I);
 
-  return u8[0] == std::byte{0x01} ? endian::big : endian::little;
+  return u8Ptr[0] == std::byte{0x01} ? endian::big : endian::little;
 }
 
 constexpr uint16 byteswap16(uint16 value) noexcept

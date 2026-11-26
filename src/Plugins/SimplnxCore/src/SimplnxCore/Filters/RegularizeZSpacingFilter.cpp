@@ -210,19 +210,19 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
 
   // Create the destination Image Geometry and the resampled cell data arrays.
   {
-    const AttributeMatrix* selectedCellData = srcImageGeom.getCellData();
-    if(selectedCellData == nullptr)
+    const AttributeMatrix* selectedCellDataPtr = srcImageGeom.getCellData();
+    if(selectedCellDataPtr == nullptr)
     {
       return MakePreflightErrorResult(-5560, fmt::format("'{}' must have a cell data Attribute Matrix.", srcImagePath.toString()));
     }
-    std::string cellDataName = selectedCellData->getName();
+    std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
     resultOutputActions.value().appendAction(
         std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, srcOrigin, CreateImageGeometryAction::SpacingType{destSpacing[0], destSpacing[1], destSpacing[2]}, cellDataName));
 
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-    for(const auto& [identifier, object] : *selectedCellData)
+    for(const auto& [identifier, object] : *selectedCellDataPtr)
     {
       // Guard instead of a reference cast: a cell AttributeMatrix may hold non-DataArray members
       // (StringArray, NeighborList) which this filter cannot remap; fail cleanly rather than throw.
@@ -247,14 +247,14 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
   // The cleared Feature AM keeps its source shape until optional renumbering.
   if(clearFeatureAttributeMatrix)
   {
-    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
-    if(srcCellFeatureData == nullptr || !srcImageGeom.contains(srcCellFeatureData))
+    const auto* srcCellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
+    if(srcCellFeatureDataPtr == nullptr || !srcImageGeom.contains(srcCellFeatureDataPtr))
     {
       return MakePreflightErrorResult(-67431, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'. Select an Attribute Matrix that is a direct "
                                                           "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
                                                           cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
     }
-    if(srcImageGeom.getCellData() == srcCellFeatureData)
+    if(srcImageGeom.getCellData() == srcCellFeatureDataPtr)
     {
       return MakePreflightErrorResult(
           -67432,
@@ -284,13 +284,13 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     }
 
     // Ignore every path to the Feature AM, including selections through another parent.
-    const auto featureAmPaths = srcCellFeatureData->getDataPaths();
+    const auto featureAmPaths = srcCellFeatureDataPtr->getDataPaths();
     ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
     const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureDataPtr->getShape()));
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *srcCellFeatureData)
+    for(const auto& [identifier, object] : *srcCellFeatureDataPtr)
     {
       clearedList += "\n" + cellFeatureAttributeMatrixPath.createChildPath(object->getName()).toString();
     }

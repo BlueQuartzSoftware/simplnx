@@ -27,16 +27,16 @@ Result<> CheckComponentIndicesInThresholds(const ArrayThresholdSet& thresholds, 
   for(const auto& threshold : thresholds.getArrayThresholds())
   {
     const IArrayThreshold* thresholdPtr = threshold.get();
-    if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
+    if(const auto* comparisonSetPtr = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSetPtr != nullptr)
     {
-      Result<> result = CheckComponentIndicesInThresholds(*comparisonSet, dataStructure);
+      Result<> result = CheckComponentIndicesInThresholds(*comparisonSetPtr, dataStructure);
       finalResult = MergeResults(std::move(result), std::move(finalResult));
     }
-    else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
+    else if(const auto* comparisonValuePtr = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValuePtr != nullptr)
     {
-      DataPath dataPath = comparisonValue->getArrayPath();
+      DataPath dataPath = comparisonValuePtr->getArrayPath();
       const auto& currentDataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
-      usize index = comparisonValue->getComponentIndex();
+      usize index = comparisonValuePtr->getComponentIndex();
       usize numComponents = currentDataArray.getNumberOfComponents();
       if(index >= currentDataArray.getNumberOfComponents())
       {
@@ -257,20 +257,20 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
   Arguments args = MultiThresholdObjectsFilter().getDefaultArguments();
   static constexpr StringLiteral k_FilterUuidKey = "Filter_Uuid";
   static constexpr StringLiteral k_FilterClassNameKey = "Filter_Name";
-  static constexpr StringLiteral v1Uuid = "{014b7300-cf36-5ede-a751-5faf9b119dae}";
-  static constexpr StringLiteral v1ClassName = "MultiThresholdObjects";
+  static constexpr StringLiteral k_V1Uuid = "{014b7300-cf36-5ede-a751-5faf9b119dae}";
+  static constexpr StringLiteral k_V1ClassName = "MultiThresholdObjects";
 
   std::vector<Result<>> results;
 
   bool isAdvanced = false;
   if(json.contains(k_FilterUuidKey))
   {
-    isAdvanced = json[k_FilterUuidKey].get<std::string>() != v1Uuid;
+    isAdvanced = json[k_FilterUuidKey].get<std::string>() != k_V1Uuid;
   }
   else if(json.contains(k_FilterClassNameKey))
   {
     // SIMPL 6.4 pipelines do not include Filter_Uuid; fall back to the legacy class name.
-    isAdvanced = json[k_FilterClassNameKey].get<std::string>() != v1ClassName;
+    isAdvanced = json[k_FilterClassNameKey].get<std::string>() != k_V1ClassName;
   }
   if(isAdvanced)
   {

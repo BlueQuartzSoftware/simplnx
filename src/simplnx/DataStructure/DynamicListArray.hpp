@@ -256,7 +256,7 @@ public:
   bool setElementList(usize pointId, ElementList& list)
   {
     T nCells = list.numCells;
-    K* data = list.cells;
+    K* dataPtr = list.cells;
     if(pointId >= m_Size)
     {
       return false;
@@ -270,7 +270,7 @@ public:
     m_Array[pointId].numCells = nCells;
     // If numCells is huge then there could be problems with this
     this->m_Array[pointId].cells = new K[nCells];
-    std::memcpy(m_Array[pointId].cells, data, sizeof(K) * nCells);
+    std::memcpy(m_Array[pointId].cells, dataPtr, sizeof(K) * nCells);
     return true;
   }
 
@@ -306,16 +306,16 @@ public:
     uint8* bufPtr = &(buffer.front());
 
     // Walk the array and allocate all the array links to Zero and nullptr
-    T* numCells = nullptr;
+    T* numCellsPtr = nullptr;
     // int32* cells = nullptr;
     for(usize i = 0; i < numElements; ++i)
     {
-      numCells = reinterpret_cast<T*>(bufPtr + offset);
-      this->m_Array[i].numCells = *numCells; // Set the number of cells in this link
+      numCellsPtr = reinterpret_cast<T*>(bufPtr + offset);
+      this->m_Array[i].numCells = *numCellsPtr; // Set the number of cells in this link
       offset += 2;
-      this->m_Array[i].cells = new K[(*numCells)];                                   // Allocate a new chunk of memory to store the list
-      std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*numCells) * sizeof(K)); // Copy from the buffer into the new list memory
-      offset += (*numCells) * sizeof(K);                                             // Increment the offset
+      this->m_Array[i].cells = new K[(*numCellsPtr)];                                   // Allocate a new chunk of memory to store the list
+      std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*numCellsPtr) * sizeof(K)); // Copy from the buffer into the new list memory
+      offset += (*numCellsPtr) * sizeof(K);                                             // Increment the offset
     }
   }
 

@@ -302,18 +302,18 @@ inline void FindInterpolationValues(const RotateArgs& params, usize octant, Size
   }
 
   // Calculate weights from the inverse-transformed coordinate and corner bounds.
-  auto c000_Index = oldIndices + indexOffset[0];
-  auto c111_Index = oldIndices + indexOffset[6];
-  Eigen::Vector3f c000_Coord = {static_cast<float32>(c000_Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
-                                static_cast<float32>(c000_Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
-                                static_cast<float32>(c000_Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
-  Eigen::Vector3f c111_Coord = {static_cast<float32>(c111_Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
-                                static_cast<float32>(c111_Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
-                                static_cast<float32>(c111_Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
+  auto c000Index = oldIndices + indexOffset[0];
+  auto c111Index = oldIndices + indexOffset[6];
+  Eigen::Vector3f c000Coord = {static_cast<float32>(c000Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
+                                static_cast<float32>(c000Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
+                                static_cast<float32>(c000Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
+  Eigen::Vector3f c111Coord = {static_cast<float32>(c111Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
+                                static_cast<float32>(c111Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
+                                static_cast<float32>(c111Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
 
   for(usize i = 0; i < 3; i++)
   {
-    uvw[i] = (oldCoords[i] - c000_Coord[i]) / (c111_Coord[i] - c000_Coord[i]);
+    uvw[i] = (oldCoords[i] - c000Coord[i]) / (c111Coord[i] - c000Coord[i]);
     uvw[i] = uvw[i] < 0.0 ? 0.0 : uvw[i];
     uvw[i] = uvw[i] > 1.0 ? 1.0 : uvw[i];
   }
@@ -347,7 +347,7 @@ public:
    */
   void sendThreadSafeProgressMessage(usize counter)
   {
-    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+    const std::lock_guard<std::mutex> lock(m_ProgressMessageMutex);
     m_Throttle.incrementPercent(counter);
   }
 
@@ -359,7 +359,7 @@ public:
    */
   void resetProgress(usize total, std::string label)
   {
-    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+    const std::lock_guard<std::mutex> lock(m_ProgressMessageMutex);
     m_Throttle.reset(total, std::move(label));
   }
 
@@ -369,7 +369,7 @@ public:
    */
   void sendThreadSafeStatusMessage(const std::string& message)
   {
-    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+    const std::lock_guard<std::mutex> lock(m_ProgressMessageMutex);
     m_MessageHandler.sendInfoMessage(message);
   }
 
@@ -423,7 +423,7 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_bool m_ShouldAbort = false;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
   std::mutex m_ResultMutex;
   Result<> m_Result;
@@ -517,7 +517,7 @@ private:
       }
     }
 
-    Page* destination = nullptr;
+    Page* destinationPtr = nullptr;
     if(m_Pages.size() < k_MaxPages)
     {
       try
@@ -527,35 +527,35 @@ private:
       {
         return MakeErrorResult<Page*>(k_NearestNeighborCopyFailed_Error, "Image transform could not allocate a bounded source page.");
       }
-      destination = &m_Pages.back();
+      destinationPtr = &m_Pages.back();
     }
     else
     {
-      destination = &*std::min_element(m_Pages.begin(), m_Pages.end(), [](const Page& left, const Page& right) { return left.useSequence < right.useSequence; });
+      destinationPtr = &*std::min_element(m_Pages.begin(), m_Pages.end(), [](const Page& left, const Page& right) { return left.useSequence < right.useSequence; });
     }
 
     const usize elementOffset = pageIndex * m_PageElements;
     const usize elementCount = std::min(m_PageElements, m_Store.getSize() - elementOffset);
     try
     {
-      if(destination->size < elementCount)
+      if(destinationPtr->size < elementCount)
       {
-        destination->values = std::make_unique<T[]>(elementCount);
-        destination->size = elementCount;
+        destinationPtr->values = std::make_unique<T[]>(elementCount);
+        destinationPtr->size = elementCount;
       }
     } catch(const std::bad_alloc&)
     {
       return MakeErrorResult<Page*>(k_NearestNeighborCopyFailed_Error, "Image transform could not allocate a bounded source page.");
     }
-    auto readResult = m_Store.copyIntoBuffer(elementOffset, nonstd::span<T>(destination->values.get(), elementCount));
+    auto readResult = m_Store.copyIntoBuffer(elementOffset, nonstd::span<T>(destinationPtr->values.get(), elementCount));
     if(readResult.invalid())
     {
       return ConvertResultTo<Page*>(std::move(readResult), nullptr);
     }
-    destination->index = pageIndex;
-    destination->size = elementCount;
-    destination->useSequence = m_NextUseSequence++;
-    return {destination};
+    destinationPtr->index = pageIndex;
+    destinationPtr->size = elementCount;
+    destinationPtr->useSequence = m_NextUseSequence++;
+    return {destinationPtr};
   }
 
   static constexpr usize k_MaxPages = 8;
@@ -704,38 +704,38 @@ public:
    */
   T calculateInterpolatedValue(const std::vector<AccumulationValueType<T>>& pValues, const Eigen::Vector3f& uvw, usize numComps, usize compIndex) const
   {
-    constexpr usize P1 = 0;
-    constexpr usize P2 = 1;
-    constexpr usize P3 = 2;
-    constexpr usize P4 = 3;
-    constexpr usize P5 = 4;
-    constexpr usize P6 = 5;
-    constexpr usize P7 = 6;
-    constexpr usize P8 = 7;
+    constexpr usize k_P1 = 0;
+    constexpr usize k_P2 = 1;
+    constexpr usize k_P3 = 2;
+    constexpr usize k_P4 = 3;
+    constexpr usize k_P5 = 4;
+    constexpr usize k_P6 = 5;
+    constexpr usize k_P7 = 6;
+    constexpr usize k_P8 = 7;
 
     /* clang-format on */
-    const AccumulationValueType<T> c000 = pValues[P1 * numComps + compIndex];
-    const AccumulationValueType<T> c100 = pValues[P2 * numComps + compIndex];
-    const AccumulationValueType<T> c110 = pValues[P3 * numComps + compIndex];
-    const AccumulationValueType<T> c010 = pValues[P4 * numComps + compIndex];
-    const AccumulationValueType<T> c001 = pValues[P5 * numComps + compIndex];
-    const AccumulationValueType<T> c101 = pValues[P6 * numComps + compIndex];
-    const AccumulationValueType<T> c111 = pValues[P7 * numComps + compIndex];
-    const AccumulationValueType<T> c011 = pValues[P8 * numComps + compIndex];
+    const AccumulationValueType<T> c000 = pValues[k_P1 * numComps + compIndex];
+    const AccumulationValueType<T> c100 = pValues[k_P2 * numComps + compIndex];
+    const AccumulationValueType<T> c110 = pValues[k_P3 * numComps + compIndex];
+    const AccumulationValueType<T> c010 = pValues[k_P4 * numComps + compIndex];
+    const AccumulationValueType<T> c001 = pValues[k_P5 * numComps + compIndex];
+    const AccumulationValueType<T> c101 = pValues[k_P6 * numComps + compIndex];
+    const AccumulationValueType<T> c111 = pValues[k_P7 * numComps + compIndex];
+    const AccumulationValueType<T> c011 = pValues[k_P8 * numComps + compIndex];
 
-    const float32 Xd = uvw[0];
-    const float32 Yd = uvw[1];
-    const float32 Zd = uvw[2];
+    const float32 xd = uvw[0];
+    const float32 yd = uvw[1];
+    const float32 zd = uvw[2];
 
-    const AccumulationValueType<T> c00 = c000 * (1 - Xd) + c100 * Xd;
-    const AccumulationValueType<T> c01 = c001 * (1 - Xd) + c101 * Xd;
-    const AccumulationValueType<T> c10 = c010 * (1 - Xd) + c110 * Xd;
-    const AccumulationValueType<T> c11 = c011 * (1 - Xd) + c111 * Xd;
+    const AccumulationValueType<T> c00 = c000 * (1 - xd) + c100 * xd;
+    const AccumulationValueType<T> c01 = c001 * (1 - xd) + c101 * xd;
+    const AccumulationValueType<T> c10 = c010 * (1 - xd) + c110 * xd;
+    const AccumulationValueType<T> c11 = c011 * (1 - xd) + c111 * xd;
 
-    const AccumulationValueType<T> c0 = c00 * (1 - Yd) + c10 * Yd;
-    const AccumulationValueType<T> c1 = c01 * (1 - Yd) + c11 * Yd;
+    const AccumulationValueType<T> c0 = c00 * (1 - yd) + c10 * yd;
+    const AccumulationValueType<T> c1 = c01 * (1 - yd) + c11 * yd;
 
-    const AccumulationValueType<T> c = c0 * (1 - Zd) + c1 * Zd;
+    const AccumulationValueType<T> c = c0 * (1 - zd) + c1 * zd;
 
     return c;
   }

@@ -29,8 +29,8 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
 {
   UnitTest::LoadPlugins();
 
-  static const DataPath k_DataPath1({Constants::k_SmallIN100, "Phase Data"});
-  static const DataPath k_DataPath2({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
+  static const DataPath kDataPath1({Constants::k_SmallIN100, "Phase Data"});
+  static const DataPath kDataPath2({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
 
   CopyDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
@@ -38,7 +38,7 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
 
   SECTION("Copy to Same Parent")
   {
-    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({k_DataPath1, k_DataPath2}));
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({kDataPath1, kDataPath2}));
     args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(false));
     args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
 
@@ -48,18 +48,18 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    const auto* path1Copy = dataStructure.getDataAs<DataGroup>(DataPath({Constants::k_SmallIN100, "Phase Data_COPY"}));
-    const auto* path2Copy = dataStructure.getDataAs<Int32Array>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases_COPY"}));
-    REQUIRE(path1Copy != nullptr);
-    REQUIRE(path2Copy != nullptr);
+    const auto* path1CopyPtr = dataStructure.getDataAs<DataGroup>(DataPath({Constants::k_SmallIN100, "Phase Data_COPY"}));
+    const auto* path2CopyPtr = dataStructure.getDataAs<Int32Array>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases_COPY"}));
+    REQUIRE(path1CopyPtr != nullptr);
+    REQUIRE(path2CopyPtr != nullptr);
   }
   SECTION("Copy to New Parent")
   {
-    static const DataPath k_CopyPath({Constants::k_SmallIN100});
+    static const DataPath kCopyPath({Constants::k_SmallIN100});
 
-    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({k_DataPath1, k_DataPath2}));
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({kDataPath1, kDataPath2}));
     args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(true));
-    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(k_CopyPath));
+    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(kCopyPath));
     args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -68,10 +68,10 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    DataGroup* copiedDataGroup = dataStructure.getDataAs<DataGroup>(k_CopyPath.createChildPath(k_DataPath1.getTargetName() + "_COPY"));
-    Int32Array* copiedArray = dataStructure.getDataAs<Int32Array>(k_CopyPath.createChildPath(k_DataPath2.getTargetName() + "_COPY"));
-    REQUIRE(copiedDataGroup != nullptr);
-    REQUIRE(copiedArray != nullptr);
+    DataGroup* copiedDataGroupPtr = dataStructure.getDataAs<DataGroup>(kCopyPath.createChildPath(kDataPath1.getTargetName() + "_COPY"));
+    Int32Array* copiedArrayPtr = dataStructure.getDataAs<Int32Array>(kCopyPath.createChildPath(kDataPath2.getTargetName() + "_COPY"));
+    REQUIRE(copiedDataGroupPtr != nullptr);
+    REQUIRE(copiedArrayPtr != nullptr);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -108,7 +108,7 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore
   }
   SECTION("Copy data new parent tuple mismatch")
   {
-    auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "TestAttributeMatrix", {10, 5, 1});
+    auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "TestAttributeMatrix", {10, 5, 1});
 
     const DataPath dataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
     const DataPath copyPath({"TestAttributeMatrix"});
@@ -145,7 +145,7 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -158,20 +158,20 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter: SIMPL Backwards Compatibility", "[
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CopyDataObjectFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CopyDataObjectFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(CopyDataObjectFilter::k_NewPathSuffix_Key) == "TestName");
     }
   }

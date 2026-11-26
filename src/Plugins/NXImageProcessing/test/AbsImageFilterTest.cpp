@@ -23,23 +23,23 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is 
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({2, 1, 1}); // 2 cells
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({2, 1, 1}); // 2 cells
   const ShapeType cellShape = {1, 1, 2};
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {3});
-  auto* inArray = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& inRef = inArray->getDataStoreRef();
+  auto* inArrayPtr = DataArray<float32>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& inRef = inArrayPtr->getDataStoreRef();
   // 2 tuples x 3 components = 6 values, mixed signs so abs is non-trivial on every component.
   const std::array<float32, 6> inputValues = {-1.0f, 2.0f, -3.0f, 4.0f, -5.0f, 6.0f};
   for(usize i = 0; i < inputValues.size(); ++i)
   {
     inRef.setValue(i, inputValues[i]);
   }
-  REQUIRE(inArray->getNumberOfComponents() == 3);
+  REQUIRE(inArrayPtr->getNumberOfComponents() == 3);
 
   const DataPath outputPath = ip_test::RunPointwiseFilter<AbsImageFilter>(ds, inputPath);
 
@@ -64,16 +64,16 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: int64 abs is exact in the integer 
   constexpr int64 k_Expected = 9007199254740993LL; // 2^53 + 1 (unrepresentable in float64)
 
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({2, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({2, 1, 1});
   const ShapeType cellShape = {1, 1, 2};
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<int64>(ds, inputPath, cellShape, {1});
-  auto* inArray = DataArray<int64>::Create(ds, "Input", store, cellAM->getId());
-  inArray->getDataStoreRef().setValue(0, k_Neg);
-  inArray->getDataStoreRef().setValue(1, int64{-5});
+  auto* inArrayPtr = DataArray<int64>::Create(ds, "Input", store, cellAmPtr->getId());
+  inArrayPtr->getDataStoreRef().setValue(0, k_Neg);
+  inArrayPtr->getDataStoreRef().setValue(1, int64{-5});
 
   AbsImageFilter filter;
   Arguments args;
@@ -154,17 +154,17 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: Preflight rejects an array whose t
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({4, 4, 4}); // 64 cells
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({4, 4, 4}); // 64 cells
 
   // Input array with a DELIBERATELY MISMATCHED tuple count (8 tuples != 64 cells), held in its own top-level
   // AttributeMatrix (NOT wired as the geometry's cell data), so the array's tuple count and the geometry's cell
   // count differ and the shared PreflightImageFilter geometry check is the sole violation.
   const ShapeType mismatchedShape = {8};
-  auto* am = AttributeMatrix::Create(ds, "Data", ShapeType(mismatchedShape.cbegin(), mismatchedShape.cend()));
+  auto* amPtr = AttributeMatrix::Create(ds, "Data", ShapeType(mismatchedShape.cbegin(), mismatchedShape.cend()));
   const DataPath inputPath({"Data", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, mismatchedShape, {1});
-  DataArray<float32>::Create(ds, "Input", store, am->getId());
+  DataArray<float32>::Create(ds, "Input", store, amPtr->getId());
 
   AbsImageFilter filter;
   Arguments args;

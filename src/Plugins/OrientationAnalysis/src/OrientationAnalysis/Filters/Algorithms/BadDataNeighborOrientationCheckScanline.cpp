@@ -28,7 +28,7 @@ namespace
  * @param orientationOps Supplies crystal-structure symmetry operators.
  * @return True if phase and strict misorientation tests pass.
  */
-inline bool isMisorientationMatch(int64 neighborSliceIdx, const std::vector<float32>& neighborQuats, const std::vector<int32>& neighborPhases, int32 currentPhaseIdx, uint32 currentLaueIndex,
+inline bool IsMisorientationMatch(int64 neighborSliceIdx, const std::vector<float32>& neighborQuats, const std::vector<int32>& neighborPhases, int32 currentPhaseIdx, uint32 currentLaueIndex,
                                   const ebsdlib::QuatD& quat1, float64 misorientationTolerance, const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps)
 {
   const int32 neighborCellPhaseIdx = neighborPhases[neighborSliceIdx];
@@ -68,36 +68,36 @@ inline bool isMisorientationMatch(int64 neighborSliceIdx, const std::vector<floa
  * @param orientationOps Supplies crystal-structure symmetry operators.
  * @return Matching good face-neighbor count.
  */
-inline int32 countMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 dimX, int64 dimY, int64 dimZ, int64 sliceIndex, const std::vector<float32>& prevQuats,
+inline int32 CountMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 dimX, int64 dimY, int64 dimZ, int64 sliceIndex, const std::vector<float32>& prevQuats,
                                     const std::vector<float32>& curQuats, const std::vector<float32>& nextQuats, const std::vector<int32>& prevPhases, const std::vector<int32>& curPhases,
                                     const std::vector<int32>& nextPhases, const std::vector<uint8>& prevMask, const std::vector<uint8>& curMask, const std::vector<uint8>& nextMask,
                                     int32 currentPhaseIdx, uint32 currentLaueIndex, const ebsdlib::QuatD& quat1, float64 misorientationTolerance,
                                     const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps)
 {
   int32 count = 0;
-  if(xIdx > 0 && (curMask[sliceIndex - 1] != 0u) && isMisorientationMatch(sliceIndex - 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(xIdx > 0 && (curMask[sliceIndex - 1] != 0u) && IsMisorientationMatch(sliceIndex - 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
   if(xIdx < dimX - 1 && (curMask[sliceIndex + 1] != 0u) &&
-     isMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+     IsMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(yIdx > 0 && (curMask[sliceIndex - dimX] != 0u) && isMisorientationMatch(sliceIndex - dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(yIdx > 0 && (curMask[sliceIndex - dimX] != 0u) && IsMisorientationMatch(sliceIndex - dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
   if(yIdx < dimY - 1 && (curMask[sliceIndex + dimX] != 0u) &&
-     isMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+     IsMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(zIdx > 0 && (prevMask[sliceIndex] != 0u) && isMisorientationMatch(sliceIndex, prevQuats, prevPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(zIdx > 0 && (prevMask[sliceIndex] != 0u) && IsMisorientationMatch(sliceIndex, prevQuats, prevPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(zIdx < dimZ - 1 && (nextMask[sliceIndex] != 0u) && isMisorientationMatch(sliceIndex, nextQuats, nextPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(zIdx < dimZ - 1 && (nextMask[sliceIndex] != 0u) && IsMisorientationMatch(sliceIndex, nextQuats, nextPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
@@ -247,11 +247,11 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   };
 
   // Recompute counts per pass to avoid a global random-write neighbor-count array.
-  constexpr int32 startLevel = 6;
-  const int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors + 1;
+  constexpr int32 k_StartLevel = 6;
+  const int32 totalLevels = k_StartLevel - m_InputValues->NumberOfNeighbors + 1;
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  for(int32 currentLevel = startLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
+  for(int32 currentLevel = k_StartLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
   {
     bool changed = true;
     int32 passCount = 0;
@@ -260,7 +260,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
     {
       changed = false;
       passCount++;
-      const std::string progressLabel = fmt::format("Processing Level {}/{} Pass {}", startLevel - currentLevel + 1, totalLevels, passCount);
+      const std::string progressLabel = fmt::format("Processing Level {}/{} Pass {}", k_StartLevel - currentLevel + 1, totalLevels, passCount);
       progressThrottle.reset(static_cast<usize>(dimZ), progressLabel);
 
       if(Result<> ioResult = loadSlice(0, curQuats, curPhases, curMask); ioResult.invalid())
@@ -317,7 +317,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
               continue;
             }
 
-            int32 count = countMatchingNeighbors(xIdx, yIdx, zIdx, dimX, dimY, dimZ, sliceIndex, prevQuats, curQuats, nextQuats, prevPhases, curPhases, nextPhases, prevMask, curMask, nextMask,
+            int32 count = CountMatchingNeighbors(xIdx, yIdx, zIdx, dimX, dimY, dimZ, sliceIndex, prevQuats, curQuats, nextQuats, prevPhases, curPhases, nextPhases, prevMask, curMask, nextMask,
                                                  currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps);
 
             if(count >= currentLevel)

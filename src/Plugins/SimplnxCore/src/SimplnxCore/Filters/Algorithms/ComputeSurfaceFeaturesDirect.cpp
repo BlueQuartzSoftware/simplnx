@@ -125,7 +125,7 @@ bool IsPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yP
  *
  * A label short-circuits later voxels of the same feature.
  */
-void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
+void FindSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
@@ -173,7 +173,7 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
  *
  * The dimension with one cell is removed before the 2D neighbor test.
  */
-void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
+void FindSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
@@ -251,11 +251,11 @@ Result<> ComputeSurfaceFeaturesDirect::operator()()
   const auto& featureGeometry = m_DataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
   if(const usize geometryDimensionality = featureGeometry.getDimensionality(); geometryDimensionality == 3)
   {
-    findSurfaceFeatures3D(m_DataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, m_ShouldCancel);
+    FindSurfaceFeatures3D(m_DataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, m_ShouldCancel);
   }
   else if(geometryDimensionality == 2)
   {
-    findSurfaceFeatures2D(m_DataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, m_ShouldCancel);
+    FindSurfaceFeatures2D(m_DataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, m_ShouldCancel);
   }
   else
   {

@@ -33,18 +33,18 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independ
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize dimX = 24;
-  constexpr usize dimY = 20;
-  constexpr usize dimZ = 16;
+  constexpr usize k_DimX = 24;
+  constexpr usize k_DimY = 20;
+  constexpr usize k_DimZ = 16;
   const std::vector<uint32> radius = {1, 1, 1};
-  constexpr float32 alpha = 0.3f;
-  constexpr float32 beta = 0.3f;
+  constexpr float32 k_Alpha = 0.3f;
+  constexpr float32 k_Beta = 0.3f;
 
   DataStructure ds;
-  const DataPath inputPath = aht::BuildAheImage<uint8>(ds, dimX, dimY, dimZ);
+  const DataPath inputPath = aht::BuildAheImage<uint8>(ds, k_DimX, k_DimY, k_DimZ);
 
   AdaptiveHistogramEqualizationImageFilter filter;
-  aht::RunAheFilter<AdaptiveHistogramEqualizationImageFilter>(filter, ds, inputPath, alpha, beta, radius);
+  aht::RunAheFilter<AdaptiveHistogramEqualizationImageFilter>(filter, ds, inputPath, k_Alpha, k_Beta, radius);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<uint8>>(outputPath).getDataStoreRef();
@@ -54,8 +54,8 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independ
     actual[i] = outStore.getValue(i);
   }
 
-  const std::vector<uint8> input = aht::MakeAhePattern<uint8>(dimX, dimY, dimZ);
-  const std::vector<uint8> expected = aht::AdaptiveHistogramEqualizationOracle<uint8>(input, dimX, dimY, dimZ, {1, 1, 1}, alpha, beta);
+  const std::vector<uint8> input = aht::MakeAhePattern<uint8>(k_DimX, k_DimY, k_DimZ);
+  const std::vector<uint8> expected = aht::AdaptiveHistogramEqualizationOracle<uint8>(input, k_DimX, k_DimY, k_DimZ, {1, 1, 1}, k_Alpha, k_Beta);
   aht::RequireAheClose<uint8>(actual, expected, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/0.005);
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
@@ -160,8 +160,8 @@ void ReportDivergence(const std::string& tag, const std::vector<uint8>& a, const
 // runs on the grayscale. Returns the created grayscale array path <cellData>/GrayScale_<inputName>.
 DataPath RunColorToGrayScale(DataStructure& ds, const DataPath& inputDataPath)
 {
-  const Uuid k_ColorToGrayScaleUuid = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-  IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(k_ColorToGrayScaleUuid);
+  const Uuid kColorToGrayScaleUuid = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
+  IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(kColorToGrayScaleUuid);
   REQUIRE(filter != nullptr);
 
   Arguments args;
@@ -290,6 +290,6 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: generic 
 
 TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: LUT huge-radius clipped neighborhood", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
-  constexpr uint32 huge = std::numeric_limits<uint32>::max();
-  CheckHugeRadiusFilter<uint16>(3, 3, 2, {huge, huge, huge}, {2, 2, 1});
+  constexpr uint32 k_Huge = std::numeric_limits<uint32>::max();
+  CheckHugeRadiusFilter<uint16>(3, 3, 2, {k_Huge, k_Huge, k_Huge}, {2, 2, 1});
 }

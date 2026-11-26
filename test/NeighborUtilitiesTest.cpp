@@ -36,27 +36,27 @@ TEST_CASE("Simplnx::NeighborUtilities: initializeFaceNeighborInternalIdx orderin
 {
   SECTION("Image3D")
   {
-    constexpr auto idx = initializeFaceNeighborInternalIdx<Image3D>();
+    constexpr auto k_Idx = initializeFaceNeighborInternalIdx<Image3D>();
     using N = VoxelNeighbors<Image3D>;
-    REQUIRE(idx == std::array<FaceNeighborType, 6>{N::k_NegativeZNeighbor, N::k_NegativeYNeighbor, N::k_NegativeXNeighbor, N::k_PositiveXNeighbor, N::k_PositiveYNeighbor, N::k_PositiveZNeighbor});
+    REQUIRE(k_Idx == std::array<FaceNeighborType, 6>{N::k_NegativeZNeighbor, N::k_NegativeYNeighbor, N::k_NegativeXNeighbor, N::k_PositiveXNeighbor, N::k_PositiveYNeighbor, N::k_PositiveZNeighbor});
   }
   SECTION("EmptyXImage2D")
   {
-    constexpr auto idx = initializeFaceNeighborInternalIdx<EmptyXImage2D>();
+    constexpr auto k_Idx = initializeFaceNeighborInternalIdx<EmptyXImage2D>();
     using N = VoxelNeighbors<EmptyXImage2D>;
-    REQUIRE(idx == std::array<FaceNeighborType, 4>{N::k_NegativeZNeighbor, N::k_NegativeYNeighbor, N::k_PositiveYNeighbor, N::k_PositiveZNeighbor});
+    REQUIRE(k_Idx == std::array<FaceNeighborType, 4>{N::k_NegativeZNeighbor, N::k_NegativeYNeighbor, N::k_PositiveYNeighbor, N::k_PositiveZNeighbor});
   }
   SECTION("EmptyYImage2D")
   {
-    constexpr auto idx = initializeFaceNeighborInternalIdx<EmptyYImage2D>();
+    constexpr auto k_Idx = initializeFaceNeighborInternalIdx<EmptyYImage2D>();
     using N = VoxelNeighbors<EmptyYImage2D>;
-    REQUIRE(idx == std::array<FaceNeighborType, 4>{N::k_NegativeZNeighbor, N::k_NegativeXNeighbor, N::k_PositiveXNeighbor, N::k_PositiveZNeighbor});
+    REQUIRE(k_Idx == std::array<FaceNeighborType, 4>{N::k_NegativeZNeighbor, N::k_NegativeXNeighbor, N::k_PositiveXNeighbor, N::k_PositiveZNeighbor});
   }
   SECTION("EmptyZImage2D")
   {
-    constexpr auto idx = initializeFaceNeighborInternalIdx<EmptyZImage2D>();
+    constexpr auto k_Idx = initializeFaceNeighborInternalIdx<EmptyZImage2D>();
     using N = VoxelNeighbors<EmptyZImage2D>;
-    REQUIRE(idx == std::array<FaceNeighborType, 4>{N::k_NegativeYNeighbor, N::k_NegativeXNeighbor, N::k_PositiveXNeighbor, N::k_PositiveYNeighbor});
+    REQUIRE(k_Idx == std::array<FaceNeighborType, 4>{N::k_NegativeYNeighbor, N::k_NegativeXNeighbor, N::k_PositiveXNeighbor, N::k_PositiveYNeighbor});
   }
 }
 
@@ -207,43 +207,43 @@ TEST_CASE("Simplnx::NeighborUtilities: computeFaceSurfaceAreas precision and ord
 
 TEST_CASE("Simplnx::NeighborUtilities: ProcessCorners visits the expected indices", "[Simplnx][NeighborUtilities]")
 {
-  using Visited = std::set<std::tuple<int64, int64, int64>>;
-  auto recorder = [](Visited& sink) { return [&](int64 z, int64 y, int64 x) { sink.insert({z, y, x}); }; };
+  using VisitedType = std::set<std::tuple<int64, int64, int64>>;
+  auto recorder = [](VisitedType& sink) { return [&](int64 z, int64 y, int64 x) { sink.insert({z, y, x}); }; };
 
   SECTION("Image3D 3x3x3 visits all 8 corners")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessCorners<Image3D>(recorder(sink), {3, 3, 3});
-    REQUIRE(sink == Visited{{0, 0, 0}, {2, 2, 2}, {0, 0, 2}, {0, 2, 0}, {2, 0, 0}, {0, 2, 2}, {2, 0, 2}, {2, 2, 0}});
+    REQUIRE(sink == VisitedType{{0, 0, 0}, {2, 2, 2}, {0, 0, 2}, {0, 2, 0}, {2, 0, 0}, {0, 2, 2}, {2, 0, 2}, {2, 2, 0}});
   }
   SECTION("EmptyZImage2D 4x3x1 visits 4 corners in the XY plane")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessCorners<EmptyZImage2D>(recorder(sink), {4, 3, 1});
-    REQUIRE(sink == Visited{{0, 0, 0}, {0, 0, 3}, {0, 2, 0}, {0, 2, 3}});
+    REQUIRE(sink == VisitedType{{0, 0, 0}, {0, 0, 3}, {0, 2, 0}, {0, 2, 3}});
   }
   SECTION("XImage1D 5x1x1 visits both endpoints")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessCorners<XImage1D>(recorder(sink), {5, 1, 1});
-    REQUIRE(sink == Visited{{0, 0, 0}, {0, 0, 4}});
+    REQUIRE(sink == VisitedType{{0, 0, 0}, {0, 0, 4}});
   }
   SECTION("SingleVoxelImage visits only the origin")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessCorners<SingleVoxelImage>(recorder(sink), {1, 1, 1});
-    REQUIRE(sink == Visited{{0, 0, 0}});
+    REQUIRE(sink == VisitedType{{0, 0, 0}});
   }
 }
 
 TEST_CASE("Simplnx::NeighborUtilities: ProcessEdges visits the expected indices", "[Simplnx][NeighborUtilities]")
 {
-  using Visited = std::vector<std::tuple<int64, int64, int64>>;
-  auto recorder = [](Visited& sink) { return [&](int64 z, int64 y, int64 x) { sink.emplace_back(z, y, x); }; };
+  using VisitedType = std::vector<std::tuple<int64, int64, int64>>;
+  auto recorder = [](VisitedType& sink) { return [&](int64 z, int64 y, int64 x) { sink.emplace_back(z, y, x); }; };
 
   SECTION("EmptyZImage2D 5x4x1 walks the X-edge (length 3) and Y-edge (length 2)")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessEdges<EmptyZImage2D>(recorder(sink), {5, 4, 1});
     // Expected: along y=0 and y=Ny-1 for x=1..Nx-2 (X edges), then x=0 and x=Nx-1 for y=1..Ny-2 (Y edges).
     // X edges: (0,0,1),(0,0,2),(0,0,3),(0,3,1),(0,3,2),(0,3,3)
@@ -254,27 +254,27 @@ TEST_CASE("Simplnx::NeighborUtilities: ProcessEdges visits the expected indices"
   }
   SECTION("XImage1D 5x1x1 walks only the X interior")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessEdges<XImage1D>(recorder(sink), {5, 1, 1});
-    REQUIRE(sink == Visited{{0, 0, 1}, {0, 0, 2}, {0, 0, 3}});
+    REQUIRE(sink == VisitedType{{0, 0, 1}, {0, 0, 2}, {0, 0, 3}});
   }
 }
 
 TEST_CASE("Simplnx::NeighborUtilities: ProcessFaces visits the expected indices", "[Simplnx][NeighborUtilities]")
 {
-  using Visited = std::vector<std::tuple<int64, int64, int64>>;
-  auto recorder = [](Visited& sink) { return [&](int64 z, int64 y, int64 x, const std::vector<FaceNeighborType>& /*faces*/) { sink.emplace_back(z, y, x); }; };
+  using VisitedType = std::vector<std::tuple<int64, int64, int64>>;
+  auto recorder = [](VisitedType& sink) { return [&](int64 z, int64 y, int64 x, const std::vector<FaceNeighborType>& /*faces*/) { sink.emplace_back(z, y, x); }; };
 
   SECTION("EmptyZImage2D 4x3x1 visits the XY interior (length 1)")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessFaces<EmptyZImage2D>(recorder(sink), {4, 3, 1});
     // Interior: x in [1, 2], y = 1. Expected invocations:
-    REQUIRE(sink == Visited{{0, 1, 1}, {0, 1, 2}});
+    REQUIRE(sink == VisitedType{{0, 1, 1}, {0, 1, 2}});
   }
   SECTION("Image3D 3x3x3 visits all 6 faces of the cube")
   {
-    Visited sink;
+    VisitedType sink;
     ImageDimensionalUtilities::ProcessFaces<Image3D>(recorder(sink), {3, 3, 3});
     // Each face has 1 interior voxel ((y=1,x=1) etc.); six faces total.
     REQUIRE(sink.size() == 6);

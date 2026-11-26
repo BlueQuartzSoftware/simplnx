@@ -30,13 +30,13 @@ namespace
  */
 struct VoxelAccumulator
 {
-  float64 weightedSum = 0.0;
-  float64 weightSum = 0.0;
+  float64 weighted_sum = 0.0;
+  float64 weight_sum = 0.0;
   uint64 count = 0;
   float64 min = std::numeric_limits<float64>::max();
   float64 max = std::numeric_limits<float64>::lowest();
-  float64 welfordMean = 0.0;
-  float64 welfordM2 = 0.0;
+  float64 welford_mean = 0.0;
+  float64 welford_m2 = 0.0;
 };
 static_assert(std::is_trivially_copyable_v<VoxelAccumulator>);
 
@@ -46,8 +46,8 @@ static_assert(std::is_trivially_copyable_v<VoxelAccumulator>);
  */
 struct CopyAccumulator
 {
-  float64 weightedSum = 0.0;
-  float64 weightSum = 0.0;
+  float64 weighted_sum = 0.0;
+  float64 weight_sum = 0.0;
 };
 static_assert(std::is_trivially_copyable_v<CopyAccumulator>);
 
@@ -336,7 +336,7 @@ struct WriteWeightedAverageFunctor
   {
     auto& store = outputArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     return WriteAccumulatorOutput(
-        store, accumulators, arrayIndex, numVoxels, [](const CopyAccumulator& accumulator) { return accumulator.weightSum > 0.0 ? accumulator.weightedSum / accumulator.weightSum : 0.0; },
+        store, accumulators, arrayIndex, numVoxels, [](const CopyAccumulator& accumulator) { return accumulator.weight_sum > 0.0 ? accumulator.weighted_sum / accumulator.weight_sum : 0.0; },
         shouldCancel);
   }
 };
@@ -350,7 +350,7 @@ struct WriteWeightedAverageFunctor
  *
  * The kernel is reused for every vertex, avoiding repeated exponential work.
  */
-void computeKernel(uint64 interpolationTechnique, const std::vector<float32>& sigmas, std::vector<float32>& kernel, const int64 kernelNumVoxels[3])
+void ComputeKernel(uint64 interpolationTechnique, const std::vector<float32>& sigmas, std::vector<float32>& kernel, const int64 kernelNumVoxels[3])
 {
   const auto kDimX = static_cast<usize>(2 * kernelNumVoxels[0] + 1);
   const auto kDimY = static_cast<usize>(2 * kernelNumVoxels[1] + 1);
@@ -397,18 +397,18 @@ const std::atomic_bool& InterpolatePointCloudToRegularGrid::getCancel()
 
 Result<> InterpolatePointCloudToRegularGrid::operator()()
 {
-  const auto* vertices = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->vertexGeomPath);
-  const auto* image = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->imageGeomPath);
-  const DataPath interpolatedGroupPath = image->getCellDataPath();
-  const SizeVec3 dims = image->getDimensions();
-  const FloatVec3 res = image->getSpacing();
+  const auto* verticesPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->vertexGeomPath);
+  const auto* imagePtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->imageGeomPath);
+  const DataPath interpolatedGroupPath = imagePtr->getCellDataPath();
+  const SizeVec3 dims = imagePtr->getDimensions();
+  const FloatVec3 res = imagePtr->getSpacing();
 
   const usize dimX = dims[0];
   const usize dimY = dims[1];
   const usize dimZ = dims[2];
   const usize numVoxels = dimX * dimY * dimZ;
 
-  const usize numVerts = vertices->getNumberOfVertices();
+  const usize numVerts = verticesPtr->getNumberOfVertices();
 
   // Convert physical kernel extents to inclusive grid radii.
   int64 kernelNumVoxels[3] = {0, 0, 0};
@@ -435,7 +435,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
   const usize totalKernel = kDimX * kDimY * kDimZ;
 
   std::vector<float32> kernel(totalKernel, 0.0f);
-  computeKernel(m_InputValues->interpolationTechnique, m_InputValues->sigmas, kernel, kernelNumVoxels);
+  ComputeKernel(m_InputValues->interpolationTechnique, m_InputValues->sigmas, kernel, kernelNumVoxels);
 
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
   if(m_InputValues->useMask)
@@ -460,26 +460,26 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
   std::vector<IDataArray*> interpSourceArrays;
   for(const auto& path : m_InputValues->interpolatedDataPaths)
   {
-    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(path);
-    if(sourceArray->getDataType() == DataType::boolean)
+    auto* sourceArrayPtr = m_DataStructure.getDataAs<IDataArray>(path);
+    if(sourceArrayPtr->getDataType() == DataType::boolean)
     {
       continue;
     }
-    interpSourceArrays.push_back(sourceArray);
-    interpSourceData.push_back(ExecuteDataFunction(ExtractAsFloat64Functor{}, sourceArray->getDataType(), sourceArray));
+    interpSourceArrays.push_back(sourceArrayPtr);
+    interpSourceData.push_back(ExecuteDataFunction(ExtractAsFloat64Functor{}, sourceArrayPtr->getDataType(), sourceArrayPtr));
   }
 
   std::vector<std::vector<float64>> copySourceData;
   std::vector<IDataArray*> copySourceArrays;
   for(const auto& path : m_InputValues->copyDataPaths)
   {
-    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(path);
-    if(sourceArray->getDataType() == DataType::boolean)
+    auto* sourceArrayPtr = m_DataStructure.getDataAs<IDataArray>(path);
+    if(sourceArrayPtr->getDataType() == DataType::boolean)
     {
       continue;
     }
-    copySourceArrays.push_back(sourceArray);
-    copySourceData.push_back(ExecuteDataFunction(ExtractAsFloat64Functor{}, sourceArray->getDataType(), sourceArray));
+    copySourceArrays.push_back(sourceArrayPtr);
+    copySourceData.push_back(ExecuteDataFunction(ExtractAsFloat64Functor{}, sourceArrayPtr->getDataType(), sourceArrayPtr));
   }
 
   const usize numInterpArrays = interpSourceArrays.size();
@@ -487,14 +487,14 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
 
   bool usesOutOfCoreStore = false;
   const auto observeOutput = [&](const DataPath& path) {
-    if(const auto* output = m_DataStructure.getDataAs<IDataArray>(path); output != nullptr && IsOutOfCore(*output))
+    if(const auto* outputPtr = m_DataStructure.getDataAs<IDataArray>(path); outputPtr != nullptr && IsOutOfCore(*outputPtr))
     {
       usesOutOfCoreStore = true;
     }
   };
-  for(const IDataArray* sourceArray : interpSourceArrays)
+  for(const IDataArray* sourceArrayPtr : interpSourceArrays)
   {
-    const std::string& arrayName = sourceArray->getName();
+    const std::string& arrayName = sourceArrayPtr->getName();
     observeOutput(interpolatedGroupPath.createChildPath(arrayName));
     if(m_InputValues->findLength)
     {
@@ -521,9 +521,9 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       observeOutput(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->summationSuffix));
     }
   }
-  for(const IDataArray* sourceArray : copySourceArrays)
+  for(const IDataArray* sourceArrayPtr : copySourceArrays)
   {
-    observeOutput(interpolatedGroupPath.createChildPath(sourceArray->getName()));
+    observeOutput(interpolatedGroupPath.createChildPath(sourceArrayPtr->getName()));
   }
 
   const bool useExternalState = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
@@ -564,8 +564,8 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       continue;
     }
 
-    const Point3D<float32> coords = vertices->getVertexCoordinate(i);
-    const std::optional<usize> optIndex = image->getIndex(coords[0], coords[1], coords[2]);
+    const Point3D<float32> coords = verticesPtr->getVertexCoordinate(i);
+    const std::optional<usize> optIndex = imagePtr->getIndex(coords[0], coords[1], coords[2]);
     if(!optIndex.has_value())
     {
       continue;
@@ -618,17 +618,17 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
                 accum.max = weightedVal;
               }
               accum.count++;
-              accum.weightedSum += weightedVal;
-              accum.weightSum += w;
+              accum.weighted_sum += weightedVal;
+              accum.weight_sum += w;
               accum.min = std::min(accum.min, weightedVal);
               accum.max = std::max(accum.max, weightedVal);
 
               if(needWelford)
               {
-                const float64 delta = weightedVal - accum.welfordMean;
-                accum.welfordMean += delta / static_cast<float64>(accum.count);
-                const float64 delta2 = weightedVal - accum.welfordMean;
-                accum.welfordM2 += delta * delta2;
+                const float64 delta = weightedVal - accum.welford_mean;
+                accum.welford_mean += delta / static_cast<float64>(accum.count);
+                const float64 delta2 = weightedVal - accum.welford_mean;
+                accum.welford_m2 += delta * delta2;
               }
               if(Result<> result = interpAccum.write(a, voxelIdx, accum, m_ShouldCancel); result.invalid())
               {
@@ -647,8 +647,8 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
               return ConvertResult(std::move(accumulatorResult));
             }
             CopyAccumulator accumulator = accumulatorResult.value();
-            accumulator.weightedSum += sourceVal;
-            accumulator.weightSum += 1.0;
+            accumulator.weighted_sum += sourceVal;
+            accumulator.weight_sum += 1.0;
             if(Result<> result = copyAccum.write(a, voxelIdx, accumulator, m_ShouldCancel); result.invalid())
             {
               return result;
@@ -677,7 +677,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
     auto& interpOutput = m_DataStructure.getDataRefAs<Float64Array>(interpolatedGroupPath.createChildPath(arrayName));
     if(Result<> result = WriteAccumulatorOutput(
            interpOutput.getDataStoreRef(), interpAccum, a, numVoxels,
-           [](const VoxelAccumulator& accumulator) { return accumulator.weightSum > 0.0 ? accumulator.weightedSum / accumulator.weightSum : 0.0; }, m_ShouldCancel);
+           [](const VoxelAccumulator& accumulator) { return accumulator.weight_sum > 0.0 ? accumulator.weighted_sum / accumulator.weight_sum : 0.0; }, m_ShouldCancel);
        result.invalid())
     {
       return result;
@@ -718,7 +718,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       auto& meanOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->meanSuffix));
       if(Result<> result = WriteAccumulatorOutput(
              meanOutput.getDataStoreRef(), interpAccum, a, numVoxels,
-             [](const VoxelAccumulator& accumulator) { return accumulator.count > 0 ? accumulator.weightedSum / static_cast<float64>(accumulator.count) : 0.0; }, m_ShouldCancel);
+             [](const VoxelAccumulator& accumulator) { return accumulator.count > 0 ? accumulator.weighted_sum / static_cast<float64>(accumulator.count) : 0.0; }, m_ShouldCancel);
          result.invalid())
       {
         return result;
@@ -729,7 +729,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       auto& stdDevOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->stdDeviationSuffix));
       if(Result<> result = WriteAccumulatorOutput(
              stdDevOutput.getDataStoreRef(), interpAccum, a, numVoxels,
-             [](const VoxelAccumulator& accumulator) { return accumulator.count > 0 ? std::sqrt(accumulator.welfordM2 / static_cast<float64>(accumulator.count)) : 0.0; }, m_ShouldCancel);
+             [](const VoxelAccumulator& accumulator) { return accumulator.count > 0 ? std::sqrt(accumulator.welford_m2 / static_cast<float64>(accumulator.count)) : 0.0; }, m_ShouldCancel);
          result.invalid())
       {
         return result;
@@ -739,7 +739,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
     {
       auto& sumOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->summationSuffix));
       if(Result<> result = WriteAccumulatorOutput(
-             sumOutput.getDataStoreRef(), interpAccum, a, numVoxels, [](const VoxelAccumulator& accumulator) { return accumulator.weightedSum; }, m_ShouldCancel);
+             sumOutput.getDataStoreRef(), interpAccum, a, numVoxels, [](const VoxelAccumulator& accumulator) { return accumulator.weighted_sum; }, m_ShouldCancel);
          result.invalid())
       {
         return result;
@@ -749,8 +749,8 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
 
   for(usize a = 0; a < numCopyArrays; a++)
   {
-    auto* outputArray = m_DataStructure.getDataAs<IDataArray>(interpolatedGroupPath.createChildPath(copySourceArrays[a]->getName()));
-    if(Result<> result = ExecuteDataFunction(WriteWeightedAverageFunctor{}, outputArray->getDataType(), outputArray, copyAccum, a, numVoxels, m_ShouldCancel); result.invalid())
+    auto* outputArrayPtr = m_DataStructure.getDataAs<IDataArray>(interpolatedGroupPath.createChildPath(copySourceArrays[a]->getName()));
+    if(Result<> result = ExecuteDataFunction(WriteWeightedAverageFunctor{}, outputArrayPtr->getDataType(), outputArrayPtr, copyAccum, a, numVoxels, m_ShouldCancel); result.invalid())
     {
       return result;
     }

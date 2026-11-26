@@ -63,13 +63,13 @@ TEST_CASE("MemorySafety: WouldExceedAvailableMemory pure overload", "[MemorySafe
 TEST_CASE("MemorySafety: EmptyDataStore::memoryUsage in-core vs OOC", "[MemorySafety]")
 {
   RegisterPlaceholderManagerForStrictBuild();
-  using StoreT = EmptyDataStore<float32>;
+  using StoreTType = EmptyDataStore<float32>;
   const ShapeType tupleShape{100}; // 100 tuples
   const ShapeType compShape{4};    // x4 components
   const uint64 logicalBytes = uint64{100} * 4 * sizeof(float32);
 
   // Empty format (in-core) -> logical size.
-  auto inCore = StoreT::Create(tupleShape, compShape, "");
+  auto inCore = StoreTType::Create(tupleShape, compShape, "");
   REQUIRE(inCore.valid());
   REQUIRE(inCore.value()->memoryUsage() == logicalBytes);
 
@@ -81,7 +81,7 @@ TEST_CASE("MemorySafety: EmptyDataStore::memoryUsage in-core vs OOC", "[MemorySa
 #endif
 
   // Zero tuples -> zero bytes regardless of storage strategy.
-  auto empty = StoreT::Create(ShapeType{0}, compShape, "");
+  auto empty = StoreTType::Create(ShapeType{0}, compShape, "");
   REQUIRE(empty.valid());
   REQUIRE(empty.value()->memoryUsage() == 0);
 }

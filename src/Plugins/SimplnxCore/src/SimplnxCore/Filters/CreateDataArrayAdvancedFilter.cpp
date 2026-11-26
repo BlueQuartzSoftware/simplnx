@@ -184,8 +184,8 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
   ShapeType tupleDims = {};
 
-  const auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
-  if(parentAM == nullptr)
+  const auto* parentAmPtr = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
+  if(parentAmPtr == nullptr)
   {
     if(!useDims)
     {
@@ -203,7 +203,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   else
   {
-    tupleDims = parentAM->getShape();
+    tupleDims = parentAmPtr->getShape();
     if(useDims)
     {
       resultOutputActions.warnings().push_back(

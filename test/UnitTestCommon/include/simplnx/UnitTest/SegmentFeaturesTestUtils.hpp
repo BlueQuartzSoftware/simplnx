@@ -32,15 +32,15 @@ namespace nx::core::UnitTest
  */
 inline AttributeMatrix* BuildSegmentFeaturesTestGeometry(DataStructure& ds, const std::array<usize, 3>& dims, const std::string& geomName, const std::string& cellDataName)
 {
-  auto* geom = ImageGeom::Create(ds, geomName);
-  geom->setDimensions({dims[0], dims[1], dims[2]});
-  REQUIRE(geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* geomPtr = ImageGeom::Create(ds, geomName);
+  geomPtr->setDimensions({dims[0], dims[1], dims[2]});
+  REQUIRE(geomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(geomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   const ShapeType cellShape = {dims[2], dims[1], dims[0]};
-  auto* am = AttributeMatrix::Create(ds, cellDataName, cellShape, geom->getId());
-  geom->setCellData(*am);
-  return am;
+  auto* amPtr = AttributeMatrix::Create(ds, cellDataName, cellShape, geomPtr->getId());
+  geomPtr->setCellData(*amPtr);
+  return amPtr;
 }
 
 /**
@@ -60,8 +60,8 @@ inline void BuildScalarTestData(DataStructure& ds, const ShapeType& cellShape, D
 
   const DataPath scalarPath = ds.getDataPathsForId(amId)[0].createChildPath(arrayName);
   auto scalarDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, scalarPath, cellShape, {1});
-  auto* scalarArray = DataArray<int32>::Create(ds, arrayName, scalarDataStore, amId);
-  auto& store = scalarArray->getDataStoreRef();
+  auto* scalarArrayPtr = DataArray<int32>::Create(ds, arrayName, scalarDataStore, amId);
+  auto& store = scalarArrayPtr->getDataStoreRef();
 
   const usize blocksPerX = (dimX + blockSize - 1) / blockSize;
   const usize blocksPerY = (dimY + blockSize - 1) / blockSize;
@@ -127,13 +127,13 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
   const DataPath amPath = ds.getDataPathsForId(amId)[0];
   const DataPath quatsPath = amPath.createChildPath("Quats");
   auto quatsDataStore = DataStoreUtilities::CreateDataStore<float32>(ds, quatsPath, cellShape, {4});
-  auto* quatsArray = DataArray<float32>::Create(ds, "Quats", quatsDataStore, amId);
-  auto& quatsStore = quatsArray->getDataStoreRef();
+  auto* quatsArrayPtr = DataArray<float32>::Create(ds, "Quats", quatsDataStore, amId);
+  auto& quatsStore = quatsArrayPtr->getDataStoreRef();
 
   const DataPath phasesPath = amPath.createChildPath("Phases");
   auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, phasesPath, cellShape, {1});
-  auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, amId);
-  auto& phasesStore = phasesArray->getDataStoreRef();
+  auto* phasesArrayPtr = DataArray<int32>::Create(ds, "Phases", phasesDataStore, amId);
+  auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
   constexpr float32 k_DegToRad = 3.14159265358979323846f / 180.0f;
 
@@ -183,8 +183,8 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
   // face neighbor (1,1,0) into the Z=0 layer.
   if(!wrapBoundary && blocksPerX >= 3 && blocksPerY >= 3 && blocksPerZ >= 3)
   {
-    const usize idx_111 = 1 * blocksPerY * blocksPerX + 1 * blocksPerX + 1;
-    blockQuats[idx_111] = blockQuats[0]; // Set to 0° (z=0 layer angle)
+    const usize idx111 = 1 * blocksPerY * blocksPerX + 1 * blocksPerX + 1;
+    blockQuats[idx111] = blockQuats[0]; // Set to 0° (z=0 layer angle)
   }
 
   const usize sliceSize = dimY * dimX;
@@ -223,11 +223,11 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
 
   // The ensemble arrays provide the crystal structure for phase 1.
   const ShapeType ensembleTupleShape = {2};
-  auto* ensembleAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensembleTupleShape, geomId);
+  auto* ensembleAmPtr = AttributeMatrix::Create(ds, "CellEnsembleData", ensembleTupleShape, geomId);
   const DataPath crystalStructsPath = ds.getDataPathsForId(geomId)[0].createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
   auto crystalDataStore = DataStoreUtilities::CreateDataStore<uint32>(ds, crystalStructsPath, ensembleTupleShape, {1});
-  auto* crystalStructsArray = DataArray<uint32>::Create(ds, "CrystalStructures", crystalDataStore, ensembleAM->getId());
-  auto& crystalStructsStore = crystalStructsArray->getDataStoreRef();
+  auto* crystalStructsArrayPtr = DataArray<uint32>::Create(ds, "CrystalStructures", crystalDataStore, ensembleAmPtr->getId());
+  auto& crystalStructsStore = crystalStructsArrayPtr->getDataStoreRef();
   crystalStructsStore[0] = 999; // Phase 0: Unknown
   crystalStructsStore[1] = crystalStructure;
 }
@@ -251,8 +251,8 @@ inline void BuildSphericalMask(DataStructure& ds, const ShapeType& cellShape, Da
 
   const DataPath maskPath = ds.getDataPathsForId(amId)[0].createChildPath(maskName);
   auto maskDataStore = DataStoreUtilities::CreateDataStore<uint8>(ds, maskPath, cellShape, {1});
-  auto* maskArray = DataArray<uint8>::Create(ds, maskName, maskDataStore, amId);
-  auto& maskStore = maskArray->getDataStoreRef();
+  auto* maskArrayPtr = DataArray<uint8>::Create(ds, maskName, maskDataStore, amId);
+  auto& maskStore = maskArrayPtr->getDataStoreRef();
 
   const float32 cx = static_cast<float32>(dimX) / 2.0f;
   const float32 cy = static_cast<float32>(dimY) / 2.0f;
@@ -486,15 +486,15 @@ inline void VerifyPeriodicBlockSegmentation(const DataStructure& ds, const std::
 template <typename FilterT, typename SetupArgsFn>
 void RunNoValidVoxelsErrorTest(AlgorithmTestScope* algorithmTestScope, SetupArgsFn setupArgs)
 {
-  constexpr usize kDim = 3;
-  const std::array<usize, 3> dims = {kDim, kDim, kDim};
-  const ShapeType cellShape = {kDim, kDim, kDim};
+  constexpr usize k_KDim = 3;
+  const std::array<usize, 3> dims = {k_KDim, k_KDim, k_KDim};
+  const ShapeType cellShape = {k_KDim, k_KDim, k_KDim};
 
   DataStructure ds;
-  auto* am = BuildSegmentFeaturesTestGeometry(ds, dims, "Geom", "CellData");
+  auto* amPtr = BuildSegmentFeaturesTestGeometry(ds, dims, "Geom", "CellData");
 
-  auto* mask = CreateTestDataArray<uint8>(ds, "Mask", cellShape, {1}, am->getId());
-  mask->fill(0);
+  auto* maskPtr = CreateTestDataArray<uint8>(ds, "Mask", cellShape, {1}, amPtr->getId());
+  maskPtr->fill(0);
 
   const DataPath geomPath({"Geom"});
   const DataPath cellDataPath({"Geom", "CellData"});
@@ -562,9 +562,9 @@ void RunNoValidVoxelsErrorTest(AlgorithmTestScope& algorithmTestScope, SetupArgs
 template <typename FilterT, typename SetupFaceFn, typename SetupFevFn>
 void RunFaceEdgeVertexConnectivityTest(AlgorithmTestScope* algorithmTestScope, SetupFaceFn setupFaceArgs, SetupFevFn setupFevArgs)
 {
-  constexpr usize kDim = 3;
-  const std::array<usize, 3> dims = {kDim, kDim, kDim};
-  const ShapeType cellShape = {kDim, kDim, kDim};
+  constexpr usize k_KDim = 3;
+  const std::array<usize, 3> dims = {k_KDim, k_KDim, k_KDim};
+  const ShapeType cellShape = {k_KDim, k_KDim, k_KDim};
 
   const DataPath geomPath({"Geom"});
   const DataPath cellDataPath({"Geom", "CellData"});

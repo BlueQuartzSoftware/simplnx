@@ -45,10 +45,10 @@ nlohmann::json NumberParameter<T>::toJsonImpl(const std::any& value) const
 template <class T>
 Result<std::any> NumberParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'NumberParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'NumberParameter' JSON Error: ";
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
   }
   auto number = json.get<ValueType>();
   return {{number}};

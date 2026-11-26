@@ -13,17 +13,17 @@ using namespace nx::core;
 
 namespace
 {
-using ClosingFilter = BinaryMorphologicalClosingImageFilter;
+using ClosingFilterType = BinaryMorphologicalClosingImageFilter;
 
 // Kernel + Foreground + Safe Border param setter for Binary Morphological Closing. Closing has no user
 // Background Value (it derives its internal background from the foreground).
 morph_test::KernelParamSetter ClosingKernelParamSetter(float64 foreground, bool safeBorder)
 {
   return [foreground, safeBorder](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
-    args.insertOrAssign(ClosingFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(ClosingFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
-    args.insertOrAssign(ClosingFilter::k_ForegroundValue_Key, std::make_any<float64>(foreground));
-    args.insertOrAssign(ClosingFilter::k_SafeBorder_Key, std::make_any<bool>(safeBorder));
+    args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
+    args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(foreground));
+    args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(safeBorder));
   };
 }
 } // namespace
@@ -41,23 +41,23 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
   using morph_test::KernelType;
   const auto build410 = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(ds, dx, dy, dz, uint8{41}, uint8{0}); };
   const auto setParams41 = ClosingKernelParamSetter(41.0, /*safeBorder=*/false);
-  constexpr auto kClosing = BinaryCompositeKind::Closing;
+  constexpr auto k_KClosing = BinaryCompositeKind::Closing;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilter, uint8>(build410, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, kClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_KClosing, uint8{41}, uint8{0}, setParams41);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilter, uint8>(build410, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, kClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_KClosing, uint8{41}, uint8{0}, setParams41);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilter, uint8>(build410, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, kClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_KClosing, uint8{41}, uint8{0}, setParams41);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilter, uint8>(build410, 12, 12, 12, KernelType::Box, {2, 1, 0}, kClosing, uint8{41}, uint8{0}, setParams41);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<ClosingFilterType, uint8>(build410, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_KClosing, uint8{41}, uint8{0}, setParams41);
   }
 }
 
@@ -75,15 +75,15 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non
   DataStructure ds;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 8, 8, 8); // values in [0,199] -> NOT binary
 
-  ClosingFilter filter;
+  ClosingFilterType filter;
   Arguments args;
-  args.insertOrAssign(ClosingFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(ClosingFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(ClosingFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(ClosingFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-  args.insertOrAssign(ClosingFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(ClosingFilter::k_ForegroundValue_Key, std::make_any<float64>(1.0));
-  args.insertOrAssign(ClosingFilter::k_SafeBorder_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ClosingFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(ClosingFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ClosingFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
+  args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(1.0));
+  args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(true));
 
   auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // fg is in range -> preflight is clean
@@ -109,26 +109,26 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr uint8 fg = 1;
-  constexpr uint8 bg = 0; // internal background for a non-zero foreground
+  constexpr usize k_D = 32;
+  constexpr uint8 k_Fg = 1;
+  constexpr uint8 k_Bg = 0; // internal background for a non-zero foreground
   const std::array<int32, 3> radius = {2, 1, 1};
   const auto kernelType = morph_test::KernelType::Box;
 
   DataStructure ds;
-  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, D, fg, bg);
+  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, k_D, k_Fg, k_Bg);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
-  ClosingFilter filter;
+  ClosingFilterType filter;
   Arguments args;
-  args.insertOrAssign(ClosingFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(ClosingFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(ClosingFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(ClosingFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-  args.insertOrAssign(ClosingFilter::k_KernelRadius_Key,
+  args.insertOrAssign(ClosingFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(ClosingFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ClosingFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
+  args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key,
                       std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
-  args.insertOrAssign(ClosingFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(fg)));
-  args.insertOrAssign(ClosingFilter::k_SafeBorder_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
+  args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(false));
 
   auto executeResult = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -137,7 +137,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
   auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   // Stream the ACTUAL input into memory (bulk) and compute the independent composite fg-count oracle over it.
@@ -151,7 +151,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
     SIMPLNX_RESULT_REQUIRE_VALID(r);
   }
   const morph_test::StructuringElement se = morph_test::MakeStructuringElement(kernelType, radius);
-  const std::vector<uint8> expected = morph_test::BinaryMorphologyCompositeFgOracle<uint8>(input, D, D, D, se, morph_test::BinaryCompositeKind::Closing, fg, bg);
+  const std::vector<uint8> expected = morph_test::BinaryMorphologyCompositeFgOracle<uint8>(input, k_D, k_D, k_D, se, morph_test::BinaryCompositeKind::Closing, k_Fg, k_Bg);
 
   // Stream the output in bounded chunks and compare.
   auto buffer = std::make_unique<uint8[]>(k_ChunkValues);
@@ -195,17 +195,17 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight r
 
   const auto makeArgs = [&](float64 fg) {
     Arguments args;
-    args.insertOrAssign(ClosingFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-    args.insertOrAssign(ClosingFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(ClosingFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(ClosingFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-    args.insertOrAssign(ClosingFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
-    args.insertOrAssign(ClosingFilter::k_ForegroundValue_Key, std::make_any<float64>(fg));
-    args.insertOrAssign(ClosingFilter::k_SafeBorder_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ClosingFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+    args.insertOrAssign(ClosingFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(ClosingFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
+    args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+    args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(fg));
+    args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(true));
     return args;
   };
 
-  ClosingFilter filter;
+  ClosingFilterType filter;
 
   REQUIRE_FALSE(filter.preflight(ds, makeArgs(99999.0)).outputActions.valid());                                   // fg out of uint8 range
   REQUIRE_FALSE(filter.preflight(ds, makeArgs(-5.0)).outputActions.valid());                                      // fg negative out of range
@@ -230,7 +230,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight r
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: ITK real-image golden (WhiteDots WithBorder)", "[NXImageProcessing][ItkGolden][BinaryMorphologicalClosingImageFilter]")
 {
-  morph_test::RunMorphologyMd5ItkGolden<ClosingFilter>("WhiteDots.png", "506d365dd92db16c2ade264fca46890c", static_cast<uint64>(morph_test::KernelType::Ball), {5, 5, 5},
+  morph_test::RunMorphologyMd5ItkGolden<ClosingFilterType>("WhiteDots.png", "506d365dd92db16c2ade264fca46890c", static_cast<uint64>(morph_test::KernelType::Ball), {5, 5, 5},
                                                        ClosingKernelParamSetter(255.0, /*safeBorder=*/false));
 }
 
@@ -240,7 +240,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: ITK real-im
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<ClosingFilter, uint8>(-8490, ClosingKernelParamSetter(1.0, /*safeBorder=*/true));
+  morph_test::RequirePreflightRejectsNonScalar<ClosingFilterType, uint8>(-8490, ClosingKernelParamSetter(1.0, /*safeBorder=*/true));
 }
 
 TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")

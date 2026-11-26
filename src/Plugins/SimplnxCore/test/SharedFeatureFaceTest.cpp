@@ -25,7 +25,7 @@
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
-namespace SharedFeatureFaceFilterTest
+namespace shared_feature_face_filter_test
 {
 const std::string k_TriangleGeometryName = "TriangleDataContainer";
 const std::string k_FaceLabelsName = "FaceLabels";
@@ -116,7 +116,7 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
 
 } // namespace SharedFeatureFaceFilterTest
 
-using namespace SharedFeatureFaceFilterTest;
+using namespace shared_feature_face_filter_test;
 
 TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFaceFilter]")
 {

@@ -22,14 +22,14 @@ TEST_CASE("SimplnxCore::RenameDataAction(Instantiate)", "[SimplnxCore][RenameDat
   UnitTest::LoadPlugins();
 
   static constexpr StringLiteral k_NewName = "Bar";
-  const DataPath k_DataPath({Constants::k_SmallIN100});
+  const DataPath kDataPath({Constants::k_SmallIN100});
 
   RenameDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(kDataPath));
 
   auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
@@ -42,14 +42,14 @@ TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][Re
   UnitTest::LoadPlugins();
 
   static constexpr StringLiteral k_NewName = Constants::k_ConfidenceIndex;
-  static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
+  static const DataPath kDataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
   RenameDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(kDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -65,14 +65,14 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][Rena
   UnitTest::LoadPlugins();
 
   static constexpr StringLiteral k_NewName = "Foo";
-  static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
+  static const DataPath kDataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
   RenameDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(kDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -81,10 +81,10 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][Rena
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   DataPath newPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_NewName});
-  auto* dataObject = dataStructure.getData(newPath);
-  REQUIRE(dataObject != nullptr);
+  auto* dataObjectPtr = dataStructure.getData(newPath);
+  REQUIRE(dataObjectPtr != nullptr);
 
-  REQUIRE(dataObject->getName() == k_NewName);
+  REQUIRE(dataObjectPtr->getName() == k_NewName);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -94,34 +94,34 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][Renam
   UnitTest::LoadPlugins();
 
   static constexpr StringLiteral k_NewName = Constants::k_GroupHName;
-  static const DataPath k_DataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
+  static const DataPath kDataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
 
   RenameDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
-  const auto sourceId = dataStructure.getData(k_DataPath)->getId();
-  auto* parent = dataStructure.getDataAs<DataGroup>(k_DataPath.getParent());
-  REQUIRE(parent != nullptr);
-  auto* sibling = DataGroup::Create(dataStructure, k_NewName, parent->getId());
-  REQUIRE(sibling != nullptr);
-  const auto siblingId = sibling->getId();
-  auto* child = ScalarData<int32>::Create(dataStructure, "OverwriteChild", 37, siblingId);
-  REQUIRE(child != nullptr);
-  const auto childId = child->getId();
+  const auto sourceId = dataStructure.getData(kDataPath)->getId();
+  auto* parentPtr = dataStructure.getDataAs<DataGroup>(kDataPath.getParent());
+  REQUIRE(parentPtr != nullptr);
+  auto* siblingPtr = DataGroup::Create(dataStructure, k_NewName, parentPtr->getId());
+  REQUIRE(siblingPtr != nullptr);
+  const auto siblingId = siblingPtr->getId();
+  auto* childPtr = ScalarData<int32>::Create(dataStructure, "OverwriteChild", 37, siblingId);
+  REQUIRE(childPtr != nullptr);
+  const auto childId = childPtr->getId();
   Arguments args;
 
   args.insert(RenameDataObjectFilter::k_AllowOverwrite_Key, std::make_any<bool>(true));
   args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(kDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  RenameDataAction action(k_DataPath, k_NewName, true);
+  RenameDataAction action(kDataPath, k_NewName, true);
   auto actionResult = action.apply(dataStructure, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
   REQUIRE(actionResult.warnings().size() == 1);
   CHECK(actionResult.warnings()[0].code == -6602);
-  CHECK(actionResult.warnings()[0].message.find(k_DataPath.replaceName(k_NewName).toString()) != std::string::npos);
+  CHECK(actionResult.warnings()[0].message.find(kDataPath.replaceName(k_NewName).toString()) != std::string::npos);
   CHECK(actionResult.warnings()[0].message.find("Other placements and their children are kept.") != std::string::npos);
   CHECK(actionResult.warnings()[0].message.find("Objects left with no placement are deleted.") != std::string::npos);
   CHECK(dataStructure.getData(siblingId) != nullptr);
@@ -132,30 +132,30 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][Renam
 
   CHECK(dataStructure.getData(siblingId) == nullptr);
   CHECK(dataStructure.getData(childId) == nullptr);
-  REQUIRE(dataStructure.getData(k_DataPath.replaceName(k_NewName)) != nullptr);
-  CHECK(dataStructure.getData(k_DataPath.replaceName(k_NewName))->getId() == sourceId);
+  REQUIRE(dataStructure.getData(kDataPath.replaceName(k_NewName)) != nullptr);
+  CHECK(dataStructure.getData(kDataPath.replaceName(k_NewName))->getId() == sourceId);
 
   // Verify rename was successful
   {
     DataPath newPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, k_NewName});
-    auto* dataObject = dataStructure.getData(newPath);
-    REQUIRE(dataObject != nullptr);
+    auto* dataObjectPtr = dataStructure.getData(newPath);
+    REQUIRE(dataObjectPtr != nullptr);
 
-    REQUIRE(dataObject->getName() == k_NewName);
+    REQUIRE(dataObjectPtr->getName() == k_NewName);
   }
 
   // Verify the unrelated DataGroup (`H`) is preserved
   {
     DataPath oldHPath({Constants::k_GroupAName, Constants::k_GroupHName});
-    auto* dataObject = dataStructure.getData(oldHPath);
-    REQUIRE(dataObject != nullptr);
+    auto* dataObjectPtr = dataStructure.getData(oldHPath);
+    REQUIRE(dataObjectPtr != nullptr);
   }
 
   // Verify its child (`N`) is preserved
   {
     DataPath oldHChildPath({Constants::k_GroupAName, Constants::k_GroupHName, Constants::k_ArrayNName});
-    auto* dataObject = dataStructure.getData(oldHChildPath);
-    REQUIRE(dataObject != nullptr);
+    auto* dataObjectPtr = dataStructure.getData(oldHChildPath);
+    REQUIRE(dataObjectPtr != nullptr);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -166,7 +166,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][Ren
   UnitTest::LoadPlugins();
 
   static constexpr StringLiteral k_NewName = Constants::k_GroupDName;
-  static const DataPath k_DataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
+  static const DataPath kDataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
 
   RenameDataObjectFilter filter;
 
@@ -175,7 +175,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][Ren
 
   args.insert(RenameDataObjectFilter::k_AllowOverwrite_Key, std::make_any<bool>(true));
   args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(kDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -200,7 +200,7 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: SIMPL Backwards Compatibility", 
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -213,20 +213,20 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: SIMPL Backwards Compatibility", 
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RenameDataObjectFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RenameDataObjectFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(RenameDataObjectFilter::k_SourceDataObjectPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(RenameDataObjectFilter::k_NewName_Key) == "TestName");
     }
@@ -240,23 +240,23 @@ TEST_CASE("SimplnxCore::RenameDataAction sibling overwrite regression", "[Simpln
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   CAPTURE(topLevel, hasSibling, mode);
   DataStructure dataStructure;
-  auto* groupA = DataGroup::Create(dataStructure, "GroupA");
-  REQUIRE(groupA != nullptr);
-  auto* unrelated = ScalarData<int32>::Create(dataStructure, "Target", 11, groupA->getId());
-  REQUIRE(unrelated != nullptr);
-  const auto unrelatedId = unrelated->getId();
-  auto* groupB = DataGroup::Create(dataStructure, "GroupB");
-  REQUIRE(groupB != nullptr);
-  const std::optional<DataObject::IdType> parentId = topLevel ? std::nullopt : std::make_optional(groupB->getId());
-  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22, parentId);
-  REQUIRE(source != nullptr);
-  const auto sourceId = source->getId();
+  auto* groupAPtr = DataGroup::Create(dataStructure, "GroupA");
+  REQUIRE(groupAPtr != nullptr);
+  auto* unrelatedPtr = ScalarData<int32>::Create(dataStructure, "Target", 11, groupAPtr->getId());
+  REQUIRE(unrelatedPtr != nullptr);
+  const auto unrelatedId = unrelatedPtr->getId();
+  auto* groupBPtr = DataGroup::Create(dataStructure, "GroupB");
+  REQUIRE(groupBPtr != nullptr);
+  const std::optional<DataObject::IdType> parentId = topLevel ? std::nullopt : std::make_optional(groupBPtr->getId());
+  auto* sourcePtr = ScalarData<int32>::Create(dataStructure, "Source", 22, parentId);
+  REQUIRE(sourcePtr != nullptr);
+  const auto sourceId = sourcePtr->getId();
   std::optional<DataObject::IdType> siblingId;
   if(hasSibling)
   {
-    auto* sibling = ScalarData<int32>::Create(dataStructure, "Target", 33, parentId);
-    REQUIRE(sibling != nullptr);
-    siblingId = sibling->getId();
+    auto* siblingPtr = ScalarData<int32>::Create(dataStructure, "Target", 33, parentId);
+    REQUIRE(siblingPtr != nullptr);
+    siblingId = siblingPtr->getId();
   }
   const DataPath sourcePath = topLevel ? DataPath({"Source"}) : DataPath({"GroupB", "Source"});
   RenameDataObjectFilter filter;
@@ -319,11 +319,11 @@ TEST_CASE("SimplnxCore::RenameDataAction other parent clash", "[SimplnxCore][Ren
   std::optional<DataObject::IdType> siblingId;
   if(hasSibling)
   {
-    const auto* parent = dataStructure.getData(sourcePath.getParent());
-    REQUIRE(parent != nullptr);
-    auto* sibling = ScalarData<int32>::Create(dataStructure, Constants::k_ArrayIName, 33, parent->getId());
-    REQUIRE(sibling != nullptr);
-    siblingId = sibling->getId();
+    const auto* parentPtr = dataStructure.getData(sourcePath.getParent());
+    REQUIRE(parentPtr != nullptr);
+    auto* siblingPtr = ScalarData<int32>::Create(dataStructure, Constants::k_ArrayIName, 33, parentPtr->getId());
+    REQUIRE(siblingPtr != nullptr);
+    siblingId = siblingPtr->getId();
   }
   const auto objectIds = dataStructure.getAllDataObjectIds();
   RenameDataAction action(sourcePath, Constants::k_ArrayIName, true);
@@ -362,32 +362,32 @@ TEST_CASE("SimplnxCore::RenameDataAction preserves overwrite target in another p
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   CAPTURE(groupTarget, placement, mode);
   DataStructure dataStructure;
-  auto* selectedParent = DataGroup::Create(dataStructure, "Selected");
-  auto* otherParent = DataGroup::Create(dataStructure, "Other");
-  REQUIRE(selectedParent != nullptr);
-  REQUIRE(otherParent != nullptr);
-  const std::optional<DataObject::IdType> parentId = topLevel ? std::nullopt : std::make_optional(selectedParent->getId());
-  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22, parentId);
-  REQUIRE(source != nullptr);
-  const auto sourceId = source->getId();
+  auto* selectedParentPtr = DataGroup::Create(dataStructure, "Selected");
+  auto* otherParentPtr = DataGroup::Create(dataStructure, "Other");
+  REQUIRE(selectedParentPtr != nullptr);
+  REQUIRE(otherParentPtr != nullptr);
+  const std::optional<DataObject::IdType> parentId = topLevel ? std::nullopt : std::make_optional(selectedParentPtr->getId());
+  auto* sourcePtr = ScalarData<int32>::Create(dataStructure, "Source", 22, parentId);
+  REQUIRE(sourcePtr != nullptr);
+  const auto sourceId = sourcePtr->getId();
   const std::optional<DataObject::IdType> targetParentId = sharedAtRoot ? std::nullopt : parentId;
-  DataObject* target = nullptr;
+  DataObject* targetPtr = nullptr;
   std::optional<DataObject::IdType> childId;
   if(groupTarget)
   {
-    target = DataGroup::Create(dataStructure, "Target", targetParentId);
-    REQUIRE(target != nullptr);
-    auto* child = ScalarData<int32>::Create(dataStructure, "Child", 37, target->getId());
-    REQUIRE(child != nullptr);
-    childId = child->getId();
+    targetPtr = DataGroup::Create(dataStructure, "Target", targetParentId);
+    REQUIRE(targetPtr != nullptr);
+    auto* childPtr = ScalarData<int32>::Create(dataStructure, "Child", 37, targetPtr->getId());
+    REQUIRE(childPtr != nullptr);
+    childId = childPtr->getId();
   }
   else
   {
-    target = ScalarData<int32>::Create(dataStructure, "Target", 33, targetParentId);
-    REQUIRE(target != nullptr);
+    targetPtr = ScalarData<int32>::Create(dataStructure, "Target", 33, targetParentId);
+    REQUIRE(targetPtr != nullptr);
   }
-  const auto targetId = target->getId();
-  REQUIRE(dataStructure.setAdditionalParent(targetId, sharedAtRoot ? selectedParent->getId() : otherParent->getId()));
+  const auto targetId = targetPtr->getId();
+  REQUIRE(dataStructure.setAdditionalParent(targetId, sharedAtRoot ? selectedParentPtr->getId() : otherParentPtr->getId()));
   const DataPath sourcePath = topLevel ? DataPath({"Source"}) : DataPath({"Selected", "Source"});
   const DataPath targetPath = sourcePath.replaceName("Target");
   const DataPath otherPath = sharedAtRoot ? DataPath({"Target"}) : DataPath({"Other", "Target"});
@@ -404,36 +404,36 @@ TEST_CASE("SimplnxCore::RenameDataAction preserves overwrite target in another p
     CHECK(dataStructure.getData(targetPath)->getId() == targetId);
     REQUIRE(dataStructure.getData(sourcePath) != nullptr);
     CHECK(dataStructure.getData(sourcePath)->getId() == sourceId);
-    CHECK(target->getParentIds().size() == (topLevel || sharedAtRoot ? 1 : 2));
+    CHECK(targetPtr->getParentIds().size() == (topLevel || sharedAtRoot ? 1 : 2));
   }
   else
   {
     CHECK(dataStructure.getData(targetPath)->getId() == sourceId);
     CHECK(dataStructure.getData(sourcePath) == nullptr);
-    CHECK(source->getValue() == 22);
+    CHECK(sourcePtr->getValue() == 22);
     if(sharedAtRoot)
     {
-      CHECK(target->getParentIds().empty());
+      CHECK(targetPtr->getParentIds().empty());
     }
     else
     {
-      REQUIRE(target->getParentIds().size() == 1);
-      CHECK(target->getParentIds().front() == otherParent->getId());
+      REQUIRE(targetPtr->getParentIds().size() == 1);
+      CHECK(targetPtr->getParentIds().front() == otherParentPtr->getId());
     }
   }
   if(childId.has_value())
   {
-    const auto* child = dataStructure.getDataAs<ScalarData<int32>>(*childId);
-    REQUIRE(child != nullptr);
-    CHECK(child->getValue() == 37);
+    const auto* childPtr = dataStructure.getDataAs<ScalarData<int32>>(*childId);
+    REQUIRE(childPtr != nullptr);
+    CHECK(childPtr->getValue() == 37);
     REQUIRE(dataStructure.getData(otherPath.createChildPath("Child")) != nullptr);
     CHECK(dataStructure.getData(otherPath.createChildPath("Child"))->getId() == *childId);
   }
   else
   {
-    const auto* scalar = dataStructure.getDataAs<ScalarData<int32>>(targetId);
-    REQUIRE(scalar != nullptr);
-    CHECK(scalar->getValue() == 33);
+    const auto* scalarPtr = dataStructure.getDataAs<ScalarData<int32>>(targetId);
+    REQUIRE(scalarPtr != nullptr);
+    CHECK(scalarPtr->getValue() == 33);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -446,19 +446,19 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: Invalid nested names preserve ev
   const int32 invocation = GENERATE(0, 1, 2, 3);
   CAPTURE(sourceAtRoot, overwrite, newName, invocation);
   DataStructure dataStructure;
-  auto* parent = DataGroup::Create(dataStructure, "P");
-  REQUIRE(parent != nullptr);
-  const std::optional<DataObject::IdType> sourceParentId = sourceAtRoot ? std::nullopt : std::make_optional(parent->getId());
-  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22, sourceParentId);
-  auto* other = ScalarData<int32>::Create(dataStructure, "Other", 11, parent->getId());
-  REQUIRE(source != nullptr);
-  REQUIRE(other != nullptr);
+  auto* parentPtr = DataGroup::Create(dataStructure, "P");
+  REQUIRE(parentPtr != nullptr);
+  const std::optional<DataObject::IdType> sourceParentId = sourceAtRoot ? std::nullopt : std::make_optional(parentPtr->getId());
+  auto* sourcePtr = ScalarData<int32>::Create(dataStructure, "Source", 22, sourceParentId);
+  auto* otherPtr = ScalarData<int32>::Create(dataStructure, "Other", 11, parentPtr->getId());
+  REQUIRE(sourcePtr != nullptr);
+  REQUIRE(otherPtr != nullptr);
   if(sourceAtRoot)
   {
-    REQUIRE(dataStructure.setAdditionalParent(source->getId(), parent->getId()));
+    REQUIRE(dataStructure.setAdditionalParent(sourcePtr->getId(), parentPtr->getId()));
   }
-  const auto sourceId = source->getId();
-  const auto otherId = other->getId();
+  const auto sourceId = sourcePtr->getId();
+  const auto otherId = otherPtr->getId();
   const DataPath sourcePath({"P", "Source"});
   const auto objectIds = dataStructure.getAllDataObjectIds();
   const auto paths = dataStructure.getAllDataPaths();
@@ -467,10 +467,10 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: Invalid nested names preserve ev
   std::vector<std::pair<DataObject::IdType, const DataObject*>> objects;
   for(const auto id : objectIds)
   {
-    const auto* object = dataStructure.getData(id);
-    REQUIRE(object != nullptr);
-    parentLists.emplace_back(id, object->getParentIds());
-    objects.emplace_back(id, object);
+    const auto* objectPtr = dataStructure.getData(id);
+    REQUIRE(objectPtr != nullptr);
+    parentLists.emplace_back(id, objectPtr->getParentIds());
+    objects.emplace_back(id, objectPtr);
   }
 
   std::vector<Error> errors;
@@ -533,21 +533,21 @@ TEST_CASE("SimplnxCore::RenameDataAction rejects a clash at the source root plac
   const bool hasSibling = GENERATE(false, true);
   CAPTURE(mode, hasSibling);
   DataStructure dataStructure;
-  auto* selectedParent = DataGroup::Create(dataStructure, "Selected");
-  REQUIRE(selectedParent != nullptr);
-  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22);
-  auto* clash = ScalarData<int32>::Create(dataStructure, "Target", 11);
-  REQUIRE(source != nullptr);
-  REQUIRE(clash != nullptr);
-  REQUIRE(dataStructure.setAdditionalParent(source->getId(), selectedParent->getId()));
-  const auto sourceId = source->getId();
-  const auto clashId = clash->getId();
+  auto* selectedParentPtr = DataGroup::Create(dataStructure, "Selected");
+  REQUIRE(selectedParentPtr != nullptr);
+  auto* sourcePtr = ScalarData<int32>::Create(dataStructure, "Source", 22);
+  auto* clashPtr = ScalarData<int32>::Create(dataStructure, "Target", 11);
+  REQUIRE(sourcePtr != nullptr);
+  REQUIRE(clashPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(sourcePtr->getId(), selectedParentPtr->getId()));
+  const auto sourceId = sourcePtr->getId();
+  const auto clashId = clashPtr->getId();
   std::optional<DataObject::IdType> siblingId;
   if(hasSibling)
   {
-    auto* sibling = ScalarData<int32>::Create(dataStructure, "Target", 33, selectedParent->getId());
-    REQUIRE(sibling != nullptr);
-    siblingId = sibling->getId();
+    auto* siblingPtr = ScalarData<int32>::Create(dataStructure, "Target", 33, selectedParentPtr->getId());
+    REQUIRE(siblingPtr != nullptr);
+    siblingId = siblingPtr->getId();
   }
   const auto objectIds = dataStructure.getAllDataObjectIds();
   RenameDataAction action(DataPath({"Selected", "Source"}), "Target", true);
@@ -557,19 +557,19 @@ TEST_CASE("SimplnxCore::RenameDataAction rejects a clash at the source root plac
   CHECK(result.errors()[0].code == -6605);
   CHECK(result.errors()[0].message.find("child at 'Target'") != std::string::npos);
   CHECK(dataStructure.getAllDataObjectIds() == objectIds);
-  CHECK(dataStructure.getData(DataPath({"Source"})) == source);
-  CHECK(dataStructure.getData(DataPath({"Selected", "Source"})) == source);
-  CHECK(dataStructure.getData(DataPath({"Target"})) == clash);
-  CHECK(source->getId() == sourceId);
-  CHECK(clash->getId() == clashId);
-  CHECK(source->getName() == "Source");
-  CHECK(source->getValue() == 22);
-  CHECK(clash->getValue() == 11);
+  CHECK(dataStructure.getData(DataPath({"Source"})) == sourcePtr);
+  CHECK(dataStructure.getData(DataPath({"Selected", "Source"})) == sourcePtr);
+  CHECK(dataStructure.getData(DataPath({"Target"})) == clashPtr);
+  CHECK(sourcePtr->getId() == sourceId);
+  CHECK(clashPtr->getId() == clashId);
+  CHECK(sourcePtr->getName() == "Source");
+  CHECK(sourcePtr->getValue() == 22);
+  CHECK(clashPtr->getValue() == 11);
   if(siblingId.has_value())
   {
-    const auto* sibling = dataStructure.getDataAs<ScalarData<int32>>(*siblingId);
-    REQUIRE(sibling != nullptr);
-    CHECK(sibling->getValue() == 33);
+    const auto* siblingPtr = dataStructure.getDataAs<ScalarData<int32>>(*siblingId);
+    REQUIRE(siblingPtr != nullptr);
+    CHECK(siblingPtr->getValue() == 33);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -579,29 +579,29 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: Overwrite preserves retained des
   const int32 retainedPlacement = GENERATE(0, 1, 2);
   CAPTURE(retainedPlacement);
   DataStructure dataStructure;
-  auto* parent = DataGroup::Create(dataStructure, "P");
-  auto* otherParent = DataGroup::Create(dataStructure, "Other");
-  REQUIRE(parent != nullptr);
-  REQUIRE(otherParent != nullptr);
-  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22, parent->getId());
-  auto* target = DataGroup::Create(dataStructure, "Target", parent->getId());
-  REQUIRE(source != nullptr);
-  REQUIRE(target != nullptr);
-  const auto sourceId = source->getId();
-  const auto targetId = target->getId();
-  auto* deleted = DataGroup::Create(dataStructure, "Deleted", targetId);
-  REQUIRE(deleted != nullptr);
-  auto* gone = ScalarData<int32>::Create(dataStructure, "Gone", 11, deleted->getId());
-  REQUIRE(gone != nullptr);
-  const auto deletedId = deleted->getId();
-  const auto goneId = gone->getId();
-  const std::optional<DataObject::IdType> sharedParentId = retainedPlacement == 0 ? std::nullopt : std::make_optional(retainedPlacement == 1 ? otherParent->getId() : targetId);
-  auto* shared = DataGroup::Create(dataStructure, "Shared", sharedParentId);
-  REQUIRE(shared != nullptr);
-  const auto sharedId = shared->getId();
-  auto* keep = ScalarData<int32>::Create(dataStructure, "Keep", 37, sharedId);
-  REQUIRE(keep != nullptr);
-  const auto keepId = keep->getId();
+  auto* parentPtr = DataGroup::Create(dataStructure, "P");
+  auto* otherParentPtr = DataGroup::Create(dataStructure, "Other");
+  REQUIRE(parentPtr != nullptr);
+  REQUIRE(otherParentPtr != nullptr);
+  auto* sourcePtr = ScalarData<int32>::Create(dataStructure, "Source", 22, parentPtr->getId());
+  auto* targetPtr = DataGroup::Create(dataStructure, "Target", parentPtr->getId());
+  REQUIRE(sourcePtr != nullptr);
+  REQUIRE(targetPtr != nullptr);
+  const auto sourceId = sourcePtr->getId();
+  const auto targetId = targetPtr->getId();
+  auto* deletedPtr = DataGroup::Create(dataStructure, "Deleted", targetId);
+  REQUIRE(deletedPtr != nullptr);
+  auto* gonePtr = ScalarData<int32>::Create(dataStructure, "Gone", 11, deletedPtr->getId());
+  REQUIRE(gonePtr != nullptr);
+  const auto deletedId = deletedPtr->getId();
+  const auto goneId = gonePtr->getId();
+  const std::optional<DataObject::IdType> sharedParentId = retainedPlacement == 0 ? std::nullopt : std::make_optional(retainedPlacement == 1 ? otherParentPtr->getId() : targetId);
+  auto* sharedPtr = DataGroup::Create(dataStructure, "Shared", sharedParentId);
+  REQUIRE(sharedPtr != nullptr);
+  const auto sharedId = sharedPtr->getId();
+  auto* keepPtr = ScalarData<int32>::Create(dataStructure, "Keep", 37, sharedId);
+  REQUIRE(keepPtr != nullptr);
+  const auto keepId = keepPtr->getId();
   if(retainedPlacement != 2)
   {
     REQUIRE(dataStructure.setAdditionalParent(sharedId, targetId));
@@ -636,22 +636,22 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: Overwrite preserves retained des
     CHECK(dataStructure.getData(retainedPath)->getId() == sharedId);
     REQUIRE(dataStructure.getData(retainedPath.createChildPath("Keep")) != nullptr);
     CHECK(dataStructure.getData(retainedPath.createChildPath("Keep"))->getId() == keepId);
-    const auto* retained = dataStructure.getData(sharedId);
-    REQUIRE(retained != nullptr);
+    const auto* retainedPtr = dataStructure.getData(sharedId);
+    REQUIRE(retainedPtr != nullptr);
     if(retainedPlacement == 0)
     {
-      CHECK(retained->getParentIds().empty());
+      CHECK(retainedPtr->getParentIds().empty());
     }
     else
     {
-      REQUIRE(retained->getParentIds().size() == 1);
-      CHECK(retained->getParentIds().front() == otherParent->getId());
+      REQUIRE(retainedPtr->getParentIds().size() == 1);
+      CHECK(retainedPtr->getParentIds().front() == otherParentPtr->getId());
     }
-    const auto* retainedKeep = dataStructure.getDataAs<ScalarData<int32>>(keepId);
-    REQUIRE(retainedKeep != nullptr);
-    CHECK(retainedKeep->getValue() == 37);
-    REQUIRE(retainedKeep->getParentIds().size() == 1);
-    CHECK(retainedKeep->getParentIds().front() == sharedId);
+    const auto* retainedKeepPtr = dataStructure.getDataAs<ScalarData<int32>>(keepId);
+    REQUIRE(retainedKeepPtr != nullptr);
+    CHECK(retainedKeepPtr->getValue() == 37);
+    REQUIRE(retainedKeepPtr->getParentIds().size() == 1);
+    CHECK(retainedKeepPtr->getParentIds().front() == sharedId);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -44,8 +44,8 @@ std::array<nx::core::usize, 2> ActivePlanarAxes(const nx::core::ImageGeom& geome
 template <typename T>
 std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
 {
-  constexpr size_t A = 0;
-  constexpr size_t B = 1;
+  constexpr size_t k_A = 0;
+  constexpr size_t k_B = 1;
   constexpr size_t k_CIdx = 2;
   std::array<size_t, 3> idx = {0, 1, 2};
   if(a > b && a > c)
@@ -55,13 +55,13 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
     {
       // sorted[1] = b;
       // sorted[0] = c;
-      idx = {k_CIdx, B, A};
+      idx = {k_CIdx, k_B, k_A};
     }
     else
     {
       // sorted[1] = c;
       // sorted[0] = b;
-      idx = {B, k_CIdx, A};
+      idx = {k_B, k_CIdx, k_A};
     }
   }
   else if(b > a && b > c)
@@ -71,13 +71,13 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
     {
       // sorted[1] = a;
       // sorted[0] = c;
-      idx = {k_CIdx, A, B};
+      idx = {k_CIdx, k_A, k_B};
     }
     else
     {
       // sorted[1] = c;
       // sorted[0] = a;
-      idx = {A, k_CIdx, B};
+      idx = {k_A, k_CIdx, k_B};
     }
   }
   else if(a > b)
@@ -85,21 +85,21 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
     // sorted[1] = a;
     // sorted[0] = b;
     // sorted[2] = c;
-    idx = {B, A, k_CIdx};
+    idx = {k_B, k_A, k_CIdx};
   }
   else if(a >= c && b >= c)
   {
     // sorted[0] = c;
     // sorted[1] = a;
     // sorted[2] = b;
-    idx = {k_CIdx, A, B};
+    idx = {k_CIdx, k_A, k_B};
   }
   else
   {
     // sorted[0] = a;
     // sorted[1] = b;
     // sorted[2] = c;
-    idx = {A, B, k_CIdx};
+    idx = {k_A, k_B, k_CIdx};
   }
 
   if(!lowToHigh)
@@ -593,7 +593,7 @@ void ComputeShapes::findAxes()
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
 
   size_t numfeatures = centroids.getNumberOfTuples();
-  constexpr double multiplier = 1.0 / (4.0 * std::numbers::pi);
+  constexpr double k_Multiplier = 1.0 / (4.0 * std::numbers::pi);
   m_MessageHandler.sendInfoMessage("Computing Feature Axes");
   m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Feature Axes");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
@@ -609,12 +609,12 @@ void ComputeShapes::findAxes()
     double r3 = m_FeatureEigenVals[3 * featureId + 2];
 
     // Adjust to ABC of ellipsoid volume
-    double I1 = (15.0 * r1) * multiplier;
-    double I2 = (15.0 * r2) * multiplier;
-    double I3 = (15.0 * r3) * multiplier;
-    double A = (I1 + I2 - I3) * 0.5;
-    double B = (I1 + I3 - I2) * 0.5;
-    double C = (I2 + I3 - I1) * 0.5;
+    double i1 = (15.0 * r1) * k_Multiplier;
+    double i2 = (15.0 * r2) * k_Multiplier;
+    double i3 = (15.0 * r3) * k_Multiplier;
+    double A = (i1 + i2 - i3) * 0.5;
+    double B = (i1 + i3 - i2) * 0.5;
+    double C = (i2 + i3 - i1) * 0.5;
     double a = (A * A * A * A) / (B * C);
     a = std::pow(a, 0.1);
     double b = B / A;
@@ -646,9 +646,9 @@ void ComputeShapes::findAxes2D()
 
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
 
-  double Ixx = 0.0;
-  double Iyy = 0.0;
-  double Ixy = 0.0;
+  double ixx = 0.0;
+  double iyy = 0.0;
+  double ixy = 0.0;
 
   size_t numfeatures = centroids.getNumberOfTuples();
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
@@ -669,21 +669,21 @@ void ComputeShapes::findAxes2D()
       return;
     }
 
-    Ixx = m_FeatureMoments[i * 6 + 0];
-    Iyy = m_FeatureMoments[i * 6 + 1];
-    Ixy = m_FeatureMoments[i * 6 + 2];
-    double r1 = (Ixx + Iyy) / 2.0 + std::sqrt(((Ixx + Iyy) * (Ixx + Iyy)) / 4.0 - (Ixx * Iyy - Ixy * Ixy));
-    double r2 = (Ixx + Iyy) / 2.0 - std::sqrt(((Ixx + Iyy) * (Ixx + Iyy)) / 4.0 - (Ixx * Iyy - Ixy * Ixy));
+    ixx = m_FeatureMoments[i * 6 + 0];
+    iyy = m_FeatureMoments[i * 6 + 1];
+    ixy = m_FeatureMoments[i * 6 + 2];
+    double r1 = (ixx + iyy) / 2.0 + std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 - (ixx * iyy - ixy * ixy));
+    double r2 = (ixx + iyy) / 2.0 - std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 - (ixx * iyy - ixy * ixy));
     if(r2 <= 0)
     {
       float tempScale1 = 1.0f;
       float tempScale2 = 1.0f;
-      if(Ixx >= Iyy)
+      if(ixx >= iyy)
       {
         tempScale1 = spacing[axes[0]];
         tempScale2 = spacing[axes[1]];
       }
-      if(Ixx < Iyy)
+      if(ixx < iyy)
       {
         tempScale1 = spacing[axes[1]];
         tempScale2 = spacing[axes[0]];
@@ -777,11 +777,11 @@ void ComputeShapes::findAxisEulers2D()
         continue;
       }
     }
-    double I1 = (ixx + iyy) / 2.0 + std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 + (ixy * ixy - ixx * iyy));
-    double I2 = (ixx + iyy) / 2.0 - std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 + (ixy * ixy - ixx * iyy));
-    double n1x = (ixx - I1) / ixy;
+    double i1 = (ixx + iyy) / 2.0 + std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 + (ixy * ixy - ixx * iyy));
+    double i2 = (ixx + iyy) / 2.0 - std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 + (ixy * ixy - ixx * iyy));
+    double n1x = (ixx - i1) / ixy;
     double n1y = 1.0;
-    double n2x = (ixx - I2) / ixy;
+    double n2x = (ixx - i2) / ixy;
     double n2y = 1.0;
     double norm1 = sqrt((n1x * n1x + n1y * n1y));
     double norm2 = sqrt((n2x * n2x + n2y * n2y));

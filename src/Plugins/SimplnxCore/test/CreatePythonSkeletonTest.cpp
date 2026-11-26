@@ -61,20 +61,20 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
     CreatePythonSkeletonFilter filter;
     Arguments args;
 
-    const std::filesystem::path k_OutputDirectory = fs::path(unit_test::k_BinaryTestOutputDir.str());
-    const std::string k_PluginName = "ExampleToolbox";
+    const std::filesystem::path kOutputDirectory = fs::path(unit_test::k_BinaryTestOutputDir.str());
+    const std::string kPluginName = "ExampleToolbox";
 
     // Generate filters into a new plugin
     {
-      const std::string k_PluginHumanName = "Example Toolbox";
-      const std::string k_FilterNames = "FirstFilter,SecondFilter";
+      const std::string kPluginHumanName = "Example Toolbox";
+      const std::string kFilterNames = "FirstFilter,SecondFilter";
 
       // Create default Parameters for the filter.
       args.insertOrAssign(CreatePythonSkeletonFilter::k_UseExistingPlugin_Key, false);
-      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginName_Key, std::make_any<std::string>(k_PluginName));
-      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::make_any<std::string>(k_PluginHumanName));
-      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginOutputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(k_OutputDirectory.string()));
-      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::make_any<std::string>(k_FilterNames));
+      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginName_Key, std::make_any<std::string>(kPluginName));
+      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::make_any<std::string>(kPluginHumanName));
+      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginOutputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(kOutputDirectory.string()));
+      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::make_any<std::string>(kFilterNames));
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
@@ -87,13 +87,13 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 
     // Generate filters into an existing plugin
     {
-      const std::string k_FilterNames = "ThirdFilter,FourthFilter";
-      const std::filesystem::path k_InputDirectory = k_OutputDirectory / k_PluginName;
+      const std::string kFilterNames = "ThirdFilter,FourthFilter";
+      const std::filesystem::path kInputDirectory = kOutputDirectory / kPluginName;
 
       // Create default Parameters for the filter.
       args.insertOrAssign(CreatePythonSkeletonFilter::k_UseExistingPlugin_Key, true);
-      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginInputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(k_InputDirectory.string()));
-      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::make_any<std::string>(k_FilterNames));
+      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginInputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(kInputDirectory.string()));
+      args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::make_any<std::string>(kFilterNames));
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);

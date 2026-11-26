@@ -75,7 +75,7 @@ namespace
  * @param warnings Receives all warnings.
  */
 template <class T>
-void moveResult(nx::core::Result<T>& result, std::vector<nx::core::Error>& errors, std::vector<nx::core::Warning>& warnings)
+void MoveResult(nx::core::Result<T>& result, std::vector<nx::core::Error>& errors, std::vector<nx::core::Warning>& warnings)
 {
   for(auto& warning : result.warnings())
   {
@@ -292,7 +292,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
   PreflightResult preflightResult = preflight(dataStructure, filterArgs, messageHandler, shouldCancel, executionContext);
   if(preflightResult.outputActions.invalid())
   {
-    return ExecuteResult{.result = ConvertResult(std::move(preflightResult.outputActions)), .outputValues = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = ConvertResult(std::move(preflightResult.outputActions)), .output_values = std::move(preflightResult.outputValues)};
   }
 
   OutputActions outputActions = std::move(preflightResult.outputActions.value());
@@ -305,7 +305,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   if(preflightActionsResult.invalid())
   {
-    return ExecuteResult{.result = std::move(preflightActionsResult), .outputValues = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = std::move(preflightActionsResult), .output_values = std::move(preflightResult.outputValues)};
   }
 
   Parameters params = parameters();
@@ -333,7 +333,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
     {
       message = "A filter ran out of memory while executing.";
     }
-    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-272, std::move(message))), .outputValues = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-272, std::move(message))), .output_values = std::move(preflightResult.outputValues)};
   } catch(const std::exception& e)
   {
     // Backstop any other exception that escapes executeImpl. The backstop converts an escaped
@@ -370,20 +370,20 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
   // error is only reported when execution itself succeeded.
   if(shouldCancel && executeImplResult.valid())
   {
-    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-1, "Filter cancelled")), .outputValues = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-1, "Filter cancelled")), .output_values = std::move(preflightResult.outputValues)};
   }
 
   Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
 
   if(preflightActionsExecuteResult.invalid())
   {
-    return ExecuteResult{.result = std::move(preflightActionsExecuteResult), .outputValues = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = std::move(preflightActionsExecuteResult), .output_values = std::move(preflightResult.outputValues)};
   }
   Result<> deferredActionsResult = outputActions.applyDeferred(dataStructure, IDataAction::Mode::Execute);
   Result<> postDeferredResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
   if(postDeferredResult.invalid())
   {
-    return ExecuteResult{.result = std::move(postDeferredResult), .outputValues = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = std::move(postDeferredResult), .output_values = std::move(preflightResult.outputValues)};
   }
 
   Result<> geometryValidationResult = dataStructure.validateGeometries();
@@ -392,7 +392,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   Result<> finalResult = MergeResults(std::move(postDeferredResult), std::move(validationResult));
 
-  return ExecuteResult{.result = std::move(finalResult), .outputValues = std::move(preflightResult.outputValues)};
+  return ExecuteResult{.result = std::move(finalResult), .output_values = std::move(preflightResult.outputValues)};
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
@@ -444,7 +444,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     }
     const auto& jsonValue = json[name];
     Result<std::any> jsonResult = param->fromJson(jsonValue);
-    moveResult(jsonResult, errors, warnings);
+    MoveResult(jsonResult, errors, warnings);
     if(jsonResult.invalid())
     {
       continue;

@@ -723,8 +723,8 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
                                                                           inputArray.getNumberOfTuples(), imageGeomPath.toString(), imageGeom.getNumberOfCells()));
   }
 
-  const AttributeMatrix* cellData = imageGeom.getCellData();
-  if(cellData == nullptr)
+  const AttributeMatrix* cellDataPtr = imageGeom.getCellData();
+  if(cellDataPtr == nullptr)
   {
     return MakeErrorResult<OutputActions>(-8342, fmt::format("Image Geometry '{}' has no cell-data Attribute Matrix to project.", imageGeomPath.toString()));
   }
@@ -771,7 +771,7 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
     // geometry, so an old cell-data array with the output name is discarded and listed.
     const std::string inputArrayName = inputArrayPath.getTargetName();
     std::string discarded;
-    for(const auto& [childId, childObject] : *cellData)
+    for(const auto& [childId, childObject] : *cellDataPtr)
     {
       const std::string childName = childObject->getName();
       if(childName == inputArrayName)
@@ -786,7 +786,7 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
     }
     for(const auto& [childId, childObject] : imageGeom)
     {
-      if(childId == cellData->getId() || childId == inputArray.getId())
+      if(childId == cellDataPtr->getId() || childId == inputArray.getId())
       {
         continue;
       }

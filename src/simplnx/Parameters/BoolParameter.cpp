@@ -38,10 +38,10 @@ nlohmann::json BoolParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> BoolParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'BoolParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'BoolParameter' JSON Error: ";
   if(!json.is_boolean())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a bool", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a bool", k_Prefix, name()));
   }
   auto boolValue = json.get<ValueType>();
   return {{boolValue}};

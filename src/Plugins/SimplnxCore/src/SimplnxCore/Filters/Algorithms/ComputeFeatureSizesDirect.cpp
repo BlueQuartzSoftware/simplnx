@@ -32,11 +32,11 @@ constexpr float64 k_ECDAreaDenominator = nx::core::numbers::pi_v<float64>;
 /**
  * @brief Defines thread-local feature voxel counts.
  */
-using FeatureVoxelCountsT = tbb::combinable<std::vector<uint64>>;
+using FeatureVoxelCountsTType = tbb::combinable<std::vector<uint64>>;
 /**
  * @brief Defines thread-local feature volume sums.
  */
-using FeatureVolumesT = tbb::combinable<std::vector<float64>>;
+using FeatureVolumesTType = tbb::combinable<std::vector<float64>>;
 
 /**
  * @class ImageSummationImpl
@@ -55,7 +55,7 @@ public:
    * @param shouldCancel Signals cancellation between Z slices.
    * @pre All arguments outlive the worker execution.
    */
-  ImageSummationImpl(FeatureVoxelCountsT& voxelCounts, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const std::atomic_bool& shouldCancel)
+  ImageSummationImpl(FeatureVoxelCountsTType& voxelCounts, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const std::atomic_bool& shouldCancel)
   : m_VoxelCounts(voxelCounts)
   , m_Dims(dims)
   , m_FeatureIds(featureIds)
@@ -100,7 +100,7 @@ public:
   }
 
 private:
-  FeatureVoxelCountsT& m_VoxelCounts;
+  FeatureVoxelCountsTType& m_VoxelCounts;
   const SizeVec3& m_Dims;
   const Int32AbstractDataStore& m_FeatureIds;
   const std::atomic_bool& m_ShouldCancel;
@@ -133,7 +133,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
 
   messageHandler.sendInfoMessage("Finding Voxel Counts...");
   // Count each feature with thread-local Z-slice accumulators.
-  FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
+  FeatureVoxelCountsTType threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
   // A nonresident Feature ID store disables parallel scheduling. This does not pin or synchronize access.
@@ -253,7 +253,7 @@ public:
    * @param shouldCancel Signals cancellation between Z slices.
    * @pre All arguments outlive the worker execution.
    */
-  RectGridSummationImpl(FeatureVoxelCountsT& voxelCounts, FeatureVolumesT& volumes, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes,
+  RectGridSummationImpl(FeatureVoxelCountsTType& voxelCounts, FeatureVolumesTType& volumes, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes,
                         const std::atomic_bool& shouldCancel)
   : m_VoxelCounts(voxelCounts)
   , m_Volumes(volumes)
@@ -311,8 +311,8 @@ public:
   }
 
 private:
-  FeatureVoxelCountsT& m_VoxelCounts;
-  FeatureVolumesT& m_Volumes;
+  FeatureVoxelCountsTType& m_VoxelCounts;
+  FeatureVolumesTType& m_Volumes;
   const SizeVec3& m_Dims;
   const Int32AbstractDataStore& m_FeatureIds;
   const Float32AbstractDataStore& m_ElemSizes;
@@ -356,8 +356,8 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
 
   messageHandler.sendInfoMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
   // Count each feature and sum element volumes with thread-local Z ranges.
-  FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
-  FeatureVolumesT threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
+  FeatureVoxelCountsTType threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
+  FeatureVolumesTType threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
   // The scheduling guard includes Feature IDs only. It does not pin or synchronize element sizes.

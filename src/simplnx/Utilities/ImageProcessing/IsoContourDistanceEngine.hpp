@@ -177,14 +177,14 @@ template <class T, class Gather>
 inline void IsoContourRow(const T* previousPlaneRow, const T* previousRow, const T* row, const T* nextRow, const T* nextPlaneRow, float32* output, usize nx, IsoRealType<T> levelSet, float32 farValue,
                           float32 negativeFar, Gather&& gather)
 {
-  using RealT = IsoRealType<T>;
+  using RealTType = IsoRealType<T>;
   const usize lastX = nx - 1;
-  const auto classify = [levelSet](T value) -> uint32 { return static_cast<uint32>((static_cast<RealT>(value) - levelSet) > RealT{0}); };
+  const auto classify = [levelSet](T value) -> uint32 { return static_cast<uint32>((static_cast<RealTType>(value) - levelSet) > RealTType{0}); };
   for(usize x = 0; x < nx; ++x)
   {
     const usize previousX = x > 0 ? x - 1 : 0;
     const usize nextX = x < lastX ? x + 1 : lastX;
-    const RealT centerValue = static_cast<RealT>(row[x]);
+    const RealTType centerValue = static_cast<RealTType>(row[x]);
     const uint32 centerClass = classify(row[x]);
     uint32 classDifference = centerClass ^ classify(row[previousX]);
     classDifference |= centerClass ^ classify(row[nextX]);
@@ -385,23 +385,23 @@ public:
     const double sp[3] = {static_cast<double>(m_Spacing[0]), static_cast<double>(m_Spacing[1]), static_cast<double>(m_Spacing[2])};
     const float32 negFar = -m_FarValue;
 
-    const auto* inMemoryInputStore = dynamic_cast<const DataStore<T>*>(&m_In);
-    auto* inMemoryOutputStore = dynamic_cast<DataStore<float32>*>(&m_Out);
+    const auto* inMemoryInputStorePtr = dynamic_cast<const DataStore<T>*>(&m_In);
+    auto* inMemoryOutputStorePtr = dynamic_cast<DataStore<float32>*>(&m_Out);
     const bool usesOutOfCoreStore = m_In.getStoreType() == IDataStore::StoreType::OutOfCore || m_Out.getStoreType() == IDataStore::StoreType::OutOfCore;
     const bool forceSlabs = ForceOocAlgorithm() && !ForceInCoreAlgorithm();
-    const bool direct = inMemoryInputStore != nullptr && inMemoryOutputStore != nullptr && !usesOutOfCoreStore && !forceSlabs;
+    const bool direct = inMemoryInputStorePtr != nullptr && inMemoryOutputStorePtr != nullptr && !usesOutOfCoreStore && !forceSlabs;
     RecordAlgorithmPathExecution(direct ? AlgorithmPath::InCore : AlgorithmPath::OutOfCore, usesOutOfCoreStore);
     if(direct)
     {
-      return RunResident(inMemoryInputStore->createSpan(), inMemoryOutputStore->createSpan(), nX, nY, nZ, slice, sp, negFar);
+      return runResident(inMemoryInputStorePtr->createSpan(), inMemoryOutputStorePtr->createSpan(), nX, nY, nZ, slice, sp, negFar);
     }
 
     if(nZ == 1)
     {
-      return RunBounded2D(static_cast<usize>(nX), static_cast<usize>(nY), sp, negFar);
+      return runBounded2D(static_cast<usize>(nX), static_cast<usize>(nY), sp, negFar);
     }
 
-    return RunSlabs(nX, nY, nZ, slice, sp, negFar);
+    return runSlabs(nX, nY, nZ, slice, sp, negFar);
   }
 
 private:
@@ -421,7 +421,7 @@ private:
    * Each slab uses at most two bulk reads because its new plane range can wrap once.
    * Each completed slab uses one bulk output write. A successful run reads every input plane once.
    */
-  Result<> RunSlabs(int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
+  Result<> runSlabs(int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
   {
     auto usefulResult = detail::IsoContourSlabUsefulBytes<T>(m_Dims);
     if(usefulResult.invalid())
@@ -511,12 +511,12 @@ private:
           const usize nextZ = std::min(zIndex + 1, zCount - 1);
           const usize previousY = yIndex > 0 ? yIndex - 1 : 0;
           const usize nextY = std::min(yIndex + 1, yCount - 1);
-          const T* previousPlaneRow = input.get() + (previousZ % plan.inputPlanes) * slice + yIndex * xCount;
-          const T* previousRow = input.get() + (zIndex % plan.inputPlanes) * slice + previousY * xCount;
-          const T* row = input.get() + (zIndex % plan.inputPlanes) * slice + yIndex * xCount;
-          const T* nextRow = input.get() + (zIndex % plan.inputPlanes) * slice + nextY * xCount;
-          const T* nextPlaneRow = input.get() + (nextZ % plan.inputPlanes) * slice + yIndex * xCount;
-          float32* outputRow = output.get() + localZ * slice + yIndex * xCount;
+          const T* previousPlaneRowPtr = input.get() + (previousZ % plan.inputPlanes) * slice + yIndex * xCount;
+          const T* previousRowPtr = input.get() + (zIndex % plan.inputPlanes) * slice + previousY * xCount;
+          const T* rowPtr = input.get() + (zIndex % plan.inputPlanes) * slice + yIndex * xCount;
+          const T* nextRowPtr = input.get() + (zIndex % plan.inputPlanes) * slice + nextY * xCount;
+          const T* nextPlaneRowPtr = input.get() + (nextZ % plan.inputPlanes) * slice + yIndex * xCount;
+          float32* outputRowPtr = output.get() + localZ * slice + yIndex * xCount;
           const int64 y = static_cast<int64>(yIndex);
           const int64 z = static_cast<int64>(zIndex);
           auto gather = [&](usize xIndex) {
@@ -533,9 +533,9 @@ private:
               const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nZ - 1));
               return static_cast<float32>(input[(sampleZ % plan.inputPlanes) * slice + sampleY * xCount + sampleX]);
             };
-            return Evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
+            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
           };
-          detail::IsoContourRow(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, outputRow, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
+          detail::IsoContourRow(previousPlaneRowPtr, previousRowPtr, rowPtr, nextRowPtr, nextPlaneRowPtr, outputRowPtr, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
           if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)
           {
             sendThreadSafeProgress(16);
@@ -582,7 +582,7 @@ private:
    * The algorithm checks cancellation between plane groups and once per row inside each group.
    * The algorithm never checks cancellation per voxel.
    */
-  Result<> RunResident(nonstd::span<const T> input, nonstd::span<float32> output, int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
+  Result<> runResident(nonstd::span<const T> input, nonstd::span<float32> output, int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
   {
     auto clampCoordinate = [](int64 value, int64 high) { return value < 0 ? int64{0} : (value > high ? high : value); };
     auto sampleReal = [&](int64 x, int64 y, int64 z) -> RealT {
@@ -628,21 +628,21 @@ private:
           const usize nextZ = std::min(zIndex + 1, zCount - 1);
           const usize previousY = yIndex > 0 ? yIndex - 1 : 0;
           const usize nextY = std::min(yIndex + 1, yCount - 1);
-          const T* previousPlaneRow = input.data() + previousZ * slice + yIndex * xCount;
-          const T* previousRow = input.data() + zIndex * slice + previousY * xCount;
-          const T* row = input.data() + zIndex * slice + yIndex * xCount;
-          const T* nextRow = input.data() + zIndex * slice + nextY * xCount;
-          const T* nextPlaneRow = input.data() + nextZ * slice + yIndex * xCount;
-          float32* outputRow = output.data() + zIndex * slice + yIndex * xCount;
+          const T* previousPlaneRowPtr = input.data() + previousZ * slice + yIndex * xCount;
+          const T* previousRowPtr = input.data() + zIndex * slice + previousY * xCount;
+          const T* rowPtr = input.data() + zIndex * slice + yIndex * xCount;
+          const T* nextRowPtr = input.data() + zIndex * slice + nextY * xCount;
+          const T* nextPlaneRowPtr = input.data() + nextZ * slice + yIndex * xCount;
+          float32* outputRowPtr = output.data() + zIndex * slice + yIndex * xCount;
           const int64 y = static_cast<int64>(yIndex);
           const int64 z = static_cast<int64>(zIndex);
           auto gather = [&](usize xIndex) {
             const int64 x = static_cast<int64>(xIndex);
             auto relativeReal = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> RealT { return sampleReal(x + deltaX, y + deltaY, z + deltaZ); };
             auto relativeFloat = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> float32 { return sampleFloat(x + deltaX, y + deltaY, z + deltaZ); };
-            return Evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
+            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
           };
-          detail::IsoContourRow(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, outputRow, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
+          detail::IsoContourRow(previousPlaneRowPtr, previousRowPtr, rowPtr, nextRowPtr, nextPlaneRowPtr, outputRowPtr, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
           if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)
           {
             sendThreadSafeProgress(16);
@@ -669,7 +669,7 @@ private:
   }
 
   template <class SampleReal, class SampleFloat>
-  float32 Evaluate2DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 nx, int64 ny, const double spacing[3], float32 negativeFar) const
+  float32 evaluate2DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 nx, int64 ny, const double spacing[3], float32 negativeFar) const
   {
     const RealT centerValue = sampleReal(0, 0);
     float32 best = centerValue > m_LevelSet ? m_FarValue : (centerValue < m_LevelSet ? negativeFar : 0.0f);
@@ -766,7 +766,7 @@ private:
    * Relative samplers let resident and slab routes use the same kernel.
    */
   template <class SampleReal, class SampleFloat>
-  float32 Evaluate3DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 z, int64 nx, int64 ny, int64 nz, const double spacing[3], float32 negativeFar) const
+  float32 evaluate3DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 z, int64 nx, int64 ny, int64 nz, const double spacing[3], float32 negativeFar) const
   {
     const RealT centerValue = sampleReal(0, 0, 0);
     float32 best = centerValue > m_LevelSet ? m_FarValue : (centerValue < m_LevelSet ? negativeFar : 0.0f);
@@ -845,7 +845,7 @@ private:
     return best;
   }
 
-  Result<> RunBounded2DFullWidth(usize nx, usize ny, usize coreRows, const double spacing[3], float32 negativeFar)
+  Result<> runBounded2DFullWidth(usize nx, usize ny, usize coreRows, const double spacing[3], float32 negativeFar)
   {
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
@@ -887,7 +887,7 @@ private:
             const int64 sampleY = std::clamp<int64>(globalY + deltaY, 0, static_cast<int64>(ny) - 1);
             return static_cast<float32>(inputBlock[(static_cast<usize>(sampleY) - loadBegin) * nx + static_cast<usize>(sampleX)]);
           };
-          outputBlock[localIndex] = Evaluate2DGather(sampleReal, sampleFloat, x, globalY, static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
+          outputBlock[localIndex] = evaluate2DGather(sampleReal, sampleFloat, x, globalY, static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
@@ -903,7 +903,7 @@ private:
     return {};
   }
 
-  Result<> RunBounded2DTiled(usize nx, usize ny, usize coreCols, const double spacing[3], float32 negativeFar)
+  Result<> runBounded2DTiled(usize nx, usize ny, usize coreCols, const double spacing[3], float32 negativeFar)
   {
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
@@ -948,7 +948,7 @@ private:
               const usize inputRow = static_cast<usize>(deltaY + 2);
               return static_cast<float32>(inputWindow[inputRow * inputStride + sampleX - haloBegin]);
             };
-            output[localX] = Evaluate2DGather(sampleReal, sampleFloat, globalX, static_cast<int64>(y), static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
+            output[localX] = evaluate2DGather(sampleReal, sampleFloat, globalX, static_cast<int64>(y), static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
           }
         };
         ParallelDataAlgorithm parallelAlgorithm;
@@ -965,7 +965,7 @@ private:
     return {};
   }
 
-  Result<> RunBounded2D(usize nx, usize ny, const double spacing[3], float32 negativeFar)
+  Result<> runBounded2D(usize nx, usize ny, const double spacing[3], float32 negativeFar)
   {
     const detail::IsoContour2DBufferPlan plan = detail::BuildIsoContour2DBufferPlan(nx, ny, sizeof(T), m_ResidentLimit2D);
     if(plan.overflow)
@@ -986,9 +986,9 @@ private:
       {
         blockRows = (blockRows / (*outputChunkShape)[1]) * (*outputChunkShape)[1];
       }
-      return RunBounded2DFullWidth(nx, ny, blockRows, spacing, negativeFar);
+      return runBounded2DFullWidth(nx, ny, blockRows, spacing, negativeFar);
     }
-    return RunBounded2DTiled(nx, ny, plan.coreCols, spacing, negativeFar);
+    return runBounded2DTiled(nx, ny, plan.coreCols, spacing, negativeFar);
   }
 
   const AbstractDataStore<T>& m_In;

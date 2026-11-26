@@ -107,10 +107,10 @@ Result<> CropVertexGeometry::operator()()
   {
     DataPath destArrayPath(croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
 
-    const auto* srcArray = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* destArray = m_DataStructure.getDataAs<IDataArray>(destArrayPath);
+    const auto* srcArrayPtr = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
+    auto* destArrayPtr = m_DataStructure.getDataAs<IDataArray>(destArrayPath);
 
-    ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArray->getDataType(), srcArray, destArray, croppedPoints);
+    ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArrayPtr->getDataType(), srcArrayPtr, destArrayPtr, croppedPoints);
   }
 
   return {};

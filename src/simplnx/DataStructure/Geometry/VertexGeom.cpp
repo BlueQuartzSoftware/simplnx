@@ -90,19 +90,19 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 
 Result<> VertexGeom::findElementSizes(bool recalculate)
 {
-  auto* vertexSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
-  if(vertexSizes != nullptr && !recalculate)
+  auto* vertexSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  if(vertexSizesPtr != nullptr && !recalculate)
   {
     return {};
   }
 
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  if(vertexSizes == nullptr)
+  if(vertexSizesPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
-    vertexSizes = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
-    if(vertexSizes == nullptr)
+    vertexSizesPtr = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
+    if(vertexSizesPtr == nullptr)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
@@ -110,7 +110,7 @@ Result<> VertexGeom::findElementSizes(bool recalculate)
     }
   }
 
-  m_ElementSizesId = vertexSizes->getId();
+  m_ElementSizesId = vertexSizesPtr->getId();
 
   // Used to be error code `1`
   return {};

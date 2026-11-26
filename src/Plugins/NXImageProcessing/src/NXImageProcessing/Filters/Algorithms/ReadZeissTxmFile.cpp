@@ -119,20 +119,20 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
   {
     // Create a temporary image geometry so that we can do some calculations on the source data
     DataStructure tmpDs;
-    auto* srcImageGeom = ImageGeom::Create(tmpDs, "srcImageGeom");
-    if(auto result = srcImageGeom->setOrigin(metadata.Origin); result.invalid())
+    auto* srcImageGeomPtr = ImageGeom::Create(tmpDs, "srcImageGeom");
+    if(auto result = srcImageGeomPtr->setOrigin(metadata.Origin); result.invalid())
     {
       return result;
     }
-    srcImageGeom->setDimensions(metadata.Dimensions);
-    if(auto result = srcImageGeom->setSpacing(metadata.Spacing); result.invalid())
+    srcImageGeomPtr->setDimensions(metadata.Dimensions);
+    if(auto result = srcImageGeomPtr->setSpacing(metadata.Spacing); result.invalid())
     {
       return result;
     }
 
     // Convert full source data dimensions to coordinates
-    auto startCoords = srcImageGeom->getCoordsf(xStart, yStart, zStart);
-    auto endCoords = srcImageGeom->getCoordsf(xEnd, yEnd, zEnd);
+    auto startCoords = srcImageGeomPtr->getCoordsf(xStart, yStart, zStart);
+    auto endCoords = srcImageGeomPtr->getCoordsf(xEnd, yEnd, zEnd);
 
     // For each dimension, if cropping, use the physical cropping range.. otherwise if not cropping, use the full dimension coordinates
     FloatVec2Type xBoundPhysical = inputValues->CroppingOptions.cropX ? inputValues->CroppingOptions.xBoundPhysical : FloatVec2Type{startCoords[0], endCoords[0]};
@@ -140,7 +140,7 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
     FloatVec2Type zBoundPhysical = inputValues->CroppingOptions.cropZ ? inputValues->CroppingOptions.zBoundPhysical : FloatVec2Type{startCoords[2], endCoords[2]};
 
     // Convert starting coordinates back to voxels
-    std::optional<usize> result = srcImageGeom->getIndex(xBoundPhysical[0], yBoundPhysical[0], zBoundPhysical[0]);
+    std::optional<usize> result = srcImageGeomPtr->getIndex(xBoundPhysical[0], yBoundPhysical[0], zBoundPhysical[0]);
     if(!result.has_value())
     {
       storage->close();
@@ -154,7 +154,7 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
     zStart = result.value() / (metadata.Dimensions[0] * metadata.Dimensions[1]);
 
     // Convert ending coordinates back to voxels
-    result = srcImageGeom->getIndex(xBoundPhysical[1], yBoundPhysical[1], zBoundPhysical[1]);
+    result = srcImageGeomPtr->getIndex(xBoundPhysical[1], yBoundPhysical[1], zBoundPhysical[1]);
     if(!result.has_value())
     {
       storage->close();

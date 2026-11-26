@@ -78,9 +78,9 @@ inline std::vector<T> AdaptiveHistogramEqualizationOracle(const std::vector<T>& 
   // Gate mirrors the engine's LUT gate: integral T AND the integer gray span within the table-size cap. For the
   // integer types exercised here (uint8/int16/int32) iscale equals the exact integer span, so this float64
   // comparison decides the path identically to the engine's integer arithmetic.
-  constexpr usize kMaxAheLutEntries = usize{1} << 22;                             // must match the engine's cap
-  constexpr float64 kMaxSpan = static_cast<float64>((kMaxAheLutEntries - 1) / 2); // 2*span + 1 <= kMaxAheLutEntries
-  const bool useLut = std::is_integral_v<T> && iscale <= kMaxSpan;
+  constexpr usize k_KMaxAheLutEntries = usize{1} << 22;                             // must match the engine's cap
+  constexpr float64 k_KMaxSpan = static_cast<float64>((k_KMaxAheLutEntries - 1) / 2); // 2*span + 1 <= kMaxAheLutEntries
+  const bool useLut = std::is_integral_v<T> && iscale <= k_KMaxSpan;
 
   std::vector<T> out(in.size());
   for(int64 zi = 0; zi < dimZi; ++zi)
@@ -244,18 +244,18 @@ template <class T>
 inline DataPath BuildAheImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto* arrayPtr = DataArray<T>::Create(ds, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const std::vector<T> pattern = MakeAhePattern<T>(dimX, dimY, dimZ);
   for(usize i = 0; i < pattern.size(); ++i)

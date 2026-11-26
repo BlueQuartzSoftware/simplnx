@@ -102,13 +102,13 @@ protected:
   static Result<> WriteDataObjectImpl(IOClassT* instance, DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter)
   {
     using T = typename IOClassT::data_type;
-    const auto* targetData = dynamic_cast<const T*>(dataObject);
-    if(targetData == nullptr)
+    const auto* targetDataPtr = dynamic_cast<const T*>(dataObject);
+    if(targetDataPtr == nullptr)
     {
       return MakeErrorResult(-800, "Provided DataObject could not be cast to the target type");
     }
 
-    return instance->writeData(dataStructureWriter, *targetData, parentWriter, true);
+    return instance->writeData(dataStructureWriter, *targetDataPtr, parentWriter, true);
   }
 };
 } // namespace HDF5

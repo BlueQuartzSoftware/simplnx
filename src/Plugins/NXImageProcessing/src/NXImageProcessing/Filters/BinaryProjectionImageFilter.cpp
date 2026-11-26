@@ -41,8 +41,8 @@ constexpr int32 k_BinaryValueTruncated = -8352;
  */
 struct BinaryIntegerParamGuard
 {
-  nx::core::float64 foregroundValue;
-  nx::core::float64 backgroundValue;
+  nx::core::float64 foreground_value;
+  nx::core::float64 background_value;
 
   template <class T>
   nx::core::Result<> operator()() const
@@ -50,7 +50,7 @@ struct BinaryIntegerParamGuard
     using nx::core::MakeErrorResult;
     using nx::core::Warning;
     nx::core::Result<> result;
-    const std::array<std::pair<const char*, nx::core::float64>, 2> params{{{"Foreground Value", foregroundValue}, {"Background Value", backgroundValue}}};
+    const std::array<std::pair<const char*, nx::core::float64>, 2> params{{{"Foreground Value", foreground_value}, {"Background Value", background_value}}};
     const std::string typeName = nx::core::DataTypeToString(nx::core::GetDataType<T>());
     const auto lowest = static_cast<nx::core::float64>(std::numeric_limits<T>::lowest());
     const auto highest = static_cast<nx::core::float64>(std::numeric_limits<T>::max());
@@ -184,7 +184,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   if(ImageProcessing::GetIntegerScalarTypes().contains(inputType))
   {
-    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foregroundValue = foregroundValue, .backgroundValue = backgroundValue});
+    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foreground_value = foregroundValue, .background_value = backgroundValue});
     if(paramGuard.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};

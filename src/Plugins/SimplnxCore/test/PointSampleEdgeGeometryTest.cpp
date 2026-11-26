@@ -43,7 +43,7 @@ const DataPath k_SampledVertexAMPath = k_SampledVertexGeomPath.createChildPath(V
 const DataPath k_ExemplarySampledVertexGeomPath = DataPath({"Exemplary Sampled Vertex Geometry"});
 
 template <typename T>
-DataArray<T>& createFixtureArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId)
+DataArray<T>& CreateFixtureArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId)
 {
   auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
   REQUIRE((store != nullptr));
@@ -52,7 +52,7 @@ DataArray<T>& createFixtureArray(DataStructure& dataStructure, const DataPath& p
   return *arrayPtr;
 }
 
-void requireArrayStorage(const IDataArray& array, bool outOfCore)
+void RequireArrayStorage(const IDataArray& array, bool outOfCore)
 {
   const auto expectedStore = outOfCore ? IDataStore::StoreType::OutOfCore : IDataStore::StoreType::InMemory;
   REQUIRE((array.getIDataStoreRef().getStoreType() == expectedStore));
@@ -62,7 +62,7 @@ void requireArrayStorage(const IDataArray& array, bool outOfCore)
   }
 }
 
-void requireEndpointDistances(const EdgeGeom& inputGeom, const VertexGeom& outputGeom, const UInt64Array& edgeIds, const Float32Array& distances)
+void RequireEndpointDistances(const EdgeGeom& inputGeom, const VertexGeom& outputGeom, const UInt64Array& edgeIds, const Float32Array& distances)
 {
   const auto& inputVertices = inputGeom.getVerticesRef();
   const auto& edges = inputGeom.getEdgesRef();
@@ -92,11 +92,11 @@ void requireEndpointDistances(const EdgeGeom& inputGeom, const VertexGeom& outpu
   }
 }
 
-void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, const std::array<float64, 3>& direction)
+void RequireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, const std::array<float64, 3>& direction)
 {
-  constexpr std::array<float64, 3> lengths{2.5, 0.1, 2.6};
-  constexpr std::array<usize, 3> sampleCounts{11, 1, 11};
-  constexpr std::array<float64, 3> start{1.0, -2.0, 3.0};
+  constexpr std::array<float64, 3> k_Lengths{2.5, 0.1, 2.6};
+  constexpr std::array<usize, 3> k_SampleCounts{11, 1, 11};
+  constexpr std::array<float64, 3> k_Start{1.0, -2.0, 3.0};
   const DataPath inputPath{{"Input Edges"}};
   const DataPath attributePath = inputPath.createChildPath(EdgeGeom::k_EdgeAttributeMatrixName).createChildPath("Attributes");
   DataStructure dataStructure;
@@ -106,9 +106,9 @@ void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   auto* edgeAmPtr = AttributeMatrix::Create(dataStructure, EdgeGeom::k_EdgeAttributeMatrixName, {3}, geomPtr->getId());
   REQUIRE((edgeAmPtr != nullptr));
   geomPtr->setEdgeAttributeMatrix(*edgeAmPtr);
-  auto& inputVertices = createFixtureArray<float32>(dataStructure, inputPath.createChildPath(EdgeGeom::k_SharedVertexListName), {6}, {3}, geomPtr->getId());
-  auto& inputEdges = createFixtureArray<IGeometry::MeshIndexType>(dataStructure, inputPath.createChildPath(EdgeGeom::k_SharedEdgeListName), {3}, {2}, geomPtr->getId());
-  auto& inputAttributes = createFixtureArray<int32>(dataStructure, attributePath, {3}, {2}, edgeAmPtr->getId());
+  auto& inputVertices = CreateFixtureArray<float32>(dataStructure, inputPath.createChildPath(EdgeGeom::k_SharedVertexListName), {6}, {3}, geomPtr->getId());
+  auto& inputEdges = CreateFixtureArray<IGeometry::MeshIndexType>(dataStructure, inputPath.createChildPath(EdgeGeom::k_SharedEdgeListName), {3}, {2}, geomPtr->getId());
+  auto& inputAttributes = CreateFixtureArray<int32>(dataStructure, attributePath, {3}, {2}, edgeAmPtr->getId());
   geomPtr->setVertices(inputVertices);
   geomPtr->setEdgeList(inputEdges);
   for(usize edge = 0; edge < 3; ++edge)
@@ -119,13 +119,13 @@ void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
       inputAttributes[(2 * edge) + endpoint] = 100 + static_cast<int32>((10 * edge) + endpoint);
       for(usize component = 0; component < 3; ++component)
       {
-        inputVertices[(6 * edge) + (3 * endpoint) + component] = static_cast<float32>(start.at(component) + (static_cast<float64>(endpoint) * lengths.at(edge) * direction.at(component)));
+        inputVertices[(6 * edge) + (3 * endpoint) + component] = static_cast<float32>(k_Start.at(component) + (static_cast<float64>(endpoint) * k_Lengths.at(edge) * direction.at(component)));
       }
     }
   }
-  requireArrayStorage(inputVertices, outOfCore);
-  requireArrayStorage(inputEdges, outOfCore);
-  requireArrayStorage(inputAttributes, outOfCore);
+  RequireArrayStorage(inputVertices, outOfCore);
+  RequireArrayStorage(inputEdges, outOfCore);
+  RequireArrayStorage(inputAttributes, outOfCore);
 
   const PointSampleEdgeGeometryFilter filter;
   Arguments args;
@@ -146,9 +146,9 @@ void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   const auto& vertices = outputGeom.getVerticesRef();
   const auto& edgeIds = dataStructure.getDataRefAs<UInt64Array>(k_SampledVertexAMPath.createChildPath("Edge Ids"));
   const auto& attributes = dataStructure.getDataRefAs<Int32Array>(k_SampledVertexAMPath.createChildPath("Attributes"));
-  requireArrayStorage(vertices, outOfCore);
-  requireArrayStorage(edgeIds, outOfCore);
-  requireArrayStorage(attributes, outOfCore);
+  RequireArrayStorage(vertices, outOfCore);
+  RequireArrayStorage(edgeIds, outOfCore);
+  RequireArrayStorage(attributes, outOfCore);
   REQUIRE((outputGeom.getNumberOfVertices() == 23));
   REQUIRE((edgeIds.getNumberOfTuples() == 23));
   REQUIRE((attributes.getNumberOfTuples() == 23));
@@ -156,14 +156,14 @@ void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   usize sample = 0;
   for(usize edge = 0; edge < 3; ++edge)
   {
-    for(usize localSample = 0; localSample < sampleCounts.at(edge); ++localSample, ++sample)
+    for(usize localSample = 0; localSample < k_SampleCounts.at(edge); ++localSample, ++sample)
     {
       CAPTURE(edge, localSample);
       REQUIRE((edgeIds[sample] == edge));
-      const float64 fraction = (static_cast<float64>(localSample) + 0.5) / static_cast<float64>(sampleCounts.at(edge));
+      const float64 fraction = (static_cast<float64>(localSample) + 0.5) / static_cast<float64>(k_SampleCounts.at(edge));
       for(usize component = 0; component < 3; ++component)
       {
-        const float64 expectedCoordinate = start.at(component) + (fraction * lengths.at(edge) * direction.at(component));
+        const float64 expectedCoordinate = k_Start.at(component) + (fraction * k_Lengths.at(edge) * direction.at(component));
         REQUIRE((vertices[(3 * sample) + component] == Approx(expectedCoordinate).margin(2.0e-6)));
       }
       for(usize component = 0; component < 2; ++component)
@@ -177,7 +177,7 @@ void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
       REQUIRE((inputAttributes[(2 * edge) + endpoint] == 100 + static_cast<int32>((10 * edge) + endpoint)));
       for(usize component = 0; component < 3; ++component)
       {
-        const float32 originalCoordinate = static_cast<float32>(start.at(component) + (static_cast<float64>(endpoint) * lengths.at(edge) * direction.at(component)));
+        const float32 originalCoordinate = static_cast<float32>(k_Start.at(component) + (static_cast<float64>(endpoint) * k_Lengths.at(edge) * direction.at(component)));
         REQUIRE((inputVertices[(6 * edge) + (3 * endpoint) + component] == originalCoordinate));
       }
     }
@@ -187,8 +187,8 @@ void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(distancePath));
     const auto& distances = dataStructure.getDataRefAs<Float32Array>(distancePath);
-    requireArrayStorage(distances, outOfCore);
-    requireEndpointDistances(*geomPtr, outputGeom, edgeIds, distances);
+    RequireArrayStorage(distances, outOfCore);
+    RequireEndpointDistances(*geomPtr, outputGeom, edgeIds, distances);
   }
   else
   {
@@ -197,15 +197,15 @@ void requireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-void requireEndpointDistanceVariants(bool outOfCore)
+void RequireEndpointDistanceVariants(bool outOfCore)
 {
-  constexpr std::array<std::array<float64, 3>, 5> directions{{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {-1.0, 0.0, 0.0}, {3.0 / 13.0, 4.0 / 13.0, 12.0 / 13.0}}};
-  for(const auto& direction : directions)
+  constexpr std::array<std::array<float64, 3>, 5> k_Directions{{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {-1.0, 0.0, 0.0}, {3.0 / 13.0, 4.0 / 13.0, 12.0 / 13.0}}};
+  for(const auto& direction : k_Directions)
   {
     DYNAMIC_SECTION("Direction " << direction[0] << ", " << direction[1] << ", " << direction[2])
     {
-      requireEndpointDistanceFixture(outOfCore, false, direction);
-      requireEndpointDistanceFixture(outOfCore, true, direction);
+      RequireEndpointDistanceFixture(outOfCore, false, direction);
+      RequireEndpointDistanceFixture(outOfCore, true, direction);
     }
   }
 }
@@ -215,14 +215,14 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Distance from endpoint", 
 {
   REQUIRE((Application::GetOrCreateInstance() != nullptr));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
-  requireEndpointDistanceVariants(false);
+  RequireEndpointDistanceVariants(false);
 }
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: real-store distance from endpoint", "[SimplnxCore][PointSampleEdgeGeometryFilter][.OocStoreContract]")
 {
   REQUIRE((Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
-  requireEndpointDistanceVariants(true);
+  RequireEndpointDistanceVariants(true);
 }
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", "[SimplnxCore][PointSampleEdgeGeometryFilter]")
@@ -257,7 +257,7 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(k_SampledVertexGeomPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(k_SampledVertexAMPath.createChildPath("Edge Ids")));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SampledVertexAMPath.createChildPath("Cumulative Sample Distance")));
-  requireEndpointDistances(dataStructure.getDataRefAs<EdgeGeom>(k_ScanVectorGeometryPath), dataStructure.getDataRefAs<VertexGeom>(k_SampledVertexGeomPath),
+  RequireEndpointDistances(dataStructure.getDataRefAs<EdgeGeom>(k_ScanVectorGeometryPath), dataStructure.getDataRefAs<VertexGeom>(k_SampledVertexGeomPath),
                            dataStructure.getDataRefAs<UInt64Array>(k_SampledVertexAMPath.createChildPath("Edge Ids")),
                            dataStructure.getDataRefAs<Float32Array>(k_SampledVertexAMPath.createChildPath("Cumulative Sample Distance")));
   // The archive's distance array uses a different origin. Compare all other arrays with the unchanged archive.

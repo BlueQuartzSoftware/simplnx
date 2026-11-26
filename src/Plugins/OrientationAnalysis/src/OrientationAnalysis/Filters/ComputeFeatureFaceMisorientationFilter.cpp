@@ -116,15 +116,15 @@ IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(c
                 MakeErrorResult<OutputActions>(-98410, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto* const faceLabels = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
-  if(faceLabels == nullptr)
+  const auto* const faceLabelsPtr = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
+  if(faceLabelsPtr == nullptr)
   {
     return MakePreflightErrorResult(-98411, fmt::format("Could not find the face labels data array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()));
   }
 
   {
     DataPath faceMisorientationColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshFaceMisorientationColorsArrayNameValue);
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{1}, faceMisorientationColorsArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsPtr->getTupleShape(), std::vector<usize>{1}, faceMisorientationColorsArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 

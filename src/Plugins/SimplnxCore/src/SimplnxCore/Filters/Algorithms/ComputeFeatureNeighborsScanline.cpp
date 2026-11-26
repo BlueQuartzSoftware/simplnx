@@ -29,8 +29,8 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListPath);
   auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->SharedSurfaceAreaListPath);
 
-  auto* boundaryCellsStore = m_InputValues->StoreBoundaryCells ? m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore() : nullptr;
-  auto* surfaceFeatures = m_InputValues->StoreSurfaceFeatures ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore() : nullptr;
+  auto* boundaryCellsStorePtr = m_InputValues->StoreBoundaryCells ? m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore() : nullptr;
+  auto* surfaceFeaturesPtr = m_InputValues->StoreSurfaceFeatures ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore() : nullptr;
 
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
@@ -59,7 +59,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   std::vector<int32> curSlice(sliceSize);
   std::vector<int32> nextSlice(sliceSize);
   std::vector<int8> boundaryCellsSlice;
-  if(boundaryCellsStore != nullptr)
+  if(boundaryCellsStorePtr != nullptr)
   {
     boundaryCellsSlice.resize(sliceSize, 0);
   }
@@ -85,7 +85,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
       return {};
     }
 
-    if(boundaryCellsStore != nullptr)
+    if(boundaryCellsStorePtr != nullptr)
     {
       std::fill(boundaryCellsSlice.begin(), boundaryCellsSlice.end(), static_cast<int8>(0));
     }
@@ -105,7 +105,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
         if(feature > 0 && static_cast<usize>(feature) < totalFeatures)
         {
           // A feature is on the surface at a non-degenerate geometry face. A single voxel is surface.
-          if(surfaceFeatures != nullptr)
+          if(surfaceFeaturesPtr != nullptr)
           {
             bool isBoundary = (dimX == 1 && dimY == 1 && dimZ == 1);
             if(dimX > 1 && (x == 0 || x == dimX - 1))
@@ -122,7 +122,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             }
             if(isBoundary)
             {
-              surfaceFeatures->setValue(feature, true);
+              surfaceFeaturesPtr->setValue(feature, true);
             }
           }
 
@@ -187,16 +187,16 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
           }
         }
 
-        if(boundaryCellsStore != nullptr)
+        if(boundaryCellsStorePtr != nullptr)
         {
           boundaryCellsSlice[localIndex] = numDiffNeighbors;
         }
       }
     }
 
-    if(boundaryCellsStore != nullptr)
+    if(boundaryCellsStorePtr != nullptr)
     {
-      ioResult = boundaryCellsStore->copyFromBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<const int8>(boundaryCellsSlice.data(), sliceSize));
+      ioResult = boundaryCellsStorePtr->copyFromBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<const int8>(boundaryCellsSlice.data(), sliceSize));
       if(ioResult.invalid())
       {
         return ioResult;

@@ -86,7 +86,7 @@ public:
 
   MMCellMapPtr getCellMap() const
   {
-    return m_cellMap;
+    return m_CellMap;
   }
 
   /**
@@ -104,7 +104,7 @@ private:
   // friend class MMGeometryGL;
   // friend class MMGeometryOBJ;
 
-  MMCellMapPtr m_cellMap = nullptr;
+  MMCellMapPtr m_CellMap = nullptr;
   Result<> m_InitializationResult;
 };
 

@@ -215,7 +215,7 @@ public:
   struct [[nodiscard]] ExecuteResult
   {
     Result<> result;
-    std::vector<PreflightValue> outputValues;
+    std::vector<PreflightValue> output_values;
   };
 
   virtual ~IFilter() noexcept;

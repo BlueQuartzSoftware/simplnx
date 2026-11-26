@@ -29,31 +29,31 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppressi
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 9;
-  constexpr usize DY = 9;
-  constexpr usize DZ = 1;
-  constexpr int32 background = 50;
-  constexpr int32 tallBump = 70;    // contrast 20 (>= Height) -> survives, lowered by Height to 60
-  constexpr int32 shallowBump = 55; // contrast 5  (<  Height) -> flattened to background (50)
-  constexpr float64 height = 10.0;
+  constexpr usize k_Dx = 9;
+  constexpr usize k_Dy = 9;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Background = 50;
+  constexpr int32 k_TallBump = 70;    // contrast 20 (>= Height) -> survives, lowered by Height to 60
+  constexpr int32 k_ShallowBump = 55; // contrast 5  (<  Height) -> flattened to background (50)
+  constexpr float64 k_Height = 10.0;
 
-  std::vector<int32> pattern(DX * DY * DZ, background);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = tallBump;    // isolated regional maximum (all face-neighbors are background)
-  pattern[rt::FlatIndex(6, 6, 0, DX, DY)] = shallowBump; // isolated regional maximum, separated from the tall bump by background
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Background);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_TallBump;    // isolated regional maximum (all face-neighbors are background)
+  pattern[rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)] = k_ShallowBump; // isolated regional maximum, separated from the tall bump by background
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   HMaximaImageFilter filter;
-  rt::RunReconstructionFilter<HMaximaImageFilter>(filter, ds, inputPath, rt::HeightParamSetter<HMaximaImageFilter>(), /*fullyConnected=*/false, height);
+  rt::RunReconstructionFilter<HMaximaImageFilter>(filter, ds, inputPath, rt::HeightParamSetter<HMaximaImageFilter>(), /*fullyConnected=*/false, k_Height);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == tallBump - static_cast<int32>(height)); // 70 -> 60 (reduced by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, DX, DY)) == background);                            // 55 -> 50 (shallow maximum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, DX, DY)) == background);                            // neighbor of the tall bump, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, DX, DY)) == background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_TallBump - static_cast<int32>(k_Height)); // 70 -> 60 (reduced by Height)
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                            // 55 -> 50 (shallow maximum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                            // neighbor of the tall bump, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                            // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -69,21 +69,21 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppressi
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  constexpr usize DX = 9;
-  constexpr usize DY = 9;
-  constexpr usize DZ = 1;
-  constexpr int32 background = 50;
-  constexpr int32 tallBump = 70;    // contrast 20 (>= Height) -> survives, lowered by Height to 60
-  constexpr int32 shallowBump = 55; // contrast 5  (<  Height) -> flattened to background (50)
-  constexpr float64 height = 10.0;
+  constexpr usize k_Dx = 9;
+  constexpr usize k_Dy = 9;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Background = 50;
+  constexpr int32 k_TallBump = 70;    // contrast 20 (>= Height) -> survives, lowered by Height to 60
+  constexpr int32 k_ShallowBump = 55; // contrast 5  (<  Height) -> flattened to background (50)
+  constexpr float64 k_Height = 10.0;
 
-  std::vector<int32> pattern(DX * DY * DZ, background);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = tallBump;    // isolated regional maximum (all face-neighbors are background)
-  pattern[rt::FlatIndex(6, 6, 0, DX, DY)] = shallowBump; // isolated regional maximum, separated from the tall bump by background
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Background);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_TallBump;    // isolated regional maximum (all face-neighbors are background)
+  pattern[rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)] = k_ShallowBump; // isolated regional maximum, separated from the tall bump by background
 
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   HMaximaImageFilter filter;
@@ -91,7 +91,7 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppressi
   args.insertOrAssign(HMaximaImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
   args.insertOrAssign(HMaximaImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(HMaximaImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(HMaximaImageFilter::k_Height_Key, std::make_any<float64>(height));
+  args.insertOrAssign(HMaximaImageFilter::k_Height_Key, std::make_any<float64>(k_Height));
 
   auto executeResult = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -100,10 +100,10 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppressi
   auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == tallBump - static_cast<int32>(height)); // 70 -> 60 (reduced by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, DX, DY)) == background);                            // 55 -> 50 (shallow maximum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, DX, DY)) == background);                            // neighbor of the tall bump, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, DX, DY)) == background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_TallBump - static_cast<int32>(k_Height)); // 70 -> 60 (reduced by Height)
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                            // 55 -> 50 (shallow maximum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                            // neighbor of the tall bump, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                            // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -116,12 +116,12 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: Height 0 is the identity", "[N
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12;
-  constexpr usize DY = 12;
-  constexpr usize DZ = 3;
-  const std::vector<int32> pattern = rt::MakeGradientNoisePattern<int32>(DX, DY, DZ);
+  constexpr usize k_Dx = 12;
+  constexpr usize k_Dy = 12;
+  constexpr usize k_Dz = 3;
+  const std::vector<int32> pattern = rt::MakeGradientNoisePattern<int32>(k_Dx, k_Dy, k_Dz);
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, k_Dx, k_Dy, k_Dz, pattern);
 
   HMaximaImageFilter filter;
   rt::RunReconstructionFilter<HMaximaImageFilter>(filter, ds, inputPath, rt::HeightParamSetter<HMaximaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
@@ -148,16 +148,16 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: int8 full-underflow clamps to 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12;
-  constexpr usize DY = 12;
-  constexpr usize DZ = 8;
-  constexpr float64 height = 300.0; // > int8 dynamic range (255) -> every voxel's marker underflows
-  const std::vector<int8> pattern = rt::MakeGradientNoisePattern<int8>(DX, DY, DZ);
+  constexpr usize k_Dx = 12;
+  constexpr usize k_Dy = 12;
+  constexpr usize k_Dz = 8;
+  constexpr float64 k_Height = 300.0; // > int8 dynamic range (255) -> every voxel's marker underflows
+  const std::vector<int8> pattern = rt::MakeGradientNoisePattern<int8>(k_Dx, k_Dy, k_Dz);
 
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int8>(ds, DX, DY, DZ, pattern);
+  const DataPath inputPath = rt::BuildImageFromPattern<int8>(ds, k_Dx, k_Dy, k_Dz, pattern);
   HMaximaImageFilter filter;
-  rt::RunReconstructionFilter<HMaximaImageFilter>(filter, ds, inputPath, rt::HeightParamSetter<HMaximaImageFilter>(), /*fullyConnected=*/false, height);
+  rt::RunReconstructionFilter<HMaximaImageFilter>(filter, ds, inputPath, rt::HeightParamSetter<HMaximaImageFilter>(), /*fullyConnected=*/false, k_Height);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = ds.getDataRefAs<DataArray<int8>>(outputPath).getDataStoreRef();

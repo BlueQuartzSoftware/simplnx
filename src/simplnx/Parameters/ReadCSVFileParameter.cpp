@@ -65,8 +65,8 @@ IParameter::VersionType ReadCSVFileParameter::getVersion() const
 // -----------------------------------------------------------------------------
 nlohmann::json ReadCSVFileParameter::toJsonImpl(const std::any& value) const
 {
-  const auto& ReadCSVData = GetAnyRef<ValueType>(value);
-  nlohmann::json json = ReadCSVData.writeJson();
+  const auto& readCsvData = GetAnyRef<ValueType>(value);
+  nlohmann::json json = readCsvData.writeJson();
   return json;
 }
 

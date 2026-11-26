@@ -88,13 +88,13 @@ bool IsGrayscaleConvertible(DataType type, usize components)
 // Resolves a single tile's geometry + array DataPaths given the montage naming options.
 struct TilePaths
 {
-  DataPath geomPath;
-  DataPath arrayPath;
+  DataPath geom_path;
+  DataPath array_path;
 };
 TilePaths MakeTilePaths(const fiji::FijiTile& tile, bool parentGroup, const std::string& groupName, const std::string& cellAmName, const std::string& arrayName)
 {
   const DataPath geomPath = parentGroup ? DataPath({groupName, tile.imageName}) : DataPath({tile.imageName});
-  return {.geomPath = geomPath, .arrayPath = geomPath.createChildPath(cellAmName).createChildPath(arrayName)};
+  return {.geom_path = geomPath, .array_path = geomPath.createChildPath(cellAmName).createChildPath(arrayName)};
 }
 } // namespace
 
@@ -315,16 +315,16 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
     const std::vector<float32> originVec = {tile.origin[0], tile.origin[1], tile.origin[2]};
     const std::vector<float32> spacingVec = {1.0f, 1.0f, 1.0f};
 
-    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(paths.geomPath, geomDims, originVec, spacingVec, cellAmName, lengthUnit));
+    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(paths.geom_path, geomDims, originVec, spacingVec, cellAmName, lengthUnit));
 
     const DataType arrayType = changeDataType ? destType : md.dataType;
     if(convertToGrayScale && IsGrayscaleConvertible(arrayType, md.numComponents))
     {
-      resultOutputActions.value().appendAction(std::make_unique<CreateMontageGrayscaleArrayAction>(arrayTupleDims, md.numComponents, paths.arrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateMontageGrayscaleArrayAction>(arrayTupleDims, md.numComponents, paths.array_path));
     }
     else
     {
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(arrayType, arrayTupleDims, componentDims, paths.arrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(arrayType, arrayTupleDims, componentDims, paths.array_path));
     }
   }
 
@@ -386,8 +386,8 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
 
     ReadImageInputValues iv;
     iv.inputFilePath = tile.filePath;
-    iv.imageGeometryPath = paths.geomPath;
-    iv.imageDataArrayPath = paths.arrayPath;
+    iv.imageGeometryPath = paths.geom_path;
+    iv.imageDataArrayPath = paths.array_path;
     iv.cellDataName = cellAmName;
     iv.changeOrigin = false; // origin already set by CreateImageGeometryAction; do not let ReadImage move it
     iv.changeSpacing = false;
@@ -403,18 +403,18 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
         messageHandler.sendWarningMessage(fmt::format("|-- Error reading tile ({}): code {} - {}", tile.filePath.filename().string(), error.code, error.message));
       }
       result.warnings().emplace_back(Warning{.code = -35940, .message = fmt::format("Tile '{}' could not be read and was skipped.", tile.filePath.filename().string())});
-      const auto& failedArray = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath);
+      const auto& failedArray = dataStructure.getDataRefAs<IDataArray>(paths.array_path);
       if(convertToGrayScale && IsGrayscaleConvertible(failedArray.getDataType(), failedArray.getNumberOfComponents()))
       {
         const ShapeType tupleShape = failedArray.getIDataStoreRef().getTupleShape();
-        const DeleteDataAction deleteAction(paths.arrayPath);
+        const DeleteDataAction deleteAction(paths.array_path);
         auto deleteResult = deleteAction.apply(dataStructure, IDataAction::Mode::Execute);
         if(deleteResult.invalid())
         {
           return MergeResults(std::move(result), std::move(deleteResult));
         }
         result = MergeResults(std::move(result), std::move(deleteResult));
-        const CreateArrayAction scalarAction(DataType::uint8, tupleShape, {1}, paths.arrayPath, "", "", {}, DataStoreInitializationMode::DeferredZeroFill);
+        const CreateArrayAction scalarAction(DataType::uint8, tupleShape, {1}, paths.array_path, "", "", {}, DataStoreInitializationMode::DeferredZeroFill);
         auto createResult = scalarAction.apply(dataStructure, IDataAction::Mode::Execute);
         if(createResult.invalid())
         {
@@ -428,14 +428,14 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
 
     if(convertToGrayScale)
     {
-      const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath);
+      const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(paths.array_path);
       if(imageArray.getNumberOfComponents() == 1)
       {
         continue;
       }
       if(!IsGrayscaleConvertible(imageArray.getDataType(), imageArray.getNumberOfComponents()))
       {
-        result.warnings().emplace_back(Warning{.code = -35932, .message = fmt::format("Tile array '{}' is not uint8; grayscale conversion skipped.", paths.arrayPath.getTargetName())});
+        result.warnings().emplace_back(Warning{.code = -35932, .message = fmt::format("Tile array '{}' is not uint8; grayscale conversion skipped.", paths.array_path.getTargetName())});
         continue;
       }
 
@@ -443,7 +443,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
       grayscaleInputValues.ConversionAlgorithm = 0;
       grayscaleInputValues.ColorWeights = colorWeights;
       grayscaleInputValues.ColorChannel = 0;
-      grayscaleInputValues.InputDataArrayPaths = {paths.arrayPath};
+      grayscaleInputValues.InputDataArrayPaths = {paths.array_path};
       grayscaleInputValues.OutputArrayPrefix = "gray";
 
       auto grayscalePreflight = PreflightColorToGrayScale(dataStructure, grayscaleInputValues);
@@ -464,9 +464,9 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
       }
 
       // Delete the color array, then rename gray<name> -> <name> so the tile keeps its declared array name.
-      const DataObject::IdType colorId = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath).getId();
+      const DataObject::IdType colorId = dataStructure.getDataRefAs<IDataArray>(paths.array_path).getId();
       dataStructure.removeData(colorId);
-      auto& gray = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath.replaceName("gray" + imageArrayName));
+      auto& gray = dataStructure.getDataRefAs<IDataArray>(paths.array_path.replaceName("gray" + imageArrayName));
       if(!gray.canRename(imageArrayName))
       {
         return MakeErrorResult(-35933, fmt::format("Unable to rename the grayscale array back to '{}'.", imageArrayName));

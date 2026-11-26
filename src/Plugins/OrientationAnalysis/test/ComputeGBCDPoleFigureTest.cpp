@@ -99,10 +99,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
   }
 
   {
-    const DataPath k_GeneratedDataPath = nxPoleFigureSigma3.createChildPath(Constants::k_CellData).createChildPath(k_Sigma3);
-    const DataPath k_ExemplarArrayPath({k_PoleFigureSigma3, k_ExemplarCellData, k_MRD});
+    const DataPath kGeneratedDataPath = nxPoleFigureSigma3.createChildPath(Constants::k_CellData).createChildPath(k_Sigma3);
+    const DataPath kExemplarArrayPath({k_PoleFigureSigma3, k_ExemplarCellData, k_MRD});
 
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, kExemplarArrayPath, kGeneratedDataPath);
   }
 
   // Sigma 9 uses a 39-degree rotation about [110].
@@ -129,10 +129,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
   }
 
   {
-    const DataPath k_GeneratedDataPath = nxPoleFigureSigma9.createChildPath(Constants::k_CellData).createChildPath(k_Sigma9);
-    const DataPath k_ExemplarArrayPath({k_PoleFigureSigma9, k_ExemplarCellData, k_MRD});
+    const DataPath kGeneratedDataPath = nxPoleFigureSigma9.createChildPath(Constants::k_CellData).createChildPath(k_Sigma9);
+    const DataPath kExemplarArrayPath({k_PoleFigureSigma9, k_ExemplarCellData, k_MRD});
 
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, kExemplarArrayPath, kGeneratedDataPath);
   }
 
   // Sigma 11 uses a 50.5-degree rotation about [110].
@@ -159,10 +159,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
   }
 
   {
-    const DataPath k_GeneratedDataPath = nxPoleFigureSigma11.createChildPath(Constants::k_CellData).createChildPath(k_Sigma11);
-    const DataPath k_ExemplarArrayPath({k_PoleFigureSigma11, k_ExemplarCellData, k_MRD});
+    const DataPath kGeneratedDataPath = nxPoleFigureSigma11.createChildPath(Constants::k_CellData).createChildPath(k_Sigma11);
+    const DataPath kExemplarArrayPath({k_PoleFigureSigma11, k_ExemplarCellData, k_MRD});
 
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, kExemplarArrayPath, kGeneratedDataPath);
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -176,7 +176,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: SIMPL Backwards Com
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -189,22 +189,22 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: SIMPL Backwards Com
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeGBCDPoleFigureFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeGBCDPoleFigureFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<int32>(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key) == 5);
@@ -280,10 +280,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid GBCD Compon
   DataStructure dataStructure;
   const DataPath gbcdPath({"Malformed GBCD"});
   const DataPath crystalStructuresPath({"Crystal Structures"});
-  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, componentShape);
-  REQUIRE(gbcd != nullptr);
-  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {2}, {1});
-  REQUIRE(crystalStructures != nullptr);
+  auto* gbcdPtr = UnitTest::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, componentShape);
+  REQUIRE(gbcdPtr != nullptr);
+  auto* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {2}, {1});
+  REQUIRE(crystalStructuresPtr != nullptr);
 
   ComputeGBCDPoleFigureFilter filter;
   Arguments args = filter.getDefaultArguments();

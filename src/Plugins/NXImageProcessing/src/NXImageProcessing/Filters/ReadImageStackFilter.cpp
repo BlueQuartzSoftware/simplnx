@@ -52,9 +52,9 @@ const ActionT* FindFirstActionOfType(const std::vector<nx::core::AnyDataAction>&
 {
   for(const auto& action : actions)
   {
-    if(const auto* typed = dynamic_cast<const ActionT*>(action.get()); typed != nullptr)
+    if(const auto* typedPtr = dynamic_cast<const ActionT*>(action.get()); typedPtr != nullptr)
     {
-      return typed;
+      return typedPtr;
     }
   }
   return nullptr;

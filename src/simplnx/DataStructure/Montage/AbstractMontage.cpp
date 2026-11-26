@@ -36,11 +36,11 @@ DataObject::Type AbstractMontage::getDataObjectType() const
 AbstractMontage::CollectionType AbstractMontage::getGeometries() const
 {
   CollectionType geometries;
-  for(auto* geometry : m_Collection)
+  for(auto* geometryPtr : m_Collection)
   {
-    if(geometry != nullptr)
+    if(geometryPtr != nullptr)
     {
-      geometries.push_back(geometry);
+      geometries.push_back(geometryPtr);
     }
   }
   return geometries;
@@ -54,9 +54,9 @@ usize AbstractMontage::getTileCount() const
 std::vector<std::string> AbstractMontage::getGeometryNames() const
 {
   std::vector<std::string> names;
-  for(auto* geometry : getGeometries())
+  for(auto* geometryPtr : getGeometries())
   {
-    names.push_back(geometry->getName());
+    names.push_back(geometryPtr->getName());
   }
   return names;
 }

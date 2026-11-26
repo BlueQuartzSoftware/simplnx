@@ -123,7 +123,7 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   ThrottledMessageHandler m_Throttle;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   CopyFromArray::ParallelTaskResult m_ParallelResult;
 };
 

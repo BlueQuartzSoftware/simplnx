@@ -97,11 +97,11 @@ std::vector<T> RunCurvatureFlow(const std::vector<T>& field, usize dx, usize dy,
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][FiniteDifferenceEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 512;
-  constexpr usize dimY = 512;
-  constexpr usize dimZ = 32;
+  constexpr usize k_DimX = 512;
+  constexpr usize k_DimY = 512;
+  constexpr usize k_DimZ = 32;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{dimX, dimY, dimZ};
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
 
   auto float64WorkResult = ImageProcessing::detail::CalculateFiniteDifferenceResidentWorkingMemoryBytes<float32, float64>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float64WorkResult);
@@ -113,7 +113,7 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: resident state requires a 
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseFiniteDifferenceResidentState(dims, 1));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFiniteDifferenceResidentState(SizeVec3{dimX, dimY, 1}, 1));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFiniteDifferenceResidentState(SizeVec3{k_DimX, k_DimY, 1}, 1));
   REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFiniteDifferenceResidentState(dims, 0));
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
@@ -142,18 +142,18 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: resident state requires a 
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: real-OOC selector uses resident state only after a complete grant", "[NXImageProcessing][FiniteDifferenceEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
   constexpr uint64 k_PartialBudgetBytes = 16384;
   constexpr uint64 k_CompleteBudgetBytes = 32768;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  std::vector<float32> field(dimX * dimY * dimZ);
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  std::vector<float32> field(k_DimX * k_DimY * k_DimZ);
   for(usize index = 0; index < field.size(); ++index)
   {
-    field[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % dimX));
+    field[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % k_DimX));
   }
-  const std::vector<float32> expected = RunCurvatureFlow(field, dimX, dimY, dimZ, 0.05, 2);
+  const std::vector<float32> expected = RunCurvatureFlow(field, k_DimX, k_DimY, k_DimZ, 0.05, 2);
 
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
@@ -161,8 +161,8 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: real-OOC selector uses res
   auto run = [&](uint64 budgetBytes) {
     manager.clear();
     manager.setBudgetBytes(budgetBytes);
-    OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-    OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, -12345.0f);
+    OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+    OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -12345.0f);
     for(usize index = 0; index < field.size(); ++index)
     {
       inputStore.setValue(index, field[index]);
@@ -184,7 +184,7 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: real-OOC selector uses res
   if(DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
   {
     const auto partialTransfers = run(k_PartialBudgetBytes);
-    REQUIRE(partialTransfers == std::array<usize, 4>{dimZ, dimX * dimY, dimZ, dimX * dimY});
+    REQUIRE(partialTransfers == std::array<usize, 4>{k_DimZ, k_DimX * k_DimY, k_DimZ, k_DimX * k_DimY});
   }
   const auto completeTransfers = run(k_CompleteBudgetBytes);
   REQUIRE(completeTransfers == std::array<usize, 4>{1, field.size(), 1, field.size()});
@@ -193,23 +193,23 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: real-OOC selector uses res
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: final 3D iteration writes output without a scratch round trip", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  std::vector<float32> field(dimX * dimY * dimZ);
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  std::vector<float32> field(k_DimX * k_DimY * k_DimZ);
   for(usize index = 0; index < field.size(); ++index)
   {
-    field[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % dimX));
+    field[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % k_DimX));
   }
-  const std::vector<float32> expected = RunCurvatureFlow(field, dimX, dimY, dimZ, 0.05, 1);
+  const std::vector<float32> expected = RunCurvatureFlow(field, k_DimX, k_DimY, k_DimZ, 0.05, 1);
 
-  DataStore<float32> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  DataStore<float32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, -12345.0f);
+  DataStore<float32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  DataStore<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -12345.0f);
   auto copyFromBufferResult = inputStore.copyFromBuffer(0, field);
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult);
-  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
-  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
+  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
+  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   const ImageProcessing::detail::CurvatureFlowFn function{};
@@ -230,17 +230,17 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: final 3D iteration writes 
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: first anisotropic conductance reduction reuses the input initialization stream", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, -12345.0f);
-  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
-  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
-  for(usize index = 0; index < dimX * dimY * dimZ; ++index)
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -12345.0f);
+  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
+  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
+  for(usize index = 0; index < k_DimX * k_DimY * k_DimZ; ++index)
   {
-    inputStore.setValue(index, static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % dimX)));
+    inputStore.setValue(index, static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % k_DimX)));
   }
 
   std::atomic_bool shouldCancel{false};
@@ -250,27 +250,27 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: first anisotropic conducta
       inputStore, outputStore, firstStore, secondStore, dims, {1.0, 1.0, 1.0}, function, 0.05, /*numberOfIterations=*/1, shouldCancel, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(firstIterationResult);
 
-  REQUIRE(inputStore.readCount() == dimZ);
-  REQUIRE(firstStore.writeCount() == dimZ);
-  REQUIRE(firstStore.readCount() == dimZ);
+  REQUIRE(inputStore.readCount() == k_DimZ);
+  REQUIRE(firstStore.writeCount() == k_DimZ);
+  REQUIRE(firstStore.readCount() == k_DimZ);
   REQUIRE(secondStore.readCount() == 0);
   REQUIRE(secondStore.writeCount() == 0);
-  REQUIRE(outputStore.writeCount() == dimZ);
+  REQUIRE(outputStore.writeCount() == k_DimZ);
 }
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: later anisotropic conductance refresh retains its frozen-state reduction pass", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, -12345.0f);
-  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
-  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
-  for(usize index = 0; index < dimX * dimY * dimZ; ++index)
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  OutOfCoreTransferCountingDataStore<float32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -12345.0f);
+  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
+  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
+  for(usize index = 0; index < k_DimX * k_DimY * k_DimZ; ++index)
   {
-    inputStore.setValue(index, static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % dimX)));
+    inputStore.setValue(index, static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % k_DimX)));
   }
 
   std::atomic_bool shouldCancel{false};
@@ -280,12 +280,12 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: later anisotropic conducta
       inputStore, outputStore, firstStore, secondStore, dims, {1.0, 1.0, 1.0}, function, 0.05, /*numberOfIterations=*/2, shouldCancel, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(secondIterationResult);
 
-  REQUIRE(inputStore.readCount() == dimZ);
-  REQUIRE(firstStore.writeCount() == dimZ);
-  REQUIRE(firstStore.readCount() == dimZ);
-  REQUIRE(secondStore.writeCount() == dimZ);
-  REQUIRE(secondStore.readCount() == 2 * dimZ);
-  REQUIRE(outputStore.writeCount() == dimZ);
+  REQUIRE(inputStore.readCount() == k_DimZ);
+  REQUIRE(firstStore.writeCount() == k_DimZ);
+  REQUIRE(firstStore.readCount() == k_DimZ);
+  REQUIRE(secondStore.writeCount() == k_DimZ);
+  REQUIRE(secondStore.readCount() == 2 * k_DimZ);
+  REQUIRE(outputStore.writeCount() == k_DimZ);
 }
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: interior range excludes exactly the clamped stencil edge", "[NXImageProcessing][FiniteDifferenceEngine]")
@@ -302,18 +302,18 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: interior range excludes ex
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: direct interior neighbors remain bit-exact with clamped edges", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  std::vector<float32> values(dimX * dimY * dimZ);
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  std::vector<float32> values(k_DimX * k_DimY * k_DimZ);
   for(usize index = 0; index < values.size(); ++index)
   {
-    values[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % dimX));
+    values[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % k_DimX));
   }
 
-  DataStore<float32> residentInput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  DataStore<float32> residentOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
+  DataStore<float32> residentInput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  DataStore<float32> residentOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
   auto copyFromBufferResult = residentInput.copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult);
   std::atomic_bool shouldCancel{false};
@@ -323,10 +323,10 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: direct interior neighbors 
       ImageProcessing::ApplyFiniteDifference(residentInput, residentOutput, dims, FloatVec3{1.0f, 1.0f, 1.0f}, function, 0.05, /*numberOfIterations=*/2, shouldCancel, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(residentResult);
 
-  OutOfCoreTransferCountingDataStore<float32> oocInput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  OutOfCoreTransferCountingDataStore<float32> oocOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  OutOfCoreTransferCountingDataStore<float32> firstStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  OutOfCoreTransferCountingDataStore<float32> secondStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float32> oocInput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float32> oocOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float32> firstStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float32> secondStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
   auto copyFromBufferResult2 = oocInput.copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult2);
   const Result<> oocResult = ImageProcessing::ApplyFiniteDifference3DPingPong<float32, ImageProcessing::detail::CurvatureAnisoFn, float32>(
@@ -344,18 +344,18 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: direct interior neighbors 
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: radius-two direct interior neighbors remain bit-exact with clamped edges", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 8;
-  constexpr usize dimZ = 9;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  std::vector<float32> values(dimX * dimY * dimZ);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 8;
+  constexpr usize k_DimZ = 9;
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  std::vector<float32> values(k_DimX * k_DimY * k_DimZ);
   for(usize index = 0; index < values.size(); ++index)
   {
-    values[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % dimX));
+    values[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) + 0.25 * static_cast<double>(index % k_DimX));
   }
 
-  DataStore<float32> residentInput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  DataStore<float32> residentOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
+  DataStore<float32> residentInput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  DataStore<float32> residentOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
   auto copyFromBufferResult = residentInput.copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult);
   std::atomic_bool shouldCancel{false};
@@ -365,10 +365,10 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: radius-two direct interior
       ImageProcessing::ApplyFiniteDifference(residentInput, residentOutput, dims, FloatVec3{1.0f, 1.0f, 1.0f}, function, 0.05, /*numberOfIterations=*/1, shouldCancel, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(residentResult);
 
-  OutOfCoreTransferCountingDataStore<float32> oocInput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  OutOfCoreTransferCountingDataStore<float32> oocOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
-  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
-  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0);
+  OutOfCoreTransferCountingDataStore<float32> oocInput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float32> oocOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+  OutOfCoreTransferCountingDataStore<float64> firstStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
+  OutOfCoreTransferCountingDataStore<float64> secondStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0);
   auto copyFromBufferResult2 = oocInput.copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult2);
   const Result<> oocResult = ImageProcessing::ApplyFiniteDifference3DPingPong<float32, ImageProcessing::detail::MinMaxCurvatureFlowFn, float64>(
@@ -562,23 +562,23 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: validates stores and cance
 
   SECTION("pre-cancel preserves output")
   {
-    constexpr float32 kPoison = -12345.0f;
+    constexpr float32 k_KPoison = -12345.0f;
     DataStore<float32> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, 1.0f);
-    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, kPoison);
+    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_KPoison);
     shouldCancel = true;
     const Result<> result = ApplyFiniteDifference(inputStore, outputStore, SizeVec3{4, 4, 4}, FloatVec3{1.0f, 1.0f, 1.0f}, fn, 0.05, 1, shouldCancel, {});
     REQUIRE(result.valid());
     for(const float32 value : outputStore)
     {
-      REQUIRE(value == kPoison);
+      REQUIRE(value == k_KPoison);
     }
   }
 }
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: mixed storage selects an OOC working format", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  constexpr const char* kInputOocFormat = "HDF5-OOC-Input";
-  constexpr const char* kOutputOocFormat = "HDF5-OOC-Output";
+  constexpr const char* k_KInputOocFormat = "HDF5-OOC-Input";
+  constexpr const char* k_KOutputOocFormat = "HDF5-OOC-Output";
 
   SECTION("resident input and resident output preserve the input format")
   {
@@ -590,23 +590,23 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: mixed storage selects an O
   SECTION("resident input and OOC output select the output format")
   {
     const auto selectedFormat = nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore,
-                                                                                                           IDataStore::StoreType::OutOfCore, kOutputOocFormat);
-    REQUIRE(selectedFormat == kOutputOocFormat);
+                                                                                                           IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
+    REQUIRE(selectedFormat == k_KOutputOocFormat);
   }
 
   SECTION("OOC input and resident output select the input format")
   {
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore);
-    REQUIRE(selectedFormat == kInputOocFormat);
+        nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore);
+    REQUIRE(selectedFormat == k_KInputOocFormat);
   }
 
   SECTION("OOC input takes precedence when both endpoints are OOC")
   {
     // The endpoint suffixes make the precedence observable without registering either backend in this helper-level test.
     const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::OutOfCore, kOutputOocFormat);
-    REQUIRE(selectedFormat == kInputOocFormat);
+        nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
+    REQUIRE(selectedFormat == k_KInputOocFormat);
   }
 }
 
@@ -642,18 +642,18 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: 2D planner bounds row bloc
   REQUIRE(overwide.coreRows == 1);
   REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_FiniteDifference2DResidentLimit);
 
-  constexpr usize kSmallLimit = 5000;
-  const auto forcedTiled = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(100, 8, 2, sizeof(float64), kSmallLimit);
+  constexpr usize k_KSmallLimit = 5000;
+  const auto forcedTiled = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(100, 8, 2, sizeof(float64), k_KSmallLimit);
   REQUIRE(forcedTiled.valid);
   REQUIRE(forcedTiled.coreCols < 100);
   REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= kSmallLimit);
+  REQUIRE(forcedTiled.residentBytes <= k_KSmallLimit);
 
-  constexpr usize kOneColumnTileLimit = ImageProcessing::detail::k_FiniteDifference2DFixedStateBytes + ((1 + 2 * 2) * (1 + 2 * 2) + 1) * sizeof(float64);
-  const auto oneColumnTiles = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(9, 7, 2, sizeof(float64), kOneColumnTileLimit);
+  constexpr usize k_KOneColumnTileLimit = ImageProcessing::detail::k_FiniteDifference2DFixedStateBytes + ((1 + 2 * 2) * (1 + 2 * 2) + 1) * sizeof(float64);
+  const auto oneColumnTiles = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(9, 7, 2, sizeof(float64), k_KOneColumnTileLimit);
   REQUIRE(oneColumnTiles.valid);
   REQUIRE(oneColumnTiles.coreCols == 1);
-  REQUIRE(oneColumnTiles.residentBytes == kOneColumnTileLimit);
+  REQUIRE(oneColumnTiles.residentBytes == k_KOneColumnTileLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(1, 1, 0, sizeof(float32));
   REQUIRE(oneCell.valid);

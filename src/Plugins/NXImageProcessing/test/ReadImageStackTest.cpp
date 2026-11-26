@@ -167,10 +167,10 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
   UnitTest::CompareImageGeometry(dataStructure, ::k_YFlipImageGeomPath, k_YGeneratedImageGeomPath);
 
   // Processed
-  DataPath k_XGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
-  DataPath k_YGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
-  const auto& xGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(k_XGeneratedImageDataPath);
-  const auto& yGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(k_YGeneratedImageDataPath);
+  DataPath kXGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+  DataPath kYGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+  const auto& xGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(kXGeneratedImageDataPath);
+  const auto& yGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(kYGeneratedImageDataPath);
 
   // Exemplar
   const auto& xFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_XFlippedImageDataPath);
@@ -303,10 +303,10 @@ Result<> ExecuteImportImageStack(DataStructure& dataStructure, const DataPath& o
  */
 void VerifyGeometryDimensions(const DataStructure& ds, const DataPath& geomPath, usize expectedX, usize expectedY, usize expectedZ)
 {
-  const auto* geom = ds.getDataAs<ImageGeom>(geomPath);
-  REQUIRE(geom != nullptr);
+  const auto* geomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  REQUIRE(geomPtr != nullptr);
 
-  SizeVec3 dims = geom->getDimensions();
+  SizeVec3 dims = geomPtr->getDimensions();
   REQUIRE(dims[0] == expectedX);
   REQUIRE(dims[1] == expectedY);
   REQUIRE(dims[2] == expectedZ);
@@ -317,11 +317,11 @@ void VerifyGeometryDimensions(const DataStructure& ds, const DataPath& geomPath,
  */
 void VerifyOriginSpacing(const DataStructure& ds, const DataPath& geomPath, const FloatVec3& expectedOrigin, const FloatVec3& expectedSpacing)
 {
-  const auto* geom = ds.getDataAs<ImageGeom>(geomPath);
-  REQUIRE(geom != nullptr);
+  const auto* geomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  REQUIRE(geomPtr != nullptr);
 
-  FloatVec3 origin = geom->getOrigin();
-  FloatVec3 spacing = geom->getSpacing();
+  FloatVec3 origin = geomPtr->getOrigin();
+  FloatVec3 spacing = geomPtr->getSpacing();
 
   REQUIRE(origin[0] == Approx(expectedOrigin[0]));
   REQUIRE(origin[1] == Approx(expectedOrigin[1]));
@@ -583,9 +583,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[NX
 
   // Compare against exemplar
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Baseline_Geometry"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Baseline_Geometry"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Baseline_Geometry", Constants::k_Cell_Data, k_ImageDataName});
@@ -614,9 +614,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[NXImage
   VerifyGeometryDimensions(ds, geomPath, 101, 200, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_X"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_X"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_X", Constants::k_Cell_Data, k_ImageDataName});
@@ -641,9 +641,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[NXImage
   VerifyGeometryDimensions(ds, geomPath, 200, 101, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Y"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Y"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_Y", Constants::k_Cell_Data, k_ImageDataName});
@@ -668,9 +668,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[NXImage
   VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Z"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Z"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_Z", Constants::k_Cell_Data, k_ImageDataName});
@@ -695,9 +695,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[NXImagePro
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XY"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XY"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_XY", Constants::k_Cell_Data, k_ImageDataName});
@@ -722,9 +722,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[NXImagePr
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 2);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XYZ"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XYZ"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_Voxel_XYZ", Constants::k_Cell_Data, k_ImageDataName});
@@ -749,9 +749,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[NXImage
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_XY"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_XY"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_Physical_XY", Constants::k_Cell_Data, k_ImageDataName});
@@ -776,9 +776,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[NXImageP
   VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_Z"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_Z"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_Physical_Z", Constants::k_Cell_Data, k_ImageDataName});
@@ -807,9 +807,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[N
   VerifyGeometryDimensions(ds, geomPath, 100, 100, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Scaling_50"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Scaling_50"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Resample_Scaling_50", Constants::k_Cell_Data, k_ImageDataName});
@@ -834,9 +834,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "
   VerifyGeometryDimensions(ds, geomPath, 128, 128, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Exact_128x128"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Exact_128x128"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Resample_Exact_128x128", Constants::k_Cell_Data, k_ImageDataName});
@@ -868,9 +868,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[NXI
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_Conversion"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_Conversion"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Grayscale_Conversion", Constants::k_Cell_Data, k_ImageDataName});
@@ -899,9 +899,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::FlipY", "[NXImageProcessing]
   VerifyGeometryDimensions(ds, geomPath, 200, 200, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"FlipY_Test"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"FlipY_Test"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"FlipY_Test", Constants::k_Cell_Data, k_ImageDataName});
@@ -931,9 +931,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed",
   VerifyOriginSpacing(ds, geomPath, {110.0f, 120.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_Cell_Data, k_ImageDataName});
@@ -959,9 +959,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed"
   VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_Cell_Data, k_ImageDataName});
@@ -987,9 +987,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_W
   VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed_WithZCrop"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed_WithZCrop"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
@@ -1015,9 +1015,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_
   VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed_WithZCrop"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed_WithZCrop"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
@@ -1046,9 +1046,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", 
   VerifyGeometryDimensions(ds, geomPath, 64, 64, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Resample"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Resample"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_And_Resample", Constants::k_Cell_Data, k_ImageDataName});
@@ -1073,9 +1073,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[NX
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_FlipX"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_FlipX"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
@@ -1100,9 +1100,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", 
   VerifyGeometryDimensions(ds, geomPath, 128, 128, 3);
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_FlipX"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_FlipX"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Resample_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
@@ -1130,9 +1130,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale",
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Grayscale"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Grayscale"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Crop_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
@@ -1160,9 +1160,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Graysca
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_Grayscale"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_Grayscale"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Resample_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
@@ -1190,9 +1190,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip",
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_And_FlipX"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_And_FlipX"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Grayscale_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
@@ -1220,9 +1220,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
-  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Full_Pipeline"}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+  const auto* generatedGeomPtr = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Full_Pipeline"}));
+  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
   DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Full_Pipeline", Constants::k_Cell_Data, k_ImageDataName});
@@ -1249,32 +1249,32 @@ fs::path MultiPageStackOutputDir()
 // size == width*height. Mirrors the libtiff synthesis idiom used in ReadImageTest.cpp/ImageIOTest.cpp.
 void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels, std::optional<double> xResolution = {})
 {
-  TIFF* tif = TIFFOpen(path.string().c_str(), "w");
-  REQUIRE(tif != nullptr);
+  TIFF* tifPtr = TIFFOpen(path.string().c_str(), "w");
+  REQUIRE(tifPtr != nullptr);
   for(const auto& pixels : pagePixels)
   {
     REQUIRE(pixels.size() == static_cast<size_t>(width) * height);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGEWIDTH, width) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGELENGTH, height) != 0);
     if(xResolution.has_value())
     {
-      REQUIRE(TIFFSetField(tif, TIFFTAG_XRESOLUTION, *xResolution) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_XRESOLUTION, *xResolution) != 0);
     }
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 8) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, 0)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_BITSPERSAMPLE, 8) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tifPtr, 0)) != 0);
     for(uint32_t row = 0; row < height; ++row)
     {
       // TIFFWriteScanline takes a non-const void* but does not modify the buffer.
-      REQUIRE(TIFFWriteScanline(tif, const_cast<uint8_t*>(pixels.data() + static_cast<size_t>(row) * width), row, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tifPtr, const_cast<uint8_t*>(pixels.data() + static_cast<size_t>(row) * width), row, 0) >= 0);
     }
-    REQUIRE(TIFFWriteDirectory(tif) != 0);
+    REQUIRE(TIFFWriteDirectory(tifPtr) != 0);
   }
-  TIFFClose(tif);
+  TIFFClose(tifPtr);
 }
 
 enum class NestedImageStackResampling : nx::core::uint8
@@ -1284,12 +1284,12 @@ enum class NestedImageStackResampling : nx::core::uint8
   Scale100
 };
 
-void checkNestedImageStack(NestedImageStackResampling resampling, const SizeVec3& expectedDimensions, bool requireDiskStore)
+void CheckNestedImageStack(NestedImageStackResampling resampling, const SizeVec3& expectedDimensions, bool requireDiskStore)
 {
-  constexpr nx::core::uint32 width = 4;
-  constexpr nx::core::uint32 height = 6;
-  constexpr usize inputSliceSize = static_cast<usize>(width) * height;
-  constexpr std::array<nx::core::uint8, 2> sliceValues = {17, 203};
+  constexpr nx::core::uint32 k_Width = 4;
+  constexpr nx::core::uint32 k_Height = 6;
+  constexpr usize k_InputSliceSize = static_cast<usize>(k_Width) * k_Height;
+  constexpr std::array<nx::core::uint8, 2> k_SliceValues = {17, 203};
   const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("NestedReadImageStack-" + Uuid::GenerateV4().str());
   REQUIRE(fs::create_directories(inputDir));
   const std::array<fs::path, 2> inputFiles = {inputDir / "slice_0.tif", inputDir / "slice_1.tif"};
@@ -1301,9 +1301,9 @@ void checkNestedImageStack(NestedImageStackResampling resampling, const SizeVec3
     }
     fs::remove(inputDir, error);
   });
-  for(usize slice = 0; slice < sliceValues.size(); ++slice)
+  for(usize slice = 0; slice < k_SliceValues.size(); ++slice)
   {
-    WriteMultiPageTiff(inputFiles.at(slice), width, height, {std::vector<nx::core::uint8>(inputSliceSize, sliceValues.at(slice))});
+    WriteMultiPageTiff(inputFiles.at(slice), k_Width, k_Height, {std::vector<nx::core::uint8>(k_InputSliceSize, k_SliceValues.at(slice))});
   }
 
   const DataPath geometryPath({"Stack Parent", "Stack"});
@@ -1365,12 +1365,12 @@ void checkNestedImageStack(NestedImageStackResampling resampling, const SizeVec3
 
   // A constant slice retains its value under resampling, independently of interpolation details.
   const usize sliceSize = expectedDimensions[0] * expectedDimensions[1];
-  for(usize slice = 0; slice < sliceValues.size(); ++slice)
+  for(usize slice = 0; slice < k_SliceValues.size(); ++slice)
   {
     for(usize pixel = 0; pixel < sliceSize; ++pixel)
     {
       CAPTURE(slice, pixel);
-      CHECK((image[(slice * sliceSize) + pixel] == sliceValues.at(slice)));
+      CHECK((image[(slice * sliceSize) + pixel] == k_SliceValues.at(slice)));
     }
   }
   CHECK((dataStructure.getDataAs<ImageGeom>(rootDecoyPath) == nullptr));
@@ -1390,15 +1390,15 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves 
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   SECTION("50 percent scaling")
   {
-    checkNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, false);
+    CheckNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, false);
   }
   SECTION("Exact dimensions")
   {
-    checkNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, false);
+    CheckNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, false);
   }
   SECTION("100 percent scaling")
   {
-    checkNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, false);
+    CheckNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, false);
   }
 }
 
@@ -1408,15 +1408,15 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves 
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   SECTION("50 percent scaling")
   {
-    checkNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, true);
+    CheckNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, true);
   }
   SECTION("Exact dimensions")
   {
-    checkNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, true);
+    CheckNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, true);
   }
   SECTION("100 percent scaling")
   {
-    checkNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, true);
+    CheckNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, true);
   }
 }
 
@@ -1428,26 +1428,26 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
 {
   UnitTest::LoadPlugins();
 
-  constexpr uint32_t width = 5;
-  constexpr uint32_t height = 4;
-  constexpr usize numFiles = 3;
-  constexpr usize pagesPerFile = 3;
-  constexpr usize sliceElems = static_cast<usize>(width) * height; // 20
+  constexpr uint32_t k_Width = 5;
+  constexpr uint32_t k_Height = 4;
+  constexpr usize k_NumFiles = 3;
+  constexpr usize k_PagesPerFile = 3;
+  constexpr usize k_SliceElems = static_cast<usize>(k_Width) * k_Height; // 20
 
   // pixel(file f, page p, index i) = f*10 + p*100 + i (all < 256). First page (p == 0) of file f is
   // therefore f*10 + i, and every later page differs, so reading the wrong page fails the comparison.
   const fs::path inputDir = MultiPageStackOutputDir();
-  for(usize f = 0; f < numFiles; ++f)
+  for(usize f = 0; f < k_NumFiles; ++f)
   {
-    std::vector<std::vector<uint8_t>> pagePixels(pagesPerFile, std::vector<uint8_t>(sliceElems));
-    for(usize p = 0; p < pagesPerFile; ++p)
+    std::vector<std::vector<uint8_t>> pagePixels(k_PagesPerFile, std::vector<uint8_t>(k_SliceElems));
+    for(usize p = 0; p < k_PagesPerFile; ++p)
     {
-      for(usize i = 0; i < sliceElems; ++i)
+      for(usize i = 0; i < k_SliceElems; ++i)
       {
         pagePixels[p][i] = static_cast<uint8_t>(f * 10 + p * 100 + i);
       }
     }
-    WriteMultiPageTiff(inputDir / fmt::format("multipage_{}.tif", f), width, height, pagePixels);
+    WriteMultiPageTiff(inputDir / fmt::format("multipage_{}.tif", f), k_Width, k_Height, pagePixels);
   }
 
   GeneratedFileListParameter::ValueType fileList;
@@ -1456,7 +1456,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   fileList.fileSuffix = "";
   fileList.fileExtension = ".tif";
   fileList.startIndex = 0;
-  fileList.endIndex = numFiles - 1;
+  fileList.endIndex = k_NumFiles - 1;
   fileList.incrementIndex = 1;
   fileList.paddingDigits = 1;
   fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
@@ -1476,17 +1476,17 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // (a) Z equals the number of FILES, not the summed page count (which would be numFiles*pagesPerFile).
-  VerifyGeometryDimensions(ds, geomPath, width, height, numFiles);
+  VerifyGeometryDimensions(ds, geomPath, k_Width, k_Height, k_NumFiles);
 
   // (b) Each slice equals the FIRST page of the corresponding file.
   const DataPath dataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   const auto& store = ds.getDataRefAs<UInt8Array>(dataPath).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == sliceElems * numFiles);
-  for(usize f = 0; f < numFiles; ++f)
+  REQUIRE(store.getNumberOfTuples() == k_SliceElems * k_NumFiles);
+  for(usize f = 0; f < k_NumFiles; ++f)
   {
-    for(usize i = 0; i < sliceElems; ++i)
+    for(usize i = 0; i < k_SliceElems; ++i)
     {
-      REQUIRE(store.getValue(f * sliceElems + i) == static_cast<uint8_t>(f * 10 + i));
+      REQUIRE(store.getValue(f * k_SliceElems + i) == static_cast<uint8_t>(f * 10 + i));
     }
   }
 
@@ -1507,20 +1507,20 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXIm
     const fs::path path = inputDir / fmt::format("slice_{}.tif", slice);
     if((slice == 0) == firstSliceIsUint16)
     {
-      TIFF* tif = TIFFOpen(path.string().c_str(), "w");
-      REQUIRE(tif != nullptr);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, 2) != 0);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, 2) != 0);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1) != 0);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 16) != 0);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
-      REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
+      TIFF* tifPtr = TIFFOpen(path.string().c_str(), "w");
+      REQUIRE(tifPtr != nullptr);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGEWIDTH, 2) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGELENGTH, 2) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLESPERPIXEL, 1) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_BITSPERSAMPLE, 16) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
       std::vector<uint16_t> pixels = {1000, 1000, 1000, 1000};
-      REQUIRE(TIFFWriteScanline(tif, pixels.data(), 0, 0) >= 0);
-      REQUIRE(TIFFWriteScanline(tif, pixels.data() + 2, 1, 0) >= 0);
-      TIFFClose(tif);
+      REQUIRE(TIFFWriteScanline(tifPtr, pixels.data(), 0, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tifPtr, pixels.data() + 2, 1, 0) >= 0);
+      TIFFClose(tifPtr);
     }
     else
     {

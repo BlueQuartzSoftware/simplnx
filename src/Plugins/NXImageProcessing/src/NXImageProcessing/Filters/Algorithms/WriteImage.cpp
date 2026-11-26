@@ -19,6 +19,6 @@ WriteImage::WriteImage(DataStructure& dataStructure, const IFilter::MessageHandl
 Result<> WriteImage::operator()()
 {
   const auto& imageArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.imageDataArrayPath);
-  const IDataArray* maskArray = m_InputValues.useMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues.maskArrayPath) : nullptr;
-  return DispatchAlgorithm<WriteImageDirect, WriteImageScanline>({&imageArray, maskArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  const IDataArray* maskArrayPtr = m_InputValues.useMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues.maskArrayPath) : nullptr;
+  return DispatchAlgorithm<WriteImageDirect, WriteImageScanline>({&imageArray, maskArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

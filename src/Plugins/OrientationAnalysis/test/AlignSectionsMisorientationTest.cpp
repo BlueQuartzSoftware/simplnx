@@ -34,28 +34,28 @@ const DataPath k_SmallCrystalPath({"Crystal Structures"});
 void CreateSmallFixture(DataStructure& dataStructure)
 {
   const ShapeType cellShape = {2, 8, 8};
-  constexpr usize kTupleCount = 2 * 8 * 8;
-  auto* image = ImageGeom::Create(dataStructure, "Small Image");
-  image->setDimensions({8, 8, 2});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, image->getId());
-  image->setCellData(*cellData);
-  auto* quats = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", cellShape, {4}, cellData->getId());
-  auto* phases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", cellShape, {1}, cellData->getId());
-  auto* numeric = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Numeric Sibling", cellShape, {2}, cellData->getId());
+  constexpr usize k_KTupleCount = 2 * 8 * 8;
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Small Image");
+  imagePtr->setDimensions({8, 8, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, imagePtr->getId());
+  imagePtr->setCellData(*cellDataPtr);
+  auto* quatsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", cellShape, {4}, cellDataPtr->getId());
+  auto* phasesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", cellShape, {1}, cellDataPtr->getId());
+  auto* numericPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Numeric Sibling", cellShape, {2}, cellDataPtr->getId());
   auto maskStore = std::make_shared<DataStore<bool>>(cellShape, ShapeType{1}, std::optional<bool>{});
   auto boolStore = std::make_shared<DataStore<bool>>(cellShape, ShapeType{1}, std::optional<bool>{});
-  REQUIRE(quats != nullptr);
-  REQUIRE(phases != nullptr);
-  REQUIRE(numeric != nullptr);
-  REQUIRE(BoolArray::Create(dataStructure, "Mask", maskStore, cellData->getId()) != nullptr);
-  REQUIRE(BoolArray::Create(dataStructure, "Bool Sibling", boolStore, cellData->getId()) != nullptr);
-  auto* crystal = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "Crystal Structures", {2}, {1});
-  REQUIRE(crystal != nullptr);
-  std::vector<float32> quatValues(kTupleCount * 4);
-  std::vector<int32> phaseValues(kTupleCount);
-  std::vector<float32> numericValues(kTupleCount * 2);
-  auto boolValues = std::make_unique<bool[]>(kTupleCount);
-  for(usize i = 0; i < kTupleCount; i++)
+  REQUIRE(quatsPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(numericPtr != nullptr);
+  REQUIRE(BoolArray::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId()) != nullptr);
+  REQUIRE(BoolArray::Create(dataStructure, "Bool Sibling", boolStore, cellDataPtr->getId()) != nullptr);
+  auto* crystalPtr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "Crystal Structures", {2}, {1});
+  REQUIRE(crystalPtr != nullptr);
+  std::vector<float32> quatValues(k_KTupleCount * 4);
+  std::vector<int32> phaseValues(k_KTupleCount);
+  std::vector<float32> numericValues(k_KTupleCount * 2);
+  auto boolValues = std::make_unique<bool[]>(k_KTupleCount);
+  for(usize i = 0; i < k_KTupleCount; i++)
   {
     quatValues[i * 4] = 1.0F;
     phaseValues[i] = 1;
@@ -64,17 +64,17 @@ void CreateSmallFixture(DataStructure& dataStructure)
     boolValues[i] = (i % 3) != 0;
   }
   const std::array<uint32, 2> crystalValues = {0, 1};
-  auto quatsWriteResult = quats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quatValues.data(), quatValues.size()));
+  auto quatsWriteResult = quatsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quatValues.data(), quatValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
-  auto phasesWriteResult = phases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
+  auto phasesWriteResult = phasesPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
-  auto numericWriteResult = numeric->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(numericValues.data(), numericValues.size()));
+  auto numericWriteResult = numericPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(numericValues.data(), numericValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(numericWriteResult);
-  auto maskStoreWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), kTupleCount));
+  auto maskStoreWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), k_KTupleCount));
   SIMPLNX_RESULT_REQUIRE_VALID(maskStoreWriteResult);
-  auto boolStoreWriteResult = boolStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), kTupleCount));
+  auto boolStoreWriteResult = boolStore->copyFromBuffer(0, nonstd::span<const bool>(boolValues.get(), k_KTupleCount));
   SIMPLNX_RESULT_REQUIRE_VALID(boolStoreWriteResult);
-  auto crystalWriteResult = crystal->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalValues.data(), crystalValues.size()));
+  auto crystalWriteResult = crystalPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalValues.data(), crystalValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalWriteResult);
 }
 
@@ -207,7 +207,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
   const std::string kExpectedOutputTopLevel2 = "align_sections_misorientation.txt";
   const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2);
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   auto exemplarFilePath = fs::path(fmt::format("{}/align_sections_misorientation/6_6_align_sections_misorientation.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -217,9 +217,9 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
 
-  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
+  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
 
-  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterList);
+  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterListPtr);
 
   {
     Arguments args;
@@ -269,16 +269,16 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test",
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
 
-  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
+  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
 
-  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterList);
+  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterListPtr);
 
   {
     Arguments args;

@@ -67,11 +67,11 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
 
   if(!json.is_array() && !json.is_null())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data entry for key '{}' is not an array.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data entry for key '{}' is not an array.", k_Prefix.view(), name()));
   }
 
   usize numRows = 0;
@@ -87,14 +87,14 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& rowJson = json[i];
     if(!rowJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}Row {} json is not an array", prefix.view(), i));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}Row {} json is not an array", k_Prefix.view(), i));
     }
 
     usize numCols = rowJson.size();
     if(numCols != 3)
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry,
-                                       fmt::format("{}Row {} json array is not the correct size. Found {} values but expecting 3.", prefix.view(), i, numCols));
+                                       fmt::format("{}Row {} json array is not the correct size. Found {} values but expecting 3.", k_Prefix.view(), i, numCols));
     }
     RowType row;
     for(usize j = 0; j < numCols; j++)
@@ -102,7 +102,7 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
       const auto& value = rowJson[j];
       if(!value.is_string())
       {
-        return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}Element ({}, {}) is not a string", prefix.view(), i, j));
+        return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}Element ({}, {}) is not a string", k_Prefix.view(), i, j));
       }
 
       row[j] = value.get<std::string>();

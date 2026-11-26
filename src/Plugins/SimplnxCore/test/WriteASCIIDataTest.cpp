@@ -58,7 +58,7 @@ public:
     {
       for(uint64 del = 0; del < k_DelimiterElements; del++)
       {
-        Test(fValue, del);
+        test(fValue, del);
       }
     }
   }
@@ -136,9 +136,9 @@ private:
     return {};
   }
 
-  void CompareResults(IDataArray& selectedArray) // compare hash of both file strings
+  void compareResults(IDataArray& selectedArray) // compare hash of both file strings
   {
-    std::hash<std::string> str_hash;
+    std::hash<std::string> strHash;
 
     fs::path writtenFilePath = fs::path(m_TestOutput.string() + "/" + selectedArray.getName() + ".txt");
     if(!fs::exists(writtenFilePath))
@@ -155,7 +155,7 @@ private:
     REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
   }
 
-  void Test(uint64 fileType, uint64 delimiter)
+  void test(uint64 fileType, uint64 delimiter)
   {
     // create data set
     m_DataStructure.clear();
@@ -165,9 +165,9 @@ private:
       using DataStoreType = DataStore<T>;
       using ArrayType = DataArray<T>;
 
-      ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(fileType) + "_" + std::to_string(delimiter) + "_" + "array_" + std::to_string(index),
+      ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(fileType) + "_" + std::to_string(delimiter) + "_" + "array_" + std::to_string(index),
                                                                                 {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
-      dataArray->fill(m_FillValue[index]);
+      dataArrayPtr->fill(m_FillValue[index]);
     }
     std::vector<DataPath> daps1 = m_DataStructure.getAllDataPaths();
 
@@ -202,12 +202,12 @@ private:
     {
       for(const auto& i : daps1)
       {
-        CompareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
+        compareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
       }
     }
     else if(fileType == k_SingleFile)
     {
-      CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[0]));
+      compareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[0]));
     }
   }
 };
@@ -311,11 +311,11 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Terminate partial final line", "[Simplnx
   DataStructure dataStructure;
   const DataPath arrayPath({"Values"});
   auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, arrayPath, {3}, {2});
-  auto* array = Int32Array::Create(dataStructure, "Values", store);
-  REQUIRE(array != nullptr);
+  auto* arrayPtr = Int32Array::Create(dataStructure, "Values", store);
+  REQUIRE(arrayPtr != nullptr);
   for(usize index = 0; index < 6; ++index)
   {
-    array->setValue(index, static_cast<int32>(index + 1));
+    arrayPtr->setValue(index, static_cast<int32>(index + 1));
   }
 
   const fs::path outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "partial_ascii_final_line";
@@ -341,7 +341,7 @@ TEST_CASE("SimplnxCore::WriteASCIIDataFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -354,22 +354,22 @@ TEST_CASE("SimplnxCore::WriteASCIIDataFilter: SIMPL Backwards Compatibility", "[
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteASCIIDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteASCIIDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(WriteASCIIDataFilter::k_OutputStyle_Key) == 0);
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteASCIIDataFilter::k_OutputDir_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<std::string>(WriteASCIIDataFilter::k_FileExtension_Key) == "TestName");

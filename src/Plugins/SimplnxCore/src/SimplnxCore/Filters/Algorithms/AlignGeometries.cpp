@@ -16,7 +16,7 @@ using namespace nx::core;
 
 namespace
 {
-FloatVec3 extractOrigin(const IGeometry& geometry)
+FloatVec3 ExtractOrigin(const IGeometry& geometry)
 {
   auto geomType = geometry.getGeomType();
   switch(geomType)
@@ -115,7 +115,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   return origin;
 }
 
-FloatVec3 extractCentroid(const IGeometry& geometry)
+FloatVec3 ExtractCentroid(const IGeometry& geometry)
 {
   FloatVec3 centroid(0.0f, 0.0f, 0.0f);
   switch(geometry.getGeomType())
@@ -237,7 +237,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   return centroid;
 }
 
-Result<> translateGeometry(IGeometry& geometry, const FloatVec3& translation)
+Result<> TranslateGeometry(IGeometry& geometry, const FloatVec3& translation)
 {
   switch(geometry.getGeomType())
   {
@@ -382,35 +382,35 @@ Result<> AlignGeometries::operator()()
 
   if(alignmentType == 0)
   {
-    FloatVec3 movingOrigin = extractOrigin(moving);
+    FloatVec3 movingOrigin = ExtractOrigin(moving);
     if(m_ShouldCancel)
     {
       return {};
     }
-    FloatVec3 targetOrigin = extractOrigin(target);
+    FloatVec3 targetOrigin = ExtractOrigin(target);
     if(m_ShouldCancel)
     {
       return {};
     }
 
     float translation[3] = {targetOrigin[0] - movingOrigin[0], targetOrigin[1] - movingOrigin[1], targetOrigin[2] - movingOrigin[2]};
-    return translateGeometry(moving, translation);
+    return TranslateGeometry(moving, translation);
   }
   if(alignmentType == 1)
   {
-    FloatVec3 movingCentroid = extractCentroid(moving);
+    FloatVec3 movingCentroid = ExtractCentroid(moving);
     if(m_ShouldCancel)
     {
       return {};
     }
-    FloatVec3 targetCentroid = extractCentroid(target);
+    FloatVec3 targetCentroid = ExtractCentroid(target);
     if(m_ShouldCancel)
     {
       return {};
     }
 
     float translation[3] = {targetCentroid[0] - movingCentroid[0], targetCentroid[1] - movingCentroid[1], targetCentroid[2] - movingCentroid[2]};
-    return translateGeometry(moving, translation);
+    return TranslateGeometry(moving, translation);
   }
   return MakeErrorResult(-13423, "Invalid selection for alignment type");
 }

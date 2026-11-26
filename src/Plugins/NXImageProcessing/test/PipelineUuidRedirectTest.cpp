@@ -51,18 +51,18 @@ TEST_CASE("NXImageProcessing::Plugin exposes ITK->new Threshold redirect", "[NXI
   // The pipeline tests use isolated FilterLists to verify the fallback path.
   UnitTest::LoadPlugins();
   const auto plugins = Application::Instance()->getFilterList()->getLoadedPlugins();
-  const AbstractPlugin* plugin = nullptr;
-  for(const auto* candidate : plugins)
+  const AbstractPlugin* pluginPtr = nullptr;
+  for(const auto* candidatePtr : plugins)
   {
-    if(candidate->getName() == "NXImageProcessing")
+    if(candidatePtr->getName() == "NXImageProcessing")
     {
-      plugin = candidate;
+      pluginPtr = candidatePtr;
       break;
     }
   }
-  REQUIRE(plugin != nullptr);
+  REQUIRE(pluginPtr != nullptr);
 
-  const auto replacements = plugin->getFilterReplacementMap();
+  const auto replacements = pluginPtr->getFilterReplacementMap();
   const Uuid oldItkUuid = *Uuid::FromString("ddf222f3-4af2-4583-967d-3eb9b86e77b4");
   const Uuid newUuid = *Uuid::FromString("9c8f6b2e-3a41-4e7d-b5c9-0f21a7d84e63");
 
@@ -76,31 +76,31 @@ TEST_CASE("NXImageProcessing::Plugin owns Write Image and exposes the ITK writer
   UnitTest::LoadPlugins();
 
   const auto plugins = Application::Instance()->getFilterList()->getLoadedPlugins();
-  const AbstractPlugin* nxImageProcessingPlugin = nullptr;
-  const AbstractPlugin* itkImageProcessingPlugin = nullptr;
-  for(const auto* candidate : plugins)
+  const AbstractPlugin* nxImageProcessingPluginPtr = nullptr;
+  const AbstractPlugin* itkImageProcessingPluginPtr = nullptr;
+  for(const auto* candidatePtr : plugins)
   {
-    if(candidate->getName() == "NXImageProcessing")
+    if(candidatePtr->getName() == "NXImageProcessing")
     {
-      nxImageProcessingPlugin = candidate;
+      nxImageProcessingPluginPtr = candidatePtr;
     }
-    else if(candidate->getName() == "ITKImageProcessing")
+    else if(candidatePtr->getName() == "ITKImageProcessing")
     {
-      itkImageProcessingPlugin = candidate;
+      itkImageProcessingPluginPtr = candidatePtr;
     }
   }
-  REQUIRE(nxImageProcessingPlugin != nullptr);
+  REQUIRE(nxImageProcessingPluginPtr != nullptr);
 
   const Uuid oldItkUuid = *Uuid::FromString("a181ee3e-1678-4133-b9c5-a9dd7bfec62f");
   const Uuid newUuid = FilterTraits<WriteImageFilter>::uuid;
-  if(itkImageProcessingPlugin != nullptr)
+  if(itkImageProcessingPluginPtr != nullptr)
   {
-    REQUIRE(itkImageProcessingPlugin->createFilter(oldItkUuid) != nullptr);
+    REQUIRE(itkImageProcessingPluginPtr->createFilter(oldItkUuid) != nullptr);
   }
 
-  REQUIRE(nxImageProcessingPlugin->createFilter(newUuid) != nullptr);
+  REQUIRE(nxImageProcessingPluginPtr->createFilter(newUuid) != nullptr);
 
-  const auto replacements = nxImageProcessingPlugin->getFilterReplacementMap();
+  const auto replacements = nxImageProcessingPluginPtr->getFilterReplacementMap();
   REQUIRE(replacements.count(oldItkUuid) == 1);
   REQUIRE(replacements.at(oldItkUuid) == newUuid);
 }

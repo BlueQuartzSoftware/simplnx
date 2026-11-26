@@ -137,9 +137,9 @@ public:
   , m_NumTuples(other.m_NumTuples)
   {
     const usize count = other.getSize();
-    auto* data = new value_type[count];
-    std::memcpy(data, other.m_Data.get(), count * sizeof(T));
-    m_Data.reset(data);
+    auto* dataPtr = new value_type[count];
+    std::memcpy(dataPtr, other.m_Data.get(), count * sizeof(T));
+    m_Data.reset(dataPtr);
   }
 
   /**
@@ -589,7 +589,7 @@ public:
       return MakeErrorResult(-6032, "DataStore extent read failed: the store has no allocated value buffer.");
     }
 
-    const T* source = m_Data.get();
+    const T* sourcePtr = m_Data.get();
     if(tupleDimensions == 3)
     {
       const uint64 dimY = tupleShape[1];
@@ -609,7 +609,7 @@ public:
             if(xStride == 1)
             {
               const usize rowValues = static_cast<usize>(xCount) * numComponents;
-              std::memcpy(destination.data() + outputIndex, source + sourceRowStart, rowValues * sizeof(T));
+              std::memcpy(destination.data() + outputIndex, sourcePtr + sourceRowStart, rowValues * sizeof(T));
               outputIndex += rowValues;
               continue;
             }
@@ -620,7 +620,7 @@ public:
             const usize sourceOffset = sourceRowStart + static_cast<usize>(xIndex * xStride) * numComponents;
             for(usize componentIndex = 0; componentIndex < numComponents; ++componentIndex)
             {
-              destination[outputIndex + componentIndex] = source[sourceOffset + componentIndex];
+              destination[outputIndex + componentIndex] = sourcePtr[sourceOffset + componentIndex];
             }
             outputIndex += numComponents;
           }
@@ -640,7 +640,7 @@ public:
         const usize sourceIndex = static_cast<usize>(startTuple + tupleOffset * tupleStride) * numComponents;
         for(usize componentIndex = 0; componentIndex < numComponents; ++componentIndex)
         {
-          destination[outputIndex + componentIndex] = source[sourceIndex + componentIndex];
+          destination[outputIndex + componentIndex] = sourcePtr[sourceIndex + componentIndex];
         }
         outputIndex += numComponents;
       }
@@ -667,7 +667,7 @@ public:
       const usize destinationValueIndex = outputTupleIndex * numComponents;
       for(usize componentIndex = 0; componentIndex < numComponents; ++componentIndex)
       {
-        destination[destinationValueIndex + componentIndex] = source[sourceValueIndex + componentIndex];
+        destination[destinationValueIndex + componentIndex] = sourcePtr[sourceValueIndex + componentIndex];
       }
     }
     return {};
@@ -732,7 +732,7 @@ public:
       return MakeErrorResult(-6033, "DataStore extent write failed: the store has no allocated value buffer.");
     }
 
-    T* destBase = m_Data.get();
+    T* destBasePtr = m_Data.get();
 
     if(tupleDims == 3)
     {
@@ -753,7 +753,7 @@ public:
             if(xStride == 1)
             {
               const usize elements = static_cast<usize>(xCountStrided) * numComp;
-              std::memcpy(destBase + destRowStart, data.data() + srcIdx, elements * sizeof(T));
+              std::memcpy(destBasePtr + destRowStart, data.data() + srcIdx, elements * sizeof(T));
               srcIdx += elements;
               continue;
             }
@@ -764,7 +764,7 @@ public:
             const usize destOff = destRowStart + static_cast<usize>(xi * xStride) * numComp;
             for(usize c = 0; c < numComp; ++c)
             {
-              destBase[destOff + c] = data[srcIdx + c];
+              destBasePtr[destOff + c] = data[srcIdx + c];
             }
             srcIdx += numComp;
           }
@@ -784,7 +784,7 @@ public:
         const usize destIdx = static_cast<usize>(startTuple + i * stride) * numComp;
         for(usize c = 0; c < numComp; ++c)
         {
-          destBase[destIdx + c] = data[srcIdx + c];
+          destBasePtr[destIdx + c] = data[srcIdx + c];
         }
         srcIdx += numComp;
       }

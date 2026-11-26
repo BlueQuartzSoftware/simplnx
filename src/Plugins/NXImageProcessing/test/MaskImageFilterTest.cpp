@@ -194,14 +194,14 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight guards (Outside Value r
   // Build an int8 input + a uint8 mask (with maskComponents components) under one geometry.
   auto buildInt8 = [](DataStructure& ds, usize maskComponents) {
     const ShapeType cellShape = {2, 2, 2};
-    auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-    imageGeom->setDimensions({2, 2, 2});
-    auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
+    auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+    imageGeomPtr->setDimensions({2, 2, 2});
+    auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
     auto inStore = DataStoreUtilities::CreateDataStore<int8>(ds, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
-    DataArray<int8>::Create(ds, "Input", inStore, cellAM->getId());
+    DataArray<int8>::Create(ds, "Input", inStore, cellAmPtr->getId());
     auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(ds, DataPath({"Image Geometry", "CellData", "Mask"}), cellShape, {maskComponents});
-    DataArray<uint8>::Create(ds, "Mask", maskStore, cellAM->getId());
+    DataArray<uint8>::Create(ds, "Mask", maskStore, cellAmPtr->getId());
   };
 
   auto makeArgs = [](float64 outsideValue) {
@@ -268,24 +268,24 @@ template <class MaskT>
 void BuildTypedMaskInputs(DataStructure& ds, usize dim, MaskT nonzeroValue)
 {
   const ShapeType cellShape = {dim, dim, dim};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+  imageGeomPtr->setDimensions({dim, dim, dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const usize numTuples = dim * dim * dim;
   auto inStore = DataStoreUtilities::CreateDataStore<float32>(ds, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
-  auto* inArray = DataArray<float32>::Create(ds, "Input", inStore, cellAM->getId());
-  auto& inRef = inArray->getDataStoreRef();
+  auto* inArrayPtr = DataArray<float32>::Create(ds, "Input", inStore, cellAmPtr->getId());
+  auto& inRef = inArrayPtr->getDataStoreRef();
   for(usize i = 0; i < inRef.getSize(); ++i)
   {
     inRef.setValue(i, static_cast<float32>(i + 1));
   }
   auto maskStore = DataStoreUtilities::CreateDataStore<MaskT>(ds, DataPath({"Image Geometry", "CellData", "Mask"}), cellShape, {1});
-  auto* maskArray = DataArray<MaskT>::Create(ds, "Mask", maskStore, cellAM->getId());
-  auto& maskRef = maskArray->getDataStoreRef();
+  auto* maskArrayPtr = DataArray<MaskT>::Create(ds, "Mask", maskStore, cellAmPtr->getId());
+  auto& maskRef = maskArrayPtr->getDataStoreRef();
   for(usize t = 0; t < numTuples; ++t)
   {
     maskRef.setValue(t, (t % 2 == 0) ? MaskT{0} : nonzeroValue); // alternating discard / keep
@@ -299,11 +299,11 @@ void RunMaskTypeKeepDiscard(MaskT nonzeroValue)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  constexpr usize kDim = 6;
+  constexpr usize k_KDim = 6;
   const float64 outsideValue = -7.0;
 
   DataStructure ds;
-  BuildTypedMaskInputs<MaskT>(ds, kDim, nonzeroValue);
+  BuildTypedMaskInputs<MaskT>(ds, k_KDim, nonzeroValue);
 
   MaskImageFilter filter;
   Arguments args;
@@ -365,16 +365,16 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type
   {
     DataStructure ds;
     const ShapeType cellShape = {2, 2, 2};
-    auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-    imageGeom->setDimensions({2, 2, 2});
-    auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
+    auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+    imageGeomPtr->setDimensions({2, 2, 2});
+    auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
     auto inStore = DataStoreUtilities::CreateDataStore<float32>(ds, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
-    DataArray<float32>::Create(ds, "Input", inStore, cellAM->getId());
+    DataArray<float32>::Create(ds, "Input", inStore, cellAmPtr->getId());
     // int32 mask with the SAME tuple count, so only the type guard fires (not the tuple guard).
-    auto* maskAM = AttributeMatrix::Create(ds, "MaskData", cellShape, imageGeom->getId());
+    auto* maskAmPtr = AttributeMatrix::Create(ds, "MaskData", cellShape, imageGeomPtr->getId());
     auto maskStore = DataStoreUtilities::CreateDataStore<int32>(ds, DataPath({"Image Geometry", "MaskData", "Mask"}), cellShape, {1});
-    DataArray<int32>::Create(ds, "Mask", maskStore, maskAM->getId());
+    DataArray<int32>::Create(ds, "Mask", maskStore, maskAmPtr->getId());
 
     auto result = filter.preflight(ds, makeArgs());
     REQUIRE(result.outputActions.invalid());
@@ -385,17 +385,17 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type
   {
     DataStructure ds;
     const ShapeType cellShape = {2, 2, 2};
-    auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-    imageGeom->setDimensions({2, 2, 2});
-    auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
+    auto* imageGeomPtr = ImageGeom::Create(ds, "Image Geometry");
+    imageGeomPtr->setDimensions({2, 2, 2});
+    auto* cellAmPtr = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
     auto inStore = DataStoreUtilities::CreateDataStore<float32>(ds, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
-    DataArray<float32>::Create(ds, "Input", inStore, cellAM->getId());
+    DataArray<float32>::Create(ds, "Input", inStore, cellAmPtr->getId());
     // uint8 mask (valid type) but with a DIFFERENT tuple count (4 != 8), so the tuple guard fires.
     const ShapeType maskShape = {4};
-    auto* maskAM = AttributeMatrix::Create(ds, "MaskData", maskShape, imageGeom->getId());
+    auto* maskAmPtr = AttributeMatrix::Create(ds, "MaskData", maskShape, imageGeomPtr->getId());
     auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(ds, DataPath({"Image Geometry", "MaskData", "Mask"}), maskShape, {1});
-    DataArray<uint8>::Create(ds, "Mask", maskStore, maskAM->getId());
+    DataArray<uint8>::Create(ds, "Mask", maskStore, maskAmPtr->getId());
 
     auto result = filter.preflight(ds, makeArgs());
     REQUIRE(result.outputActions.invalid());

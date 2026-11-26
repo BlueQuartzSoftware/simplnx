@@ -330,7 +330,7 @@ Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueT
 }
 
 template <class T>
-constexpr static T square(T value) noexcept
+constexpr static T Square(T value) noexcept
 {
   return value * value;
 }
@@ -368,7 +368,7 @@ size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const E
   size_t minIndex = 0;
   for(size_t i = 0; i < 8; i++)
   {
-    float const distance = square(unitSquareCoords[i][0] - coord[0]) + square(unitSquareCoords[i][1] - coord[1]) + square(unitSquareCoords[i][2] - coord[2]);
+    float const distance = Square(unitSquareCoords[i][0] - coord[0]) + Square(unitSquareCoords[i][1] - coord[1]) + Square(unitSquareCoords[i][2] - coord[2]);
 
     if(distance < minDistance)
     {

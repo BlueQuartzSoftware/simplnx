@@ -30,25 +30,25 @@ using namespace nx::core::Constants;
 
 namespace
 {
-const std::vector<int> inputIntVector({1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-const std::vector<int> inputHexVector({0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A});
-const std::vector<int> inputOctVector({001, 002, 003, 004, 005, 006, 007});
-const std::vector<double> inputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
-const std::vector<std::string> inputCharErrorVector({"sdstrg", "2.2", "3.65", "&(^$#", "5.76", "sjtyr", "7.0", "8.342", "&*^#F", "youikjhgf"});
-const std::vector<double> inputScientificNotation({0.15e1, 2.2e0, 3.65, 43.4e-1, 0.576e1, 653.4e-2, 7.0, 8.342, 9.8723, 10.89});
+const std::vector<int> k_InputIntVector({1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+const std::vector<int> k_InputHexVector({0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A});
+const std::vector<int> k_InputOctVector({001, 002, 003, 004, 005, 006, 007});
+const std::vector<double> k_InputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
+const std::vector<std::string> k_InputCharErrorVector({"sdstrg", "2.2", "3.65", "&(^$#", "5.76", "sjtyr", "7.0", "8.342", "&*^#F", "youikjhgf"});
+const std::vector<double> k_InputScientificNotation({0.15e1, 2.2e0, 3.65, 43.4e-1, 0.576e1, 653.4e-2, 7.0, 8.342, 9.8723, 10.89});
 
-const std::vector<double> outputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
-const std::vector<double> outputIntAsDoubleVector({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0});
+const std::vector<double> k_OutputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
+const std::vector<double> k_OutputIntAsDoubleVector({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0});
 
 const std::string k_DataArrayName = "Array1";
 
-const usize xDim = 10;
-const usize yDim = 5;
-const usize zDim = 1;
+const usize k_XDim = 10;
+const usize k_YDim = 5;
+const usize k_ZDim = 1;
 } // namespace
 
 template <typename T>
-static void writeInvalidFile(const std::string& filePath, std::vector<T> values, char delimiter)
+static void WriteInvalidFile(const std::string& filePath, std::vector<T> values, char delimiter)
 {
   std::ofstream data(filePath, std::ios::out /*| std::ios::trunc*/);
   // std::ofstream data(filePath, std::ios::binary);
@@ -71,9 +71,9 @@ static void writeFile(const std::string& filePath, char delimiter)
 {
   std::ofstream outfile(filePath.c_str(), std::ios_base::binary);
   int32 index = 0;
-  for(usize y = 0; y < yDim; y++)
+  for(usize y = 0; y < k_YDim; y++)
   {
-    for(usize x = 0; x < xDim; x++)
+    for(usize x = 0; x < k_XDim; x++)
     {
       outfile << index++;
       // if(x < xDim - 1)
@@ -95,11 +95,11 @@ static void RunInvalidTest()
 
   // Test Using Unexpected Input - Alphabetical Characters, Special Characters, etc.
   {
-    writeInvalidFile<std::string>(inputFilePath, inputCharErrorVector, delimiter);
+    WriteInvalidFile<std::string>(inputFilePath, k_InputCharErrorVector, delimiter);
 
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
+    AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(GetNumericType<T>()));
@@ -126,13 +126,13 @@ static void RunInvalidTest()
     std::string maxValue = StringUtilities::number(std::numeric_limits<T>().max());
     maxValue = maxValue + '0';
     std::vector<std::string> inputMaxVector({maxValue});
-    writeInvalidFile<std::string>(inputFilePath, inputMaxVector, delimiter);
+    WriteInvalidFile<std::string>(inputFilePath, inputMaxVector, delimiter);
 
     tupleDims = {1};
 
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
+    AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(GetNumericType<T>()));
@@ -176,13 +176,13 @@ static void RunInvalidTest()
     }
 
     std::vector<std::string> inputMinVector({minValue});
-    writeInvalidFile<std::string>(inputFilePath, inputMinVector, delimiter);
+    WriteInvalidFile<std::string>(inputFilePath, inputMinVector, delimiter);
 
     tupleDims = {1};
 
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
+    AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(GetNumericType<T>()));
@@ -210,10 +210,10 @@ static void RunTest(char sep, int delimiter)
   writeFile(inputFilePath, sep);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageDataContainer");
-  const ShapeType tDims = {xDim, yDim, zDim};
-  imageGeom->setDimensions(tDims);
-  AttributeMatrix* attrMat = AttributeMatrix::Create(dataStructure, "AttributeMatrix", std::vector<usize>{zDim, yDim, xDim}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageDataContainer");
+  const ShapeType tDims = {k_XDim, k_YDim, k_ZDim};
+  imageGeomPtr->setDimensions(tDims);
+  AttributeMatrix* attrMatPtr = AttributeMatrix::Create(dataStructure, "AttributeMatrix", std::vector<usize>{k_ZDim, k_YDim, k_XDim}, imageGeomPtr->getId());
 
   DataPath createdAttributeArrayPath({"ImageDataContainer", "AttributeMatrix", "ImportedData"});
   NumericType scalarType = GetNumericType<T>();
@@ -242,9 +242,9 @@ static void RunTest(char sep, int delimiter)
   REQUIRE(dataStructure.getDataAs<DataArray<T>>(createdAttributeArrayPath) != nullptr);
   auto& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdAttributeArrayPath);
   usize index = 0;
-  for(usize y = 0; y < yDim; y++)
+  for(usize y = 0; y < k_YDim; y++)
   {
-    for(usize x = 0; x < xDim; x++)
+    for(usize x = 0; x < k_XDim; x++)
     {
       T value = static_cast<T>(index);
       REQUIRE(value == createdArray[index]);
@@ -338,7 +338,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
   {
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    DataGroup* dataGroup = DataGroup::Create(dataStructure, k_GroupAName);
+    DataGroup* dataGroupPtr = DataGroup::Create(dataStructure, k_GroupAName);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
@@ -362,7 +362,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
   {
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    DataGroup* dataGroup = DataGroup::Create(dataStructure, k_GroupAName);
+    DataGroup* dataGroupPtr = DataGroup::Create(dataStructure, k_GroupAName);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
@@ -388,7 +388,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: SIMPL Backwards Compatibility",
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -401,22 +401,22 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: SIMPL Backwards Compatibility",
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadTextDataArrayFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadTextDataArrayFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(ReadTextDataArrayFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
       // Complex type (NumericTypeParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<uint64>(ReadTextDataArrayFilter::k_NComp_Key) == 5);

@@ -109,14 +109,14 @@ Result<> CopyArray(const IDataArray& sourceArray, IDataArray& destinationArray, 
         }
         for(usize x = 0; x < referenceDims[0]; x++)
         {
-          T* destinationTuple = destinationRow.get() + x * components;
+          T* destinationTuplePtr = destinationRow.get() + x * components;
           if(xIndices[x] == k_InvalidIndex)
           {
-            std::fill_n(destinationTuple, components, static_cast<T>(fillValue));
+            std::fill_n(destinationTuplePtr, components, static_cast<T>(fillValue));
           }
           else
           {
-            std::copy_n(sourceRow.get() + xIndices[x] * components, components, destinationTuple);
+            std::copy_n(sourceRow.get() + xIndices[x] * components, components, destinationTuplePtr);
           }
         }
       }

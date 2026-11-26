@@ -24,26 +24,26 @@ CreateStringArrayAction::~CreateStringArrayAction() noexcept = default;
 
 Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "CreateStringArrayAction: ";
+  static constexpr StringLiteral k_Prefix = "CreateStringArrayAction: ";
   auto parentPath = path().getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
 
-  DataObject* parentObject = nullptr;
+  DataObject* parentObjectPtr = nullptr;
   if(parentPath.getLength() != 0)
   {
-    parentObject = dataStructure.getData(parentPath);
-    if(parentObject == nullptr)
+    parentObjectPtr = dataStructure.getData(parentPath);
+    if(parentObjectPtr == nullptr)
     {
-      return MakeErrorResult(-6001, fmt::format("{}CreateStringArrayAction:: Parent object '{}' does not exist", prefix, parentPath.toString()));
+      return MakeErrorResult(-6001, fmt::format("{}CreateStringArrayAction:: Parent object '{}' does not exist", k_Prefix, parentPath.toString()));
     }
 
-    dataObjectId = parentObject->getId();
+    dataObjectId = parentObjectPtr->getId();
   }
 
   if(m_Dims.empty())
   {
-    return MakeErrorResult(-6002, fmt::format("{}CreateStringArrayAction: Tuple Shape was empty. Please set the number of tuples.", prefix));
+    return MakeErrorResult(-6002, fmt::format("{}CreateStringArrayAction: Tuple Shape was empty. Please set the number of tuples.", k_Prefix));
   }
 
   std::string name = path().getTargetName();
@@ -63,20 +63,20 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mod
   }
 
   std::vector<std::string> values(totalTuples, m_InitializeValue);
-  StringArray* array = StringArray::CreateWithValues(dataStructure, name, m_Dims, values, dataObjectId);
-  if(array == nullptr)
+  StringArray* arrayPtr = StringArray::CreateWithValues(dataStructure, name, m_Dims, values, dataObjectId);
+  if(arrayPtr == nullptr)
   {
-    if(parentObject != nullptr && parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    if(parentObjectPtr != nullptr && parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
-      auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
-      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
+      auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrixPtr->getShape(), " x "));
       std::string arrayShape = fmt::format("String Array Tuple Shape: {}", fmt::join(m_Dims, " x "));
       return MakeErrorResult(-6003, fmt::format("{}Unable to create String Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created String Array must have the same tuple "
                                                 "dimensions or the same total number of tuples.\n{}\n{}",
-                                                prefix, name, parentPath.toString(), amShape, arrayShape));
+                                                k_Prefix, name, parentPath.toString(), amShape, arrayShape));
     }
 
-    return MakeErrorResult(-6004, fmt::format("{}CreateStringArrayAction: Unable to create StringArray at '{}'", prefix, path().toString()));
+    return MakeErrorResult(-6004, fmt::format("{}CreateStringArrayAction: Unable to create StringArray at '{}'", k_Prefix, path().toString()));
   }
   return {};
 }

@@ -20,18 +20,18 @@ namespace
 constexpr int32 k_ComponentCountMismatchError = -90003;
 constexpr int32 k_InvalidNumTuples = -90004;
 
-IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, const std::vector<DataPath>& dataPaths)
+IFilter::PreflightResult ValidateArrayTypes(const DataStructure& dataStructure, const std::vector<DataPath>& dataPaths)
 {
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath))
+    if(const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath))
     {
       if(!dataType.has_value())
       {
-        dataType = dataArray->getDataType();
+        dataType = dataArrayPtr->getDataType();
       }
-      else if(dataType != dataArray->getDataType())
+      else if(dataType != dataArrayPtr->getDataType())
       {
         std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
         return {.outputActions = MakeErrorResult<OutputActions>(-90001, ss)};
@@ -46,7 +46,7 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, 
   return {};
 }
 
-WarningCollection warnOnUnsignedTypes(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
+WarningCollection WarnOnUnsignedTypes(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
 {
   WarningCollection results;
   for(const auto& dataPath : paths)
@@ -149,7 +149,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 
   if(!dataArrayPaths.empty())
   {
-    auto result = validateArrayTypes(dataStructure, dataArrayPaths);
+    auto result = ValidateArrayTypes(dataStructure, dataArrayPaths);
     if(result.outputActions.invalid())
     {
       return result;
@@ -159,7 +159,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   WarningCollection warnings;
   if(!dataArrayPaths.empty())
   {
-    warnings = warnOnUnsignedTypes(dataStructure, dataArrayPaths);
+    warnings = WarnOnUnsignedTypes(dataStructure, dataArrayPaths);
   }
 
   if(firstInputArray.getNumberOfComponents() != secondInputArray.getNumberOfComponents())

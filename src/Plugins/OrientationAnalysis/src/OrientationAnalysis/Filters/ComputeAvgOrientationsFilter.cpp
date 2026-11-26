@@ -136,7 +136,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
 
-  auto pUseRodriguesAverage_Key = filterArgs.value<bool>(k_UseRodriguesAverage_Key);
+  auto pUseRodriguesAverageKey = filterArgs.value<bool>(k_UseRodriguesAverage_Key);
   auto pAvgQuatsArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_RodriguesQuatsArrayName_Key));
   auto pAvgEulerAnglesArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_RodriguesAvgEulerArrayName_Key));
 
@@ -151,7 +151,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto pWatsonKappaArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonKappaArrayName_Key));
 
   // Require at least one averaging method before execution.
-  if(!pUseRodriguesAverage_Key && !pUseVonMisesFisher && !pUseWatson)
+  if(!pUseRodriguesAverageKey && !pUseVonMisesFisher && !pUseWatson)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(
                 -54673, "No averaging method is enabled. Enable at least one of: 'Compute Rodrigues Average', 'Compute von Mises-Fisher Average', 'Compute Watson Average'.")};
@@ -177,7 +177,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
 
   // Create output DataStructure Items
   auto tupleShape = cellFeatAttMatrix.getShape();
-  if(pUseRodriguesAverage_Key)
+  if(pUseRodriguesAverageKey)
   {
     {
       auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{4}, pAvgQuatsArrayPathValue);

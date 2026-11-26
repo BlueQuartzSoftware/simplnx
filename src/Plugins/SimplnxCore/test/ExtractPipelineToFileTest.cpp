@@ -18,9 +18,9 @@ using namespace nx::core::Constants;
 
 namespace
 {
-fs::path k_OutputFileName(fmt::format("{}/Small_IN100_Pipeline", unit_test::k_BinaryTestOutputDir));
-fs::path k_JsonOutputFile(k_OutputFileName.string() + Pipeline::k_SIMPLExtension.str());
-fs::path k_NXOutputFile(k_OutputFileName.string() + Pipeline::k_Extension.str());
+fs::path KOutputFileName(fmt::format("{}/Small_IN100_Pipeline", unit_test::k_BinaryTestOutputDir));
+fs::path KJsonOutputFile(KOutputFileName.string() + Pipeline::k_SIMPLExtension.str());
+fs::path KNxOutputFile(KOutputFileName.string() + Pipeline::k_Extension.str());
 } // namespace
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[SimplnxCore][ExtractPipelineToFileFilter]")
@@ -37,7 +37,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[Simplnx
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ExtractPipelineToFileFilter::k_ImportFileData, std::make_any<FileSystemPathParameter::ValueType>(exemplarDream3dFile));
-  args.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, std::make_any<FileSystemPathParameter::ValueType>(k_NXOutputFile));
+  args.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, std::make_any<FileSystemPathParameter::ValueType>(KNxOutputFile));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -47,9 +47,9 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[Simplnx
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  REQUIRE(fs::exists(k_NXOutputFile));
+  REQUIRE(fs::exists(KNxOutputFile));
 
-  fs::remove(k_NXOutputFile);
+  fs::remove(KNxOutputFile);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -68,7 +68,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ExtractPipelineToFileFilter::k_ImportFileData, std::make_any<FileSystemPathParameter::ValueType>(exemplarDream3dFile));
-  args.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, std::make_any<FileSystemPathParameter::ValueType>(k_JsonOutputFile));
+  args.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, std::make_any<FileSystemPathParameter::ValueType>(KJsonOutputFile));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -79,9 +79,9 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   REQUIRE(preflightResult.outputActions.warnings().front().code == -2581);
-  REQUIRE(fs::exists(k_NXOutputFile));
+  REQUIRE(fs::exists(KNxOutputFile));
 
-  fs::remove(k_NXOutputFile);
+  fs::remove(KNxOutputFile);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -100,7 +100,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missin
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ExtractPipelineToFileFilter::k_ImportFileData, std::make_any<FileSystemPathParameter::ValueType>(exemplarDream3dFile));
-  args.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, std::make_any<FileSystemPathParameter::ValueType>(k_OutputFileName));
+  args.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, std::make_any<FileSystemPathParameter::ValueType>(KOutputFileName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -110,7 +110,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missin
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  REQUIRE(!fs::exists(k_JsonOutputFile));
+  REQUIRE(!fs::exists(KJsonOutputFile));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -146,7 +146,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  REQUIRE(!fs::exists(k_JsonOutputFile));
+  REQUIRE(!fs::exists(KJsonOutputFile));
 
   fs::remove(testInvalidInputFile);
 
