@@ -401,7 +401,8 @@ inline void RunObjectMorphologyComputedExpected(const std::function<DataPath(Dat
   }
 
   NewFilterT filter;
-  detail::RunFilter<NewFilterT>(filter, dataStructure, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}, setParams);
+  detail::RunFilter<NewFilterT>(filter, dataStructure, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
+                                setParams);
 
   const std::vector<T> expected = ObjectMorphologyOracle<T>(input, dimX, dimY, dimZ, kernelType, radius, op, objectValue, backgroundValue);
 

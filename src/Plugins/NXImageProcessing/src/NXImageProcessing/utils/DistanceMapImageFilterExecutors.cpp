@@ -130,7 +130,8 @@ struct SignedDanielssonDistanceMapExecuteFn
     // (2) dil = BinaryDilate(inv, ball radius 1, DilateValue=1). ITK's BinaryBallStructuringElement(1) is
     // FlatStructuringElement::Ball(1) (== KernelType::Ball); outside is background (boundaryToForeground=false).
     const StructuringElement se = MakeStructuringElement(KernelType::Ball, {1, 1, 1});
-    if(Result<> r = ApplyBinaryMorphology<T>(*invStore, *dilStore, dims, se, MorphOp::Dilate, T{1}, T{0}, /*boundaryToForeground=*/false, inArray, outArray, should_cancel, message_handler); r.invalid())
+    if(Result<> r = ApplyBinaryMorphology<T>(*invStore, *dilStore, dims, se, MorphOp::Dilate, T{1}, T{0}, /*boundaryToForeground=*/false, inArray, outArray, should_cancel, message_handler);
+       r.invalid())
     {
       return r;
     }
@@ -139,7 +140,8 @@ struct SignedDanielssonDistanceMapExecuteFn
     // (3) d1 = Danielsson(input) -> the real output store; (4) d2 = Danielsson(dil) -> d2 scratch. Both inherit
     // SquaredDistance/UseImageSpacing (ITK sets these on both inner filters); InputIsBinary is left default (it never
     // affects the distance).
-    if(Result<> r = ApplyDanielssonDistanceMap<T>(inStore, outStore, dims, /*inputIsBinary=*/false, squared_distance, use_spacing, spacing, inArray, outArray, should_cancel, message_handler); r.invalid())
+    if(Result<> r = ApplyDanielssonDistanceMap<T>(inStore, outStore, dims, /*inputIsBinary=*/false, squared_distance, use_spacing, spacing, inArray, outArray, should_cancel, message_handler);
+       r.invalid())
     {
       return r;
     }

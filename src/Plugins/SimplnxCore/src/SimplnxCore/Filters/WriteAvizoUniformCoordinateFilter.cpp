@@ -140,7 +140,7 @@ constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_WriteBinaryFileKey = "WriteBinaryFile";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_UnitsKey = "Units";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteAvizoUniformCoordinateFilter::FromSIMPLJson(const nlohmann::json& json)

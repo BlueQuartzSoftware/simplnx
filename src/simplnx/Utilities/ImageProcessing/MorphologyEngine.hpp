@@ -64,7 +64,8 @@ void SubtractMorphologyPlaneRows(const T* originalPlane, T* morphologyPlane, usi
     for(usize x = 0; x < outputWidth; ++x)
     {
       const T originalValue = originalRowPtr[x];
-      morphologyRowPtr[x] = outputMode == MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<T>(originalValue - morphologyRowPtr[x]) : static_cast<T>(morphologyRowPtr[x] - originalValue);
+      morphologyRowPtr[x] =
+          outputMode == MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<T>(originalValue - morphologyRowPtr[x]) : static_cast<T>(morphologyRowPtr[x] - originalValue);
     }
   }
 }
@@ -4019,19 +4020,21 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
       {
         if(firstDilate)
         {
-          detail::RunMorphologyFlatFoldBlock<T, true>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, flatOffsets, shouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, true>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, flatOffsets,
+                                                      shouldCancel);
         }
         else
         {
-          detail::RunMorphologyFlatFoldBlock<T, false>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, flatOffsets, shouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, false>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, flatOffsets,
+                                                       shouldCancel);
         }
       }
       else
       {
         if(firstDilate)
         {
-          detail::RunMorphologyPlaneWindow<T, true>(inputRing.get(), planePtr, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se, *axisSets,
-                                                    shouldCancel);
+          detail::RunMorphologyPlaneWindow<T, true>(inputRing.get(), planePtr, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
+                                                    *axisSets, shouldCancel);
         }
         else
         {
@@ -5970,16 +5973,16 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
       const detail::PackedBinaryPlanesView firstView = packedFirstRing->view();
       if(secondDilate)
       {
-        if(!detail::RunPrepackedBinaryMorphologyBlock<T, true>(firstView, outputPlanePtr, paddedDims, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background, secondBoundaryToForeground,
-                                                               shouldCancel))
+        if(!detail::RunPrepackedBinaryMorphologyBlock<T, true>(firstView, outputPlanePtr, paddedDims, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
+                                                               secondBoundaryToForeground, shouldCancel))
         {
           return {};
         }
       }
       else
       {
-        if(!detail::RunPrepackedBinaryMorphologyBlock<T, false>(firstView, outputPlanePtr, paddedDims, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background, secondBoundaryToForeground,
-                                                                shouldCancel))
+        if(!detail::RunPrepackedBinaryMorphologyBlock<T, false>(firstView, outputPlanePtr, paddedDims, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
+                                                                secondBoundaryToForeground, shouldCancel))
         {
           return {};
         }

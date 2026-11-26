@@ -34,13 +34,13 @@ Result<DREAM3D::ImageGeometryMetadata> ReadImageGeometryMetadata(const HDF5::Gro
   if(origin.invalid() || origin.value().size() != 3)
   {
     return MakeErrorResult<MetadataType>(k_ReadingOriginErrorCode, fmt::format("Cannot read image geometry '{}' from '{}'. Expected three origin values in the HDF5 attribute.",
-                                                                            DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
+                                                                               DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
   }
   const auto spacing = group.readVectorAttribute<float32>(IOConstants::k_H5_SPACING);
   if(spacing.invalid() || spacing.value().size() != 3)
   {
     return MakeErrorResult<MetadataType>(k_ReadingSpacingErrorCode, fmt::format("Cannot read image geometry '{}' from '{}'. Expected three spacing values in the HDF5 attribute.",
-                                                                             DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
+                                                                                DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
   }
   return {MetadataType{FloatVec3(origin.value()), FloatVec3(spacing.value())}};
 }

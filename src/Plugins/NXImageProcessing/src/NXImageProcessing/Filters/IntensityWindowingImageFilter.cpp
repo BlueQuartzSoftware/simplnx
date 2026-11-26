@@ -134,7 +134,7 @@ constexpr StringLiteral k_OutputMinimumKey = "OutputMinimum";
 constexpr StringLiteral k_OutputMaximumKey = "OutputMaximum";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> IntensityWindowingImageFilter::FromSIMPLJson(const nlohmann::json& json)

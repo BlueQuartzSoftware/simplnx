@@ -268,7 +268,7 @@ namespace simpl
 constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
 constexpr StringLiteral k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
 constexpr StringLiteral k_InternalTrianglesNameKey = "InternalTrianglesName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

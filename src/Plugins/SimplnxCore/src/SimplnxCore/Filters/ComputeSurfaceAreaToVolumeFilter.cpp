@@ -186,7 +186,7 @@ constexpr StringLiteral k_NumCellsArrayPathKey = "NumCellsArrayPath";
 constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayNameKey = "SurfaceAreaVolumeRatioArrayName";
 constexpr StringLiteral k_CalculateSphericityKey = "CalculateSphericity";
 constexpr StringLiteral k_SphericityArrayNameKey = "SphericityArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeSurfaceAreaToVolumeFilter::FromSIMPLJson(const nlohmann::json& json)

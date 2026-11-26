@@ -225,7 +225,7 @@ constexpr StringLiteral k_CellParentIdsArrayNameKey = "CellParentIdsArrayName";
 constexpr StringLiteral k_NewCellFeatureAttributeMatrixNameKey = "NewCellFeatureAttributeMatrixName";
 constexpr StringLiteral k_FeatureParentIdsArrayNameKey = "FeatureParentIdsArrayName";
 constexpr StringLiteral k_ActiveArrayNameKey = "ActiveArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MergeTwinsFilter::FromSIMPLJson(const nlohmann::json& json)

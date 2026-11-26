@@ -25,8 +25,8 @@ using GradientAnisoFilterType = GradientAnisotropicDiffusionImageFilter;
 // Sets the geometry, input, and output keys plus TimeStep, ConductanceParameter, ConductanceScalingUpdateInterval,
 // and NumberOfIterations on the Arguments. The helper runs preflight and execute, and requires that both steps
 // succeed.
-void RunGradientAniso(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 timeStep, float64 conductanceParameter, uint32 conductanceScalingUpdateInterval, uint32 numberOfIterations,
-                      const std::string& outputName = "Output")
+void RunGradientAniso(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 timeStep, float64 conductanceParameter, uint32 conductanceScalingUpdateInterval,
+                      uint32 numberOfIterations, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;

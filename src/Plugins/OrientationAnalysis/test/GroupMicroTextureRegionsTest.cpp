@@ -289,7 +289,7 @@ Arguments BuildArgs(float32 cAxisToleranceDeg, bool useRunningAverage, bool rand
   args.insertOrAssign(GroupMicroTextureRegionsFilter::k_SeedArrayName_Key, std::make_any<std::string>(k_SeedArrayName));
   return args;
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 TEST_CASE("OrientationAnalysis::GroupMicroTextureRegionsFilter: Phase Index Bounds", "[OrientationAnalysis][GroupMicroTextureRegionsFilter]")

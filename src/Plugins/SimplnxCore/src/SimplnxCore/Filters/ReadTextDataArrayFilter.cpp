@@ -168,7 +168,7 @@ constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
 constexpr StringLiteral k_SkipHeaderLinesKey = "SkipHeaderLines";
 constexpr StringLiteral k_DelimiterKey = "Delimiter";
 constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadTextDataArrayFilter::FromSIMPLJson(const nlohmann::json& json)

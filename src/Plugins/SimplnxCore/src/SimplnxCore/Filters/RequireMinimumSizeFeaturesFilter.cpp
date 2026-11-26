@@ -198,7 +198,7 @@ constexpr StringLiteral k_PhaseNumberKey = "PhaseNumber";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_NumCellsArrayPathKey = "NumCellsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RequireMinimumSizeFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)

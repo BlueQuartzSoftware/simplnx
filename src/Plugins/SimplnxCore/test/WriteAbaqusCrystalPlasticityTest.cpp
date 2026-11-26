@@ -65,7 +65,7 @@ DataStructure CreateDataStructure(const SizeVec3& dimensions, const std::vector<
   const ShapeType eulerShape = eulerTupleCount == 0 ? cellShape : ShapeType{eulerTupleCount};
   auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerTupleCount == 0 ? k_EulerAnglesPath : k_WrongEulerAnglesPath, eulerShape, {3});
   auto* eulerAnglesArrayPtr = eulerTupleCount == 0 ? DataArray<float32>::Create(dataStructure, k_EulerAnglesPath.getTargetName(), eulerAnglesStore, cellDataPtr->getId()) :
-                                                  DataArray<float32>::Create(dataStructure, k_WrongEulerAnglesPath.getTargetName(), eulerAnglesStore);
+                                                     DataArray<float32>::Create(dataStructure, k_WrongEulerAnglesPath.getTargetName(), eulerAnglesStore);
   REQUIRE(eulerAnglesArrayPtr != nullptr);
 
   REQUIRE(featureIds.size() == featureIdsArrayPtr->getNumberOfTuples());

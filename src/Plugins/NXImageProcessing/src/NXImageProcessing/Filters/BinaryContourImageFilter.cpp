@@ -156,7 +156,7 @@ constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
 constexpr StringLiteral k_ForegroundValueKey = "ForegroundValue";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> BinaryContourImageFilter::FromSIMPLJson(const nlohmann::json& json)

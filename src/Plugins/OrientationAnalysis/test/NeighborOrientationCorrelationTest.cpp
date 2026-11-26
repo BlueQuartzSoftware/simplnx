@@ -234,7 +234,7 @@ void VerifyAgainstSnapshot(const DataStructure& dataStructure, const CellSnapsho
     }
   }
 }
-} // namespace NOCOracle
+} // namespace noc_oracle
 
 namespace small_in100_invariants
 {
@@ -318,7 +318,7 @@ std::vector<CellArraySnapshot> SnapshotCellArrays(const DataStructure& dataStruc
   }
   return snapshots;
 }
-} // namespace SmallIn100Invariants
+} // namespace small_in100_invariants
 } // namespace
 
 // Verifies production-scale array-transfer invariants after the Small IN100 pipeline.
@@ -769,7 +769,7 @@ static void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, 
   auto crystalStructuresArrayWriteResult = crystalStructuresArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(csData.data(), 2));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresArrayWriteResult);
 }
-} // namespace NOCOocTest
+} // namespace noc_ooc_test
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Generate Test Data", "[OrientationAnalysis][NeighborOrientationCorrelationFilter][.GenerateTestData]")
 {

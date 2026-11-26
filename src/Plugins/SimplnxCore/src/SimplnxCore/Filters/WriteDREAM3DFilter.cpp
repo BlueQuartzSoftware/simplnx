@@ -118,7 +118,7 @@ namespace simpl
 {
 constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_WriteXdmfFileKey = "WriteXdmfFile";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)

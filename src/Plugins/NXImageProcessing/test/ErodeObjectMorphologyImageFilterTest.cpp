@@ -125,7 +125,9 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
       {
         SECTION("ObjectValue=7 BackgroundValue=3 colliding with existing label 3")
         {
-          const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return omt::BuildObjectImageWithExtraLabel<int32>(dataStructure, dx, dy, dz, int32{7}, int32{3}, int32{0}); };
+          const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) {
+            return omt::BuildObjectImageWithExtraLabel<int32>(dataStructure, dx, dy, dz, int32{7}, int32{3}, int32{0});
+          };
           omt::RunObjectMorphologyComputedExpected<ErodeObjectMorphologyImageFilter, int32>(build, 12, 12, 12, kt, radius, ObjectMorphOp::Erode, int32{7}, int32{3},
                                                                                             omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(7.0, 3.0));
         }

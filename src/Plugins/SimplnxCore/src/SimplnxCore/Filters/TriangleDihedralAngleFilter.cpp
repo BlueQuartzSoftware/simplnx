@@ -127,7 +127,7 @@ namespace
 namespace simpl
 {
 constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPathKey = "SurfaceMeshTriangleDihedralAnglesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> TriangleDihedralAngleFilter::FromSIMPLJson(const nlohmann::json& json)

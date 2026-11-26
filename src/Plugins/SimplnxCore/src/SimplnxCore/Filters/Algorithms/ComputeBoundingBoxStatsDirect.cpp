@@ -335,8 +335,8 @@ private:
  * @return True when the complete traversal finishes without cancellation.
  */
 template <class InputAccessorT, class FunctionT>
-bool ForEachBoxValue(const ImageGeom& imageGeom, const InputAccessorT& inputValues, const std::array<usize, 6>& voxelIndices, const std::atomic_bool& shouldCancel, const ScanProgressType& reportProgress,
-                     std::string_view progressLabel, FunctionT&& function)
+bool ForEachBoxValue(const ImageGeom& imageGeom, const InputAccessorT& inputValues, const std::array<usize, 6>& voxelIndices, const std::atomic_bool& shouldCancel,
+                     const ScanProgressType& reportProgress, std::string_view progressLabel, FunctionT&& function)
 {
   if(voxelIndices[k_MinXIndex] >= voxelIndices[k_MaxXIndex] || voxelIndices[k_MinYIndex] >= voxelIndices[k_MaxYIndex] || voxelIndices[k_MinZIndex] >= voxelIndices[k_MaxZIndex])
   {

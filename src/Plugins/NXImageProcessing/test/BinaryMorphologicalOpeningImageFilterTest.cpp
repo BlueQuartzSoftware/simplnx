@@ -223,7 +223,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight r
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: ITK real-image golden (WhiteDots)", "[NXImageProcessing][ItkGolden][BinaryMorphologicalOpeningImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<OpeningFilterType>("WhiteDots.png", "3dcb8bce1c174f358608927212aa4cf7", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
-                                                       OpeningKernelParamSetter(255.0, 0.0));
+                                                           OpeningKernelParamSetter(255.0, 0.0));
 }
 
 // -----------------------------------------------------------------------------

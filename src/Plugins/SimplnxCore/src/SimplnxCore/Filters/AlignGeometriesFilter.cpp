@@ -104,7 +104,7 @@ namespace simpl
 constexpr StringLiteral k_AlignmentTypeKey = "AlignmentType";
 constexpr StringLiteral k_MovingGeometryKey = "MovingGeometry";
 constexpr StringLiteral k_TargetGeometryKey = "TargetGeometry";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AlignGeometriesFilter::FromSIMPLJson(const nlohmann::json& json)

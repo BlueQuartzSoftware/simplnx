@@ -46,7 +46,8 @@ const std::array<ThreshCase, 3> k_ThreshCases = {{
 
 // Sets the geometry, input, and output keys plus the seven double-threshold parameters on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
-void RunDT(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const ThreshCase& tc, uint8 insideValue, uint8 outsideValue, bool fullyConnected, const std::string& outputName = "Output")
+void RunDT(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const ThreshCase& tc, uint8 insideValue, uint8 outsideValue, bool fullyConnected,
+           const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;

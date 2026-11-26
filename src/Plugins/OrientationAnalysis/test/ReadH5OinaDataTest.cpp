@@ -252,12 +252,14 @@ fs::path WriteH5OinaFixture(const std::string& fileName, const std::vector<ScanS
 // angles are 90/90/120 degrees written as radians, which is what an H5OINA file
 // carries; the third angle differs from the second so a gamma slot that echoed
 // beta would be visible.
-const PhaseSpec k_HexPhase{.name = "Hex Phase A", .laue_group = k_LaueHexagonalHigh, .space_group = 194, .lattice_dimensions = {2.5F, 2.5F, 4.0F}, .lattice_angles = {1.5707964F, 1.5707964F, 2.0943952F}};
+const PhaseSpec k_HexPhase{
+    .name = "Hex Phase A", .laue_group = k_LaueHexagonalHigh, .space_group = 194, .lattice_dimensions = {2.5F, 2.5F, 4.0F}, .lattice_angles = {1.5707964F, 1.5707964F, 2.0943952F}};
 // Hexagonal low: Laue group 8 -> CrystalStructure Hexagonal_Low (6/m).
 const PhaseSpec k_HexLowPhase{
     .name = "Hex Phase Low", .laue_group = k_LaueHexagonalLow, .space_group = 175, .lattice_dimensions = {2.5F, 2.5F, 4.0F}, .lattice_angles = {1.5707964F, 1.5707964F, 2.0943952F}};
 // Cubic: Laue group 11 -> CrystalStructure Cubic_High (1).
-const PhaseSpec k_CubicPhase{.name = "Cubic Phase B", .laue_group = k_LaueCubicHigh, .space_group = 225, .lattice_dimensions = {3.5F, 3.5F, 3.5F}, .lattice_angles = {1.5707964F, 1.5707964F, 1.5707964F}};
+const PhaseSpec k_CubicPhase{
+    .name = "Cubic Phase B", .laue_group = k_LaueCubicHigh, .space_group = 225, .lattice_dimensions = {3.5F, 3.5F, 3.5F}, .lattice_angles = {1.5707964F, 1.5707964F, 1.5707964F}};
 
 //------------------------------------------------------------------------------
 // Fixture A: one scan "1", 3 x 2 cells, XStep 0.25 / YStep 0.5, two phases.

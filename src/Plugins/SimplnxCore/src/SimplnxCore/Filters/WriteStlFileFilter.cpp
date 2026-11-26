@@ -221,7 +221,7 @@ namespace simpl
 constexpr StringLiteral k_OutputStlDirectoryKey = "OutputStlDirectory";
 constexpr StringLiteral k_OutputStlPrefixKey = "OutputStlPrefix";
 constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteStlFileFilter::FromSIMPLJson(const nlohmann::json& json)

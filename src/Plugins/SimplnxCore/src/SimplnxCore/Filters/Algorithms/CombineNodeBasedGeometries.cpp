@@ -167,7 +167,8 @@ Result<> CombineGeometryElements(DataStructure& dataStructure, NodeGeomType* out
   msgHandler.sendInfoMessage(fmt::format("Combining vertex data..."));
   std::vector<INodeGeometry0D*> inputGeoms(inputGeometryPaths.size());
   std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&dataStructure](const DataPath& path) { return dataStructure.getDataAs<INodeGeometry0D>(path); });
-  return CombineGeometryElements<INodeGeometry0D>(dataStructure, outputGeom0dPtr, inputGeoms, getVerticesArrayFunc, INodeGeometry0D::k_SharedVertexListName, getVertexAttrMatrixFunc, msgHandler, shouldCancel);
+  return CombineGeometryElements<INodeGeometry0D>(dataStructure, outputGeom0dPtr, inputGeoms, getVerticesArrayFunc, INodeGeometry0D::k_SharedVertexListName, getVertexAttrMatrixFunc, msgHandler,
+                                                  shouldCancel);
 }
 
 /**
@@ -225,7 +226,8 @@ Result<> CombineGeometryElements(DataStructure& dataStructure, NodeGeomType* out
 
   // Combine the data
   msgHandler.sendInfoMessage(fmt::format("Combining edge data..."));
-  auto result = CombineGeometryElements<INodeGeometry1D>(dataStructure, outputGeom1dPtr, inputGeoms, getEdgesArrayFunc, INodeGeometry1D::k_SharedEdgeListName, getEdgeAttrMatrixFunc, msgHandler, shouldCancel);
+  auto result =
+      CombineGeometryElements<INodeGeometry1D>(dataStructure, outputGeom1dPtr, inputGeoms, getEdgesArrayFunc, INodeGeometry1D::k_SharedEdgeListName, getEdgeAttrMatrixFunc, msgHandler, shouldCancel);
   if(result.invalid())
   {
     return result;
@@ -293,7 +295,8 @@ Result<> CombineGeometryElements(DataStructure& dataStructure, NodeGeomType* out
   msgHandler.sendInfoMessage(fmt::format("Combining face data..."));
   std::vector<INodeGeometry2D*> inputGeoms(inputGeometryPaths.size());
   std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&dataStructure](const DataPath& path) { return dataStructure.getDataAs<INodeGeometry2D>(path); });
-  auto result = CombineGeometryElements<INodeGeometry2D>(dataStructure, outputGeom2dPtr, inputGeoms, getFacesArrayFunc, INodeGeometry2D::k_SharedFacesListName, getFaceAttrMatrixFunc, msgHandler, shouldCancel);
+  auto result =
+      CombineGeometryElements<INodeGeometry2D>(dataStructure, outputGeom2dPtr, inputGeoms, getFacesArrayFunc, INodeGeometry2D::k_SharedFacesListName, getFaceAttrMatrixFunc, msgHandler, shouldCancel);
   if(result.invalid())
   {
     return result;
@@ -361,7 +364,8 @@ Result<> CombineGeometryElements(DataStructure& dataStructure, NodeGeomType* out
   msgHandler.sendInfoMessage(fmt::format("Combining polyhedron data..."));
   std::vector<INodeGeometry3D*> inputGeoms(inputGeometryPaths.size());
   std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&dataStructure](const DataPath& path) { return dataStructure.getDataAs<INodeGeometry3D>(path); });
-  auto result = CombineGeometryElements<INodeGeometry3D>(dataStructure, outputGeom3dPtr, inputGeoms, getPolyArrayFunc, INodeGeometry3D::k_SharedPolyhedronListName, getPolyAttrMatrixFunc, msgHandler, shouldCancel);
+  auto result = CombineGeometryElements<INodeGeometry3D>(dataStructure, outputGeom3dPtr, inputGeoms, getPolyArrayFunc, INodeGeometry3D::k_SharedPolyhedronListName, getPolyAttrMatrixFunc, msgHandler,
+                                                         shouldCancel);
   if(result.invalid())
   {
     return result;

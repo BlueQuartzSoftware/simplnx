@@ -528,7 +528,7 @@ constexpr StringLiteral k_MedianArrayNameKey = "MedianArrayName";
 constexpr StringLiteral k_StdDeviationArrayNameKey = "StdDeviationArrayName";
 constexpr StringLiteral k_SummationArrayNameKey = "SummationArrayName";
 constexpr StringLiteral k_StandardizedArrayNameKey = "StandardizedArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeArrayStatisticsFilter::FromSIMPLJson(const nlohmann::json& json)

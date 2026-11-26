@@ -162,7 +162,7 @@ namespace simpl
 constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_WriteBinaryFileKey = "WriteBinaryFile";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteVtkRectilinearGridFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -161,7 +161,7 @@ constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_CAxisMisalignmentListArrayNameKey = "CAxisMisalignmentListArrayName";
 constexpr StringLiteral k_AvgCAxisMisalignmentsArrayNameKey = "AvgCAxisMisalignmentsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureNeighborCAxisMisalignmentsFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -329,8 +329,8 @@ Result<> ComputeKMedoidsDirect::operator()()
   }
 
   RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(
-      clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath), maskCompare, m_InputValues->UseMask, m_InputValues->InitClusters,
-      m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric, m_InputValues->Seed);
+      clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath), maskCompare, m_InputValues->UseMask,
+      m_InputValues->InitClusters, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric, m_InputValues->Seed);
 
   return {};
 }

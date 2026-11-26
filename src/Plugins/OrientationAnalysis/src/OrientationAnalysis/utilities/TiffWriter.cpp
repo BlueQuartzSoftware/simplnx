@@ -67,7 +67,7 @@ std::pair<int32_t, std::string> TiffWriter::WriteImage(const std::string& filepa
   // Now compute the offset to the image data so that we can put that into the tag.
   // The math on this ONLY Works if we have 11 total Tags.
   // IF YOU ADD MORE TAGS, YOU NEED TO ADJUST THE NEXT LINE OF CODE
-  int32_t imageDataOffset = static_cast<int32_t>(8 + (kNumTags * 12) + 6);                                   // Header + tags + IDF Tag entry count and Next IFD Offset
+  int32_t imageDataOffset = static_cast<int32_t>(8 + (kNumTags * 12) + 6);                                        // Header + tags + IDF Tag entry count and Next IFD Offset
   tags.push_back(TIFTAG{.tag_id = 0x0111, .data_type = 0x0004, .data_count = 1, .data_offset = imageDataOffset}); // StripOffsets
 
   tags.push_back(TIFTAG{.tag_id = 0x0112, .data_type = 0x0003, .data_count = 1, .data_offset = 1});                                // Orientation

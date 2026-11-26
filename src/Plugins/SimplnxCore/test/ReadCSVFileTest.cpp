@@ -259,8 +259,8 @@ static void TestCaseTestPrimitivesError(UnitTest::AlgorithmTestScope& scope, non
 }
 
 static void TestCaseTestImporterDataError(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
-                                            const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
-                                            nonstd::span<std::string> values, int32 expectedErrorCode)
+                                          const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
+                                          nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   std::string newGroupName = "New Group";
   ReadCSVFileFilter filter;
@@ -523,8 +523,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - I
   TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
   TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8, CSVType::int32}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
   TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
-  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8, CSVType::int32}, {false}, tupleDims, v,
-                                  k_IncorrectDataTypeCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8, CSVType::int32}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
 
   // Incorrect Skipped Array Mask Count
   TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
@@ -575,7 +574,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - I
 
   // Inconsistent Columns
   TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array", "Custom Array2"}, {CSVType::int8, CSVType::int8}, {false, false}, tupleDims, v,
-                                  k_InconsistentCols);
+                                k_InconsistentCols);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 6): Invalid filter execution - Blank Lines")

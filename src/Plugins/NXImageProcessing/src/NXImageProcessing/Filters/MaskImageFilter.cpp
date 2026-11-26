@@ -138,7 +138,7 @@ constexpr StringLiteral k_OutsideValueKey = "OutsideValue";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_MaskCellArrayPathKey = "MaskCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MaskImageFilter::FromSIMPLJson(const nlohmann::json& json)

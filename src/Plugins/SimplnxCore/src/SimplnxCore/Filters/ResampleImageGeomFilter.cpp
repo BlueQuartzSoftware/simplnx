@@ -180,7 +180,7 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
 constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
 constexpr StringLiteral k_NewDataContainerPathKey = "NewDataContainerPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& json)

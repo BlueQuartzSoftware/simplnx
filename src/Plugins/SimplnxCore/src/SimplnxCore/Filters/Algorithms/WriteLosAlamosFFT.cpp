@@ -215,8 +215,8 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
       const float32 phi = eulerAnglesChunkPtr[eulerIndex + 1] * 180.0f * Constants::k_1OverPiF;
       const float32 phi2 = eulerAnglesChunkPtr[eulerIndex + 2] * 180.0f * Constants::k_1OverPiF;
 
-      file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<UllType>(x + 1), static_cast<UllType>(y + 1), static_cast<UllType>(z + 1), featureIdsChunkPtr[chunkIndex],
-                          cellPhasesChunkPtr[chunkIndex]);
+      file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<UllType>(x + 1), static_cast<UllType>(y + 1), static_cast<UllType>(z + 1),
+                          featureIdsChunkPtr[chunkIndex], cellPhasesChunkPtr[chunkIndex]);
 
       x++;
       if(x == dims[0])

@@ -160,7 +160,7 @@ constexpr StringLiteral k_HatchDataContainerName_Key = "HatchDataContainerName";
 constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
 constexpr StringLiteral k_HatchAttributeMatrixName_Key = "HatchAttributeMatrixName";
 constexpr StringLiteral k_RegionIdsArrayName_Key = "RegionIdsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------

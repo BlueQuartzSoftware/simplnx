@@ -139,7 +139,7 @@ constexpr int64 k_ScalarValue = 3;
 const ShapeType k_TupleShape{3, 2, 1};
 const SizeVec3 k_ImageShape{1, 2, 3};
 constexpr int16 k_ListCount = 6;
-} // namespace Constants
+} // namespace constants
 
 /**
  * @var m_DataMutex
@@ -163,7 +163,7 @@ constexpr StringLiteral k_GridMontageName = "GridMontage";
 
 constexpr StringLiteral k_CreateDataFilterName = "Create Data Group";
 constexpr StringLiteral k_ExportD3DFilterName = "Write DREAM3D-NX File";
-} // namespace DataNames
+} // namespace data_names
 
 const FilterHandle k_CreateDataGroupHandle(Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
 const FilterHandle k_CreateDataArrayHandle(Uuid::FromString("67041f9b-bdc6-4122-acc6-c9fe9280e90d").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());

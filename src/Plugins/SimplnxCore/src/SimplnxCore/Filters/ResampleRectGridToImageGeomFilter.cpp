@@ -224,7 +224,7 @@ constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 constexpr StringLiteral k_DimensionsKey = "Dimensions";
 constexpr StringLiteral k_ImageGeometryPathKey = "ImageGeometryPath";
 constexpr StringLiteral k_ImageGeomCellAttributeMatrixKey = "ImageGeomCellAttributeMatrix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohmann::json& json)

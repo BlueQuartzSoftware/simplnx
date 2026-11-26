@@ -100,7 +100,7 @@ namespace simpl
 {
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> NormalizeImageFilter::FromSIMPLJson(const nlohmann::json& json)

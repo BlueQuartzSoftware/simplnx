@@ -168,7 +168,7 @@ constexpr StringLiteral k_JobNameKey = "JobName";
 constexpr StringLiteral k_OutputPathKey = "OutputPath";
 constexpr StringLiteral k_FilePrefixKey = "FilePrefix";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteAbaqusHexahedronFilter::FromSIMPLJson(const nlohmann::json& json)

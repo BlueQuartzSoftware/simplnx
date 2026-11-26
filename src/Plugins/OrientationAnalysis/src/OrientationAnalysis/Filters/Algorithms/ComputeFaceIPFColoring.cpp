@@ -231,8 +231,8 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
   }
   using namespace orientation::detail;
   constexpr usize k_FaceBytes = (2 * sizeof(int32)) + (3 * sizeof(float64)) + (6 * sizeof(uint8));
-  auto planResult =
-      PlanLookups({.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 3, .FaceBytes = k_FaceBytes}, -24359);
+  auto planResult = PlanLookups(
+      {.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 3, .FaceBytes = k_FaceBytes}, -24359);
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));

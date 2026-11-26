@@ -141,7 +141,7 @@ constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_WriteBinaryFileKey = "WriteBinaryFile";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_UnitsKey = "Units";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteAvizoRectilinearCoordinateFilter::FromSIMPLJson(const nlohmann::json& json)

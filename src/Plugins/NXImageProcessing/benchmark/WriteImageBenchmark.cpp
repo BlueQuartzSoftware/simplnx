@@ -483,7 +483,8 @@ Result<> AppendCsv(const fs::path& csvPath, const std::vector<TimingRow>& rows, 
   }
   for(const TimingRow& row : rows)
   {
-    output << row.mode << ',' << row.writer << ',' << row.case_name << ',' << row.data_type << ',' << k_DimX << 'x' << k_DimY << 'x' << k_DimZ << ',' << k_VoxelCount << ',' << warmup << ',' << repeats;
+    output << row.mode << ',' << row.writer << ',' << row.case_name << ',' << row.data_type << ',' << k_DimX << 'x' << k_DimY << 'x' << k_DimZ << ',' << k_VoxelCount << ',' << warmup << ','
+           << repeats;
     for(usize index = 0; index < 3; ++index)
     {
       output << ',';
@@ -492,8 +493,8 @@ Result<> AppendCsv(const fs::path& csvPath, const std::vector<TimingRow>& rows, 
         output << fmt::format("{:.3f}", row.samples_ms[index]);
       }
     }
-    output << ',' << fmt::format("{:.3f}", row.median_ms) << ',' << fmt::format("{:.3f}", row.minimum_ms) << ',' << row.output.file_count << ',' << row.output.byte_count << ',' << row.data_format << ','
-           << row.chunk_shape << ',' << row.counter_delta.returned_extent_reads << ',' << row.counter_delta.caller_extent_reads << ',' << row.counter_delta.chunk_cache_misses << ','
+    output << ',' << fmt::format("{:.3f}", row.median_ms) << ',' << fmt::format("{:.3f}", row.minimum_ms) << ',' << row.output.file_count << ',' << row.output.byte_count << ',' << row.data_format
+           << ',' << row.chunk_shape << ',' << row.counter_delta.returned_extent_reads << ',' << row.counter_delta.caller_extent_reads << ',' << row.counter_delta.chunk_cache_misses << ','
            << row.counter_delta.metadata_batches << '\n';
   }
   return {};

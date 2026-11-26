@@ -382,6 +382,6 @@ Result<> ReplaceElementAttributesWithNeighborValues::operator()()
   auto* srcIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
-  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArrayPtr->getDataType(), imageGeom, srcIDataArrayPtr, m_InputValues->InputArrayPath, m_InputValues->SelectedComparison, m_InputValues->MinConfidence,
-                             m_InputValues->Loop, m_ShouldCancel, m_MessageHandler);
+  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArrayPtr->getDataType(), imageGeom, srcIDataArrayPtr, m_InputValues->InputArrayPath, m_InputValues->SelectedComparison,
+                             m_InputValues->MinConfidence, m_InputValues->Loop, m_ShouldCancel, m_MessageHandler);
 }

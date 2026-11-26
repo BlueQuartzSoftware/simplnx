@@ -129,7 +129,7 @@ constexpr StringLiteral k_SigmaKey = "Sigma";
 constexpr StringLiteral k_NormalizeAcrossScaleKey = "NormalizeAcrossScale";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> SmoothingRecursiveGaussianImageFilter::FromSIMPLJson(const nlohmann::json& json)

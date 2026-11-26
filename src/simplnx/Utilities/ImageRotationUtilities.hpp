@@ -305,11 +305,11 @@ inline void FindInterpolationValues(const RotateArgs& params, usize octant, Size
   auto c000Index = oldIndices + indexOffset[0];
   auto c111Index = oldIndices + indexOffset[6];
   Eigen::Vector3f c000Coord = {static_cast<float32>(c000Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
-                                static_cast<float32>(c000Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
-                                static_cast<float32>(c000Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
+                               static_cast<float32>(c000Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
+                               static_cast<float32>(c000Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
   Eigen::Vector3f c111Coord = {static_cast<float32>(c111Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
-                                static_cast<float32>(c111Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
-                                static_cast<float32>(c111Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
+                               static_cast<float32>(c111Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
+                               static_cast<float32>(c111Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
 
   for(usize i = 0; i < 3; i++)
   {

@@ -144,7 +144,7 @@ constexpr StringLiteral k_SurfaceTripleLineLambdaKey = "SurfaceTripleLineLambda"
 constexpr StringLiteral k_SurfaceQuadPointLambdaKey = "SurfaceQuadPointLambda";
 constexpr StringLiteral k_SurfaceMeshNodeTypeArrayPathKey = "SurfaceMeshNodeTypeArrayPath";
 constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> LaplacianSmoothingFilter::FromSIMPLJson(const nlohmann::json& json)

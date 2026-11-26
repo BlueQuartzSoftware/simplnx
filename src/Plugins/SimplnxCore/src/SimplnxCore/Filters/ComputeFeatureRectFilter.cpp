@@ -130,7 +130,7 @@ namespace simpl
 {
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_FeatureRectArrayPathKey = "FeatureRectArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureRectFilter::FromSIMPLJson(const nlohmann::json& json)

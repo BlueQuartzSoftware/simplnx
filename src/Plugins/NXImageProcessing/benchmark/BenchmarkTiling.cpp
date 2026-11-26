@@ -301,8 +301,8 @@ struct FillTiledFunctor
 
 namespace ip_bench
 {
-Result<> BuildTiledInput(DataStructure& dataStructure, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, usize targetVoxels, usize minZSlices,
-                         DataStorageMode storeMode, DataPath& outArrayPath, bool force2D, const SourceArrayValidator& sourceValidator)
+Result<> BuildTiledInput(DataStructure& dataStructure, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, usize targetVoxels,
+                         usize minZSlices, DataStorageMode storeMode, DataPath& outArrayPath, bool force2D, const SourceArrayValidator& sourceValidator)
 {
   // --- 1) Read the real input ONCE into a scratch DataStructure to recover dims/type/components. Force the scratch
   //        in-core (fast slice reads) regardless of the caller's active preference; restore the preference after. ---

@@ -35,7 +35,7 @@ namespace
 {
 struct CliOptions
 {
-  std::string mode = "incore";       // incore | ooc
+  std::string mode = "incore";        // incore | ooc
   usize target_voxels = 256000000ULL; // ~256M voxels
   usize z_slices = 256;
   bool force_2d = false;
@@ -45,9 +45,9 @@ struct CliOptions
   bool ooc_only = false;
   std::optional<uint64> cache_memory_budget_bytes;
   std::optional<uint64> working_memory_bytes;
-  std::string filters = "subset"; // subset | all | <name>[,<name>...]
+  std::string filters = "subset";  // subset | all | <name>[,<name>...]
   std::string out_csv;             // CSV output path (enables the full run + CSV write)
-  bool require_new_result = false;  // Exit nonzero if the selected new-filter configuration does not produce a timing.
+  bool require_new_result = false; // Exit nonzero if the selected new-filter configuration does not produce a timing.
   bool do_merge = false;           // --merge <incoreCsv> <oocCsv> : join two CSVs, no filters run
   std::string merge_incore_csv;
   std::string merge_ooc_csv;

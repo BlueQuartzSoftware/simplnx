@@ -138,7 +138,7 @@ namespace simpl
 {
 constexpr StringLiteral k_LammpsFileKey = "LammpsFile";
 constexpr StringLiteral k_AtomFeatureLabelsPathKey = "AtomFeatureLabelsPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteLAMMPSFileFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -183,7 +183,7 @@ namespace simpl
 {
 constexpr StringLiteral k_ReferenceCellAttributeMatrixPathKey = "ReferenceCellAttributeMatrixPath";
 constexpr StringLiteral k_SamplingCellAttributeMatrixPathKey = "SamplingCellAttributeMatrixPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -287,7 +287,8 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     std::vector<usize> vertTupleShape = {4};
     AttributeMatrix* vertAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, vertexGeomPtr->getId());
     vertexGeomPtr->setVertexAttributeMatrix(*vertAttMatrixPtr);
-    StringArray* testStringArrayPtr = StringArray::CreateWithValues(dataStruct, k_StringArray, vertAttMatrixPtr->getShape(), {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrixPtr->getId());
+    StringArray* testStringArrayPtr =
+        StringArray::CreateWithValues(dataStruct, k_StringArray, vertAttMatrixPtr->getShape(), {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrixPtr->getId());
     Float32Array* vertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeomPtr->getId());
     (*vertListArrayPtr)[0] = 0;
     (*vertListArrayPtr)[1] = 0;

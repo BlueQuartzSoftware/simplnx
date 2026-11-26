@@ -118,7 +118,7 @@ constexpr StringLiteral k_TetrahedralGeom = "TetrahedralGeometry";
 constexpr StringLiteral k_TriangleGeom = "TriangleGeometry";
 constexpr StringLiteral k_VertexGeom = "VertexGeometry";
 } // namespace geometry_type
-} // namespace Legacy
+} // namespace legacy
 
 std::pair<std::string, usize> GetXdmfTypeAndSize(DataType type)
 {
@@ -2797,7 +2797,8 @@ Result<> DREAM3D::FinishImportingObject(DataStructure& importStructure, DataStru
   }
 
   const auto* insertedObjectPtr = dataStructure.getData(dataPath);
-  if(dynamic_cast<const IDataArray*>(insertedObjectPtr) == nullptr && dynamic_cast<const INeighborList*>(insertedObjectPtr) == nullptr && dynamic_cast<const StringArray*>(insertedObjectPtr) == nullptr)
+  if(dynamic_cast<const IDataArray*>(insertedObjectPtr) == nullptr && dynamic_cast<const INeighborList*>(insertedObjectPtr) == nullptr &&
+     dynamic_cast<const StringArray*>(insertedObjectPtr) == nullptr)
   {
     return insertResult;
   }

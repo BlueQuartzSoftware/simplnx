@@ -232,7 +232,7 @@ constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttr
 constexpr StringLiteral k_ClusteringListArrayNameKey = "ClusteringListArrayName";
 constexpr StringLiteral k_NewEnsembleArrayArrayNameKey = "NewEnsembleArrayArrayName";
 constexpr StringLiteral k_MaxMinArrayNameKey = "MaxMinArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureClusteringFilter::FromSIMPLJson(const nlohmann::json& json)

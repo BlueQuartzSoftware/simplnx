@@ -23,7 +23,7 @@ namespace create_image_geometry_unit_test
 const fs::path k_DataDir = "test/data";
 const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
-} // namespace CreateImageGeometryUnitTest
+} // namespace create_image_geometry_unit_test
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
 {

@@ -1437,7 +1437,8 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           const usize loadedWidth = loadXEnd - loadXBegin;
           const usize coreWidth = xEnd - xBegin;
           const usize coreRows = yEnd - yBegin;
-          if(Result<> result = ReadFiniteDifference2DRegion(*currentStorePtr, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size())); result.invalid())
+          if(Result<> result = ReadFiniteDifference2DRegion(*currentStorePtr, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size()));
+             result.invalid())
           {
             return result;
           }

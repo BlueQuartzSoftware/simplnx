@@ -153,7 +153,8 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
     }
     if(tokens.size() < 4 || (tokens[0] != "<Min>" && tokens[0] != "<Max>"))
     {
-      return MakeErrorResult<LocationType>(-1, fmt::format("Unexpected data at line {} in 'Location' section of Binary CT Northstar file '{}'. Expected '<Min>' or '<Max>' followed by three coordinates.",
+      return MakeErrorResult<LocationType>(-1,
+                                           fmt::format("Unexpected data at line {} in 'Location' section of Binary CT Northstar file '{}'. Expected '<Min>' or '<Max>' followed by three coordinates.",
                                                        lineCount, headerFilePath.string()));
     }
 
@@ -444,7 +445,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
     importedGeometryInfo = geometryInfo;
     SHeaderCache[m_InstanceId].start_voxel_coord = {0, 0, 0};
     SHeaderCache[m_InstanceId].end_voxel_coord = {static_cast<int32_t>(geometryInfo.Dimensions[0] - 1), static_cast<int32_t>(geometryInfo.Dimensions[1] - 1),
-                                                 static_cast<int32_t>(geometryInfo.Dimensions[2] - 1)};
+                                                  static_cast<int32_t>(geometryInfo.Dimensions[2] - 1)};
   }
 
   SHeaderCache[m_InstanceId].original_geometry_dims = geometryInfo.Dimensions;
@@ -568,7 +569,7 @@ constexpr StringLiteral k_ImportSubvolumeKey = "ImportSubvolume";
 constexpr StringLiteral k_StartVoxelCoordKey = "StartVoxelCoord";
 constexpr StringLiteral k_EndVoxelCoordKey = "EndVoxelCoord";
 constexpr StringLiteral k_ImportedVolumeDescriptionKey = "ImportedVolumeDescription";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::json& json)

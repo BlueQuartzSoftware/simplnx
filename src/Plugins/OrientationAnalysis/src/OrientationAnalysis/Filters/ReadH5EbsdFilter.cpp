@@ -315,7 +315,7 @@ constexpr StringLiteral k_ReadH5EbsdKey = "ReadH5Ebsd";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 
 namespace simpl_conversion_custom
 {
@@ -386,7 +386,7 @@ struct ReadH5EbsdFilterParameterConverter
     return {std::move(value)};
   }
 };
-} // namespace SIMPLConversionCustom
+} // namespace simpl_conversion_custom
 } // namespace
 
 Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)

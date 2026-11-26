@@ -51,6 +51,6 @@ Result<> PartitionGeometry::operator()()
   }
 
   const IDataArray* maskArrayPtr = m_InputValues->UseVertexMask ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->VertexMaskPath) : nullptr;
-  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({partitionIdsArrayPtr, partitionGridFeatureIdsArrayPtr, verticesArrayPtr, maskArrayPtr}, m_DataStructure, m_MessageHandler,
-                                                                               m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({partitionIdsArrayPtr, partitionGridFeatureIdsArrayPtr, verticesArrayPtr, maskArrayPtr}, m_DataStructure,
+                                                                               m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

@@ -327,7 +327,7 @@ private:
   Matrix3dR m_GFixedT;
 };
 
-} // namespace GBCDMetricBased
+} // namespace gbcd_metric_based
 
 ComputeGBCDMetricBased::ComputeGBCDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                ComputeGBCDMetricBasedInputValues* inputValues)
@@ -533,7 +533,7 @@ Result<> ComputeGBCDMetricBased::operator()()
     dataAlg.setRange(i, i + currentChunkSize);
     dataAlg.setParallelizationEnabled(true);
     dataAlg.execute(gbcd_metric_based::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
-                                                       currentLaueIndex, eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
+                                                         currentLaueIndex, eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
 
     // Bulk-read this chunk's face labels and areas for totalFaceArea accumulation.
     // Re-applies the same geometric filter conditions that TrianglesSelector uses.
@@ -627,7 +627,7 @@ Result<> ComputeGBCDMetricBased::operator()()
     dataAlg.setRange(i, i + pointsChunkSize);
     dataAlg.setParallelizationEnabled(true);
     dataAlg.execute(gbcd_metric_based::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, planeResolutionSq, totalFaceArea, numDistinctGBs,
-                                                       ballVolume, gFixedT));
+                                                         ballVolume, gFixedT));
     progressThrottle.updateCount(i + pointsChunkSize);
   }
 

@@ -266,7 +266,7 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects over
 
   constexpr usize k_Dx = 20;
   constexpr usize k_Dy = 10;
-  constexpr usize k_Dz = 1;            // 200 voxels -- room for 130 single-voxel labels + background
+  constexpr usize k_Dz = 1;          // 200 voxels -- room for 130 single-voxel labels + background
   constexpr usize k_NumLabels = 130; // > max<int8> (127): the 128th surviving label overflows
   static_assert(k_NumLabels <= k_Dx * k_Dy * k_Dz, "field must hold every distinct label voxel");
   std::vector<int8> field(k_Dx * k_Dy * k_Dz, int8{0});

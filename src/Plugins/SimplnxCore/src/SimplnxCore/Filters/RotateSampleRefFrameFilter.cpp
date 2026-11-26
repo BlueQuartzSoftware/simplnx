@@ -426,7 +426,7 @@ constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
 constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
 constexpr StringLiteral k_RotationTableKey = "RotationTable";
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -29,6 +29,6 @@ Result<> ComputeIPFColors::operator()()
     maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
   }
 
-  return DispatchAlgorithm<ComputeIPFColorsDirect, ComputeIPFColorsScanline>({eulersArrayPtr, phasesArrayPtr, crystalStructuresArrayPtr, maskArrayPtr, ipfColorsArrayPtr}, m_DataStructure, m_MessageHandler,
-                                                                             m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<ComputeIPFColorsDirect, ComputeIPFColorsScanline>({eulersArrayPtr, phasesArrayPtr, crystalStructuresArrayPtr, maskArrayPtr, ipfColorsArrayPtr}, m_DataStructure,
+                                                                             m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

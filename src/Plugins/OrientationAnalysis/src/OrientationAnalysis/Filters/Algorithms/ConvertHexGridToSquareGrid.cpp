@@ -211,8 +211,8 @@ public:
           }
 
           // Write to the output file
-          outFile << "  " << phi1Ptr[hexGridIndex] << "	" << phiPtr[hexGridIndex] << "	" << phi2Ptr[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iqPtr[hexGridIndex] << "	" << ciPtr[hexGridIndex]
-                  << "	" << phasePtr[hexGridIndex] << "	" << semSigPtr[hexGridIndex] << "	" << fitPtr[hexGridIndex] << "  "
+          outFile << "  " << phi1Ptr[hexGridIndex] << "	" << phiPtr[hexGridIndex] << "	" << phi2Ptr[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iqPtr[hexGridIndex] << "	"
+                  << ciPtr[hexGridIndex] << "	" << phasePtr[hexGridIndex] << "	" << semSigPtr[hexGridIndex] << "	" << fitPtr[hexGridIndex] << "  "
                   << "\n";
         }
       }

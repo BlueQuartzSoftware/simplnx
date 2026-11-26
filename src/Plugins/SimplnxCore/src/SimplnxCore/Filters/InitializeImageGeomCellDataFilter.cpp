@@ -288,7 +288,7 @@ constexpr StringLiteral k_ZMaxKey = "ZMax";
 constexpr StringLiteral k_InitTypeKey = "InitType";
 constexpr StringLiteral k_InitValueKey = "InitValue";
 constexpr StringLiteral k_InitRangeKey = "InitRange";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> InitializeImageGeomCellDataFilter::FromSIMPLJson(const nlohmann::json& json)

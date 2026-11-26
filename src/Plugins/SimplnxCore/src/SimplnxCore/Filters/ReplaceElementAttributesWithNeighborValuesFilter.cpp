@@ -153,7 +153,7 @@ constexpr StringLiteral k_MinConfidenceKey = "MinConfidence";
 constexpr StringLiteral k_SelectedComparisonKey = "SelectedComparison";
 constexpr StringLiteral k_LoopKey = "Loop";
 constexpr StringLiteral k_ConfidenceIndexArrayPathKey = "ConfidenceIndexArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReplaceElementAttributesWithNeighborValuesFilter::FromSIMPLJson(const nlohmann::json& json)

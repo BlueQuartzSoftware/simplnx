@@ -125,7 +125,8 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
 
     if(shiftsArrayPtr->getNumberOfTuples() != imageGeom.getNumZCells())
     {
-      return MakePreflightErrorResult(-8943, fmt::format("The size of shifts array ({}) does not align with Z Dimension of geometry ({})", shiftsArrayPtr->getNumberOfTuples(), imageGeom.getNumZCells()));
+      return MakePreflightErrorResult(-8943,
+                                      fmt::format("The size of shifts array ({}) does not align with Z Dimension of geometry ({})", shiftsArrayPtr->getNumberOfTuples(), imageGeom.getNumZCells()));
     }
   }
 
@@ -155,7 +156,7 @@ namespace
 namespace simpl
 {
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& json)

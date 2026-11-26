@@ -237,7 +237,7 @@ namespace simpl
 constexpr StringLiteral k_TriangleGeometryKey = "TriangleGeometry";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_ReducedTriangleGeometryKey = "ReducedTriangleGeometry";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RemoveFlaggedTrianglesFilter::FromSIMPLJson(const nlohmann::json& json)

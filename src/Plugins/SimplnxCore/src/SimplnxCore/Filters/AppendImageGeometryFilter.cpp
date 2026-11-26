@@ -368,7 +368,7 @@ namespace simpl
 constexpr StringLiteral k_InputAttributeMatrixKey = "InputAttributeMatrix";
 constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
 constexpr StringLiteral k_CheckResolutionKey = "CheckResolution";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -262,7 +262,7 @@ constexpr StringLiteral k_ParentIdsArrayPathKey = "ParentIdsArrayPath";
 constexpr StringLiteral k_ParentVolumesArrayPathKey = "ParentVolumesArrayPath";
 constexpr StringLiteral k_UseNonContiguousNeighborsKey = "UseNonContiguousNeighbors";
 constexpr StringLiteral k_VolumesArrayPathKey = "VolumesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeGroupingDensityFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -283,7 +283,7 @@ constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 constexpr StringLiteral k_XPointsKey = "XPoints";
 constexpr StringLiteral k_YPointsKey = "YPoints";
 constexpr StringLiteral k_ZPointsKey = "ZPoints";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RegularGridSampleSurfaceMeshFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -138,7 +138,7 @@ constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix"
 constexpr StringLiteral k_InfixEquationKey = "InfixEquation";
 constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
 constexpr StringLiteral k_CalculatedArrayKey = "CalculatedArray";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ArrayCalculatorFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -1432,14 +1432,14 @@ Result<> ComputeArrayHistogramByFeature::operator()()
         {
           return resizeResult;
         }
-        ExecuteParallelFunctor<InstantiateHistogramByFeatureImplFunctor, NoBooleanType>(InstantiateHistogramByFeatureImplFunctor{}, inputDataPtr->getDataType(), dataAlg, modalBinRangesPtr, inputDataPtr,
-                                                                                        binRangesPtr, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange, histFullRange, m_ShouldCancel,
-                                                                                        numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
+        ExecuteParallelFunctor<InstantiateHistogramByFeatureImplFunctor, NoBooleanType>(InstantiateHistogramByFeatureImplFunctor{}, inputDataPtr->getDataType(), dataAlg, modalBinRangesPtr,
+                                                                                        inputDataPtr, binRangesPtr, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange, histFullRange,
+                                                                                        m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
       }
       else
       {
-        ExecuteParallelFunctor(InstantiateHistogramByFeatureImplFunctor{}, inputDataPtr->getDataType(), dataAlg, inputDataPtr, binRangesPtr, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange,
-                               histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
+        ExecuteParallelFunctor(InstantiateHistogramByFeatureImplFunctor{}, inputDataPtr->getDataType(), dataAlg, inputDataPtr, binRangesPtr, featureIdsStore, m_InputValues->MinRange,
+                               m_InputValues->MaxRange, histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
       }
       return taskResult.takeResult();
     };
@@ -1450,26 +1450,26 @@ Result<> ComputeArrayHistogramByFeature::operator()()
     if(maskArrayPtr != nullptr && modalBinRangesPtr != nullptr)
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, maskArrayPtr, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr, modalBinRangesPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore, maskArrayPtr,
-          *countsArrayPtr, *mostPopulatedArrayPtr, modalBinRangesPtr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, maskArrayPtr, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr, modalBinRangesPtr}, executeDirect, *inputDataPtr, *binRangesPtr,
+          featureIdsStore, maskArrayPtr, *countsArrayPtr, *mostPopulatedArrayPtr, modalBinRangesPtr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
     else if(maskArrayPtr != nullptr)
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, maskArrayPtr, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore, maskArrayPtr, *countsArrayPtr,
-          *mostPopulatedArrayPtr, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, maskArrayPtr, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore,
+          maskArrayPtr, *countsArrayPtr, *mostPopulatedArrayPtr, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
     else if(modalBinRangesPtr != nullptr)
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr, modalBinRangesPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore, nullptr, *countsArrayPtr,
-          *mostPopulatedArrayPtr, modalBinRangesPtr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr, modalBinRangesPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore,
+          nullptr, *countsArrayPtr, *mostPopulatedArrayPtr, modalBinRangesPtr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
     else
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore, nullptr, *countsArrayPtr,
-          *mostPopulatedArrayPtr, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore, nullptr,
+          *countsArrayPtr, *mostPopulatedArrayPtr, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
     if(executeResult.invalid())
     {

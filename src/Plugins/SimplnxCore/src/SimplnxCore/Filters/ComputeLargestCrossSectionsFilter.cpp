@@ -146,7 +146,7 @@ namespace simpl
 constexpr StringLiteral k_PlaneKey = "Plane";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_LargestCrossSectionsArrayPathKey = "LargestCrossSectionsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeLargestCrossSectionsFilter::FromSIMPLJson(const nlohmann::json& json)

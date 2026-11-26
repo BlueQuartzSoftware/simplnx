@@ -245,7 +245,7 @@ constexpr StringLiteral k_StlFilesPathKey = "StlFilesPath";
 constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
 constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
 constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CombineStlFilesFilter::FromSIMPLJson(const nlohmann::json& json)

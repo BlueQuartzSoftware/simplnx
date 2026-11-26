@@ -265,7 +265,7 @@ FixtureData BuildRealisticMicrostructure()
   return td;
 }
 
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 // =============================================================================

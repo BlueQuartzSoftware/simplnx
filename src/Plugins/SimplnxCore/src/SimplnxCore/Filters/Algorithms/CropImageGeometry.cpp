@@ -154,7 +154,8 @@ protected:
 
     const auto* sourceStorePtr = dynamic_cast<const DataStore<T>*>(&m_OldCellStore);
     auto* destinationStorePtr = dynamic_cast<DataStore<T>*>(&m_NewCellStore);
-    if(m_OldCellStore.getStoreType() == IDataStore::StoreType::InMemory && m_NewCellStore.getStoreType() == IDataStore::StoreType::InMemory && sourceStorePtr != nullptr && destinationStorePtr != nullptr)
+    if(m_OldCellStore.getStoreType() == IDataStore::StoreType::InMemory && m_NewCellStore.getStoreType() == IDataStore::StoreType::InMemory && sourceStorePtr != nullptr &&
+       destinationStorePtr != nullptr)
     {
       const T* sourceDataPtr = sourceStorePtr->data();
       T* destinationDataPtr = destinationStorePtr->data();

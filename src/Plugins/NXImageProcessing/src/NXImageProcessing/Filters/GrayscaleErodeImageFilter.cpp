@@ -134,7 +134,7 @@ constexpr StringLiteral k_KernelTypeKey = "KernelType";
 constexpr StringLiteral k_KernelRadiusKey = "KernelRadius";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> GrayscaleErodeImageFilter::FromSIMPLJson(const nlohmann::json& json)

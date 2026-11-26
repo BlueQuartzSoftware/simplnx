@@ -19,8 +19,8 @@ using DanielssonFilterType = DanielssonDistanceMapImageFilter;
 
 // Sets the geometry, input, and output keys plus the three Danielsson parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
-void RunDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool inputIsBinary, bool squaredDistance, bool useImageSpacing, UnitTest::AlgorithmTestScope* scope = nullptr,
-                   const std::string& outputName = "Output")
+void RunDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool inputIsBinary, bool squaredDistance, bool useImageSpacing,
+                   UnitTest::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;

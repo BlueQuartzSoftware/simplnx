@@ -51,9 +51,9 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppressi
   const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
   REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_TallBump - static_cast<int32>(k_Height)); // 70 -> 60 (reduced by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                            // 55 -> 50 (shallow maximum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                            // neighbor of the tall bump, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                              // 55 -> 50 (shallow maximum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                              // neighbor of the tall bump, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                              // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -101,9 +101,9 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppressi
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_TallBump - static_cast<int32>(k_Height)); // 70 -> 60 (reduced by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                            // 55 -> 50 (shallow maximum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                            // neighbor of the tall bump, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                              // 55 -> 50 (shallow maximum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                              // neighbor of the tall bump, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                              // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------

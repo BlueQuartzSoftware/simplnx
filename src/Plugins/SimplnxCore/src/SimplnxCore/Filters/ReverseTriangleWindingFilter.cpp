@@ -95,7 +95,7 @@ namespace
 namespace simpl
 {
 constexpr StringLiteral k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReverseTriangleWindingFilter::FromSIMPLJson(const nlohmann::json& json)

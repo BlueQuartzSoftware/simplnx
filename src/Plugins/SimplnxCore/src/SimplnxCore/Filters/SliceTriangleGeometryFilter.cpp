@@ -225,7 +225,7 @@ constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "EdgeAttributeMatrixName
 
 constexpr StringLiteral k_SliceAttributeMatrixName_Key = "SliceAttributeMatrixName";
 constexpr StringLiteral k_SliceIdArrayName_Key = "SliceIdArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------

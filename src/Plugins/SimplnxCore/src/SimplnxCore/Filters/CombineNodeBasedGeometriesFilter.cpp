@@ -264,7 +264,8 @@ Result<> AddOutputArray(const GeometryArrayInfo& arrayInfo, const DataPath& outp
     break;
   }
   case IArray::ArrayType::NeighborListArray: {
-    actions.appendAction(std::make_unique<CreateNeighborListAction>(arrayInfo.data_type.value(), std::vector<usize>{1}, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
+    actions.appendAction(
+        std::make_unique<CreateNeighborListAction>(arrayInfo.data_type.value(), std::vector<usize>{1}, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
   case IArray::ArrayType::Any: {

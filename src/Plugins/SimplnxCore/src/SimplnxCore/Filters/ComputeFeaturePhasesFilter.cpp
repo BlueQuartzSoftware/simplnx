@@ -125,7 +125,7 @@ namespace simpl
 constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeaturePhasesFilter::FromSIMPLJson(const nlohmann::json& json)

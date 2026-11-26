@@ -147,9 +147,9 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: large-offs
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
   constexpr usize k_D = 12;
-  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& dataStructure) { return ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0); },
-                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, k_D); }, k_StdDevAbsTol,
-                                                                                             k_StdDevRelTol);
+  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>(
+      [](DataStructure& dataStructure) { return ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0); }, [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, k_D); },
+      k_StdDevAbsTol, k_StdDevRelTol);
 }
 
 // -----------------------------------------------------------------------------

@@ -210,7 +210,7 @@ constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
 constexpr StringLiteral k_MedoidsArrayNameKey = "MedoidsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeKMedoidsFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -171,7 +171,7 @@ constexpr StringLiteral k_MisorientationRotationKey = "MisorientationRotation";
 constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_GBCDArrayPathKey = "GBCDArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteGBCDGMTFileFilter::FromSIMPLJson(const nlohmann::json& json)

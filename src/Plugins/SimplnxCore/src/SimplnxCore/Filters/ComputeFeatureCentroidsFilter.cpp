@@ -149,7 +149,7 @@ namespace simpl
 {
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureCentroidsFilter::FromSIMPLJson(const nlohmann::json& json)

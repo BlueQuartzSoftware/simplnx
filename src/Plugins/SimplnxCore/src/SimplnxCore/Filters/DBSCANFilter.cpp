@@ -233,7 +233,7 @@ constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> DBSCANFilter::FromSIMPLJson(const nlohmann::json& json)

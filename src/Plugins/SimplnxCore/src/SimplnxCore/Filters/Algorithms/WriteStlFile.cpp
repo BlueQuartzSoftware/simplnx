@@ -50,7 +50,8 @@ public:
    */
   Result<usize> createOverflowFile()
   {
-    const fs::path newPath = fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_atomic_files_list.size(), m_InputPath.extension().string()));
+    const fs::path newPath =
+        fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_atomic_files_list.size(), m_InputPath.extension().string()));
     auto atomicFileResult = AtomicFile::Create(newPath);
     if(atomicFileResult.invalid())
     {

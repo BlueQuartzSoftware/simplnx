@@ -324,7 +324,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCor
 
     // Values inside the range must change. Values outside it must remain unchanged.
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, k_XMin - 1, 0, k_YMin - 1, 0, k_ZMin - 1, 0.0));                                                    // No bool
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMin, k_XMax, k_YMin, k_YMax, k_ZMin, k_ZMax, k_InitValue));                                                 // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMin, k_XMax, k_YMin, k_YMax, k_ZMin, k_ZMax, k_InitValue));                                         // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMax + 1, k_ImageDims[0] - 1, k_YMax + 1, k_ImageDims[1] - 1, k_ZMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 
@@ -407,7 +407,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[S
 
     // Values inside the range must use the requested range. Values outside it must remain unchanged.
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, k_XMin - 1, 0, k_YMin - 1, 0, k_ZMin - 1, 0.0));                                                    // No bool
-    REQUIRE(ExecuteNeighborFunction(IsDataWithinInclusiveRangeFunctor{}, type, dataStore, k_XMin, k_XMax, k_YMin, k_YMax, k_ZMin, k_ZMax, k_InitRange));                                          // No bool
+    REQUIRE(ExecuteNeighborFunction(IsDataWithinInclusiveRangeFunctor{}, type, dataStore, k_XMin, k_XMax, k_YMin, k_YMax, k_ZMin, k_ZMax, k_InitRange));                                  // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMax + 1, k_ImageDims[0] - 1, k_YMax + 1, k_ImageDims[1] - 1, k_ZMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 

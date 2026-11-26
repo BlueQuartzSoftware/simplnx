@@ -176,7 +176,7 @@ constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArra
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_IntensityArrayNameKey = "IntensityArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::json& json)

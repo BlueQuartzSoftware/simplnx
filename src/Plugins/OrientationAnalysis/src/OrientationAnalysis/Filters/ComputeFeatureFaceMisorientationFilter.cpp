@@ -155,7 +155,7 @@ constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_SurfaceMeshFaceMisorientationColorsArrayNameKey = "SurfaceMeshFaceMisorientationColorsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureFaceMisorientationFilter::FromSIMPLJson(const nlohmann::json& json)

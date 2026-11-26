@@ -169,7 +169,7 @@ const Float32Array& GetOutputAvgMisorientations(const DataStructure& dataStructu
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName)));
   return dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName));
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Preflight Error - Feature array tuple count mismatch (-34501)",

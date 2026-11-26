@@ -143,7 +143,7 @@ constexpr StringLiteral k_RegionIdArrayNameKey = "RegionIdArrayName";
 constexpr StringLiteral k_RegionIdArrayPathKey = "RegionIdArrayPath";
 constexpr StringLiteral k_TriangleAttributeMatrixNameKey = "TriangleAttributeMatrixName";
 constexpr StringLiteral k_NumTrianglesArrayNameKey = "NumTrianglesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> LabelTriangleGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

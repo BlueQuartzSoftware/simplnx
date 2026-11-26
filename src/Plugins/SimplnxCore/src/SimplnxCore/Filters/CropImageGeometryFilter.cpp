@@ -235,7 +235,7 @@ constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath"
 constexpr StringLiteral k_RenumberFeaturesKey = "RenumberFeatures";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CropImageGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

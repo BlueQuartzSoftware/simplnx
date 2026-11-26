@@ -123,7 +123,7 @@ namespace simpl
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_BoundaryCellsArrayPathKey = "BoundaryCellsArrayPath";
 constexpr StringLiteral k_BoundaryCellFractionsArrayPathKey = "BoundaryCellFractionsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeBoundaryElementFractionsFilter::FromSIMPLJson(const nlohmann::json& json)

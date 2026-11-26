@@ -380,7 +380,7 @@ inline std::vector<usize> AllIndicesExcept(usize cellCount, const std::vector<us
   }
   return trueIndices;
 }
-} // namespace MaskFixture
+} // namespace mask_fixture
 } // namespace
 
 TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Generate Test Data", "[SimplnxCore][ErodeDilateMaskFilter][.GenerateTestData]")
@@ -559,7 +559,7 @@ TEST_CASE("SimplnxCore::ErodeDilateMaskFilter: Class 1 dilate, one iteration", "
   // computeValidFaceNeighbors reports -Z and +Z invalid for every voxel and no Z growth is possible.
   // Expected true set: {7, 11, 12, 13, 17} -- a plus shape centred on (2, 2).
   mask_fixture::CheckMask(dataStructure, mask_fixture::k_CellCount,
-                         {mask_fixture::GetIndex(2, 2), mask_fixture::GetIndex(1, 2), mask_fixture::GetIndex(3, 2), mask_fixture::GetIndex(2, 1), mask_fixture::GetIndex(2, 3)});
+                          {mask_fixture::GetIndex(2, 2), mask_fixture::GetIndex(1, 2), mask_fixture::GetIndex(3, 2), mask_fixture::GetIndex(2, 1), mask_fixture::GetIndex(2, 3)});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

@@ -51,9 +51,9 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
   const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
   REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_DeepDent + static_cast<int32>(k_Height)); // 30 -> 40 (raised by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                            // 45 -> 50 (shallow minimum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                            // neighbor of the deep dent, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                              // 45 -> 50 (shallow minimum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                              // neighbor of the deep dent, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                              // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -102,9 +102,9 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_DeepDent + static_cast<int32>(k_Height)); // 30 -> 40 (raised by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                            // 45 -> 50 (shallow minimum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                            // neighbor of the deep dent, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                              // 45 -> 50 (shallow minimum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                              // neighbor of the deep dent, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                              // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------

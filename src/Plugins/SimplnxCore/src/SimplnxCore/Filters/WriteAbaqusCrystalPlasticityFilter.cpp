@@ -226,7 +226,7 @@ constexpr StringLiteral k_MatConstKey = "MatConst";
 constexpr StringLiteral k_AbqFeatureIdsArrayPathKey = "AbqFeatureIdsArrayPath";
 constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
 constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson(const nlohmann::json& json)

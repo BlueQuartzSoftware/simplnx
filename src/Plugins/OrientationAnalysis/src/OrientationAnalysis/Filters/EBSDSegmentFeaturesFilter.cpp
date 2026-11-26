@@ -215,7 +215,7 @@ constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArra
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 constexpr StringLiteral k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
 constexpr StringLiteral k_ActiveArrayNameKey = "ActiveArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> EBSDSegmentFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)

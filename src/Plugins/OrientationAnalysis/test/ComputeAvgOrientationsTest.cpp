@@ -239,8 +239,8 @@ DataStructure BuildSingleOrientationMethodOracleData()
 {
   return BuildDataStructure(4, 4, {0, 1, 2, 3}, {0, 1, 1, 1},
                             {
-                                0.0F, 0.0F, 0.0F, 1.0F,         // F0 background
-                                0.0F, 0.0F, 0.0F, 1.0F,         // F1 identity
+                                0.0F, 0.0F, 0.0F, 1.0F,       // F0 background
+                                0.0F, 0.0F, 0.0F, 1.0F,       // F1 identity
                                 0.0F, 0.0F, k_Rz90Z, k_Rz90Z, // F2 Rz90
                                 0.0F, 0.0F, k_Rz45Z, k_Rz45W, // F3 Rz45
                             },
@@ -515,10 +515,10 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Ora
   const std::vector<int32> featureIds = {0, 1, 2, 3, 3, 4, 4, 4};
   const std::vector<int32> phases = {0, 1, 1, 1, 1, 1, 1, 1};
   const std::vector<float32> quats = {
-      0.0f, 0.0f, 0.0f,     1.0f,     // c0 identity
-      0.0f, 0.0f, 0.0f,     1.0f,     // c1 identity
+      0.0f, 0.0f, 0.0f,    1.0f,    // c0 identity
+      0.0f, 0.0f, 0.0f,    1.0f,    // c1 identity
       0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c2 Rz90
-      0.0f, 0.0f, 0.0f,     1.0f,     // c3 identity
+      0.0f, 0.0f, 0.0f,    1.0f,    // c3 identity
       0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c4 Rz90
       0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c5 Rz90
       0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c6 Rz90
@@ -552,12 +552,12 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Ora
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
   const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
   constexpr float32 k_QuatTol = 1.0e-6f;
-  CheckQuat(avgQuats, 0, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);         // F0 background -> identity
-  CheckQuat(avgQuats, 1, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);         // F1 single identity
+  CheckQuat(avgQuats, 0, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);       // F0 background -> identity
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);       // F1 single identity
   CheckQuat(avgQuats, 2, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, k_QuatTol); // F2 single Rz90
   CheckQuat(avgQuats, 3, 0.0f, 0.0f, k_Rz45Z, k_Rz45W, k_QuatTol); // F3 mean(identity,Rz90) = Rz45
   CheckQuat(avgQuats, 4, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, k_QuatTol); // F4 3x Rz90 = Rz90
-  CheckQuat(avgQuats, 5, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);         // F5 empty -> identity
+  CheckQuat(avgQuats, 5, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);       // F5 empty -> identity
 
   for(usize f = 0; f < static_cast<usize>(numFeatures); f++)
   {
@@ -710,7 +710,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry
   // Deliberately scrambled order so the first-voxel reset operates on Rz(120),
   // not the base representation.
   const std::vector<float32> quats = {
-      0.0f, 0.0f, 0.0f,      1.0f,      // c0 background identity
+      0.0f, 0.0f, 0.0f,     1.0f,     // c0 background identity
       0.0f, 0.0f, k_Rz120Z, k_Rz120W, // c1 Rz(120) == Rz(30) * Rz(90)
       0.0f, 0.0f, k_Rz30Z,  k_Rz30W,  // c2 Rz(30)  base representation
       0.0f, 0.0f, -k_Rz30Z, -k_Rz30W, // c3 -Rz(30) double-cover representative
@@ -838,10 +838,10 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase
   const std::vector<int32> phases = {1, 0, 1, 1, 0};
   const std::vector<float32> quats = {
       0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c0 F1 phase 1: Rz90
-      0.62f, -0.41f, 0.55f,    -0.37f,   // c1 F1 phase 0: garbage
+      0.62f, -0.41f, 0.55f,   -0.37f,  // c1 F1 phase 0: garbage
       0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c2 F2 phase 1: Rz90
       0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c3 F2 phase 1: Rz90
-      0.62f, -0.41f, 0.55f,    -0.37f,   // c4 F2 phase 0: garbage
+      0.62f, -0.41f, 0.55f,   -0.37f,  // c4 F2 phase 0: garbage
   };
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
 
@@ -921,7 +921,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structur
       0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c0 valid
       0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c1 unknown xtal
       0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c2 OOB phase
-      0.62f, -0.41f, 0.55f,    -0.37f,   // c3 OOB phase, garbage quat
+      0.62f, -0.41f, 0.55f,   -0.37f,  // c3 OOB phase, garbage quat
   };
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic, k_Unknown};
 
@@ -1012,7 +1012,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Direct and Scanline meth
     const std::vector<int32> featureIds = {0, 1, 1, 2, 2, 3, 3, 3};
     const std::vector<int32> phases = {1, 1, 1, 1, 2, 2, 2, 2};
     const std::vector<float32> quaternions = {
-        0.0F, 0.0F, 0.0F,     1.0F,     0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z, 0.0F, 0.0F, k_Rz45Z, k_Rz45W,
+        0.0F, 0.0F, 0.0F,    1.0F,    0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z, 0.0F, 0.0F, k_Rz45Z, k_Rz45W,
         0.0F, 0.0F, k_Rz90Z, k_Rz90Z, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz45Z, k_Rz45W, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z,
     };
     const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic, k_Triclinic};
@@ -1193,7 +1193,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: bounded fallback without
   {
     const std::vector<int32> featureIds = {0, 1, 1, 2, 2, 2};
     const std::vector<int32> phases = {0, 1, 1, 1, 1, 1};
-    const std::vector<float32> quaternions = {0.0F, 0.0F, 0.0F,     1.0F,     0.0F, 0.0F, 0.0F,     1.0F,     0.0F, 0.0F, k_Rz90Z, k_Rz90Z,
+    const std::vector<float32> quaternions = {0.0F, 0.0F, 0.0F,    1.0F,    0.0F, 0.0F, 0.0F,    1.0F,    0.0F, 0.0F, k_Rz90Z, k_Rz90Z,
                                               0.0F, 0.0F, k_Rz30Z, k_Rz30W, 0.0F, 0.0F, k_Rz45Z, k_Rz45W, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z};
     const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
     ConfigureMethods(args, false, true, true);

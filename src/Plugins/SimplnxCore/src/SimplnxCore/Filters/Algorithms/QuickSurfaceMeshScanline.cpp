@@ -1161,9 +1161,9 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
   // A disk-backed source or output disallows resident node-record fallback.
   const auto isOutOfCore = [](const IArray* array) { return array != nullptr && IsOutOfCore(*array); };
-  bool hasOutOfCoreTarget = isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)) ||
-                            isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath)) ||
-                            isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath)) || isOutOfCore(triangleGeomPtr->getVertices()) || isOutOfCore(triangleGeomPtr->getFaces());
+  bool hasOutOfCoreTarget =
+      isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)) || isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath)) ||
+      isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath)) || isOutOfCore(triangleGeomPtr->getVertices()) || isOutOfCore(triangleGeomPtr->getFaces());
   const auto inspectPaths = [this, &hasOutOfCoreTarget, &isOutOfCore](const std::vector<DataPath>& paths) {
     for(const auto& path : paths)
     {

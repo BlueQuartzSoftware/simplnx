@@ -267,7 +267,7 @@ constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
 constexpr StringLiteral k_AvgEulerAnglesArrayPathKey = "AvgEulerAnglesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeAvgOrientationsFilter::FromSIMPLJson(const nlohmann::json& json)

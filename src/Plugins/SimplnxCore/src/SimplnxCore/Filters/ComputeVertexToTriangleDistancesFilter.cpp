@@ -156,7 +156,7 @@ constexpr StringLiteral k_TriangleDataContainerKey = "TriangleDataContainer";
 constexpr StringLiteral k_TriangleNormalsArrayPathKey = "TriangleNormalsArrayPath";
 constexpr StringLiteral k_DistancesArrayPathKey = "DistancesArrayPath";
 constexpr StringLiteral k_ClosestTriangleIdArrayPathKey = "ClosestTriangleIdArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeVertexToTriangleDistancesFilter::FromSIMPLJson(const nlohmann::json& json)

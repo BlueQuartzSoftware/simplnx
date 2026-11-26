@@ -884,7 +884,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipel
         else
         {
           expected[index] = testCase.output_mode == ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<T>(values[index] - expectedInput[index]) :
-                                                                                                                                     static_cast<T>(expectedInput[index] - values[index]);
+                                                                                                                                      static_cast<T>(expectedInput[index] - values[index]);
         }
       }
       std::vector<T> actual(count);
@@ -985,7 +985,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline uses 
         if(testCase.output_mode != ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology)
         {
           expected = testCase.output_mode == ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<int32>(values[index] - morphology[index]) :
-                                                                                                                              static_cast<int32>(morphology[index] - values[index]);
+                                                                                                                               static_cast<int32>(morphology[index] - values[index]);
         }
         REQUIRE(actual[index] == expected);
       }
@@ -1624,7 +1624,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: ApplyMorphology entry point disp
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
 
-    const Result<> result = ApplyMorphology<int32>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), SizeVec3{k_X, k_Y, k_Z}, se, op, *inArrayPtr, *outArrayPtr, shouldCancel, messageHandler);
+    const Result<> result =
+        ApplyMorphology<int32>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), SizeVec3{k_X, k_Y, k_Z}, se, op, *inArrayPtr, *outArrayPtr, shouldCancel, messageHandler);
     REQUIRE(result.valid());
 
     const std::vector<int32> expected = Oracle(ramp, k_X, k_Y, k_Z, se, op);
@@ -2169,17 +2170,18 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slab
     ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, true>(grayscaleSlab.data(), grayscaleDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
     ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, false>(grayscaleSlab.data(), grayscaleErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
     ImageProcessing::detail::RunMorphologyGradientFlatFoldBlock<uint8>(grayscaleSlab.data(), gradient.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binarySlab.data(), binaryDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background, false,
-                                                                           shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binarySlab.data(), binaryErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background, false,
-                                                                            shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binarySlab.data(), binaryDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                           false, shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binarySlab.data(), binaryErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                            false, shouldCancel);
 
     REQUIRE(grayscaleDilate == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate), boundDims, outputOrigin, outputDims));
     REQUIRE(grayscaleErode == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode), boundDims, outputOrigin, outputDims));
     REQUIRE(gradient == extractBlock(GradientOracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se), boundDims, outputOrigin, outputDims));
     REQUIRE(binaryDilate ==
             extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate, k_Foreground, k_Background, false), boundDims, outputOrigin, outputDims));
-    REQUIRE(binaryErode == extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, k_Foreground, k_Background, false), boundDims, outputOrigin, outputDims));
+    REQUIRE(binaryErode ==
+            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, k_Foreground, k_Background, false), boundDims, outputOrigin, outputDims));
   }
 
   SECTION("one-plane cropped ring uses nonzero padded-space origins")
@@ -2204,16 +2206,18 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slab
     ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, true>(grayscaleRing.data(), grayscaleDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
     ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, false>(grayscaleRing.data(), grayscaleErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
     ImageProcessing::detail::RunMorphologyGradientFlatFoldBlock<uint8>(grayscaleRing.data(), gradient.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binaryRing.data(), binaryDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background, true,
-                                                                           shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binaryRing.data(), binaryErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background, true,
-                                                                            shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binaryRing.data(), binaryDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                           true, shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binaryRing.data(), binaryErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                            true, shouldCancel);
 
     REQUIRE(grayscaleDilate == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate), boundDims, outputOrigin, outputDims));
     REQUIRE(grayscaleErode == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode), boundDims, outputOrigin, outputDims));
     REQUIRE(gradient == extractBlock(GradientOracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se), boundDims, outputOrigin, outputDims));
-    REQUIRE(binaryDilate == extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate, k_Foreground, k_Background, true), boundDims, outputOrigin, outputDims));
-    REQUIRE(binaryErode == extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, k_Foreground, k_Background, true), boundDims, outputOrigin, outputDims));
+    REQUIRE(binaryDilate ==
+            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate, k_Foreground, k_Background, true), boundDims, outputOrigin, outputDims));
+    REQUIRE(binaryErode ==
+            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, k_Foreground, k_Background, true), boundDims, outputOrigin, outputDims));
   }
 }
 
@@ -2568,7 +2572,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
     SIMPLNX_RESULT_REQUIRE_INVALID(grayscale);
     REQUIRE(grayscale.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
     morph_test::RequireSingleGeometryContext(grayscale.errors().front().message, geomPath);
-    auto binary = ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler);
+    auto binary =
+        ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler);
     SIMPLNX_RESULT_REQUIRE_INVALID(binary);
     REQUIRE(binary.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
     morph_test::RequireSingleGeometryContext(binary.errors().front().message, geomPath);
@@ -2588,7 +2593,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
     results.push_back(ImageProcessing::ExecuteObjectMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::ObjectMorphOp::Dilate, 5, 0, cancel, handler));
     results.push_back(ImageProcessing::ExecuteBinaryMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, 5, 0, false, cancel, handler));
     results.push_back(ImageProcessing::ExecuteMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler));
+    results.push_back(
+        ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler));
     results.push_back(ImageProcessing::ExecuteReconstructionOpenCloseImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Erode, false, false, cancel, handler));
     results.push_back(ImageProcessing::ExecuteBinaryOpeningByReconstructionImageFilter(dataStructure, geomPath, inputPath, outputPath, se, 5, 0, false, cancel, handler));
     for(usize i = 0; i < results.size(); ++i)

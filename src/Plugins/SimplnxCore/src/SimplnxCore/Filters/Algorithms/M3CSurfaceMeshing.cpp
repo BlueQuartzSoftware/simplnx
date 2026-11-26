@@ -448,9 +448,9 @@ struct NeighborAccessor
   Neighbor operator[](SiteIdType site_id) const
   {
     // Recover the legacy loop coordinates for this one-based site.
-    const SiteIdType within = (site_id - 1) % nsp;         // == j + (i - 1)
+    const SiteIdType within = (site_id - 1) % nsp;      // == j + (i - 1)
     const int i = static_cast<int>(within % x_dim) + 1; // 1..xDim
-    const SiteIdType j = within - (i - 1);                 // multiple of xDim, 0..nsp-xDim
+    const SiteIdType j = within - (i - 1);              // multiple of xDim, 0..nsp-xDim
     const SiteIdType k = ((site_id - 1) / nsp) * nsp;
 
     Neighbor n{};
@@ -552,7 +552,7 @@ constexpr int8 k_QuadPoint = 4;
 constexpr int8 k_SurfaceDefault = 12;
 constexpr int8 k_SurfaceTriplePoint = 13;
 constexpr int8 k_SurfaceQuadPoint = 14;
-} // namespace M3CNodeType
+} // namespace m3_c_node_type
 
 /**
  * @brief Classifies four corner labels into a marching-square case.
@@ -1734,7 +1734,7 @@ int64 GetNumberTriangles(const int32* p, Face* sq, const NeighborAccessor& neigh
  * @param mcid Specifies the source cube index.
  */
 void GetCase0Triangles(Triangle* t1, SiteIdType* mCubeID, const SiteIdType* afe, const NodeCoords& v1, Segment* e1, int nfedge, int64 tin, int64* tout, const double tcrd1[3], const double tcrd2[3],
-                         SiteIdType mcid)
+                       SiteIdType mcid)
 {
 
   const FaceEdgeLoops loops = BurnAndOrientFaceEdgeLoops(afe, e1, nfedge);
@@ -1853,7 +1853,7 @@ void GetCase0Triangles(Triangle* t1, SiteIdType* mCubeID, const SiteIdType* afe,
  * @param mcid Specifies the source cube index.
  */
 void GetCase2Triangles(Triangle* t1, SiteIdType* mCubeID, const SiteIdType* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteIdType* afc, int /*nfctr*/, int64 tin, int64* tout,
-                         const double tcrd1[3], const double tcrd2[3], SiteIdType mcid)
+                       const double tcrd1[3], const double tcrd2[3], SiteIdType mcid)
 {
 
   const FaceEdgeLoops loops = BurnFaceEdgeLoops(afe, e1, nfedge);
@@ -2163,8 +2163,8 @@ void GetCase2Triangles(Triangle* t1, SiteIdType* mCubeID, const SiteIdType* afe,
  *
  * Open loops use a fan from the body-center node.
  */
-void GetCaseMTriangles(Triangle* t1, SiteIdType* mCubeID, const SiteIdType* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteIdType* afc, int nfctr, int64 tin, int64* tout, SiteIdType ccn,
-                         const double tcrd1[3], const double tcrd2[3], SiteIdType mcid)
+void GetCaseMTriangles(Triangle* t1, SiteIdType* mCubeID, const SiteIdType* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteIdType* afc, int nfctr, int64 tin, int64* tout,
+                       SiteIdType ccn, const double tcrd1[3], const double tcrd2[3], SiteIdType mcid)
 {
 
   const FaceEdgeLoops loops = BurnFaceEdgeLoops(afe, e1, nfedge);
@@ -3709,8 +3709,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         }
         else
         {
-          GetCaseMTriangles(countTriangles.data(), countCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, faceCenters, faceCenterCount, 0, &generatedCount, 7 * (cube - 1) + 6,
-                              c1, c2, cube);
+          GetCaseMTriangles(countTriangles.data(), countCubes.data(), edgeIds.data(), nodeCoords, segments.data(), edgeCount, faceCenters, faceCenterCount, 0, &generatedCount, 7 * (cube - 1) + 6, c1,
+                            c2, cube);
         }
         if(generatedCount != count)
         {

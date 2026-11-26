@@ -146,7 +146,7 @@ constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
 constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteLosAlamosFFTFilter::FromSIMPLJson(const nlohmann::json& json)

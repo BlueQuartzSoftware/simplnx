@@ -42,11 +42,11 @@ std::map<std::string, uint32> KEnsembleCrystalInfoLookup = {
     {k_TrigonalLow, ebsdlib::CrystalStructure::Trigonal_Low},     {k_TrigonalHigh, ebsdlib::CrystalStructure::Trigonal_High}};
 
 std::map<std::string, uint32> KEnsemblePhaseTypeInfoLookup = {{k_PrimaryPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Primary)},
-                                                               {k_PrecipitatePhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Precipitate)},
-                                                               {k_TransformationPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Transformation)},
-                                                               {k_MatrixPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Matrix)},
-                                                               {k_BoundaryPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Boundary)},
-                                                               {k_Unknown, static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown)}};
+                                                              {k_PrecipitatePhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Precipitate)},
+                                                              {k_TransformationPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Transformation)},
+                                                              {k_MatrixPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Matrix)},
+                                                              {k_BoundaryPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Boundary)},
+                                                              {k_Unknown, static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown)}};
 } // namespace
 
 // -----------------------------------------------------------------------------

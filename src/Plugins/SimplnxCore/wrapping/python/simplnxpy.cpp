@@ -1940,7 +1940,8 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "index"_a, "filter"_a, "args"_a = py::dict());
   pipeline.def(
-      "append", [internalsPtr](Pipeline& self, const IFilter& filter_, const py::dict& args) { self.insertAt(self.size(), filter_.clone(), ConvertDictToArgs(*internalsPtr, filter_.parameters(), args)); },
+      "append",
+      [internalsPtr](Pipeline& self, const IFilter& filter_, const py::dict& args) { self.insertAt(self.size(), filter_.clone(), ConvertDictToArgs(*internalsPtr, filter_.parameters(), args)); },
       "filter"_a, "args"_a = py::dict());
   pipeline.def("clear", &Pipeline::clear);
   pipeline.def("remove", &Pipeline::removeAt, "index"_a);

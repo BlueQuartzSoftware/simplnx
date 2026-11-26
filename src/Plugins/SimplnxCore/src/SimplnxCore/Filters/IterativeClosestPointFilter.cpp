@@ -135,7 +135,7 @@ constexpr StringLiteral k_TargetVertexGeometryKey = "TargetVertexGeometry";
 constexpr StringLiteral k_IterationsKey = "Iterations";
 constexpr StringLiteral k_ApplyTransformKey = "ApplyTransform";
 constexpr StringLiteral k_TransformArrayNameKey = "TransformArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> IterativeClosestPointFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -231,7 +231,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight r
 TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: ITK real-image golden (WhiteDots WithBorder)", "[NXImageProcessing][ItkGolden][BinaryMorphologicalClosingImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<ClosingFilterType>("WhiteDots.png", "506d365dd92db16c2ade264fca46890c", static_cast<uint64>(morph_test::KernelType::Ball), {5, 5, 5},
-                                                       ClosingKernelParamSetter(255.0, /*safeBorder=*/false));
+                                                           ClosingKernelParamSetter(255.0, /*safeBorder=*/false));
 }
 
 // -----------------------------------------------------------------------------

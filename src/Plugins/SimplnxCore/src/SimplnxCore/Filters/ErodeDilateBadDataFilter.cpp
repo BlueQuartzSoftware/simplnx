@@ -181,7 +181,7 @@ constexpr StringLiteral k_YDirOnKey = "YDirOn";
 constexpr StringLiteral k_ZDirOnKey = "ZDirOn";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ErodeDilateBadDataFilter::FromSIMPLJson(const nlohmann::json& json)

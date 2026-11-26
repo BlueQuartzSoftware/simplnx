@@ -194,7 +194,7 @@ constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
 constexpr StringLiteral k_KernelRadiusKey = "KernelRadius";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ErodeObjectMorphologyImageFilter::FromSIMPLJson(const nlohmann::json& json)

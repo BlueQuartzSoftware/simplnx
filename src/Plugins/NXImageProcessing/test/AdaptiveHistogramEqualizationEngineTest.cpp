@@ -298,7 +298,8 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
         REQUIRE(plan.coreColumns == transferCase.core_columns);
         REQUIRE(plan.residentBytes == targetBytes);
 
-        const std::vector<uint8> actual = RunBoundedAhe(input, k_DimX, k_DimY, k_Radius, 1.0f, 0.25f, targetBytes, transferCase.maximum_read_values, transferCase.maximum_write_values, transferCase.write_count);
+        const std::vector<uint8> actual =
+            RunBoundedAhe(input, k_DimX, k_DimY, k_Radius, 1.0f, 0.25f, targetBytes, transferCase.maximum_read_values, transferCase.maximum_write_values, transferCase.write_count);
         RequireAheClose<uint8>(actual, expected, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/0.005);
       }
     }
@@ -359,10 +360,10 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
       }
     }
 
-    const auto fixedPlanResult =
-        ImageProcessing::detail::CreateAdaptiveHistogramEqualization2DPlan(k_DimX, k_DimY, k_Radius[0], k_Radius[1], sizeof(float32), ImageProcessing::detail::k_AdaptiveHistogramEqualization2DTargetBytes,
-                                                                           /*fixedScratchBytes=*/0, /*useHorizontalSums=*/false,
-                                                                           /*preferFixedOutput=*/true);
+    const auto fixedPlanResult = ImageProcessing::detail::CreateAdaptiveHistogramEqualization2DPlan(k_DimX, k_DimY, k_Radius[0], k_Radius[1], sizeof(float32),
+                                                                                                    ImageProcessing::detail::k_AdaptiveHistogramEqualization2DTargetBytes,
+                                                                                                    /*fixedScratchBytes=*/0, /*useHorizontalSums=*/false,
+                                                                                                    /*preferFixedOutput=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(fixedPlanResult);
     REQUIRE(fixedPlanResult.value().fixedOutput);
     const std::vector<float32> fixedOutputActual =
@@ -597,7 +598,8 @@ void CheckPlaneTraversalIdentity()
       }
       else
       {
-        ImageProcessing::detail::AdaptiveHistogramEqualizationPlaneBody<T> body{slab.data(), actual.data(), k_DimX, k_DimY, k_DimZ, radius[0], radius[1], radius[2], zLo, z, minValue, iscale, 0.37f, 0.21f};
+        ImageProcessing::detail::AdaptiveHistogramEqualizationPlaneBody<T> body{slab.data(), actual.data(), k_DimX, k_DimY,   k_DimZ, radius[0], radius[1],
+                                                                                radius[2],   zLo,           z,      minValue, iscale, 0.37f,     0.21f};
         auto referenceBody = body;
         referenceBody.outPlane = expected.data();
         ahe_test::unclipped::AdaptiveHistogramEqualizationPlaneBody(referenceBody, Range{0, k_SliceValues});
@@ -668,7 +670,7 @@ void CheckBlockTraversalIdentity()
       }
       else
       {
-        ImageProcessing::detail::AdaptiveHistogramEqualization2DBlockBody<T> body{block.data(), actual.data(), k_DimX,        k_DimY,     radius[0], radius[1], inputXBegin, inputYBegin, inputWidth,
+        ImageProcessing::detail::AdaptiveHistogramEqualization2DBlockBody<T> body{block.data(), actual.data(), k_DimX,        k_DimY,   radius[0], radius[1], inputXBegin, inputYBegin, inputWidth,
                                                                                   origin[0],    origin[1],     k_OutputWidth, minValue, iscale,    0.37f,     0.21f,       shouldCancel};
         auto referenceBody = body;
         referenceBody.output = expected.data();

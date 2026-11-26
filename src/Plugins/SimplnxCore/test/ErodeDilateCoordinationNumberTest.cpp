@@ -690,11 +690,11 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Bulk Storage Failur
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
   using FaultType = CoordinationBulkFailureStore::Fault;
   const std::array<std::pair<std::string_view, FaultType>, 6> faultCases = {{{"Success control", FaultType::None},
-                                                                         {"FeatureIds initial read", FaultType::InitialFeatureIdsRead},
-                                                                         {"Sibling destination read", FaultType::DestinationRead},
-                                                                         {"Sibling next-Z read", FaultType::NextSliceRead},
-                                                                         {"Sibling previous-Z read after committed slice", FaultType::PreviousSliceRead},
-                                                                         {"Sibling destination write", FaultType::DestinationWrite}}};
+                                                                             {"FeatureIds initial read", FaultType::InitialFeatureIdsRead},
+                                                                             {"Sibling destination read", FaultType::DestinationRead},
+                                                                             {"Sibling next-Z read", FaultType::NextSliceRead},
+                                                                             {"Sibling previous-Z read after committed slice", FaultType::PreviousSliceRead},
+                                                                             {"Sibling destination write", FaultType::DestinationWrite}}};
 
   for(const auto& [label, fault] : faultCases)
   {

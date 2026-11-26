@@ -324,7 +324,7 @@ Result<> UpdateSmoothingCoordinates(SmoothingWorkspace& work, const std::vector<
   {
     const usize count = std::min(capacity, vertexCount - first);
     const auto coordinates = work.cache_vertices ? nonstd::span<float32>(work.Vertices.data(), work.Vertices.size()).subspan(first * 3, count * 3) :
-                                                  nonstd::span<float32>(work.Page.data(), work.Page.size()).first(count * 3);
+                                                   nonstd::span<float32>(work.Page.data(), work.Page.size()).first(count * 3);
     if(!work.cache_vertices)
     {
       result = MeshingUtilities::detail::MergeTransferResult(result, ReadTemporaryCoordinates(*work.Temporary, first, coordinates));

@@ -201,7 +201,7 @@ constexpr StringLiteral k_NumNeighborsArrayNameKey = "NumNeighborsArrayName";
 constexpr StringLiteral k_NeighborListArrayNameKey = "NeighborListArrayName";
 constexpr StringLiteral k_SharedSurfaceAreaListArrayNameKey = "SharedSurfaceAreaListArrayName";
 constexpr StringLiteral k_SurfaceFeaturesArrayNameKey = "SurfaceFeaturesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)

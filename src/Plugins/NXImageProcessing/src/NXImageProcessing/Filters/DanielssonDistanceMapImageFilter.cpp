@@ -110,7 +110,7 @@ constexpr StringLiteral k_SquaredDistanceKey = "SquaredDistance";
 constexpr StringLiteral k_UseImageSpacingKey = "UseImageSpacing";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> DanielssonDistanceMapImageFilter::FromSIMPLJson(const nlohmann::json& json)

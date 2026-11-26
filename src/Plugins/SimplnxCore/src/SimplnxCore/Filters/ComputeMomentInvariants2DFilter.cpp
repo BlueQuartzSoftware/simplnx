@@ -180,7 +180,7 @@ constexpr StringLiteral k_Omega1ArrayPathKey = "Omega1ArrayPath";
 constexpr StringLiteral k_Omega2ArrayPathKey = "Omega2ArrayPath";
 constexpr StringLiteral k_SaveCentralMomentsKey = "SaveCentralMoments";
 constexpr StringLiteral k_CentralMomentsArrayPathKey = "CentralMomentsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeMomentInvariants2DFilter::FromSIMPLJson(const nlohmann::json& json)

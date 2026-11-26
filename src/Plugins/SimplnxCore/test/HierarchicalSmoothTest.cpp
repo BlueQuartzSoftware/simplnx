@@ -158,7 +158,7 @@ struct MeshPaths
   DataPath triangle_geom;
   DataPath node_type;   // Vertex Data / Node Type   (Int8)
   DataPath face_labels; // Face Data / Face Labels    (Int32 x2)
-  DataPath vertices;   // SharedVertexList           (Float32 x3)
+  DataPath vertices;    // SharedVertexList           (Float32 x3)
 };
 
 // Build an ImageGeom whose FeatureIds are the nearest-seed Voronoi assignment, then run

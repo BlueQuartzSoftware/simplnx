@@ -180,7 +180,7 @@ constexpr StringLiteral k_MaxValPerLineKey = "MaxValPerLine";
 constexpr StringLiteral k_OutputFilePathKey = "OutputFilePath";
 constexpr StringLiteral k_DelimiterKey = "Delimiter";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteASCIIDataFilter::FromSIMPLJson(const nlohmann::json& json)

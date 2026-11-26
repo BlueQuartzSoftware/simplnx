@@ -138,7 +138,7 @@ constexpr StringLiteral k_IgnoreFeatureZeroKey = "IgnoreFeatureZero";
 constexpr StringLiteral k_IncludeVolumeBoundaryKey = "IncludeVolumeBoundary";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_BoundaryCellsArrayNameKey = "BoundaryCellsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeBoundaryCellsFilter::FromSIMPLJson(const nlohmann::json& json)

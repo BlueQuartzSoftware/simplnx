@@ -195,7 +195,7 @@ constexpr StringLiteral k_UncertaintyKey = "Uncertainty";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> UncertainRegularGridSampleSurfaceMeshFilter::FromSIMPLJson(const nlohmann::json& json)

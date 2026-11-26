@@ -596,8 +596,8 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: mixed storage selects an O
 
   SECTION("OOC input and resident output select the input format")
   {
-    const auto selectedFormat =
-        nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore);
+    const auto selectedFormat = nx::core::ImageProcessing::detail::SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory,
+                                                                                                           DataStore<float32>::k_DataStore);
     REQUIRE(selectedFormat == k_KInputOocFormat);
   }
 

@@ -166,8 +166,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
   ThrottledMessageHandler progressThrottle(messageHandler);
   using VoxelRecordType = detail::WatershedVoxelRecord<TInput>;
   using PhysicalVoxelRecordType = std::conditional_t<SplitBucketState, detail::WatershedBucketVoxelRecord,
-                                                 std::conditional_t<PackedResidentStatusState, detail::WatershedPackedResidentStatusVoxelRecord<TInput>,
-                                                                    std::conditional_t<PackedCombinedState, detail::WatershedPackedVoxelRecord<TInput>, VoxelRecordType>>>;
+                                                     std::conditional_t<PackedResidentStatusState, detail::WatershedPackedResidentStatusVoxelRecord<TInput>,
+                                                                        std::conditional_t<PackedCombinedState, detail::WatershedPackedVoxelRecord<TInput>, VoxelRecordType>>>;
   using QueueType = detail::WatershedExternalQueue<TInput>;
   static_assert(!SplitBucketState || detail::k_UseWatershedBucketQueue<TInput>);
   static_assert(!PackedCombinedState || (detail::k_UseWatershedBucketQueue<TInput> && !SplitBucketState));

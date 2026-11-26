@@ -173,7 +173,7 @@ constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPat
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_MaterialNameArrayPathKey = "MaterialNameArrayPath";
 constexpr StringLiteral k_NumFeaturesArrayPathKey = "NumFeaturesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteINLFileFilter::FromSIMPLJson(const nlohmann::json& json)

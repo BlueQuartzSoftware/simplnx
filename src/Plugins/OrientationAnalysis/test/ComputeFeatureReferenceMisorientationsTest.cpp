@@ -76,7 +76,7 @@ struct FixtureData
   Int32Array* feature_ids = nullptr;
   Int32Array* cell_phases = nullptr;
   Float32Array* quats = nullptr;
-  Float32Array* avg_quats = nullptr;             // sized for numFeatures; populated only for Mode 0
+  Float32Array* avg_quats = nullptr;              // sized for numFeatures; populated only for Mode 0
   Float32Array* gb_euclidean_distances = nullptr; // only populated for Mode 1
   UInt32Array* crystal_structures = nullptr;
 };
@@ -295,7 +295,7 @@ inline void AssertClass4Invariants(const DataStructure& dataStructure, bool isMo
   }
 }
 
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 // The retired Small IN100 exemplar archive was generated from earlier SIMPLNX output and formed a circular oracle.

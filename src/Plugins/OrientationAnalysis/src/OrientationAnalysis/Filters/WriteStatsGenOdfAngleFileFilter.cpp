@@ -170,7 +170,7 @@ constexpr StringLiteral k_UseGoodVoxelsKey = "UseGoodVoxels";
 constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
 constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteStatsGenOdfAngleFileFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -232,7 +232,7 @@ constexpr StringLiteral k_PoissonVolFractionKey = "PoissonVolFraction";
 constexpr StringLiteral k_BoundaryNoiseKey = "BoundaryNoise";
 constexpr StringLiteral k_BoundaryVolFractionKey = "BoundaryVolFraction";
 constexpr StringLiteral k_GBEuclideanDistancesArrayPathKey = "GBEuclideanDistancesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AddBadDataFilter::FromSIMPLJson(const nlohmann::json& json)

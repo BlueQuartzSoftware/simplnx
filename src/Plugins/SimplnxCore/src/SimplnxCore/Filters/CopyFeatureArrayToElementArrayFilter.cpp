@@ -142,7 +142,7 @@ namespace simpl
 constexpr StringLiteral k_SelectedFeatureArrayPathKey = "SelectedFeatureArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CreatedArrayNameKey = "CreatedArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CopyFeatureArrayToElementArrayFilter::FromSIMPLJson(const nlohmann::json& json)

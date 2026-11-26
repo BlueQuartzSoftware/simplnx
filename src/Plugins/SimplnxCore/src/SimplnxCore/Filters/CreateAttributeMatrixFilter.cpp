@@ -95,7 +95,7 @@ namespace simpl
 {
 constexpr StringLiteral k_TupleDimensionsKey = "TupleDimensions";
 constexpr StringLiteral k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateAttributeMatrixFilter::FromSIMPLJson(const nlohmann::json& json)

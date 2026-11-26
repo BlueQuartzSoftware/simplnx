@@ -177,9 +177,9 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     }
     if((maskArrayPtr != nullptr) && maskArrayPtr->getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
-      return {.outputActions =
-                  MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
-                                                                     pMaskArrayPathValue.toString(), maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(), dataArrayPtr->getNumberOfTuples())),
+      return {.outputActions = MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
+                                                                                  pMaskArrayPathValue.toString(), maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(),
+                                                                                  dataArrayPtr->getNumberOfTuples())),
               .outputValues = {}};
     }
 

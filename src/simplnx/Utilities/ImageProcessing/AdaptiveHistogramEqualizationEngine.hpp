@@ -1127,7 +1127,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
   if constexpr(std::is_integral_v<T>)
   {
     constexpr usize k_KMaxAheLutEntries = detail::k_AdaptiveHistogramEqualizationMaximumLutEntries; // ~4M entries (16 MB float), table-size cap
-    constexpr int64 k_KMaxSpan = static_cast<int64>((k_KMaxAheLutEntries - 1) / 2);                   // 2*span + 1 <= kMaxAheLutEntries
+    constexpr int64 k_KMaxSpan = static_cast<int64>((k_KMaxAheLutEntries - 1) / 2);                 // 2*span + 1 <= kMaxAheLutEntries
     const T minT = statsResult.value().min;
     const T maxT = statsResult.value().max;
     // Exact span magnitude for any integer width: unsigned subtraction cannot overflow, and maxT >= minT here

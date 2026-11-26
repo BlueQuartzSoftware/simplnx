@@ -99,7 +99,7 @@ namespace simpl
 {
 constexpr StringLiteral k_ConversionTypeKey = "ConversionType";
 constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ChangeAngleRepresentationFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -68,7 +68,7 @@ struct BinaryMorphologyCompositeExecuteFn
   BinaryCompositeOp op;
   float64 foreground;
   float64 background; // used only by Opening; Closing derives its internal background
-  bool safe_border;    // used only by Closing (ITK binary Opening has no SafeBorder)
+  bool safe_border;   // used only by Closing (ITK binary Opening has no SafeBorder)
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
 

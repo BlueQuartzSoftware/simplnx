@@ -220,7 +220,7 @@ private:
       using ArrayType = DataArray<T>;
 
       ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(endianess) + "_" + "array_" + std::to_string(index),
-                                                                                {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
+                                                                                   {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
       dataArrayPtr->fill(m_FillValue[index]);
     }
     std::vector<DataPath> daps1 = m_DataStructure.getAllDataPaths();
@@ -296,7 +296,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
     using ArrayType = DataArray<int32>;
 
     ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, std::to_string(0) + "_" + "array_" + std::to_string(index), {static_cast<usize>(k_NumOfTuples)},
-                                                                              {static_cast<usize>(k_NumComponents)});
+                                                                                 {static_cast<usize>(k_NumComponents)});
     dataArrayPtr->fill(123123);
   }
   std::vector<DataPath> daps1 = dataStructure.getAllDataPaths();

@@ -145,7 +145,7 @@ constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
 constexpr StringLiteral k_SurfaceFeaturesArrayPathKey = "SurfaceFeaturesArrayPath";
 constexpr StringLiteral k_PhasesArrayPathKey = "PhasesArrayPath";
 constexpr StringLiteral k_BiasedFeaturesArrayNameKey = "BiasedFeaturesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeBiasedFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)

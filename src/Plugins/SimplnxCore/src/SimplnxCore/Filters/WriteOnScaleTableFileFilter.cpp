@@ -170,7 +170,7 @@ constexpr StringLiteral k_OutputFilePrefixKey = "OutputFilePrefix";
 constexpr StringLiteral k_NumKeypointsKey = "NumKeypoints";
 constexpr StringLiteral k_PzflexFeatureIdsArrayPathKey = "PzflexFeatureIdsArrayPath";
 constexpr StringLiteral k_PhaseNamesArrayPathKey = "PhaseNamesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::json& json)

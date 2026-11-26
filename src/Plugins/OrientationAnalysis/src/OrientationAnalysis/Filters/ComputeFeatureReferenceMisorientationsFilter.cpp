@@ -226,7 +226,7 @@ constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_FeatureReferenceMisorientationsArrayNameKey = "FeatureReferenceMisorientationsArrayName";
 constexpr StringLiteral k_FeatureAvgMisorientationsArrayNameKey = "FeatureAvgMisorientationsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureReferenceMisorientationsFilter::FromSIMPLJson(const nlohmann::json& json)

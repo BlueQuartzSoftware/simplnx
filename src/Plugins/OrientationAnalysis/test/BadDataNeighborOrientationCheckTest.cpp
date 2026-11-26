@@ -39,7 +39,7 @@ const DataPath k_PhasesArrayPath = k_CellDataPath.createChildPath(k_PhasesName);
 
 const std::string k_CStuctsName = "Crystal Structures";
 const DataPath k_CStuctsArrayPath = k_CellEnsembleDataPath.createChildPath(k_CStuctsName);
-} // namespace VerificationConstants
+} // namespace verification_constants
 
 namespace class_four_invariants
 {
@@ -80,7 +80,7 @@ void AssertInvariants(const std::vector<uint8>& originalMask, const DataStructur
   }
   REQUIRE(countAfter >= countBefore);
 }
-} // namespace ClassFourInvariants
+} // namespace class_four_invariants
 } // namespace
 
 // AlgorithmTestScope forces each selected path and records its target-call

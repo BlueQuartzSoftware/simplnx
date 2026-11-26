@@ -30,6 +30,6 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
   auto* phasesArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath);
 
-  return DispatchAlgorithm<BadDataNeighborOrientationCheckWorklist, BadDataNeighborOrientationCheckScanline>({quatsArrayPtr, maskArrayPtr, phasesArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
-                                                                                                             m_InputValues);
+  return DispatchAlgorithm<BadDataNeighborOrientationCheckWorklist, BadDataNeighborOrientationCheckScanline>({quatsArrayPtr, maskArrayPtr, phasesArrayPtr}, m_DataStructure, m_MessageHandler,
+                                                                                                             m_ShouldCancel, m_InputValues);
 }

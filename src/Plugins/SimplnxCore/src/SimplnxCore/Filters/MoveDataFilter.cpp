@@ -122,7 +122,7 @@ constexpr StringLiteral k_AttributeMatrixSourceKey = "AttributeMatrixSource";
 constexpr StringLiteral k_DataContainerDestinationKey = "DataContainerDestination";
 constexpr StringLiteral k_DataArraySourceKey = "DataArraySource";
 constexpr StringLiteral k_AttributeMatrixDestinationKey = "AttributeMatrixDestination";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MoveDataFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -162,7 +162,7 @@ constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
 constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> BadDataNeighborOrientationCheckFilter::FromSIMPLJson(const nlohmann::json& json)

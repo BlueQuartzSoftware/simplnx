@@ -129,7 +129,7 @@ namespace simpl
 {
 constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
 constexpr StringLiteral k_CAxisLocationsArrayNameKey = "CAxisLocationsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeCAxisLocationsFilter::FromSIMPLJson(const nlohmann::json& json)

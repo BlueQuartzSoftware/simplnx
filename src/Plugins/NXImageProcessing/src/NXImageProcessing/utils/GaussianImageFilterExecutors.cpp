@@ -514,7 +514,8 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
         return {};
       }
       // order-1 derivative along `dim` (reads raw input T)
-      if(Result<> r = RecursiveGaussianAxisPass<T>(inStore, work, dims, dim, sigma, static_cast<double>(spacing[dim]), /*order=*/1, normalize_across_scale, should_cancel, message_handler); r.invalid())
+      if(Result<> r = RecursiveGaussianAxisPass<T>(inStore, work, dims, dim, sigma, static_cast<double>(spacing[dim]), /*order=*/1, normalize_across_scale, should_cancel, message_handler);
+         r.invalid())
       {
         return r;
       }
@@ -525,7 +526,8 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
         {
           continue;
         }
-        if(Result<> r = RecursiveGaussianAxisPass<float32>(work, work, dims, a, sigma, static_cast<double>(spacing[a]), /*order=*/0, normalize_across_scale, should_cancel, message_handler); r.invalid())
+        if(Result<> r = RecursiveGaussianAxisPass<float32>(work, work, dims, a, sigma, static_cast<double>(spacing[a]), /*order=*/0, normalize_across_scale, should_cancel, message_handler);
+           r.invalid())
         {
           return r;
         }
@@ -956,7 +958,7 @@ struct DiscreteGaussianExecuteFn
   const DataPath& output_array_path;
   SizeVec3 dims;
   FloatVec3 spacing;
-  std::vector<float64> variance;     // per-axis (x,y,z)
+  std::vector<float64> variance;      // per-axis (x,y,z)
   std::vector<float64> maximum_error; // per-axis (x,y,z)
   uint32 maximum_kernel_width;
   bool use_image_spacing;
@@ -968,7 +970,8 @@ struct DiscreteGaussianExecuteFn
   {
     const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
     auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
-    return ApplyDiscreteGaussian<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, variance, maximum_kernel_width, maximum_error, use_image_spacing, spacing, should_cancel, message_handler);
+    return ApplyDiscreteGaussian<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, variance, maximum_kernel_width, maximum_error, use_image_spacing, spacing, should_cancel,
+                                    message_handler);
   }
 };
 

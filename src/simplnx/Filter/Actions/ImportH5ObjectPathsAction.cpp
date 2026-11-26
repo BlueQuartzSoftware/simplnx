@@ -422,8 +422,8 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   const auto sourceCount = sourceStructure.getLiveObjectCount();
   if(sourceCount > k_MaximumId - startId)
   {
-    return MergeResults(std::move(importResult),
-                        MakeErrorResult(-6213, fmt::format("Cannot import '{}': source identifiers starting at {} exceed the maximum next identifier {}.", m_H5FilePath.string(), startId, k_MaximumId)));
+    return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot import '{}': source identifiers starting at {} exceed the maximum next identifier {}.",
+                                                                                    m_H5FilePath.string(), startId, k_MaximumId)));
   }
   DataObject::IdType extraPlacementCount = 0;
   std::unordered_set<const DataObject*> countedSources;

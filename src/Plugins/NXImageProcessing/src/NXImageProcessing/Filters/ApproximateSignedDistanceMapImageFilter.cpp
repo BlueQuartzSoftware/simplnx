@@ -100,7 +100,7 @@ constexpr StringLiteral k_InsideValueKey = "InsideValue";
 constexpr StringLiteral k_OutsideValueKey = "OutsideValue";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ApproximateSignedDistanceMapImageFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -596,7 +596,7 @@ std::vector<char> ConvertToChars(const std::string& string)
 {
   return std::vector<char>(string.begin(), string.end());
 }
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)

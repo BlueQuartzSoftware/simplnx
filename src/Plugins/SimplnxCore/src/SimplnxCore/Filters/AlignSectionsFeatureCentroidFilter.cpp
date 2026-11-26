@@ -230,7 +230,7 @@ constexpr StringLiteral k_WriteAlignmentShiftsKey = "WriteAlignmentShifts";
 constexpr StringLiteral k_UseReferenceSliceKey = "UseReferenceSlice";
 constexpr StringLiteral k_ReferenceSliceKey = "ReferenceSlice";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AlignSectionsFeatureCentroidFilter::FromSIMPLJson(const nlohmann::json& json)

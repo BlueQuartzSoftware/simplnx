@@ -676,8 +676,8 @@ Result<> ComputeAvgOrientations::executeScanline()
   }
   if(quaternionsPtr->getSize() != quaternionValueCount)
   {
-    return MakeErrorResult(
-        -54675, fmt::format("ComputeAvgOrientations: quaternion array '{}' has {} values; expected {} tuples times four components.", quaternionsPtr->getName(), quaternionsPtr->getSize(), tupleCount));
+    return MakeErrorResult(-54675, fmt::format("ComputeAvgOrientations: quaternion array '{}' has {} values; expected {} tuples times four components.", quaternionsPtr->getName(),
+                                               quaternionsPtr->getSize(), tupleCount));
   }
 
   const DataPath* featureCountPathPtr = nullptr;

@@ -225,7 +225,7 @@ constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 constexpr StringLiteral k_VertexGeometryKey = "VertexGeometry";
 constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> PointSampleTriangleGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

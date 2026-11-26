@@ -329,7 +329,7 @@ constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_ArraysToInterpolateKey = "ArraysToInterpolate";
 constexpr StringLiteral k_ArraysToCopyKey = "ArraysToCopy";
 constexpr StringLiteral k_InterpolatedAttributeMatrixNameKey = "InterpolatedAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> InterpolatePointCloudToRegularGridFilter::FromSIMPLJson(const nlohmann::json& json)

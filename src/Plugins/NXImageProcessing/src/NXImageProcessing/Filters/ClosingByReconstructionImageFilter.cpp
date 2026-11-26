@@ -141,7 +141,7 @@ constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
 constexpr StringLiteral k_PreserveIntensitiesKey = "PreserveIntensities";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ClosingByReconstructionImageFilter::FromSIMPLJson(const nlohmann::json& json)

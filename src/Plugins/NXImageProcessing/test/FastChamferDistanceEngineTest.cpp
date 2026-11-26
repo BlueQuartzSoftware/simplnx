@@ -378,7 +378,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: single seed == chamfer 
   field[FlatIndex(4, 4, 4, k_D, k_D)] = 0.0f;
   const std::vector<float32> out = RunChamfer(field, k_D, k_D, k_D, k_KMax);
 
-  REQUIRE(out[FlatIndex(4, 4, 4, k_D, k_D)] == 0.0f);                             // seed
+  REQUIRE(out[FlatIndex(4, 4, 4, k_D, k_D)] == 0.0f);                               // seed
   REQUIRE(out[FlatIndex(5, 4, 4, k_D, k_D)] == Approx(k_KW0).epsilon(1e-5));        // +x axis
   REQUIRE(out[FlatIndex(3, 4, 4, k_D, k_D)] == Approx(k_KW0).epsilon(1e-5));        // -x axis
   REQUIRE(out[FlatIndex(4, 5, 4, k_D, k_D)] == Approx(k_KW0).epsilon(1e-5));        // +y axis

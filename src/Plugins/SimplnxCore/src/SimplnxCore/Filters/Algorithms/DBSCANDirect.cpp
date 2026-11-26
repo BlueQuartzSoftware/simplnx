@@ -191,8 +191,8 @@ class HyperGridBitMap3D : public HyperGridBitMap
 public:
   static constexpr float32 Dimensions = 3; // Number of coordinate components.
 
-  GridBitMap xTable; // Occupied-grid incidence by X position.
-  GridBitMap yTable; // Occupied-grid incidence by Y position.
+  GridBitMap xTable;  // Occupied-grid incidence by X position.
+  GridBitMap yTable;  // Occupied-grid incidence by Y position.
   GridBitMap z_table; // Occupied-grid incidence by Z position.
 
   HyperGridBitMap3D() = delete;
@@ -746,7 +746,7 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
 struct ClusterNode
 {
   int32 cluster_id = 0; // Feature identifier for a root grid.
-  usize parent = 0;    // Parent grid identifier in the union forest.
+  usize parent = 0;     // Parent grid identifier in the union forest.
 };
 
 /**

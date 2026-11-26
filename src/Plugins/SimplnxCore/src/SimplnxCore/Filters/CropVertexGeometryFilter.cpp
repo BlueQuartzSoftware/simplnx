@@ -204,7 +204,7 @@ constexpr StringLiteral k_XMaxKey = "XMax";
 constexpr StringLiteral k_YMaxKey = "YMax";
 constexpr StringLiteral k_ZMaxKey = "ZMax";
 constexpr StringLiteral k_CroppedDataContainerNameKey = "CroppedDataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

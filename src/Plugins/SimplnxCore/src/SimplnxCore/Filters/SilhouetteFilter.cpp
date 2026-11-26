@@ -105,8 +105,8 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
   const auto* clusterIdsPtr = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
   if(clusterArrayPtr->getNumberOfTuples() != clusterIdsPtr->getNumberOfTuples())
   {
-    return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArrayPtr->getName(), clusterArrayPtr->getNumberOfTuples(),
-                                                       clusterIdsPtr->getName(), clusterIdsPtr->getNumberOfTuples()));
+    return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArrayPtr->getName(),
+                                                       clusterArrayPtr->getNumberOfTuples(), clusterIdsPtr->getName(), clusterIdsPtr->getNumberOfTuples()));
   }
 
   if(pUseMaskValue && !CheckArraysHaveSameTupleCount(dataStructure, {pSelectedArrayPathValue, pMaskArrayPathValue, pFeatureIdsArrayPathValue}))
@@ -152,7 +152,7 @@ constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_SilhouetteArrayPathKey = "SilhouetteArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> SilhouetteFilter::FromSIMPLJson(const nlohmann::json& json)

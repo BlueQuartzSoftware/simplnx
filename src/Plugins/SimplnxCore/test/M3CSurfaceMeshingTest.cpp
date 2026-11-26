@@ -1333,8 +1333,9 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges", "[Si
   const FloatVec3 origin(10.0f, -5.0f, 2.5f);
 
   using LabelerFnType = int32 (*)(usize, usize, usize);
-  const auto [labelerName, labeler] = GENERATE(std::make_tuple("single feature", static_cast<LabelerFnType>(SingleFeatureLabeler)),
-                                               std::make_tuple("triple line", static_cast<LabelerFnType>(TripleLineLabeler)), std::make_tuple("unique cells", static_cast<LabelerFnType>(UniqueCellLabeler)));
+  const auto [labelerName, labeler] =
+      GENERATE(std::make_tuple("single feature", static_cast<LabelerFnType>(SingleFeatureLabeler)), std::make_tuple("triple line", static_cast<LabelerFnType>(TripleLineLabeler)),
+               std::make_tuple("unique cells", static_cast<LabelerFnType>(UniqueCellLabeler)));
 
   DYNAMIC_SECTION(labelerName << ": option off keeps the chamfer")
   {

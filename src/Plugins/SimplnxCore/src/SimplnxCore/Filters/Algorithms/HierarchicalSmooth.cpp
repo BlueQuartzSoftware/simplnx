@@ -488,8 +488,8 @@ std::tuple<SpMatType, Eigen::MatrixXd> GetDirichletBvp(const SpMatType& gl, cons
   return std::make_tuple(glRed, fConst);
 }
 
-double GetObjFn(SmootherType& smth, double feps, const SpMatType& fSmallEye, const SpMatType& ltl, const Eigen::MatrixXd& ltk, const MatindexType& nMobile, const Eigen::MatrixXd& yMobile, const SpMatType& d,
-                const Eigen::MatrixXd& ayIn, Eigen::MatrixXd& yOut)
+double GetObjFn(SmootherType& smth, double feps, const SpMatType& fSmallEye, const SpMatType& ltl, const Eigen::MatrixXd& ltk, const MatindexType& nMobile, const Eigen::MatrixXd& yMobile,
+                const SpMatType& d, const Eigen::MatrixXd& ayIn, Eigen::MatrixXd& yOut)
 {
   SpMatType bigA = (1.0 - feps) * fSmallEye + feps * ltl;
   Eigen::MatrixXd b = (1.0 - feps) * yMobile - feps * ltk;

@@ -150,9 +150,9 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
     }
     if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && !m_AllowedTypes.contains(dataArrayPtr->getArrayType()))
     {
-      errors.push_back(Error{
-          .code = FilterParameter::Constants::k_Validate_Type_Error,
-          .message = fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(), dataArrayPtr->getTypeName(), IArray::StringListFromArrayType(m_AllowedTypes))});
+      errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Type_Error,
+                             .message = fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(), dataArrayPtr->getTypeName(),
+                                                    IArray::StringListFromArrayType(m_AllowedTypes))});
       continue;
     }
     if(!m_RequiredComponentShapes.empty())

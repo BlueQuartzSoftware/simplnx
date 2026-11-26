@@ -328,20 +328,20 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
 
   // define all 12 cube edges as pairs of vertex indices
   static constexpr std::array<std::array<int32, 2>, 12> k_ExpectedEdges = {{// bottom face
-                                                                          {0, 1},
-                                                                          {1, 2},
-                                                                          {2, 3},
-                                                                          {3, 0},
-                                                                          // top face
-                                                                          {4, 5},
-                                                                          {5, 6},
-                                                                          {6, 7},
-                                                                          {7, 4},
-                                                                          // vertical sides
-                                                                          {0, 4},
-                                                                          {1, 5},
-                                                                          {2, 6},
-                                                                          {3, 7}}};
+                                                                            {0, 1},
+                                                                            {1, 2},
+                                                                            {2, 3},
+                                                                            {3, 0},
+                                                                            // top face
+                                                                            {4, 5},
+                                                                            {5, 6},
+                                                                            {6, 7},
+                                                                            {7, 4},
+                                                                            // vertical sides
+                                                                            {0, 4},
+                                                                            {1, 5},
+                                                                            {2, 6},
+                                                                            {3, 7}}};
 
   const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(DataPath({"EdgeGeom"}));
   const auto& sharedVertList = edgeGeom.getVerticesRef();

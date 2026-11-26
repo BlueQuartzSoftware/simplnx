@@ -76,7 +76,7 @@ constexpr StringLiteral k_Type = "type";
 constexpr StringLiteral k_Children = "children";
 constexpr StringLiteral k_SchemaVersion = "schema_version";
 constexpr StringLiteral k_Objects = "objects";
-} // namespace Keys
+} // namespace keys
 
 constexpr int32 k_HierarchyJsonSchemaVersion = 1;
 

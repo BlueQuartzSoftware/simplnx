@@ -174,7 +174,8 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
 
   if(!dataObjectPtr->rename(m_NewName))
   {
-    return MakeErrorResult(k_RenameFailed, fmt::format("{}Could not rename DataObject at '{}' to '{}'. Choose a valid name that is unique under every parent.", k_Prefix, m_Path.toString(), m_NewName));
+    return MakeErrorResult(k_RenameFailed,
+                           fmt::format("{}Could not rename DataObject at '{}' to '{}'. Choose a valid name that is unique under every parent.", k_Prefix, m_Path.toString(), m_NewName));
   }
   return result;
 }

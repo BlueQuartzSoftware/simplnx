@@ -647,9 +647,10 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Nested single label 
   // Two closed boxes: [1, 6] x [0, 3] x [0, 3] and [2, 4] x [1, 2] x [1, 2].
   auto* geomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
   REQUIRE(geomPtr != nullptr);
-  auto* verticesPtr = Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {16}, {3}), geomPtr->getId());
-  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces",
-                                                      DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {24}, {3}), geomPtr->getId());
+  auto* verticesPtr =
+      Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {16}, {3}), geomPtr->getId());
+  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(
+      dataStructure, "Faces", DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {24}, {3}), geomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
   geomPtr->setVertices(*verticesPtr);
@@ -694,9 +695,10 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Touching and overlap
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* geomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
-  auto* verticesPtr = Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {24}, {3}), geomPtr->getId());
-  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces",
-                                                      DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {36}, {3}), geomPtr->getId());
+  auto* verticesPtr =
+      Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {24}, {3}), geomPtr->getId());
+  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(
+      dataStructure, "Faces", DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {36}, {3}), geomPtr->getId());
   geomPtr->setVertices(*verticesPtr);
   geomPtr->setFaceList(*facesPtr);
   auto* faceDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{36}, geomPtr->getId());

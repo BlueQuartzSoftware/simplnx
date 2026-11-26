@@ -122,7 +122,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore]
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Invalid because mismatch tuple shapes
-  dataStructure = CreateTestDataStructure<uint8>();                                                                              // Reset the DataStructure
+  dataStructure = CreateTestDataStructure<uint8>();                                                                                 // Reset the DataStructure
   UInt8Array* array4Ptr = nx::core::UnitTest::CreateTestDataArray<uint8>(dataStructure, k_InvalidArrayType, {5ULL, 55ULL}, {3}, 0); // Non-matching tuple shape
   array4Ptr->fill(static_cast<uint8>(3));
   preflightResult = filter.preflight(dataStructure, args);

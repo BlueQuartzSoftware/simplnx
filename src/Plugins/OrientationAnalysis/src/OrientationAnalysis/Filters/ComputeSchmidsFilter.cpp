@@ -276,7 +276,7 @@ constexpr StringLiteral k_SlipSystemsArrayNameKey = "SlipSystemsArrayName";
 constexpr StringLiteral k_PolesArrayNameKey = "PolesArrayName";
 constexpr StringLiteral k_PhisArrayNameKey = "PhisArrayName";
 constexpr StringLiteral k_LambdasArrayNameKey = "LambdasArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeSchmidsFilter::FromSIMPLJson(const nlohmann::json& json)

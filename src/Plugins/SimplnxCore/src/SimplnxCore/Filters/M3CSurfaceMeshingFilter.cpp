@@ -251,7 +251,7 @@ constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixN
 constexpr StringLiteral k_SurfaceMeshNodeTypesArrayNameKey = "SurfaceMeshNodeTypesArrayName";
 constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
 constexpr StringLiteral k_FaceLabelsArrayNameKey = "FaceLabelsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> M3CSurfaceMeshingFilter::FromSIMPLJson(const nlohmann::json& json)

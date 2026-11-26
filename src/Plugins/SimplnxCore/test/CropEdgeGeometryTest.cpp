@@ -103,7 +103,8 @@ DataStructure CreateSharedOutsideVertexData(bool cropCase = false)
   auto* geomPtr = EdgeGeom::Create(dataStructure, k_EdgeGeometry);
   REQUIRE(geomPtr != nullptr);
   const DataPath geomPath({k_EdgeGeometry});
-  auto* verticesPtr = Float32Array::Create(dataStructure, k_VerticesName, DataStoreUtilities::CreateDataStore<float32>(dataStructure, geomPath.createChildPath(k_VerticesName), {3}, {3}), geomPtr->getId());
+  auto* verticesPtr =
+      Float32Array::Create(dataStructure, k_VerticesName, DataStoreUtilities::CreateDataStore<float32>(dataStructure, geomPath.createChildPath(k_VerticesName), {3}, {3}), geomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   const std::vector<float32> coordinates{0, 0, 0, 0.5F, 1, -1, 2, 4, 6};
   for(usize i = 0; i < coordinates.size(); ++i)
@@ -125,8 +126,9 @@ DataStructure CreateSharedOutsideVertexData(bool cropCase = false)
   REQUIRE(edgeDataPtr != nullptr);
   geomPtr->setVertexAttributeMatrix(*vertexDataPtr);
   geomPtr->setEdgeAttributeMatrix(*edgeDataPtr);
-  auto* vertexValuesPtr = Int32Array::Create(
-      dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_VertexData).createChildPath("Values"), {3}, {1}), vertexDataPtr->getId());
+  auto* vertexValuesPtr =
+      Int32Array::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_VertexData).createChildPath("Values"), {3}, {1}),
+                         vertexDataPtr->getId());
   auto* edgeValuesPtr = Int32Array::Create(
       dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_Edge_Data).createChildPath("Values"), {2}, {1}), edgeDataPtr->getId());
   REQUIRE(vertexValuesPtr != nullptr);

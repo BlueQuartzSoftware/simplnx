@@ -216,7 +216,7 @@ constexpr StringLiteral k_FillRemovedFeaturesKey = "FillRemovedFeatures";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_FlaggedFeaturesArrayPathKey = "FlaggedFeaturesArrayPath";
 constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RemoveFlaggedFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -654,8 +654,8 @@ static Result<> FindDistanceMap(DataStructure& dataStructure, const ComputeEucli
   ParallelTaskAlgorithm taskRunner;
   if(inputValues->DoBoundaries)
   {
-    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::FeatureBoundary>(*inputValues, nearestNeighbors, featureIdsBuf.data(), gbDistBuf.data(), gbManhattanDistancesStorePtr,
-                                                                                                    totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
+    taskRunner.execute(ComputeDistanceMapImpl<T, ComputeEuclideanDistMap::MapType::FeatureBoundary>(
+        *inputValues, nearestNeighbors, featureIdsBuf.data(), gbDistBuf.data(), gbManhattanDistancesStorePtr, totalVoxels, udims, spacing, taskResult, shouldCancel, sendThreadSafeProgress));
   }
 
   if(inputValues->DoTripleLines)

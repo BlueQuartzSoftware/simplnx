@@ -715,7 +715,7 @@ void CheckActiveArray(const DataStructure& dataStructure, usize expectedNumFeatu
     REQUIRE(activeRef[featureIdx] == 1);
   }
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 using namespace analytical_fixtures;

@@ -224,7 +224,7 @@ constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName"
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 constexpr StringLiteral k_PhaseAttributeMatrixNameKey = "PhaseAttributeMatrixName";
 constexpr StringLiteral k_MaterialNameArrayNameKey = "MaterialNameArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::json& json)

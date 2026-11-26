@@ -815,7 +815,8 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persis
       DataStore<int16> outputStore(tupleShape, componentShape, int16{0});
       const ReconstructionMarkerOptions options{.source = source, .height = 0.0};
       ReconstructSweep<int16, true> sweep{
-          maskStore, maskStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, 3 * k_PlaneValues, std::numeric_limits<usize>::max(), options, 0, 0, false, 0};
+          maskStore, maskStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, 3 * k_PlaneValues, std::numeric_limits<usize>::max(), options, 0, 0,
+          false,     0};
       REQUIRE(sweep().valid());
 
       std::vector<int16> actual(k_VolumeValues);
@@ -868,7 +869,7 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: bounded 2D row 
   constexpr usize k_DimY = 9;
   constexpr usize k_DimZ = 1;
   constexpr usize k_FullWidthBudget = 3 * k_DimX; // two core rows plus one halo row
-  constexpr usize k_OverwideBudget = 6;         // four core columns plus two X halos
+  constexpr usize k_OverwideBudget = 6;           // four core columns plus two X halos
   const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
 
   for(bool fullyConnected : {false, true})
@@ -1032,9 +1033,17 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask
     DataStore<int16> vincentOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
     DataStore<int16> sweepOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
     ReconstructVincent<int16> vincent{maskStore, maskStore, vincentOutput, SizeVec3{k_DimX, k_DimY, k_DimZ}, op, true, shouldCancel, messageHandler, options};
-    ReconstructSweep<int16, true> sweep{
-        maskStore, maskStore, sweepOutput, SizeVec3{k_DimX, k_DimY, k_DimZ}, op, true, shouldCancel, messageHandler, ReconstructSweep<int16, true>::k_DefaultSlabValues, std::numeric_limits<usize>::max(),
-        options};
+    ReconstructSweep<int16, true> sweep{maskStore,
+                                        maskStore,
+                                        sweepOutput,
+                                        SizeVec3{k_DimX, k_DimY, k_DimZ},
+                                        op,
+                                        true,
+                                        shouldCancel,
+                                        messageHandler,
+                                        ReconstructSweep<int16, true>::k_DefaultSlabValues,
+                                        std::numeric_limits<usize>::max(),
+                                        options};
     REQUIRE(vincent().valid());
     REQUIRE(sweep().valid());
 

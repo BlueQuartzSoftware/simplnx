@@ -81,7 +81,7 @@ namespace simpl
 constexpr StringLiteral k_CreatedDataContainerKey = "CreatedDataContainer";
 // 6.6
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateDataGroupFilter::FromSIMPLJson(const nlohmann::json& json)

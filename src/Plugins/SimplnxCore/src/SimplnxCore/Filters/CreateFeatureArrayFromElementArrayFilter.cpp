@@ -127,7 +127,7 @@ constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
 constexpr StringLiteral k_CreatedArrayNameKey = "CreatedArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateFeatureArrayFromElementArrayFilter::FromSIMPLJson(const nlohmann::json& json)

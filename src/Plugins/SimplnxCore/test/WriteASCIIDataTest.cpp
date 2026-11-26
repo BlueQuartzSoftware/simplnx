@@ -166,7 +166,7 @@ private:
       using ArrayType = DataArray<T>;
 
       ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(fileType) + "_" + std::to_string(delimiter) + "_" + "array_" + std::to_string(index),
-                                                                                {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
+                                                                                   {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
       dataArrayPtr->fill(m_FillValue[index]);
     }
     std::vector<DataPath> daps1 = m_DataStructure.getAllDataPaths();

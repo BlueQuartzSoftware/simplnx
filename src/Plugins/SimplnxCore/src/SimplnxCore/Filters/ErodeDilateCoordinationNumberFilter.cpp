@@ -153,7 +153,7 @@ constexpr StringLiteral k_CoordinationNumberKey = "CoordinationNumber";
 constexpr StringLiteral k_LoopKey = "Loop";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ErodeDilateCoordinationNumberFilter::FromSIMPLJson(const nlohmann::json& json)

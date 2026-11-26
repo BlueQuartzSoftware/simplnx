@@ -178,7 +178,7 @@ constexpr StringLiteral k_ReadPointDataKey = "ReadPointData";
 constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
 constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
 constexpr StringLiteral k_VolumeDataContainerNameKey = "VolumeDataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------

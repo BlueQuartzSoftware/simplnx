@@ -96,7 +96,7 @@ DataStructure CreateDataStructure()
 
   return dataStructure;
 }
-} // namespace ExtractVertexGeometryTest
+} // namespace extract_vertex_geometry_test
 } // namespace
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count", "[SimplnxCore][ExtractVertexGeometry]")

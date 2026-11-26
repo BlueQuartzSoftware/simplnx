@@ -121,7 +121,7 @@ constexpr StringLiteral k_GridResolutionKey = "GridResolution";
 constexpr StringLiteral k_NumberOfEmptyNeighborsKey = "NumberOfEmptyNeighbors";
 constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
 constexpr StringLiteral k_HullDataContainerNameKey = "HullDataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ApproximatePointCloudHullFilter::FromSIMPLJson(const nlohmann::json& json)

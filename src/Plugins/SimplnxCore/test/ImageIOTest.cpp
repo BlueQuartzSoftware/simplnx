@@ -31,9 +31,9 @@ struct TiffPage
 {
   uint32_t width = 0;
   uint32_t height = 0;
-  uint16_t spp = 1;                    // samples-per-pixel
+  uint16_t spp = 1;                     // samples-per-pixel
   std::optional<uint32_t> subfile_type; // nullopt => do not emit the SubfileType tag
-  std::vector<uint8_t> pixels;         // row-major, top-to-bottom, size == width*height*spp
+  std::vector<uint8_t> pixels;          // row-major, top-to-bottom, size == width*height*spp
 };
 
 // Builds a page filled with a single constant value across all pixels/components.

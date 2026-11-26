@@ -193,7 +193,7 @@ constexpr StringLiteral k_ScaleKey = "Scale";
 constexpr StringLiteral k_ComputedTransformationMatrixKey = "ComputedTransformationMatrix";
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 constexpr StringLiteral k_DataArraySelectionKey = "DataArraySelection";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ApplyTransformationToGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

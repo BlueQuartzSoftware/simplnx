@@ -50,7 +50,8 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DR
   DataPath transformArrayPath({Constants::k_SmallIN100, "Transform Array"});
 
   auto* targetVertexGeomPtr = VertexGeom::Create(dataStructure, "Vertex Geometry 2", movingVertexGeomPtr->getParentIds().front());
-  auto* eulerData2Ptr = Float32Array::CreateWithStore<DataStore<float>>(dataStructure, "Euler 2", {movingVertexGeomPtr->getVertices()->getNumberOfTuples()}, {3}, targetVertexGeomPtr->getParentIds().front());
+  auto* eulerData2Ptr =
+      Float32Array::CreateWithStore<DataStore<float>>(dataStructure, "Euler 2", {movingVertexGeomPtr->getVertices()->getNumberOfTuples()}, {3}, targetVertexGeomPtr->getParentIds().front());
   targetVertexGeomPtr->setVertices(*eulerData2Ptr);
 
   DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, targetVertexGeomPtr->getName()});

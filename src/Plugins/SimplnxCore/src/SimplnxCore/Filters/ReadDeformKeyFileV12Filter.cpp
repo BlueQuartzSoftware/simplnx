@@ -196,7 +196,7 @@ constexpr StringLiteral k_DEFORMInputFileKey = "DEFORMInputFile";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadDeformKeyFileV12Filter::FromSIMPLJson(const nlohmann::json& json)

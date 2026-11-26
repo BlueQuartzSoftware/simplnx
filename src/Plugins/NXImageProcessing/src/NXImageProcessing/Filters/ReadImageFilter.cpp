@@ -450,7 +450,7 @@ constexpr StringLiteral k_FileNameKey = "FileName";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_ImageDataArrayNameKey = "ImageDataArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadImageFilter::FromSIMPLJson(const nlohmann::json& json)

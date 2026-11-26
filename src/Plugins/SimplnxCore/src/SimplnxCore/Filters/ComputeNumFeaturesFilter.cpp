@@ -135,7 +135,7 @@ namespace simpl
 {
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_NumFeaturesArrayPathKey = "NumFeaturesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeNumFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)

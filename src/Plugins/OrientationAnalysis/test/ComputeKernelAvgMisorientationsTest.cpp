@@ -171,7 +171,7 @@ const Float32Array& GetOutputKAM(const DataStructure& dataStructure)
 {
   return dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_KAMOutName));
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 
 analytical_fixtures::FixtureData CreateOocFixture(usize nX, usize ny, usize nz)
 {

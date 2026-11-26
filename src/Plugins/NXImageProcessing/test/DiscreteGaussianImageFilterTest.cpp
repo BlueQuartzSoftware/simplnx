@@ -25,8 +25,8 @@ using DgFilterType = DiscreteGaussianImageFilter;
 
 // Sets the standard geom/input/output keys + Variance/MaximumKernelWidth/MaximumError/UseImageSpacing on a shared
 // Arguments, runs preflight + execute, and requires both succeed.
-void RunDG(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const std::vector<float64>& variance, uint32 maxKernelWidth, const std::vector<float64>& maxError, bool useImageSpacing,
-           const std::string& outputName = "Output")
+void RunDG(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const std::vector<float64>& variance, uint32 maxKernelWidth, const std::vector<float64>& maxError,
+           bool useImageSpacing, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;

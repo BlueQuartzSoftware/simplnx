@@ -48,7 +48,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
 
   BinaryOpeningByReconstructionImageFilter filter;
   rt::RunReconstructionFilter<BinaryOpeningByReconstructionImageFilter>(
-      filter, dataStructure, inputPath, rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball), {1, 1, 1}, 1.0, 0.0),
+      filter, dataStructure, inputPath,
+      rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball), {1, 1, 1}, 1.0, 0.0),
       /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
@@ -156,7 +157,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
 
   BinaryOpeningByReconstructionImageFilter filter;
   rt::RunReconstructionFilter<BinaryOpeningByReconstructionImageFilter>(
-      filter, dataStructure, inputPath, rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Annulus), {1, 1, 1}, 1.0, 0.0),
+      filter, dataStructure, inputPath,
+      rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Annulus), {1, 1, 1}, 1.0, 0.0),
       /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});

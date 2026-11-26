@@ -372,8 +372,8 @@ public:
       case ConvertColorToGrayScale::ConversionType::Average:
         if(numComponents >= 3)
         {
-          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Average>(inputDataPtr, outputDataPtr, {0.3333F, 0.3333F, 0.3333F}, numComponents, m_ColorChannel),
-                                         totalPoints);
+          ParallelWrapper::RunContiguous(
+              ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Average>(inputDataPtr, outputDataPtr, {0.3333F, 0.3333F, 0.3333F}, numComponents, m_ColorChannel), totalPoints);
           return {};
         }
         break;

@@ -147,7 +147,7 @@ constexpr StringLiteral k_XDirOnKey = "XDirOn";
 constexpr StringLiteral k_YDirOnKey = "YDirOn";
 constexpr StringLiteral k_ZDirOnKey = "ZDirOn";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ErodeDilateMaskFilter::FromSIMPLJson(const nlohmann::json& json)

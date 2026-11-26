@@ -264,7 +264,7 @@ FixtureData BuildRealisticMicrostructure()
 
   return td;
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 // The retired exemplar comparison consumed `compute_feature_neighbor_caxis_misalignments.tar.gz`.

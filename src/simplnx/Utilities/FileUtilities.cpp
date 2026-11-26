@@ -228,7 +228,7 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     if(statusError)
     {
       return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect path '{}' while checking write permission for '{}'. Check directory access. Operating system error {}: {}",
-                                                          detail::PathForDiagnostic(checkedPath), detail::PathForDiagnostic(path), statusError.value(), statusError.message()));
+                                                            detail::PathForDiagnostic(checkedPath), detail::PathForDiagnostic(path), statusError.value(), statusError.message()));
     }
     if(checkedPathExists || checkedPath == rootPath)
     {

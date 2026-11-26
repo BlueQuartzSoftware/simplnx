@@ -157,7 +157,7 @@ constexpr StringLiteral k_InputTypeKey = "InputType";
 constexpr StringLiteral k_OutputTypeKey = "OutputType";
 constexpr StringLiteral k_InputOrientationArrayPathKey = "InputOrientationArrayPath";
 constexpr StringLiteral k_OutputOrientationArrayNameKey = "OutputOrientationArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json& json)

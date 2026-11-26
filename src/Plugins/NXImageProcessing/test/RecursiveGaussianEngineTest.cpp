@@ -389,14 +389,16 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: working storage selection
               .useTemporaryRecordStore);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore)
               .useTemporaryRecordStore);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat).useTemporaryRecordStore);
+  REQUIRE(
+      ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat).useTemporaryRecordStore);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::InMemory, "Alternate-DataStore") ==
           DataStore<float32>::k_DataStore);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat) ==
           k_KOutputOocFormat);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore) ==
           k_KInputOocFormat);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat) == k_KInputOocFormat);
+  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat) ==
+          k_KInputOocFormat);
 }
 
 TEST_CASE("NXImageProcessing::GaussianTemporaryStore: performs typed bulk I/O and rejects backend failures", "[NXImageProcessing][RecursiveGaussianEngine]")

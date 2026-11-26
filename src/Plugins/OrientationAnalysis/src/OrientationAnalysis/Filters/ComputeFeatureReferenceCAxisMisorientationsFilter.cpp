@@ -178,7 +178,7 @@ constexpr StringLiteral k_AvgCAxesArrayPathKey = "AvgCAxesArrayPath";
 constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayNameKey = "FeatureAvgCAxisMisorientationsArrayName";
 constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayNameKey = "FeatureStdevCAxisMisorientationsArrayName";
 constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayNameKey = "FeatureReferenceCAxisMisorientationsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureReferenceCAxisMisorientationsFilter::FromSIMPLJson(const nlohmann::json& json)

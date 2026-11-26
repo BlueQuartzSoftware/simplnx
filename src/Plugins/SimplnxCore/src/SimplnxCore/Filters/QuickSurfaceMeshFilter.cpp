@@ -282,7 +282,7 @@ constexpr StringLiteral k_NodeTypesArrayNameKey = "NodeTypesArrayName";
 constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
 constexpr StringLiteral k_FaceLabelsArrayNameKey = "FaceLabelsArrayName";
 constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> QuickSurfaceMeshFilter::FromSIMPLJson(const nlohmann::json& json)

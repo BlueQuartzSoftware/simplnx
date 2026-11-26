@@ -221,23 +221,23 @@ const std::set<BaseGroup::GroupType>& BaseGroup::GetAllGeometryGroupTypes()
 std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupType>& groupTypes)
 {
   static const std::map<GroupType, std::string> kTypeToStringMap = {{GroupType::BaseGroup, "BaseGroup"},
-                                                                     {GroupType::DataGroup, "DataGroup"},
-                                                                     {GroupType::AttributeMatrix, "AttributeMatrix"},
-                                                                     {GroupType::IGeometry, "IGeometry"},
-                                                                     {GroupType::IGridGeometry, "IGridGeometry"},
-                                                                     {GroupType::RectGridGeom, "RectGridGeom"},
-                                                                     {GroupType::ImageGeom, "ImageGeom"},
-                                                                     {GroupType::INodeGeometry0D, "INodeGeometry0D"},
-                                                                     {GroupType::VertexGeom, "VertexGeom"},
-                                                                     {GroupType::INodeGeometry1D, "INodeGeometry1D"},
-                                                                     {GroupType::EdgeGeom, "EdgeGeom"},
-                                                                     {GroupType::INodeGeometry2D, "INodeGeometry2D"},
-                                                                     {GroupType::QuadGeom, "QuadGeom"},
-                                                                     {GroupType::TriangleGeom, "TriangleGeom"},
-                                                                     {GroupType::INodeGeometry3D, "INodeGeometry3D"},
-                                                                     {GroupType::HexahedralGeom, "HexahedralGeom"},
-                                                                     {GroupType::TetrahedralGeom, "TetrahedralGeom"},
-                                                                     {GroupType::Unknown, "Unknown"}};
+                                                                    {GroupType::DataGroup, "DataGroup"},
+                                                                    {GroupType::AttributeMatrix, "AttributeMatrix"},
+                                                                    {GroupType::IGeometry, "IGeometry"},
+                                                                    {GroupType::IGridGeometry, "IGridGeometry"},
+                                                                    {GroupType::RectGridGeom, "RectGridGeom"},
+                                                                    {GroupType::ImageGeom, "ImageGeom"},
+                                                                    {GroupType::INodeGeometry0D, "INodeGeometry0D"},
+                                                                    {GroupType::VertexGeom, "VertexGeom"},
+                                                                    {GroupType::INodeGeometry1D, "INodeGeometry1D"},
+                                                                    {GroupType::EdgeGeom, "EdgeGeom"},
+                                                                    {GroupType::INodeGeometry2D, "INodeGeometry2D"},
+                                                                    {GroupType::QuadGeom, "QuadGeom"},
+                                                                    {GroupType::TriangleGeom, "TriangleGeom"},
+                                                                    {GroupType::INodeGeometry3D, "INodeGeometry3D"},
+                                                                    {GroupType::HexahedralGeom, "HexahedralGeom"},
+                                                                    {GroupType::TetrahedralGeom, "TetrahedralGeom"},
+                                                                    {GroupType::Unknown, "Unknown"}};
 
   std::set<std::string> stringValues;
   for(auto groupType : groupTypes)

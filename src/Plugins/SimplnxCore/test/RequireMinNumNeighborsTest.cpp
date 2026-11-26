@@ -289,7 +289,7 @@ void PopulateDataStructure(DataStructure& dataStructure)
     phasesPtr->getDataStoreRef()[featureId] = inputPhases[featureId];
   }
 }
-} // namespace DiscriminatingFixture
+} // namespace discriminating_fixture
 
 /**
  * @brief Selects the analytical fixture inputs for array-kind validation.

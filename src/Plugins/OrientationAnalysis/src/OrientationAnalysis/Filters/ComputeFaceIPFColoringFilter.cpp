@@ -190,7 +190,7 @@ constexpr StringLiteral k_FeatureEulerAnglesArrayPathKey = "FeatureEulerAnglesAr
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_SurfaceMeshFaceIPFColorsArrayNameKey = "SurfaceMeshFaceIPFColorsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFaceIPFColoringFilter::FromSIMPLJson(const nlohmann::json& json)

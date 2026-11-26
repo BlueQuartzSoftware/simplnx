@@ -183,7 +183,8 @@ Arguments MakeArgs(const std::vector<float32>& loading, bool storeAngleComps, bo
  * @brief Asserts the five outputs of one feature against the oracle. Angle components are
  * checked only when phisRef/lambdasRef are >= 0 (a negative sentinel means "do not check").
  */
-void CheckFeature(const DataStructure& dataStructure, usize featureIdx, float64 expectedM, int32 expectedSlipSystem, const std::array<int32, 3>& expectedPoles, float64 expectedPhi, float64 expectedLambda)
+void CheckFeature(const DataStructure& dataStructure, usize featureIdx, float64 expectedM, int32 expectedSlipSystem, const std::array<int32, 3>& expectedPoles, float64 expectedPhi,
+                  float64 expectedLambda)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));

@@ -503,7 +503,7 @@ constexpr StringLiteral k_VGHeaderFileKey = "VGHeaderFile";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_DensityArrayNameKey = "DensityArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadVolumeGraphicsFileFilter::FromSIMPLJson(const nlohmann::json& json)

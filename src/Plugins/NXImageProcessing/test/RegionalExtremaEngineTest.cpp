@@ -364,7 +364,7 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: bounded 2D row blocks and o
   constexpr usize k_DimY = 9;
   constexpr usize k_DimZ = 1;
   constexpr usize k_FullWidthBudget = 4 * k_DimX; // two core rows plus two halo rows
-  constexpr usize k_OverwideBudget = 18;        // three rows of four core columns plus two X halos
+  constexpr usize k_OverwideBudget = 18;          // three rows of four core columns plus two X halos
   const std::vector<int16> input = MakePlateauPattern<int16>(k_DimX, k_DimY, k_DimZ);
 
   for(const RegionalExtremaOp op : {RegionalExtremaOp::Maxima, RegionalExtremaOp::Minima})
@@ -487,7 +487,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == 
     for(usize y = 0; y < k_Dy; ++y)
     {
       REQUIRE(flood[FlatIndex(k_Dx - 1, y, 0, k_Dx, k_Dy)] == static_cast<T>((k_Dx - 1) * 10)); // kept
-      REQUIRE(flood[FlatIndex(0, y, 0, k_Dx, k_Dy)] == markerMax);                          // not a maximum
+      REQUIRE(flood[FlatIndex(0, y, 0, k_Dx, k_Dy)] == markerMax);                              // not a maximum
     }
   }
   SECTION("marker-value-in-input edge case (a voxel at the type extreme)")

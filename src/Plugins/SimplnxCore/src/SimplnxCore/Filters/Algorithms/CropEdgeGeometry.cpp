@@ -197,7 +197,7 @@ std::pair<float32, float32> Clip(float32 t_min, float32 t_max, float32 v1, float
  * @return std::tuple<float32, float32, float32> Adjusted 3D coordinates of the outside vertex.
  */
 std::tuple<float32, float32, float32> InterpolateOutsideVertex(const std::tuple<float32, float32, float32>& insideVertex, const std::tuple<float32, float32, float32>& outsideVertex,
-                                                                 std::array<float32, 6> boundingBox)
+                                                               std::array<float32, 6> boundingBox)
 {
   float32 x1 = std::get<0>(insideVertex);
   float32 y1 = std::get<1>(insideVertex);

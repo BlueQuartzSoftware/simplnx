@@ -213,7 +213,7 @@ constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
 constexpr StringLiteral k_MeansArrayNameKey = "MeansArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeKMeansFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -326,7 +326,7 @@ constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
 constexpr StringLiteral k_EndianKey = "Endian";
 constexpr StringLiteral k_SkipHeaderBytesKey = "SkipHeaderBytes";
 constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)

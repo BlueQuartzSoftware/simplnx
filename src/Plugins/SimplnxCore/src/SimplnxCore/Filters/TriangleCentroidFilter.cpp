@@ -122,7 +122,7 @@ namespace
 namespace simpl
 {
 constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPathKey = "SurfaceMeshTriangleCentroidsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> TriangleCentroidFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -157,7 +157,7 @@ constexpr StringLiteral k_DataContainerToCopyKey = "DataContainerToCopy";
 constexpr StringLiteral k_AttributeMatrixToCopyKey = "AttributeMatrixToCopy";
 constexpr StringLiteral k_AttributeArrayToCopyKey = "AttributeArrayToCopy";
 constexpr StringLiteral k_CopiedObjectNameKey = "CopiedObjectName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CopyDataObjectFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -257,7 +257,7 @@ Arguments CreateArguments()
   return args;
 }
 
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - Empty selection (filter guard)", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")

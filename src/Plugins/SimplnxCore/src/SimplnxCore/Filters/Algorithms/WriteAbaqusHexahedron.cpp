@@ -158,8 +158,8 @@ int32 WriteElems(ThrottledMessageHandler& progressThrottle, const std::string& f
       for(usize x = 0; x < cDims[0]; x++)
       {
         const std::array<int64, 8> nodeId = GetNodeIds(x, y, z, pDims);
-        fprintf(fPtr, "%llu, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld\n", (LliTType)index, (LliTType)nodeId[5], (LliTType)nodeId[1], (LliTType)nodeId[0], (LliTType)nodeId[4], (LliTType)nodeId[7],
-                (LliTType)nodeId[3], (LliTType)nodeId[2], (LliTType)nodeId[6]);
+        fprintf(fPtr, "%llu, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld\n", (LliTType)index, (LliTType)nodeId[5], (LliTType)nodeId[1], (LliTType)nodeId[0], (LliTType)nodeId[4],
+                (LliTType)nodeId[7], (LliTType)nodeId[3], (LliTType)nodeId[2], (LliTType)nodeId[6]);
 
         ++index;
       }

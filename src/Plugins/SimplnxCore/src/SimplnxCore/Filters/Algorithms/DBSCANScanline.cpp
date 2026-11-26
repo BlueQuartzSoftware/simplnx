@@ -137,11 +137,11 @@ constexpr uint64 k_MergeTileRecords = 2048;       // Bounds point records held f
 struct DBSCANGridState
 {
   uint64 grid[3] = {0, 0, 0}; // Grid coordinates in X/Y/Z order.
-  uint64 first_member = 0;     // First point-record index in sorted membership.
-  uint64 member_count = 0;     // Number of point records in the grid.
+  uint64 first_member = 0;    // First point-record index in sorted membership.
+  uint64 member_count = 0;    // Number of point records in the grid.
   uint64 parent = 0;          // Parent grid identifier in the external forest.
-  int32 cluster_id = 0;        // Feature identifier for a root grid.
-  uint8 is_core = 0;           // Nonzero when MemberCount meets MinPoints.
+  int32 cluster_id = 0;       // Feature identifier for a root grid.
+  uint8 is_core = 0;          // Nonzero when MemberCount meets MinPoints.
 };
 
 /**
@@ -181,7 +181,7 @@ template <typename T>
 struct DBSCANPointRecord
 {
   uint64 grid[3] = {0, 0, 0}; // Grid coordinates in X/Y/Z order.
-  uint64 tuple_id = 0;         // Original tuple identifier.
+  uint64 tuple_id = 0;        // Original tuple identifier.
   T coordinates[3] = {};      // Point coordinate values.
 };
 
@@ -1217,7 +1217,7 @@ private:
   struct GridNeighborhood
   {
     std::array<uint64, 125> grid_ids = {}; // Grid identifiers in the 5x5x5 search range.
-    usize Count = 0;                      // Number of occupied neighboring grids.
+    usize Count = 0;                       // Number of occupied neighboring grids.
   };
 
   /**
@@ -3031,7 +3031,7 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
 struct ClusterNode
 {
   int32 cluster_id = 0; // Feature identifier for a root grid.
-  usize parent = 0;    // Parent grid identifier in the union forest.
+  usize parent = 0;     // Parent grid identifier in the union forest.
 };
 
 /**

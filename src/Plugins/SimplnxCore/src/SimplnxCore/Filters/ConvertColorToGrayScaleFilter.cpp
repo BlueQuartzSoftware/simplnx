@@ -132,7 +132,7 @@ constexpr StringLiteral k_ColorWeightsKey = "ColorWeights";
 constexpr StringLiteral k_ColorChannelKey = "ColorChannel";
 constexpr StringLiteral k_InputDataArrayVectorKey = "InputDataArrayVector";
 constexpr StringLiteral k_OutputArrayPrefixKey = "OutputArrayPrefix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConvertColorToGrayScaleFilter::FromSIMPLJson(const nlohmann::json& json)

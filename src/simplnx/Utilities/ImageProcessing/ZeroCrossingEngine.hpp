@@ -415,8 +415,8 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
           const usize yPrevious = y > 0 ? y - 1 : y;
           const usize yNext = y + 1 < ny ? y + 1 : y;
           const T* planePtr = valuesPtr + z * slice;
-          detail::ZeroCrossingRow(valuesPtr + zPrevious * slice + y * nX, planePtr + yPrevious * nX, planePtr + y * nX, planePtr + yNext * nX, valuesPtr + zNext * slice + y * nX, outputPtr + z * slice + y * nX, nX,
-                                  foregroundValue, backgroundValue);
+          detail::ZeroCrossingRow(valuesPtr + zPrevious * slice + y * nX, planePtr + yPrevious * nX, planePtr + y * nX, planePtr + yNext * nX, valuesPtr + zNext * slice + y * nX,
+                                  outputPtr + z * slice + y * nX, nX, foregroundValue, backgroundValue);
         }
       });
     }

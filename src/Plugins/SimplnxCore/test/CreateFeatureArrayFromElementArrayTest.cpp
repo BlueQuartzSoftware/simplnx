@@ -80,7 +80,7 @@ const DataPath k_InputCellPath = k_CellAMPath.createChildPath(Constants::k_FaceD
 
 const DataPath k_FeatureAMPath = k_ParentDGPath.createChildPath(Constants::k_FeatureData);
 const DataPath k_OutputFeaturePath = k_FeatureAMPath.createChildPath("OutputFeatureArray");
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Valid filter execution - 1 Component")
 {
@@ -113,14 +113,16 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-co
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_CellAMPath.getTargetName(), ShapeType{5ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* fidsArrayPtr =
+        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 0;
     (*fidsArrayPtr)[1] = 1;
     (*fidsArrayPtr)[2] = 2;
     (*fidsArrayPtr)[3] = 1;
     (*fidsArrayPtr)[4] = 2;
 
-    auto* cellFloatArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* cellFloatArrayPtr =
+        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 5.0f;
     (*cellFloatArrayPtr)[1] = 10.0f;
     (*cellFloatArrayPtr)[2] = 20.0f;
@@ -183,13 +185,15 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-co
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* fidsArrayPtr =
+        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 1;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 1;
     (*fidsArrayPtr)[3] = 2;
 
-    auto* cellFloatArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* cellFloatArrayPtr =
+        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 10.0f;
     (*cellFloatArrayPtr)[1] = 20.0f;
     (*cellFloatArrayPtr)[2] = 15.0f;
@@ -251,13 +255,15 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-3 three-com
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* fidsArrayPtr =
+        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 1;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 1;
     (*fidsArrayPtr)[3] = 2;
 
-    auto* cellRgbArrayPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{3ULL}, cellAmPtr->getId());
+    auto* cellRgbArrayPtr =
+        UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{3ULL}, cellAmPtr->getId());
     // cell 0 → [10, 20, 30]
     (*cellRgbArrayPtr)[0 * 3 + 0] = 10;
     (*cellRgbArrayPtr)[0 * 3 + 1] = 20;
@@ -336,12 +342,14 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-4 error pat
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_CellAMPath.getTargetName(), ShapeType{3ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{3ULL}, topGroupPtr->getId());
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* fidsArrayPtr =
+        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = -1;
     (*fidsArrayPtr)[1] = -2;
     (*fidsArrayPtr)[2] = -1;
 
-    auto* cellFloatArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* cellFloatArrayPtr =
+        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 1.0f;
     (*cellFloatArrayPtr)[1] = 2.0f;
     (*cellFloatArrayPtr)[2] = 1.0f;
@@ -387,13 +395,15 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-5 error pat
     auto siblingArrayResizeResult = siblingArrayPtr->resizeTuples(ShapeType{5ULL});
     SIMPLNX_RESULT_REQUIRE_VALID(siblingArrayResizeResult);
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* fidsArrayPtr =
+        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 1;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 3;
     (*fidsArrayPtr)[3] = 2;
 
-    auto* cellFloatArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* cellFloatArrayPtr =
+        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 10.0f;
     (*cellFloatArrayPtr)[1] = 20.0f;
     (*cellFloatArrayPtr)[2] = 30.0f;
@@ -437,13 +447,15 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-6 gap in Fe
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* fidsArrayPtr =
+        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 0;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 0;
     (*fidsArrayPtr)[3] = 2;
 
-    auto* cellFloatArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* cellFloatArrayPtr =
+        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 5.0f;
     (*cellFloatArrayPtr)[1] = 30.0f;
     (*cellFloatArrayPtr)[2] = 5.0f;
@@ -537,13 +549,15 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-8 error pat
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_CellAMPath.getTargetName(), ShapeType{4ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* fidsArrayPtr =
+        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = -1;
     (*fidsArrayPtr)[1] = 1;
     (*fidsArrayPtr)[2] = 2;
     (*fidsArrayPtr)[3] = -1;
 
-    auto* cellFloatArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    auto* cellFloatArrayPtr =
+        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 1.0f;
     (*cellFloatArrayPtr)[1] = 2.0f;
     (*cellFloatArrayPtr)[2] = 3.0f;
@@ -620,7 +634,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Bulk last-valu
   REQUIRE(featureAmPtr != nullptr);
 
   auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
-  auto* valuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{k_ComponentCount}, cellAmPtr->getId());
+  auto* valuesPtr =
+      Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{k_ComponentCount}, cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   REQUIRE(valuesPtr != nullptr);
   for(usize cellIdx = 0; cellIdx < k_CellCount; cellIdx++)

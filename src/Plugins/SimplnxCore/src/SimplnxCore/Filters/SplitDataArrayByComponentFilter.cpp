@@ -176,7 +176,7 @@ namespace simpl
 {
 constexpr StringLiteral k_InputArrayPathKey = "InputArrayPath";
 constexpr StringLiteral k_SplitArraysSuffixKey = "SplitArraysSuffix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> SplitDataArrayByComponentFilter::FromSIMPLJson(const nlohmann::json& json)

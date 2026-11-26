@@ -166,7 +166,7 @@ constexpr StringLiteral k_StoreAsNewPhaseKey = "StoreAsNewPhase";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> FillBadDataFilter::FromSIMPLJson(const nlohmann::json& json)

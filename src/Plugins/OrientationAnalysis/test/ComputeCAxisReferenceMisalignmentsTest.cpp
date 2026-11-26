@@ -136,7 +136,8 @@ float64 ExpectedAngle(const EulerType& euler, const std::vector<float32>& refere
   return std::acos(std::clamp(std::abs(dot), 0.0, 1.0)) / k_Radians;
 }
 
-void CheckOutput(const DataStructure& dataStructure, const std::vector<EulerType>& eulers, const std::vector<float32>& reference, const std::vector<usize>& excluded = {}, const std::string& groupName = "")
+void CheckOutput(const DataStructure& dataStructure, const std::vector<EulerType>& eulers, const std::vector<float32>& reference, const std::vector<usize>& excluded = {},
+                 const std::string& groupName = "")
 {
   const DataPath outputPath = InGroup(groupName, k_Output);
   const DataPath quatsPath = InGroup(groupName, k_Quats);

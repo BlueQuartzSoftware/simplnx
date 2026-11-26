@@ -1453,11 +1453,11 @@ struct ComputeArrayStatisticsByFeatureFunctor
  */
 struct StatisticsGroupLayout
 {
-  bool compute_by_index = false;     // True when outputs group tuples by FeatureId.
+  bool compute_by_index = false;      // True when outputs group tuples by FeatureId.
   bool create_feature_id_map = false; // True when the filter creates compact-to-source mapping output.
-  int32 first_feature_id = 0;        // Inclusive source FeatureId lower bound.
-  int32 last_feature_id = 0;         // Inclusive source FeatureId upper bound.
-  usize group_count = 1;            // Number of compact output tuples.
+  int32 first_feature_id = 0;         // Inclusive source FeatureId lower bound.
+  int32 last_feature_id = 0;          // Inclusive source FeatureId upper bound.
+  usize group_count = 1;              // Number of compact output tuples.
 
   /**
    * @brief Returns a compact output index for one FeatureId.
@@ -1485,8 +1485,8 @@ struct StatisticsGroupLayout
 struct ObservedFeatureBounds
 {
   bool has_values = false; // True after at least one FeatureId is observed.
-  int32 minimum = 0;      // Lowest observed FeatureId.
-  int32 maximum = 0;      // Highest observed FeatureId.
+  int32 minimum = 0;       // Lowest observed FeatureId.
+  int32 maximum = 0;       // Highest observed FeatureId.
 };
 
 /**
@@ -2900,10 +2900,11 @@ Result<> ComputeArrayStatistics::operator()()
     {
       if(!m_InputValues->FindMode)
       {
-        return ExecuteDataFunctionNoBool(ComputeArrayStatisticsByFeatureFunctor{}, inputArrayPtr->getDataType(), m_DataStructure, inputArrayPtr, arrays, layout.group_count, m_InputValues, m_ShouldCancel,
-                                         *this);
+        return ExecuteDataFunctionNoBool(ComputeArrayStatisticsByFeatureFunctor{}, inputArrayPtr->getDataType(), m_DataStructure, inputArrayPtr, arrays, layout.group_count, m_InputValues,
+                                         m_ShouldCancel, *this);
       }
-      return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArrayPtr->getDataType(), m_DataStructure, inputArrayPtr, arrays, layout.group_count, m_InputValues, m_ShouldCancel, *this);
+      return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArrayPtr->getDataType(), m_DataStructure, inputArrayPtr, arrays, layout.group_count, m_InputValues, m_ShouldCancel,
+                                     *this);
     }
     if(!m_InputValues->FindMode)
     {

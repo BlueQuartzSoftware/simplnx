@@ -259,14 +259,14 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
        .degrees_to_radians = true,
        .edax_hexagonal_alignment = false,
        .expected_euler_angles = {0.0021816615F, 0.004363323F, 0.006544985F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.12435471F,
-                               0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
+                                 0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
       // Points 0/3 (hex): float32(float64(30.375) * pi/180) = 0.53014374,
       //                   float32(float64(37.125) * pi/180) = 0.6479535 (float32 arithmetic: 0.64795345).
       {.name = "Radians, Hex Alignment",
        .degrees_to_radians = true,
        .edax_hexagonal_alignment = true,
        .expected_euler_angles = {0.0021816615F, 0.004363323F, 0.53014374F, 0.008726646F, 0.0109083075F, 0.01308997F, 0.015271631F, 0.017453292F, 0.019634955F, 0.021816615F, 0.023998277F, 0.6479535F,
-                               0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
+                                 0.058904864F, 0.11780973F, 0.032724924F, 0.034906585F, 0.037088245F, 0.03926991F}},
   };
 
   for(const ConversionCase& conversionCase : cases)

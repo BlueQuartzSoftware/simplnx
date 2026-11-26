@@ -43,7 +43,8 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed inter
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   GrayscaleGrindPeakImageFilter filter;
-  rt::RunReconstructionFilter<GrayscaleGrindPeakImageFilter>(filter, dataStructure, inputPath, rt::FullyConnectedParamSetter<GrayscaleGrindPeakImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
+  rt::RunReconstructionFilter<GrayscaleGrindPeakImageFilter>(filter, dataStructure, inputPath, rt::FullyConnectedParamSetter<GrayscaleGrindPeakImageFilter>(), /*fullyConnected=*/false,
+                                                             /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();

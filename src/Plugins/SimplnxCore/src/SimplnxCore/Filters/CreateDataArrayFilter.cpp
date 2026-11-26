@@ -178,7 +178,7 @@ constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
 constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
 constexpr StringLiteral k_InitializationValueKey = "InitializationValue";
 constexpr StringLiteral k_NewArrayKey = "NewArray";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& json)

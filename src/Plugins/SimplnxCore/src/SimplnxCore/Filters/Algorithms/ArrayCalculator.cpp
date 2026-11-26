@@ -70,13 +70,13 @@ struct ParsedItem
 const OperatorDef& GetUnaryNegativeOp()
 {
   static const OperatorDef sUnaryNeg = {.token = "neg",
-                                         .kind = OperatorDef::UnaryPrefix,
-                                         .precedence = 4,
-                                         .numArgs = 1,
-                                         .associativity = OperatorDef::Right,
-                                         .trigMode = OperatorDef::None,
-                                         .unaryOp = [](double x) { return -x; },
-                                         .binaryOp = nullptr};
+                                        .kind = OperatorDef::UnaryPrefix,
+                                        .precedence = 4,
+                                        .numArgs = 1,
+                                        .associativity = OperatorDef::Right,
+                                        .trigMode = OperatorDef::None,
+                                        .unaryOp = [](double x) { return -x; },
+                                        .binaryOp = nullptr};
   return sUnaryNeg;
 }
 

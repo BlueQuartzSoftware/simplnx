@@ -137,7 +137,7 @@ namespace simpl
 constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_AvgCAxesArrayPathKey = "AvgCAxesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeAvgCAxesFilter::FromSIMPLJson(const nlohmann::json& json)

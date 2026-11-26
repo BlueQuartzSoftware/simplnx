@@ -193,7 +193,7 @@ constexpr StringLiteral k_AxisLengthsArrayNameKey = "AxisLengthsArrayName";
 constexpr StringLiteral k_AxisEulerAnglesArrayNameKey = "AxisEulerAnglesArrayName";
 constexpr StringLiteral k_AspectRatiosArrayNameKey = "AspectRatiosArrayName";
 constexpr StringLiteral k_VolumesArrayNameKey = "VolumesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeShapesFilter::FromSIMPLJson(const nlohmann::json& json)

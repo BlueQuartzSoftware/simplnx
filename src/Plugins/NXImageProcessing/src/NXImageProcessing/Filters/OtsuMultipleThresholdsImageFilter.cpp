@@ -158,7 +158,7 @@ constexpr StringLiteral k_NumberOfHistogramBinsKey = "NumberOfHistogramBins";
 constexpr StringLiteral k_ValleyEmphasisKey = "ValleyEmphasis";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> OtsuMultipleThresholdsImageFilter::FromSIMPLJson(const nlohmann::json& json)

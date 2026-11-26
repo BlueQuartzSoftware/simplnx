@@ -407,8 +407,8 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: real-OOC selector uses res
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
     const ForceOocAlgorithmGuard forceOoc(true);
-    Result<> applyResult = ApplyObjectMorphology(inputStore, outputStore, dims, structuringElement, boxOffsets, ObjectMorphOp::Erode, k_ObjectValue, k_BackgroundValue, *dispatchInputPtr, *dispatchOutputPtr,
-                                                 shouldCancel, messageHandler);
+    Result<> applyResult = ApplyObjectMorphology(inputStore, outputStore, dims, structuringElement, boxOffsets, ObjectMorphOp::Erode, k_ObjectValue, k_BackgroundValue, *dispatchInputPtr,
+                                                 *dispatchOutputPtr, shouldCancel, messageHandler);
     SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
     for(usize index = 0; index < expected.size(); ++index)
     {

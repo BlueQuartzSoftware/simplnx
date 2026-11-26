@@ -589,7 +589,8 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     checkUnchangedInputs();
-    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3, nonstd::span<const IGeometry::MeshIndexType>(k_ExpectedFaces.data(), k_ExpectedFaces.size()));
+    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3,
+                                                        nonstd::span<const IGeometry::MeshIndexType>(k_ExpectedFaces.data(), k_ExpectedFaces.size()));
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

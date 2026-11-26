@@ -365,7 +365,7 @@ constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_MaterialNameArrayPathKey = "MaterialNameArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WritePoleFigureFilter::FromSIMPLJson(const nlohmann::json& json)

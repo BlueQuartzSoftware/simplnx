@@ -170,7 +170,7 @@ namespace constants
 const fs::path k_DataDir = "test/data";
 const StringLiteral k_LegacyFilepath = "LegacyData.dream3d";
 const fs::path k_ComplexH5File = "new.h5";
-} // namespace Constants
+} // namespace constants
 
 fs::path GetDataDir()
 {

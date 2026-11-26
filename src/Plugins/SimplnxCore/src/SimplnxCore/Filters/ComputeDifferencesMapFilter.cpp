@@ -210,7 +210,7 @@ namespace simpl
 constexpr StringLiteral k_FirstInputArrayPathKey = "FirstInputArrayPath";
 constexpr StringLiteral k_SecondInputArrayPathKey = "SecondInputArrayPath";
 constexpr StringLiteral k_DifferenceMapArrayPathKey = "DifferenceMapArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeDifferencesMapFilter::FromSIMPLJson(const nlohmann::json& json)

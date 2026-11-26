@@ -59,7 +59,7 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   if(statusError)
   {
     return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect output path '{}'. Check directory access. Operating system error {}: {}",
-                                                        FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
+                                                          FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
   }
   if(outputExists)
   {
@@ -80,12 +80,12 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   if(creationError)
   {
     return MakeErrorResult(k_CreateDirectoryError, fmt::format("Unable to create output directory '{}'. Check the path and write permissions. Operating system error {}: {}",
-                                                             FileUtilities::detail::PathForDiagnostic(outputPath), creationError.value(), creationError.message()));
+                                                               FileUtilities::detail::PathForDiagnostic(outputPath), creationError.value(), creationError.message()));
   }
   if(statusError)
   {
     return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect output path '{}' after the directory creation attempt. Check directory access. Operating system error {}: {}",
-                                                        FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
+                                                          FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
   }
   return MakeErrorResult(k_CreateDirectoryError,
                          fmt::format("Output directory '{}' no longer exists after the creation attempt. Check the path and try again.", FileUtilities::detail::PathForDiagnostic(outputPath)));

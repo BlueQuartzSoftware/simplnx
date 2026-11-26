@@ -192,8 +192,8 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
   }
   using namespace orientation::detail;
   constexpr usize k_FaceBytes = (2 * sizeof(int32)) + sizeof(float32);
-  auto planResult =
-      PlanLookups({.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 4, .FaceBytes = k_FaceBytes}, -98425);
+  auto planResult = PlanLookups(
+      {.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 4, .FaceBytes = k_FaceBytes}, -98425);
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));

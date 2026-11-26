@@ -181,7 +181,7 @@ namespace
 namespace simpl
 {
 constexpr StringLiteral k_SurfaceMeshFaceLabelsPathKey = "SurfaceMeshFaceLabelsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> VerifyTriangleWindingFilter::FromSIMPLJson(const nlohmann::json& json)

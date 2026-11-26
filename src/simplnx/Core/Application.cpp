@@ -407,8 +407,8 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
     auto addManagerResult = m_DataIOCollection->addIOManager(pluginIO);
     if(addManagerResult.invalid())
     {
-      return MakeErrorResult(
-          -34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", pluginPtr->getName(), addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
+      return MakeErrorResult(-34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", pluginPtr->getName(),
+                                              addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
     }
   }
 

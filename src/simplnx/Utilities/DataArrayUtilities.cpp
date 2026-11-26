@@ -534,7 +534,8 @@ Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructur
   }
   case IArray::ArrayType::DataArray: {
     auto* iDataArrayPtr = dynamic_cast<IDataArray*>(array);
-    auto result = ExecuteDataFunction(CreateDefaultValueDataArrayFunctor{}, iDataArrayPtr->getDataType(), destDataStructure, newArrayName, tupleShape, array->getComponentShape(), defaultValue, parentId);
+    auto result =
+        ExecuteDataFunction(CreateDefaultValueDataArrayFunctor{}, iDataArrayPtr->getDataType(), destDataStructure, newArrayName, tupleShape, array->getComponentShape(), defaultValue, parentId);
     if(result.invalid())
     {
       return MakeErrorResult<IArray*>(-1050, fmt::format("Unable to create default-initialized data array to append to data array '{}': {}", array->getName(), result.errors()[0].message));

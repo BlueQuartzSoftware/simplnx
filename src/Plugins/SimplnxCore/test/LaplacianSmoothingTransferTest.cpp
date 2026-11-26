@@ -40,7 +40,7 @@ constexpr CoordinatesType k_InputCoordinates{0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F,
 constexpr CoordinatesType k_PlainCoordinates{1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F};
 /** @brief Supplies one Taubin pair with lambda 1/4 and mu factor -1. */
 constexpr CoordinatesType k_TaubinCoordinates{1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F,
-                                          1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F};
+                                              1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F};
 /** @brief Supplies every edge once; each vertex has degree three. */
 constexpr std::array<IGeometry::MeshIndexType, 12> k_Edges{0, 1, 0, 2, 0, 3, 1, 2, 1, 3, 2, 3};
 /** @brief Makes every vertex use the default lambda. */

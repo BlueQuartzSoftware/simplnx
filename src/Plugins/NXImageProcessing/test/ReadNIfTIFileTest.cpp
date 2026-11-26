@@ -39,12 +39,12 @@ struct SyntheticNiftiParams
   int16_t bitpix{8};
   float scl_slope{0.0f};
   float scl_inter{0.0f};
-  int16_t rank{3};      // dim[0]; override to 1/2/4 for rejection tests
+  int16_t rank{3};       // dim[0]; override to 1/2/4 for rejection tests
   int16_t qform_code{1}; // set to 0 to disable qform
   float quatern_b{0.0f};
   float quatern_c{0.0f};
   float quatern_d{0.0f};
-  int16_t sform_code{0};                        // >0 enables srow_* population
+  int16_t sform_code{0};                       // >0 enables srow_* population
   std::array<std::array<float, 4>, 3> sform{}; // 3x4 affine when sformCode > 0
 };
 

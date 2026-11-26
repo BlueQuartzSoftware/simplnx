@@ -381,7 +381,7 @@ constexpr StringLiteral k_TetCellAttributeMatrixNameKey = "TetCellAttributeMatri
 constexpr StringLiteral k_HexCellAttributeMatrixNameKey = "HexCellAttributeMatrixName";
 constexpr StringLiteral k_TreatWarningsAsErrorsKey = "TreatWarningsAsErrors";
 constexpr StringLiteral k_ArrayHandlingKey = "ArrayHandling";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

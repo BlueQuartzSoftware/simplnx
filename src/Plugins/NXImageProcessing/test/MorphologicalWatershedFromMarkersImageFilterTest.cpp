@@ -100,7 +100,8 @@ std::pair<DataPath, DataPath> BuildGrayscaleAndMarker(DataStructure& dataStructu
 }
 
 // Set the standard keys + the two bool params, run preflight + execute, require both succeed.
-void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const DataPath& markerPath, bool markWatershedLine, bool fullyConnected, const std::string& outputName = "Output")
+void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const DataPath& markerPath, bool markWatershedLine, bool fullyConnected,
+                  const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;

@@ -373,7 +373,7 @@ constexpr StringLiteral k_PlaneKey = "Plane";
 constexpr StringLiteral k_FileNameKey = "FileName";
 constexpr StringLiteral k_IndexOffsetKey = "IndexOffset";
 constexpr StringLiteral k_ImageArrayPathKey = "ImageArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteImageFilter::FromSIMPLJson(const nlohmann::json& json)

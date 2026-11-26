@@ -188,9 +188,9 @@ namespace
 struct CCLResult
 {
   std::unique_ptr<ExternalEquivalence> equivalences; // Owns bounded external label relationships.
-  uint64 next_label = 1;                              // First unused provisional label.
-  uint64 largest_root = 0;                            // Root label of the largest component.
-  uint64 largest_size = 0;                            // Voxel count of the largest component.
+  uint64 next_label = 1;                             // First unused provisional label.
+  uint64 largest_root = 0;                           // Root label of the largest component.
+  uint64 largest_size = 0;                           // Voxel count of the largest component.
 };
 
 constexpr uint64 k_RecordsPerPage = 4096; // Bounds records read or written in one cache page.
@@ -990,7 +990,8 @@ Result<IdentifySampleSliceLayout> MakeIdentifySampleSliceLayout(const SizeVec3& 
     return ConvertInvalidResult<IdentifySampleSliceLayout>(std::move(xyBytesResult));
   }
   const usize allocationBound = static_cast<usize>(std::numeric_limits<std::ptrdiff_t>::max());
-  if(layout.plane_bytes > allocationBound || (plane != IdentifySampleSliceBySliceFunctor::Plane::XY && plane != IdentifySampleSliceBySliceFunctor::Plane::XZ && xyBytesResult.value() > allocationBound))
+  if(layout.plane_bytes > allocationBound ||
+     (plane != IdentifySampleSliceBySliceFunctor::Plane::XY && plane != IdentifySampleSliceBySliceFunctor::Plane::XZ && xyBytesResult.value() > allocationBound))
   {
     return MakeErrorResult<IdentifySampleSliceLayout>(-45465, fmt::format("Identify Sample mask '{}': plane buffer {} bytes or XY buffer {} bytes exceeds the allocation bound {} bytes.", maskName,
                                                                           layout.plane_bytes, xyBytesResult.value(), allocationBound));

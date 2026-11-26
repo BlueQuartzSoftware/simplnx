@@ -159,7 +159,7 @@ constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
 constexpr StringLiteral k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
 constexpr StringLiteral k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -26,7 +26,7 @@ const DataPath k_GeometryPath = DataPath({k_TriangleGeometryName});
 const DataPath k_FeatureAttributeMatrixPath = k_GeometryPath.createChildPath(k_FaceFeatureName);
 const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(k_FaceLabelsName);
 
-} // namespace ComputeTriangleGeomCentroidsFilterTest
+} // namespace compute_triangle_geom_centroids_filter_test
 
 using namespace compute_triangle_geom_centroids_filter_test;
 

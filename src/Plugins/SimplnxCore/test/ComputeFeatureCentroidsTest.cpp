@@ -383,7 +383,7 @@ inline static void RequireCentroid(const std::vector<float32>& c, usize featureI
   REQUIRE(c[featureId * 3 + 1] == Approx(y).margin(margin));
   REQUIRE(c[featureId * 3 + 2] == Approx(z).margin(margin));
 }
-} // namespace CentroidToy
+} // namespace centroid_toy
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 65536-block tail oracle", "[SimplnxCore][ComputeFeatureCentroidsFilter][.OocStoreContract]")
 {

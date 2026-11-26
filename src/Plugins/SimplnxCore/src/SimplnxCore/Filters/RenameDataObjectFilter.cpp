@@ -120,7 +120,7 @@ constexpr StringLiteral k_SelectedDataContainerNameKey = "SelectedDataContainerN
 constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
 constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 constexpr StringLiteral k_NewArrayNameKey = "NewArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RenameDataObjectFilter::FromSIMPLJson(const nlohmann::json& json)

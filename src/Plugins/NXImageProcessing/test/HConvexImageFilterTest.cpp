@@ -50,10 +50,10 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights", "
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == static_cast<int32>(k_Height)); // tall dome capped to Height (10)
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == static_cast<int32>(k_Height));   // tall dome capped to Height (10)
   REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == (k_ShallowBump - k_Background)); // shallow dome == contrast (5)
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == 0);                          // background -> 0
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == 0);                          // neighbor of the tall bump -> 0
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == 0);                              // background -> 0
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == 0);                              // neighbor of the tall bump -> 0
 }
 
 // -----------------------------------------------------------------------------
@@ -102,10 +102,10 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights (bo
   auto& outArray = dataStructure.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == static_cast<int32>(k_Height)); // tall dome capped to Height (10)
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == static_cast<int32>(k_Height));   // tall dome capped to Height (10)
   REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == (k_ShallowBump - k_Background)); // shallow dome == contrast (5)
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == 0);                          // background -> 0
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == 0);                          // neighbor of the tall bump -> 0
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == 0);                              // background -> 0
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == 0);                              // neighbor of the tall bump -> 0
 }
 
 // -----------------------------------------------------------------------------

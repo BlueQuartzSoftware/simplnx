@@ -24,7 +24,8 @@ using MinMaxFilterType = MinMaxCurvatureFlowImageFilter;
 
 // Sets the geometry, input, and output keys plus TimeStep, NumberOfIterations, and StencilRadius on the Arguments.
 // The helper runs preflight and execute, and requires that both steps succeed.
-void RunMinMaxCurvatureFlow(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 timeStep, uint32 numberOfIterations, int32 stencilRadius, const std::string& outputName = "Output")
+void RunMinMaxCurvatureFlow(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 timeStep, uint32 numberOfIterations, int32 stencilRadius,
+                            const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;

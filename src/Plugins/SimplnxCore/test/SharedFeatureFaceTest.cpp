@@ -114,7 +114,7 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-} // namespace SharedFeatureFaceFilterTest
+} // namespace shared_feature_face_filter_test
 
 using namespace shared_feature_face_filter_test;
 

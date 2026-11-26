@@ -135,7 +135,7 @@ constexpr StringLiteral k_QuaternionDataArrayPathKey = "QuaternionDataArrayPath"
 constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
 constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
 constexpr StringLiteral k_ConversionTypeKey = "ConversionType";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConvertQuaternionFilter::FromSIMPLJson(const nlohmann::json& json)

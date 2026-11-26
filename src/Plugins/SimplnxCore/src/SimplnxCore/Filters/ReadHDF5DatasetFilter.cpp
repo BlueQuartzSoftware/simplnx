@@ -257,7 +257,7 @@ namespace simpl
 constexpr StringLiteral k_HDF5FilePathKey = "HDF5FilePath";
 constexpr StringLiteral k_ImportInfoArrayKey = "Dataset Import Info Array";
 constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadHDF5DatasetFilter::FromSIMPLJson(const nlohmann::json& json)

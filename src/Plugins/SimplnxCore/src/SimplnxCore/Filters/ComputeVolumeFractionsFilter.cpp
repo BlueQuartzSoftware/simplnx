@@ -164,7 +164,7 @@ namespace simpl
 {
 constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 constexpr StringLiteral k_VolFractionsArrayPathKey = "VolFractionsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeVolumeFractionsFilter::FromSIMPLJson(const nlohmann::json& json)

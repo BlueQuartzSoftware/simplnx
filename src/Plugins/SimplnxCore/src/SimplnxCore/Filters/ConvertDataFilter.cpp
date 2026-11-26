@@ -147,7 +147,7 @@ namespace simpl
 constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_OutputArrayNameKey = "OutputArrayName";
-} // namespace SIMPL
+} // namespace simpl
 namespace simpl_conversion_custom
 {
 struct LinkedPathCreationFilterParameterConverter
@@ -167,7 +167,7 @@ struct LinkedPathCreationFilterParameterConverter
     return {std::move(value)};
   }
 };
-} // namespace SIMPLConversionCustom
+} // namespace simpl_conversion_custom
 } // namespace
 
 Result<Arguments> ConvertDataFilter::FromSIMPLJson(const nlohmann::json& json)

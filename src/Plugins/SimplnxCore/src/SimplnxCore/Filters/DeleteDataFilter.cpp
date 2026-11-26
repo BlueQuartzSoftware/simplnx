@@ -210,7 +210,7 @@ namespace
 namespace simpl
 {
 constexpr StringLiteral k_DataArraysToRemoveKey = "DataArraysToRemove";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> DeleteDataFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -490,7 +490,8 @@ struct RelabelComponentExecuteFn
       // (itkRelabelComponentImageFilter.hxx): size DESCENDING; ties (equal size) broken by ASCENDING original
       // label. std::sort is NOT stable, so this tie-break -- not "keep relative order" -- is what makes the
       // sorted order (and therefore the output label values) deterministic.
-      std::sort(sizeVector.begin(), sizeVector.end(), [](const LabelSizePairType& a, const LabelSizePairType& b) -> bool { return a.second > b.second || (!(a.second < b.second) && a.first < b.first); });
+      std::sort(sizeVector.begin(), sizeVector.end(),
+                [](const LabelSizePairType& a, const LabelSizePairType& b) -> bool { return a.second > b.second || (!(a.second < b.second) && a.first < b.first); });
     }
     else if constexpr(!k_UseDenseLabels)
     {

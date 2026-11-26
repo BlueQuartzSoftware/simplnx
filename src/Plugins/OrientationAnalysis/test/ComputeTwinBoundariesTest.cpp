@@ -49,7 +49,7 @@ const DataPath k_ExemplarIncoherencePath = k_FaceDataPath.createChildPath(k_Exem
 
 const DataPath k_GeneratedBoundariesPath = k_FaceDataPath.createChildPath(k_GeneratedBoundariesName);
 const DataPath k_GeneratedIncoherencePath = k_FaceDataPath.createChildPath(k_GeneratedIncoherenceName);
-} // namespace TwinBoundariesConstants
+} // namespace twin_boundaries_constants
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherence", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {

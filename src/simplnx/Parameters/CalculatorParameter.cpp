@@ -76,8 +76,9 @@ Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, V
   auto units = json[k_Units].get<std::underlying_type_t<AngleUnits>>();
   if(units != to_underlying(AngleUnits::Radians) && units != to_underlying(AngleUnits::Degrees))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(),
-                                                                                                           k_Units.view(), to_underlying(AngleUnits::Radians), to_underlying(AngleUnits::Degrees)));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
+                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_Units.view(), to_underlying(AngleUnits::Radians),
+                                                 to_underlying(AngleUnits::Degrees)));
   }
   ValueType value;
   value.m_Equation = json[k_Equation].get<std::string>();

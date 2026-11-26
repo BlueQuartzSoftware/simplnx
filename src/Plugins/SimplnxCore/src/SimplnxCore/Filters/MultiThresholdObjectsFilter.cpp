@@ -249,7 +249,7 @@ namespace simpl
 constexpr StringLiteral k_SelectedThresholdsKey = "SelectedThresholds";
 constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
 constexpr StringLiteral k_DestinationArrayNameKey = "DestinationArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::json& json)

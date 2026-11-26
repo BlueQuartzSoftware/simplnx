@@ -164,7 +164,7 @@ constexpr StringLiteral k_ReplaceValueKey = "ReplaceValue";
 constexpr StringLiteral k_SelectedArrayKey = "SelectedArray";
 constexpr StringLiteral k_ConditionalArrayPathKey = "ConditionalArrayPath";
 constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json& json)

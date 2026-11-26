@@ -47,7 +47,7 @@ namespace analytical_fixtures
 struct FixtureData
 {
   std::string name;
-  std::array<float32, 3> euler_in;   // radians
+  std::array<float32, 3> euler_in;  // radians
   std::array<float32, 4> axisAngle; // i, j, k, w (degrees)
   std::array<float64, 3> expected;  // radians, canonical ranges
 };
@@ -94,7 +94,7 @@ inline static void RunRotateFilter(DataStructure& dataStructure, const DataPath&
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][RotateEulerRefFrameFilter]")
 {

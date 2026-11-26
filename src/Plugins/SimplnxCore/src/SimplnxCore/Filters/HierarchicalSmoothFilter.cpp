@@ -114,7 +114,7 @@ namespace
 {
 namespace simpl
 {
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------

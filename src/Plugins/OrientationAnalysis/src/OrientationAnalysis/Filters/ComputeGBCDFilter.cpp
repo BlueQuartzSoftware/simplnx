@@ -174,7 +174,7 @@ constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 constexpr StringLiteral k_FaceEnsembleAttributeMatrixNameKey = "FaceEnsembleAttributeMatrixName";
 constexpr StringLiteral k_GBCDArrayNameKey = "GBCDArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeGBCDFilter::FromSIMPLJson(const nlohmann::json& json)

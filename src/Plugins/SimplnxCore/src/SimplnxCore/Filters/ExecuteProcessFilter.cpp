@@ -110,7 +110,7 @@ namespace simpl
 constexpr StringLiteral k_ArgumentsKey = "Arguments";
 constexpr StringLiteral k_BlockingKey = "Blocking";
 constexpr StringLiteral k_TimeoutKey = "Timeout";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExecuteProcessFilter::FromSIMPLJson(const nlohmann::json& json)

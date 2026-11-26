@@ -212,7 +212,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Analytic frustum half
   const usize rotationIndex = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(rotationIndex);
   const std::array<FrameType, 3> rotations = {FrameType::Identity(), Eigen::AngleAxisd(std::acos(-1.0) / 6, PointType::UnitZ()).toRotationMatrix(),
-                                          Eigen::AngleAxisd(0.8, PointType{1, 2, 2}.normalized()).toRotationMatrix()};
+                                              Eigen::AngleAxisd(0.8, PointType{1, 2, 2}.normalized()).toRotationMatrix()};
   const auto& rotation = rotations[rotationIndex];
   auto data = MeshData(Frustum(), {0, 0, 17.0 / 28.0}, rotation);
   ExecuteShapes(data);

@@ -370,8 +370,8 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
     // Preflight initializes surface flags to false. This path marks only geometry-face features.
     auto* surfaceFeaturesPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     auto* boundaryCellsPtr = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeaturesPtr, boundaryCellsPtr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, progressThrottle, m_ShouldCancel);
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeaturesPtr, boundaryCellsPtr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures,
+                         dims, spacing64, progressThrottle, m_ShouldCancel);
   }
   if(m_InputValues->StoreSurfaceFeatures)
   {

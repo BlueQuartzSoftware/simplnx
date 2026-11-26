@@ -186,9 +186,9 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    const TriangleGeom::SharedVertexList* sharedVertsPtr =
-        TriangleGeom::SharedVertexList::Create(dataStructure, TriangleGeom::k_SharedVertexListName,
-                                               std::make_shared<DataStore<TriangleGeom::SharedVertexList::value_type>>(std::move(sharedVertexListBuffer), ShapeType{111}, ShapeType{3}), geomPtr->getId());
+    const TriangleGeom::SharedVertexList* sharedVertsPtr = TriangleGeom::SharedVertexList::Create(
+        dataStructure, TriangleGeom::k_SharedVertexListName, std::make_shared<DataStore<TriangleGeom::SharedVertexList::value_type>>(std::move(sharedVertexListBuffer), ShapeType{111}, ShapeType{3}),
+        geomPtr->getId());
 
     geomPtr->setVertexListId(sharedVertsPtr->getId());
   }
@@ -292,7 +292,8 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    DataArray<int32>::Create(dataStructure, k_FaceLabelsPath.getTargetName(), std::make_shared<Int32DataStore>(std::move(faceLabelsBuffer), faceDataAmPtr->getShape(), ShapeType{2}), faceDataAmPtr->getId());
+    DataArray<int32>::Create(dataStructure, k_FaceLabelsPath.getTargetName(), std::make_shared<Int32DataStore>(std::move(faceLabelsBuffer), faceDataAmPtr->getShape(), ShapeType{2}),
+                             faceDataAmPtr->getId());
   }
 
   AttributeMatrix* featureDataAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureDataPath.getTargetName(), ShapeType{45}, geomPtr->getId());

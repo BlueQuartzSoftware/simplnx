@@ -87,8 +87,9 @@ Result<DataPath> PrepareBenchmarkInput(DataStructure& dataStructure, const ip_be
 // pre-check (to catch e.g. a key mismatch without aborting the sweep), then times execute() over warmup + repeats.
 // Returns the median ms, or nullopt with @p note set to the skip/error reason. @p sentinel must already be active for
 // the desired store mode.
-std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataStructure& dataStructure, const std::unordered_set<DataObject::IdType>& baseline, const ip_bench::BenchmarkFilterSpec& spec,
-                                const DataPath& geom, const DataPath& input, const std::string& outName, int warmup, int repeats, const std::optional<uint32>& projectionAxis, std::string& note)
+std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataStructure& dataStructure, const std::unordered_set<DataObject::IdType>& baseline,
+                                const ip_bench::BenchmarkFilterSpec& spec, const DataPath& geom, const DataPath& input, const std::string& outName, int warmup, int repeats,
+                                const std::optional<uint32>& projectionAxis, std::string& note)
 {
   IFilter::UniquePointer filter = filterList->createFilter(uuid);
   if(filter == nullptr)

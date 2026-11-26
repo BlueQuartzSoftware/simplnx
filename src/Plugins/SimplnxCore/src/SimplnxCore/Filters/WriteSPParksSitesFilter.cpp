@@ -136,7 +136,7 @@ namespace simpl
 constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteSPParksSitesFilter::FromSIMPLJson(const nlohmann::json& json)

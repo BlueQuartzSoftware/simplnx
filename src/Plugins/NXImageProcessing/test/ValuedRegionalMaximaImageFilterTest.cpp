@@ -38,14 +38,15 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed cen
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   ValuedRegionalMaximaImageFilter filter;
-  rt::RunReconstructionFilter<ValuedRegionalMaximaImageFilter>(filter, dataStructure, inputPath, rt::FullyConnectedParamSetter<ValuedRegionalMaximaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
+  rt::RunReconstructionFilter<ValuedRegionalMaximaImageFilter>(filter, dataStructure, inputPath, rt::FullyConnectedParamSetter<ValuedRegionalMaximaImageFilter>(), /*fullyConnected=*/false,
+                                                               /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
   const int32 markerMin = std::numeric_limits<int32>::lowest();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Peak);    // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Peak);    // peak plateau kept at value
   REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == markerMin); // field is not a regional maximum
 }
 
@@ -94,8 +95,8 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed cen
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
   const int32 markerMin = std::numeric_limits<int32>::lowest();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Peak);      // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Peak);    // peak plateau kept at value
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Peak);    // peak plateau kept at value
   REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == markerMin); // field is not a regional maximum
 }
 
@@ -116,7 +117,8 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: flat image unchan
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   ValuedRegionalMaximaImageFilter filter;
-  rt::RunReconstructionFilter<ValuedRegionalMaximaImageFilter>(filter, dataStructure, inputPath, rt::FullyConnectedParamSetter<ValuedRegionalMaximaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
+  rt::RunReconstructionFilter<ValuedRegionalMaximaImageFilter>(filter, dataStructure, inputPath, rt::FullyConnectedParamSetter<ValuedRegionalMaximaImageFilter>(), /*fullyConnected=*/false,
+                                                               /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();

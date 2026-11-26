@@ -172,7 +172,7 @@ constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 constexpr StringLiteral k_NewArrayArrayNameKey = "NewArrayArrayName";
 constexpr StringLiteral k_ReducedArrayArrayNameKey = "ReducedArrayArrayName";
 constexpr StringLiteral k_SaveRemovedComponentKey = "SaveRemovedComponent";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::json& json)

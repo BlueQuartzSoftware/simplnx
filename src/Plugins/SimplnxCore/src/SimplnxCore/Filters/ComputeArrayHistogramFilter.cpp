@@ -201,9 +201,9 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
     if(maskArrayPtr != nullptr && maskArrayPtr->getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(k_MaskTupleCountError,
-                                                              fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
-                                                                          maskArrayPath.toString(), maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(), dataArrayPtr->getNumberOfTuples()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  k_MaskTupleCountError, fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.", maskArrayPath.toString(),
+                                                     maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(), dataArrayPtr->getNumberOfTuples()))};
     }
 
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArrayPtr->getName()));
@@ -302,7 +302,7 @@ constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
 constexpr StringLiteral k_NewAttributeMatrixNameKey = "NewAttributeMatrixName";
 constexpr StringLiteral k_NewDataArrayNameKey = "NewDataArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeArrayHistogramFilter::FromSIMPLJson(const nlohmann::json& json)

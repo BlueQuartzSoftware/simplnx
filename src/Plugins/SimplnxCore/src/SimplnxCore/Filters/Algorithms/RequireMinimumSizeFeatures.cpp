@@ -58,8 +58,8 @@ Result<> RequireMinimumSizeFeatures::operator()()
   }
 
   Error errorReturn = {.code = 0, .message = ""};
-  Result<std::vector<bool>> activeObjectsResult =
-      removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhasesPtr, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase, m_InputValues->MinAllowedFeaturesSize, errorReturn);
+  Result<std::vector<bool>> activeObjectsResult = removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhasesPtr, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase,
+                                                                      m_InputValues->MinAllowedFeaturesSize, errorReturn);
   if(activeObjectsResult.invalid())
   {
     return ConvertResult(std::move(activeObjectsResult));

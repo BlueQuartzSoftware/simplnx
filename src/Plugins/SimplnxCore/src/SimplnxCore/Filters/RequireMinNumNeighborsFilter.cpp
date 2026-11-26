@@ -237,7 +237,7 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_NumNeighborsArrayPathKey = "NumNeighborsArrayPath";
 constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RequireMinNumNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)

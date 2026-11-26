@@ -156,7 +156,7 @@ constexpr StringLiteral k_F1ListArrayNameKey = "F1ListArrayName";
 constexpr StringLiteral k_F1sptListArrayNameKey = "F1sptListArrayName";
 constexpr StringLiteral k_F7ListArrayNameKey = "F7ListArrayName";
 constexpr StringLiteral k_MPrimeListArrayNameKey = "mPrimeListArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeSlipTransmissionMetricsFilter::FromSIMPLJson(const nlohmann::json& json)

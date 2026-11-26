@@ -85,6 +85,6 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   const auto* crystalStructuresPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CrystalStructuresArrayPath);
   const auto* outputPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->KernelAverageMisorientationsArrayName);
 
-  return DispatchAlgorithm<ComputeKernelAvgMisorientationsDirect, ComputeKernelAvgMisorientationsScanline>({featureIdsPtr, phasesPtr, quatsPtr, crystalStructuresPtr, outputPtr}, m_DataStructure, m_MessageHandler,
-                                                                                                           m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<ComputeKernelAvgMisorientationsDirect, ComputeKernelAvgMisorientationsScanline>({featureIdsPtr, phasesPtr, quatsPtr, crystalStructuresPtr, outputPtr}, m_DataStructure,
+                                                                                                           m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

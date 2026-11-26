@@ -204,7 +204,7 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_GBDistancesArrayNameKey = "GBDistancesArrayName";
 constexpr StringLiteral k_TJDistancesArrayNameKey = "TJDistancesArrayName";
 constexpr StringLiteral k_QPDistancesArrayNameKey = "QPDistancesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeEuclideanDistMapFilter::FromSIMPLJson(const nlohmann::json& json)

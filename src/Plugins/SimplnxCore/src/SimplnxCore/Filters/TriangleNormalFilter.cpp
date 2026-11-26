@@ -122,7 +122,7 @@ namespace
 namespace simpl
 {
 constexpr StringLiteral k_SurfaceMeshTriangleNormalsArrayPathKey = "SurfaceMeshTriangleNormalsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> TriangleNormalFilter::FromSIMPLJson(const nlohmann::json& json)

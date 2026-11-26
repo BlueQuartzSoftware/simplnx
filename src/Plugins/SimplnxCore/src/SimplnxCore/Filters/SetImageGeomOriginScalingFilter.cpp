@@ -185,7 +185,7 @@ constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_ChangeResolutionKey = "ChangeResolution";
 constexpr StringLiteral k_SpacingKey = "Spacing";
 constexpr StringLiteral k_ResolutionKey = "Resolution";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> SetImageGeomOriginScalingFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -210,7 +210,7 @@ constexpr StringLiteral k_NonContiguousNeighborListArrayPathKey = "NonContiguous
 constexpr StringLiteral k_UseNonContiguousNeighborsKey = "UseNonContiguousNeighbors";
 constexpr StringLiteral k_UseRunningAverageKey = "UseRunningAverage";
 constexpr StringLiteral k_VolumesArrayPathKey = "VolumesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> GroupMicroTextureRegionsFilter::FromSIMPLJson(const nlohmann::json& json)

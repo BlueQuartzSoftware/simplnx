@@ -396,7 +396,7 @@ constexpr StringLiteral k_UpdateOriginKey = "UpdateOrigin";
 constexpr StringLiteral k_XMinMaxKey = "XMinMax";
 constexpr StringLiteral k_YMinMaxKey = "YMinMax";
 constexpr StringLiteral k_ZMinMaxKey = "ZMinMax";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------

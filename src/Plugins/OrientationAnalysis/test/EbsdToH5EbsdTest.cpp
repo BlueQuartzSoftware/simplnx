@@ -196,14 +196,14 @@ const std::string k_FilePrefix = "Slice_";
 const std::string k_FileSuffix;
 const std::string k_FileExtension = ".ang";
 GeneratedFileListParameter::ValueType KFileListInfo = {.startIndex = k_StartIndex,
-                                                        .endIndex = k_EndIndex,
-                                                        .incrementIndex = k_IncrementIndex,
-                                                        .paddingDigits = k_PaddingDigits,
-                                                        .ordering = k_Ordering,
-                                                        .inputPath = k_InputPath,
-                                                        .filePrefix = k_FilePrefix,
-                                                        .fileSuffix = k_FileSuffix,
-                                                        .fileExtension = k_FileExtension};
+                                                       .endIndex = k_EndIndex,
+                                                       .incrementIndex = k_IncrementIndex,
+                                                       .paddingDigits = k_PaddingDigits,
+                                                       .ordering = k_Ordering,
+                                                       .inputPath = k_InputPath,
+                                                       .filePrefix = k_FilePrefix,
+                                                       .fileSuffix = k_FileSuffix,
+                                                       .fileExtension = k_FileExtension};
 
 } // namespace
 

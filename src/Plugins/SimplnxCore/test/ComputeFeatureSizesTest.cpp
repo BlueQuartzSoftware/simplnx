@@ -38,7 +38,7 @@ namespace legacy_test
 {
 const std::string k_Volumes("Volumes");
 const std::string k_EquivalentDiameters("EquivalentDiameters");
-} // namespace LegacyTest
+} // namespace legacy_test
 
 /**
  * @namespace Test
@@ -756,7 +756,7 @@ static void ValidateRectGridDataStructure(const DataStructure& dataStructure)
   REQUIRE(equivalentDiameters.getValue(2) == Approx(8.7640428f).epsilon(k_RelativeTolerance));
   REQUIRE(equivalentDiameters.getValue(3) == Approx(3.0668866f).epsilon(k_RelativeTolerance));
 }
-} // namespace Test
+} // namespace test
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizesScanline: bounded output writes", "[SimplnxCore][ComputeFeatureSizes][ScanlineOutput]")
 {

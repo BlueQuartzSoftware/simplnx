@@ -138,7 +138,7 @@ constexpr StringLiteral k_HeightKey = "Height";
 constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> HConvexImageFilter::FromSIMPLJson(const nlohmann::json& json)

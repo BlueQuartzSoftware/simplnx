@@ -416,7 +416,7 @@ constexpr StringLiteral k_UseMaskKey = "UseMask";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_VoxelIndicesArrayPathKey = "VoxelIndicesArrayPath";
 constexpr StringLiteral k_CreatedImageDataContainerNameKey = "CreatedImageDataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MapPointCloudToRegularGridFilter::FromSIMPLJson(const nlohmann::json& json)

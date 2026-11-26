@@ -234,15 +234,15 @@ const std::vector<uint8_t> k_CheckBChannelColors{
     255, // white
 };
 const std::vector<std::vector<uint8_t>> k_AlgorithmMap{k_CheckDefaultLuminosityColors,
-                                                     k_CheckCustomLuminosityColors,
-                                                     k_CheckLessZeroLuminosityColors,
-                                                     k_CheckGreaterOneLuminosityColors,
-                                                     k_CheckLessNegativeOneLuminosityColors,
-                                                     k_CheckAverageColors,
-                                                     k_CheckLightnessColors,
-                                                     k_CheckRChannelColors,
-                                                     k_CheckGChannelColors,
-                                                     k_CheckBChannelColors};
+                                                       k_CheckCustomLuminosityColors,
+                                                       k_CheckLessZeroLuminosityColors,
+                                                       k_CheckGreaterOneLuminosityColors,
+                                                       k_CheckLessNegativeOneLuminosityColors,
+                                                       k_CheckAverageColors,
+                                                       k_CheckLightnessColors,
+                                                       k_CheckRChannelColors,
+                                                       k_CheckGChannelColors,
+                                                       k_CheckBChannelColors};
 
 //------------------------------------------------------------------------------
 static void SetDataArrayTestValues(UInt8Array* aa)

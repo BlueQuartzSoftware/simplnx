@@ -78,7 +78,8 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: storage plan selects autom
 
   SECTION("resident input and OOC output automatically fuse and select the output format")
   {
-    const auto plan = nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::InMemory, k_KInputResidentFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
+    const auto plan =
+        nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::InMemory, k_KInputResidentFormat, IDataStore::StoreType::OutOfCore, k_KOutputOocFormat);
     REQUIRE(plan.useFusedPlanePass);
     REQUIRE(plan.useTemporaryRecordStore);
     REQUIRE(plan.workingDataFormat == k_KOutputOocFormat);
@@ -86,7 +87,8 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: storage plan selects autom
 
   SECTION("OOC input and resident output automatically fuse and select the input format")
   {
-    const auto plan = nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, k_KOutputResidentFormat);
+    const auto plan =
+        nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_KInputOocFormat, IDataStore::StoreType::InMemory, k_KOutputResidentFormat);
     REQUIRE(plan.useFusedPlanePass);
     REQUIRE(plan.useTemporaryRecordStore);
     REQUIRE(plan.workingDataFormat == k_KInputOocFormat);
@@ -308,8 +310,8 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: pre-cancellation leaves fu
   DiscreteGaussianPassOptions options;
   options.forceFusedPlanePass = true;
 
-  const Result<> result =
-      ApplyDiscreteGaussian<int16>(inputStore, outputStore, SizeVec3{k_KDimX, k_KDimY, k_KDimZ}, {2.0, 2.0, 2.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler, options);
+  const Result<> result = ApplyDiscreteGaussian<int16>(inputStore, outputStore, SizeVec3{k_KDimX, k_KDimY, k_KDimZ}, {2.0, 2.0, 2.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, shouldCancel,
+                                                       messageHandler, options);
   REQUIRE(result.valid());
   for(usize i = 0; i < outputStore.getSize(); ++i)
   {

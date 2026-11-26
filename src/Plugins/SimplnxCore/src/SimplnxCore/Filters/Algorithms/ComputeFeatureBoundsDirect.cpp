@@ -367,7 +367,7 @@ Result<> ComputeFeatureBoundsDirect::operator()()
   else
   {
     const int32 maxFeatureId = inMemoryFeatureIdsPtr != nullptr ? *std::max_element(inMemoryFeatureIdsPtr->data(), inMemoryFeatureIdsPtr->data() + inMemoryFeatureIdsPtr->getSize()) :
-                                                               *std::max_element(featureIds.cbegin(), featureIds.cend());
+                                                                  *std::max_element(featureIds.cbegin(), featureIds.cend());
     numFeatures = maxFeatureId + 1;
   }
 

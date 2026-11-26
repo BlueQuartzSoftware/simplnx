@@ -87,10 +87,10 @@ constexpr int32 k_EmptyFeatureSkippedWarning = -53905;
 
 struct FixtureSpec
 {
-  SizeVec3 dims;                 // (x, y, z)
+  SizeVec3 dims;                  // (x, y, z)
   std::vector<int32> feature_ids; // x fastest, then y, then z
   usize num_features;             // tuple count of the Feature Attribute Matrix (index 0 is the unused feature)
-  std::vector<bool> flagged;     // size numFeatures; true means remove/extract
+  std::vector<bool> flagged;      // size numFeatures; true means remove/extract
 };
 
 std::vector<usize> TupleDims(const SizeVec3& dims)

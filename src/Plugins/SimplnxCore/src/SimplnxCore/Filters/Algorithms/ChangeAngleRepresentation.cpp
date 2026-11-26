@@ -21,7 +21,7 @@ namespace euler_angle_conversion_type
 {
 constexpr uint64 k_DegreesToRadians = 0;
 constexpr uint64 k_RadiansToDegrees = 1;
-} // namespace EulerAngleConversionType
+} // namespace euler_angle_conversion_type
 
 float32 GetConversionFactor(uint64 conversionType)
 {

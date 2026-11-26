@@ -52,7 +52,8 @@ inline AttributeMatrix* BuildSegmentFeaturesTestGeometry(DataStructure& dataStru
  * @param arrayName Scalar array name.
  * @param wrapBoundary True to give opposite boundary blocks the same value.
  */
-inline void BuildScalarTestData(DataStructure& dataStructure, const ShapeType& cellShape, DataObject::IdType amId, usize blockSize, const std::string& arrayName = "ScalarData", bool wrapBoundary = false)
+inline void BuildScalarTestData(DataStructure& dataStructure, const ShapeType& cellShape, DataObject::IdType amId, usize blockSize, const std::string& arrayName = "ScalarData",
+                                bool wrapBoundary = false)
 {
   const usize dimZ = cellShape[0];
   const usize dimY = cellShape[1];

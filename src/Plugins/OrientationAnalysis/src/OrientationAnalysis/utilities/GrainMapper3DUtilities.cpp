@@ -19,9 +19,10 @@ namespace gm_3d_dataset_constants = GrainMapper3DUtilities::Constants;
 
 namespace GrainMapper3DUtilities
 {
-const std::map<std::string, size_t> k_NameToCompDimMap = {{gm_3d_dataset_constants::k_CompletenessName, 1}, {gm_3d_dataset_constants::k_GrainIdName, 1},  {gm_3d_dataset_constants::k_MaskName, 1},     {gm_3d_dataset_constants::k_PhaseIdName, 1},
-                                                          {gm_3d_dataset_constants::k_RodriguesName, 3},    {gm_3d_dataset_constants::k_EulerZXZName, 3}, {gm_3d_dataset_constants::k_EulerZYZName, 3}, {gm_3d_dataset_constants::k_QuaternionName, 4},
-                                                          {gm_3d_dataset_constants::k_IPF001Name, 3},       {gm_3d_dataset_constants::k_IPF010Name, 3},   {gm_3d_dataset_constants::k_IPF100Name, 3}};
+const std::map<std::string, size_t> k_NameToCompDimMap = {
+    {gm_3d_dataset_constants::k_CompletenessName, 1}, {gm_3d_dataset_constants::k_GrainIdName, 1},  {gm_3d_dataset_constants::k_MaskName, 1},     {gm_3d_dataset_constants::k_PhaseIdName, 1},
+    {gm_3d_dataset_constants::k_RodriguesName, 3},    {gm_3d_dataset_constants::k_EulerZXZName, 3}, {gm_3d_dataset_constants::k_EulerZYZName, 3}, {gm_3d_dataset_constants::k_QuaternionName, 4},
+    {gm_3d_dataset_constants::k_IPF001Name, 3},       {gm_3d_dataset_constants::k_IPF010Name, 3},   {gm_3d_dataset_constants::k_IPF100Name, 3}};
 
 int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId)
 {
@@ -74,10 +75,11 @@ GrainMapperReader::GrainMapperReader(std::string filePath, bool readDctData, boo
 , m_ReadAbsorptionData(readAbsorptionData)
 , m_FileName(std::move(filePath))
 {
-  m_NameToDataTypeMap = {{gm_3d_dataset_constants::k_CompletenessName, DataType::float32}, {gm_3d_dataset_constants::k_GrainIdName, DataType::int32},      {gm_3d_dataset_constants::k_MaskName, DataType::uint8},
-                         {gm_3d_dataset_constants::k_PhaseIdName, DataType::uint8},        {gm_3d_dataset_constants::k_RodriguesName, DataType::float32},  {gm_3d_dataset_constants::k_EulerZXZName, DataType::float32},
-                         {gm_3d_dataset_constants::k_EulerZYZName, DataType::float32},     {gm_3d_dataset_constants::k_QuaternionName, DataType::float32}, {gm_3d_dataset_constants::k_IPF001Name, DataType::uint8},
-                         {gm_3d_dataset_constants::k_IPF010Name, DataType::uint8},         {gm_3d_dataset_constants::k_IPF100Name, DataType::uint8}};
+  m_NameToDataTypeMap = {
+      {gm_3d_dataset_constants::k_CompletenessName, DataType::float32}, {gm_3d_dataset_constants::k_GrainIdName, DataType::int32},      {gm_3d_dataset_constants::k_MaskName, DataType::uint8},
+      {gm_3d_dataset_constants::k_PhaseIdName, DataType::uint8},        {gm_3d_dataset_constants::k_RodriguesName, DataType::float32},  {gm_3d_dataset_constants::k_EulerZXZName, DataType::float32},
+      {gm_3d_dataset_constants::k_EulerZYZName, DataType::float32},     {gm_3d_dataset_constants::k_QuaternionName, DataType::float32}, {gm_3d_dataset_constants::k_IPF001Name, DataType::uint8},
+      {gm_3d_dataset_constants::k_IPF010Name, DataType::uint8},         {gm_3d_dataset_constants::k_IPF100Name, DataType::uint8}};
 }
 
 GrainMapperReader::~GrainMapperReader() = default;

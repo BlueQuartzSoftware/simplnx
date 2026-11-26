@@ -108,7 +108,7 @@ constexpr StringLiteral k_WriteNeighborListDataKey = "WriteNeighborListData";
 constexpr StringLiteral k_WriteNumFeaturesLineKey = "WriteNumFeaturesLine";
 constexpr StringLiteral k_DelimiterChoiceIntKey = "DelimiterChoiceInt";
 constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteFeatureDataCSVFilter::FromSIMPLJson(const nlohmann::json& json)

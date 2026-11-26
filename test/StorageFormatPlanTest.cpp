@@ -1341,13 +1341,14 @@ public:
     {
       const auto* arrayPtr = structure.getDataAs<Int32Array>(path);
       complete_empty_context = complete_empty_context && arrayPtr != nullptr && arrayPtr->getStoreType() == IDataStore::StoreType::Empty && arrayPtr->getDataFormat().empty() &&
-                             arrayPtr->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory;
+                               arrayPtr->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory;
     }
     if(std::find(paths.begin(), paths.end(), k_C8FinalizerLists) != paths.end())
     {
       const auto* listsPtr = structure.getDataAs<NeighborList<int32>>(k_C8FinalizerLists);
       const auto* stringsPtr = structure.getDataAs<StringArray>(k_C8FinalizerStrings);
-      complete_empty_context = complete_empty_context && listsPtr != nullptr && dynamic_cast<EmptyListStore<int32>*>(listsPtr->getStore().get()) != nullptr && stringsPtr != nullptr && stringsPtr->isPlaceholder();
+      complete_empty_context =
+          complete_empty_context && listsPtr != nullptr && dynamic_cast<EmptyListStore<int32>*>(listsPtr->getStore().get()) != nullptr && stringsPtr != nullptr && stringsPtr->isPlaceholder();
     }
     if(!complete_empty_context)
     {

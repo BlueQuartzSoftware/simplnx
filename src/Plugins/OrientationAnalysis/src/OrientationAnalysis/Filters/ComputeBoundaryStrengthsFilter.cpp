@@ -166,7 +166,7 @@ constexpr StringLiteral k_SurfaceMeshF1sArrayNameKey = "SurfaceMeshF1sArrayName"
 constexpr StringLiteral k_SurfaceMeshF1sptsArrayNameKey = "SurfaceMeshF1sptsArrayName";
 constexpr StringLiteral k_SurfaceMeshF7sArrayNameKey = "SurfaceMeshF7sArrayName";
 constexpr StringLiteral k_SurfaceMeshmPrimesArrayNameKey = "SurfaceMeshmPrimesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeBoundaryStrengthsFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -124,7 +124,7 @@ namespace simpl
 constexpr StringLiteral k_QuaternionDataArrayPathKey = "QuaternionDataArrayPath";
 constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
 constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeQuaternionConjugateFilter::FromSIMPLJson(const nlohmann::json& json)

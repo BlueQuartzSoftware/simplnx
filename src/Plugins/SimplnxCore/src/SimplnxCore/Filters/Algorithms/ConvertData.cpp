@@ -289,7 +289,7 @@ struct ConvertDataFunctor
     return ConvertData<InputType>(dataStructure, inputValues, shouldCancel);
   }
 };
-} // namespace Detail
+} // namespace convert_data_detail
 
 ConvertData::ConvertData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ConvertDataInputValues* inputValues)
 : m_DataStructure(dataStructure)

@@ -367,7 +367,7 @@ namespace simpl
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 constexpr StringLiteral k_InputFileKey = "InputFile";
 constexpr StringLiteral k_NewZResKey = "NewZRes";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RegularizeZSpacingFilter::FromSIMPLJson(const nlohmann::json& json)

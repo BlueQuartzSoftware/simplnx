@@ -352,8 +352,8 @@ private:
     if(quatStorePtr != nullptr && phaseStorePtr != nullptr && fzQuatStorePtr != nullptr && hasContiguousMask)
     {
       const MaskType* maskDataPtr = maskStorePtr == nullptr ? nullptr : maskStorePtr->data();
-      dataAlgorithm.execute(
-          GenerateFZQuatsContiguousImpl<MaskType>(quatStorePtr->data(), phaseStorePtr->data(), phaseOps, numPhases, maskDataPtr, fzQuatStorePtr->data(), m_ShouldCancel, warningCount, sendThreadSafeProgress));
+      dataAlgorithm.execute(GenerateFZQuatsContiguousImpl<MaskType>(quatStorePtr->data(), phaseStorePtr->data(), phaseOps, numPhases, maskDataPtr, fzQuatStorePtr->data(), m_ShouldCancel, warningCount,
+                                                                    sendThreadSafeProgress));
       return {};
     }
 

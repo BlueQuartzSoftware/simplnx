@@ -126,7 +126,7 @@ namespace simpl
 {
 constexpr StringLiteral k_FillHolesKey = "FillHoles";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> IdentifySampleFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -167,7 +167,7 @@ constexpr StringLiteral k_NormalizeDataKey = "NormalizeData";
 constexpr StringLiteral k_MoveValuesKey = "MoveValues";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 constexpr StringLiteral k_StackedDataArrayNameKey = "StackedDataArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CombineAttributeArraysFilter::FromSIMPLJson(const nlohmann::json& json)

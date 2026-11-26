@@ -123,7 +123,7 @@ constexpr StringLiteral k_UseGoodVoxelsKey = "UseGoodVoxels";
 constexpr StringLiteral k_VectorsArrayPathKey = "VectorsArrayPath";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
 constexpr StringLiteral k_CellVectorColorsArrayNameKey = "CellVectorColorsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeVectorColorsFilter::FromSIMPLJson(const nlohmann::json& json)

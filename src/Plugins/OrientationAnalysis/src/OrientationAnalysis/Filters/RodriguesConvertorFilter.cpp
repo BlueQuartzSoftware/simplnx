@@ -125,7 +125,7 @@ namespace simpl
 constexpr StringLiteral k_RodriguesDataArrayPathKey = "RodriguesDataArrayPath";
 constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
 constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RodriguesConvertorFilter::FromSIMPLJson(const nlohmann::json& json)

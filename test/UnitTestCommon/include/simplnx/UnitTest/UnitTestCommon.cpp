@@ -745,7 +745,8 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
           REQUIRE(neighborlistBPtr != nullptr);
           // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
           // DataTypeToString(neighborlistB->getDataType());
-          INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistAPtr->getDataType()), DataTypeToString(neighborlistBPtr->getDataType())));
+          INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistAPtr->getDataType()),
+                           DataTypeToString(neighborlistBPtr->getDataType())));
           REQUIRE(neighborlistAPtr->getDataType() == neighborlistBPtr->getDataType());
 
           ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistAPtr->getDataType(), neighborlistAPtr, neighborlistBPtr);

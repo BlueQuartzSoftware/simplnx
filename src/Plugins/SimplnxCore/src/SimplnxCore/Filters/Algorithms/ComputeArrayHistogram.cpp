@@ -782,8 +782,8 @@ Result<> ComputeArrayHistogram::operator()()
     }
 
     usize overflow = 0;
-    Result<> result =
-        ExecuteDataFunctionNoBool(ComputeHistogramFunctor{}, inputData.getDataType(), inputData, binRanges, counts, mostPopulated, modalBinRangesPtr, maskArrayPtr, *m_InputValues, m_ShouldCancel, overflow);
+    Result<> result = ExecuteDataFunctionNoBool(ComputeHistogramFunctor{}, inputData.getDataType(), inputData, binRanges, counts, mostPopulated, modalBinRangesPtr, maskArrayPtr, *m_InputValues,
+                                                m_ShouldCancel, overflow);
     if(result.invalid())
     {
       return result;

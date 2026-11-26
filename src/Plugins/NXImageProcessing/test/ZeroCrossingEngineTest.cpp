@@ -697,7 +697,8 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles pr
 
       std::atomic_bool shouldCancel{false};
       IFilter::MessageHandler messageHandler{};
-      const Result<> applyResult = ApplyZeroCrossing<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, k_Foreground, k_Background, shouldCancel, messageHandler, transferCase.target_bytes);
+      const Result<> applyResult =
+          ApplyZeroCrossing<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, k_Foreground, k_Background, shouldCancel, messageHandler, transferCase.target_bytes);
       SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
 
       std::vector<uint8> actual(k_TotalValues);

@@ -204,7 +204,7 @@ constexpr StringLiteral k_SelectedDataContainerNameKey = "SelectedDataContainerN
 constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_UseMaskKey = "UseMask";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExtractVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& json)

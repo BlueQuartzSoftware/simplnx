@@ -85,7 +85,8 @@ Result<> GatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
                                nonstd::span<float32> page)
 {
   constexpr usize k_Maximum = std::numeric_limits<usize>::max();
-  if(vertexCount > k_Maximum / 3 || indexes.size() > k_Maximum / 3 || order.size() < indexes.size() || gathered.size() < indexes.size() * 3 || page.size() % 3 != 0 || (!indexes.empty() && page.empty()))
+  if(vertexCount > k_Maximum / 3 || indexes.size() > k_Maximum / 3 || order.size() < indexes.size() || gathered.size() < indexes.size() * 3 || page.size() % 3 != 0 ||
+     (!indexes.empty() && page.empty()))
   {
     return MakeErrorResult(-65902, "Vertex-coordinate gather received invalid buffer sizes. Supply one order entry and three coordinates per vertex, and a whole-XYZ read page.");
   }

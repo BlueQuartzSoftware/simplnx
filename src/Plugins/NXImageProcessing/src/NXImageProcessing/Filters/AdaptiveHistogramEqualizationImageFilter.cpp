@@ -125,7 +125,7 @@ constexpr StringLiteral k_AlphaKey = "Alpha";
 constexpr StringLiteral k_BetaKey = "Beta";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AdaptiveHistogramEqualizationImageFilter::FromSIMPLJson(const nlohmann::json& json)

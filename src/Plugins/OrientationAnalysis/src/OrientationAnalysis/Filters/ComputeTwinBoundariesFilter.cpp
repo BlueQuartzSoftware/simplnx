@@ -139,8 +139,8 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
 
   if(pFindCoherence)
   {
-    auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL},
+                                                                 pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -188,7 +188,7 @@ constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLa
 constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPathKey = "SurfaceMeshFaceNormalsArrayPath";
 constexpr StringLiteral k_SurfaceMeshTwinBoundaryArrayNameKey = "SurfaceMeshTwinBoundaryArrayName";
 constexpr StringLiteral k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey = "SurfaceMeshTwinBoundaryIncoherenceArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeTwinBoundariesFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -101,7 +101,7 @@ constexpr StringLiteral k_LevelSetValueKey = "LevelSetValue";
 constexpr StringLiteral k_FarValueKey = "FarValue";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> IsoContourDistanceImageFilter::FromSIMPLJson(const nlohmann::json& json)

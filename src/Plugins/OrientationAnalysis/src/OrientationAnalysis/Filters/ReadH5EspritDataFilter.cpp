@@ -247,7 +247,7 @@ constexpr StringLiteral k_ReadPatternDataKey = "ReadPatternData";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadH5EspritDataFilter::FromSIMPLJson(const nlohmann::json& json)

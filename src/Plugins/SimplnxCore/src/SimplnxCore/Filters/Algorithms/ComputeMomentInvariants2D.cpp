@@ -774,7 +774,7 @@ Result<> ComputeMomentInvariants2D::operator()()
     progressThrottle.queueMessage("Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId);
   };
 
-  return DispatchAlgorithm<ComputeMomentInvariants2DImpl, ComputeMomentInvariants2DScanline>({&featureIdsArray, &featureRectArray, &omega1Array, &omega2Array, centralMomentsPtr}, featureIds, featureRect,
-                                                                                             omega1, omega2, centralMomentsPtr, volDims, m_InputValues->NormalizeMomentInvariants, reportProgress,
-                                                                                             reportSkipped, m_ShouldCancel);
+  return DispatchAlgorithm<ComputeMomentInvariants2DImpl, ComputeMomentInvariants2DScanline>({&featureIdsArray, &featureRectArray, &omega1Array, &omega2Array, centralMomentsPtr}, featureIds,
+                                                                                             featureRect, omega1, omega2, centralMomentsPtr, volDims, m_InputValues->NormalizeMomentInvariants,
+                                                                                             reportProgress, reportSkipped, m_ShouldCancel);
 }

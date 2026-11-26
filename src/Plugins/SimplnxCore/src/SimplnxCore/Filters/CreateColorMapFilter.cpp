@@ -154,7 +154,7 @@ namespace simpl
 constexpr StringLiteral k_SelectedPresetNameKey = "SelectedPresetName";
 constexpr StringLiteral k_SelectedDataArrayPathKey = "SelectedDataArrayPath";
 constexpr StringLiteral k_RgbArrayNameKey = "RgbArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateColorMapFilter::FromSIMPLJson(const nlohmann::json& json)

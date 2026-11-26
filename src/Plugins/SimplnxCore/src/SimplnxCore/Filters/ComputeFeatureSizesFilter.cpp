@@ -180,7 +180,7 @@ constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatri
 constexpr StringLiteral k_EquivalentDiametersArrayNameKey = "EquivalentDiametersArrayName";
 constexpr StringLiteral k_NumElementsArrayNameKey = "NumElementsArrayName";
 constexpr StringLiteral k_VolumesArrayNameKey = "VolumesArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeatureSizesFilter::FromSIMPLJson(const nlohmann::json& json)

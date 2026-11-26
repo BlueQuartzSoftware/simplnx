@@ -234,7 +234,7 @@ constexpr StringLiteral k_SurfaceMeshDataContainerNameKey = "SurfaceMeshDataCont
 constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
 constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
 constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)

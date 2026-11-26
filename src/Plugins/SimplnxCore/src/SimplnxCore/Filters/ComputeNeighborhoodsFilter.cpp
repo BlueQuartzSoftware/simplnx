@@ -245,7 +245,7 @@ constexpr StringLiteral k_EquivalentDiametersArrayPathKey = "EquivalentDiameters
 constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
 constexpr StringLiteral k_NeighborhoodsArrayNameKey = "NeighborhoodsArrayName";
 constexpr StringLiteral k_NeighborhoodListArrayNameKey = "NeighborhoodListArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeNeighborhoodsFilter::FromSIMPLJson(const nlohmann::json& json)

@@ -203,7 +203,7 @@ constexpr StringLiteral k_SurfaceMeshFeatureFaceLabelsArrayPathKey = "SurfaceMes
 constexpr StringLiteral k_FeatureEulerAnglesArrayPathKey = "FeatureEulerAnglesArrayPath";
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeGBPDMetricBasedFilter::FromSIMPLJson(const nlohmann::json& json)

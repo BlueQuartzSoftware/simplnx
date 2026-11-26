@@ -108,7 +108,7 @@ constexpr StringLiteral k_MinimumObjectSizeKey = "MinimumObjectSize";
 constexpr StringLiteral k_SortByObjectSizeKey = "SortByObjectSize";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RelabelComponentImageFilter::FromSIMPLJson(const nlohmann::json& json)
