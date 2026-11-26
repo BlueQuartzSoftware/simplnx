@@ -230,13 +230,13 @@ template <class ValueT>
 using RelabelThreadLocalType = tbb::combinable<ValueT>;
 #else
 template <class ValueT>
-class RelabelThreadLocal
+class RelabelThreadLocalType
 {
 public:
-  RelabelThreadLocal() = default;
+  RelabelThreadLocalType() = default;
 
   template <class FactoryT>
-  explicit RelabelThreadLocal(FactoryT&& factory)
+  explicit RelabelThreadLocalType(FactoryT&& factory)
   : m_Value(std::forward<FactoryT>(factory)())
   {
   }
@@ -333,7 +333,7 @@ struct RelabelComponentExecuteFn
               for(; i + 8 <= range.max(); i += 8)
               {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-                if((i % 65536) == 0 && shouldCancel)
+                if((i % 65536) == 0 && should_cancel)
                 {
                   return;
                 }
@@ -357,7 +357,7 @@ struct RelabelComponentExecuteFn
             for(; i < range.max(); ++i)
             {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-              if((i % 65536) == 0 && shouldCancel)
+              if((i % 65536) == 0 && should_cancel)
               {
                 return;
               }
@@ -580,7 +580,7 @@ struct RelabelComponentExecuteFn
             for(; i + 8 <= range.max(); i += 8)
             {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-              if((i % 65536) == 0 && shouldCancel)
+              if((i % 65536) == 0 && should_cancel)
               {
                 return;
               }
@@ -608,7 +608,7 @@ struct RelabelComponentExecuteFn
           for(; i < range.max(); ++i)
           {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-            if((i % 65536) == 0 && shouldCancel)
+            if((i % 65536) == 0 && should_cancel)
             {
               return;
             }

@@ -1001,7 +1001,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #if SIMPLNX_BUILD_TESTS
         injectedFailure = InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::RawRead);
 #endif
-        if(injectedFailure || H5Dread_chunk(m_DatasetId, H5P_DEFAULT, metadata.Origin.data(), &ignoredMask, stored.Data.get()) < 0)
+        if(injectedFailure || H5Dread_chunk(m_DatasetId, H5P_DEFAULT, metadata.Origin.data(), &ignoredMask, stored.data.get()) < 0)
         {
 #if SIMPLNX_BUILD_TESTS
           ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadFailed, metadata.Record.storedSize, 0);

@@ -19,7 +19,7 @@ inline std::string timestamp()
   const auto utcTimeT = std::chrono::system_clock::to_time_t(utcNow);
   std::tm tmLocal = {};
 #ifdef _MSC_VER
-  localtime_s(&tm_local, &utc_time_t);
+  localtime_s(&tmLocal, &utcTimeT);
 #else
   localtime_r(&utcTimeT, &tmLocal);
 #endif

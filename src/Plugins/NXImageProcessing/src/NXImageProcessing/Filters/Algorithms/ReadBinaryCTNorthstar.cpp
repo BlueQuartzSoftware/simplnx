@@ -31,7 +31,7 @@ namespace
 bool SeekToOffset(FILE* file, uint64 offset)
 {
 #if defined(_MSC_VER)
-  using FileOffset = int64;
+  using FileOffsetType = int64;
 #else
   using FileOffsetType = off_t;
 #endif
@@ -42,7 +42,7 @@ bool SeekToOffset(FILE* file, uint64 offset)
   }
 
 #if defined(_MSC_VER)
-  return ::_fseeki64(file, static_cast<FileOffset>(offset), SEEK_SET) == 0;
+  return ::_fseeki64(file, static_cast<FileOffsetType>(offset), SEEK_SET) == 0;
 #else
   return ::fseeko(file, static_cast<FileOffsetType>(offset), SEEK_SET) == 0;
 #endif

@@ -443,7 +443,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
 #ifdef _WIN32
   SECTION("A full-sharing indexer handle follows the volume rename capability")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const bool supportsPosixRename = UnitTest::VolumeSupportsPosixRename(directory);
     {
       const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -453,27 +453,27 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       if(supportsPosixRename)
       {
         REQUIRE_FALSE(outcome.Error);
-        CHECK((readFile(destination) == "new"));
+        CHECK((ReadFile(destination) == "new"));
         CHECK_FALSE(fs::exists(replacement));
       }
       else
       {
         REQUIRE(outcome.Error);
-        CHECK((readFile(destination) == "old"));
-        CHECK((readFile(replacement) == "new"));
+        CHECK((ReadFile(destination) == "old"));
+        CHECK((ReadFile(replacement) == "new"));
       }
     }
     if(!supportsPosixRename)
     {
       REQUIRE_FALSE(InstallReplacementFile(replacement, destination).Error);
-      CHECK((readFile(destination) == "new"));
+      CHECK((ReadFile(destination) == "new"));
       CHECK_FALSE(fs::exists(replacement));
     }
   }
 
   SECTION("A forced conventional fallback preserves held files and succeeds after release")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps();
     steps.Rename = [](const fs::path& from, const fs::path& to) {
       return detail::RenameWithFallback(
@@ -489,17 +489,17 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
       REQUIRE(outcome.Error);
       CHECK(outcome.RetriesExhausted);
-      CHECK((readFile(destination) == "old"));
-      CHECK((readFile(replacement) == "new"));
+      CHECK((ReadFile(destination) == "old"));
+      CHECK((ReadFile(replacement) == "new"));
     }
     REQUIRE_FALSE(detail::InstallReplacementFile(replacement, destination, steps).Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
   SECTION("A handle without delete sharing is released during a wait")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([&held]() noexcept {
@@ -520,13 +520,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
     REQUIRE_FALSE(outcome.Error);
     CHECK((outcome.Attempts >= 2));
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
   SECTION("A persistent handle without delete sharing leaves both files intact")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
@@ -538,13 +538,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION || outcome.Error.value() == ERROR_ACCESS_DENIED));
     CHECK((outcome.Waited == detail::k_FileReplacementTotalWaitLimitMs));
     CHECK(outcome.RetriesExhausted);
-    CHECK((readFile(destination) == "old"));
-    CHECK((readFile(replacement) == "new"));
+    CHECK((ReadFile(destination) == "old"));
+    CHECK((ReadFile(replacement) == "new"));
   }
 
   SECTION("A read-only destination fails after one attempt")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const DWORD originalAttributes = GetFileAttributesW(destination.c_str());
     REQUIRE((originalAttributes != INVALID_FILE_ATTRIBUTES));
     const auto restoreAttributes = MakeScopeGuard([&destination, originalAttributes]() noexcept { SetFileAttributesW(destination.c_str(), originalAttributes); });
@@ -557,13 +557,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK((outcome.Error.value() == ERROR_ACCESS_DENIED));
     CHECK((outcome.Attempts == 1));
     CHECK_FALSE(outcome.RetriesExhausted);
-    CHECK((readFile(destination) == "old"));
-    CHECK((readFile(replacement) == "new"));
+    CHECK((ReadFile(destination) == "old"));
+    CHECK((ReadFile(replacement) == "new"));
   }
 
   SECTION("A replacement handle without delete sharing leaves both files intact")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const HANDLE held = CreateFileW(replacement.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
@@ -574,16 +574,16 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK((outcome.Error.category() == std::system_category()));
     CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION));
     CHECK(outcome.RetriesExhausted);
-    CHECK((readFile(destination) == "old"));
-    CHECK((readFile(replacement) == "new"));
+    CHECK((ReadFile(destination) == "old"));
+    CHECK((ReadFile(replacement) == "new"));
   }
 
   SECTION("Write-through replacement installs the new file")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const auto outcome = InstallReplacementFile(replacement, destination, FileReplacementDurability::WriteThrough);
     REQUIRE_FALSE(outcome.Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 #endif

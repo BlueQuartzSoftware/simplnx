@@ -75,7 +75,7 @@ TEST_CASE("MemorySafety: EmptyDataStore::memoryUsage in-core vs OOC", "[MemorySa
 
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
   // Non-empty format (OOC placeholder) -> 0 (data lives on disk).
-  auto ooc = StoreT::Create(tupleShape, compShape, "HDF5-OOC");
+  auto ooc = StoreTType::Create(tupleShape, compShape, "HDF5-OOC");
   REQUIRE(ooc.valid());
   REQUIRE(ooc.value()->memoryUsage() == 0);
 #endif
@@ -149,7 +149,7 @@ TEST_CASE("MemorySafety: DataStructure::memoryUsage counts OOC preflight arrays 
 
   // In-core builds normalize an unavailable OOC request to memory. Strict OOC builds preserve the OOC plan.
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
-  REQUIRE(ds.memoryUsage() == inCoreBytes);
+  REQUIRE(dataStructure.memoryUsage() == inCoreBytes);
 #else
   REQUIRE(dataStructure.memoryUsage() == 2 * inCoreBytes);
 #endif

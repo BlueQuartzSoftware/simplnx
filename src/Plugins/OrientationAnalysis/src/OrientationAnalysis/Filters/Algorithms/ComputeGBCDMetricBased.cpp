@@ -501,7 +501,7 @@ Result<> ComputeGBCDMetricBased::operator()()
 #ifdef SIMPLNX_ENABLE_MULTICORE
   tbb::concurrent_vector<gbcd_metric_based::TriAreaAndNormals> selectedTriangles(0);
 #else
-  std::vector<GBCDMetricBased::TriAreaAndNormals> selectedTriangles(0);
+  std::vector<gbcd_metric_based::TriAreaAndNormals> selectedTriangles(0);
 #endif
 
   usize triChunkSize = 50000;
