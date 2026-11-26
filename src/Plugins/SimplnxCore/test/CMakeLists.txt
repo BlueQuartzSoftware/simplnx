@@ -162,6 +162,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SurfaceNetsVvTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
+  TriangleGeometrySupportTestUtils.cpp
   TriangleNormalFilterTest.cpp
   UncertainRegularGridSampleSurfaceMeshTest.cpp
   RepairTriangleWindingTransferTest.cpp
