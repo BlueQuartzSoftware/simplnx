@@ -10,8 +10,6 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -352,49 +350,20 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Preflight Error - Cell ar
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeAvgCAxesFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeAvgCAxesFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeAvgCAxesFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeAvgCAxesFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      // The feature attribute matrix is derived from the legacy AvgCAxesArrayPath (the created array),
-      // and the AvgCAxes array name comes from that same path.
-      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
-      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key) == "TestArray");
-      // The legacy filter had no Cell Phases or Crystal Structures inputs; the conversion derives the
-      // conventional locations from the legacy FeatureIds path.
-      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "Phases"}));
-      CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"}));
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ComputeAvgCAxesFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ComputeAvgCAxesFilter>::uuid);
+  // The feature attribute matrix is derived from the legacy AvgCAxesArrayPath (the created array),
+  // and the AvgCAxes array name comes from that same path.
+  CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
+  CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<std::string>(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key) == "TestArray");
+  // The legacy filter had no Cell Phases or Crystal Structures inputs; the conversion derives the
+  // conventional locations from the legacy FeatureIds path.
+  CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "Phases"}));
+  CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"}));
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeAvgCAxesFilter]")

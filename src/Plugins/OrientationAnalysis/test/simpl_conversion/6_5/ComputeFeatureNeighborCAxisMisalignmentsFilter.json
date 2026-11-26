@@ -11,26 +11,26 @@
     "Filter_Uuid": "{cdd50b83-ea09-5499-b008-4b253cf4c246}",
     "FindAvgMisals": 1,
     "NeighborListArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Volume",
+      "Attribute Matrix Name": "Features",
+      "Data Array Name": "Neighbors"
     },
     "AvgQuatsArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Volume",
+      "Attribute Matrix Name": "Features",
+      "Data Array Name": "MeanQuaternions"
     },
     "FeaturePhasesArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Volume",
+      "Attribute Matrix Name": "Features",
+      "Data Array Name": "PhaseIds"
     },
     "CrystalStructuresArrayPath": {
-      "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
-      "Data Array Name": "TestArray"
+      "Data Container Name": "Volume",
+      "Attribute Matrix Name": "Ensembles",
+      "Data Array Name": "CrystalStructures"
     },
-    "CAxisMisalignmentListArrayName": "TestName",
-    "AvgCAxisMisalignmentsArrayName": "TestName"
+    "CAxisMisalignmentListArrayName": "NeighborCAxisAngles",
+    "AvgCAxisMisalignmentsArrayName": "MeanCAxisAngle"
   }
 }

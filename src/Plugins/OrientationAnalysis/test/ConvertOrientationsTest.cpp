@@ -27,8 +27,6 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -447,41 +445,12 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: real HDF5 4096-block stereo
 
 TEST_CASE("OrientationAnalysis::ConvertOrientationsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ConvertOrientationsFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ConvertOrientationsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ConvertOrientationsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ConvertOrientationsFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<ChoicesParameter::ValueType>(ConvertOrientationsFilter::k_InputType_Key) == 0);
-      CHECK(args.value<ChoicesParameter::ValueType>(ConvertOrientationsFilter::k_OutputType_Key) == 0);
-      CHECK(args.value<DataPath>(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ConvertOrientationsFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ConvertOrientationsFilter>::uuid);
+  CHECK(args.value<ChoicesParameter::ValueType>(ConvertOrientationsFilter::k_InputType_Key) == 0);
+  CHECK(args.value<ChoicesParameter::ValueType>(ConvertOrientationsFilter::k_OutputType_Key) == 0);
+  CHECK(args.value<DataPath>(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<std::string>(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key) == "TestName");
 }

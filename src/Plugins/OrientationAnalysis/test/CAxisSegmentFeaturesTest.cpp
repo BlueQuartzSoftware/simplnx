@@ -14,8 +14,6 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/SegmentFeaturesTestUtils.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -1275,48 +1273,19 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "CAxisSegmentFeaturesFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "CAxisSegmentFeaturesFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CAxisSegmentFeaturesFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<float32>(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key) == 2.5f);
-      CHECK(args.value<bool>(CAxisSegmentFeaturesFilter::k_UseMask_Key) == true);
-      CHECK(args.value<bool>(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key) == true);
-      CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key) == "TestName");
-      CHECK(args.value<std::string>(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key) == "TestName");
-      CHECK(args.value<std::string>(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key) == "TestName");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "CAxisSegmentFeaturesFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<CAxisSegmentFeaturesFilter>::uuid);
+  CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+  CHECK(args.value<float32>(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key) == 2.5f);
+  CHECK(args.value<bool>(CAxisSegmentFeaturesFilter::k_UseMask_Key) == true);
+  CHECK(args.value<bool>(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key) == true);
+  CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<DataPath>(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+  CHECK(args.value<std::string>(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key) == "TestName");
+  CHECK(args.value<std::string>(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key) == "TestName");
+  CHECK(args.value<std::string>(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key) == "TestName");
 }

@@ -18,8 +18,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -463,43 +461,14 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: real HDF5 65536-block import 
 
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadAngDataFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadAngDataFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadAngDataFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadAngDataFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<FileSystemPathParameter::ValueType>(ReadAngDataFilter::k_InputFile_Key) == fs::path("/some/test/path/data.ang"));
-      CHECK(args.value<DataPath>(ReadAngDataFilter::k_CreatedImageGeometryPath_Key) == DataPath({"ImageDataContainer"}));
-      CHECK(args.value<std::string>(ReadAngDataFilter::k_CellAttributeMatrixName_Key) == "CellData");
-      CHECK(args.value<std::string>(ReadAngDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "CellEnsembleData");
-    }
-  }
+  const auto version = GENERATE("6_4", "6_5");
+  CAPTURE(version);
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / version / "ReadAngDataFilter.json";
+  const auto args = UnitTest::LoadSIMPLConversionArguments(fixturePath, FilterTraits<ReadAngDataFilter>::uuid);
+  CHECK(args.value<FileSystemPathParameter::ValueType>(ReadAngDataFilter::k_InputFile_Key) == fs::path("/some/test/path/data.ang"));
+  CHECK(args.value<DataPath>(ReadAngDataFilter::k_CreatedImageGeometryPath_Key) == DataPath({"ImageDataContainer"}));
+  CHECK(args.value<std::string>(ReadAngDataFilter::k_CellAttributeMatrixName_Key) == "CellData");
+  CHECK(args.value<std::string>(ReadAngDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "CellEnsembleData");
 }
 
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: override invalid X step", "[OrientationAnalysis][ReadAngDataFilter]")
