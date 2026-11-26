@@ -1,7 +1,7 @@
 #include "ReadEnsembleInfoFilter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadEnsembleInfo.hpp"
-#include "OrientationAnalysis/utilities/inicpp.h"
+#include "inicpp/inicpp.h"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"

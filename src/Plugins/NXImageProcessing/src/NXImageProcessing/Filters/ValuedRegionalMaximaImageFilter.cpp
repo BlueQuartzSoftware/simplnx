@@ -74,7 +74,7 @@ IFilter::PreflightResult ValuedRegionalMaximaImageFilter::preflightImpl(const Da
 
   // requireScalar=true: the regional-extrema engine is defined on scalar images (matching the legacy ITK operator);
   // the shared preflight also validates type membership and the geometry/tuple match.
-  return {ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+  return {.outputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                         /*requireScalar=*/true)};
 }
 Result<> ValuedRegionalMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,

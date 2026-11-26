@@ -54,8 +54,6 @@ hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::strin
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  herr_t error = 0;
-  herr_t returnError = 0;
   hid_t datasetId = -1;
   /* Open the dataset. */
   if((datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT)) < 0)
@@ -64,10 +62,12 @@ hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::strin
   }
   /* Get an identifier for the datatype. */
   hid_t typeId = H5Dget_type(datasetId);
-  H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName);
-  if(returnError < 0)
+  const herr_t closeError = H5Dclose(datasetId);
+  if(closeError < 0)
   {
-    return static_cast<hid_t>(returnError);
+    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << closeError
+              << std::endl;
+    return static_cast<hid_t>(closeError);
   }
   return typeId;
 }
@@ -237,25 +237,3 @@ std::mutex& nx::core::HDF5::Support::ApiLock()
   static std::mutex* s_ApiLock = new std::mutex();
   return *s_ApiLock;
 }
-
-#if 0
-hid_t Support::getDatasetType(hid_t locationID, const std::string& datasetName)
-{
-  herr_t error = 0;
-  herr_t returnError = 0;
-  hid_t datasetID = -1;
-  /* Open the dataset. */
-  if((datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT)) < 0)
-  {
-    return -1;
-  }
-  /* Get an identifier for the datatype. */
-  hid_t typeID = H5Dget_type(datasetID);
-  H5_CLOSE_H5_DATASET(datasetID, error, returnError, datasetName);
-  if(returnError < 0)
-  {
-    return static_cast<hid_t>(returnError);
-  }
-  return typeID;
-}
-#endif

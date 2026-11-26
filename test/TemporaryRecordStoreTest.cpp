@@ -107,9 +107,9 @@ TEST_CASE("TemporaryRecordStore configuration retains 64-bit fixed-record limits
 
 TEST_CASE("Result assertion macros evaluate expressions once", "[TemporaryRecordStore]")
 {
-  STATIC_REQUIRE(NX_IS_LVALUE_RESULT(std::declval<Result<>&>()));
-  STATIC_REQUIRE_FALSE(NX_IS_LVALUE_RESULT(std::declval<Result<>&&>()));
-  STATIC_REQUIRE_FALSE(NX_IS_LVALUE_RESULT(std::declval<int&>()));
+  STATIC_REQUIRE(k_IsLvalueResult<decltype((std::declval<Result<>&>()))>);
+  STATIC_REQUIRE_FALSE(k_IsLvalueResult<decltype((std::declval<Result<>&&>()))>);
+  STATIC_REQUIRE_FALSE(k_IsLvalueResult<decltype((std::declval<int&>()))>);
 
   usize evaluationCount = 0;
   auto invalidResult = MakeErrorResult(-9004, "expected test error");

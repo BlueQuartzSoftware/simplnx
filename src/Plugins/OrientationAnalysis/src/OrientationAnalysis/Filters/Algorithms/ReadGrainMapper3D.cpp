@@ -31,6 +31,7 @@ namespace GM3DConst = GrainMapper3DUtilities::Constants;
 
 namespace
 {
+constexpr uint32 k_UnknownCrystalStructure = 999; // Sentinel for an invalid ensemble entry.
 constexpr usize k_MaximumTransferValues = 65536;
 
 /**
@@ -190,11 +191,6 @@ Result<> FillDataArrayAnnounced(DataStructure& dataStructure, const DataPath& da
 
 } // namespace
 
-namespace ebsdlib::CrystalStructure
-{
-inline constexpr uint32_t UnknownCrystalStructure = 999; // Sentinel for an invalid ensemble entry.
-}
-
 ReadGrainMapper3D::ReadGrainMapper3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadGrainMapper3DInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -230,7 +226,7 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
   Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
   auto& universalHermannMauguin = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_UniversalHermannMauguin));
 
-  crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  crystalStructures[0] = k_UnknownCrystalStructure;
   materialNames[0] = "Invalid Phase";
   latticeConstants->setComponent(0, 0, 0.0f);
   latticeConstants->setComponent(0, 1, 0.0f);

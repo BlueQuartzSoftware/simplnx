@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-#include "simplnx/Utilities/RTree.hpp"
+#include "RTree/RTree.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>

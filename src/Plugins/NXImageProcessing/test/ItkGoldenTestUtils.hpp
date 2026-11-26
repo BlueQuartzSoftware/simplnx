@@ -15,7 +15,7 @@
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/MD5.hpp"
+#include "MD5/MD5.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "NXImageProcessing/Filters/ReadImageFilter.hpp"

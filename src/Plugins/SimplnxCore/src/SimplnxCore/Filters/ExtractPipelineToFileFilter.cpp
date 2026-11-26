@@ -81,7 +81,7 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
   Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};
   }
 
   Result<OutputActions> results;
