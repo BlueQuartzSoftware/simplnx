@@ -113,7 +113,7 @@ protected:
    *
    * Application owns the shared Preferences instance.
    */
-  void addDefaultValue(std::string keyName, const nlohmann::json& value);
+  void addDefaultValue(std::string keyName, const nlohmann::json& value) const;
 
 private:
   IdType m_Id;

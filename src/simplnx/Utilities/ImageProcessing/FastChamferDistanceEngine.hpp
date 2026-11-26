@@ -518,7 +518,7 @@ private:
     return {};
   }
 
-  void Propagate2DForward(float32* block, usize nx, usize sourceRows, usize loadedRows)
+  void Propagate2DForward(float32* block, usize nx, usize sourceRows, usize loadedRows) const
   {
     const float32 w0 = detail::k_ChamferWeights[0];
     const float32 w1 = detail::k_ChamferWeights[1];
@@ -555,7 +555,7 @@ private:
     }
   }
 
-  void Propagate2DBackward(float32* block, usize nx, usize firstSourceRow, usize loadedRows)
+  void Propagate2DBackward(float32* block, usize nx, usize firstSourceRow, usize loadedRows) const
   {
     const float32 w0 = detail::k_ChamferWeights[0];
     const float32 w1 = detail::k_ChamferWeights[1];

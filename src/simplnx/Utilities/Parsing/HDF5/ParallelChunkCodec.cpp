@@ -239,7 +239,7 @@ LegacyPayloadTaskScopeForTesting::~LegacyPayloadTaskScopeForTesting() noexcept
   }
 }
 
-void LegacyPayloadTaskScopeForTesting::observeExceptionAggregation() noexcept
+void LegacyPayloadTaskScopeForTesting::observeExceptionAggregation() const noexcept
 {
   if(m_Active)
   {

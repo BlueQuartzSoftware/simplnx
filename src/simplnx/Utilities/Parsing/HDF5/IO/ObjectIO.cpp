@@ -210,7 +210,7 @@ std::string ObjectIO::getAttributeNameByIndex(int64 idx) const
   return GetNameFromBuffer(buffer);
 }
 
-void ObjectIO::deleteAttribute(const std::string& name)
+void ObjectIO::deleteAttribute(const std::string& name) const
 {
   // getId() self-locks; resolve it before the leaf-locked existence-check + delete.
   const hid_t selfId = getId();

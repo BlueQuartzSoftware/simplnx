@@ -174,7 +174,7 @@ public:
    * @brief Deletes one attribute.
    * @param name Specifies the attribute.
    */
-  void deleteAttribute(const std::string& name);
+  void deleteAttribute(const std::string& name) const;
 
   /**
    * @brief Tests whether one attribute exists.
