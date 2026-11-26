@@ -90,11 +90,13 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractPipelineToFileTest.cpp
   ExtractTripleLinesTest.cpp
   ExtractVertexGeometryTest.cpp
+  FeatureRemovalTestUtils.cpp
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
   FlyingEdges3DTest.cpp
   HierarchicalSmoothTest.cpp
   IdentifyDuplicateVerticesTest.cpp
+  ImageGeometryFeatureTestUtils.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
   ImageIOTest.cpp

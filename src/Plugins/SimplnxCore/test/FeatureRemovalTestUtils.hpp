@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -122,4 +123,43 @@ uint64 HashStore(const AbstractDataStore<T>& store)
   }
   return hash;
 }
+
+template <typename T>
+concept FeatureValue = std::is_same_v<T, int32> || std::is_same_v<T, bool>;
+
+namespace StrictFeatureIds
+{
+inline const DataPath k_GeometryPath({"Strict Geometry"});
+inline const DataPath k_CellPath = k_GeometryPath.createChildPath("Cells");
+inline const DataPath k_FeatureValuesPath = k_GeometryPath.createChildPath("Features").createChildPath("Feature Values");
+inline const DataPath k_OtherValuesPath = k_GeometryPath.createChildPath("Other Cells").createChildPath("Other Values");
+
+struct ParentIds
+{
+  DataObject::IdType Cells;
+  DataObject::IdType Elsewhere;
+};
+
+template <FeatureValue T>
+ParentIds BuildInput(DataStructure& dataStructure);
+void CheckPreflight(const IFilter::PreflightResult& result, int32 expectedCode, const DataPath& offendingPath);
+} // namespace StrictFeatureIds
+
+namespace SharedCellPaths
+{
+inline const DataPath k_GeometryPath({"Alias Geometry"});
+inline const DataPath k_CellPath = k_GeometryPath.createChildPath("Cells");
+inline const DataPath k_AliasCellPath({"Earlier Parent", "Cells"});
+inline const DataPath k_FeatureValuesPath = k_GeometryPath.createChildPath("Features").createChildPath("Feature Values");
+
+template <FeatureValue T>
+void BuildInput(DataStructure& dataStructure, const std::array<T, 3>& featureValues);
+void CheckCompaction(const DataStructure& dataStructure);
+void CheckIgnoredValues(const DataStructure& dataStructure);
+void CheckModifiedPaths(const IFilter::PreflightResult& preflight);
+} // namespace SharedCellPaths
+
+std::string GetStaleArrayReport(const IFilter::PreflightResult& result, usize expectedCount = 1);
+std::vector<int32> ReadInt32(const DataStructure& dataStructure, const DataPath& path);
+bool HasWarningCode(const std::vector<Warning>& warnings, int32 code);
 } // namespace nx::core::FeatureRemovalTest

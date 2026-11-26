@@ -1,3 +1,5 @@
+#include "ImageGeometryFeatureTestUtils.hpp"
+
 #include "SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.hpp"
 #include "SimplnxCore/Filters/RotateSampleRefFrameFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -12,14 +14,12 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <Eigen/Dense>
 #include <catch2/catch.hpp>
@@ -736,25 +736,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   DataStructure dataStructure;
   const DataPath srcGeomPath({"Geom"});
   const DataPath destGeomPath({"Geom Out"});
-  auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
-  REQUIRE(geomPtr != nullptr);
-  geomPtr->setDimensions({2, 2, 2});
-  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
-  REQUIRE(elementAmPtr != nullptr);
-  geomPtr->setCellData(*elementAmPtr);
-  auto* dataPtr =
-      Int32Array::Create(dataStructure, "Data", DataStoreUtilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
-                         elementAmPtr->getId());
-  REQUIRE(dataPtr != nullptr);
-  dataPtr->fill(7);
-  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
-  REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32Array::Create(dataStructure, "Geom Values",
-                                       DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
-  REQUIRE(valuesPtr != nullptr);
-  valuesPtr->fill(42);
+  ImageGeometryFeatureTest::CreateImageWithGeometryNameInChildren(dataStructure);
   RotateSampleRefFrameFilter filter;
   Arguments args;
   args.insertOrAssign(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
@@ -763,35 +745,16 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const DataPath copiedAmPath = destGeomPath.createChildPath("Geom Feature Data");
-  const DataPath copiedValuesPath = copiedAmPath.createChildPath("Geom Values");
-  const DataPath renamedAmPath = destGeomPath.createChildPath("Geom Out Feature Data");
 
   SECTION("Declared recursive paths keep child names")
   {
-    const CopyDataObjectAction* copyActionPtr = nullptr;
-    for(const auto& action : preflightResult.outputActions.value().actions)
-    {
-      const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
-      if(candidatePtr != nullptr && candidatePtr->path() == srcGeomPath.createChildPath("Geom Feature Data"))
-      {
-        copyActionPtr = candidatePtr;
-        break;
-      }
-    }
-    REQUIRE(copyActionPtr != nullptr);
-    const auto createdPaths = copyActionPtr->getAllCreatedPaths();
-    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), copiedValuesPath) != createdPaths.end());
-    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), renamedAmPath.createChildPath("Geom Out Values")) == createdPaths.end());
+    ImageGeometryFeatureTest::CheckChildNamesInCopyAction(preflightResult.outputActions.value(), srcGeomPath, destGeomPath);
   }
   SECTION("Copied objects keep child names")
   {
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(copiedAmPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(copiedValuesPath) != nullptr);
-    REQUIRE_FALSE(dataStructure.containsData(renamedAmPath));
-    REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
+    ImageGeometryFeatureTest::CheckCopiedChildNames(dataStructure, destGeomPath);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1199,28 +1162,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regr
   auto ds = CreateFeatureRotateFixture();
   const DataPath sourcePath({"Input"});
   const DataPath outputPath({"Output"});
-  const auto featurePath = sourcePath.createChildPath("Cell Feature Data");
-  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
-  REQUIRE(features != nullptr);
-  const auto featureId = features->getId();
-  const auto shape = features->getShape();
-  const auto countsPath = featurePath.createChildPath("NumElements");
-  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
-  std::vector<int32> originalCounts(counts.getSize());
-  for(usize i = 0; i < originalCounts.size(); ++i)
-  {
-    originalCounts[i] = counts[i];
-  }
-  auto* nested = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
-  REQUIRE(nested != nullptr);
-  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nested->getId());
-  REQUIRE(keep != nullptr);
-  (*keep)[0] = 123;
-  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
-  auto* outside = DataGroup::Create(ds, "Outside");
-  REQUIRE(outside != nullptr);
-  REQUIRE(ds.setAdditionalParent(nested->getId(), outside->getId()));
-  const auto parents = ds.getData(featurePath)->getParentIds();
+  const auto original = ImageGeometryFeatureTest::AddNestedFeatureAlias(ds, sourcePath);
   auto args = MakeFeatureRotateArgs(clear);
   if(selectNested)
   {
@@ -1229,46 +1171,10 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regr
   RotateSampleRefFrameFilter filter;
   auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  bool foundNestedCopy = false;
-  const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
-  for(const auto& action : preflight.outputActions.value().actions)
-  {
-    const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get());
-    if(copy != nullptr && copy->path() == sourcePath.createChildPath("Misc"))
-    {
-      foundNestedCopy = true;
-      bool declaresFeature = false;
-      for(const auto& created : copy->getAllCreatedPaths())
-      {
-        if(created.rebase(nestedOutputPath, DataPath{}).has_value())
-        {
-          declaresFeature = true;
-        }
-      }
-      CHECK(declaresFeature == !clear);
-    }
-  }
-  REQUIRE(foundNestedCopy);
+  ImageGeometryFeatureTest::CheckNestedFeatureCopyAction(preflight.outputActions.value(), sourcePath, outputPath, clear);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* outputFeatures = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Cell Feature Data"));
-  REQUIRE(outputFeatures != nullptr);
-  CHECK(outputFeatures->getSize() == (clear ? 0 : 3));
-  CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
-  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
-  CHECK(ds.getData(featurePath)->getId() == featureId);
-  CHECK(ds.getData(featurePath)->getParentIds() == parents);
-  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
-  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getSize() == 3);
-  CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
-  for(usize i = 0; i < originalCounts.size(); ++i)
-  {
-    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
-    if(!clear)
-    {
-      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
-    }
-  }
+  ImageGeometryFeatureTest::CheckNestedFeatureAlias(ds, sourcePath, outputPath, clear, original);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Reject another geometry element Feature AM", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
@@ -1278,13 +1184,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Reject another geometry elem
   const auto featurePath = DataPath({"Input", "Cell Feature Data"});
   const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
   REQUIRE(features != nullptr);
-  auto* other = VertexGeom::Create(ds, "OtherGeometry");
-  REQUIRE(other != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {features->getNumberOfTuples()}, {3}, other->getId());
-  REQUIRE(vertices != nullptr);
-  other->setVertices(*vertices);
-  REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
-  other->setVertexAttributeMatrix(*features);
+  const auto& other = ImageGeometryFeatureTest::ShareFeatureMatrixWithVertexGeometry(ds, *features);
   RotateSampleRefFrameFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRotateArgs(true));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -1292,6 +1192,6 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Reject another geometry elem
   CHECK(result.outputActions.errors()[0].code == -67460);
   CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
-  CHECK(other->getVertexAttributeMatrix() == features);
+  CHECK(other.getVertexAttributeMatrix() == features);
   CHECK(features->getSize() > 0);
 }

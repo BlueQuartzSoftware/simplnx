@@ -1,3 +1,5 @@
+#include "ImageGeometryFeatureTestUtils.hpp"
+
 #include "SimplnxCore/Filters/Algorithms/CropImageGeometry.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -15,7 +17,6 @@
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -260,53 +261,6 @@ DataStructure CreateDataStructure()
 
   Int32Array* phases_data = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", cellDataDims, {1}, cellDataPtr->getId());
 
-  return dataStructure;
-}
-
-/**
- * @brief Creates four columns of features and independent Feature and Ensemble data.
- * @return Image geometry with FeatureId x + 1 at each cell (x, y, 0).
- */
-DataStructure CreateFeatureCropFixture()
-{
-  DataStructure dataStructure;
-  dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({4, 4, 1});
-  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 4, 4}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellData->getShape(), {1}, cellData->getId());
-  REQUIRE(featureIds != nullptr);
-  for(usize y = 0; y < 4; ++y)
-  {
-    for(usize x = 0; x < 4; ++x)
-    {
-      (*featureIds)[y * 4 + x] = static_cast<int32>(x + 1);
-    }
-  }
-
-  auto* featureData = AttributeMatrix::Create(dataStructure, "Cell Feature Data", ShapeType{5}, imageGeom->getId());
-  REQUIRE(featureData != nullptr);
-  auto* numElements = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureData->getId());
-  REQUIRE(numElements != nullptr);
-  numElements->fill(4);
-  (*numElements)[0] = 0;
-  auto* neighbors = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{5}, featureData->getId());
-  REQUIRE(neighbors != nullptr);
-  neighbors->setLists({{}, {2}, {1, 3}, {2, 4}, {3}});
-  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{5}, {"Background", "One", "Two", "Three", "Four"}, featureData->getId()) != nullptr);
-
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", ShapeType{2}, imageGeom->getId());
-  REQUIRE(ensembleData != nullptr);
-  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleData->getId());
-  REQUIRE(crystalStructures != nullptr);
-  (*crystalStructures)[0] = 999;
-  (*crystalStructures)[1] = 1;
   return dataStructure;
 }
 
@@ -689,7 +643,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry: real OOC stores preserve cropped valu
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber OFF preflight", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   REQUIRE(AttributeMatrix::Create(ds, "Other Feature Data", {5}, ds.getId(DataPath({"Image"}))) != nullptr);
   CropImageGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(true, false));
@@ -715,7 +669,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber OFF prefligh
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF preflight", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   CropImageGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(false, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
@@ -731,7 +685,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF preflight", "[Simplnx
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF ignores stored renumber", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   CropImageGeometryFilter filter;
   Arguments args = MakeFeatureCropArgs(false, true);
   args.insertOrAssign(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "DoesNotExist"})));
@@ -746,7 +700,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF ignores stored renumb
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: StrictFeatureIds preflight", "[SimplnxCore][CropImageGeometryFilter][StrictFeatureIds]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   const auto* imageGeom = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
   REQUIRE(imageGeom != nullptr);
   const auto* cellData = imageGeom->getCellData();
@@ -789,7 +743,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: StrictFeatureIds preflight", "[
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON Feature AM errors", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   // An Attribute Matrix that is not a child of "Image".
   REQUIRE(AttributeMatrix::Create(ds, "Elsewhere", std::vector<usize>{5}) != nullptr);
   CropImageGeometryFilter filter;
@@ -821,7 +775,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON Feature AM errors", "[
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber OFF execute", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   CropImageGeometryFilter filter;
   auto result = filter.execute(ds, MakeFeatureCropArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -853,7 +807,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber OFF execute"
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber ON execute", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   CropImageGeometryFilter filter;
   auto result = filter.execute(ds, MakeFeatureCropArgs(true, true));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -880,7 +834,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber ON execute",
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF execute copies Feature AM unchanged", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   CropImageGeometryFilter filter;
   const bool renumber = GENERATE(false, true);
   CAPTURE(renumber);
@@ -934,7 +888,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF execute copies Featur
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON in place", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   CropImageGeometryFilter filter;
   Arguments args = MakeFeatureCropArgs(true, true);
   args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
@@ -2328,25 +2282,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry: Child names containing the geometry n
   DataStructure dataStructure;
   const DataPath srcGeomPath({"Geom"});
   const DataPath destGeomPath({"Geom Out"});
-  auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
-  REQUIRE(geomPtr != nullptr);
-  geomPtr->setDimensions({2, 2, 2});
-  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
-  REQUIRE(elementAmPtr != nullptr);
-  geomPtr->setCellData(*elementAmPtr);
-  auto* dataPtr =
-      Int32Array::Create(dataStructure, "Data", DataStoreUtilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
-                         elementAmPtr->getId());
-  REQUIRE(dataPtr != nullptr);
-  dataPtr->fill(7);
-  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
-  REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32Array::Create(dataStructure, "Geom Values",
-                                       DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
-  REQUIRE(valuesPtr != nullptr);
-  valuesPtr->fill(42);
+  ImageGeometryFeatureTest::CreateImageWithGeometryNameInChildren(dataStructure);
   CropImageGeometryFilter filter;
   Arguments args;
   args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
@@ -2357,35 +2293,16 @@ TEST_CASE("SimplnxCore::CropImageGeometry: Child names containing the geometry n
   args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{1, 1, 1}));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const DataPath copiedAmPath = destGeomPath.createChildPath("Geom Feature Data");
-  const DataPath copiedValuesPath = copiedAmPath.createChildPath("Geom Values");
-  const DataPath renamedAmPath = destGeomPath.createChildPath("Geom Out Feature Data");
 
   SECTION("Declared recursive paths keep child names")
   {
-    const CopyDataObjectAction* copyActionPtr = nullptr;
-    for(const auto& action : preflightResult.outputActions.value().actions)
-    {
-      const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
-      if(candidatePtr != nullptr && candidatePtr->path() == srcGeomPath.createChildPath("Geom Feature Data"))
-      {
-        copyActionPtr = candidatePtr;
-        break;
-      }
-    }
-    REQUIRE(copyActionPtr != nullptr);
-    const auto createdPaths = copyActionPtr->getAllCreatedPaths();
-    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), copiedValuesPath) != createdPaths.end());
-    REQUIRE(std::find(createdPaths.begin(), createdPaths.end(), renamedAmPath.createChildPath("Geom Out Values")) == createdPaths.end());
+    ImageGeometryFeatureTest::CheckChildNamesInCopyAction(preflightResult.outputActions.value(), srcGeomPath, destGeomPath);
   }
   SECTION("Copied objects keep child names")
   {
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(copiedAmPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(copiedValuesPath) != nullptr);
-    REQUIRE_FALSE(dataStructure.containsData(renamedAmPath));
-    REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
+    ImageGeometryFeatureTest::CheckCopiedChildNames(dataStructure, destGeomPath);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -2646,81 +2563,24 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Feature AM nested alias regress
   UnitTest::LoadPlugins();
   const bool clear = GENERATE(true, false);
   const bool renumber = GENERATE(false, true);
-  auto ds = CreateFeatureCropFixture();
+  auto ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   const DataPath sourcePath({"Image"});
   const DataPath outputPath({"Cropped"});
-  const auto featurePath = sourcePath.createChildPath("Cell Feature Data");
-  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
-  REQUIRE(features != nullptr);
-  const auto featureId = features->getId();
-  const auto shape = features->getShape();
-  const auto countsPath = featurePath.createChildPath("NumElements");
-  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
-  std::vector<int32> originalCounts(counts.getSize());
-  for(usize i = 0; i < originalCounts.size(); ++i)
-  {
-    originalCounts[i] = counts[i];
-  }
-  auto* nested = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
-  REQUIRE(nested != nullptr);
-  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nested->getId());
-  REQUIRE(keep != nullptr);
-  (*keep)[0] = 123;
-  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
-  auto* outside = DataGroup::Create(ds, "Outside");
-  REQUIRE(outside != nullptr);
-  REQUIRE(ds.setAdditionalParent(nested->getId(), outside->getId()));
-  const auto parents = ds.getData(featurePath)->getParentIds();
+  const auto original = ImageGeometryFeatureTest::AddNestedFeatureAlias(ds, sourcePath);
   auto args = MakeFeatureCropArgs(clear, renumber);
   CropImageGeometryFilter filter;
   auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  bool foundNestedCopy = false;
-  const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
-  for(const auto& action : preflight.outputActions.value().actions)
-  {
-    const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get());
-    if(copy != nullptr && copy->path() == sourcePath.createChildPath("Misc"))
-    {
-      foundNestedCopy = true;
-      bool declaresFeature = false;
-      for(const auto& created : copy->getAllCreatedPaths())
-      {
-        if(created.rebase(nestedOutputPath, DataPath{}).has_value())
-        {
-          declaresFeature = true;
-        }
-      }
-      CHECK(declaresFeature == !clear);
-    }
-  }
-  REQUIRE(foundNestedCopy);
+  ImageGeometryFeatureTest::CheckNestedFeatureCopyAction(preflight.outputActions.value(), sourcePath, outputPath, clear);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* outputFeatures = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Cell Feature Data"));
-  REQUIRE(outputFeatures != nullptr);
-  CHECK(outputFeatures->getSize() == (clear ? 0 : 3));
-  CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
-  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
-  CHECK(ds.getData(featurePath)->getId() == featureId);
-  CHECK(ds.getData(featurePath)->getParentIds() == parents);
-  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
-  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getSize() == 3);
-  CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
-  for(usize i = 0; i < originalCounts.size(); ++i)
-  {
-    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
-    if(!clear)
-    {
-      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
-    }
-  }
+  ImageGeometryFeatureTest::CheckNestedFeatureAlias(ds, sourcePath, outputPath, clear, original);
 }
 
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Feature AM selected through second parent", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   const bool renumber = GENERATE(false, true);
   auto* parent = DataGroup::Create(ds, "Alias");
   REQUIRE(parent != nullptr);
@@ -2796,7 +2656,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL conversion uses voxel bou
   CHECK(args.value<std::vector<uint64>>(CropImageGeometryFilter::k_MaxVoxel_Key) == std::vector<uint64>{3, 2, 0});
 
   UnitTest::LoadPlugins();
-  auto ds = CreateFeatureCropFixture();
+  auto ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   auto result = CropImageGeometryFilter().execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto* cropped = ds.getDataAs<ImageGeom>(DataPath({"Cropped"}));
@@ -2807,17 +2667,11 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL conversion uses voxel bou
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Reject another geometry element Feature AM", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  auto ds = CreateFeatureCropFixture();
+  auto ds = ImageGeometryFeatureTest::CreateFourColumnImage();
   const auto featurePath = DataPath({"Image", "Cell Feature Data"});
   const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
   REQUIRE(features != nullptr);
-  auto* other = VertexGeom::Create(ds, "OtherGeometry");
-  REQUIRE(other != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {features->getNumberOfTuples()}, {3}, other->getId());
-  REQUIRE(vertices != nullptr);
-  other->setVertices(*vertices);
-  REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
-  other->setVertexAttributeMatrix(*features);
+  const auto& other = ImageGeometryFeatureTest::ShareFeatureMatrixWithVertexGeometry(ds, *features);
   CropImageGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -2825,6 +2679,6 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Reject another geometry element
   CHECK(result.outputActions.errors()[0].code == -67460);
   CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
-  CHECK(other->getVertexAttributeMatrix() == features);
+  CHECK(other.getVertexAttributeMatrix() == features);
   CHECK(features->getSize() > 0);
 }
