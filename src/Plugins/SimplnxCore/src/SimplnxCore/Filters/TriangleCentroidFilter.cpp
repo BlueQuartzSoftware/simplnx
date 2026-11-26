@@ -119,7 +119,7 @@ Result<> TriangleCentroidFilter::executeImpl(DataStructure& dataStructure, const
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPathKey = "SurfaceMeshTriangleCentroidsArrayPath";
 } // namespace SIMPL
@@ -131,9 +131,9 @@ Result<Arguments> TriangleCentroidFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleCentroidsArrayPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
                                                                                                                                   k_CentroidsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleCentroidsArrayPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
                                                                                                                                       k_TriGeometryDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

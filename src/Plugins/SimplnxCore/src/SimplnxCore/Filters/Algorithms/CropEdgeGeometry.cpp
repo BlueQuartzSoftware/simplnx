@@ -196,7 +196,7 @@ std::pair<float32, float32> clip(float32 t_min, float32 t_max, float32 v1, float
  * MUST be in the format (x_min, y_min, z_min, x_max, y_max, z_max).
  * @return std::tuple<float32, float32, float32> Adjusted 3D coordinates of the outside vertex.
  */
-std::tuple<float32, float32, float32> interpolate_outside_vertex(const std::tuple<float32, float32, float32>& insideVertex, const std::tuple<float32, float32, float32>& outsideVertex,
+std::tuple<float32, float32, float32> InterpolateOutsideVertex(const std::tuple<float32, float32, float32>& insideVertex, const std::tuple<float32, float32, float32>& outsideVertex,
                                                                  std::array<float32, 6> boundingBox)
 {
   float32 x1 = std::get<0>(insideVertex);
@@ -326,16 +326,16 @@ Result<> CropEdgeGeometry::operator()()
     float32 x1 = srcVertices[3 * v0 + 0];
     float32 y1 = srcVertices[3 * v0 + 1];
     float32 z1 = srcVertices[3 * v0 + 2];
-    bool v0_inside = is_inside(x1, y1, z1, boundingBox);
+    bool v0Inside = is_inside(x1, y1, z1, boundingBox);
 
     float32 x2 = srcVertices[3 * v1 + 0];
     float32 y2 = srcVertices[3 * v1 + 1];
     float32 z2 = srcVertices[3 * v1 + 2];
     bool v1_inside = is_inside(x2, y2, z2, boundingBox);
 
-    bool edgeOutsideBoundary = !v0_inside && !v1_inside;
-    bool edgeInsideBoundary = v0_inside && v1_inside;
-    bool edgeIntersectingBoundary = (v0_inside && !v1_inside) || (!v0_inside && v1_inside);
+    bool edgeOutsideBoundary = !v0Inside && !v1_inside;
+    bool edgeInsideBoundary = v0Inside && v1_inside;
+    bool edgeIntersectingBoundary = (v0Inside && !v1_inside) || (!v0Inside && v1_inside);
 
     if(edgeOutsideBoundary)
     {
@@ -370,7 +370,7 @@ Result<> CropEdgeGeometry::operator()()
       }
       if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
       {
-        const auto clipPoint = interpolate_outside_vertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
+        const auto clipPoint = InterpolateOutsideVertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
         const auto key = std::make_pair(outsideVertexIdx, clipPoint);
         auto iter = clipVertexMapping.find(key);
         if(iter == clipVertexMapping.end())
@@ -386,7 +386,7 @@ Result<> CropEdgeGeometry::operator()()
           interpolatedValuesMap.emplace(clippedVertexIdx, clipPoint);
           iter = clipVertexMapping.emplace(key, clippedVertexIdx).first;
         }
-        if(v0_inside)
+        if(v0Inside)
         {
           v1 = iter->second;
         }

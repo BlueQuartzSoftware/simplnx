@@ -575,17 +575,17 @@ private:
 };
 
 template <typename T>
-struct is_allowed_array_type : std::false_type
+struct IsSplittableArrayType : std::false_type
 {
 };
 
 template <typename T>
-struct is_allowed_array_type<DataArray<T>> : std::true_type
+struct IsSplittableArrayType<DataArray<T>> : std::true_type
 {
 };
 
 template <>
-struct is_allowed_array_type<StringArray> : std::true_type
+struct IsSplittableArrayType<StringArray> : std::true_type
 {
 };
 
@@ -604,7 +604,7 @@ struct is_allowed_array_type<StringArray> : std::true_type
  * Each task copies one output without further cancellation checks. Outputs can complete in a different order.
  */
 template <typename ArrayType>
-typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type SplitArraysByTupleImpl(DataStructure& dataStructure, const DataPath& inputArrayPath,
+typename std::enable_if<IsSplittableArrayType<ArrayType>::value, Result<>>::type SplitArraysByTupleImpl(DataStructure& dataStructure, const DataPath& inputArrayPath,
                                                                                                         const std::vector<DataPath>& outputArrayPaths, usize splitDimension,
                                                                                                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {

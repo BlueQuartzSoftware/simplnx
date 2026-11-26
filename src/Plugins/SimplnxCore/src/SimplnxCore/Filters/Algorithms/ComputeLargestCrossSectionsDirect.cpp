@@ -244,7 +244,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
   if(inMemoryFeatureIds != nullptr && inMemoryLargestCrossSections != nullptr)
   {
     const int32* featureIdsData = inMemoryFeatureIds->data();
-    float32* largestCrossSectionsData = inMemoryLargestCrossSections->data();
+    float32* largestCrossSectionsDataPtr = inMemoryLargestCrossSections->data();
     const usize sliceSize = xCells * yCells;
 
     if(m_InputValues->Plane == 0)
@@ -262,7 +262,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
         {
           featureCounts[static_cast<usize>(planeFeatureIds[planeIndex])]++;
         }
-        UpdateLargestCrossSections(featureCounts.data(), numFeatures, areaScalar, largestCrossSectionsData);
+        UpdateLargestCrossSections(featureCounts.data(), numFeatures, areaScalar, largestCrossSectionsDataPtr);
       }
       return {};
     }
@@ -271,7 +271,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
     {
       // Workers use only the stable in-memory backing pointer and thread-local
       // feature vectors; output remains untouched until the serial reduction.
-      const std::vector<float32> initialLargestCrossSections(largestCrossSectionsData, largestCrossSectionsData + numFeatures);
+      const std::vector<float32> initialLargestCrossSections(largestCrossSectionsDataPtr, largestCrossSectionsDataPtr + numFeatures);
       XzCrossSectionThreadScratch threadScratch([numFeatures, &initialLargestCrossSections] { return XzCrossSectionScratch(numFeatures, initialLargestCrossSections); });
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, yCells);
@@ -283,7 +283,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
       threadScratch.combine_each([&](const XzCrossSectionScratch& scratch) {
         for(usize featureId = 1; featureId < numFeatures; featureId++)
         {
-          largestCrossSectionsData[featureId] = std::max(scratch.largest_cross_sections[featureId], largestCrossSectionsData[featureId]);
+          largestCrossSectionsDataPtr[featureId] = std::max(scratch.largest_cross_sections[featureId], largestCrossSectionsDataPtr[featureId]);
         }
       });
       return {};
@@ -326,7 +326,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
 
         for(usize localX = 0; localX < activeXPlanes; localX++)
         {
-          UpdateLargestCrossSections(featureCounts.data() + (localX * numFeatures), numFeatures, areaScalar, largestCrossSectionsData);
+          UpdateLargestCrossSections(featureCounts.data() + (localX * numFeatures), numFeatures, areaScalar, largestCrossSectionsDataPtr);
         }
       }
       return {};

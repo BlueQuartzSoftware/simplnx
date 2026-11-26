@@ -276,9 +276,9 @@ static void CompareResults(const uint8& algoMapIndex, const DataStructure& dataS
 {
   DataPath arrayName({m_GeomName});
   arrayName = arrayName.createChildPath(m_outputArrayPrefix + m_DataArrayName);
-  const auto* testArray = dataStructure.getDataAs<UInt8Array>(arrayName);
-  REQUIRE(testArray != nullptr);
-  const auto& testData = testArray->getDataStoreRef();
+  const auto* testArrayPtr = dataStructure.getDataAs<UInt8Array>(arrayName);
+  REQUIRE(testArrayPtr != nullptr);
+  const auto& testData = testArrayPtr->getDataStoreRef();
 
   const std::vector<uint8>& colorArray{algorithmMap[algoMapIndex]};
 

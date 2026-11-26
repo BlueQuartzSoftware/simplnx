@@ -419,7 +419,7 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_RotationRepresentationChoiceKey = "RotationRepresentationChoice";
 constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
@@ -437,22 +437,22 @@ Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  Result<> rotateResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_RotationRepresentationChoiceKey, k_RotationRepresentation_Key);
+  Result<> rotateResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_RotationRepresentationChoiceKey, k_RotationRepresentation_Key);
   if(rotateResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(rotateResult));
   }
   results.push_back(
-      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, SIMPL::k_RotationAxisKey, SIMPL::k_RotationAngleKey, k_RotationAxisAngle_Key));
-  Result<> tableResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_RotationTableKey, k_RotationMatrix_Key);
+      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
+  Result<> tableResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_RotationTableKey, k_RotationMatrix_Key);
   if(tableResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(tableResult));
   }
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

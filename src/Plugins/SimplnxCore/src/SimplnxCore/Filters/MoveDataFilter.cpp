@@ -115,7 +115,7 @@ Result<> MoveDataFilter::executeImpl(DataStructure& /*dataStructure*/, const Arg
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_WhatToMoveKey = "WhatToMove";
 constexpr StringLiteral k_AttributeMatrixSourceKey = "AttributeMatrixSource";
@@ -131,17 +131,17 @@ Result<Arguments> MoveDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  if(json[SIMPL::k_WhatToMoveKey].get<int32>() == 0)
+  if(json[simpl::k_WhatToMoveKey].get<int32>() == 0)
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixSourceKey, k_SourceDataPaths_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixSourceKey, k_SourceDataPaths_Key));
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerDestinationKey, k_DestinationParentPath_Key));
+        SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerDestinationKey, k_DestinationParentPath_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySourceKey, k_SourceDataPaths_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_DataArraySourceKey, k_SourceDataPaths_Key));
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixDestinationKey, k_DestinationParentPath_Key));
+        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixDestinationKey, k_DestinationParentPath_Key));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

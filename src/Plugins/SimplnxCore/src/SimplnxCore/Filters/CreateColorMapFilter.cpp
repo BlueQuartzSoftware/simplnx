@@ -149,7 +149,7 @@ Result<> CreateColorMapFilter::executeImpl(DataStructure& dataStructure, const A
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_SelectedPresetNameKey = "SelectedPresetName";
 constexpr StringLiteral k_SelectedDataArrayPathKey = "SelectedDataArrayPath";
@@ -163,9 +163,9 @@ Result<Arguments> CreateColorMapFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey, k_SelectedPreset_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_RgbArrayNameKey, k_RgbArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_SelectedPresetNameKey, k_SelectedPreset_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_RgbArrayNameKey, k_RgbArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

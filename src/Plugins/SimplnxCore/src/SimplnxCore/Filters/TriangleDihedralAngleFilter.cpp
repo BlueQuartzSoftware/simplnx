@@ -124,7 +124,7 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPathKey = "SurfaceMeshTriangleDihedralAnglesArrayPath";
 } // namespace SIMPL
@@ -136,10 +136,10 @@ Result<Arguments> TriangleDihedralAngleFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey,
                                                                                                                                   k_SurfaceMeshTriangleDihedralAnglesArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(
-      args, json, SIMPL::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey, k_TGeometryDataPath_Key));
+      args, json, simpl::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey, k_TGeometryDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

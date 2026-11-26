@@ -2416,10 +2416,10 @@ protected:
 class HyperGridBitMap3D : public HyperGridBitMap
 {
 public:
-  static constexpr float32 Dimensions = 3; // Number of coordinate components.
+  static constexpr float32 k_Dimensions = 3; // Number of coordinate components.
 
-  GridBitMap xTable; // Occupied-grid incidence by X position.
-  GridBitMap yTable; // Occupied-grid incidence by Y position.
+  GridBitMap x_table; // Occupied-grid incidence by X position.
+  GridBitMap y_table; // Occupied-grid incidence by Y position.
   GridBitMap zTable; // Occupied-grid incidence by Z position.
 
   HyperGridBitMap3D() = delete;
@@ -2499,7 +2499,7 @@ public:
     }
 
     // Grid Info - DO NOT MODIFY - basis for algorithm
-    float32 sideLength = epsilon / std::sqrt(Dimensions);
+    float32 sideLength = epsilon / std::sqrt(k_Dimensions);
     std::array<float32, 3> spacing = {sideLength, sideLength, sideLength};
 
     float32 buffer = sideLength;
@@ -2627,8 +2627,8 @@ public:
         return;
       }
 
-      xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
-      yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
+      x_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
+      y_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
       zTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), zSet.size());
 
       if(shouldCancel)
@@ -2641,19 +2641,19 @@ public:
         usize relativeGridBytePos = gridId / 8;
         uint8 bitGridOffset = gridId % 8;
 
-        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.rowLength;
-        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.rowLength;
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * x_table.rowLength;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * y_table.rowLength;
         usize zPos = std::distance(zSet.begin(), zSet.find(positions[gridId][2])) * zTable.rowLength;
 
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        xTable.gridTable[xBytePos] = xMask | xTable.gridTable[xBytePos];
+        x_table.gridTable[xBytePos] = xMask | x_table.gridTable[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        yTable.gridTable[yBytePos] = yMask | yTable.gridTable[yBytePos];
+        y_table.gridTable[yBytePos] = yMask | y_table.gridTable[yBytePos];
 
         usize zBytePos = zPos + relativeGridBytePos;
         uint8 zMask = 1;
@@ -2671,10 +2671,10 @@ public:
 class HyperGridBitMap2D : public HyperGridBitMap
 {
 public:
-  static constexpr float32 Dimensions = 2; // Number of coordinate components.
+  static constexpr float32 k_Dimensions = 2; // Number of coordinate components.
 
-  GridBitMap xTable; // Occupied-grid incidence by X position.
-  GridBitMap yTable; // Occupied-grid incidence by Y position.
+  GridBitMap x_table; // Occupied-grid incidence by X position.
+  GridBitMap y_table; // Occupied-grid incidence by Y position.
 
   HyperGridBitMap2D() = delete;
 
@@ -2750,7 +2750,7 @@ public:
     }
 
     // Grid Info - DO NOT MODIFY - basis for algorithm
-    float32 sideLength = epsilon / std::sqrt(Dimensions);
+    float32 sideLength = epsilon / std::sqrt(k_Dimensions);
     std::array<float32, 2> spacing = {sideLength, sideLength};
 
     float32 buffer = sideLength;
@@ -2871,8 +2871,8 @@ public:
         return;
       }
 
-      xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
-      yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
+      x_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
+      y_table = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
 
       if(shouldCancel)
       {
@@ -2884,18 +2884,18 @@ public:
         usize relativeGridBytePos = gridId / 8;
         uint8 bitGridOffset = gridId % 8;
 
-        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.rowLength;
-        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.rowLength;
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * x_table.rowLength;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * y_table.rowLength;
 
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        xTable.gridTable[xBytePos] = xMask | xTable.gridTable[xBytePos];
+        x_table.gridTable[xBytePos] = xMask | x_table.gridTable[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        yTable.gridTable[yBytePos] = yMask | yTable.gridTable[yBytePos];
+        y_table.gridTable[yBytePos] = yMask | y_table.gridTable[yBytePos];
       }
     }
   }
@@ -2950,46 +2950,46 @@ concept IsHGBP = std::is_base_of_v<HyperGridBitMap, HGBMT>;
 template <IsHGBP HGBPT>
 std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridBitMap)
 {
-  usize searchSpace = std::ceil(std::sqrt(HGBPT::Dimensions));
+  usize searchSpace = std::ceil(std::sqrt(HGBPT::k_Dimensions));
 
   std::vector<usize> neighborGridIds = {};
 
-  std::vector<uint8> finalGridMask(hyperGridBitMap.xTable.rowLength, std::numeric_limits<uint8>::max());
+  std::vector<uint8> finalGridMask(hyperGridBitMap.x_table.rowLength, std::numeric_limits<uint8>::max());
 
   usize relativeGridBytePos = targetGridId / 8;
   uint8 bitGridOffset = targetGridId % 8;
 
   usize xPos = 0;
-  for(usize i = 0; i < hyperGridBitMap.xTable.numPositions; i++)
+  for(usize i = 0; i < hyperGridBitMap.x_table.numPositions; i++)
   {
-    usize gridPos = (i * hyperGridBitMap.xTable.rowLength) + relativeGridBytePos;
+    usize gridPos = (i * hyperGridBitMap.x_table.rowLength) + relativeGridBytePos;
     uint8 mask = 1;
     mask <<= bitGridOffset;
-    uint8 result = hyperGridBitMap.xTable.gridTable[gridPos] & mask;
+    uint8 result = hyperGridBitMap.x_table.gridTable[gridPos] & mask;
     if(result > 0)
     {
       xPos = i;
       break;
     }
   }
-  SearchTablePositions(finalGridMask, searchSpace, xPos, hyperGridBitMap.xTable);
+  SearchTablePositions(finalGridMask, searchSpace, xPos, hyperGridBitMap.x_table);
 
   usize yPos = 0;
-  for(usize i = 0; i < hyperGridBitMap.yTable.numPositions; i++)
+  for(usize i = 0; i < hyperGridBitMap.y_table.numPositions; i++)
   {
-    usize gridPos = (i * hyperGridBitMap.yTable.rowLength) + relativeGridBytePos;
+    usize gridPos = (i * hyperGridBitMap.y_table.rowLength) + relativeGridBytePos;
     uint8 mask = 1;
     mask <<= bitGridOffset;
-    uint8 result = hyperGridBitMap.yTable.gridTable[gridPos] & mask;
+    uint8 result = hyperGridBitMap.y_table.gridTable[gridPos] & mask;
     if(result > 0)
     {
       yPos = i;
       break;
     }
   }
-  SearchTablePositions(finalGridMask, searchSpace, yPos, hyperGridBitMap.yTable);
+  SearchTablePositions(finalGridMask, searchSpace, yPos, hyperGridBitMap.y_table);
 
-  if constexpr(HGBPT::Dimensions == 3)
+  if constexpr(HGBPT::k_Dimensions == 3)
   {
     usize zPos = 0;
     for(usize i = 0; i < hyperGridBitMap.zTable.numPositions; i++)
@@ -3390,7 +3390,7 @@ private:
   Result<std::vector<float32>> readGridCellCoords(usize gridId) const
   {
     const auto& indices = hyperGridBitMap.gridVoxels[gridId];
-    const usize dims = static_cast<usize>(HGBPT::Dimensions);
+    const usize dims = static_cast<usize>(HGBPT::k_Dimensions);
     std::vector<float32> coords(indices.size() * dims);
     auto tupleBuf = std::make_unique<T[]>(dims);
     for(usize i = 0; i < indices.size(); i++)
@@ -3479,7 +3479,7 @@ private:
    */
   Result<bool> canMerge(usize pGridId, usize qGridId) const
   {
-    const usize dims = static_cast<usize>(HGBPT::Dimensions);
+    const usize dims = static_cast<usize>(HGBPT::k_Dimensions);
     Result<std::vector<float32>> pCoordsResult = readGridCellCoords(pGridId);
     if(pCoordsResult.invalid())
     {

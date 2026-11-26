@@ -27,7 +27,7 @@
 using namespace nx::core;
 using namespace H5Support;
 using namespace GrainMapper3DUtilities;
-namespace GM3DConst = GrainMapper3DUtilities::Constants;
+namespace gm_3d_dataset_constants = GrainMapper3DUtilities::Constants;
 
 namespace
 {
@@ -263,17 +263,17 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     return {};
   }
 
-  hid_t labDctGid = H5Gopen(fileId, GM3DConst::k_LabDCTGroupName.c_str(), H5P_DEFAULT);
+  hid_t labDctGid = H5Gopen(fileId, gm_3d_dataset_constants::k_LabDCTGroupName.c_str(), H5P_DEFAULT);
   if(labDctGid < 0)
   {
-    return MakeErrorResult(-89300, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", GM3DConst::k_LabDCTGroupName));
+    return MakeErrorResult(-89300, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", gm_3d_dataset_constants::k_LabDCTGroupName));
   }
   auto groupSentinel = H5Support::H5ScopedGroupSentinel(labDctGid, true);
 
-  hid_t dataGid = H5Gopen(labDctGid, GM3DConst::k_DataGroupName.c_str(), H5P_DEFAULT);
+  hid_t dataGid = H5Gopen(labDctGid, gm_3d_dataset_constants::k_DataGroupName.c_str(), H5P_DEFAULT);
   if(dataGid < 0)
   {
-    return MakeErrorResult(-89301, fmt::format("ReadGrainMapper3D: Error opening '/LabDCT/{}' group.", GM3DConst::k_DataGroupName));
+    return MakeErrorResult(-89301, fmt::format("ReadGrainMapper3D: Error opening '/LabDCT/{}' group.", gm_3d_dataset_constants::k_DataGroupName));
   }
   groupSentinel.addGroupId(dataGid);
 
@@ -304,13 +304,13 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   Result<> result;
 
   // Convert phase IDs from the file's uint8 representation to the requested int32 array.
-  if(m_InputValues->ConvertPhaseData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_PhaseIdName) > 0))
+  if(m_InputValues->ConvertPhaseData && (std::count(dctDataSets.begin(), dctDataSets.end(), gm_3d_dataset_constants::k_PhaseIdName) > 0))
   {
-    uint8DataSets.erase(GM3DConst::k_PhaseIdName);
-    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_PhaseIdName);
+    uint8DataSets.erase(gm_3d_dataset_constants::k_PhaseIdName);
+    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(gm_3d_dataset_constants::k_PhaseIdName);
     auto& phaseI32 = m_DataStructure.getDataRefAs<Int32Array>(dataArrayPath).getDataStoreRef();
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_PhaseIdName);
-    auto conversionResult = ReadDatasetInBatches<uint8>(datasetReader, GM3DConst::k_PhaseIdName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
+    nx::core::HDF5::DatasetIO datasetReader(dataGid, gm_3d_dataset_constants::k_PhaseIdName);
+    auto conversionResult = ReadDatasetInBatches<uint8>(datasetReader, gm_3d_dataset_constants::k_PhaseIdName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
                                                         [&phaseI32, &dataArrayPath](nonstd::span<const uint8> source, usize offset) -> Result<> {
                                                           if(offset > phaseI32.getSize() || source.size() > phaseI32.getSize() - offset)
                                                           {
@@ -327,15 +327,15 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   }
 
   // Convert each Rodrigues triple to a unit axis and magnitude.
-  if(m_InputValues->ConvertOrientationData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_RodriguesName) > 0))
+  if(m_InputValues->ConvertOrientationData && (std::count(dctDataSets.begin(), dctDataSets.end(), gm_3d_dataset_constants::k_RodriguesName) > 0))
   {
-    floatDataSets.erase(GM3DConst::k_RodriguesName);
-    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_RodriguesName);
+    floatDataSets.erase(gm_3d_dataset_constants::k_RodriguesName);
+    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(gm_3d_dataset_constants::k_RodriguesName);
     auto& rodData = m_DataStructure.getDataRefAs<Float32Array>(dataArrayPath).getDataStoreRef();
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_RodriguesName);
+    nx::core::HDF5::DatasetIO datasetReader(dataGid, gm_3d_dataset_constants::k_RodriguesName);
     constexpr usize k_RodriguesSourceBatchValues = (k_MaximumTransferValues / 4) * 3;
     auto conversionResult = ReadDatasetInBatches<float32>(
-        datasetReader, GM3DConst::k_RodriguesName, m_ShouldCancel, m_MessageHandler, k_RodriguesSourceBatchValues,
+        datasetReader, gm_3d_dataset_constants::k_RodriguesName, m_ShouldCancel, m_MessageHandler, k_RodriguesSourceBatchValues,
         [&rodData, &dataArrayPath](nonstd::span<const float32> source, usize sourceOffset) -> Result<> {
           if(source.size() % 3 != 0)
           {
@@ -406,13 +406,13 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     }
   }
 
-  if(m_InputValues->ConvertOrientationData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_QuaternionName) > 0))
+  if(m_InputValues->ConvertOrientationData && (std::count(dctDataSets.begin(), dctDataSets.end(), gm_3d_dataset_constants::k_QuaternionName) > 0))
   {
-    floatDataSets.erase(GM3DConst::k_QuaternionName);
-    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_QuaternionName);
+    floatDataSets.erase(gm_3d_dataset_constants::k_QuaternionName);
+    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(gm_3d_dataset_constants::k_QuaternionName);
     auto& quatData = m_DataStructure.getDataRefAs<Float32Array>(dataArrayPath).getDataStoreRef();
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_QuaternionName);
-    auto conversionResult = ReadDatasetInBatches<float32>(datasetReader, GM3DConst::k_QuaternionName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
+    nx::core::HDF5::DatasetIO datasetReader(dataGid, gm_3d_dataset_constants::k_QuaternionName);
+    auto conversionResult = ReadDatasetInBatches<float32>(datasetReader, gm_3d_dataset_constants::k_QuaternionName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
                                                           [&quatData, &dataArrayPath](nonstd::span<const float32> source, usize offset) -> Result<> {
                                                             if(source.size() % 4 != 0 || offset > quatData.getSize() || source.size() > quatData.getSize() - offset)
                                                             {
@@ -469,17 +469,17 @@ Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& /*reader*/, hi
   {
     return {};
   }
-  hid_t gid = H5Gopen(fileId, GM3DConst::k_AbsorptionCTName.c_str(), H5P_DEFAULT);
+  hid_t gid = H5Gopen(fileId, gm_3d_dataset_constants::k_AbsorptionCTName.c_str(), H5P_DEFAULT);
   if(gid < 0)
   {
-    return MakeErrorResult(-89350, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", GM3DConst::k_AbsorptionCTName));
+    return MakeErrorResult(-89350, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", gm_3d_dataset_constants::k_AbsorptionCTName));
   }
   auto groupSentinel = H5Support::H5ScopedGroupSentinel(gid, true);
 
   DataPath dataArrayPath =
       m_InputValues->AbsorptionImageGeometryPath.createChildPath(m_InputValues->AbsorptionCellAttributeMatrixName).createChildPath(GrainMapper3DUtilities::Constants::k_DataGroupName);
 
-  nx::core::HDF5::DatasetIO datasetReader(gid, GM3DConst::k_DataGroupName);
+  nx::core::HDF5::DatasetIO datasetReader(gid, gm_3d_dataset_constants::k_DataGroupName);
 
   return FillDataArrayAnnounced<uint16>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
 }

@@ -112,7 +112,7 @@ Result<> RenameDataObjectFilter::executeImpl(DataStructure& /*dataStructure*/, c
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_SelectedAttributeMatrixPathKey = "SelectedAttributeMatrixPath";
 constexpr StringLiteral k_NewAttributeMatrixKey = "NewAttributeMatrix";
@@ -129,22 +129,22 @@ Result<Arguments> RenameDataObjectFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  if(json.contains(SIMPL::k_SelectedArrayPathKey.str()))
+  if(json.contains(simpl::k_SelectedArrayPathKey.str()))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SourceDataObjectPath_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewArrayNameKey, k_NewName_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SourceDataObjectPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewArrayNameKey, k_NewName_Key));
   }
-  else if(json.contains(SIMPL::k_SelectedAttributeMatrixPathKey))
+  else if(json.contains(simpl::k_SelectedAttributeMatrixPathKey))
   {
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedAttributeMatrixPathKey, k_SourceDataObjectPath_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewAttributeMatrixKey, k_NewName_Key));
+        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SelectedAttributeMatrixPathKey, k_SourceDataObjectPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewAttributeMatrixKey, k_NewName_Key));
   }
   else
   {
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataContainerNameKey, k_SourceDataObjectPath_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerNameFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_NewName_Key));
+        SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataContainerNameKey, k_SourceDataObjectPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerNameFilterParameterConverter>(args, json, simpl::k_NewDataContainerNameKey, k_NewName_Key));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

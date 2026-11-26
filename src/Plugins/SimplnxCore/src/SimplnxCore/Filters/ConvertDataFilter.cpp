@@ -142,13 +142,13 @@ Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Argu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_OutputArrayNameKey = "OutputArrayName";
 } // namespace SIMPL
-namespace SIMPLConversionCustom
+namespace simpl_conversion_custom
 {
 struct LinkedPathCreationFilterParameterConverter
 {
@@ -176,9 +176,9 @@ Result<Arguments> ConvertDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_ArrayToConvertPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputArrayNameKey, k_ConvertedArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_ArrayToConvertPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<simpl_conversion_custom::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputArrayNameKey, k_ConvertedArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

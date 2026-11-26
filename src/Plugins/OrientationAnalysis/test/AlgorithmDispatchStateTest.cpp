@@ -194,12 +194,12 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residenc
   auto* inMemoryList = NeighborList<int32>::Create(dataStructure, "InMemoryList", {1});
   auto outOfCoreStore = std::make_shared<TestOutOfCoreListStore>(ShapeType{1});
   auto* outOfCoreList = NeighborList<int32>::Create(dataStructure, "OutOfCoreList", outOfCoreStore);
-  auto* stringArray = StringArray::CreateWithValues(dataStructure, "Strings", {1}, {"value"});
+  auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, "Strings", {1}, {"value"});
 
   REQUIRE(dataArray != nullptr);
   REQUIRE(inMemoryList != nullptr);
   REQUIRE(outOfCoreList != nullptr);
-  REQUIRE(stringArray != nullptr);
+  REQUIRE(stringArrayPtr != nullptr);
 
   UnitTest::AlgorithmTestScope inMemoryScope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
   inMemoryScope.requireExpectedStore(*inMemoryList);
@@ -231,7 +231,7 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residenc
   CHECK_FALSE(usedDirect);
   CHECK(AnyOutOfCore(dynamicTargets));
 
-  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({nullptr, dataArray, stringArray}, usedDirect).valid());
+  REQUIRE(DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({nullptr, dataArray, stringArrayPtr}, usedDirect).valid());
   CHECK(usedDirect);
 
   REQUIRE(dispatchEmptyForTest(usedDirect).valid());

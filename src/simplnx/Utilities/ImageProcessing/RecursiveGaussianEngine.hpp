@@ -315,31 +315,31 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
     {
       acrossScaleNormalization = sigma * sigma;
     }
-    double N0_0 = 0.0;
-    double N1_0 = 0.0;
-    double N2_0 = 0.0;
-    double N3_0 = 0.0;
-    double N0_2 = 0.0;
-    double N1_2 = 0.0;
-    double N2_2 = 0.0;
-    double N3_2 = 0.0;
-    double SN0 = 0.0;
-    double DN0 = 0.0;
-    double EN0 = 0.0;
-    double SN2 = 0.0;
-    double DN2 = 0.0;
-    double EN2 = 0.0;
-    ComputeNCoefficients(sigmad, A1[0], B1[0], W1, L1, A2[0], B2[0], W2, L2, N0_0, N1_0, N2_0, N3_0, SN0, DN0, EN0);
-    ComputeNCoefficients(sigmad, A1[2], B1[2], W1, L1, A2[2], B2[2], W2, L2, N0_2, N1_2, N2_2, N3_2, SN2, DN2, EN2);
+    double n00 = 0.0;
+    double n10 = 0.0;
+    double n20 = 0.0;
+    double n30 = 0.0;
+    double n02 = 0.0;
+    double n12 = 0.0;
+    double n22 = 0.0;
+    double n32 = 0.0;
+    double sn0 = 0.0;
+    double dn0 = 0.0;
+    double en0 = 0.0;
+    double sn2 = 0.0;
+    double dn2 = 0.0;
+    double en2 = 0.0;
+    ComputeNCoefficients(sigmad, A1[0], B1[0], W1, L1, A2[0], B2[0], W2, L2, n00, n10, n20, n30, sn0, dn0, en0);
+    ComputeNCoefficients(sigmad, A1[2], B1[2], W1, L1, A2[2], B2[2], W2, L2, n02, n12, n22, n32, sn2, dn2, en2);
 
-    const double beta = -(2 * SN2 - SD * N0_2) / (2 * SN0 - SD * N0_0);
-    c.n0 = N0_2 + beta * N0_0;
-    c.n1 = N1_2 + beta * N1_0;
-    c.n2 = N2_2 + beta * N2_0;
-    c.n3 = N3_2 + beta * N3_0;
-    SN = SN2 + beta * SN0;
-    DN = DN2 + beta * DN0;
-    EN = EN2 + beta * EN0;
+    const double beta = -(2 * sn2 - SD * n02) / (2 * sn0 - SD * n00);
+    c.n0 = n02 + beta * n00;
+    c.n1 = n12 + beta * n10;
+    c.n2 = n22 + beta * n20;
+    c.n3 = n32 + beta * n30;
+    SN = sn2 + beta * sn0;
+    DN = dn2 + beta * dn0;
+    EN = en2 + beta * en0;
 
     double alpha2 = EN * SD * SD - ED * SN * SD - 2 * DN * DD * SD + 2 * DD * DD * SN;
     alpha2 /= SD * SD * SD;

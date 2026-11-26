@@ -149,7 +149,7 @@ Result<> CreateAMScanPathsFilter::executeImpl(DataStructure& dataStructure, cons
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_StripeWidth_Key = "StripeWidth";
 constexpr StringLiteral k_HatchSpacing_Key = "HatchSpacing";
@@ -170,17 +170,17 @@ Result<Arguments> CreateAMScanPathsFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_StripeWidth_Key, k_StripeWidth_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_HatchSpacing_Key, k_HatchSpacing_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_StripeWidth_Key, k_StripeWidth_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_HatchSpacing_Key, k_HatchSpacing_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CADSliceDataContainerName_Key, k_CADSliceDataContainerPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CADSliceIdsArrayPath_Key, k_CADSliceIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CADRegionIdsArrayPath_Key, k_CADRegionIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_HatchDataContainerName_Key, k_HatchDataContainerPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CADSliceDataContainerName_Key, k_CADSliceDataContainerPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CADSliceIdsArrayPath_Key, k_CADSliceIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CADRegionIdsArrayPath_Key, k_CADRegionIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_HatchDataContainerName_Key, k_HatchDataContainerPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName_Key, k_VertexAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_HatchAttributeMatrixName_Key, k_HatchAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_RegionIdsArrayName_Key, k_RegionIdsArrayName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName_Key, k_VertexAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_HatchAttributeMatrixName_Key, k_HatchAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_RegionIdsArrayName_Key, k_RegionIdsArrayName_Key));
   Result<> conversionResult = MergeResults(std::move(results));
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

@@ -217,7 +217,7 @@ Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStruc
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_RectilinearGridPathKey = "RectilinearGridPath";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
@@ -233,14 +233,14 @@ Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
   // Rect Grid Geometry description parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
   // Created Geometry description is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrixName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

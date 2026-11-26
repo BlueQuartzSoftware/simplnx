@@ -309,7 +309,7 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ReadH5EbsdKey = "ReadH5Ebsd";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
@@ -317,7 +317,7 @@ constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName"
 constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
 } // namespace SIMPL
 
-namespace SIMPLConversionCustom
+namespace simpl_conversion_custom
 {
 struct ReadH5EbsdFilterParameterConverter
 {
@@ -395,11 +395,11 @@ Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, SIMPL::k_ReadH5EbsdKey, k_ReadH5EbsdParameter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<simpl_conversion_custom::ReadH5EbsdFilterParameterConverter>(args, json, simpl::k_ReadH5EbsdKey, k_ReadH5EbsdParameter_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

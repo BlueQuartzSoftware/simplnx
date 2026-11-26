@@ -477,7 +477,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     {
       strings.push_back(fmt::format("str{}", i));
     }
-    auto* strArray = StringArray::CreateWithValues(ds, "Input Strings", am->getShape(), strings, am->getId());
+    auto* strArrayPtr = StringArray::CreateWithValues(ds, "Input Strings", am->getShape(), strings, am->getId());
 
     // Execute filter
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({k_AttributeMatrixName, "Input Strings"})));
@@ -507,11 +507,11 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
 
     for(usize i = 0; i < 4; ++i)
     {
-      REQUIRE((*outSA1)[i] == (*strArray)[i]);
+      REQUIRE((*outSA1)[i] == (*strArrayPtr)[i]);
     }
     for(usize i = 0; i < 6; ++i)
     {
-      REQUIRE((*outSA2)[i] == (*strArray)[i + 4]);
+      REQUIRE((*outSA2)[i] == (*strArrayPtr)[i + 4]);
     }
 
     // Original StringArray still exists

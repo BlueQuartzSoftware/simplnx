@@ -179,7 +179,7 @@ Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStru
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ReferenceCellAttributeMatrixPathKey = "ReferenceCellAttributeMatrixPath";
 constexpr StringLiteral k_SamplingCellAttributeMatrixPathKey = "SamplingCellAttributeMatrixPath";
@@ -193,12 +193,12 @@ Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohma
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_ReferenceCellAttributeMatrixPathKey,
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey,
                                                                                                                          k_ReferenceCellAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SamplingCellAttributeMatrixPathKey,
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey,
                                                                                                                          k_SamplingCellAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

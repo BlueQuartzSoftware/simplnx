@@ -171,7 +171,7 @@ Result<> TransferComponentsDirect(const IDataArray& inputArray, IDataArray* extr
   const usize reducedComponents = numComponents - 1;
   const usize chunkTuples = std::max<usize>(1, k_TargetChunkValues / numComponents);
   const usize totalChunks = ((numTuples - 1) / chunkTuples) + 1;
-  const T* inputData = contiguousInputStore->data();
+  const T* inputDataPtr = contiguousInputStore->data();
   T* extractedData = contiguousExtractedStore == nullptr ? nullptr : contiguousExtractedStore->data();
   T* reducedData = contiguousReducedStore == nullptr ? nullptr : contiguousReducedStore->data();
 
@@ -189,13 +189,13 @@ Result<> TransferComponentsDirect(const IDataArray& inputArray, IDataArray* extr
       const usize inputOffset = (tupleOffset + tupleIndex) * numComponents;
       if(extractedData != nullptr)
       {
-        extractedData[tupleOffset + tupleIndex] = inputData[inputOffset + componentIndex];
+        extractedData[tupleOffset + tupleIndex] = inputDataPtr[inputOffset + componentIndex];
       }
       if(reducedData != nullptr)
       {
         T* reducedTuple = reducedData + (tupleOffset + tupleIndex) * reducedComponents;
-        std::copy_n(inputData + inputOffset, componentIndex, reducedTuple);
-        std::copy_n(inputData + inputOffset + componentIndex + 1, reducedComponents - componentIndex, reducedTuple + componentIndex);
+        std::copy_n(inputDataPtr + inputOffset, componentIndex, reducedTuple);
+        std::copy_n(inputDataPtr + inputOffset + componentIndex + 1, reducedComponents - componentIndex, reducedTuple + componentIndex);
       }
     }
   }

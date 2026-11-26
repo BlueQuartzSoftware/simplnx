@@ -178,7 +178,7 @@ Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_SurfaceMeshFaceLabelsPathKey = "SurfaceMeshFaceLabelsArrayPath";
 } // namespace SIMPL
@@ -190,7 +190,7 @@ Result<Arguments> VerifyTriangleWindingFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsPathKey, k_LabelsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsPathKey, k_LabelsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

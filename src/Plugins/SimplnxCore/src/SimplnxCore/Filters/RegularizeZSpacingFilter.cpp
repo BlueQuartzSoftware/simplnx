@@ -362,7 +362,7 @@ Result<> RegularizeZSpacingFilter::executeImpl(DataStructure& dataStructure, con
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 constexpr StringLiteral k_InputFileKey = "InputFile";
@@ -378,10 +378,10 @@ Result<Arguments> RegularizeZSpacingFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_NewZResKey, k_NewZRes_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_NewZResKey, k_NewZRes_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

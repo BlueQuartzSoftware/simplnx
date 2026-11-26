@@ -172,7 +172,7 @@ Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_InputArrayPathKey = "InputArrayPath";
 constexpr StringLiteral k_SplitArraysSuffixKey = "SplitArraysSuffix";
@@ -185,8 +185,8 @@ Result<Arguments> SplitDataArrayByComponentFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputArrayPathKey, k_MultiCompArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_SplitArraysSuffixKey, k_Postfix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputArrayPathKey, k_MultiCompArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_SplitArraysSuffixKey, k_Postfix_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

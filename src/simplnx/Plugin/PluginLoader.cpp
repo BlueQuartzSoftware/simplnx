@@ -31,7 +31,7 @@ using namespace nx::core;
 namespace
 {
 template <class T>
-constexpr bool is_function_ptr_v = (std::is_pointer_v<T> && std::is_function_v<std::remove_pointer_t<T>>);
+constexpr bool k_IsFunctionPtrV = (std::is_pointer_v<T> && std::is_function_v<std::remove_pointer_t<T>>);
 
 void* LoadSharedLibrary(const std::filesystem::path& path)
 {
@@ -53,7 +53,7 @@ bool UnloadSharedLibrary(void* handle)
 
 template <class Func>
 Func ImportFunction(void* handle, const char* funcName)
-requires(is_function_ptr_v<Func>)
+requires(k_IsFunctionPtrV<Func>)
 {
 #if defined(_WIN32)
   return reinterpret_cast<Func>(GetProcAddress(reinterpret_cast<HINSTANCE>(handle), funcName));

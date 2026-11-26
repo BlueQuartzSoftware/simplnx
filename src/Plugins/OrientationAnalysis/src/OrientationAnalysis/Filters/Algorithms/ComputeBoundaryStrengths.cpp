@@ -47,14 +47,14 @@ Result<> ComputeBoundaryStrengths::operator()()
 
   const usize numTriangles = surfaceMeshFaceLabelsArrayRef.getNumberOfTuples();
 
-  float32 mPrime_1 = NAN;
-  float32 mPrime_2 = NAN;
-  float32 F1_1 = NAN;
-  float32 F1_2 = NAN;
-  float32 F1spt_1 = NAN;
-  float32 F1spt_2 = NAN;
-  float32 F7_1 = NAN;
-  float32 F7_2 = NAN;
+  float32 mPrime1 = NAN;
+  float32 mPrime2 = NAN;
+  float32 f11 = NAN;
+  float32 f12 = NAN;
+  float32 f1Spt1 = NAN;
+  float32 f1Spt2 = NAN;
+  float32 f71 = NAN;
+  float32 f72 = NAN;
 
   nx::core::Vec3<float64> LD = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
   LD = LD.normalize();
@@ -109,47 +109,47 @@ Result<> ComputeBoundaryStrengths::operator()()
                                              m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, feature1PhaseIdx, faceIdx, orientationOps.size(), orientationOps.size()));
         }
         const ebsdlib::LaueOps::Pointer& laueClass = orientationOps[currentLaueIndex];
-        mPrime_1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD.data()));
-        mPrime_2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD.data()));
-        F1_1 = static_cast<float32>(laueClass->getF1(q1, q2, LD.data(), true));
-        F1_2 = static_cast<float32>(laueClass->getF1(q2, q1, LD.data(), true));
-        F1spt_1 = static_cast<float32>(laueClass->getF1spt(q1, q2, LD.data(), true));
-        F1spt_2 = static_cast<float32>(laueClass->getF1spt(q2, q1, LD.data(), true));
-        F7_1 = static_cast<float32>(laueClass->getF7(q1, q2, LD.data(), true));
-        F7_2 = static_cast<float32>(laueClass->getF7(q2, q1, LD.data(), true));
+        mPrime1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD.data()));
+        mPrime2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD.data()));
+        f11 = static_cast<float32>(laueClass->getF1(q1, q2, LD.data(), true));
+        f12 = static_cast<float32>(laueClass->getF1(q2, q1, LD.data(), true));
+        f1Spt1 = static_cast<float32>(laueClass->getF1spt(q1, q2, LD.data(), true));
+        f1Spt2 = static_cast<float32>(laueClass->getF1spt(q2, q1, LD.data(), true));
+        f71 = static_cast<float32>(laueClass->getF7(q1, q2, LD.data(), true));
+        f72 = static_cast<float32>(laueClass->getF7(q2, q1, LD.data(), true));
       }
       else
       {
-        mPrime_1 = 0.0f;
-        F1_1 = 0.0f;
-        F1spt_1 = 0.0f;
-        F7_1 = 0.0f;
-        mPrime_2 = 0.0f;
-        F1_2 = 0.0f;
-        F1spt_2 = 0.0f;
-        F7_2 = 0.0f;
+        mPrime1 = 0.0f;
+        f11 = 0.0f;
+        f1Spt1 = 0.0f;
+        f71 = 0.0f;
+        mPrime2 = 0.0f;
+        f12 = 0.0f;
+        f1Spt2 = 0.0f;
+        f72 = 0.0f;
       }
     }
     else
     {
-      mPrime_1 = 0.0f;
-      F1_1 = 0.0f;
-      F1spt_1 = 0.0f;
-      F7_1 = 0.0f;
-      mPrime_2 = 0.0f;
-      F1_2 = 0.0f;
-      F1spt_2 = 0.0f;
-      F7_2 = 0.0f;
+      mPrime1 = 0.0f;
+      f11 = 0.0f;
+      f1Spt1 = 0.0f;
+      f71 = 0.0f;
+      mPrime2 = 0.0f;
+      f12 = 0.0f;
+      f1Spt2 = 0.0f;
+      f72 = 0.0f;
     }
 
-    mPrimes[2 * faceIdx] = mPrime_1;
-    mPrimes[2 * faceIdx + 1] = mPrime_2;
-    f1s[2 * faceIdx] = F1_1;
-    f1s[2 * faceIdx + 1] = F1_2;
-    f1sPts[2 * faceIdx] = F1spt_1;
-    f1sPts[2 * faceIdx + 1] = F1spt_2;
-    f7s[2 * faceIdx] = F7_1;
-    f7s[2 * faceIdx + 1] = F7_2;
+    mPrimes[2 * faceIdx] = mPrime1;
+    mPrimes[2 * faceIdx + 1] = mPrime2;
+    f1s[2 * faceIdx] = f11;
+    f1s[2 * faceIdx + 1] = f12;
+    f1sPts[2 * faceIdx] = f1Spt1;
+    f1sPts[2 * faceIdx + 1] = f1Spt2;
+    f7s[2 * faceIdx] = f71;
+    f7s[2 * faceIdx + 1] = f72;
   }
 
   if(emitLaueClassWarning)

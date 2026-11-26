@@ -331,7 +331,7 @@ std::optional<uint64> readSavedOocSize(const nlohmann::json& document, const Ooc
  * @brief Returns the current user's home directory.
  * @return Home directory from the platform environment or account database.
  */
-std::filesystem::path getHomeDirectory()
+std::filesystem::path GetHomeDirectory()
 {
 #ifdef _WIN32
   return getenv("USERPROFILE");
@@ -349,11 +349,11 @@ std::filesystem::path getHomeDirectory()
 std::filesystem::path Preferences::DefaultFilePath(const std::string& applicationName)
 {
 #if defined(__APPLE__)
-  return getHomeDirectory() / "Library/Preferences" / applicationName / k_DefaultFileName.str();
+  return GetHomeDirectory() / "Library/Preferences" / applicationName / k_DefaultFileName.str();
 #elif defined(_WIN32)
-  return getHomeDirectory() / "AppData/Local" / applicationName / k_DefaultFileName.str();
+  return GetHomeDirectory() / "AppData/Local" / applicationName / k_DefaultFileName.str();
 #else
-  return getHomeDirectory() / ".config/" / applicationName / k_DefaultFileName.str();
+  return GetHomeDirectory() / ".config/" / applicationName / k_DefaultFileName.str();
 #endif
 }
 

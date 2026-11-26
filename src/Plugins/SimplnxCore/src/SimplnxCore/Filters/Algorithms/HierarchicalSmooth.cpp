@@ -30,7 +30,7 @@ using trimesh = Eigen::Array<int, Eigen::Dynamic, 3>;
 using meshnode = Eigen::Matrix<double, 3, Eigen::Dynamic>;
 using facelabel = Eigen::Array<int, Eigen::Dynamic, 2>;
 using nodetype = Eigen::Array<int, Eigen::Dynamic, 1>;
-using is_smoothed = Eigen::Array<bool, Eigen::Dynamic, 1>;
+using IsSmoothedType = Eigen::Array<bool, Eigen::Dynamic, 1>;
 using matindex = Eigen::Matrix<int, Eigen::Dynamic, 1>;
 using EdgePair = std::pair<int, int>;
 using EdgeList = std::vector<EdgePair>;
@@ -135,10 +135,10 @@ meshnode sliceMeshnodeCols(const meshnode& mat, const matindex& colIdx)
 }
 
 // Slice rows from is_smoothed array: out = arr(rowIdx)
-is_smoothed sliceIsSmoothed(const is_smoothed& arr, const matindex& idx)
+IsSmoothedType sliceIsSmoothed(const IsSmoothedType& arr, const matindex& idx)
 {
   int n = static_cast<int>(idx.size());
-  is_smoothed result(n);
+  IsSmoothedType result(n);
   for(int i = 0; i < n; i++)
   {
     result(i) = arr(idx(i));
@@ -580,7 +580,7 @@ meshnode smoothWithType(const meshnode& nodesIn, const std::string& type = "seri
 
 struct VolumeSolverData
 {
-  is_smoothed status;
+  IsSmoothedType status;
   trimesh mesh;
   meshnode node;
   meshnode nodeSmooth;
@@ -601,7 +601,7 @@ void initVolumeSolver(VolumeSolverData& vs, trimesh&& volumeMesh, meshnode&& sur
   vs.maxIterations = nIterations;
   vs.errorThreshold = errorThreshold;
 
-  vs.status = is_smoothed(vs.type.size());
+  vs.status = IsSmoothedType(vs.type.size());
   for(int i = 0; i < vs.type.size(); i++)
   {
     vs.status(i) = (vs.type(i) % 10 == 4); // quad junction points considered already smoothed
@@ -731,7 +731,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
           {
             // Reached terminal quad point
             matindex thisTripleLineIndex = getindex(vtemp);
-            is_smoothed thisStatus = sliceIsSmoothed(vs.status, thisTripleLineIndex);
+            IsSmoothedType thisStatus = sliceIsSmoothed(vs.status, thisTripleLineIndex);
             if(!thisStatus.all())
             {
               meshnode thisTripleLine = sliceMeshnodeCols(vs.nodeSmooth, thisTripleLineIndex);

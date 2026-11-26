@@ -224,7 +224,7 @@ Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, con
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_TriangleGeometryKey = "EdgeGeometry";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
@@ -238,9 +238,9 @@ Result<Arguments> RemoveFlaggedEdgesFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_TriangleGeometryKey, k_InputEdgeGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ReducedTriangleGeometryKey, k_OutputEdgeGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_TriangleGeometryKey, k_InputEdgeGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_ReducedTriangleGeometryKey, k_OutputEdgeGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

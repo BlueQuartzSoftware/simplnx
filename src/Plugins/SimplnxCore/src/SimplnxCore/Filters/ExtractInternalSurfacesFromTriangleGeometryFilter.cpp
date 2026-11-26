@@ -263,7 +263,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
 constexpr StringLiteral k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
@@ -278,9 +278,9 @@ Result<Arguments> ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJs
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_InternalTrianglesNameKey, k_CreatedTriangleGeometryPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_InternalTrianglesNameKey, k_CreatedTriangleGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

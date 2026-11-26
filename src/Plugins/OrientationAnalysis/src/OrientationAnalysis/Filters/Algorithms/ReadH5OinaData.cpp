@@ -84,7 +84,7 @@ Result<> validateDataSetExtents(const std::filesystem::path& filePath, const std
 }
 
 template <typename T>
-Result<> copyRawData(const ReadH5DataInputValues* inputValues, usize count, DataStructure& dataStructure, ebsdlib::H5OINAReader& reader, const std::string& name, usize offset,
+Result<> CopyRawData(const ReadH5DataInputValues* inputValues, usize count, DataStructure& dataStructure, ebsdlib::H5OINAReader& reader, const std::string& name, usize offset,
                      const std::atomic_bool& shouldCancel)
 {
   using ArrayType = DataArray<T>;
@@ -260,7 +260,7 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
   }
 
   const auto copy = [this](auto typeTag, usize count, const std::string& name, usize offset) {
-    return copyRawData<decltype(typeTag)>(m_InputValues, count, m_DataStructure, *m_Reader, name, offset, m_ShouldCancel);
+    return CopyRawData<decltype(typeTag)>(m_InputValues, count, m_DataStructure, *m_Reader, name, offset, m_ShouldCancel);
   };
   Result<> result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::BandContrast, tupleOffset);
   if(result.invalid())

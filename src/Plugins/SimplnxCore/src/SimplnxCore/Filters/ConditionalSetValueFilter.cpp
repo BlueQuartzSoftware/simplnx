@@ -157,7 +157,7 @@ Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_RemoveValueKey = "RemoveValue";
 constexpr StringLiteral k_ReplaceValueKey = "ReplaceValue";
@@ -173,17 +173,17 @@ Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  if(json.contains(SIMPL::k_RemoveValueKey))
+  if(json.contains(simpl::k_RemoveValueKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_RemoveValueKey, k_RemoveValue_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayKey, k_SelectedArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_RemoveValueKey, k_RemoveValue_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayKey, k_SelectedArrayPath_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_ReplaceValueKey, k_ReplaceValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_ReplaceValueKey, k_ReplaceValue_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

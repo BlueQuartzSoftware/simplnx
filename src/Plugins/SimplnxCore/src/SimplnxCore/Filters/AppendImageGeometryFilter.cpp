@@ -363,7 +363,7 @@ Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_InputAttributeMatrixKey = "InputAttributeMatrix";
 constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
@@ -377,9 +377,9 @@ Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_InputAttributeMatrixKey, k_InputGeometries_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CheckResolutionKey, k_CheckResolution_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_InputAttributeMatrixKey, k_InputGeometries_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_CheckResolutionKey, k_CheckResolution_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

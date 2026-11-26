@@ -454,13 +454,13 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: half-space == exact E
   constexpr usize DX = 8;
   constexpr usize DY = 4;
   constexpr usize DZ = 3;
-  constexpr usize K = 5;
+  constexpr usize k_PlaneIndex = 5;
   std::vector<int32> pattern(DX * DY * DZ, 0);
   for(usize z = 0; z < DZ; ++z)
   {
     for(usize y = 0; y < DY; ++y)
     {
-      for(usize x = K; x < DX; ++x)
+      for(usize x = k_PlaneIndex; x < DX; ++x)
       {
         pattern[FlatIndex(x, y, z, DX, DY)] = 1;
       }
@@ -473,7 +473,7 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: half-space == exact E
     {
       for(usize x = 0; x < DX; ++x)
       {
-        const int64 d = (x >= K) ? 0 : static_cast<int64>(K - x);
+        const int64 d = (x >= k_PlaneIndex) ? 0 : static_cast<int64>(k_PlaneIndex - x);
         INFO("x=" << x << " y=" << y << " z=" << z);
         REQUIRE(got[FlatIndex(x, y, z, DX, DY)] == static_cast<float32>(d * d));
       }

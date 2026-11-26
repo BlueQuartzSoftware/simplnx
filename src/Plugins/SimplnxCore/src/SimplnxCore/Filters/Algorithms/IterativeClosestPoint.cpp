@@ -22,16 +22,16 @@ struct VertexGeomAdaptor
 {
   const Derived& obj;
   AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>* verts;
-  size_t m_NumComponents = 0;
-  size_t m_NumTuples = 0;
+  size_t num_components = 0;
+  size_t num_tuples = 0;
 
   explicit VertexGeomAdaptor(const Derived& obj_)
   : obj(obj_)
   {
     // These values never change for the lifetime of this object so cache them now.
     verts = derived()->getVertices()->getDataStore();
-    m_NumComponents = verts->getNumberOfComponents();
-    m_NumTuples = verts->getNumberOfTuples();
+    num_components = verts->getNumberOfComponents();
+    num_tuples = verts->getNumberOfTuples();
   }
 
   [[nodiscard]] const Derived& derived() const
@@ -41,12 +41,12 @@ struct VertexGeomAdaptor
 
   [[nodiscard]] usize kdtree_get_point_count() const
   {
-    return m_NumTuples;
+    return num_tuples;
   }
 
   [[nodiscard]] float kdtree_get_pt(const usize idx, const usize dim) const
   {
-    auto offset = idx * m_NumComponents;
+    auto offset = idx * num_components;
     return verts->getValue(offset + dim);
   }
 

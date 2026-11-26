@@ -93,7 +93,7 @@ const std::vector<std::vector<std::vector<float>>> k_Ref = {
 
 // This section of code exists solely to generate a source code in case another
 // orientation representation is created. Leave this code here.
-static void _make_code()
+static void MakeCode()
 {
   std::vector<std::string> inRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};
   std::vector<std::string> outRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};

@@ -163,7 +163,7 @@ Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_OutputPathKey = "OutputPath";
 constexpr StringLiteral k_OutputFilePrefixKey = "OutputFilePrefix";
@@ -178,12 +178,12 @@ Result<Arguments> WriteOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::jso
   Arguments args = WriteOnScaleTableFileFilter().getDefaultArguments();
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputFilePrefixKey, k_FilePrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_NumKeypointsKey, k_NumKeypoints_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_PzflexFeatureIdsArrayPathKey, k_InputGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_PzflexFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_PhaseNamesArrayPathKey, k_PhaseNamesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_OutputFilePrefixKey, k_FilePrefix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_NumKeypointsKey, k_NumKeypoints_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_InputGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayPathKey, k_PhaseNamesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

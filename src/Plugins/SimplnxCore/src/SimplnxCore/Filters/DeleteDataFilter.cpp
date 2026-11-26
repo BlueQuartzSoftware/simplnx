@@ -207,7 +207,7 @@ Result<> DeleteDataFilter::executeImpl(DataStructure& /*dataStructure*/, const A
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_DataArraysToRemoveKey = "DataArraysToRemove";
 } // namespace SIMPL
@@ -219,7 +219,7 @@ Result<Arguments> DeleteDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraysToRemoveConverter>(args, json, SIMPL::k_DataArraysToRemoveKey, k_DataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraysToRemoveConverter>(args, json, simpl::k_DataArraysToRemoveKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

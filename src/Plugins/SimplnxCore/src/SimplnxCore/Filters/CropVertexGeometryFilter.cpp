@@ -194,7 +194,7 @@ Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, con
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_XMinKey = "XMin";
@@ -214,10 +214,10 @@ Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& 
   std::vector<Result<>> results;
 
   // Convert 3 numeric inputs into Vec3 inputs
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, SIMPL::k_XMinKey, SIMPL::k_YMinKey, SIMPL::k_ZMinKey, k_MinPos_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, SIMPL::k_XMaxKey, SIMPL::k_YMaxKey, SIMPL::k_ZMaxKey, k_MaxPos_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPos_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPos_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

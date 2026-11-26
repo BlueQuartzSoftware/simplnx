@@ -97,12 +97,12 @@ private:
   bool* m_Mask = nullptr;
 
   int m_SamplesNumberType = {0};
-  DataPath m_TriangleGeometry = {SIMPL::Defaults::TriangleDataContainerName, "", ""};
-  std::string m_VertexGeometry = {SIMPL::Defaults::VertexDataContainerName};
-  std::string m_VertexAttributeMatrixName = {SIMPL::Defaults::VertexAttributeMatrixName};
+  DataPath m_TriangleGeometry = {simpl::Defaults::TriangleDataContainerName, "", ""};
+  std::string m_VertexGeometry = {simpl::Defaults::VertexDataContainerName};
+  std::string m_VertexAttributeMatrixName = {simpl::Defaults::VertexAttributeMatrixName};
   int m_NumberOfSamples = {100000};
   DataPath m_ParentGeometry = {"", "", ""};
-  DataPath m_TriangleAreasArrayPath = {SIMPL::Defaults::TriangleDataContainerName, SIMPL::Defaults::FaceAttributeMatrixName, SIMPL::FaceData::SurfaceMeshFaceAreas};
+  DataPath m_TriangleAreasArrayPath = {simpl::Defaults::TriangleDataContainerName, simpl::Defaults::FaceAttributeMatrixName, simpl::FaceData::SurfaceMeshFaceAreas};
   bool m_UseMask = {false};
   DataPath m_MaskArrayPath = {"", "", ""};
   std::vector<DataPath> m_SelectedDataPaths = {};

@@ -15,7 +15,7 @@ template <class T>
 template <bool Dilation>
 Result<> ReconstructVincent<T>::runImpl()
 {
-  using Tr = detail::ReconTraits<T, Dilation>;
+  using TraitsType = detail::ReconTraits<T, Dilation>;
   const int64 nX = static_cast<int64>(m_Dims[0]);
   const int64 nY = static_cast<int64>(m_Dims[1]);
   const int64 nZ = static_cast<int64>(m_Dims[2]);
@@ -124,10 +124,10 @@ Result<> ReconstructVincent<T>::runImpl()
               {
                 if(inBounds(x + neighbor.off.dx, y + neighbor.off.dy, z + neighbor.off.dz))
                 {
-                  value = Tr::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+                  value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
                 }
               }
-              const T newValue = Tr::clampToMask(value, mask[position]);
+              const T newValue = TraitsType::clampToMask(value, mask[position]);
               if(newValue != work[position])
               {
                 work[position] = newValue;
@@ -163,10 +163,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + neighbor.off.dx, y + neighbor.off.dy, z + neighbor.off.dz))
             {
-              value = Tr::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+              value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
             }
           }
-          const T newValue = Tr::clampToMask(value, mask[position]);
+          const T newValue = TraitsType::clampToMask(value, mask[position]);
           if(newValue != work[position])
           {
             work[position] = newValue;
@@ -242,13 +242,13 @@ Result<> ReconstructVincent<T>::runImpl()
             {
               if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
               {
-                v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+                v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
               }
             }
             // The wavefront path writes conditionally, tracking blockChanged for RunPlaneWavefront's per-block
             // changed-flag contract, unlike the unconditional assignment in the serial path below; both leave
             // work[p] holding the identical final value.
-            const T newValue = Tr::clampToMask(v, mask[p]);
+            const T newValue = TraitsType::clampToMask(v, mask[p]);
             if(newValue != work[p])
             {
               work[p] = newValue;
@@ -281,10 +281,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
             {
-              v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+              v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
             }
           }
-          work[p] = Tr::clampToMask(v, mask[p]);
+          work[p] = TraitsType::clampToMask(v, mask[p]);
         }
       }
     }
@@ -320,10 +320,10 @@ Result<> ReconstructVincent<T>::runImpl()
             {
               if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
               {
-                v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+                v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
               }
             }
-            v = Tr::clampToMask(v, mask[p]);
+            v = TraitsType::clampToMask(v, mask[p]);
             work[p] = v;
             for(const NeighborDelta& nd : laterN)
             {
@@ -332,7 +332,7 @@ Result<> ReconstructVincent<T>::runImpl()
                 continue;
               }
               const usize q = static_cast<usize>(static_cast<int64>(p) + nd.delta);
-              if(Tr::compare(v, work[q]) && Tr::compare(mask[q], work[q]))
+              if(TraitsType::compare(v, work[q]) && TraitsType::compare(mask[q], work[q]))
               {
                 seeds.push_back(static_cast<uint64>(p));
                 break;
@@ -370,10 +370,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
             {
-              v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+              v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
             }
           }
-          v = Tr::clampToMask(v, mask[p]);
+          v = TraitsType::clampToMask(v, mask[p]);
           work[p] = v;
           for(const NeighborDelta& nd : laterN)
           {
@@ -382,7 +382,7 @@ Result<> ReconstructVincent<T>::runImpl()
               continue;
             }
             const usize q = static_cast<usize>(static_cast<int64>(p) + nd.delta);
-            if(Tr::compare(v, work[q]) && Tr::compare(mask[q], work[q]))
+            if(TraitsType::compare(v, work[q]) && TraitsType::compare(mask[q], work[q]))
             {
               if(!fifo->tryPush(static_cast<uint64>(p)))
               {
@@ -417,9 +417,9 @@ Result<> ReconstructVincent<T>::runImpl()
         continue;
       }
       const usize q = static_cast<usize>(static_cast<int64>(p) + nd.delta);
-      if(Tr::compare(v, work[q]) && work[q] != mask[q])
+      if(TraitsType::compare(v, work[q]) && work[q] != mask[q])
       {
-        work[q] = Tr::compare(mask[q], v) ? v : mask[q];
+        work[q] = TraitsType::compare(mask[q], v) ? v : mask[q];
         if(!fifo->tryPush(static_cast<uint64>(q)))
         {
           return finishWithResidentSweeps();

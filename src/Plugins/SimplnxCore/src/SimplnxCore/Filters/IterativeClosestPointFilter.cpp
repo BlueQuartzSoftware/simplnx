@@ -128,7 +128,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_MovingVertexGeometryKey = "MovingVertexGeometry";
 constexpr StringLiteral k_TargetVertexGeometryKey = "TargetVertexGeometry";
@@ -144,12 +144,12 @@ Result<Arguments> IterativeClosestPointFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_MovingVertexGeometryKey, k_MovingVertexPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TargetVertexGeometryKey, k_TargetVertexPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_IterationsKey, k_NumIterations_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ApplyTransformKey, k_ApplyTransformation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_MovingVertexGeometryKey, k_MovingVertexPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TargetVertexGeometryKey, k_TargetVertexPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_IterationsKey, k_NumIterations_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_ApplyTransformKey, k_ApplyTransformation_Key));
   // Transform attribute matrix parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_TransformArrayNameKey, k_TransformArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_TransformArrayNameKey, k_TransformArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

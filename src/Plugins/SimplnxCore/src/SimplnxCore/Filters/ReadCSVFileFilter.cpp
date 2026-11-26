@@ -570,7 +570,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_AutomaticAttrMatrixKey = "Wizard_AutomaticAM";
 constexpr StringLiteral k_SelectedPathKey = "Wizard_SelectedPath";
@@ -617,22 +617,22 @@ Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   // Convert the existing attr matrix boolean
   {
-    auto result = SIMPLConversion::BooleanFilterParameterConverter::convert(json[SIMPL::k_AutomaticAttrMatrixKey]);
+    auto result = SIMPLConversion::BooleanFilterParameterConverter::convert(json[simpl::k_AutomaticAttrMatrixKey]);
     if(result.invalid())
     {
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SelectedPathKey, k_CreatedDataGroup_Key));
     }
     else
     {
       auto isCreatedDataGroup = result.value();
       if(isCreatedDataGroup)
       {
-        results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
+        results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_SelectedPathKey, k_CreatedDataGroup_Key));
       }
       else
       {
         results.push_back(
-            SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_SelectedAttributeMatrixPath_Key));
+            SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SelectedPathKey, k_SelectedAttributeMatrixPath_Key));
       }
     }
     results.push_back(ConvertResult(std::move(result)));

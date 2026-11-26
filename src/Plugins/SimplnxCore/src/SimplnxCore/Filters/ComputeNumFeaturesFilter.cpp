@@ -131,7 +131,7 @@ Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, con
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 constexpr StringLiteral k_NumFeaturesArrayPathKey = "NumFeaturesArrayPath";
@@ -144,11 +144,11 @@ Result<Arguments> ComputeNumFeaturesFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_EnsembleAttributeMatrixPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_NumFeaturesArrayPathKey, k_EnsembleAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_NumFeaturesArrayName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_NumFeaturesArrayPathKey, k_NumFeaturesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -223,7 +223,7 @@ Result<> AddBadDataFilter::executeImpl(DataStructure& dataStructure, const Argum
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_UseRandomSeedKey = "UseRandomSeed";
 constexpr StringLiteral k_RandomSeedValueKey = "RandomSeedValue";
@@ -241,15 +241,15 @@ Result<Arguments> AddBadDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseRandomSeedKey, k_UseSeed_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, SIMPL::k_RandomSeedValueKey, k_SeedValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_PoissonNoiseKey, k_PoissonNoise_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_PoissonVolFractionKey, k_PoissonVolFraction_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_BoundaryNoiseKey, k_BoundaryNoise_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_BoundaryVolFractionKey, k_BoundaryVolFraction_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_GBEuclideanDistancesArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_UseSeed_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_PoissonNoiseKey, k_PoissonNoise_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_PoissonVolFractionKey, k_PoissonVolFraction_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_BoundaryNoiseKey, k_BoundaryNoise_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_BoundaryVolFractionKey, k_BoundaryVolFraction_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_ImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GBEuclideanDistancesArrayPathKey, k_GBEuclideanDistancesArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_GBEuclideanDistancesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

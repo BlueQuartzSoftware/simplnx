@@ -158,7 +158,7 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
   Vec3f pvec;
   Vec3f qvec;
   double det = NAN;
-  double inv_det = NAN;
+  double invDet = NAN;
 
   /* find vectors for two edges sharing vert0 */
   edge1 = vert1 - vert0;
@@ -173,7 +173,7 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
   /* calculate distance from vert0 to ray origin */
   tvec = orig - vert0;
 
-  inv_det = 1.0 / det;
+  invDet = 1.0 / det;
 
   qvec = tvec.cross(edge1);
 
@@ -215,8 +215,8 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
   } /* ray is parallel to the plane of the triangle */
 
   // float t = edge2.dotProduct(qvec) * inv_det;
-  float u = bcoord[0] * inv_det;
-  float v = bcoord[1] * inv_det;
+  float u = bcoord[0] * invDet;
+  float v = bcoord[1] * invDet;
 
   bcoord[0] = 1 - u - v;
   bcoord[1] = u;

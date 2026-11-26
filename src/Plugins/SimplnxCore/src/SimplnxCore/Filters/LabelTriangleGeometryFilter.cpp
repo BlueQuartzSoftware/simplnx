@@ -136,7 +136,7 @@ Result<> LabelTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_CADDataContainerPathKey = "CADDataContainerPath";
 constexpr StringLiteral k_RegionIdArrayNameKey = "RegionIdArrayName";
@@ -153,11 +153,11 @@ Result<Arguments> LabelTriangleGeometryFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_RegionIdArrayPathKey, k_CreatedRegionIdsPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_RegionIdArrayPathKey, k_CreatedRegionIdsPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -1215,9 +1215,9 @@ DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::strin
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
-  ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, name, tupleShape, componentShape, parentId);
-  dataArray->fill(static_cast<T>(0.0));
-  return dataArray;
+  ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, name, tupleShape, componentShape, parentId);
+  dataArrayPtr->fill(static_cast<T>(0.0));
+  return dataArrayPtr;
 }
 
 /**

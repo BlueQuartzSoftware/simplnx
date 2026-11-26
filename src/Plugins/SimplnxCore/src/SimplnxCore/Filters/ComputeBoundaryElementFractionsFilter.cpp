@@ -118,7 +118,7 @@ Result<> ComputeBoundaryElementFractionsFilter::executeImpl(DataStructure& dataS
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_BoundaryCellsArrayPathKey = "BoundaryCellsArrayPath";
@@ -132,10 +132,10 @@ Result<Arguments> ComputeBoundaryElementFractionsFilter::FromSIMPLJson(const nlo
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayPathKey, k_FeatureDataAMPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayPathKey, k_BoundaryCellsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellFractionsArrayPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_BoundaryCellsArrayPathKey, k_FeatureDataAMPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_BoundaryCellsArrayPathKey, k_BoundaryCellsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_BoundaryCellFractionsArrayPathKey,
                                                                                                                                   k_BoundaryCellFractionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

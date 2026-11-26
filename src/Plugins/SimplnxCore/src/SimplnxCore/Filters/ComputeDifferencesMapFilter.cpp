@@ -205,7 +205,7 @@ Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_FirstInputArrayPathKey = "FirstInputArrayPath";
 constexpr StringLiteral k_SecondInputArrayPathKey = "SecondInputArrayPath";
@@ -219,9 +219,9 @@ Result<Arguments> ComputeDifferencesMapFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FirstInputArrayPathKey, k_FirstInputArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SecondInputArrayPathKey, k_SecondInputArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_DifferenceMapArrayPathKey, k_DifferenceMapArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FirstInputArrayPathKey, k_FirstInputArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SecondInputArrayPathKey, k_SecondInputArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_DifferenceMapArrayPathKey, k_DifferenceMapArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

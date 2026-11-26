@@ -105,7 +105,7 @@ Result<> ExecuteProcessFilter::executeImpl(DataStructure& dataStructure, const A
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ArgumentsKey = "Arguments";
 constexpr StringLiteral k_BlockingKey = "Blocking";
@@ -119,9 +119,9 @@ Result<Arguments> ExecuteProcessFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ArgumentsKey, k_Arguments_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_BlockingKey, k_Blocking_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_TimeoutKey, k_Timeout_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_ArgumentsKey, k_Arguments_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_BlockingKey, k_Blocking_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_TimeoutKey, k_Timeout_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

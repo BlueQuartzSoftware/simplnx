@@ -65,7 +65,7 @@ hid_t codecMemoryType()
  * @param shape Dimensions to multiply.
  * @return Product of all dimensions, or 1 for an empty shape.
  */
-usize product(const std::vector<uint64>& shape)
+usize Product(const std::vector<uint64>& shape)
 {
   return std::accumulate(shape.begin(), shape.end(), usize{1}, std::multiplies<usize>());
 }
@@ -217,7 +217,7 @@ std::vector<std::byte> serialReadChunkRegion(hid_t dataset, const Extent& bounds
     memDims[tupleRank + d] = static_cast<hsize_t>(componentShape[d]);
   }
 
-  const usize clampedTuples = product(clampedTupleDims);
+  const usize clampedTuples = Product(clampedTupleDims);
   std::vector<std::byte> out(clampedTuples * numComponents * elementSize);
   const hid_t fileSpace = H5Dget_space(dataset);
   const hid_t memSpace = H5Screate_simple(static_cast<int>(fullRank), memDims.data(), nullptr);
@@ -304,7 +304,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -342,7 +342,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint8);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<std::byte> bytes(numElements * elementSize);
     for(usize i = 0; i < numElements; ++i)
@@ -378,7 +378,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {3};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(float32);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<float32> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -416,8 +416,8 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
-    const usize numElements = product(tupleShape) * numComponents;
+    const usize numComponents = Product(componentShape);
+    const usize numElements = Product(tupleShape) * numComponents;
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -453,7 +453,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
     std::vector<std::byte> bytes(numElements * elementSize, std::byte{0});
 
     // Eligible: single-filter deflate.
@@ -505,8 +505,8 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
-    const usize chunkTuples = product(chunkShape);
+    const usize numComponents = Product(componentShape);
+    const usize chunkTuples = Product(chunkShape);
     const usize chunkElements = chunkTuples * numComponents;
     const usize chunkBytes = chunkElements * elementSize;
     const uint16 fillValue = 0xBEEFu;
@@ -562,7 +562,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
 
     // Independent reference: a serial whole-dataset H5Dread (HDF5 supplies the fill value
     // for the unallocated chunks itself).
-    const usize totalBytes = product(tupleShape) * numComponents * elementSize;
+    const usize totalBytes = Product(tupleShape) * numComponents * elementSize;
     const std::vector<std::byte> bufferA = serialReadWhole(filePath, totalBytes, H5T_NATIVE_UINT16);
 
     const hid_t rFileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -607,7 +607,7 @@ TEST_CASE("ParallelChunkCodec batch-locates chunks for parallel inflate", "[Para
   const std::vector<uint64> tupleShape = {4, 64};
   const std::vector<uint64> componentShape = {1};
   const std::vector<uint64> chunkShape = {1, 64};
-  std::vector<std::byte> source(product(tupleShape));
+  std::vector<std::byte> source(Product(tupleShape));
   for(usize index = 0; index < source.size(); ++index)
   {
     source[index] = static_cast<std::byte>((index * 17 + index / 13) & 0xFF);
@@ -649,7 +649,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -690,7 +690,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 8};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
+    const usize numComponents = Product(componentShape);
 
     // Band = chunk-rows 1 and 2 -> tuple rows [4, 12) -> sourceStartTuple = 4 * 8 = 32.
     const std::vector<uint64> bandChunks = {1, 2};
@@ -736,7 +736,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {3};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(float32);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<float32> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -776,7 +776,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {2};
     const std::vector<uint64> chunkShape = {5, 5};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -814,7 +814,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<std::byte> source(numElements * elementSize, std::byte{0});
 
@@ -982,8 +982,8 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
-    const usize chunkTuples = product(chunkShape);
+    const usize numComponents = Product(componentShape);
+    const usize chunkTuples = Product(chunkShape);
     const usize nominalElements = chunkTuples * numComponents;
 
     std::vector<uint16> nominalValues(nominalElements);
@@ -1027,7 +1027,7 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize nominalElements = product(chunkShape) * product(componentShape);
+    const usize nominalElements = Product(chunkShape) * Product(componentShape);
 
     std::vector<std::byte> nominalBytes(nominalElements * elementSize, std::byte{0});
 
@@ -1139,7 +1139,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
     // chunks, last row/col clamped. Built with the raw HDF5 API so the chunk shape is exact.
     const std::vector<uint64> dims = {10, 7};
     const std::vector<uint64> chunkShape = {4, 4};
-    const usize numElements = product(dims);
+    const usize numElements = Product(dims);
     const usize elementSize = sizeof(uint16);
 
     std::vector<uint16> source(numElements);
@@ -1168,7 +1168,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
   {
     const std::vector<uint64> dims = {10, 7};
     const std::vector<uint64> chunkShape = {4, 4};
-    const usize numElements = product(dims);
+    const usize numElements = Product(dims);
     const usize elementSize = sizeof(uint16);
 
     std::vector<uint16> source(numElements);
@@ -1198,7 +1198,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
   SECTION("ineligible: contiguous (unchunked) dataset reads correctly via the serial fallback")
   {
     const std::vector<uint64> dims = {10, 7};
-    const usize numElements = product(dims);
+    const usize numElements = Product(dims);
     const usize elementSize = sizeof(float32);
 
     std::vector<float32> source(numElements);
@@ -2997,7 +2997,7 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
       std::vector<hsize_t> shape(fixture.tupleShape.begin(), fixture.tupleShape.end());
       shape.insert(shape.end(), fixture.componentShape.begin(), fixture.componentShape.end());
       REQUIRE(shape.size() == fixture.physicalChunks.size());
-      std::vector<uint16> values(product(fixture.tupleShape) * product(fixture.componentShape));
+      std::vector<uint16> values(Product(fixture.tupleShape) * Product(fixture.componentShape));
       std::iota(values.begin(), values.end(), uint16{101});
       const uint16 fillValue = fixture.sparse ? uint16{513} : uint16{0x4F4F};
       hid_t file = H5I_INVALID_HID;

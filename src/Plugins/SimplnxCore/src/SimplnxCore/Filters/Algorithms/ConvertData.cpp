@@ -15,7 +15,7 @@
 
 using namespace nx::core;
 
-namespace Detail
+namespace convert_data_detail
 {
 // Each bulk input and output buffer contains at most 65,536 values.
 constexpr usize k_ConvertChunkSize = 65'536;
@@ -307,5 +307,5 @@ const std::atomic_bool& ConvertData::getCancel()
 Result<> ConvertData::operator()()
 {
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
-  return ExecuteDataFunction(Detail::ConvertDataFunctor{}, inputArray.getDataType(), m_DataStructure, m_InputValues, m_ShouldCancel);
+  return ExecuteDataFunction(convert_data_detail::ConvertDataFunctor{}, inputArray.getDataType(), m_DataStructure, m_InputValues, m_ShouldCancel);
 }

@@ -68,7 +68,7 @@ std::string createRandomDirectoryName()
  * @param value Attribute value.
  * @return True when the platform accepted the attribute.
  */
-bool setExtendedAttribute(const fs::path& path, const std::string& key, const std::string& value)
+bool SetExtendedAttribute(const fs::path& path, const std::string& key, const std::string& value)
 {
 #ifdef _WIN32
   // Set-Content -Path <path> -Stream <name> -Value <value>
@@ -105,12 +105,12 @@ bool setExtendedAttribute(const fs::path& path, const std::string& key, const st
 bool setIgnoreFileSyncAttributes(const fs::path& path)
 {
   // https://help.dropbox.com/sync/ignored-files
-  const bool dropboxResult = setExtendedAttribute(path, "com.dropbox.ignored", "1");
+  const bool dropboxResult = SetExtendedAttribute(path, "com.dropbox.ignored", "1");
 
   // Dropbox for macOS on File Provider uses a second attribute.
   // Set both attributes because this code cannot detect the active integration.
 #ifdef __APPLE__
-  const bool fileProviderResult = setExtendedAttribute(path, "com.apple.fileprovider.ignore#P", "1");
+  const bool fileProviderResult = SetExtendedAttribute(path, "com.apple.fileprovider.ignore#P", "1");
   return dropboxResult && fileProviderResult;
 #else
   return dropboxResult;

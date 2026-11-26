@@ -167,7 +167,7 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 // DREAM.3D 6.4 and 6.5 ChangeResolution write "Resolution" and "NewDataContainerName".
 // The later "Spacing" and "NewDataContainerPath" keys are still accepted.
@@ -190,32 +190,32 @@ Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& j
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(
-      args, json, json.contains(SIMPL::k_ResolutionKey) ? SIMPL::k_ResolutionKey : SIMPL::k_SpacingKey, k_Spacing_Key));
+      args, json, json.contains(simpl::k_ResolutionKey) ? simpl::k_ResolutionKey : simpl::k_SpacingKey, k_Spacing_Key));
   // Legacy renumbering also controls whether Feature data is cleared.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_RenumberFeaturesKey, k_ClearFeatureAttributeMatrix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_ClearFeatureAttributeMatrix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, simpl::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
 
   // Legacy ChangeResolution uses these Feature paths only when RenumberFeatures is on.
   bool renumberDisabled = false;
-  if(json.contains(SIMPL::k_RenumberFeaturesKey))
+  if(json.contains(simpl::k_RenumberFeaturesKey))
   {
-    const auto renumber = SIMPLConversion::LinkedBooleanFilterParameterConverter::convert(json[SIMPL::k_RenumberFeaturesKey]);
+    const auto renumber = SIMPLConversion::LinkedBooleanFilterParameterConverter::convert(json[simpl::k_RenumberFeaturesKey]);
     renumberDisabled = renumber.valid() && !renumber.value();
   }
-  if(!renumberDisabled || json.contains(SIMPL::k_CellFeatureAttributeMatrixPathKey))
+  if(!renumberDisabled || json.contains(simpl::k_CellFeatureAttributeMatrixPathKey))
   {
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
+        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
   }
-  if(!renumberDisabled || json.contains(SIMPL::k_FeatureIdsArrayPathKey))
+  if(!renumberDisabled || json.contains(simpl::k_FeatureIdsArrayPathKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(
-      args, json, json.contains(SIMPL::k_NewDataContainerNameKey) ? SIMPL::k_NewDataContainerNameKey : SIMPL::k_NewDataContainerPathKey, k_CreatedImageGeometry_Key));
+      args, json, json.contains(simpl::k_NewDataContainerNameKey) ? simpl::k_NewDataContainerNameKey : simpl::k_NewDataContainerPathKey, k_CreatedImageGeometry_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

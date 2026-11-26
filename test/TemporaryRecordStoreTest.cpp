@@ -68,7 +68,7 @@ public:
   Result<> write(uint64 offset, uint64 count, nonstd::span<const std::byte> bytes, const std::atomic_bool& cancel) override
   {
     ++writeCalls;
-    writeOffsets.push_back(offset);
+    write_offsets.push_back(offset);
     if(cancel || failWrite)
     {
       return MakeErrorResult(-9002, "spy write failure");
@@ -94,7 +94,7 @@ public:
   bool failRead = false;
   bool failWrite = false;
   mutable std::vector<uint64> readOffsets;
-  std::vector<uint64> writeOffsets;
+  std::vector<uint64> write_offsets;
   std::vector<std::byte> m_Bytes;
 
 private:
@@ -363,7 +363,7 @@ TEST_CASE("BoundedRecordPageCache obeys cache hits, LRU eviction, partial pages,
   SIMPLNX_RESULT_REQUIRE_VALID(partialPageWriteResult);
   auto cacheFlushResult = cache.flush(active);
   SIMPLNX_RESULT_REQUIRE_VALID(cacheFlushResult);
-  REQUIRE(store.writeOffsets.back() == 4);
+  REQUIRE(store.write_offsets.back() == 4);
   store.shortRead = true;
   BoundedRecordPageCache<uint64> shortCache(store, 2, 1);
   auto shortCacheReadResult = shortCache.read(0, active);
@@ -448,7 +448,7 @@ TEST_CASE("BoundedRecordPageCache retains dirty data after failed eviction write
   auto cacheFlushResult = cache.flush(active);
   SIMPLNX_RESULT_REQUIRE_VALID(cacheFlushResult);
   REQUIRE(store.writeCalls >= 2);
-  REQUIRE(std::all_of(store.writeOffsets.begin(), store.writeOffsets.end(), [](uint64 offset) { return offset == 0; }));
+  REQUIRE(std::all_of(store.write_offsets.begin(), store.write_offsets.end(), [](uint64 offset) { return offset == 0; }));
 }
 
 TEST_CASE("ExternalEquivalence compresses a 4096-node chain without resident path state", "[TemporaryRecordStore]")

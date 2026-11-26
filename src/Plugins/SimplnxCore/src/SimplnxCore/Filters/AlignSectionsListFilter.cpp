@@ -152,7 +152,7 @@ Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, cons
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 } // namespace SIMPL
@@ -164,7 +164,7 @@ Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

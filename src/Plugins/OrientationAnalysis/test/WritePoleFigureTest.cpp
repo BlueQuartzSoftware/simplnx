@@ -137,7 +137,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
   struct ConvSnapshot
   {
     std::vector<float64> intensity;
-    std::vector<uint8> compositeRgb;
+    std::vector<uint8> composite_rgb;
   };
 
   auto runWithConv = [&](ChoicesParameter::ValueType convIndex, const std::string& geomName, const std::string& intensityName) {
@@ -191,10 +191,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
     // This second snapshot verifies the composite configuration path separately.
     const DataPath compositePath = DataPath({geomName, "Cell Data", "Phase_1"});
     const auto& compositeStore = dataStructure.getDataRefAs<UInt8Array>(compositePath).getDataStoreRef();
-    snap.compositeRgb.resize(compositeStore.getSize());
+    snap.composite_rgb.resize(compositeStore.getSize());
     for(usize i = 0; i < compositeStore.getSize(); ++i)
     {
-      snap.compositeRgb[i] = compositeStore[i];
+      snap.composite_rgb[i] = compositeStore[i];
     }
 
     return snap;
@@ -223,21 +223,21 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
 
   // The composite RGB output uses the same convention.
   // Its basal-plane figures rotate, so require more than one percent differing bytes.
-  REQUIRE(xa.compositeRgb.size() == xastar.compositeRgb.size());
-  REQUIRE(!xa.compositeRgb.empty());
+  REQUIRE(xa.composite_rgb.size() == xastar.composite_rgb.size());
+  REQUIRE(!xa.composite_rgb.empty());
 
   usize diffBytes = 0;
-  for(usize i = 0; i < xa.compositeRgb.size(); ++i)
+  for(usize i = 0; i < xa.composite_rgb.size(); ++i)
   {
-    if(xa.compositeRgb[i] != xastar.compositeRgb[i])
+    if(xa.composite_rgb[i] != xastar.composite_rgb[i])
     {
       ++diffBytes;
     }
   }
-  INFO(fmt::format("Composite RGB bytes that differ between X||a and X||a*: {} / {} ({:.2f}%)", diffBytes, xa.compositeRgb.size(),
-                   100.0 * static_cast<double>(diffBytes) / static_cast<double>(xa.compositeRgb.size())));
+  INFO(fmt::format("Composite RGB bytes that differ between X||a and X||a*: {} / {} ({:.2f}%)", diffBytes, xa.composite_rgb.size(),
+                   100.0 * static_cast<double>(diffBytes) / static_cast<double>(xa.composite_rgb.size())));
 
-  REQUIRE(diffBytes > xa.compositeRgb.size() / 100);
+  REQUIRE(diffBytes > xa.composite_rgb.size() / 100);
 }
 
 // Discrete mode must reach the renderer and differ from color mode.

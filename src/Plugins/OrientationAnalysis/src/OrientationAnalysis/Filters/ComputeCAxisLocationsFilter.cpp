@@ -125,7 +125,7 @@ Result<> ComputeCAxisLocationsFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
 constexpr StringLiteral k_CAxisLocationsArrayNameKey = "CAxisLocationsArrayName";
@@ -138,8 +138,8 @@ Result<Arguments> ComputeCAxisLocationsFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CAxisLocationsArrayNameKey, k_CAxisLocationsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CAxisLocationsArrayNameKey, k_CAxisLocationsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

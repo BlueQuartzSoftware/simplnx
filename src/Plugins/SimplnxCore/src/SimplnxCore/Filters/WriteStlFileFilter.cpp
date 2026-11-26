@@ -180,15 +180,15 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(pGroupingTypeValue == GroupingType::PartNumber)
   {
-    const auto* partNumbers = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue);
-    if(partNumbers == nullptr)
+    const auto* partNumbersPtr = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue);
+    if(partNumbersPtr == nullptr)
     {
       return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
     }
-    if(partNumbers->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    if(partNumbersPtr->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pPartNumberPathValue.toString(),
-                                                          partNumbers->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
+                                                          partNumbersPtr->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
     }
   }
 
@@ -216,7 +216,7 @@ Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arg
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_OutputStlDirectoryKey = "OutputStlDirectory";
 constexpr StringLiteral k_OutputStlPrefixKey = "OutputStlPrefix";
@@ -230,10 +230,10 @@ Result<Arguments> WriteStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -91,7 +91,7 @@ Result<> CreateAttributeMatrixFilter::executeImpl(DataStructure& /*dataStructure
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_TupleDimensionsKey = "TupleDimensions";
 constexpr StringLiteral k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
@@ -105,8 +105,8 @@ Result<Arguments> CreateAttributeMatrixFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   // Attribute matrix type parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimensionsKey, k_TupleDims_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeMatrixKey, k_DataObjectPath));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_TupleDimensionsKey, k_TupleDims_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeMatrixKey, k_DataObjectPath));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -380,7 +380,7 @@ SIMPLNX_EXPORT bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArr
 template <class T>
 Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleShape, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat = "")
 {
-  static constexpr StringLiteral prefix = "CreateNeighborListAction: ";
+  static constexpr StringLiteral k_Prefix = "CreateNeighborListAction: ";
   auto parentPath = path.getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
@@ -390,7 +390,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
     auto* parentObjectPtr = dataStructure.getData(parentPath);
     if(parentObjectPtr == nullptr)
     {
-      return MakeErrorResult(-5801, fmt::format("{}Parent object \"{}\" does not exist", prefix, parentPath.toString()));
+      return MakeErrorResult(-5801, fmt::format("{}Parent object \"{}\" does not exist", k_Prefix, parentPath.toString()));
     }
 
     dataObjectId = parentObjectPtr->getId();
@@ -405,7 +405,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
 
   if(neighborList == nullptr)
   {
-    return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", prefix, path.toString()));
+    return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", k_Prefix, path.toString()));
   }
 
   return {};
@@ -795,11 +795,11 @@ inline usize Flatten(const std::vector<usize>& position, const std::vector<usize
 inline std::vector<uint64> FindPosition(uint64 index, const std::vector<uint64>& shape)
 {
   using index_type = uint64;
-  using shape_type = std::vector<index_type>;
+  using PositionType = std::vector<index_type>;
 
   const bool usingColumnMajor = true;
   const usize dimensions = shape.size();
-  shape_type position(dimensions);
+  PositionType position(dimensions);
   for(index_type i = 0; i < dimensions; i++)
   {
     const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;

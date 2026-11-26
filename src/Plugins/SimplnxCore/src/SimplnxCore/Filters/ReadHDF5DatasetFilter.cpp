@@ -252,7 +252,7 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_HDF5FilePathKey = "HDF5FilePath";
 constexpr StringLiteral k_ImportInfoArrayKey = "Dataset Import Info Array";
@@ -266,8 +266,8 @@ Result<Arguments> ReadHDF5DatasetFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::ImportHDF5DatasetFilterParameterConverter>(args, json, SIMPL::k_ImportInfoArrayKey, SIMPL::k_HDF5FilePathKey,
-                                                                                                                    SIMPL::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::ImportHDF5DatasetFilterParameterConverter>(args, json, simpl::k_ImportInfoArrayKey, simpl::k_HDF5FilePathKey,
+                                                                                                                    simpl::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

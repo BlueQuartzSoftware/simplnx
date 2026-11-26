@@ -58,12 +58,12 @@ void CheckTransferEnrichmentAllocation()
 
 namespace
 {
-Result<> readCoordinatePage(const Float32AbstractDataStore& vertices, usize first, nonstd::span<float32> page)
+Result<> ReadCoordinatePage(const Float32AbstractDataStore& vertices, usize first, nonstd::span<float32> page)
 {
   return vertices.copyIntoBuffer(first * 3, page);
 }
 
-Result<> readCoordinatePage(const ITemporaryRecordStore& vertices, usize first, nonstd::span<float32> page)
+Result<> ReadCoordinatePage(const ITemporaryRecordStore& vertices, usize first, nonstd::span<float32> page)
 {
   const std::atomic_bool active{false};
   const usize count = page.size() / 3;
@@ -114,7 +114,7 @@ Result<> gatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
     if(first != loadedPage)
     {
       const usize count = std::min(capacity, vertexCount - first);
-      auto readResult = readCoordinatePage(vertices, first, page.first(count * 3));
+      auto readResult = ReadCoordinatePage(vertices, first, page.first(count * 3));
       if(readResult.invalid())
       {
         auto failure = MeshingUtilities::detail::PreserveTransferFailure(result, std::move(readResult));

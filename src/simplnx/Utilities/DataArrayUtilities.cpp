@@ -523,14 +523,14 @@ Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructur
   switch(array->getArrayType())
   {
   case IArray::ArrayType::StringArray: {
-    auto* newStringArray = StringArray::Create(destDataStructure, newArrayName, parentId);
-    auto resizeResult = newStringArray->resizeTuples(tupleShape);
+    auto* newStringArrayPtr = StringArray::Create(destDataStructure, newArrayName, parentId);
+    auto resizeResult = newStringArrayPtr->resizeTuples(tupleShape);
     if(resizeResult.invalid())
     {
       return ConvertInvalidResult<IArray*>(std::move(resizeResult));
     }
-    std::fill(newStringArray->begin(), newStringArray->end(), defaultValue);
-    return {newStringArray};
+    std::fill(newStringArrayPtr->begin(), newStringArrayPtr->end(), defaultValue);
+    return {newStringArrayPtr};
   }
   case IArray::ArrayType::DataArray: {
     auto* iDataArray = dynamic_cast<IDataArray*>(array);

@@ -118,7 +118,7 @@ Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
 constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
@@ -133,8 +133,8 @@ Result<Arguments> RotateEulerRefFrameFilter::FromSIMPLJson(const nlohmann::json&
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, SIMPL::k_RotationAxisKey, SIMPL::k_RotationAngleKey, k_RotationAxisAngle_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellEulerAnglesArrayPathKey, k_EulerAnglesArrayPath_Key));
+      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_EulerAnglesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

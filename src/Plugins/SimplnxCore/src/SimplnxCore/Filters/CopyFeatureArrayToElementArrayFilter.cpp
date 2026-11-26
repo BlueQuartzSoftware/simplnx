@@ -137,7 +137,7 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_SelectedFeatureArrayPathKey = "SelectedFeatureArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
@@ -152,8 +152,8 @@ Result<Arguments> CopyFeatureArrayToElementArrayFilter::FromSIMPLJson(const nloh
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   // Do not map legacy CreatedArrayName to the suffix.
   // SIMPLNX appends a suffix to the input name, which would produce an incorrect name.
   // Leave the suffix empty so the copied array keeps its input name.

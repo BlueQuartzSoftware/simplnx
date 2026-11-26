@@ -340,7 +340,7 @@ template <typename T, typename K>
   std::vector<uint8> visited(numElems, 0);
 
   // Reuse one neighbor vector across source elements.
-  std::vector<K> loop_neighbors(32, 0);
+  std::vector<K> loopNeighbors(32, 0);
 
   // Keep one candidate element outside the active chunk in local memory.
   auto neighborVertsBuf = std::make_unique<K[]>(numVertsPerElem);
@@ -413,11 +413,11 @@ template <typename T, typename K>
           // A complete shared boundary entity defines one neighbor.
           if(vCount == numSharedVerts)
           {
-            loop_neighbors[linkCount[t]] = vertIdxs[vt];
+            loopNeighbors[linkCount[t]] = vertIdxs[vt];
             ++linkCount[t];
-            if(linkCount[t] >= loop_neighbors.size())
+            if(linkCount[t] >= loopNeighbors.size())
             {
-              loop_neighbors.resize(loop_neighbors.size() + 10);
+              loopNeighbors.resize(loopNeighbors.size() + 10);
             }
             visited[vertIdxs[vt]] = true;
           }
@@ -427,9 +427,9 @@ template <typename T, typename K>
       // Clear only visited indexes recorded for this source element.
       for(int64 k = 0; k < linkCount[t]; k++)
       {
-        visited[loop_neighbors[k]] = false;
+        visited[loopNeighbors[k]] = false;
       }
-      dynamicList->setElementList(t, linkCount[t], loop_neighbors.data());
+      dynamicList->setElementList(t, linkCount[t], loopNeighbors.data());
     }
   }
 

@@ -101,7 +101,7 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_FeatureDataFileKey = "FeatureDataFile";
 constexpr StringLiteral k_WriteNeighborListDataKey = "WriteNeighborListData";
@@ -117,11 +117,11 @@ Result<Arguments> WriteFeatureDataCSVFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_FeatureDataFileKey, k_FeatureDataFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteNeighborListDataKey, k_WriteNeighborListData_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteNumFeaturesLineKey, k_WriteNumFeaturesLine_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterChoiceIntKey, k_DelimiterChoiceInt_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_FeatureDataFileKey, k_FeatureDataFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteNeighborListDataKey, k_WriteNeighborListData_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteNumFeaturesLineKey, k_WriteNumFeaturesLine_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterChoiceIntKey, k_DelimiterChoiceInt_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixPathKey,
                                                                                                                          k_CellFeatureAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
