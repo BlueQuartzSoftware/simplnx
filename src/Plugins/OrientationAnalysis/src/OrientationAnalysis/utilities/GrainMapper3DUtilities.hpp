@@ -112,10 +112,10 @@ private:
   bool m_ReadDctData = false;
   bool m_ReadAbsorptionData = false;
 
-  std::string m_ErrorMessage = {};
-  std::string m_FileName = {};
-  std::string m_HDF5Path = {};
-  std::string m_OINAVersion = {};
+  std::string m_ErrorMessage;
+  std::string m_FileName;
+  std::string m_HDF5Path;
+  std::string m_OINAVersion;
 
   std::vector<size_t> m_LabDctDimensions;
   std::vector<double> m_LabDctSpacing = {1.0, 1.0, 1.0};

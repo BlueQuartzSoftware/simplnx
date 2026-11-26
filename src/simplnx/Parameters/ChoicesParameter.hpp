@@ -106,7 +106,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
-  Choices m_Choices = {};
+  Choices m_Choices;
 };
 
 namespace SIMPLConversion

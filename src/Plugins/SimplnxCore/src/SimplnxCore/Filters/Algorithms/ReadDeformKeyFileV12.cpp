@@ -194,8 +194,8 @@ private:
   const bool m_Allocate;
   FileCache& m_Cache;
   usize m_LineCount = 0;
-  std::vector<std::string> m_UserDefinedVariables = {};
-  std::vector<DataPath> m_UserDefinedArrays = {};
+  std::vector<std::string> m_UserDefinedVariables;
+  std::vector<DataPath> m_UserDefinedArrays;
 
   // helper functions
   [[nodiscard]] Result<> setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens, usize tokenOffset = 0)

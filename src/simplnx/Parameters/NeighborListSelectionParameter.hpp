@@ -112,8 +112,8 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
 };
 
 } // namespace nx::core

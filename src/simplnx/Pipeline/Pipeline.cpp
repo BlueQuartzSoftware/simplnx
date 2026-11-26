@@ -67,8 +67,8 @@ nlohmann::json CreatePipelineJson(std::string_view name, nlohmann::json filterAr
 } // namespace
 
 Pipeline::Pipeline(ExecutionContext executionContext, std::string  name, FilterList* filterList)
-: AbstractPipelineNode()
-, m_Name(std::move(name))
+: 
+ m_Name(std::move(name))
 , m_FilterList(filterList)
 , m_ExecutionContext(std::move(executionContext))
 {
@@ -80,8 +80,8 @@ Pipeline::Pipeline(const std::string& name, FilterList* filterList)
 }
 
 Pipeline::Pipeline(const Pipeline& other)
-: AbstractPipelineNode()
-, m_Name(other.m_Name)
+: 
+ m_Name(other.m_Name)
 , m_Collection(other.m_Collection)
 , m_FilterList(other.m_FilterList)
 , m_ExecutionContext(other.m_ExecutionContext)
@@ -91,8 +91,8 @@ Pipeline::Pipeline(const Pipeline& other)
 }
 
 Pipeline::Pipeline(Pipeline&& other) noexcept
-: AbstractPipelineNode()
-, m_Name(std::move(other.m_Name))
+: 
+ m_Name(std::move(other.m_Name))
 , m_Collection(std::move(other.m_Collection))
 , m_FilterList(std::move(other.m_FilterList))
 , m_ExecutionContext(std::move(other.m_ExecutionContext))

@@ -95,8 +95,8 @@ std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handl
 }
 
 PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, Arguments  args)
-: AbstractPipelineFilter()
-, m_Filter(std::move(filter))
+: 
+ m_Filter(std::move(filter))
 , m_Arguments(std::move(args))
 {
 }

@@ -50,7 +50,7 @@ struct ZeissTxmHeaderMetadata
   CreateImageGeometryAction::SpacingType Spacing = {0.0f, 0.0f, 0.0f};
   CreateImageGeometryAction::OriginType Origin = {0.0f, 0.0f, 0.0f};
   IGeometry::LengthUnit Units = IGeometry::LengthUnit::Micrometer;
-  std::string DataFilePath = {};
+  std::string DataFilePath;
   ZeissTxmDataType DataType = ZeissTxmDataType::FLOAT_TYPE;
   void clear()
   {

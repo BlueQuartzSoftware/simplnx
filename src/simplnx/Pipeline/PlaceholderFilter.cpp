@@ -12,8 +12,8 @@ std::unique_ptr<PlaceholderFilter> PlaceholderFilter::Create(nlohmann::json json
 PlaceholderFilter::PlaceholderFilter() = default;
 
 PlaceholderFilter::PlaceholderFilter(nlohmann::json json)
-: AbstractPipelineFilter()
-, m_Json(std::move(json))
+: 
+ m_Json(std::move(json))
 {
   // Raw fallback JSON can contain an invalid flag; keep that payload without rejecting the placeholder.
   const auto disabledIter = m_Json.find(k_IsDisabledKey.str());

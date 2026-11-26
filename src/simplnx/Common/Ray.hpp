@@ -30,8 +30,8 @@ public:
    */
   Ray()
   : m_Origin()
-  , m_Angle()
-  , m_Length(0)
+  , 
+   m_Length(0)
   {
   }
 

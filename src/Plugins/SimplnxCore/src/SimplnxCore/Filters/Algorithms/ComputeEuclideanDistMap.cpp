@@ -111,8 +111,8 @@ class ComputeDistanceMapImpl
   T* m_DistBuf = nullptr;
   AbstractDataStore<T>* m_OutputStore = nullptr;
   usize m_TotalVoxels = 0;
-  SizeVec3 m_Dims = {};
-  FloatVec3 m_Spacing = {};
+  SizeVec3 m_Dims;
+  FloatVec3 m_Spacing;
 
 public:
   /**

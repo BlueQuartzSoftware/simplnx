@@ -60,7 +60,7 @@ public:
     return {m_AtomicFilesList.size() - 1};
   }
 
-  std::vector<AtomicFile> m_AtomicFilesList = {};
+  std::vector<AtomicFile> m_AtomicFilesList;
 
 private:
   fs::path m_InputPath;

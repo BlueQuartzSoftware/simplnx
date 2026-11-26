@@ -24,7 +24,7 @@ public:
     int32 startSlice = 0;
     int32 endSlice = 0;
     int32 eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-    std::vector<std::string> selectedArrayNames = {};
+    std::vector<std::string> selectedArrayNames;
     bool useRecommendedTransform = {true};
   };
 

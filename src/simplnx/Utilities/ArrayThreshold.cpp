@@ -58,8 +58,8 @@ nlohmann::json IArrayThreshold::toJson() const
 }
 
 ArrayThreshold::ArrayThreshold()
-: IArrayThreshold()
-, m_ArrayPath()
+ 
+ 
 
 {
 }
@@ -182,7 +182,7 @@ std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& j
 }
 
 ArrayThresholdSet::ArrayThresholdSet()
-: IArrayThreshold()
+ 
 {
 }
 

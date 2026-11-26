@@ -126,10 +126,10 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
-  AllowedDataTypes m_AllowedDataTypes = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
+  AllowedDataTypes m_AllowedDataTypes;
+  AllowedComponentShapes m_RequiredComponentShapes;
 };
 
 namespace SIMPLConversion

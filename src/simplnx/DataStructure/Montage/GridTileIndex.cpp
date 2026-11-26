@@ -8,7 +8,7 @@
 using namespace nx::core;
 
 GridTileIndex::GridTileIndex()
-: AbstractTileIndex()
+ 
 {
 }
 

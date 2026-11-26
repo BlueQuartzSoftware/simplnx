@@ -115,8 +115,8 @@ protected:
   Result<> validatePaths(const DataStructure& dataStructure, const ValueType& value) const;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedComponentShapes m_RequiredComponentShapes;
 };
 
 namespace SIMPLConversion

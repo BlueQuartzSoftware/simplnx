@@ -24,15 +24,15 @@ struct SIMPLNXCORE_EXPORT ComputeNeighborListStatisticsInputValues
   bool FindStdDeviation = false;
   bool FindSummation = false;
 
-  DataPath TargetNeighborListPath = {};
+  DataPath TargetNeighborListPath;
 
-  DataPath LengthPath = {};
-  DataPath MinPath = {};
-  DataPath MaxPath = {};
-  DataPath MeanPath = {};
-  DataPath MedianPath = {};
-  DataPath StdDeviationPath = {};
-  DataPath SummationPath = {};
+  DataPath LengthPath;
+  DataPath MinPath;
+  DataPath MaxPath;
+  DataPath MeanPath;
+  DataPath MedianPath;
+  DataPath StdDeviationPath;
+  DataPath SummationPath;
 };
 
 /**

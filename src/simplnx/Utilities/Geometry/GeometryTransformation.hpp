@@ -65,8 +65,8 @@ struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
   DataPath CellAttributeMatrixPath;
   bool ClearFeatureAttributeMatrix = false;
   bool RenumberFeatures = false;
-  DataPath FeatureAttributeMatrixPath = {};
-  DataPath FeatureIdsPath = {};
+  DataPath FeatureAttributeMatrixPath;
+  DataPath FeatureIdsPath;
   DataPath TransformMatrixPath;
   bool RemoveOriginalGeometry{};
   bool TranslateGeometryToGlobalOrigin{};

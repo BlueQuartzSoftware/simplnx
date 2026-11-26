@@ -35,7 +35,7 @@ public:
   {
     fs::path inputFilePath;
     uint32_t stackingOrder = RefFrameZDir::k_LowtoHigh;
-    std::list<std::string> scanNames = {};
+    std::list<std::string> scanNames;
   };
 
   using ExtensionsType = std::unordered_set<std::string>;
@@ -142,7 +142,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
-  ExtensionsType m_AvailableExtensions = {};
+  ExtensionsType m_AvailableExtensions;
   EbsdReaderType m_ReaderType = {};
 };
 } // namespace nx::core

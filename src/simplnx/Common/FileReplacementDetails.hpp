@@ -30,7 +30,7 @@ struct FileReplacementSteps
   /** @brief Waits for the specified duration before the next attempt. */
   std::function<void(std::chrono::milliseconds)> Wait;
   /** @brief Optional prerequisite. Transient errors share the rename retry budget. Never called again after success. */
-  std::function<std::error_code(const std::filesystem::path&)> Flush = {};
+  std::function<std::error_code(const std::filesystem::path&)> Flush;
 };
 
 /**

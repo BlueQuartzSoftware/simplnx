@@ -2345,7 +2345,7 @@ struct DBSCANExternalFunctor
  */
 struct GridBitMap
 {
-  std::vector<uint8> gridTable = {}; // Bit-packed grid incidence rows.
+  std::vector<uint8> gridTable; // Bit-packed grid incidence rows.
   usize numPositions = 0;            // Number of positions on the indexed axis.
   usize rowLength = 0;               // Bytes in one axis-position row.
 };
@@ -2384,7 +2384,7 @@ struct GridBitMapFactory
 class HyperGridBitMap
 {
 public:
-  std::vector<std::vector<usize>> gridVoxels = {}; // Maps each occupied grid to its source tuple indices.
+  std::vector<std::vector<usize>> gridVoxels; // Maps each occupied grid to its source tuple indices.
 
   /**
    * @brief Moves the constructor-time bulk-I/O, coordinate or grid-sizing result to the caller.
@@ -3040,7 +3040,7 @@ struct ClusterNode
  */
 struct ClusterForest
 {
-  std::vector<ClusterNode> clusterForestNodes = {}; // State for every occupied grid.
+  std::vector<ClusterNode> clusterForestNodes; // State for every occupied grid.
 
   /**
    * @brief Creates one singleton cluster node for each occupied grid.

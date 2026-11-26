@@ -149,9 +149,9 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedTypes m_AllowedTypes;
+  AllowedComponentShapes m_RequiredComponentShapes;
   DataLocation m_Location = DataLocation::Any;
 };
 

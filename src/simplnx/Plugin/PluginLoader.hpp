@@ -27,8 +27,8 @@ class SIMPLNX_EXPORT InMemoryPluginLoader : public IPluginLoader
 {
 public:
   InMemoryPluginLoader(std::shared_ptr<AbstractPlugin> plugin)
-  : IPluginLoader()
-  , m_Plugin(std::move(plugin))
+  : 
+   m_Plugin(std::move(plugin))
   {
   }
 

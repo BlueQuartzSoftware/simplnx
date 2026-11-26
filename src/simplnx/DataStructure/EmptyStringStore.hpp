@@ -25,8 +25,8 @@ public:
   EmptyStringStore() = default;
 
   EmptyStringStore(const ShapeType& tupleShape)
-  : AbstractStringStore()
-  , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
+  : 
+   m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
   , m_NumTuples(std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   {
   }

@@ -51,7 +51,7 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
 struct ReadNiftiHeaderCache
 {
   std::string inputFile;
-  fs::file_time_type timeStamp{};
+  fs::file_time_type timeStamp;
   nx::core::nifti::NiftiMetadata metadata;
   bool useAffineIfPresent{true};
 };

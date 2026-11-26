@@ -574,8 +574,8 @@ public:
   PyFilter() = delete;
 
   PyFilter(py::object object)
-  : IFilter()
-  , m_Object(std::move(object))
+  : 
+   m_Object(std::move(object))
   {
     py::gil_scoped_acquire gil;
     m_Name = m_Object.attr("name")().cast<std::string>();

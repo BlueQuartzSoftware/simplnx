@@ -132,9 +132,9 @@ struct SIMPLNX_EXPORT DataObjectModification
  */
 struct SIMPLNX_EXPORT OutputActions
 {
-  std::vector<AnyDataAction> actions = {};
-  std::vector<AnyDataAction> deferredActions = {};
-  std::vector<DataObjectModification> modifiedActions = {};
+  std::vector<AnyDataAction> actions;
+  std::vector<AnyDataAction> deferredActions;
+  std::vector<DataObjectModification> modifiedActions;
 
   OutputActions() = default;
 

@@ -37,7 +37,7 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5EbsdInputValues
   int32 startSlice = 0;
   int32 endSlice = 0;
   int32 eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-  std::vector<std::string> hdf5DataPaths = {};
+  std::vector<std::string> hdf5DataPaths;
   bool useRecommendedTransform = {true};
   DataPath dataContainerPath;
   DataPath cellAttributeMatrixPath;

@@ -86,8 +86,8 @@ private:
 
   std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 
-  std::mt19937_64 m_Generator = {};
-  std::uniform_real_distribution<float32> m_Distribution = {};
+  std::mt19937_64 m_Generator;
+  std::uniform_real_distribution<float32> m_Distribution;
 
   /**
    * @brief Groups connected twin features.
