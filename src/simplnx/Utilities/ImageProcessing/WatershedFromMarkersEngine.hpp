@@ -1047,7 +1047,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
   // Precondition: borderSentinel must be non-zero (it is NumericTraits<TLabel>::max() by contract). The Beucher branch
   // maps out-of-bounds neighbors to borderSentinel and gates propagation on `o == wsLabel(0)`, so a non-zero sentinel
   // guarantees an OOB neighbor can never alias a real label (nor flat index 0). All type maxes are > 0, so this holds.
-  assert(borderSentinel != wsLabel);
+  assert(borderSentinel != k_WsLabel);
 
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 nY = static_cast<int64>(dims[1]);

@@ -383,7 +383,7 @@ public:
       }
     }
 
-    assert(replacement != nullptr);
+    assert(replacementPtr != nullptr);
     const usize tupleStart = blockIndex * m_BlockTuples;
     const usize tupleCount = std::min(m_BlockTuples, m_TotalTuples - tupleStart);
     if(Result<> result = m_FeatureIdsStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacementPtr->feature_ids.data(), tupleCount)); result.invalid())
@@ -511,7 +511,7 @@ private:
     const usize windowZMax = m_Plane + std::min(kernelZ, (m_ZPoints - 1) - m_Plane);
 
     const SliceSlot& focalSlice = m_SliceSlots[m_Plane % m_WindowSlices];
-    assert(focalSlice.Z == m_Plane);
+    assert(focalSlice.z == m_Plane);
 
     for(usize row = minRow; row < maxRow; row++)
     {
@@ -549,7 +549,7 @@ private:
         for(usize nz = windowZMin;; nz++)
         {
           const SliceSlot& neighborSlice = m_SliceSlots[nz % m_WindowSlices];
-          assert(neighborSlice.Z == nz);
+          assert(neighborSlice.z == nz);
 
           for(usize ny = neighborYMin;; ny++)
           {
@@ -704,7 +704,7 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
     while(nextSliceToLoad <= windowZMax)
     {
       SliceSlot& slot = sliceSlots[nextSliceToLoad % plan.WindowSlices];
-      assert(slot.Z == k_UnloadedSlice || slot.Z < windowZMin);
+      assert(slot.z == k_UnloadedSlice || slot.z < windowZMin);
       if(Result<> result = loadSlice(nextSliceToLoad, slot); result.invalid())
       {
         return result;
