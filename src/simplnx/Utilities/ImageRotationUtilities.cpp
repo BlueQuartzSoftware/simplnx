@@ -1,6 +1,7 @@
 #include "ImageRotationUtilities.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace nx::core::ImageRotationUtilities
 {
@@ -276,9 +277,9 @@ Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::Val
   const float64 norm = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
   const FloatVec3 normalizedAxis = {static_cast<float32>(axis[0] / norm), static_cast<float32>(axis[1] / norm), static_cast<float32>(axis[2] / norm)};
 
-  const float cosTheta = cos(rotAngle);
+  const float cosTheta = std::cos(rotAngle);
   const float oneMinusCosTheta = 1 - cosTheta;
-  const float sinTheta = sin(rotAngle);
+  const float sinTheta = std::sin(rotAngle);
 
   // First Row:
   transformationMatrix(0) = normalizedAxis[0] * normalizedAxis[0] * (oneMinusCosTheta) + cosTheta;

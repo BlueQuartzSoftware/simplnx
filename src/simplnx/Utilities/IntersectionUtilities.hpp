@@ -80,7 +80,7 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   // check if ray and plane are parallel ?
   float NdotRayDirection = N.dot(rayDirection);
 
-  if(fabs(NdotRayDirection) < k_Epsilon) // almost 0
+  if(std::fabs(NdotRayDirection) < k_Epsilon) // almost 0
   {
     return false;
   } // they are parallel so they don't intersect !
