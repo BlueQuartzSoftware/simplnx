@@ -1608,7 +1608,7 @@ Result<> DataStructure::validateAttributeMatrices() const
   for(const auto& dataObject : m_DataObjects)
   {
     auto dataObjectSharedPtr = dataObject.second.lock();
-    if(dataObjectSharedPtr.get() != nullptr)
+    if(dataObjectSharedPtr != nullptr)
     {
       auto dataObjectType = dataObjectSharedPtr->getDataObjectType();
       if(dataObjectType == DataObject::Type::AttributeMatrix)

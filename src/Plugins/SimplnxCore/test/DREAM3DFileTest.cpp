@@ -598,32 +598,32 @@ DataStructure CreateTestDataStructure()
 
   auto vertices = std::make_shared<Float32DataStore>(Constants::k_TupleShape, ShapeType{3}, 0.0f);
   auto* vertexArray = Float32Array::Create(dataStructure, Constants::k_VertexList, vertices, dataGroup->getId());
-  FillDataStore<float32>(*vertices.get());
+  FillDataStore<float32>(*vertices);
 
   auto edges = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{2}, 0);
   auto* edgesArray = IGeometry::SharedEdgeList::Create(dataStructure, Constants::k_Edges, edges, dataGroup->getId());
-  FillDataStore<uint64>(*edges.get());
+  FillDataStore<uint64>(*edges);
 
   auto triangles = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{3}, 0);
   auto* trianglesArray = IGeometry::SharedTriList::Create(dataStructure, Constants::k_Faces, triangles, dataGroup->getId());
-  FillDataStore<uint64>(*triangles.get());
+  FillDataStore<uint64>(*triangles);
 
   auto polyhedra = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
   auto* polyhedraArray = IGeometry::SharedFaceList::Create(dataStructure, Constants::k_Polyhedra, polyhedra, dataGroup->getId());
   REQUIRE(polyhedraArray != nullptr);
-  FillDataStore<uint64>(*polyhedra.get());
+  FillDataStore<uint64>(*polyhedra);
 
   auto quadStore = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
   auto* quadArray = IGeometry::SharedFaceList::Create(dataStructure, Constants::k_QuadArray, quadStore, dataGroup->getId());
-  FillDataStore<uint64>(*quadStore.get());
+  FillDataStore<uint64>(*quadStore);
 
   auto hexStore = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{8}, 0);
   auto* hexArray = IGeometry::SharedHexList::Create(dataStructure, Constants::k_HexaArray, hexStore, dataGroup->getId());
-  FillDataStore<uint64>(*hexStore.get());
+  FillDataStore<uint64>(*hexStore);
 
   auto tetraStore = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
   auto* tetraArray = IGeometry::SharedTetList::Create(dataStructure, Constants::k_TetraArray, tetraStore, dataGroup->getId());
-  FillDataStore<uint64>(*tetraStore.get());
+  FillDataStore<uint64>(*tetraStore);
 
   StringArray::collection_type strings = {"1", "2", "3", "4", "5", "6"};
   auto* stringArray = StringArray::CreateWithValues(dataStructure, Constants::k_StringArray, Constants::k_TupleShape, strings, dataGroup->getId());
@@ -656,15 +656,15 @@ DataStructure CreateTestDataStructure()
   ShapeType componentBounds{1};
   auto xBounds = std::make_shared<Float32DataStore>(xShape, componentBounds, 0.0f);
   auto* xBoundsArray = Float32Array::Create(dataStructure, Constants::k_XBounds, xBounds, rectGridGeom->getId());
-  FillDataStore<float32>(*xBounds.get());
+  FillDataStore<float32>(*xBounds);
   ShapeType yShape{Constants::k_TupleShape[1] + 1};
   auto yBounds = std::make_shared<Float32DataStore>(yShape, componentBounds, 0.0f);
   auto* yBoundsArray = Float32Array::Create(dataStructure, Constants::k_YBounds, yBounds, rectGridGeom->getId());
-  FillDataStore<float32>(*yBounds.get());
+  FillDataStore<float32>(*yBounds);
   ShapeType zShape{Constants::k_TupleShape[2] + 1};
   auto zBounds = std::make_shared<Float32DataStore>(zShape, componentBounds, 0.0f);
   auto* zBoundsArray = Float32Array::Create(dataStructure, Constants::k_ZBounds, zBounds, rectGridGeom->getId());
-  FillDataStore<float32>(*zBounds.get());
+  FillDataStore<float32>(*zBounds);
 
   rectGridGeom->setDimensions(Constants::k_TupleShape);
   rectGridGeom->setCellData(cellMatrix->getId());
@@ -697,7 +697,7 @@ DataStructure CreateTestDataStructure()
   auto vertexValues = std::make_shared<Float32DataStore>(Constants::k_TupleShape, ShapeType{1}, 0.0f);
   auto* vertexValuesArray = Float32Array::Create(dataStructure, Constants::k_VertexValues, vertexValues, vertexMatrix->getId());
   REQUIRE(vertexValuesArray != nullptr);
-  FillDataStore<float32>(*vertexValues.get());
+  FillDataStore<float32>(*vertexValues);
 
   // 3D Geometries. Hexahedra have quad faces (4 vertices) and 8-vertex cells; tetrahedra have
   // triangle faces (3 vertices) and 4-vertex cells.
