@@ -363,7 +363,7 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
     {
       return 'F';
     }
-    else if(zeroCount == 1)
+    if(zeroCount == 1)
     {
       return 'E';
     }
@@ -522,7 +522,7 @@ char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
     {
       return 'f';
     }
-    else if(zeroCount == 1)
+    if(zeroCount == 1)
     {
       return 'e';
     }
@@ -568,7 +568,7 @@ char RayCrossesTriangle(const CachedRay<T>& ray, const Point3D<T>& p0, const Poi
     {
       return 'f';
     }
-    else if(zeroCount == 1)
+    if(zeroCount == 1)
     {
       return 'e';
     }
@@ -620,7 +620,7 @@ char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
   {
     return '1';
   }
-  else if(numerator == 0.0)
+  if(numerator == 0.0)
   {
     return 'q';
   }
@@ -667,7 +667,7 @@ char RayIntersectsPlane(const CachedRay<T>& ray, const Point3D<T>& p0, const Poi
   {
     return '1';
   }
-  else if(numerator == 0.0)
+  if(numerator == 0.0)
   {
     return 'q';
   }
@@ -702,7 +702,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
   {
     return RayCrossesTriangle(ray, p0, p1, p2);
   }
-  else if(code == 'q')
+  if(code == 'q')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
   }
@@ -739,7 +739,7 @@ char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& 
   {
     return RayCrossesTriangle(ray, p0, p1, p2);
   }
-  else if(code == 'q')
+  if(code == 'q')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
   }
@@ -827,7 +827,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
         break;
       }
       /* If ray hits face at interior point, increment crossings. */
-      else if(code == 'f')
+      if(code == 'f')
       {
         crossings++;
       }

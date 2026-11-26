@@ -112,7 +112,7 @@ bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vect
       intersection = p1;
       return true;
     }
-    else if(std::abs(lineYprime - p1.y()) < 1e-9f)
+    if(std::abs(lineYprime - p1.y()) < 1e-9f)
     {
       intersection = p1;
       return true;

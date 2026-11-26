@@ -460,7 +460,7 @@ nlohmann::json Preferences::value(const std::string& name) const
   {
     return m_Values[name];
   }
-  else if(m_DefaultValues.contains(name))
+  if(m_DefaultValues.contains(name))
   {
     return m_DefaultValues[name];
   }
@@ -501,7 +501,7 @@ nlohmann::json Preferences::pluginValue(const std::string& pluginName, const std
   {
     return m_Values[k_Plugin_Key][pluginName][valueName];
   }
-  else if(pluginContainsDefault(pluginName, valueName))
+  if(pluginContainsDefault(pluginName, valueName))
   {
     return m_DefaultValues[k_Plugin_Key][pluginName][valueName];
   }

@@ -1109,10 +1109,9 @@ static Result<> finishImportingLegacyDataArray(DataStructure& dataStructure, con
     {
       return finishImportingLegacyDataArrayImpl<bool>(dataStructure, dataSetIO, dataPath);
     }
-    else
-    {
-      return finishImportingLegacyDataArrayImpl<uint8>(dataStructure, dataSetIO, dataPath);
-    }
+    
+          return finishImportingLegacyDataArrayImpl<uint8>(dataStructure, dataSetIO, dataPath);
+   
     break;
   }
   case DataType::uint16:
@@ -1352,7 +1351,7 @@ static Result<> readLegacyArray(DataStructure& dataStructure, const nx::core::HD
   {
     return readLegacyNeighborList(dataStructure, amGroupReader, dataArraySet, 0, preflight);
   }
-  else if(isLegacyStringArray(dataArraySet))
+  if(isLegacyStringArray(dataArraySet))
   {
     return readLegacyStringArray(dataStructure, dataArraySet, preflight);
   }
@@ -1371,7 +1370,7 @@ static Result<> finishImportingLegacyArray(DataStructure& dataStructure, const n
   {
     return finishImportingLegacyNeighborList(dataStructure, amGroup, dataArraySet, dataPath);
   }
-  else if(isLegacyStringArray(dataArraySet))
+  if(isLegacyStringArray(dataArraySet))
   {
     return finishImportingLegacyStringArray(dataStructure, dataArraySet, dataPath);
   }
@@ -2373,7 +2372,7 @@ static Result<> finishImportingLegacyDataContainer(DataStructure& dataStructure,
     {
       return finishImportingLegacyImageGeom(dataStructure, geometryPtr, geomGroup);
     }
-    else if(geomName == Legacy::Type::EdgeGeom)
+    if(geomName == Legacy::Type::EdgeGeom)
     {
       return finishImportingLegacyEdgeGeom(dataStructure, geometryPtr, geomGroup);
     }
@@ -2635,7 +2634,7 @@ Result<std::shared_ptr<DataObject>> DREAM3D::ImportDataObjectFromFile(const nx::
   {
     return HDF5::DataStructureReader::ReadObject(fileReader, dataPath);
   }
-  else if(fileVersion == k_LegacyFileVersion)
+  if(fileVersion == k_LegacyFileVersion)
   {
     auto result = ImportLegacyDataObjectFromFile(fileReader, dataPath);
     if(result.invalid())
@@ -3053,7 +3052,7 @@ Result<DataStructure> LoadDataStructureMetadataInternal(const nx::core::HDF5::Fi
   {
     return ImportDataStructureV8(fileReader, true);
   }
-  else if(fileVersion == DREAM3D::k_LegacyFileVersion)
+  if(fileVersion == DREAM3D::k_LegacyFileVersion)
   {
     return ImportLegacyDataStructure(fileReader, true);
   }
@@ -3097,7 +3096,7 @@ Result<> EagerLoadDataFromHDF5(DataStructure& dataStructure, const DataPath& dat
   {
     return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath);
   }
-  else if(fileVersion == DREAM3D::k_LegacyFileVersion)
+  if(fileVersion == DREAM3D::k_LegacyFileVersion)
   {
     const auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
     return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);

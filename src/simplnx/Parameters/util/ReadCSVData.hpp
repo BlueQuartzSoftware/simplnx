@@ -318,7 +318,7 @@ constexpr CSVType StringToCSVType(std::string_view csvTypeString)
   {
     return CSVType::int8;
   }
-  else if(csvTypeString == CSVTypeToString(CSVType::uint8).view())
+  if(csvTypeString == CSVTypeToString(CSVType::uint8).view())
   {
     return CSVType::uint8;
   }

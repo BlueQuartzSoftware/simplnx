@@ -258,10 +258,9 @@ Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
   {
     return FillDataStore(dataArray, dataArrayPath, datasetReader, start, count);
   }
-  else
-  {
-    return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count, shouldCancel);
-  }
+  
+      return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count, shouldCancel);
+ 
 }
 } // namespace Support
 } // namespace nx::core::HDF5

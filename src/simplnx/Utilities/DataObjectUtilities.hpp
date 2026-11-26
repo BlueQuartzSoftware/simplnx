@@ -117,7 +117,7 @@ constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
   {
     return IGeometry::Type::Image;
   }
-  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::RectGrid).view())
+  if(geomTypeString == GeometryTypeToString(IGeometry::Type::RectGrid).view())
   {
     return IGeometry::Type::RectGrid;
   }

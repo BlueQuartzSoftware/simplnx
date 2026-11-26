@@ -462,7 +462,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has 0 total tuples.  At least 1 tuple is required.", tupleDimsStr, tupleTotal, totalImportedLines);
     return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(ReadCSVFile::IssueCodes::INCORRECT_TUPLES), errMsg), .outputValues = {}};
   }
-  else if(tupleTotal > totalImportedLines && !useExistingGroupOrAM)
+  if(tupleTotal > totalImportedLines && !useExistingGroupOrAM)
   {
     std::string tupleDimsStr = FileUtilities::CSV::TupleDimsToString(readCSVData.tupleDims);
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} total tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr,

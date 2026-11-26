@@ -1158,15 +1158,14 @@ PYBIND11_MODULE(simplnx, mod)
       }
       return outputPaths;
     }
-    else
-    {
-      auto result_ = nx::core::GetAllChildDataPaths(self, parentPath);
+    
+          auto result_ = nx::core::GetAllChildDataPaths(self, parentPath);
       if(result_)
       {
         return result_.value();
       }
       return std::vector<DataPath>{};
-    }
+   
   });
   dataStructure.def("get_children", [](DataStructure& self, const std::string& parentPath) {
     if(parentPath.empty())
@@ -1179,9 +1178,8 @@ PYBIND11_MODULE(simplnx, mod)
       }
       return outputPaths;
     }
-    else
-    {
-      auto pathConversionResult = DataPath::FromString(parentPath);
+    
+          auto pathConversionResult = DataPath::FromString(parentPath);
       if(!pathConversionResult)
       {
         return std::vector<DataPath>{};
@@ -1193,7 +1191,7 @@ PYBIND11_MODULE(simplnx, mod)
         return result_.value();
       }
       return std::vector<DataPath>{};
-    }
+   
   });
 
   auto dataObjectType = py::enum_<DataObject::Type>(dataObject, "DataObjectType");

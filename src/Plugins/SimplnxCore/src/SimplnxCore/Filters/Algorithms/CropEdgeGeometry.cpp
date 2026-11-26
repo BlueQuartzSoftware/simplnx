@@ -368,7 +368,7 @@ Result<> CropEdgeGeometry::operator()()
                                           std::to_string(outsideZ), boundingBox[0], boundingBox[1], boundingBox[2], boundingBox[3], boundingBox[4], boundingBox[5]);
         return MakeErrorResult(to_underlying(ErrorCodes::OutsideVertexError), message);
       }
-      else if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
+      if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
       {
         const auto clipPoint = interpolate_outside_vertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
         const auto key = std::make_pair(outsideVertexIdx, clipPoint);

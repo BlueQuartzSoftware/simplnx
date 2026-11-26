@@ -542,10 +542,9 @@ bool DataStructure::removeData(const std::optional<DataObject::IdType>& identifi
   {
     return false;
   }
-  else
-  {
-    return removeData(identifier.value());
-  }
+  
+      return removeData(identifier.value());
+ 
 }
 
 bool DataStructure::removeData(const DataPath& path)

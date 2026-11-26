@@ -396,7 +396,7 @@ Result<> ReadString(std::istream& in, char* result, usize length)
     {
       return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadStringEofErr), "Failed to read string: Reached end of the file.");
     }
-    else if(in.bad())
+    if(in.bad())
     {
       return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadStringReadErr), "Failed to read string: Read error on input operation.");
     }

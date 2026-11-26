@@ -299,15 +299,14 @@ std::vector<std::string> standardizeMultiComponent(const usize numComps, const s
   {
     return {componentValues};
   }
-  else
-  {
-    std::vector<std::string> standardized(numComps);
+  
+      std::vector<std::string> standardized(numComps);
     for(usize comp = 0; comp < numComps; comp++)
     {
       standardized[comp] = componentValues[0];
     }
     return standardized;
-  }
+ 
 }
 
 /**

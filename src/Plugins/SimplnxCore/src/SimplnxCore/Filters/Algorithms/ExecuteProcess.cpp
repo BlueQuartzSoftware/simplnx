@@ -82,7 +82,7 @@ Result<> ExecuteProcess::operator()()
     outFile.close();
     return MakeErrorResult<>(-56410, fmt::format("Program {} not found. Make sure it's available from the PATH.", arguments[0]));
   }
-  else if(ec)
+  if(ec)
   {
     outFile.close();
     return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));

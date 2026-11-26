@@ -155,10 +155,9 @@ FilterList* Pipeline::getActiveFilterList() const
   {
     return getFilterList();
   }
-  else
-  {
-    return Application::Instance()->getFilterList();
-  }
+  
+      return Application::Instance()->getFilterList();
+ 
 }
 
 AbstractPipelineNode::NodeType Pipeline::getType() const
@@ -294,7 +293,7 @@ bool Pipeline::preflightFrom(index_type index, RenamedPaths& /*renamedPaths*/, c
   {
     return preflight(shouldCancel);
   }
-  else if(index >= size())
+  if(index >= size())
   {
     return false;
   }

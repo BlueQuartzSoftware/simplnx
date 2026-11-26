@@ -1614,10 +1614,9 @@ Result<> IdentifySampleCCL::operator()()
     return ExecuteDataFunction(IdentifySampleSliceCCLFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles,
                                static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
   }
-  else
-  {
-    return ExecuteDataFunction(IdentifySampleCCLFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
-  }
+  
+      return ExecuteDataFunction(IdentifySampleCCLFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
+ 
 
   return {};
 }

@@ -3586,7 +3586,7 @@ struct DBSCANScanlineFunctor
     {
       return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, shouldCancel);
     }
-    else if(inputArray.getNumberOfComponents() == 3)
+    if(inputArray.getNumberOfComponents() == 3)
     {
       return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, shouldCancel);
     }

@@ -28,7 +28,7 @@ void AbstractDataStructureObserver::startObservingStructure(DataStructure* obser
   {
     return;
   }
-  else if(isObservingStructure())
+  if(isObservingStructure())
   {
     stopObservingStructure();
   }

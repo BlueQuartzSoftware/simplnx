@@ -1260,7 +1260,7 @@ struct DBSCANDirectFunctor
     {
       return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, messageHandler, shouldCancel);
     }
-    else if(inputArray.getNumberOfComponents() == 3)
+    if(inputArray.getNumberOfComponents() == 3)
     {
       return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, messageHandler, shouldCancel);
     }

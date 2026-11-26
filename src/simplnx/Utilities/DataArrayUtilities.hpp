@@ -826,10 +826,9 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
     {
       break;
     }
-    else
-    {
-      idx[d] = 0;
-    }
+    
+          idx[d] = 0;
+   
   }
 }
 } // namespace Indexing

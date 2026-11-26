@@ -80,7 +80,7 @@ public:
         readProcessDefinition();
         continue;
       }
-      else if(tokens == k_StoppingAndStepControls)
+      if(tokens == k_StoppingAndStepControls)
       {
         // Skip the comment line that ends the header
         getNextLineTokens();
