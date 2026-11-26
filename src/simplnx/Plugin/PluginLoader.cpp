@@ -51,9 +51,9 @@ bool UnloadSharedLibrary(void* handle)
 #endif
 }
 
-template <class Func, class = std::enable_if_t<is_function_ptr_v<Func>>>
+template <class Func>
 Func ImportFunction(void* handle, const char* funcName)
-{
+requires (is_function_ptr_v<Func>) {
 #if defined(_WIN32)
   return reinterpret_cast<Func>(GetProcAddress(reinterpret_cast<HINSTANCE>(handle), funcName));
 #elif defined(__linux__) || defined(__APPLE__)

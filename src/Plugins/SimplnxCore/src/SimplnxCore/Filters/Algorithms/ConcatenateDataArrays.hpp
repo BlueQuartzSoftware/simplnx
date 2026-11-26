@@ -28,10 +28,10 @@ struct is_allowed_array_type<StringArray> : std::true_type
 };
 
 template <typename ArrayType>
-typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type ConcatenateArraysImpl(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths,
+Result<> ConcatenateArraysImpl(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths,
                                                                                                        const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler,
                                                                                                        const std::atomic_bool& shouldCancel)
-{
+requires is_allowed_array_type<ArrayType>::value {
   auto& outputDataArray = dataStructure.getDataRefAs<ArrayType>(outputArrayPath);
   usize destTupleOffset = 0;
   for(const auto& inputArrayPath : inputArrayPaths)

@@ -182,8 +182,8 @@ Result<ToT> ConvertInvalidResult(Result<FromT>&& result)
 }
 
 template <class ToT, class FromT>
-std::enable_if_t<std::is_convertible_v<FromT, ToT>, Result<ToT>> ConvertResultTo(Result<FromT>&& from)
-{
+Result<ToT> ConvertResultTo(Result<FromT>&& from)
+requires (std::is_convertible_v<FromT, ToT>) {
   if(from.invalid())
   {
     return {{nonstd::make_unexpected(std::move(from.errors()))}, std::move(from.warnings())};

@@ -71,9 +71,9 @@ public:
    * The format is min X, min Y, min Z, max X, max Y, max Z.
    * @param arr
    */
-  template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT, Point3D<ValueType>>::value>>
+  template <class PointT = PointType>
   explicit BoundingBox(nonstd::span<const ValueType, 6> arr)
-  : m_Lower(Point3D<ValueType>(arr[0], arr[1], arr[2]))
+  requires std::is_same<PointT, Point3D<ValueType>>::value : m_Lower(Point3D<ValueType>(arr[0], arr[1], arr[2]))
   , m_Upper(Point3D<ValueType>(arr[3], arr[4], arr[5]))
   {
   }
@@ -83,9 +83,9 @@ public:
    * The format is min X, min Y, max X, max Y.
    * @param arr
    */
-  template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT, Point2D<ValueType>>::value>>
+  template <class PointT = PointType>
   explicit BoundingBox(nonstd::span<const ValueType, 4> arr)
-  : m_Lower(Point2D<ValueType>(arr[0], arr[1]))
+  requires std::is_same<PointT, Point2D<ValueType>>::value : m_Lower(Point2D<ValueType>(arr[0], arr[1]))
   , m_Upper(Point2D<ValueType>(arr[2], arr[3]))
   {
   }
