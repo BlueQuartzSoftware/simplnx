@@ -121,8 +121,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadImageStackTest.cpp
   ReadMhaFileTest.cpp
   ReadNIfTIFileTest.cpp
+  ReconstructionFilterTestUtils.cpp
   ReadVolumeGraphicsFileTest.cpp
   ReadZeissTxmFileTest.cpp
+  UnaryFilterTestUtils.cpp
   WriteImageTest.cpp
 )
 

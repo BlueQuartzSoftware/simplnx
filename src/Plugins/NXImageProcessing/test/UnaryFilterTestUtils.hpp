@@ -14,8 +14,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace ip_test
@@ -100,7 +102,7 @@ inline DataPath BuildScalarValuesImage(DataStructure& ds, const std::vector<T>& 
 /**
  * @brief Runs a pointwise unary NXImageProcessing filter (preflight + execute) on @p inputPath, writing the result
  *        to sibling array "Output", and returns that output DataPath. Requires the three boilerplate key constants
- *        every pointwise filter exposes. The caller owns LoadPlugins()/storage-mode setup (a domain-edge test pins
+ *        every pointwise filter exposes. The caller owns the storage-mode setup (a domain-edge test pins
  *        ForceInCore). A test uses this helper to check a single crafted input.
  */
 template <class FilterT>
@@ -117,4 +119,12 @@ inline DataPath RunPointwiseFilter(DataStructure& ds, const DataPath& inputPath)
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return inputPath.replaceName("Output");
 }
+
+using PointwiseFilterRunner = DataPath(DataStructure&, const DataPath&);
+
+/** @brief Compares the filter's output for Ramp-Zero-One-Float.nrrd with the specified ITK baseline image. */
+void CheckItkRampBaseline(PointwiseFilterRunner& runFilter, std::string_view baselineFile, float64 tolerance);
+
+/** @brief Compares the filter's output for Ramp-Zero-One-Float.nrrd with the specified ITK MD5 hash. */
+void CheckItkRampMd5(PointwiseFilterRunner& runFilter, std::string_view expectedHash);
 } // namespace ip_test

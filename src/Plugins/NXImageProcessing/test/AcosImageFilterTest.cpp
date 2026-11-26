@@ -1,4 +1,3 @@
-#include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/AcosImageFilter.hpp"
@@ -30,34 +29,5 @@ TEST_CASE("NXImageProcessing::AcosImageFilter: acos of |x|>1 is NaN (domain edge
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::AcosImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][AcosImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-
-  const DataPath geom({"Image Geometry"});
-  const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
-  const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
-
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
-  SIMPLNX_RESULT_REQUIRE_VALID(readInput);
-
-  Arguments args;
-  args.insertOrAssign(AcosImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geom));
-  args.insertOrAssign(AcosImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(AcosImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  AcosImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-  // DURABLE golden: baseline compare @ 0.01 (SameAsInput output owned by 'geom').
-  const DataPath bGeom({"Baseline Geometry"});
-  const auto readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath("BasicFilters_AcosImageFilter_defaults.nrrd"), bGeom, "CellData", "Baseline");
-  SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
-  const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.01);
-  SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
-
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  ip_test::CheckItkRampBaseline(ip_test::RunPointwiseFilter<AcosImageFilter>, "BasicFilters_AcosImageFilter_defaults.nrrd", 0.01);
 }

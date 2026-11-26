@@ -7,7 +7,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <catch2/catch.hpp>
@@ -102,11 +101,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXIm
   SECTION("multi-component rejected")
   {
     DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
-    const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    const DataPath vecPath = rt::BuildThreeComponentImage(ds);
     const DataPath geomPath = vecPath.getParent().getParent();
     ZCFilter filter;
     Arguments args;

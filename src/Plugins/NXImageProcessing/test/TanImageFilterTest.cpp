@@ -1,4 +1,3 @@
-#include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/TanImageFilter.hpp"
@@ -36,34 +35,5 @@ TEST_CASE("NXImageProcessing::TanImageFilter: tan near pi/2 is large-magnitude f
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::TanImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][TanImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-
-  const DataPath geom({"Image Geometry"});
-  const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
-  const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
-
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
-  SIMPLNX_RESULT_REQUIRE_VALID(readInput);
-
-  Arguments args;
-  args.insertOrAssign(TanImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geom));
-  args.insertOrAssign(TanImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(TanImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  TanImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-  // DURABLE golden: baseline compare @ 0.01.
-  const DataPath bGeom({"Baseline Geometry"});
-  const auto readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath("BasicFilters_TanImageFilter_defaults.nrrd"), bGeom, "CellData", "Baseline");
-  SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
-  const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.01);
-  SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
-
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  ip_test::CheckItkRampBaseline(ip_test::RunPointwiseFilter<TanImageFilter>, "BasicFilters_TanImageFilter_defaults.nrrd", 0.01);
 }

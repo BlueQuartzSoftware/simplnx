@@ -160,6 +160,9 @@ inline std::vector<T> MakePlateauPattern(usize dimX, usize dimY, usize dimZ)
   return v;
 }
 
+/** @brief Creates a 6 x 6 x 1 image with a three-component int32 cell array for scalar-input preflight tests. */
+DataPath BuildThreeComponentImage(DataStructure& ds);
+
 /**
  * @brief Builds an ImageGeom "Image Geometry" (dimX x dimY x dimZ) with cell AttributeMatrix "CellData" and a
  *        scalar cell array "Input" of element type T, bulk-filled from @p pattern (so it is efficient even on a
