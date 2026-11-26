@@ -197,10 +197,10 @@ public:
   , m_TotalFaceArea(totalFaceArea)
   , m_NumDistinctGBs(numDistinctGBs)
   , m_BallVolume(ballVolume)
-  , m_Crystal(crystal)
+  , m_Crystal(crystal), m_NSym(m_OrientationOps[crystal]->getNumSymOps())
   {
     m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-    m_NSym = m_OrientationOps[crystal]->getNumSymOps();
+    
   }
 
   void probe(usize start, usize end) const

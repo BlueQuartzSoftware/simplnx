@@ -242,9 +242,9 @@ public:
    * @param length
    */
   CachedRay(const typename Ray<T>::PointType& origin, typename Ray<T>::ZXZEulerType ang, typename Ray<T>::LengthType length)
-  : Ray<T>(origin, std::move(ang), length)
+  : Ray<T>(origin, std::move(ang), length), m_Endpoint(this->calculateEndpoint())
   {
-    m_Endpoint = this->calculateEndpoint();
+    
   }
 
   /**
