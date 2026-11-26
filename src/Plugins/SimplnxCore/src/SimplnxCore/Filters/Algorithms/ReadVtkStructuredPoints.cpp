@@ -420,8 +420,8 @@ Result<> ReadString(std::istream& in, char* result, usize length)
  */
 char* LowerCase(char* str, const usize len)
 {
-  usize i;
-  char* s;
+  usize i = 0;
+  char* s = nullptr;
 
   for(i = 0, s = str; *s != '\0' && i < len; s++, i++)
   {

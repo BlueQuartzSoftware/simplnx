@@ -96,8 +96,8 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
   auto progressIncrement = dims[2] / 100;
   usize progressCounter = 0;
-  int32 featureName;
-  int64 kStride, jStride;
+  int32 featureName = 0;
+  int64 kStride = 0, jStride = 0;
   for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
   {
     if(shouldCancel)
@@ -246,7 +246,7 @@ usize FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vecto
   const usize totalPoints = featureIds.getNumberOfTuples();
   usize filledCellCount = 0;
 
-  int32 featureName, neighbor;
+  int32 featureName = 0, neighbor = 0;
   for(usize j = 0; j < totalPoints; j++)
   {
     if(shouldCancel)

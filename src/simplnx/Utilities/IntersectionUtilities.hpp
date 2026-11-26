@@ -4,6 +4,8 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
+#include <math.h>
+
 #include <Eigen/Dense>
 
 #include <array>
@@ -153,7 +155,7 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
 inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec3f& vert0, const Vec3f& vert1, const Vec3f& vert2, Vec3f& bcoord)
 {
   Vec3f edge1, edge2, tvec, pvec, qvec;
-  double det, inv_det;
+  double det = NAN, inv_det = NAN;
 
   /* find vectors for two edges sharing vert0 */
   edge1 = vert1 - vert0;
@@ -392,9 +394,9 @@ bool SphereIntersectsRectangularPrism(const std::array<T, 3>& sphereCenter, T ra
 
   if(outMinX || outMinY || outMinZ || outMaxX || outMaxY || outMaxZ)
   {
-    float32 xPoint;
-    float32 yPoint;
-    float32 zPoint;
+    float32 xPoint = NAN;
+    float32 yPoint = NAN;
+    float32 zPoint = NAN;
     if(outMinX && outMinY && outMinZ)
     {
       // Center is in C; Checking if point falls in sphere

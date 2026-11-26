@@ -55,7 +55,7 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
 
   std::vector<hsize_t> dims;
   H5T_class_t classType;
-  size_t sizeType;
+  size_t sizeType = 0;
   herr_t err = H5Lite::getDatasetInfo(exemplarFileId, datasetPath, dims, classType, sizeType);
   size_t totalElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<size_t>(1), std::multiplies<>());
 
@@ -137,7 +137,7 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
  ************************************************************/
 herr_t VisitorFunction(hid_t locId, const char* name, const H5O_info_t* info, void* /*operatorData*/)
 {
-  herr_t status;
+  herr_t status = 0;
 
   switch(info->type)
   {

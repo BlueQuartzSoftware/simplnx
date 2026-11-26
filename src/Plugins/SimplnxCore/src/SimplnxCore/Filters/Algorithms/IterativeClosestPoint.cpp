@@ -1,5 +1,7 @@
 #include "IterativeClosestPoint.hpp"
 
+#include <math.h>
+
 #include "nanoflann/nanoflann.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -146,8 +148,8 @@ Result<> IterativeClosestPoint::operator()()
 
     for(usize j = 0; j < numMovingVerts; j++)
     {
-      usize identifier;
-      float dist;
+      usize identifier = 0;
+      float dist = NAN;
       nanoflann::KNNResultSet<float> results(nn);
       results.init(&identifier, &dist);
       index.findNeighbors(results, movingCopyPtr + (3 * j), nanoflann::SearchParams());

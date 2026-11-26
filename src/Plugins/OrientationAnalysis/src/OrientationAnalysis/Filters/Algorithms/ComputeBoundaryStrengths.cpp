@@ -6,6 +6,7 @@
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <math.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
 using namespace nx::core;
@@ -47,7 +48,7 @@ Result<> ComputeBoundaryStrengths::operator()()
 
   const usize numTriangles = surfaceMeshFaceLabelsArrayRef.getNumberOfTuples();
 
-  float32 mPrime_1, mPrime_2, F1_1, F1_2, F1spt_1, F1spt_2, F7_1, F7_2;
+  float32 mPrime_1 = NAN, mPrime_2 = NAN, F1_1 = NAN, F1_2 = NAN, F1spt_1 = NAN, F1spt_2 = NAN, F7_1 = NAN, F7_2 = NAN;
 
   nx::core::Vec3<float64> LD = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
   LD = LD.normalize();

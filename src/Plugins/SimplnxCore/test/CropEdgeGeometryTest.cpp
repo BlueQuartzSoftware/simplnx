@@ -493,7 +493,7 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Invalid Params", "[SimplnxCore]
 
   std::vector<float32> minCoords;
   std::vector<float32> maxCoords;
-  int64 errCode;
+  int64 errCode = 0;
 
   SECTION("X Min > X Max")
   {

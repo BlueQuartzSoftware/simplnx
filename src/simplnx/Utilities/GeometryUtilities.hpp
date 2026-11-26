@@ -289,7 +289,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   // Update the triangle nodes to reflect the unique ids
-  IGeometry::MeshIndexType nCells;
+  IGeometry::MeshIndexType nCells = 0;
   usize nVerticesPerCell = 0;
   if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
   {

@@ -10,6 +10,7 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <fmt/format.h>
+#include <math.h>
 #include <nonstd/span.hpp>
 
 #include <atomic>
@@ -172,7 +173,7 @@ inline double ModifiedBesselI0(double y)
 inline double ModifiedBesselI1(double y)
 {
   const double d = std::abs(y);
-  double accumulator;
+  double accumulator = NAN;
   if(d < 3.75)
   {
     double m = y / 3.75;

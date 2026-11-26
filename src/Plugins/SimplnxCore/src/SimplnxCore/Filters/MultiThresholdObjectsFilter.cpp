@@ -1,5 +1,7 @@
 #include "MultiThresholdObjectsFilter.hpp"
 
+#include <math.h>
+
 #include "SimplnxCore/Filters/Algorithms/MultiThresholdObjects.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
@@ -52,8 +54,8 @@ struct CheckCustomValueInBounds
   template <typename T>
   Result<> operator()(float64 customValue)
   {
-    float64 minValue;
-    float64 maxValue;
+    float64 minValue = NAN;
+    float64 maxValue = NAN;
     if constexpr(std::is_floating_point_v<T>)
     {
       // Floating Point Types

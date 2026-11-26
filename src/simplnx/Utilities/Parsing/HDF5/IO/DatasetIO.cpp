@@ -1887,7 +1887,7 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
     const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
 
     /* create a string data type */
-    hid_t typeId;
+    hid_t typeId = 0;
     if((typeId = H5Tcopy(H5T_C_S1)) >= 0)
     {
       size_t size = text.size() + 1;
@@ -1896,7 +1896,7 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
         if(H5Tset_strpad(typeId, H5T_STR_NULLTERM) >= 0)
         {
           /* Create the data space for the dataset. */
-          hid_t dataspaceId;
+          hid_t dataspaceId = 0;
           if((dataspaceId = H5Screate(H5S_SCALAR)) >= 0)
           {
             /* Create or open the dataset. */
@@ -2073,8 +2073,8 @@ std::string DatasetIO::getFilterName() const
     const int numFilters = H5Pget_nfilters(cpListId);
     for(int j = 0; j < numFilters; ++j)
     {
-      unsigned int flags;
-      unsigned int filterConfig;
+      unsigned int flags = 0;
+      unsigned int filterConfig = 0;
       size_t cdNElements = 0;
       char name[1024];
       H5Z_filter_t filter = H5Pget_filter2(cpListId, j, &flags, &cdNElements, nullptr, std::size(name) / sizeof(*name), name, &filterConfig);

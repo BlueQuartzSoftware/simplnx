@@ -1,5 +1,7 @@
 #include "ReadDeformKeyFileV12.hpp"
 
+#include <math.h>
+
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
@@ -207,7 +209,7 @@ private:
     }
     for(usize comp = 0; comp < numComp; comp++)
     {
-      float32 value;
+      float32 value = NAN;
       try
       {
         value = std::stof(tokens[tokenOffset + comp]);
@@ -320,7 +322,7 @@ private:
       return {};
     }
 
-    usize numVars;
+    usize numVars = 0;
     Result<> result = parse_ull(tokens.at(2), numVars);
     if(result.invalid())
     {
@@ -639,7 +641,7 @@ private:
       {
         return {};
       }
-      bool isWord;
+      bool isWord = false;
       std::vector<std::string> tokens;
       // Read the line. This line _Should_ be the start of "section" of data.
       {
@@ -672,7 +674,7 @@ private:
       if(word == k_VertexTitle)
       {
         vertHit = true;
-        usize numVerts;
+        usize numVerts = 0;
         Result<> result = parse_ull(tokens.at(2), numVerts);
         if(result.invalid())
         {
@@ -699,7 +701,7 @@ private:
       else if(word == k_CellTitle)
       {
         quadHit = true;
-        usize numCells;
+        usize numCells = 0;
         Result<> result = parse_ull(tokens.at(2), numCells);
         if(result.invalid())
         {
@@ -727,7 +729,7 @@ private:
       {
         // This is most likely the beginning of a data array
         std::string dataArrayName = tokens.at(0);
-        usize tupleCount;
+        usize tupleCount = 0;
         Result<> tupResult = parse_ull(tokens.at(2), tupleCount);
         if(tupResult.invalid())
         {

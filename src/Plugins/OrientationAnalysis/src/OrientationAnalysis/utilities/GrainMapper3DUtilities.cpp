@@ -186,7 +186,7 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
   // up with the actual dimensions of the HDF5 data set.
   std::vector<hsize_t> dims;
   H5T_class_t classType;
-  size_t sizeType;
+  size_t sizeType = 0;
   H5Lite::getDatasetInfo(labDctGid, "Data/Completeness", dims, classType, sizeType);
   // Note that we need to flip the order of dimensions from ZYX to XYZ
   m_LabDctDimensions = {static_cast<size_t>(dims[2]), static_cast<size_t>(dims[1]), static_cast<size_t>(dims[0])};

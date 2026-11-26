@@ -501,8 +501,8 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
                 continue;
               }
 
-              int64 dxStart;
-              int64 dxEnd;
+              int64 dxStart = 0;
+              int64 dxEnd = 0;
               if(dz < 0)
               {
                 dxStart = -1;

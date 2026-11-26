@@ -187,7 +187,7 @@ public:
   int32 GBCDIndex(const std::vector<float32>& gbcdDelta, const std::vector<int32>& gbcdSz, const std::vector<float32>& gbcdLimits, const float32* eulerN, const float32* sqCoord) const
   {
     constexpr usize k_GBCDParamCount = 5;
-    int32 gbcdIndex;
+    int32 gbcdIndex = 0;
     int32 index[k_GBCDParamCount] = {0, 0, 0, 0, 0};
     int32 flagGood = 1;
 

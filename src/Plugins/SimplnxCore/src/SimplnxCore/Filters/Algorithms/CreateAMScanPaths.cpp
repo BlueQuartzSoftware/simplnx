@@ -259,7 +259,7 @@ void extractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INod
     usize oldV0 = edges[2 * i];
     usize oldV1 = edges[2 * i + 1];
 
-    usize newV0;
+    usize newV0 = 0;
     auto itV0 = vertexMap.find(oldV0);
     if(itV0 == vertexMap.end())
     {
@@ -274,7 +274,7 @@ void extractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INod
       newV0 = itV0->second;
     }
 
-    usize newV1;
+    usize newV1 = 0;
     auto itV1 = vertexMap.find(oldV1);
     if(itV1 == vertexMap.end())
     {

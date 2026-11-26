@@ -108,7 +108,7 @@ SIMPLNX_EXPORT int32_t ReadLine(std::istream& in, char* buffer, size_t length);
 template <typename T, typename K>
 Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
 {
-  int32 err;
+  int32 err = 0;
   if(!std::filesystem::exists(filename))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
@@ -241,7 +241,7 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
 template <typename T>
 Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter)
 {
-  int32 err;
+  int32 err = 0;
   if(!std::filesystem::exists(filename))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));

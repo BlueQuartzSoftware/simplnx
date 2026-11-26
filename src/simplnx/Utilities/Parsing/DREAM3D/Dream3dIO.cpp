@@ -1771,7 +1771,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   }
 
   auto childrenResult = MergeResults(daResults);
-  uint32 amType;
+  uint32 amType = 0;
   auto amTypeResult = amGroupReader.readScalarAttribute<uint32>("AttributeMatrixType");
   if(amTypeResult.invalid())
   {

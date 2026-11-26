@@ -96,7 +96,7 @@ herr_t nx::core::HDF5::Support::FindAttribute(hid_t locationId, const std::strin
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  hsize_t attributeNum;
+  hsize_t attributeNum = 0;
   herr_t returnError = 0;
 
   attributeNum = 0;

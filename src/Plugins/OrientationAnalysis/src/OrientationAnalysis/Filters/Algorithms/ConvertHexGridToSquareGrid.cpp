@@ -9,6 +9,7 @@
 
 #include <EbsdLib/IO/TSL/AngConstants.h>
 #include <EbsdLib/IO/TSL/AngReader.h>
+#include <math.h>
 
 #include "simplnx/Utilities/ProgressEstimator.hpp"
 
@@ -147,8 +148,8 @@ public:
       }
 
       // Reusable variables for the loop
-      int32 hexGridIndex, hexGridIndex1, hexGridIndex2;
-      float32 xHex1, xHex2;
+      int32 hexGridIndex = 0, hexGridIndex1 = 0, hexGridIndex2 = 0;
+      float32 xHex1 = NAN, xHex2 = NAN;
 
       // Now loop on every cell in the replacement square grid
       for(int32 j = 0; j < m_SqrNumRows; j++)

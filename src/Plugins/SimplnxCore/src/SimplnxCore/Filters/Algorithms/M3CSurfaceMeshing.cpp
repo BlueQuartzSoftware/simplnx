@@ -630,7 +630,7 @@ int treat_anomaly(const std::array<SiteId, 4>& tnst, const int32* p1, const Neig
     }
   }
 
-  int tempFlag;
+  int tempFlag = 0;
   if(minid == -1 || minid == 1 || minid == 3)
   {
     tempFlag = 0;
@@ -1035,7 +1035,7 @@ FaceEdgeLoops burnFaceEdgeLoops(const SiteId* afe, const Segment* e1, int nfedge
     {
       burnt[i] = loopID;
       burnt_list[tail] = cedge;
-      int coin;
+      int coin = 0;
       do
       {
         SiteId chaser = burnt_list[tail];
@@ -1140,7 +1140,7 @@ FaceEdgeLoops burnAndOrientFaceEdgeLoops(const SiteId* afe, Segment* e1, int nfe
     {
       burnt[i] = loopID;
       burnt_list[tail] = cedge;
-      int coin;
+      int coin = 0;
       do
       {
         SiteId chaser = burnt_list[tail];
@@ -1159,8 +1159,8 @@ FaceEdgeLoops burnAndOrientFaceEdgeLoops(const SiteId* afe, Segment* e1, int nfe
             SiteId nnode1 = static_cast<SiteId>(e1[nedge].node_id[0]);
             SiteId nnode2 = static_cast<SiteId>(e1[nedge].node_id[1]);
             int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
-            int nodeFlag;
-            int flip;
+            int nodeFlag = 0;
+            int flip = 0;
             if((cnode2 == nnode1) && (cnode1 != nnode2))
             {
               nodeFlag = 1;
