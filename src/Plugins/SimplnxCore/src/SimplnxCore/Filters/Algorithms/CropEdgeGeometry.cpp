@@ -255,7 +255,6 @@ CropEdgeGeometry::CropEdgeGeometry(DataStructure& dataStructure, const IFilter::
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CropEdgeGeometry::getCancel()
 {

@@ -129,8 +129,6 @@ SurfaceNetsDirect::SurfaceNetsDirect(DataStructure& dataStructure, const IFilter
 {
 }
 
-
-
 Result<> SurfaceNetsDirect::operator()()
 {
   const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();

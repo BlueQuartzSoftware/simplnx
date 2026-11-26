@@ -574,8 +574,7 @@ public:
   PyFilter() = delete;
 
   PyFilter(py::object object)
-  : 
-   m_Object(std::move(object))
+  : m_Object(std::move(object))
   {
     py::gil_scoped_acquire gil;
     m_Name = m_Object.attr("name")().cast<std::string>();
@@ -656,10 +655,10 @@ protected:
       return result;
     } catch(const py::error_already_set& pyException)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
     } catch(const std::exception& exception)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
     }
   }
 

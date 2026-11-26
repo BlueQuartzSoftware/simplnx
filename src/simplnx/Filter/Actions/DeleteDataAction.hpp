@@ -26,7 +26,7 @@ public:
    * @param path The path to the DataObject to delete
    * @param type The deletion type
    */
-  DeleteDataAction(DataPath  path, DeleteType type = DeleteType::JustObject);
+  DeleteDataAction(DataPath path, DeleteType type = DeleteType::JustObject);
 
   ~DeleteDataAction() noexcept override;
 

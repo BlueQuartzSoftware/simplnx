@@ -13,7 +13,6 @@ ReshapeDataArray::ReshapeDataArray(DataStructure& dataStructure, const IFilter::
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReshapeDataArray::getCancel()
 {

@@ -343,8 +343,6 @@ ComputeFeatureBoundsDirect::ComputeFeatureBoundsDirect(DataStructure& dataStruct
 {
 }
 
-
-
 Result<> ComputeFeatureBoundsDirect::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();

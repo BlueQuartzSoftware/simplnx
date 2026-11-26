@@ -351,7 +351,7 @@ Preferences* Application::getPreferences()
   return m_Preferences.get();
 }
 
-JsonPipelineBuilder* Application::getPipelineBuilder() 
+JsonPipelineBuilder* Application::getPipelineBuilder()
 {
   return nullptr;
 }

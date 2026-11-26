@@ -21,7 +21,7 @@ constexpr StringLiteral k_Units = "units";
 constexpr StringLiteral k_SelectedGroup = "selected_group";
 } // namespace
 
-CalculatorParameter::CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+CalculatorParameter::CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {

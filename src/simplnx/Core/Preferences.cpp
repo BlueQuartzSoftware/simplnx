@@ -86,8 +86,8 @@ struct OocSizeKeys
  */
 std::array<OocSizeKeys, 2> oocSizeKeys()
 {
-  return {OocSizeKeys{.bytesKey=std::string(Preferences::k_LargeDataSize_Key), .gbKey=std::string(Preferences::k_LargeDataSizeGB_Key)},
-          OocSizeKeys{.bytesKey=std::string(Preferences::k_LargeDataStructureSize_Key), .gbKey=std::string(Preferences::k_LargeDataStructureSizeGB_Key)}};
+  return {OocSizeKeys{.bytesKey = std::string(Preferences::k_LargeDataSize_Key), .gbKey = std::string(Preferences::k_LargeDataSizeGB_Key)},
+          OocSizeKeys{.bytesKey = std::string(Preferences::k_LargeDataStructureSize_Key), .gbKey = std::string(Preferences::k_LargeDataStructureSizeGB_Key)}};
 }
 
 /**

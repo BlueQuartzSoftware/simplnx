@@ -1320,7 +1320,6 @@ ComputeBoundingBoxStatsDirect::ComputeBoundingBoxStatsDirect(DataStructure& data
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStatsDirect::operator()()
 {

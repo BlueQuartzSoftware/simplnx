@@ -39,7 +39,6 @@ WriteDREAM3D::WriteDREAM3D(DataStructure& dataStructure, const IFilter::MessageH
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteDREAM3D::operator()()
 {

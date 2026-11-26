@@ -16,7 +16,7 @@ struct fmt::formatter<nx::core::Error>
     return ctx.begin();
   }
 
-  static format_context::iterator format(const nx::core::Error& error, format_context& ctx) 
+  static format_context::iterator format(const nx::core::Error& error, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "Error({}, {})", error.code, error.message);
   }
@@ -24,7 +24,7 @@ struct fmt::formatter<nx::core::Error>
 
 namespace nx::core
 {
-ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices  choices)
+ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices choices)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_Choices(std::move(choices))

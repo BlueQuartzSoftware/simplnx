@@ -77,7 +77,7 @@ IFilter::PreflightResult IsoContourDistanceImageFilter::preflightImpl(const Data
   // AllNumeric admits ALL scalar types INCLUDING floating point (the legacy ScalarPixelIdTypeList).
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat32>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> IsoContourDistanceImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

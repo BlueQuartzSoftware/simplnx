@@ -70,7 +70,6 @@ IterativeClosestPoint::IterativeClosestPoint(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& IterativeClosestPoint::getCancel()
 {

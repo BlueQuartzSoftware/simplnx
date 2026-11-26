@@ -69,7 +69,7 @@ public:
   };
 
   ReadHDF5DatasetParameter() = delete;
-  ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~ReadHDF5DatasetParameter() override = default;
 
   ReadHDF5DatasetParameter(const ReadHDF5DatasetParameter&) = delete;

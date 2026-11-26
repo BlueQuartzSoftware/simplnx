@@ -82,7 +82,7 @@ public:
    * @brief Move constructor transfers ownership from another ImageGeom.
    * @param other The ImageGeom object to move from
    */
-  ImageGeom(ImageGeom&& other)  noexcept = default;
+  ImageGeom(ImageGeom&& other) noexcept = default;
 
   ~ImageGeom() noexcept override = default;
 

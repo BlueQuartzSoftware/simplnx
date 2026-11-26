@@ -213,7 +213,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

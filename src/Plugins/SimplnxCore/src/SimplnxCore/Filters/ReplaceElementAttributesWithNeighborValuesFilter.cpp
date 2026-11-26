@@ -102,7 +102,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, k_TupleCountMismatchError); tupleResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   {
     if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, k_ComparisonNotInCellDataError, "Input Comparison Array"); cellDataResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
     }
   }
 
@@ -127,7 +127,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
     }
   }
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

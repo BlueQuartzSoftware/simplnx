@@ -21,7 +21,6 @@ ComputeFeatureNeighborMisorientations::ComputeFeatureNeighborMisorientations(Dat
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighborMisorientations::operator()()
 {

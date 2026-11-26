@@ -236,7 +236,6 @@ ReadZeissTxmFile::ReadZeissTxmFile(DataStructure& dataStructure, const IFilter::
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReadZeissTxmFile::getCancel() const
 {

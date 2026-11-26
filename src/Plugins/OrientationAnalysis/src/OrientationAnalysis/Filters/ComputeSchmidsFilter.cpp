@@ -140,21 +140,21 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pFeaturePhasesArrayPathValue, pAvgQuatsArrayPathValue});
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-13503, fmt::format("The Feature Phases array '{}' and Average Quaternions array '{}' must have equal tuple counts. {}",
-                                                               pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString(), tupleValidityCheck.error()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-13503, fmt::format("The Feature Phases array '{}' and Average Quaternions array '{}' must have equal tuple counts. {}",
+                                                                                pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString(), tupleValidityCheck.error()))};
   }
 
   if(phasesRef.getNumberOfTuples() == 0)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(
-        -13504, fmt::format("The Feature Phases array '{}' and Average Quaternions array '{}' each contain 0 tuples. They must contain at least the Feature 0 sentinel tuple.",
-                            pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -13504, fmt::format("The Feature Phases array '{}' and Average Quaternions array '{}' each contain 0 tuples. They must contain at least the Feature 0 sentinel tuple.",
+                                    pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString()))};
   }
 
   if(crystalStructuresRef.getNumberOfTuples() == 0)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(
-        -13505, fmt::format("The Crystal Structures array '{}' contains 0 tuples. It must contain at least one Ensemble tuple.", pCrystalStructuresArrayPathValue.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -13505, fmt::format("The Crystal Structures array '{}' contains 0 tuples. It must contain at least one Ensemble tuple.", pCrystalStructuresArrayPathValue.toString()))};
   }
 
   const auto vectorMagnitude = [](const VectorFloat32Parameter::ValueType& vector) {
@@ -163,8 +163,8 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
 
   if(vectorMagnitude(pLoadingDirectionValue) < std::numeric_limits<float32>::epsilon())
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-13506, fmt::format("Loading Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.", pLoadingDirectionValue[0],
-                                                               pLoadingDirectionValue[1], pLoadingDirectionValue[2]))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-13506, fmt::format("Loading Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.",
+                                                                                pLoadingDirectionValue[0], pLoadingDirectionValue[1], pLoadingDirectionValue[2]))};
   }
 
   const auto tupleShape = phasesRef.getIDataStore()->getTupleShape();
@@ -206,22 +206,22 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   {
     if(vectorMagnitude(pSlipPlaneValue) < std::numeric_limits<float32>::epsilon())
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(
-          -13507, fmt::format("Slip Plane <{}, {}, {}> has zero length. Its components must define a non-zero plane normal.", pSlipPlaneValue[0], pSlipPlaneValue[1], pSlipPlaneValue[2]))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -13507, fmt::format("Slip Plane <{}, {}, {}> has zero length. Its components must define a non-zero plane normal.", pSlipPlaneValue[0], pSlipPlaneValue[1], pSlipPlaneValue[2]))};
     }
     if(vectorMagnitude(pSlipDirectionValue) < std::numeric_limits<float32>::epsilon())
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-13508, fmt::format("Slip Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.", pSlipDirectionValue[0],
-                                                                 pSlipDirectionValue[1], pSlipDirectionValue[2]))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-13508, fmt::format("Slip Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.",
+                                                                                  pSlipDirectionValue[0], pSlipDirectionValue[1], pSlipDirectionValue[2]))};
     }
 
     // make sure direction lies in plane
     const float32 dotProduct = pSlipPlaneValue[0] * pSlipDirectionValue[0] + pSlipPlaneValue[1] * pSlipDirectionValue[1] + pSlipPlaneValue[2] * pSlipDirectionValue[2];
     if(0.0F != dotProduct)
     {
-      return {
-          .outputActions=MakeErrorResult<OutputActions>(-13500, fmt::format("Slip Plane <{}, {}, {}> and Slip Direction <{}, {}, {}> have a dot product of {}. The vectors must be perpendicular.", pSlipPlaneValue[0],
-                                                             pSlipPlaneValue[1], pSlipPlaneValue[2], pSlipDirectionValue[0], pSlipDirectionValue[1], pSlipDirectionValue[2], dotProduct))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -13500, fmt::format("Slip Plane <{}, {}, {}> and Slip Direction <{}, {}, {}> have a dot product of {}. The vectors must be perpendicular.", pSlipPlaneValue[0], pSlipPlaneValue[1],
+                                      pSlipPlaneValue[2], pSlipDirectionValue[0], pSlipDirectionValue[1], pSlipDirectionValue[2], dotProduct))};
     }
   }
 
@@ -232,7 +232,7 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   // None found in this filter based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

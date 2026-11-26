@@ -58,7 +58,6 @@ ReverseTriangleWinding::ReverseTriangleWinding(DataStructure& dataStructure, con
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ReverseTriangleWinding::operator()()
 {

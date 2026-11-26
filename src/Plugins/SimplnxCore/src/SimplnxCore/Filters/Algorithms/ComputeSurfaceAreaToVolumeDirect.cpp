@@ -26,8 +26,6 @@ ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure
 {
 }
 
-
-
 Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 {
   auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);

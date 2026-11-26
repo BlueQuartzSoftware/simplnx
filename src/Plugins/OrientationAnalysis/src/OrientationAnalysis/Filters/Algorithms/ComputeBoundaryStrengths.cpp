@@ -6,8 +6,8 @@
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
-#include <math.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
+#include <math.h>
 
 using namespace nx::core;
 
@@ -22,7 +22,6 @@ ComputeBoundaryStrengths::ComputeBoundaryStrengths(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeBoundaryStrengths::getCancel()

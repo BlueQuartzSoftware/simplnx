@@ -98,7 +98,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
   usize numComponents = inputArray->getNumberOfComponents();
   if(numComponents <= 1)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString()))};
   }
 
   ShapeType tDims = inputArray->getIDataStoreRef().getTupleShape();
@@ -112,9 +112,10 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
       auto compIndex = static_cast<usize>(comp);
       if(comp >= numComponents || comp < 0)
       {
-        return {.outputActions=MakeErrorResult<OutputActions>(
-            -65402, fmt::format("Selected component '{}' is not a valid component. Input array at path '{}' only has {} components, please choose a component number between 0 and {} to extract.",
-                                comp, pInputArrayPath.toString(), numComponents, numComponents - 1))};
+        return {
+            .outputActions = MakeErrorResult<OutputActions>(
+                -65402, fmt::format("Selected component '{}' is not a valid component. Input array at path '{}' only has {} components, please choose a component number between 0 and {} to extract.",
+                                    comp, pInputArrayPath.toString(), numComponents, numComponents - 1))};
       }
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(compIndex, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
@@ -136,7 +137,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pInputArrayPath, DeleteDataAction::DeleteType::JustObject));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

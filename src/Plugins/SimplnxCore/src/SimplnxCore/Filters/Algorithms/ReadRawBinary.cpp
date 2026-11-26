@@ -115,8 +115,6 @@ ReadRawBinary::ReadRawBinary(DataStructure& dataStructure, const ReadRawBinaryIn
 {
 }
 
-
-
 Result<> ReadRawBinary::operator()()
 {
   return execute();

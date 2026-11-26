@@ -180,7 +180,6 @@ ComputeLargestCrossSectionsDirect::ComputeLargestCrossSectionsDirect(DataStructu
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSectionsDirect::operator()()
 {

@@ -83,8 +83,6 @@ ComputeQuaternionConjugateDirect::ComputeQuaternionConjugateDirect(DataStructure
 {
 }
 
-
-
 const std::atomic_bool& ComputeQuaternionConjugateDirect::getCancel()
 {
   return m_ShouldCancel;

@@ -302,7 +302,6 @@ ExtractComponentAsArray::ExtractComponentAsArray(DataStructure& dataStructure, c
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractComponentAsArray::getCancel()
 {

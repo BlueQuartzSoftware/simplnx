@@ -65,7 +65,7 @@ public:
 private:
   fs::path m_InputPath;
 
-  LimitBoundAtomicFile(fs::path  inputPath)
+  LimitBoundAtomicFile(fs::path inputPath)
   : m_InputPath(std::move(inputPath))
   {
   }
@@ -283,7 +283,7 @@ public:
    * @param startValue Specifies the first triangle.
    * @param shouldCancel Stops before later triangles when true.
    */
-  SingleOutWrapper(WriteStlFile* filter, fs::path  path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+  SingleOutWrapper(WriteStlFile* filter, fs::path path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
                    const IGeometry::MeshIndexType startValue, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Path(std::move(path))

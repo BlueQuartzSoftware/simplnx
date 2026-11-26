@@ -90,16 +90,17 @@ public:
    * @param componentShape Component dimensions in slowest-to-fastest order.
    * @param initValue Initial value retained for future growth; nullopt leaves initial elements unwritten.
    */
-  DataStore(ShapeType  tupleShape, ShapeType  componentShape, std::optional<T> initValue)
+  DataStore(ShapeType tupleShape, ShapeType componentShape, std::optional<T> initValue)
   : parent_type(initValue)
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
-  , m_Data(std::unique_ptr<value_type[]>(new value_type[this->getSize()])), m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
+  , m_Data(std::unique_ptr<value_type[]>(new value_type[this->getSize()]))
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   {
     // new value_type[n] leaves the buffer uninitialized. Value initialization would add a full pass before the caller overwrites these values.
     // It would also hide reads of unwritten elements behind plausible zeros.
-    
+
     if(initValue.has_value())
     {
       std::fill_n(data(), this->getSize(), *initValue);
@@ -163,8 +164,8 @@ public:
    * @param rhs Source data store.
    * @return This data store.
    */
-  DataStore& operator=(DataStore&& rhs)
- noexcept   {
+  DataStore& operator=(DataStore&& rhs) noexcept
+  {
     m_ComponentShape = std::move(rhs.m_ComponentShape);
     m_TupleShape = std::move(rhs.m_TupleShape);
     m_Data = std::move(rhs.m_Data);

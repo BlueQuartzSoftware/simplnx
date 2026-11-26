@@ -293,8 +293,6 @@ ConvertQuaternion::ConvertQuaternion(DataStructure& dataStructure, const IFilter
 {
 }
 
-
-
 const std::atomic_bool& ConvertQuaternion::getCancel()
 {
   return m_ShouldCancel;

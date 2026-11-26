@@ -216,12 +216,12 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
     if(spacingValidation.invalid())
     {
-      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
     }
     auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
     if(originValidation.invalid())
     {
-      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(originValidation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(originValidation))};
     }
 
     std::stringstream ss;
@@ -257,9 +257,10 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     usize zTuples = zBounds.getNumberOfTuples();
     if(xTuples < 2 || yTuples < 2 || zTuples < 2)
     {
-      return {nonstd::make_unexpected(
-          std::vector<Error>{Error{.code=-9844, .message=fmt::format("One of the bounds arrays has a size less than two; all sizes must be at least two\nX Bounds Size: {}\nY Bounds Size: {}\nZ Bounds Size: {}\n",
-                                                      xBounds.getNumberOfTuples(), yBounds.getNumberOfTuples(), zBounds.getNumberOfTuples())}})};
+      return {nonstd::make_unexpected(std::vector<Error>{
+          Error{.code = -9844,
+                .message = fmt::format("One of the bounds arrays has a size less than two; all sizes must be at least two\nX Bounds Size: {}\nY Bounds Size: {}\nZ Bounds Size: {}\n",
+                                       xBounds.getNumberOfTuples(), yBounds.getNumberOfTuples(), zBounds.getNumberOfTuples())}})};
     }
 
     auto createRectGridGeometryAction = std::make_unique<CreateRectGridGeometryAction>(pGeometryPath, pXBoundsPath, pYBoundsPath, pZBoundsPath, pCellAMName, ArrayHandlingType{pArrayHandling});
@@ -308,7 +309,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

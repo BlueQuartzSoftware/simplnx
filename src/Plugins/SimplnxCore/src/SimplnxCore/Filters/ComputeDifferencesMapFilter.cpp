@@ -34,13 +34,13 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, 
       else if(dataType != dataArray->getDataType())
       {
         std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
-        return {.outputActions=MakeErrorResult<OutputActions>(-90001, ss)};
+        return {.outputActions = MakeErrorResult<OutputActions>(-90001, ss)};
       }
     }
     else
     {
       std::string ss = fmt::format("Selected DataPath must point to a DataArray");
-      return {.outputActions=MakeErrorResult<OutputActions>(-90002, ss)};
+      return {.outputActions = MakeErrorResult<OutputActions>(-90002, ss)};
     }
   }
   return {};
@@ -54,22 +54,22 @@ WarningCollection warnOnUnsignedTypes(const DataStructure& dataStructure, const 
     if(dataStructure.getDataAs<UInt8Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint8_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{.code=-90004, .message=ss});
+      results.push_back(Warning{.code = -90004, .message = ss});
     }
     if(dataStructure.getDataAs<UInt16Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint16_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{.code=-90005, .message=ss});
+      results.push_back(Warning{.code = -90005, .message = ss});
     }
     if(dataStructure.getDataAs<UInt32Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint32_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{.code=-90006, .message=ss});
+      results.push_back(Warning{.code = -90006, .message = ss});
     }
     if(dataStructure.getDataAs<UInt64Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint64_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{.code=-90007, .message=ss});
+      results.push_back(Warning{.code = -90007, .message = ss});
     }
   }
   return results;
@@ -165,15 +165,15 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   if(firstInputArray.getNumberOfComponents() != secondInputArray.getNumberOfComponents())
   {
     std::string ss = fmt::format("Selected Attribute Arrays must have the same component dimensions");
-    return {.outputActions=MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
+    return {.outputActions = MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
   }
 
   // validate the number of tuples
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {
-        .outputActions=MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_InvalidNumTuples,
+                                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // At this point we have two valid arrays of the same type and component dimensions, so we
@@ -186,7 +186,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   actions.value().appendAction(std::move(action));
   actions.m_Warnings = warnings;
 
-  return {.outputActions=std::move(actions)};
+  return {.outputActions = std::move(actions)};
 }
 
 //------------------------------------------------------------------------------

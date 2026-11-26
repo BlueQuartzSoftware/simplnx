@@ -9,8 +9,7 @@ using namespace nx::core;
 
 namespace nx::core
 {
-CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, DimensionType  dims, OriginType  origin, SpacingType  spacing, std::string  cellAttributeMatrixName,
-                                                     IGeometry::LengthUnit units)
+CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing, std::string cellAttributeMatrixName, IGeometry::LengthUnit units)
 : IDataCreationAction(path)
 , m_Dims(std::move(dims))
 , m_Origin(std::move(origin))

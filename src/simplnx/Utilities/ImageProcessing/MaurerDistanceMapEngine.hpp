@@ -579,9 +579,9 @@ inline MaurerLineChunk GetMaurerLineChunk(usize index, usize lineLength, usize b
   const usize regularEnd = regularRemainder == 1 && lineLength > blockValues ? lineLength - (blockValues + 1) : lineLength - regularRemainder;
   if(index >= regularEnd)
   {
-    return {.begin=regularEnd, .count=lineLength - regularEnd};
+    return {.begin = regularEnd, .count = lineLength - regularEnd};
   }
-  return {.begin=(index / blockValues) * blockValues, .count=blockValues};
+  return {.begin = (index / blockValues) * blockValues, .count = blockValues};
 }
 
 // itk::SignedMaurerDistanceMapImageFilter::Remove -- the lower-envelope domination test. Parabola (x2,d2) hides the

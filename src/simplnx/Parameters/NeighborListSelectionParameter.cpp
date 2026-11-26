@@ -20,7 +20,7 @@ struct fmt::formatter<nx::core::DataType>
     return ctx.begin();
   }
 
-  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx) 
+  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
   }
@@ -33,7 +33,7 @@ constexpr int32 k_Validate_AllowedType_Error = -206;
 
 namespace nx::core
 {
-NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
+NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
                                                                const AllowedTypes& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))

@@ -116,7 +116,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     auto validation = GeometryUtilities::ValidateFiniteVector(origin, "Origin", k_OriginDomain);
     if(validation.invalid())
     {
-      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
     originVec = {origin[0], origin[1], origin[2]};
     optOrigin = originVec;
@@ -127,7 +127,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     auto validation = GeometryUtilities::ValidatePositiveFiniteVector(spacing, "Spacing", k_SpacingDomain);
     if(validation.invalid())
     {
-      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
     spacingVec = {spacing[0], spacing[1], spacing[2]};
     optSpacing = spacingVec;
@@ -165,7 +165,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   preflightUpdatedValues.push_back(
       {"Image Geometry [After Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), spacingVec, originVec, srcImageGeom->getUnits())});
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -87,7 +87,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
   auto importData = filterArgs.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   if(importData.FilePath.empty())
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
 
   const bool useDefaultGeometryValues = filterArgs.value<bool>(k_UseDefaultGeometryValues_Key);
@@ -99,7 +99,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
 
   if(dataStructureResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};
   }
   result.warnings() = std::move(dataStructureResult.warnings());
   const auto& importedDataStructure = dataStructureResult.value().dataStructure;
@@ -111,7 +111,8 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
     {
       if(!importedDataStructure.containsData(dataPath))
       {
-        result.warnings().push_back(Warning{.code=-12, .message=fmt::format("The Include List path '{}' does not exist in the input file '{}'.", dataPath.toString(), importData.FilePath.string())});
+        result.warnings().push_back(
+            Warning{.code = -12, .message = fmt::format("The Include List path '{}' does not exist in the input file '{}'.", dataPath.toString(), importData.FilePath.string())});
       }
     }
     auto allDataPaths = importedDataStructure.getAllDataPaths();
@@ -121,7 +122,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
     if(selectedPaths.empty())
     {
       result.warnings().push_back(
-          Warning{.code=-10, .message="The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"});
+          Warning{.code = -10, .message = "The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"});
     }
   }
   else if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
@@ -131,9 +132,10 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
     {
       if(importData.DataPaths.empty())
       {
-        result.warnings().push_back(Warning{.code=-11,
-                                            .message="The import policy is set to 'Exclude List' and the file paths list is empty.  This will result in all data being imported.  You can accomplish the same "
-                                            "result by setting the import policy to 'All'."});
+        result.warnings().push_back(
+            Warning{.code = -11,
+                    .message = "The import policy is set to 'Exclude List' and the file paths list is empty.  This will result in all data being imported.  You can accomplish the same "
+                               "result by setting the import policy to 'All'."});
         selectedPaths = std::move(allDataPaths);
       }
       else
@@ -163,7 +165,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
   {
     auto failure = MakeErrorResult<OutputActions>(k_UnsupportedPathImportPolicyError, "The chosen PathImportPolicy is not supported by this filter.  Please contact the developers.");
     failure.warnings() = std::move(result.warnings());
-    return {.outputActions=std::move(failure)};
+    return {.outputActions = std::move(failure)};
   }
 
   auto validation = dataStructureResult.value().applyImageMetadata(importData.FilePath, selectedPaths, useDefaultGeometryValues);
@@ -178,7 +180,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
     }
     auto failure = ConvertInvalidResult<OutputActions>(std::move(validation));
     failure.warnings() = std::move(result.warnings());
-    return {.outputActions=std::move(failure)};
+    return {.outputActions = std::move(failure)};
   }
 
   auto boundsValidation = HDF5::RectGridGeomIO::ValidateImportedBounds(importedDataStructure, importData.FilePath, selectedPaths);
@@ -186,12 +188,12 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
   {
     auto failure = ConvertInvalidResult<OutputActions>(std::move(boundsValidation));
     failure.warnings() = std::move(result.warnings());
-    return {.outputActions=std::move(failure)};
+    return {.outputActions = std::move(failure)};
   }
 
   // The action reports each selected geometry's defaulted values when applied in either mode.
   result.value().appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, selectedPaths, useDefaultGeometryValues));
-  return {.outputActions=std::move(result)};
+  return {.outputActions = std::move(result)};
 }
 
 Result<> ReadDREAM3DFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,

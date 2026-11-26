@@ -15,7 +15,7 @@ public:
   using ValueType = DataPath;
 
   DataGroupCreationParameter() = delete;
-  DataGroupCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  DataGroupCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~DataGroupCreationParameter() override = default;
 
   DataGroupCreationParameter(const DataGroupCreationParameter&) = delete;

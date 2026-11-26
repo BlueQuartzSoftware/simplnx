@@ -18,7 +18,7 @@ public:
    * @param selectedDataPath The path to the source DataArray to copy
    * @param createdDataPath The path where the copied DataArray will be created
    */
-  CopyArrayInstanceAction(DataPath  selectedDataPath, const DataPath& createdDataPath);
+  CopyArrayInstanceAction(DataPath selectedDataPath, const DataPath& createdDataPath);
 
   ~CopyArrayInstanceAction() noexcept override;
 

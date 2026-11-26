@@ -28,7 +28,6 @@ EbsdToH5Ebsd::EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageH
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& EbsdToH5Ebsd::getCancel()
 {

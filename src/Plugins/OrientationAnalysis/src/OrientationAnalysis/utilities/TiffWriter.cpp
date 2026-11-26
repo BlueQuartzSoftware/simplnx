@@ -58,27 +58,27 @@ std::pair<int32_t, std::string> TiffWriter::WriteImage(const std::string& filepa
   outputFile.write(reinterpret_cast<const char*>(&ifdOffset), sizeof(ifdOffset));
   const int k_NumTags = 12;
   std::vector<TIFTAG> tags;
-  tags.push_back(TIFTAG{.TagId=0x00FE, .DataType=0x0004, .DataCount=1, .DataOffset=0x00000000});                // NewSubfileType
-  tags.push_back(TIFTAG{.TagId=0x0100, .DataType=0x0004, .DataCount=1, .DataOffset=width});                     // ImageWidth
-  tags.push_back(TIFTAG{.TagId=0x0101, .DataType=0x0004, .DataCount=1, .DataOffset=height});                    // ImageLength
-  tags.push_back(TIFTAG{.TagId=0x0102, .DataType=0x0003, .DataCount=1, .DataOffset=8 * sizeof(char)});          // BitsPerSample
-  tags.push_back(TIFTAG{.TagId=0x0103, .DataType=0x0003, .DataCount=1, .DataOffset=0x0001});                    // Compression
-  tags.push_back(TIFTAG{.TagId=0x0106, .DataType=0x0003, .DataCount=1, .DataOffset=photometricInterpretation}); // PhotometricInterpretation  // For SamplesPerPixel = 3 or 4 (RGB or RGBA)
+  tags.push_back(TIFTAG{.TagId = 0x00FE, .DataType = 0x0004, .DataCount = 1, .DataOffset = 0x00000000});                // NewSubfileType
+  tags.push_back(TIFTAG{.TagId = 0x0100, .DataType = 0x0004, .DataCount = 1, .DataOffset = width});                     // ImageWidth
+  tags.push_back(TIFTAG{.TagId = 0x0101, .DataType = 0x0004, .DataCount = 1, .DataOffset = height});                    // ImageLength
+  tags.push_back(TIFTAG{.TagId = 0x0102, .DataType = 0x0003, .DataCount = 1, .DataOffset = 8 * sizeof(char)});          // BitsPerSample
+  tags.push_back(TIFTAG{.TagId = 0x0103, .DataType = 0x0003, .DataCount = 1, .DataOffset = 0x0001});                    // Compression
+  tags.push_back(TIFTAG{.TagId = 0x0106, .DataType = 0x0003, .DataCount = 1, .DataOffset = photometricInterpretation}); // PhotometricInterpretation  // For SamplesPerPixel = 3 or 4 (RGB or RGBA)
   // Now compute the offset to the image data so that we can put that into the tag.
   // The math on this ONLY Works if we have 11 total Tags.
   // IF YOU ADD MORE TAGS, YOU NEED TO ADJUST THE NEXT LINE OF CODE
-  int32_t imageDataOffset = static_cast<int32_t>(8 + (k_NumTags * 12) + 6); // Header + tags + IDF Tag entry count and Next IFD Offset
-  tags.push_back(TIFTAG{.TagId=0x0111, .DataType=0x0004, .DataCount=1, .DataOffset=imageDataOffset});               // StripOffsets
+  int32_t imageDataOffset = static_cast<int32_t>(8 + (k_NumTags * 12) + 6);                                   // Header + tags + IDF Tag entry count and Next IFD Offset
+  tags.push_back(TIFTAG{.TagId = 0x0111, .DataType = 0x0004, .DataCount = 1, .DataOffset = imageDataOffset}); // StripOffsets
 
-  tags.push_back(TIFTAG{.TagId=0x0112, .DataType=0x0003, .DataCount=1, .DataOffset=1});                                // Orientation
-  tags.push_back(TIFTAG{.TagId=0x0115, .DataType=0x0003, .DataCount=1, .DataOffset=samplesPerPixel});                  // SamplesPerPixel
-  tags.push_back(TIFTAG{.TagId=0x0116, .DataType=0x0004, .DataCount=1, .DataOffset=height});                           // RowsPerStrip
-  tags.push_back(TIFTAG{.TagId=0x0117, .DataType=0x0004, .DataCount=1, .DataOffset=width * height * samplesPerPixel}); // StripByteCounts
+  tags.push_back(TIFTAG{.TagId = 0x0112, .DataType = 0x0003, .DataCount = 1, .DataOffset = 1});                                // Orientation
+  tags.push_back(TIFTAG{.TagId = 0x0115, .DataType = 0x0003, .DataCount = 1, .DataOffset = samplesPerPixel});                  // SamplesPerPixel
+  tags.push_back(TIFTAG{.TagId = 0x0116, .DataType = 0x0004, .DataCount = 1, .DataOffset = height});                           // RowsPerStrip
+  tags.push_back(TIFTAG{.TagId = 0x0117, .DataType = 0x0004, .DataCount = 1, .DataOffset = width * height * samplesPerPixel}); // StripByteCounts
 
   // TIFTAG XResolution;
   // TIFTAG YResolution;
   // TIFTAG ResolutionUnit;
-  tags.push_back(TIFTAG{.TagId=0x011c, .DataType=0x0003, .DataCount=1, .DataOffset=0x0001}); // PlanarConfiguration // 284
+  tags.push_back(TIFTAG{.TagId = 0x011c, .DataType = 0x0003, .DataCount = 1, .DataOffset = 0x0001}); // PlanarConfiguration // 284
 
   // Write the number of tags to the IFD section
   uint16_t numEntries = static_cast<uint16_t>(tags.size());

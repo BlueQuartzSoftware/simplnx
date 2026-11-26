@@ -737,8 +737,6 @@ ComputeMomentInvariants2D::ComputeMomentInvariants2D(DataStructure& dataStructur
 {
 }
 
-
-
 const std::atomic_bool& ComputeMomentInvariants2D::getCancel()
 {
   return m_ShouldCancel;

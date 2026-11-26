@@ -173,10 +173,11 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     {
       const double requiredGiB = static_cast<double>(requiredMemory) / k_BytesPerGiB;
       const double projectedGiB = (static_cast<double>(dataStructure.memoryUsage()) + static_cast<double>(requiredMemory)) / k_BytesPerGiB;
-      result.warnings().emplace_back(Warning{.code=-271, .message=fmt::format("Creating array '{}' (~{:.1f} GB) would bring in-core memory to ~{:.1f} GB, "
-                                                               "above this machine's currently-available ~{:.1f} GB. It may swap badly or "
-                                                               "fail. Consider out-of-core storage for this data.",
-                                                               path.toString(), requiredGiB, projectedGiB, availableGiB)});
+      result.warnings().emplace_back(Warning{.code = -271,
+                                             .message = fmt::format("Creating array '{}' (~{:.1f} GB) would bring in-core memory to ~{:.1f} GB, "
+                                                                    "above this machine's currently-available ~{:.1f} GB. It may swap badly or "
+                                                                    "fail. Consider out-of-core storage for this data.",
+                                                                    path.toString(), requiredGiB, projectedGiB, availableGiB)});
     }
   }
 

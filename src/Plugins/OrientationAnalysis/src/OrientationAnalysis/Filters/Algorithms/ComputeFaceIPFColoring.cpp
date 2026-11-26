@@ -438,7 +438,6 @@ ComputeFaceIPFColoring::ComputeFaceIPFColoring(DataStructure& dataStructure, con
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeFaceIPFColoring::operator()()
 {

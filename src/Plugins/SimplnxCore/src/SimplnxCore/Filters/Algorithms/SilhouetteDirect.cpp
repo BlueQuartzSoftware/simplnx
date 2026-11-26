@@ -158,8 +158,6 @@ SilhouetteDirect::SilhouetteDirect(DataStructure& dataStructure, const IFilter::
 {
 }
 
-
-
 Result<> SilhouetteDirect::operator()()
 {
   // Dense indices keep sparse Cluster Ids within the distance table. Cluster zero retains index zero.

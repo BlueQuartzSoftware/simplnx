@@ -93,7 +93,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   auto dimensions = ConvertDimensions(tupleDimsData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, to_underlying(ReshapeDataArray::ErrorCodes::NonPositiveTupleDimValue));
   if(dimensions.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
   }
   tDims = std::move(dimensions.value());
 
@@ -139,7 +139,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(inputArrayPath));
   resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(outputArrayPath, inputArrayPath.getTargetName()));
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

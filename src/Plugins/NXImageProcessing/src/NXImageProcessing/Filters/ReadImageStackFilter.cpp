@@ -29,7 +29,6 @@
 
 #include <filesystem>
 
-
 using namespace nx::core;
 
 namespace
@@ -203,7 +202,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
   if(files.empty())
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
   }
 
   DataStructure tmpDs;
@@ -278,7 +277,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     Result<> actionsResult = resultOutputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
   }
 
@@ -337,7 +336,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     Result<> actionsResult = resultOutputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     pathsToDelete.push_back(currentImageGeomPath);
@@ -375,7 +374,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     Result<> actionsResult = grayscaleImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     resultOutputActions = MergeOutputActionResults(resultOutputActions, grayscaleImageResult.outputActions);
@@ -413,7 +412,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
   preflightUpdatedValues.push_back({"Output Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(outputDims, outputSpacing, outputOrigin, outputUnits)});
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

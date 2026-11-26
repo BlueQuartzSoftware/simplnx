@@ -31,8 +31,8 @@ class CreateGeometry3DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  CreateGeometry3DAction(const DataPath& geometryPath, size_t numCells, size_t numVertices, std::string  vertexAttributeMatrixName, std::string  cellAttributeMatrixName,
-                         std::string  sharedVerticesName, std::string  sharedCellsName)
+  CreateGeometry3DAction(const DataPath& geometryPath, size_t numCells, size_t numVertices, std::string vertexAttributeMatrixName, std::string cellAttributeMatrixName, std::string sharedVerticesName,
+                         std::string sharedCellsName)
   : IDataCreationAction(geometryPath)
   , m_NumCells(numCells)
   , m_NumVertices(numVertices)
@@ -43,8 +43,8 @@ public:
   {
   }
 
-  CreateGeometry3DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputCellsArrayPath, std::string  vertexAttributeMatrixName,
-                         std::string  cellAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateGeometry3DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputCellsArrayPath, std::string vertexAttributeMatrixName,
+                         std::string cellAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(std::move(vertexAttributeMatrixName))
   , m_CellDataName(std::move(cellAttributeMatrixName))

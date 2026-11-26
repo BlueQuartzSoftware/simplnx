@@ -105,8 +105,8 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
-                                           fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
+                                                            fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   {
     DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
@@ -114,7 +114,7 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

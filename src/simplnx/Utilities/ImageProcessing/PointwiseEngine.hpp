@@ -181,7 +181,7 @@ inline Result<PointwiseBatchPlan> MakePointwiseBatchPlan(usize totalValues, usiz
 
   const usize batchValues = std::min(totalValues, targetValues >= selectedAlignment ? (targetValues / selectedAlignment) * selectedAlignment : selectedAlignment);
   const usize totalBatches = totalValues / batchValues + static_cast<usize>((totalValues % batchValues) != 0);
-  return {PointwiseBatchPlan{.batchValues=batchValues, .totalBatches=totalBatches, .alignmentValues=selectedAlignment, .usedMismatchedLayoutFallback=useFallback}};
+  return {PointwiseBatchPlan{.batchValues = batchValues, .totalBatches = totalBatches, .alignmentValues = selectedAlignment, .usedMismatchedLayoutFallback = useFallback}};
 }
 
 template <class T, class U, class MapOpT>

@@ -20,7 +20,6 @@ ComputeBoundingBoxStats::ComputeBoundingBoxStats(DataStructure& dataStructure, c
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStats::operator()()
 {

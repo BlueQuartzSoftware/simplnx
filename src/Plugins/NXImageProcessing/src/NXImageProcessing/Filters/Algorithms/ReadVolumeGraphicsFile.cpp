@@ -24,7 +24,6 @@ ReadVolumeGraphicsFile::ReadVolumeGraphicsFile(DataStructure& dataStructure, con
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReadVolumeGraphicsFile::getCancel()
 {

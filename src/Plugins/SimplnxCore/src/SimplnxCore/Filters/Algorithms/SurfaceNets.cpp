@@ -23,8 +23,6 @@ SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-
-
 const std::atomic_bool& SurfaceNets::getCancel()
 {
   return m_ShouldCancel;

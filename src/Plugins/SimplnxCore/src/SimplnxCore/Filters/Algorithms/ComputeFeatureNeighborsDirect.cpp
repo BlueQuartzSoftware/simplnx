@@ -332,8 +332,6 @@ ComputeFeatureNeighborsDirect::ComputeFeatureNeighborsDirect(DataStructure& data
 {
 }
 
-
-
 Result<> ComputeFeatureNeighborsDirect::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;

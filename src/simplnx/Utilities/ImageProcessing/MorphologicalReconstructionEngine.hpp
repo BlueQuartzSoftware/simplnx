@@ -249,7 +249,7 @@ inline ReconstructionWorkingMemoryFraction SelectReconstructionWorkingMemoryFrac
 {
   if(dims[2] > 1 && (source == ReconstructionMarkerSource::MaskMinusHeight || source == ReconstructionMarkerSource::MaskPlusHeight))
   {
-    return {.numerator=k_ReconstructionDerivedMarker3DPreferredUsefulNumerator, .denominator=k_ReconstructionDerivedMarker3DPreferredUsefulDenominator};
+    return {.numerator = k_ReconstructionDerivedMarker3DPreferredUsefulNumerator, .denominator = k_ReconstructionDerivedMarker3DPreferredUsefulDenominator};
   }
   return {};
 }
@@ -568,7 +568,7 @@ template <class T>
 class ReconstructVincent
 {
 public:
-  ReconstructVincent(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3  dims, ReconstructOp op, bool fullyConnected,
+  ReconstructVincent(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op, bool fullyConnected,
                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, ReconstructionMarkerOptions markerOptions = {},
                      usize frontierCapacity = std::numeric_limits<usize>::max())
   : m_Marker(markerStore)
@@ -618,7 +618,7 @@ template <class T>
 class ReconstructSweepWithMarkerOptions
 {
 public:
-  ReconstructSweepWithMarkerOptions(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3  dims, ReconstructOp op,
+  ReconstructSweepWithMarkerOptions(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op,
                                     bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, ReconstructionMarkerOptions markerOptions)
   : m_Marker(markerStore)
   , m_Mask(maskStore)
@@ -743,7 +743,7 @@ public:
   static constexpr usize k_DefaultFixed2DWorkValues = std::max<usize>(1, (48ULL * 1024ULL * 1024ULL) / sizeof(T));
   static constexpr usize k_DefaultFixed2DBufferValues = std::max<usize>(1, (8ULL * 1024ULL * 1024ULL) / sizeof(T));
 
-  ReconstructSweep(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3  dims, ReconstructOp op, bool fullyConnected,
+  ReconstructSweep(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op, bool fullyConnected,
                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize maxSlabValues = k_DefaultSlabValues,
                    usize maxSweepPairs = std::numeric_limits<usize>::max(), ReconstructionMarkerOptions markerOptions = {}, usize fixed2DWorkValues = k_DefaultFixed2DWorkValues,
                    usize fixed2DBufferValues = k_DefaultFixed2DBufferValues, bool useResidentFullSweep = false, usize residentFrontierValues = 0)
@@ -922,7 +922,7 @@ template <class T, bool UseTemporaryWork = false>
 class ReconstructSweepWithWorkingMemory
 {
 public:
-  ReconstructSweepWithWorkingMemory(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3  dims, ReconstructOp op,
+  ReconstructSweepWithWorkingMemory(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op,
                                     bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_Marker(markerStore)
   , m_Mask(maskStore)

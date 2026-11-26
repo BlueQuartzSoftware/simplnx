@@ -16,8 +16,6 @@ AppendImageGeometry::AppendImageGeometry(DataStructure& dataStructure, const IFi
 {
 }
 
-
-
 const std::atomic_bool& AppendImageGeometry::getCancel()
 {
   return m_ShouldCancel;

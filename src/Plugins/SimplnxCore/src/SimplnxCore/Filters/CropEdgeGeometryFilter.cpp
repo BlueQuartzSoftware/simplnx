@@ -175,7 +175,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
 
   if(!pCropXDim && !pCropYDim && !pCropZDim)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::NoDimensionsChosen), "At least one dimension must be selected to crop!")};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::NoDimensionsChosen), "At least one dimension must be selected to crop!")};
   }
 
   float32 xMin = pCropXDim ? minCoords[0] : std::numeric_limits<float32>::lowest();
@@ -191,17 +191,17 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   if(pCropXDim && xMax < xMin)
   {
     const std::string errMsg = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-    return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::XMinLargerThanXMax), errMsg)};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::XMinLargerThanXMax), errMsg)};
   }
   if(pCropYDim && yMax < yMin)
   {
     const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-    return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::YMinLargerThanYMax), errMsg)};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::YMinLargerThanYMax), errMsg)};
   }
   if(pCropZDim && zMax < zMin)
   {
     const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::ZMinLargerThanZMax), errMsg)};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::ZMinLargerThanZMax), errMsg)};
   }
 
   std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
@@ -280,48 +280,49 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     const auto* srcFeatureData = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
     if(srcFeatureData == nullptr || !srcEdgeGeom.contains(srcFeatureData))
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'. Select an Attribute Matrix that is a "
-                                                                 "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
-                                                                 featureAmPath.toString(), srcEdgeGeomPath.toString())),
-              .outputValues=preflightUpdatedValues};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'. Select an Attribute Matrix that is a "
+                                      "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                      featureAmPath.toString(), srcEdgeGeomPath.toString())),
+              .outputValues = preflightUpdatedValues};
     }
     if(srcEdgeGeom.getEdgeAttributeMatrix() == srcFeatureData || srcEdgeGeom.getVertexAttributeMatrix() == srcFeatureData)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(
+      return {.outputActions = MakeErrorResult<OutputActions>(
                   -67412, fmt::format("The Feature Attribute Matrix '{}' is the Edge or Vertex Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn "
                                       "off 'Clear Feature Attribute Matrix'.",
                                       featureAmPath.toString(), srcEdgeGeomPath.toString())),
-              .outputValues=preflightUpdatedValues};
+              .outputValues = preflightUpdatedValues};
     }
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
     if(elementDataResult.invalid())
     {
-      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(shouldRenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, featureIdsPath, *srcEdgeGeom.getEdgeAttributeMatrix()))
     {
       return {
-          .outputActions=MakeErrorResult<OutputActions>(
+          .outputActions = MakeErrorResult<OutputActions>(
               -67413, fmt::format("**Edge Feature Ids** DataArray '{}' must be in the Edge Attribute Matrix '{}' of the selected Edge Geometry '{}'. Select the DataArray from that Attribute Matrix.",
                                   featureIdsPath.toString(), srcEdgeGeomPath.createChildPath(srcEdgeGeom.getEdgeAttributeMatrix()->getName()).toString(), srcEdgeGeomPath.toString())),
-          .outputValues=preflightUpdatedValues};
+          .outputValues = preflightUpdatedValues};
     }
     if(shouldRenumberFeatures)
     {
       const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
       if(featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1)
       {
-        return {.outputActions=MakeErrorResult<OutputActions>(
-            -67415,
-            fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.", featureIdsPath.toString()))};
+        return {.outputActions = MakeErrorResult<OutputActions>(
+                    -67415, fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.",
+                                        featureIdsPath.toString()))};
       }
       const auto& featureIds = *featureIdsPtr;
       if(featureIds.getNumberOfTuples() != srcEdgeGeom.getNumberOfEdges())
       {
-        return {.outputActions=MakeErrorResult<OutputActions>(
+        return {.outputActions = MakeErrorResult<OutputActions>(
                     -67414, fmt::format("**Edge Feature Ids** DataArray '{}' has {} tuples, but the selected Edge Geometry '{}' has {} edges. Select a DataArray with one tuple per edge.",
                                         featureIdsPath.toString(), featureIds.getNumberOfTuples(), srcEdgeGeomPath.toString(), srcEdgeGeom.getNumberOfEdges())),
-                .outputValues=preflightUpdatedValues};
+                .outputValues = preflightUpdatedValues};
       }
     }
     const auto featureAmPaths = srcFeatureData->getDataPaths();
@@ -372,7 +373,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

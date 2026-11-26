@@ -14,7 +14,7 @@ constexpr nx::core::int64 k_BadFormatCode = -780;
 
 namespace nx::core
 {
-DataStoreFormatParameter::DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+DataStoreFormatParameter::DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {
@@ -64,7 +64,7 @@ typename DataStoreFormatParameter::ValueType DataStoreFormatParameter::defaultSt
   return m_DefaultValue;
 }
 
-typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues() 
+typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues()
 {
   const auto displayNames = Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
   AvailableValuesType result;
@@ -76,7 +76,7 @@ typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter:
   return result;
 }
 
-std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames() 
+std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames()
 {
   return Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
 }

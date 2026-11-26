@@ -15,7 +15,6 @@
 #include <cmath>
 #include <filesystem>
 
-
 using namespace nx::core;
 
 namespace
@@ -66,8 +65,6 @@ WriteGBCDGMTFile::WriteGBCDGMTFile(DataStructure& dataStructure, const IFilter::
 , m_MessageHandler(mesgHandler)
 {
 }
-
-
 
 const std::atomic_bool& WriteGBCDGMTFile::getCancel()
 {

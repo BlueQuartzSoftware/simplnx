@@ -18,7 +18,7 @@ public:
   using AllowedTypes = std::set<DataType>;
 
   NeighborListSelectionParameter() = delete;
-  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, const AllowedTypes& allowedTypes);
+  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes);
   ~NeighborListSelectionParameter() override = default;
 
   NeighborListSelectionParameter(const NeighborListSelectionParameter&) = delete;

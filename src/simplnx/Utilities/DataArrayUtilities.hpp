@@ -2230,9 +2230,8 @@ public:
    * @pre Source and destination arrays and grid-value arrays outlive this mapper.
    * @pre xGridValues, yGridValues, and zGridValues are not null.
    */
-  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, FloatVec3  origin, SizeVec3  imageGeoDims,
-                             const std::vector<float32>& imageGeoSpacing, SizeVec3  rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues,
-                             const Float32Array* zGridValues)
+  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, FloatVec3 origin, SizeVec3 imageGeoDims, const std::vector<float32>& imageGeoSpacing,
+                             SizeVec3 rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues, const Float32Array* zGridValues)
   : m_ArrayType(destCellArray.getArrayType())
   , m_TaskResult(taskResult)
   , m_InputCellArray(&inputCellArray)

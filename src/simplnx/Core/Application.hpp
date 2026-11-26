@@ -139,7 +139,7 @@ public:
    * @brief Returns no JSON pipeline builder.
    * @return nullptr.
    */
-  static JsonPipelineBuilder* getPipelineBuilder() ;
+  static JsonPipelineBuilder* getPipelineBuilder();
 
   /**
    * @brief Returns the collection of data I/O managers.

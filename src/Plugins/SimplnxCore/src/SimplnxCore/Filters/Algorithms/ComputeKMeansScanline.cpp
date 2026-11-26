@@ -458,8 +458,6 @@ ComputeKMeansScanline::ComputeKMeansScanline(DataStructure& dataStructure, const
 {
 }
 
-
-
 void ComputeKMeansScanline::updateProgress(const std::string& message)
 {
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, message);

@@ -10,7 +10,6 @@
 #include <fstream>
 #include <limits>
 
-
 namespace nx::core::fiji
 {
 Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path& configPath)

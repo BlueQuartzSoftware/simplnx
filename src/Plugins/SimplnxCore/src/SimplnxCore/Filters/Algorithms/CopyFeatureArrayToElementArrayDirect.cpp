@@ -108,8 +108,6 @@ CopyFeatureArrayToElementArrayDirect::CopyFeatureArrayToElementArrayDirect(DataS
 {
 }
 
-
-
 Result<> CopyFeatureArrayToElementArrayDirect::operator()()
 {
   if(m_InputValues->SelectedFeatureArrayPaths.empty())

@@ -41,7 +41,7 @@ public:
 
   GeneratedFileListParameter() = delete;
 
-  GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
 
   ~GeneratedFileListParameter() override = default;
 

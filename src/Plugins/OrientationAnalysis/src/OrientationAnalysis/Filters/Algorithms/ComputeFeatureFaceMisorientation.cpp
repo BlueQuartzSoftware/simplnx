@@ -350,7 +350,6 @@ ComputeFeatureFaceMisorientation::ComputeFeatureFaceMisorientation(DataStructure
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureFaceMisorientation::operator()()
 {

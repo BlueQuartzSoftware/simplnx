@@ -347,7 +347,6 @@ ConvertHexGridToSquareGrid::ConvertHexGridToSquareGrid(DataStructure& dataStruct
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ConvertHexGridToSquareGrid::getCancel()
 {

@@ -56,12 +56,13 @@ public:
    * @pre All arguments outlive this reader.
    */
   IEbsdOemReader(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues)
-  : m_Reader(T::New()), m_DataStructure(dataStructure)
+  : m_Reader(T::New())
+  , m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(mesgHandler)
   , m_InputValues(inputValues)
   {
-    
+
     m_Reader->setFileName(inputValues->SelectedScanNames.inputFilePath.string());
   }
 
@@ -92,7 +93,7 @@ public:
         return {};
       }
 
-      m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message=fmt::format("Importing Index {}", currentScanName)});
+      m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = fmt::format("Importing Index {}", currentScanName)});
 
       Result<> readResults = readData(currentScanName);
       if(readResults.invalid())

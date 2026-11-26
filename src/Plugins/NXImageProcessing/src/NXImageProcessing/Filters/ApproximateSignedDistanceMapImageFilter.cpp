@@ -76,7 +76,7 @@ IFilter::PreflightResult ApproximateSignedDistanceMapImageFilter::preflightImpl(
   // IntegerOnly restricts the input to the integer scalar types (this mask filter does not accept float input).
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> ApproximateSignedDistanceMapImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

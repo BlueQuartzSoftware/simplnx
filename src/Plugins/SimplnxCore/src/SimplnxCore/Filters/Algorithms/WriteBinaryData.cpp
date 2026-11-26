@@ -17,8 +17,6 @@ WriteBinaryData::WriteBinaryData(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-
-
 Result<> WriteBinaryData::operator()()
 {
   const auto endianess = static_cast<endian>(m_InputValues->EndianIndex);

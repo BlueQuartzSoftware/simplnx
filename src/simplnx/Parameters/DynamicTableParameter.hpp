@@ -19,7 +19,7 @@ public:
   using ValueType = DynamicTableInfo::TableDataType;
 
   DynamicTableParameter() = delete;
-  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, DynamicTableInfo  tableInfo);
+  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, DynamicTableInfo tableInfo);
   DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const DynamicTableInfo& tableInfo);
   ~DynamicTableParameter() override = default;
 

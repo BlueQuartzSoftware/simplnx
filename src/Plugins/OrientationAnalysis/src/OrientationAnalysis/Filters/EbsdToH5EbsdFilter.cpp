@@ -144,7 +144,7 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
   preflightUpdatedValues.push_back({"Reference Type Notes", description.str()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -26,7 +26,7 @@ constexpr int64 k_InvalidType = -63900;
 constexpr int64 k_InvalidBounds = -63901;
 } // namespace
 
-CropGeometryParameter::CropGeometryParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+CropGeometryParameter::CropGeometryParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {

@@ -30,8 +30,6 @@ ReadCtfData::ReadCtfData(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-
-
 Result<> ReadCtfData::operator()()
 {
   m_MessageHandler.sendInfoMessage(fmt::format("Reading .ctf file '{}'", m_InputValues->InputFile.string()));

@@ -120,7 +120,7 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm path
                 budgetManager.setBudgetBytes(previousBudget);
               }
             };
-            const BudgetRestorer budgetRestorer{.budgetManager=budgetManager, .previousBudget=previousBudget};
+            const BudgetRestorer budgetRestorer{.budgetManager = budgetManager, .previousBudget = previousBudget};
             budgetManager.clear();
             // The 1,024-byte budget grants less memory than each worker scratch needs.
             // The planner fails, so the default single-worker slab runs.

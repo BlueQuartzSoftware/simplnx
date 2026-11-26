@@ -156,17 +156,17 @@ TEST_CASE("Preferences loads valid GB thresholds on the 0.01-GB grid", "[Core][P
     nlohmann::json value;
     uint64 expectedBytes;
   };
-  const std::vector<ValidCase> cases = {{.description="integer 1", .value=nlohmann::json(int64{1}), .expectedBytes=1073741824},
-                                        {.description="unsigned 2", .value=nlohmann::json(uint64{2}), .expectedBytes=2147483648},
-                                        {.description="1.5", .value=nlohmann::json(1.5), .expectedBytes=k_OneAndAHalfGBBytes},
-                                        {.description="integer 0", .value=nlohmann::json(int64{0}), .expectedBytes=0},
-                                        {.description="0.0", .value=nlohmann::json(0.0), .expectedBytes=0},
-                                        {.description="-0.0", .value=nlohmann::json(-0.0), .expectedBytes=0},
-                                        {.description="0.01", .value=nlohmann::json(0.01), .expectedBytes=k_OneHundredthBytes},
-                                        {.description="0.001", .value=nlohmann::json(0.001), .expectedBytes=k_OneHundredthBytes},
-                                        {.description="0.004", .value=nlohmann::json(0.004), .expectedBytes=k_OneHundredthBytes},
-                                        {.description="13.85", .value=nlohmann::json(13.85), .expectedBytes=14871324262},
-                                        {.description="maximum", .value=nlohmann::json(17179869183.99), .expectedBytes=k_MaxGridBytes}};
+  const std::vector<ValidCase> cases = {{.description = "integer 1", .value = nlohmann::json(int64{1}), .expectedBytes = 1073741824},
+                                        {.description = "unsigned 2", .value = nlohmann::json(uint64{2}), .expectedBytes = 2147483648},
+                                        {.description = "1.5", .value = nlohmann::json(1.5), .expectedBytes = k_OneAndAHalfGBBytes},
+                                        {.description = "integer 0", .value = nlohmann::json(int64{0}), .expectedBytes = 0},
+                                        {.description = "0.0", .value = nlohmann::json(0.0), .expectedBytes = 0},
+                                        {.description = "-0.0", .value = nlohmann::json(-0.0), .expectedBytes = 0},
+                                        {.description = "0.01", .value = nlohmann::json(0.01), .expectedBytes = k_OneHundredthBytes},
+                                        {.description = "0.001", .value = nlohmann::json(0.001), .expectedBytes = k_OneHundredthBytes},
+                                        {.description = "0.004", .value = nlohmann::json(0.004), .expectedBytes = k_OneHundredthBytes},
+                                        {.description = "13.85", .value = nlohmann::json(13.85), .expectedBytes = 14871324262},
+                                        {.description = "maximum", .value = nlohmann::json(17179869183.99), .expectedBytes = k_MaxGridBytes}};
   for(usize keyIndex = 0; keyIndex < k_GBKeys.size(); ++keyIndex)
   {
     for(const auto& validCase : cases)
@@ -199,15 +199,16 @@ TEST_CASE("Preferences repairs invalid GB thresholds with their own warning", "[
     std::string shownValue;
     std::string shownType;
   };
-  const std::vector<InvalidCase> cases = {{.description="negative integer", .value=nlohmann::json(int64{-1}), .shownValue="-1", .shownType="number_integer"},
-                                          {.description="negative float", .value=nlohmann::json(-0.5), .shownValue="-0.5", .shownType="number_float"},
-                                          {.description="string", .value=nlohmann::json("1.5"), .shownValue="\"1.5\"", .shownType="string"},
-                                          {.description="boolean", .value=nlohmann::json(true), .shownValue="true", .shownType="boolean"},
-                                          {.description="null", .value=nlohmann::json(nullptr), .shownValue="null", .shownType="null"},
-                                          {.description="array", .value=nlohmann::json::array({1}), .shownValue="[1]", .shownType="array"},
-                                          {.description="1e300", .value=nlohmann::json(1e300), .shownValue="1e+300", .shownType="number_float"},
-                                          {.description="above maximum", .value=nlohmann::json(17179869184.0), .shownValue="17179869184.0", .shownType="number_float"},
-                                          {.description="UINT64_MAX", .value=nlohmann::json(std::numeric_limits<uint64>::max()), .shownValue="18446744073709551615", .shownType="number_unsigned"}};
+  const std::vector<InvalidCase> cases = {
+      {.description = "negative integer", .value = nlohmann::json(int64{-1}), .shownValue = "-1", .shownType = "number_integer"},
+      {.description = "negative float", .value = nlohmann::json(-0.5), .shownValue = "-0.5", .shownType = "number_float"},
+      {.description = "string", .value = nlohmann::json("1.5"), .shownValue = "\"1.5\"", .shownType = "string"},
+      {.description = "boolean", .value = nlohmann::json(true), .shownValue = "true", .shownType = "boolean"},
+      {.description = "null", .value = nlohmann::json(nullptr), .shownValue = "null", .shownType = "null"},
+      {.description = "array", .value = nlohmann::json::array({1}), .shownValue = "[1]", .shownType = "array"},
+      {.description = "1e300", .value = nlohmann::json(1e300), .shownValue = "1e+300", .shownType = "number_float"},
+      {.description = "above maximum", .value = nlohmann::json(17179869184.0), .shownValue = "17179869184.0", .shownType = "number_float"},
+      {.description = "UINT64_MAX", .value = nlohmann::json(std::numeric_limits<uint64>::max()), .shownValue = "18446744073709551615", .shownType = "number_unsigned"}};
   for(usize keyIndex = 0; keyIndex < k_GBKeys.size(); ++keyIndex)
   {
     for(const auto& invalidCase : cases)
@@ -253,11 +254,11 @@ TEST_CASE("Preferences converts legacy byte thresholds to the 0.01-GB grid", "[C
     nlohmann::json value;
     uint64 expectedBytes;
   };
-  const std::vector<LegacyCase> cases = {{.description="0", .value=nlohmann::json(uint64{0}), .expectedBytes=0},
-                                         {.description="10000 bytes", .value=nlohmann::json(int64{10000}), .expectedBytes=k_OneHundredthBytes},
-                                         {.description="123456789 bytes", .value=nlohmann::json(uint64{123456789}), .expectedBytes=118111601},
-                                         {.description="1 GiB", .value=nlohmann::json(uint64{1073741824}), .expectedBytes=1073741824},
-                                         {.description="UINT64_MAX", .value=nlohmann::json(std::numeric_limits<uint64>::max()), .expectedBytes=k_MaxGridBytes}};
+  const std::vector<LegacyCase> cases = {{.description = "0", .value = nlohmann::json(uint64{0}), .expectedBytes = 0},
+                                         {.description = "10000 bytes", .value = nlohmann::json(int64{10000}), .expectedBytes = k_OneHundredthBytes},
+                                         {.description = "123456789 bytes", .value = nlohmann::json(uint64{123456789}), .expectedBytes = 118111601},
+                                         {.description = "1 GiB", .value = nlohmann::json(uint64{1073741824}), .expectedBytes = 1073741824},
+                                         {.description = "UINT64_MAX", .value = nlohmann::json(std::numeric_limits<uint64>::max()), .expectedBytes = k_MaxGridBytes}};
   for(usize keyIndex = 0; keyIndex < k_ByteKeys.size(); ++keyIndex)
   {
     for(const auto& legacyCase : cases)
@@ -383,7 +384,12 @@ TEST_CASE("Preferences saves OOC thresholds only as GB keys", "[Core][Preference
     uint64 bytes;
     std::string text;
   };
-  const std::vector<SaveCase> cases = {{.bytes=0, .text="0.0"}, {.bytes=10000, .text="0.01"}, {.bytes=1073741824, .text="1.0"}, {.bytes=k_OneAndAHalfGBBytes, .text="1.5"}, {.bytes=14871324262, .text="13.85"}, {.bytes=std::numeric_limits<uint64>::max(), .text="17179869183.99"}};
+  const std::vector<SaveCase> cases = {{.bytes = 0, .text = "0.0"},
+                                       {.bytes = 10000, .text = "0.01"},
+                                       {.bytes = 1073741824, .text = "1.0"},
+                                       {.bytes = k_OneAndAHalfGBBytes, .text = "1.5"},
+                                       {.bytes = 14871324262, .text = "13.85"},
+                                       {.bytes = std::numeric_limits<uint64>::max(), .text = "17179869183.99"}};
   for(usize keyIndex = 0; keyIndex < k_ByteKeys.size(); ++keyIndex)
   {
     for(const auto& saveCase : cases)

@@ -131,10 +131,11 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const Da
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-9402, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-9402, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

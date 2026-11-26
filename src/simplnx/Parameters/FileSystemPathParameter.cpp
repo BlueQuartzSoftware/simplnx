@@ -118,8 +118,8 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 namespace nx::core
 {
 //-----------------------------------------------------------------------------
-FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
-                                                 ExtensionsType  extensionsType, PathType pathType, bool acceptAllExtensions)
+FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, ExtensionsType extensionsType,
+                                                 PathType pathType, bool acceptAllExtensions)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 , m_PathType(pathType)

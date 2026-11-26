@@ -381,10 +381,10 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convent
   const float64 k_ExpectedLambda = 0.7559289460184544; // 4/sqrt(28)
 
   const std::vector<QuatRow> rows = {
-      {.label="identity (0,0,0,1)", .quat={0.0F, 0.0F, 0.0F, 1.0F}, .slipSystem=10, .poles={26, 53, 80}},
-      {.label="180 deg about Z (0,0,1,0)", .quat={0.0F, 0.0F, 1.0F, 0.0F}, .slipSystem=8, .poles={-26, -53, 80}},
-      {.label="120 deg about [111] (.5,.5,.5,.5)", .quat={0.5F, 0.5F, 0.5F, 0.5F}, .slipSystem=6, .poles={80, 26, 53}},
-      {.label="180 deg about X (1,0,0,0)", .quat={1.0F, 0.0F, 0.0F, 0.0F}, .slipSystem=1, .poles={26, -53, -80}},
+      {.label = "identity (0,0,0,1)", .quat = {0.0F, 0.0F, 0.0F, 1.0F}, .slipSystem = 10, .poles = {26, 53, 80}},
+      {.label = "180 deg about Z (0,0,1,0)", .quat = {0.0F, 0.0F, 1.0F, 0.0F}, .slipSystem = 8, .poles = {-26, -53, 80}},
+      {.label = "120 deg about [111] (.5,.5,.5,.5)", .quat = {0.5F, 0.5F, 0.5F, 0.5F}, .slipSystem = 6, .poles = {80, 26, 53}},
+      {.label = "180 deg about X (1,0,0,0)", .quat = {1.0F, 0.0F, 0.0F, 0.0F}, .slipSystem = 1, .poles = {26, -53, -80}},
   };
 
   for(const auto& row : rows)

@@ -30,8 +30,8 @@ class CreateGeometry1DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, std::string  vertexAttributeMatrixName, std::string  edgeAttributeMatrixName,
-                         std::string  sharedVerticesName, std::string  sharedEdgesName)
+  CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, std::string vertexAttributeMatrixName, std::string edgeAttributeMatrixName, std::string sharedVerticesName,
+                         std::string sharedEdgesName)
   : IDataCreationAction(geometryPath)
   , m_NumEdges(numEdges)
   , m_NumVertices(numVertices)
@@ -42,8 +42,8 @@ public:
   {
   }
 
-  CreateGeometry1DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputEdgesArrayPath, std::string  vertexAttributeMatrixName,
-                         std::string  edgeAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateGeometry1DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputEdgesArrayPath, std::string vertexAttributeMatrixName,
+                         std::string edgeAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(std::move(vertexAttributeMatrixName))
   , m_EdgeDataName(std::move(edgeAttributeMatrixName))

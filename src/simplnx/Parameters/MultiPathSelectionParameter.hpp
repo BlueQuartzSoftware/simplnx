@@ -15,7 +15,7 @@ public:
   using ValueType = std::vector<DataPath>;
 
   MultiPathSelectionParameter() = delete;
-  MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~MultiPathSelectionParameter() override = default;
 
   MultiPathSelectionParameter(const MultiPathSelectionParameter&) = delete;

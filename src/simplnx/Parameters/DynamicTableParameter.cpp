@@ -12,7 +12,7 @@
 
 namespace nx::core
 {
-DynamicTableParameter::DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, DynamicTableInfo  tableInfo)
+DynamicTableParameter::DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, DynamicTableInfo tableInfo)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 , m_TableInfo(std::move(tableInfo))

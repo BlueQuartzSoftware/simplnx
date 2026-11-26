@@ -158,7 +158,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     if(inputUnits != destUnits)
     {
       resultOutputActions.warnings().push_back(
-          Warning{.code=-8310, .message=fmt::format("Input units ({}) not equal to Destination units ({}).", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits))});
+          Warning{.code = -8310, .message = fmt::format("Input units ({}) not equal to Destination units ({}).", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits))});
     }
 
     switch(pDirection)
@@ -340,7 +340,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     preflightUpdatedValues.push_back({"Appended Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin, destGeometry.getUnits())});
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

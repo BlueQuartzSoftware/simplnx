@@ -493,7 +493,6 @@ ExtractFeatureBoundaries2D::ExtractFeatureBoundaries2D(DataStructure& dataStruct
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractFeatureBoundaries2D::getCancel() const
 {

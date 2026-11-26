@@ -16,8 +16,6 @@ ComputeFeatureSizes::ComputeFeatureSizes(DataStructure& dataStructure, const IFi
 {
 }
 
-
-
 Result<> ComputeFeatureSizes::operator()()
 {
   auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath);

@@ -291,7 +291,6 @@ ComputeKMeansDirect::ComputeKMeansDirect(DataStructure& dataStructure, const IFi
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 void ComputeKMeansDirect::updateProgress(const std::string& message)
 {

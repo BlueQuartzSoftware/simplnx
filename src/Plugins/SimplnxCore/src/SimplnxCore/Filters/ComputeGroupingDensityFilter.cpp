@@ -211,7 +211,7 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

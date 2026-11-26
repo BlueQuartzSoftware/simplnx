@@ -148,7 +148,7 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
       {-93214, "Finding the twin boundaries requires Cubic-Low m-3 or Cubic-High m-3m type crystal structures. Make sure your data is of one of these two types."});
 
   // Return both the resultOutputActions via std::move()
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

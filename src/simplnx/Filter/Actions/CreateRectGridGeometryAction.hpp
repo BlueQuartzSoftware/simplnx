@@ -25,10 +25,10 @@ public:
 
   using SpacingType = std::vector<float>;
 
-  CreateRectGridGeometryAction(const DataPath& path, usize xBoundsDim, usize yBoundsDim, usize zBoundsDim, std::string  cellAttributeMatrixName, std::string  xBoundsName,
-                               std::string  yBoundsName, std::string  zBoundsName);
+  CreateRectGridGeometryAction(const DataPath& path, usize xBoundsDim, usize yBoundsDim, usize zBoundsDim, std::string cellAttributeMatrixName, std::string xBoundsName, std::string yBoundsName,
+                               std::string zBoundsName);
 
-  CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath, std::string  cellAttributeMatrixName,
+  CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath, std::string cellAttributeMatrixName,
                                const ArrayHandlingType& arrayType);
 
   ~CreateRectGridGeometryAction() noexcept override;

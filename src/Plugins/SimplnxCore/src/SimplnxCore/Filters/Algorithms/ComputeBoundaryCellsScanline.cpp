@@ -18,8 +18,6 @@ ComputeBoundaryCellsScanline::ComputeBoundaryCellsScanline(DataStructure& dataSt
 {
 }
 
-
-
 Result<> ComputeBoundaryCellsScanline::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);

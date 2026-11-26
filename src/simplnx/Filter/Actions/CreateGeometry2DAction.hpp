@@ -31,8 +31,8 @@ class CreateGeometry2DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, std::string  vertexAttributeMatrixName, std::string  faceAttributeMatrixName,
-                         std::string  sharedVerticesName, std::string  sharedFacesName)
+  CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, std::string vertexAttributeMatrixName, std::string faceAttributeMatrixName, std::string sharedVerticesName,
+                         std::string sharedFacesName)
   : IDataCreationAction(geometryPath)
   , m_NumFaces(numFaces)
   , m_NumVertices(numVertices)
@@ -43,8 +43,8 @@ public:
   {
   }
 
-  CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, std::string  vertexAttributeMatrixName,
-                         std::string  faceAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, std::string vertexAttributeMatrixName,
+                         std::string faceAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(std::move(vertexAttributeMatrixName))
   , m_FaceDataName(std::move(faceAttributeMatrixName))

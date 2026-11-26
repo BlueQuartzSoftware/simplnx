@@ -72,7 +72,6 @@ FlyingEdges3D::FlyingEdges3D(DataStructure& dataStructure, const IFilter::Messag
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& FlyingEdges3D::getCancel()
 {

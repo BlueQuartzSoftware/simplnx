@@ -19,7 +19,6 @@ DBSCAN::DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesg
 
 // -----------------------------------------------------------------------------
 
-
 Result<> DBSCAN::operator()()
 {
   // Include every scanline input and output in storage-path selection.

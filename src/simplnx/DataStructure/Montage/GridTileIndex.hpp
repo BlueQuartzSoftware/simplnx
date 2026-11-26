@@ -89,7 +89,7 @@ protected:
    * @param montage
    * @param pos
    */
-  GridTileIndex(const GridMontage* montage, SizeVec3  pos);
+  GridTileIndex(const GridMontage* montage, SizeVec3 pos);
 
 private:
   SizeVec3 m_Pos;

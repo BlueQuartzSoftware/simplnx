@@ -96,14 +96,14 @@ IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure
 
   if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, {goodVoxelsArrayPath}, -45463); result.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, goodVoxelsArrayPath);
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -106,7 +106,7 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, {pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -67205); tupleResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   PreflightResult preflightResult;
@@ -124,7 +124,7 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return actions and updated preflight values.
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 Result<> ComputeKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

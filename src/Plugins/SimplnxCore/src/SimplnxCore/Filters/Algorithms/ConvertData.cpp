@@ -299,8 +299,6 @@ ConvertData::ConvertData(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-
-
 const std::atomic_bool& ConvertData::getCancel()
 {
   return m_ShouldCancel;

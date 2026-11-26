@@ -146,16 +146,18 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
   // past the end of one of them, so check here where the user still gets an actionable message.
   if(faceLabels.getNumberOfTuples() != triangleGeom.getNumberOfFaces())
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-57402, fmt::format("Face Labels array '{}' has {} tuples but Triangle Geometry '{}' has {} faces. They must match.", pFaceLabelsArrayPath.toString(),
-                                                               faceLabels.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfFaces()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-57402, fmt::format("Face Labels array '{}' has {} tuples but Triangle Geometry '{}' has {} faces. They must match.", pFaceLabelsArrayPath.toString(),
+                                                                   faceLabels.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfFaces()))};
   }
   if(copyNodeTypes)
   {
     const auto& nodeTypes = dataStructure.getDataRefAs<IDataArray>(pNodeTypesArrayPath);
     if(nodeTypes.getNumberOfTuples() != triangleGeom.getNumberOfVertices())
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-57403, fmt::format("Node Types array '{}' has {} tuples but Triangle Geometry '{}' has {} vertices. They must match.", pNodeTypesArrayPath.toString(),
-                                                                 nodeTypes.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfVertices()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-57403, fmt::format("Node Types array '{}' has {} tuples but Triangle Geometry '{}' has {} vertices. They must match.", pNodeTypesArrayPath.toString(),
+                                                                     nodeTypes.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfVertices()))};
     }
   }
 
@@ -177,7 +179,7 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
     resultOutputActions.value().appendAction(std::move(createNodeTypesAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

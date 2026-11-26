@@ -345,7 +345,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   if(!pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindModeValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue && !pFindNumUniqueValuesValue)
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(MakeWarningVoidResult(-57200, "No statistics have been selected, so this filter will perform no operations"), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(MakeWarningVoidResult(-57200, "No statistics have been selected, so this filter will perform no operations"), {})};
   }
 
   std::vector<DataPath> inputDataArrayPaths;
@@ -457,7 +457,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, tupleDims).actions;
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

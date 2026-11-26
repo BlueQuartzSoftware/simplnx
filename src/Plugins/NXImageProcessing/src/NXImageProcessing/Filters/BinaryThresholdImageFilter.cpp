@@ -103,12 +103,12 @@ IFilter::PreflightResult BinaryThresholdImageFilter::preflightImpl(const DataStr
   const auto upperThreshold = filterArgs.value<float64>(k_UpperThreshold_Key);
   if(lowerThreshold > upperThreshold)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-8330, fmt::format("Lower Threshold ({}) cannot be greater than Upper Threshold ({}).", lowerThreshold, upperThreshold))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-8330, fmt::format("Lower Threshold ({}) cannot be greater than Upper Threshold ({}).", lowerThreshold, upperThreshold))};
   }
 
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
@@ -122,7 +122,7 @@ Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, c
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  const BinaryThresholdOperation operation{.lowerThreshold=lowerThreshold, .upperThreshold=upperThreshold, .insideValue=insideValue, .outsideValue=outsideValue};
+  const BinaryThresholdOperation operation{.lowerThreshold = lowerThreshold, .upperThreshold = upperThreshold, .insideValue = insideValue, .outsideValue = outsideValue};
   return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

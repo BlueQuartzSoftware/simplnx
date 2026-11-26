@@ -84,7 +84,7 @@ IFilter::PreflightResult GradientMagnitudeImageFilter::preflightImpl(const DataS
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {.outputActions=std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   // ITK's GradientMagnitudeImageFilter throws "Image spacing cannot be zero" when UseImageSpacing is on; replicate it
@@ -97,10 +97,10 @@ IFilter::PreflightResult GradientMagnitudeImageFilter::preflightImpl(const DataS
     if(Result<> spacingCheck = ImageProcessing::ValidatePositiveSpacing(imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_GradientMagnitudeZeroSpacing, 0.0);
        spacingCheck.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
     }
   }
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 Result<> GradientMagnitudeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

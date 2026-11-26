@@ -71,7 +71,7 @@ public:
    * @brief Constructs an IDataCreationAction that takes a DataPath specifying the path to be created.
    * @param createdPath
    */
-  IDataCreationAction(DataPath  createdPath)
+  IDataCreationAction(DataPath createdPath)
   : m_CreatedPath(std::move(createdPath))
   {
   }
@@ -177,7 +177,7 @@ struct SIMPLNX_EXPORT OutputActions
    */
   void appendDataObjectModificationNotification(const DataPath& dataPath, DataObjectModification::ModifiedType modifiedType)
   {
-    modifiedActions.push_back(DataObjectModification{.modifiedPath=dataPath, .modifiedType=modifiedType});
+    modifiedActions.push_back(DataObjectModification{.modifiedPath = dataPath, .modifiedType = modifiedType});
   }
 
   /**

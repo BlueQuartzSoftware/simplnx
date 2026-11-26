@@ -11,7 +11,7 @@ using namespace nx::core;
 
 namespace nx::core
 {
-CopyDataObjectAction::CopyDataObjectAction(DataPath  path, const DataPath& newPath, const std::vector<DataPath>& allCreatedPaths)
+CopyDataObjectAction::CopyDataObjectAction(DataPath path, const DataPath& newPath, const std::vector<DataPath>& allCreatedPaths)
 : IDataCreationAction(newPath)
 , m_Path(std::move(path))
 , m_NewPath(newPath)

@@ -1350,8 +1350,8 @@ protected:
    * @brief Moves base data-store state.
    * @param other Data store to move.
    */
-  AbstractDataStore(AbstractDataStore&& other)
- noexcept   : IDataStore(std::move(other))
+  AbstractDataStore(AbstractDataStore&& other) noexcept
+  : IDataStore(std::move(other))
   , m_InitValue(std::move(other.m_InitValue))
   {
   }

@@ -315,8 +315,6 @@ SilhouetteScanline::SilhouetteScanline(DataStructure& dataStructure, const IFilt
 {
 }
 
-
-
 Result<> SilhouetteScanline::operator()()
 {
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);

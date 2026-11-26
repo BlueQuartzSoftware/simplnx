@@ -517,8 +517,6 @@ WriteStatsGenOdfAngleFile::WriteStatsGenOdfAngleFile(DataStructure& dataStructur
 {
 }
 
-
-
 const std::atomic_bool& WriteStatsGenOdfAngleFile::getCancel()
 {
   return m_ShouldCancel;

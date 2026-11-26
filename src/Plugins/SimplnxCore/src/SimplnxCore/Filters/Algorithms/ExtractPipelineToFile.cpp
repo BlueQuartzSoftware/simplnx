@@ -24,7 +24,6 @@ ExtractPipelineToFile::ExtractPipelineToFile(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ExtractPipelineToFile::operator()()
 {

@@ -247,7 +247,6 @@ FillBadDataCCL::FillBadDataCCL(DataStructure& dataStructure, const IFilter::Mess
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& FillBadDataCCL::getCancel() const
 {
@@ -688,7 +687,7 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
             // Write (dest, src) pair to the external record store if a valid neighbor was found
             if(bestNeighbor >= 0)
             {
-              pairBatch[batchCount++] = {.destination=z * dims[0] * dims[1] + y * dims[0] + x, .source=bestNeighbor};
+              pairBatch[batchCount++] = {.destination = z * dims[0] * dims[1] + y * dims[0] + x, .source = bestNeighbor};
               if(batchCount == pairBatch.size())
               {
                 auto writeResult =
@@ -735,8 +734,9 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
 
     if(pairsWritten == 0)
     {
-      m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Warning,
-                                    .message=fmt::format("{} bad-data voxel(s) could not be filled because they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
+      m_MessageHandler.sendMessage(
+          {.type = IFilter::Message::Type::Warning,
+           .message = fmt::format("{} bad-data voxel(s) could not be filled because they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
       break;
     }
 
@@ -772,7 +772,7 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
     featureIdsStore.flush();
   }
 
-  m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message=fmt::format("  Completed in {} iteration{}", iteration, iteration == 1 ? "" : "s")});
+  m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = fmt::format("  Completed in {} iteration{}", iteration, iteration == 1 ? "" : "s")});
   return {};
 }
 

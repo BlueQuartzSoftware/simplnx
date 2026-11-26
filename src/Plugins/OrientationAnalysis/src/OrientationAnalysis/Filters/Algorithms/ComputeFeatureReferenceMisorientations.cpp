@@ -31,8 +31,6 @@ ComputeFeatureReferenceMisorientations::ComputeFeatureReferenceMisorientations(D
 {
 }
 
-
-
 const std::atomic_bool& ComputeFeatureReferenceMisorientations::getCancel()
 {
   return m_ShouldCancel;

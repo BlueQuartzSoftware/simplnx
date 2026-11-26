@@ -107,7 +107,7 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {featureIdsPath, cellPhasesPath, eulerAnglesPath}, -78431); tupleResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   PreflightResult preflightResult;
@@ -121,7 +121,7 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

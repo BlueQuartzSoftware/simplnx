@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <filesystem>
 
-
 using namespace nx::core;
 
 namespace nx::core
@@ -113,18 +112,19 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
   const auto componentShape = gbcd.getComponentShape();
   if(componentShape.size() != 6 || componentShape[5] != 2 || std::any_of(componentShape.begin(), componentShape.end(), [](usize dimension) { return dimension == 0; }))
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-96713, fmt::format("The DataArray '{}' selected for **GBCD** has component shape [{}]. The GBCD DataArray must have 6 component dimensions: 5 positive bin "
-                                                               "dimensions followed by a final dimension of 2 (hemispheres).",
-                                                               pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -96713, fmt::format("The DataArray '{}' selected for **GBCD** has component shape [{}]. The GBCD DataArray must have 6 component dimensions: 5 positive bin "
+                                    "dimensions followed by a final dimension of 2 (hemispheres).",
+                                    pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
   }
 
   auto numEnsembles = gbcd.getNumberOfTuples();
   if(pPhaseOfInterestValue >= numEnsembles)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-96712, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-96712, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

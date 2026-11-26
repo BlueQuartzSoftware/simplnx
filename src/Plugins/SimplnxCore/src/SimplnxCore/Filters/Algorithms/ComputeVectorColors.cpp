@@ -170,8 +170,6 @@ ComputeVectorColors::ComputeVectorColors(DataStructure& dataStructure, const IFi
 {
 }
 
-
-
 const std::atomic_bool& ComputeVectorColors::getCancel()
 {
   return m_ShouldCancel;

@@ -14,7 +14,7 @@ public:
   using ValueType = std::string;
 
   StringParameter() = delete;
-  StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~StringParameter() override = default;
 
   StringParameter(const StringParameter&) = delete;

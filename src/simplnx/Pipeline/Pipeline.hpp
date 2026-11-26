@@ -103,7 +103,7 @@ public:
    * @param name
    * @param filterList
    */
-  Pipeline(ExecutionContext executionContext, std::string  name = "Untitled Pipeline", FilterList* filterList = nullptr);
+  Pipeline(ExecutionContext executionContext, std::string name = "Untitled Pipeline", FilterList* filterList = nullptr);
 
   /**
    * @brief Constructs a pipeline with the specified name. If no name is

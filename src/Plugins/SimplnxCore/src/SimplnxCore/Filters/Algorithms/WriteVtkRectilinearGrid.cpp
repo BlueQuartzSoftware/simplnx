@@ -20,8 +20,6 @@ WriteVtkRectilinearGrid::WriteVtkRectilinearGrid(DataStructure& dataStructure, c
 {
 }
 
-
-
 const std::atomic_bool& WriteVtkRectilinearGrid::getCancel()
 {
   return m_ShouldCancel;

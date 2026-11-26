@@ -103,7 +103,8 @@ IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   usize numTuples = dataStructure.getDataRefAs<IDataArray>(pSelectedDataArrayPathsValue[0]).getNumberOfTuples();

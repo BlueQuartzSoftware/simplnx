@@ -4,7 +4,7 @@
 
 using namespace nx::core;
 
-DataRemovedMessage::DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string  name)
+DataRemovedMessage::DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string name)
 : AbstractDataStructureMessage(dataStructure)
 , m_Name(std::move(name))
 , m_Id(identifier)

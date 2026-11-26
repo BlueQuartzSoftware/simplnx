@@ -22,7 +22,6 @@ ComputeSlipTransmissionMetrics::ComputeSlipTransmissionMetrics(DataStructure& da
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeSlipTransmissionMetrics::getCancel()
 {

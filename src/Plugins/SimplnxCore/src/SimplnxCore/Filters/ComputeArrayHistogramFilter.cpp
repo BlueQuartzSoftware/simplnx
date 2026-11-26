@@ -152,7 +152,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   Result<> binCountResult = ValidateNumberOfBins(pNumberOfBinsValue);
   if(binCountResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
   }
   auto pNewDataGroupValue = filterArgs.value<bool>(k_CreateNewDataGroup_Key);
   auto pDataGroupNameValue = filterArgs.value<DataPath>(k_DataGroupPath_Key);
@@ -173,8 +173,8 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
     if(maskArray == nullptr)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(k_InvalidMaskArrayError,
-                                             fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  k_InvalidMaskArrayError, fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
     }
   }
 
@@ -201,9 +201,9 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
     if(maskArray != nullptr && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
     {
-      return {
-          .outputActions=MakeErrorResult<OutputActions>(k_MaskTupleCountError, fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
-                                                                            maskArrayPath.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(k_MaskTupleCountError,
+                                                              fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
+                                                                          maskArrayPath.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples()))};
     }
 
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
@@ -232,7 +232,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     }
   }
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

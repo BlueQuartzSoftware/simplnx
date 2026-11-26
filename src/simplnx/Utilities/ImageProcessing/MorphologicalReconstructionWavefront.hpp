@@ -96,7 +96,7 @@ inline ReconstructionPlaneWavefrontSchedule BuildReconstructionPlaneWavefrontSch
     {
       const usize colBegin = blockCol * schedule.blockEdge;
       const usize colEnd = std::min(dimX, colBegin + schedule.blockEdge);
-      schedule.waves[2 * blockRow + blockCol].push_back(ReconstructionPlaneBlock{.rowBegin=rowBegin, .rowEnd=rowEnd, .colBegin=colBegin, .colEnd=colEnd});
+      schedule.waves[2 * blockRow + blockCol].push_back(ReconstructionPlaneBlock{.rowBegin = rowBegin, .rowEnd = rowEnd, .colBegin = colBegin, .colEnd = colEnd});
     }
   }
   return schedule;

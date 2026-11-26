@@ -336,8 +336,6 @@ CreateAMScanPaths::CreateAMScanPaths(DataStructure& dataStructure, const IFilter
 {
 }
 
-
-
 const std::atomic_bool& CreateAMScanPaths::getCancel()
 {
   return m_ShouldCancel;

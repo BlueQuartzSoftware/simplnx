@@ -89,13 +89,13 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
   };
 
   const std::vector<ExpectedFeature> expected = {
-      {.featureId=0, .isNaN=true, .x=0.0f, .y=0.0f, .z=0.0f, .description="F0: placeholder feature, never referenced -> counter==0 -> NaN"},
-      {.featureId=1, .isNaN=false, .x=0.0f, .y=0.0f, .z=1.0f, .description="F1: single cell, identity quaternion"},
-      {.featureId=2, .isNaN=false, .x=0.0f, .y=k_SqrtThreeOverTwo, .z=0.5f, .description="F2: single cell, +60 deg about +X"},
-      {.featureId=3, .isNaN=false, .x=0.0f, .y=0.0f, .z=1.0f, .description="F3: three aligned identity cells -- trivial average"},
-      {.featureId=4, .isNaN=false, .x=0.0f, .y=0.0f, .z=1.0f, .description="F4: antipodal pair -- antipodal-flip resolves to (0,0,1)"},
-      {.featureId=5, .isNaN=true, .x=0.0f, .y=0.0f, .z=0.0f, .description="F5: declared feature, no cells reference it -> counter==0 -> NaN"},
-      {.featureId=6, .isNaN=true, .x=0.0f, .y=0.0f, .z=0.0f, .description="F6: sole cell is non-hex (Cubic_High) -> counter==0 -> NaN"},
+      {.featureId = 0, .isNaN = true, .x = 0.0f, .y = 0.0f, .z = 0.0f, .description = "F0: placeholder feature, never referenced -> counter==0 -> NaN"},
+      {.featureId = 1, .isNaN = false, .x = 0.0f, .y = 0.0f, .z = 1.0f, .description = "F1: single cell, identity quaternion"},
+      {.featureId = 2, .isNaN = false, .x = 0.0f, .y = k_SqrtThreeOverTwo, .z = 0.5f, .description = "F2: single cell, +60 deg about +X"},
+      {.featureId = 3, .isNaN = false, .x = 0.0f, .y = 0.0f, .z = 1.0f, .description = "F3: three aligned identity cells -- trivial average"},
+      {.featureId = 4, .isNaN = false, .x = 0.0f, .y = 0.0f, .z = 1.0f, .description = "F4: antipodal pair -- antipodal-flip resolves to (0,0,1)"},
+      {.featureId = 5, .isNaN = true, .x = 0.0f, .y = 0.0f, .z = 0.0f, .description = "F5: declared feature, no cells reference it -> counter==0 -> NaN"},
+      {.featureId = 6, .isNaN = true, .x = 0.0f, .y = 0.0f, .z = 0.0f, .description = "F6: sole cell is non-hex (Cubic_High) -> counter==0 -> NaN"},
   };
 
   for(const auto& exp : expected)

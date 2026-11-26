@@ -63,7 +63,7 @@ struct CheckInitializationFunctor
       float64 max = initRange.second;
       if(min > max)
       {
-        return Error{.code=-5550, .message=fmt::format("{}: Invalid initialization range.  Minimum value is larger than maximum value.", arrayName)};
+        return Error{.code = -5550, .message = fmt::format("{}: Invalid initialization range.  Minimum value is larger than maximum value.", arrayName)};
       }
       if(min < static_cast<double>(std::numeric_limits<T>().lowest()) || max > static_cast<double>(std::numeric_limits<T>().max()))
       {
@@ -71,7 +71,7 @@ struct CheckInitializationFunctor
       }
       if(min == max)
       {
-        return Error{.code=-4002, .message=fmt::format("{}: The initialization range must have differing values", arrayName)};
+        return Error{.code = -4002, .message = fmt::format("{}: The initialization range must have differing values", arrayName)};
       }
     }
 
@@ -175,7 +175,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
   if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, cellArrayPaths, -3557); result.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   uint64 xMin = minPoint.at(0);
@@ -191,37 +191,37 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
   if(cellArrayPaths.empty())
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-3550, "At least one data array must be selected.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-3550, "At least one data array must be selected.")};
   }
 
   std::vector<Error> errors;
 
   if(xMax < xMin)
   {
-    errors.push_back(Error{.code=-3551, .message=fmt::format("X Max ({}) less than X Min ({})", xMax, xMin)});
+    errors.push_back(Error{.code = -3551, .message = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin)});
   }
   if(yMax < yMin)
   {
-    errors.push_back(Error{.code=-3552, .message=fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin)});
+    errors.push_back(Error{.code = -3552, .message = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin)});
   }
   if(zMax < zMin)
   {
-    errors.push_back(Error{.code=-3553, .message=fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
+    errors.push_back(Error{.code = -3553, .message = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   if(xMax > (static_cast<int64>(imageGeom.getNumXCells()) - 1))
   {
-    errors.push_back(Error{.code=-3554, .message=fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
+    errors.push_back(Error{.code = -3554, .message = fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
   }
   if(yMax > (static_cast<int64>(imageGeom.getNumYCells()) - 1))
   {
-    errors.push_back(Error{.code=-3555, .message=fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
+    errors.push_back(Error{.code = -3555, .message = fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
   }
   if(zMax > (static_cast<int64>(imageGeom.getNumZCells()) - 1))
   {
-    errors.push_back(Error{.code=-3556, .message=fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
+    errors.push_back(Error{.code = -3556, .message = fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
   }
 
   for(const DataPath& path : cellArrayPaths)
@@ -252,7 +252,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
     nx::core::MarkDataPathModified(dataStructure, resultOutputActions, path);
   }
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

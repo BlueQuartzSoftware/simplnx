@@ -38,7 +38,7 @@
 namespace nx::core
 {
 // -----------------------------------------------------------------------------
-ReadCSVFileParameter::ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+ReadCSVFileParameter::ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {

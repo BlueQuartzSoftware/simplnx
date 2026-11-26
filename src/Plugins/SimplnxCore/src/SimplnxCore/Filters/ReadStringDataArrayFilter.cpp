@@ -118,7 +118,7 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
       auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
       if(dimensions.invalid())
       {
-        return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+        return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
       }
       tupleDims = std::move(dimensions.value());
     }
@@ -129,8 +129,9 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
     if(useDims)
     {
       resultOutputActions.warnings().push_back(
-          Warning{.code=-77604, .message="You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+          Warning{.code = -77604,
+                  .message = "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                             "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
@@ -138,7 +139,7 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 Result<> ReadStringDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

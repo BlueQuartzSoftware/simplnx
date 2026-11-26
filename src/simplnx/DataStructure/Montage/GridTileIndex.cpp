@@ -8,11 +8,11 @@
 using namespace nx::core;
 
 GridTileIndex::GridTileIndex()
- 
+
 {
 }
 
-GridTileIndex::GridTileIndex(const GridMontage* montage, SizeVec3  pos)
+GridTileIndex::GridTileIndex(const GridMontage* montage, SizeVec3 pos)
 : AbstractTileIndex(montage)
 , m_Pos(std::move(pos))
 {

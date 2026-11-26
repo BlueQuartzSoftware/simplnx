@@ -58,7 +58,6 @@ LabelTriangleGeometry::LabelTriangleGeometry(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& LabelTriangleGeometry::getCancel()
 {

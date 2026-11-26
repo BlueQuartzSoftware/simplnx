@@ -106,8 +106,8 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
   const auto& quatArray = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
   if(phaseData.getNumberOfTuples() != quatArray.getNumberOfTuples())
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-49001,
-                                           fmt::format("Quaternion and Phase Arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), phaseData.getNumberOfTuples()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -49001, fmt::format("Quaternion and Phase Arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), phaseData.getNumberOfTuples()))};
   }
 
   if(pUseGoodVoxelsValue)
@@ -115,8 +115,8 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
     const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(pGoodVoxelsArrayPathValue);
     if(maskArray.getNumberOfTuples() != quatArray.getNumberOfTuples())
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-49002,
-                                             fmt::format("Quaternion and Mask arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), maskArray.getNumberOfTuples()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -49002, fmt::format("Quaternion and Mask arrays must have the same number of tuples. '{} != {}'", quatArray.getNumberOfTuples(), maskArray.getNumberOfTuples()))};
     }
   }
 
@@ -128,7 +128,7 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
       std::make_unique<CreateArrayAction>(nx::core::DataType::float32, quatArray.getDataStore()->getTupleShape(), quatArray.getDataStore()->getComponentShape(), pFZQuatsArrayPathValue, "", "0.0");
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

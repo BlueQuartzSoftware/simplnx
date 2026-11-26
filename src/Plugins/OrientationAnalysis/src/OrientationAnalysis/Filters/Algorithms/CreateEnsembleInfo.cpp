@@ -49,7 +49,6 @@ CreateEnsembleInfo::CreateEnsembleInfo(DataStructure& dataStructure, const IFilt
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CreateEnsembleInfo::getCancel()
 {

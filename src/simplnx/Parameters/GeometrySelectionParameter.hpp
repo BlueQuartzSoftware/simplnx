@@ -22,7 +22,7 @@ public:
   using AllowedTypes = std::set<AllowedType>;
 
   GeometrySelectionParameter() = delete;
-  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, AllowedTypes  allowedTypes);
+  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes);
   ~GeometrySelectionParameter() override = default;
 
   GeometrySelectionParameter(const GeometrySelectionParameter&) = delete;

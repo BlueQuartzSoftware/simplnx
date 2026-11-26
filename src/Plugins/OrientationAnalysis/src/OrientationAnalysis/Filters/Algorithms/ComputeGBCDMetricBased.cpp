@@ -251,7 +251,7 @@ public:
 #else
                     const std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    float64 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, Matrix3dR  gFixedT)
+                    float64 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, Matrix3dR gFixedT)
   : m_DistributionValues(distributionValues)
   , m_ErrorValues(errorValues)
   , m_SamplePtsX(samplePtsX)
@@ -336,8 +336,6 @@ ComputeGBCDMetricBased::ComputeGBCDMetricBased(DataStructure& dataStructure, con
 , m_MessageHandler(mesgHandler)
 {
 }
-
-
 
 const std::atomic_bool& ComputeGBCDMetricBased::getCancel()
 {

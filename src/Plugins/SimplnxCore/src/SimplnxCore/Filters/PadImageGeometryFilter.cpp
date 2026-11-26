@@ -170,7 +170,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
 
   if(!pPadXDim && !pPadYDim && !pPadZDim)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to pad!")};
+    return {.outputActions = MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to pad!")};
   }
 
   Result<OutputActions> resultOutputActions;
@@ -199,7 +199,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     const auto& error = dimensions.errors().front();
     if(error.code != GeometryUtilities::k_PaddedExtentOverflowError && error.code != GeometryUtilities::k_PaddedTupleOverflowError)
     {
-      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     resultOutputActions.warnings().push_back({k_PaddedDimensionsWarning, error.message + " Execution checks final dimensions; preflight uses source dimensions and origin."});
     useSourceOrigin = true;
@@ -266,7 +266,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     const AttributeMatrix* selectedCellData = srcImageGeom.getCellData();
     if(selectedCellData == nullptr)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
@@ -343,22 +343,24 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
      ((pPadXDim && (pXMinMaxValue[0] > 0 || pXMinMaxValue[1] > 0)) || (pPadYDim && (pYMinMaxValue[0] > 0 || pYMinMaxValue[1] > 0)) || (pPadZDim && (pZMinMaxValue[0] > 0 || pZMinMaxValue[1] > 0))))
   {
     resultOutputActions.warnings().emplace_back(Warning{
-        .code=-67401,
-        .message=fmt::format("Default Padding Value is {}. This value is written into every Cell Data Array, including any Feature Ids array. The added cells then belong to Feature {}, so any Feature "
-                    "data computed before this filter is no longer correct for that Feature. A negative value, or a value larger than the last Feature Id, creates Feature Ids that are not valid. "
-                    "Use 0 to add background cells.",
-                    pDefaultFillValue, pDefaultFillValue)});
+        .code = -67401,
+        .message =
+            fmt::format("Default Padding Value is {}. This value is written into every Cell Data Array, including any Feature Ids array. The added cells then belong to Feature {}, so any Feature "
+                        "data computed before this filter is no longer correct for that Feature. A negative value, or a value larger than the last Feature Id, creates Feature Ids that are not valid. "
+                        "Use 0 to add background cells.",
+                        pDefaultFillValue, pDefaultFillValue)});
   }
 
   if(!pUpdateOriginValue && hasCopiedAttributeMatrix && ((pPadXDim && pXMinMaxValue[0] > 0) || (pPadYDim && pYMinMaxValue[0] > 0) || (pPadZDim && pZMinMaxValue[0] > 0)))
   {
     resultOutputActions.warnings().emplace_back(Warning{
-        .code=-67402, .message="Update Origin is OFF and padding is added on the minimum side. The existing cells move to new physical coordinates. Values stored in physical coordinates in the copied Attribute "
-                "Matrices, such as Feature Centroids, no longer match the cells. Turn on Update Origin to keep the cells in place, or recompute those values."});
+        .code = -67402,
+        .message = "Update Origin is OFF and padding is added on the minimum side. The existing cells move to new physical coordinates. Values stored in physical coordinates in the copied Attribute "
+                   "Matrices, such as Feature Centroids, no longer match the cells. Turn on Update Origin to keep the cells in place, or recompute those values."});
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

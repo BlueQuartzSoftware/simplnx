@@ -166,8 +166,6 @@ ComputeSurfaceFeaturesScanline::ComputeSurfaceFeaturesScanline(DataStructure& da
 {
 }
 
-
-
 Result<> ComputeSurfaceFeaturesScanline::operator()()
 {
   const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;

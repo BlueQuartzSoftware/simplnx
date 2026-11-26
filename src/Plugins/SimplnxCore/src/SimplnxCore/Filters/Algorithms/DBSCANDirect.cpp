@@ -119,8 +119,8 @@ public:
 struct GridBitMap
 {
   std::vector<uint8> gridTable; // Bit-packed grid incidence rows.
-  usize numPositions = 0;            // Number of positions on the indexed axis.
-  usize rowLength = 0;               // Bytes in one axis-position row.
+  usize numPositions = 0;       // Number of positions on the indexed axis.
+  usize rowLength = 0;          // Bytes in one axis-position row.
 };
 
 /**
@@ -1279,8 +1279,6 @@ DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageH
 , m_MessageHandler(mesgHandler)
 {
 }
-
-
 
 Result<> DBSCANDirect::operator()()
 {

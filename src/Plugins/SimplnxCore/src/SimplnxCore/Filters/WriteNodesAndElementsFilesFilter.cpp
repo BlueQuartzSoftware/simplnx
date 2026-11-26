@@ -105,16 +105,16 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
 
   if(!writeNodeFile && !writeElementFile)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
-                                           "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
+                                                            "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
   }
 
   auto& selectedGeometry = dataStructure.getDataRefAs<IGeometry>(selectedGeometryPath);
   if(selectedGeometry.getGeomType() == IGeometry::Type::Vertex && writeElementFile)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(
-        to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
-        "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a different geometry with a type other than Vertex.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
+                                                            "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a "
+                                                            "different geometry with a type other than Vertex.")};
   }
 
   return {};

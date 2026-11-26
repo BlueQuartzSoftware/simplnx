@@ -44,9 +44,9 @@ TEST_CASE("Simplnx::PipelineFilter::Routes info text to the update signal", "[Si
   TestablePipelineFilter pipelineFilter;
 
   std::vector<UpdateRecord> updates;
-  pipelineFilter.getFilterUpdateSignal().connect([&updates](AbstractPipelineNode*, int32 index, const std::string& message) { updates.push_back(UpdateRecord{.index=index, .message=message}); });
+  pipelineFilter.getFilterUpdateSignal().connect([&updates](AbstractPipelineNode*, int32 index, const std::string& message) { updates.push_back(UpdateRecord{.index = index, .message = message}); });
 
-  pipelineFilter.notifyFilterMessage(IFilter::Message{.type=IFilter::Message::Type::Info, .message="Reading slice 4"});
+  pipelineFilter.notifyFilterMessage(IFilter::Message{.type = IFilter::Message::Type::Info, .message = "Reading slice 4"});
 
   REQUIRE(updates.size() == 1);
   REQUIRE(updates[0].message == "Reading slice 4");
@@ -57,10 +57,11 @@ TEST_CASE("Simplnx::PipelineFilter::Routes progress without a downcast", "[Simpl
   TestablePipelineFilter pipelineFilter;
 
   std::vector<ProgressRecord> progressRecords;
-  pipelineFilter.getFilterProgressSignal().connect(
-      [&progressRecords](AbstractPipelineNode*, int32 index, int32 progress, const std::string& message) { progressRecords.push_back(ProgressRecord{.index=index, .progress=progress, .message=message}); });
+  pipelineFilter.getFilterProgressSignal().connect([&progressRecords](AbstractPipelineNode*, int32 index, int32 progress, const std::string& message) {
+    progressRecords.push_back(ProgressRecord{.index = index, .progress = progress, .message = message});
+  });
 
-  pipelineFilter.notifyFilterMessage(IFilter::Message{.type=IFilter::Message::Type::Progress, .message="Analyzing data", .progress=35});
+  pipelineFilter.notifyFilterMessage(IFilter::Message{.type = IFilter::Message::Type::Progress, .message = "Analyzing data", .progress = 35});
 
   REQUIRE(progressRecords.size() == 1);
   REQUIRE(progressRecords[0].progress == 35);
@@ -72,12 +73,12 @@ TEST_CASE("Simplnx::PipelineFilter::Warning text is not discarded", "[Simplnx][P
   TestablePipelineFilter pipelineFilter;
 
   std::vector<UpdateRecord> updates;
-  pipelineFilter.getFilterUpdateSignal().connect([&updates](AbstractPipelineNode*, int32 index, const std::string& message) { updates.push_back(UpdateRecord{.index=index, .message=message}); });
+  pipelineFilter.getFilterUpdateSignal().connect([&updates](AbstractPipelineNode*, int32 index, const std::string& message) { updates.push_back(UpdateRecord{.index = index, .message = message}); });
 
   std::vector<FaultState> faults;
   pipelineFilter.getFilterFaultSignal().connect([&faults](AbstractPipelineNode*, int32, FaultState state) { faults.push_back(state); });
 
-  pipelineFilter.notifyFilterMessage(IFilter::Message{.type=IFilter::Message::Type::Warning, .message="Phase 3 has an unknown crystal structure"});
+  pipelineFilter.notifyFilterMessage(IFilter::Message{.type = IFilter::Message::Type::Warning, .message = "Phase 3 has an unknown crystal structure"});
 
   // The fault state must still be raised.
   REQUIRE(faults.size() == 1);
@@ -93,12 +94,12 @@ TEST_CASE("Simplnx::PipelineFilter::Error text is not discarded", "[Simplnx][Pip
   TestablePipelineFilter pipelineFilter;
 
   std::vector<UpdateRecord> updates;
-  pipelineFilter.getFilterUpdateSignal().connect([&updates](AbstractPipelineNode*, int32 index, const std::string& message) { updates.push_back(UpdateRecord{.index=index, .message=message}); });
+  pipelineFilter.getFilterUpdateSignal().connect([&updates](AbstractPipelineNode*, int32 index, const std::string& message) { updates.push_back(UpdateRecord{.index = index, .message = message}); });
 
   std::vector<FaultState> faults;
   pipelineFilter.getFilterFaultSignal().connect([&faults](AbstractPipelineNode*, int32, FaultState state) { faults.push_back(state); });
 
-  pipelineFilter.notifyFilterMessage(IFilter::Message{.type=IFilter::Message::Type::Error, .message="Could not open file"});
+  pipelineFilter.notifyFilterMessage(IFilter::Message{.type = IFilter::Message::Type::Error, .message = "Could not open file"});
 
   REQUIRE(faults.size() == 1);
   REQUIRE(faults[0] == FaultState::Errors);

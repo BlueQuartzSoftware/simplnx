@@ -20,7 +20,6 @@ ComputeLargestCrossSections::ComputeLargestCrossSections(DataStructure& dataStru
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeLargestCrossSections::getCancel()
 {

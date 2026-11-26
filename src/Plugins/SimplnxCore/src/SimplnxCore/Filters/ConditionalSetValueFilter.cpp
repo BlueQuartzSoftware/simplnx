@@ -138,7 +138,7 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   // Inform users that the following arrays are going to be modified in place
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, selectedArrayPath);
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

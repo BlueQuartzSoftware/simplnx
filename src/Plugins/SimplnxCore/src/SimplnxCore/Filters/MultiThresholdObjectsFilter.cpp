@@ -180,7 +180,7 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
   Result<> componentIndicesResult = CheckComponentIndicesInThresholds(thresholdsObject, dataStructure);
   if(componentIndicesResult.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(componentIndicesResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentIndicesResult))};
   }
 
   if(maskArrayType == DataType::boolean)

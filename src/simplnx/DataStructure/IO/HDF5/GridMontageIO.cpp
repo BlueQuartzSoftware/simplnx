@@ -26,7 +26,7 @@ Result<> GridMontageIO::readData(DataStructureReader& structureReader, const gro
   auto* montage = GridMontage::Import(structureReader.getDataStructure(), objectName, importId, parentId);
   return BaseGroupIO::ReadBaseGroupData(structureReader, *montage, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
-Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable) 
+Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable)
 {
   auto groupWriter = parentGroup.createGroup(montage.getName());
   return BaseGroupIO::WriteBaseGroupData(dataStructureWriter, montage, parentGroup, importable);

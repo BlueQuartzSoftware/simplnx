@@ -17,8 +17,6 @@ ComputeSurfaceAreaToVolume::ComputeSurfaceAreaToVolume(DataStructure& dataStruct
 {
 }
 
-
-
 const std::atomic_bool& ComputeSurfaceAreaToVolume::getCancel()
 {
   return m_ShouldCancel;

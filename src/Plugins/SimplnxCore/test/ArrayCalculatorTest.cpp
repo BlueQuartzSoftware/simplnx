@@ -142,7 +142,8 @@ IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=DataPath({k_AttributeMatrix}), .m_Equation=equation, .m_Units=units}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup = DataPath({k_AttributeMatrix}), .m_Equation = equation, .m_Units = units}));
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(calculatedPath));
 
@@ -160,7 +161,8 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=DataPath({k_AttributeMatrix}), .m_Equation=equation, .m_Units=units}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup = DataPath({k_AttributeMatrix}), .m_Equation = equation, .m_Units = units}));
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(targetArrayPath));
 
@@ -1078,8 +1080,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
   {
     DataPath outputPath({"Group1", "NewArray"});
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=DataPath{}, .m_Equation="UniqueName + 1", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = DataPath{}, .m_Equation = "UniqueName + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
     auto result = filter.execute(ds, args);
@@ -1098,8 +1100,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
   {
     DataPath outputPath({"Group1", "AmbiguousResult"});
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=DataPath{}, .m_Equation="SharedName + 1", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = DataPath{}, .m_Equation = "SharedName + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
     auto result = filter.execute(ds, args);
@@ -1111,8 +1113,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
   {
     DataPath outputPath({"Group1", "ResolvedResult"});
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=DataPath({"Group1"}), .m_Equation="SharedName + 1", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = DataPath({"Group1"}), .m_Equation = "SharedName + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
     auto result = filter.execute(ds, args);
@@ -1131,8 +1133,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
   {
     DataPath outputPath({"Group2", "QuotedResult"});
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=DataPath{}, .m_Equation="\"Group2/SharedName\" + 1", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = DataPath{}, .m_Equation = "\"Group2/SharedName\" + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
     auto result = filter.execute(ds, args);
@@ -1162,8 +1164,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
   SECTION("pi resolves to std::numbers::pi")
   {
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="pi", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "pi", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1180,8 +1182,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
   SECTION("e resolves to std::numbers::e")
   {
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="e", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "e", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1198,8 +1200,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
   SECTION("2 * pi expression works")
   {
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="2 * pi", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "2 * pi", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1228,8 +1230,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
   SECTION("Scalar modulo: 10 % 3 = 1")
   {
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="10 % 3", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "10 % 3", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1246,8 +1248,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
   SECTION("Array modulo: InputArray2 % 3 = 1 element-wise")
   {
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="InputArray2 % 3", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "InputArray2 % 3", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1280,7 +1282,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tuple Component Indexing")
     // tuple 2, comp 1 = index 2*3 + 1 = 7
     Arguments args;
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="\"MultiComponent Array1\"[2, 1]", .m_Units=CalculatorParameter::Radians}));
+                        std::make_any<CalculatorParameter::ValueType>(
+                            CalculatorParameter::ValueType{.m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "\"MultiComponent Array1\"[2, 1]", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1299,7 +1302,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tuple Component Indexing")
   {
     Arguments args;
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="\"MultiComponent Array1\"[100, 0]", .m_Units=CalculatorParameter::Radians}));
+                        std::make_any<CalculatorParameter::ValueType>(
+                            CalculatorParameter::ValueType{.m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "\"MultiComponent Array1\"[100, 0]", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1325,8 +1329,9 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
     // Sum = 2*values = [0,2,4,6,8,10,...,58]
     // Component 0 extraction: for each tuple t, take element at (t*3 + 0) = 2*(t*3)
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
-                                                                              .m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="(\"MultiComponent Array1\" + \"MultiComponent Array2\")[0]", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[0]", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1360,8 +1365,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Multi-word Array Names")
   {
     // Spaced Array is filled with 2, so Spaced Array + 1 = 3
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="Spaced Array + 1", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "Spaced Array + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1391,8 +1396,9 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Ex
   SECTION("(expr)[T, C] produces scalar")
   {
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
-                                                                              .m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="(\"MultiComponent Array1\" + \"MultiComponent Array2\")[2, 1]", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[2, 1]", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1411,8 +1417,9 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Ex
   SECTION("(expr)[T, C] out of bounds tuple")
   {
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
-                                                                              .m_SelectedGroup=k_AttributeMatrixPath, .m_Equation="(\"MultiComponent Array1\" + \"MultiComponent Array2\")[100, 0]", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[100, 0]", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1431,8 +1438,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Preflight rejects missing binary 
   DataStructure ds = ::createDataStructure();
   ArrayCalculatorFilter filter;
   Arguments args;
-  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation=equation, .m_Units=CalculatorParameter::Radians}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = equation, .m_Units = CalculatorParameter::Radians}));
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
 
@@ -1454,8 +1461,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape mismatch after ex
   DataStructure ds = CreateComponentShapeDataStructure();
   ArrayCalculatorFilter filter;
   Arguments args;
-  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation=equation, .m_Units=CalculatorParameter::Radians}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = equation, .m_Units = CalculatorParameter::Radians}));
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
 
@@ -1541,7 +1548,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and f
     ArrayCalculatorFilter filter;
     Arguments args;
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=matrixPath, .m_Equation=equation, .m_Units=CalculatorParameter::Radians}));
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup = matrixPath, .m_Equation = equation, .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::uint32));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
 
@@ -1578,8 +1585,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and f
 
     ArrayCalculatorFilter filter;
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=matrixPath, .m_Equation="Input + 1", .m_Units=CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              .m_SelectedGroup = matrixPath, .m_Equation = "Input + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::uint32));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
 
@@ -1700,8 +1707,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[Simp
   CAPTURE(equation);
   ArrayCalculatorFilter filter;
   Arguments args;
-  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{.m_SelectedGroup=k_AttributeMatrixPath, .m_Equation=equation, .m_Units=CalculatorParameter::Radians}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = equation, .m_Units = CalculatorParameter::Radians}));
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   const DataPath outputPath({"Result"});
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));

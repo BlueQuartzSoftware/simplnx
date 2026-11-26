@@ -37,7 +37,7 @@ public:
    * @param helpText The help text that should be displayed to a user
    * @param defaultValue The default value for the parameter
    */
-  ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
 
   ~ReadH5EbsdFileParameter() override = default;
 

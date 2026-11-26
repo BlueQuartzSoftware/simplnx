@@ -36,7 +36,7 @@ public:
    * @param sharedVertexListName Name of the vertex coordinate array.
    * @param units Length unit of the vertex coordinates. The default is Meter. Use Unspecified when the coordinates are not lengths.
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, std::string  vertexAttributeMatrixName, std::string  sharedVertexListName,
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, std::string vertexAttributeMatrixName, std::string sharedVertexListName,
                              IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
@@ -54,7 +54,7 @@ public:
    * @param arrayType Copy, Move, or Reference handling of the input array.
    * @param units Length unit of the vertex coordinates. The default is Meter. Use Unspecified when the coordinates are not lengths.
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, std::string  vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
+  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, std::string vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
                              IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(std::move(vertexAttributeMatrixName))

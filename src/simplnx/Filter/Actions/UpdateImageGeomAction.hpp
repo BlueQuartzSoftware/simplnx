@@ -21,7 +21,7 @@ public:
    * @param path The path to the ImageGeometry to update
    * @param centerOrigin Whether to center the origin
    */
-  UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, DataPath  path, bool centerOrigin = false);
+  UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, DataPath path, bool centerOrigin = false);
 
   ~UpdateImageGeomAction() noexcept override;
 

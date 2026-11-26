@@ -370,7 +370,7 @@ struct ImportH5ObjectPathsAction::TestState
 #endif
 };
 
-ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(fs::path  importFile, PathsType  paths, bool useDefaultGeometryValues)
+ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(fs::path importFile, PathsType paths, bool useDefaultGeometryValues)
 : IDataCreationAction(DataPath{})
 , m_H5FilePath(std::move(importFile))
 , m_Paths(std::move(paths))

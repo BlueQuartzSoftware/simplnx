@@ -70,7 +70,7 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId);
 class ORIENTATIONANALYSIS_EXPORT GrainMapperReader
 {
 public:
-  explicit GrainMapperReader(std::string  filePath, bool readDctData, bool readAbsorptionData);
+  explicit GrainMapperReader(std::string filePath, bool readDctData, bool readAbsorptionData);
   ~GrainMapperReader();
 
   using GrainMapperPhase = struct
@@ -97,7 +97,7 @@ public:
 
   std::vector<std::string> getDctDatasetNames() const;
   std::map<std::string, nx::core::DataType> getNameToDataTypeMap() const;
-  static std::map<std::string, size_t> getNameToCompDimMap() ;
+  static std::map<std::string, size_t> getNameToCompDimMap();
   std::vector<GrainMapperPhase> getPhaseVector() const;
   herr_t readPhaseInfo(hid_t parentId);
   herr_t findAvailableDctDatasets(hid_t parentId);

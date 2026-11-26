@@ -50,7 +50,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  static Result<> writeData(DataStructureWriter& dataStructureWriter, const QuadGeom& geometry, group_writer_type& parentGroup, bool importable) ;
+  static Result<> writeData(DataStructureWriter& dataStructureWriter, const QuadGeom& geometry, group_writer_type& parentGroup, bool importable);
 
   /**
    * @brief Attempts to write the DataObject to HDF5.

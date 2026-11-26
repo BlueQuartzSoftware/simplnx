@@ -21,7 +21,7 @@ template <typename T>
 class PadImageGeomDataArray
 {
 public:
-  PadImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, SizeVec3  paddedDims, const PadImageGeometryInputValues* inputValues,
+  PadImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, SizeVec3 paddedDims, const PadImageGeometryInputValues* inputValues,
                         const std::atomic_bool& shouldCancel)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -97,7 +97,6 @@ PadImageGeometry::PadImageGeometry(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& PadImageGeometry::getCancel()

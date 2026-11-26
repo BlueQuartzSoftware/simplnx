@@ -170,7 +170,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   auto componentDimensions = ConvertDimensions(compDimsData.at(0), "Component", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78605);
   if(componentDimensions.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
   }
   ShapeType compDims = std::move(componentDimensions.value());
   // Conversion has already checked the product.
@@ -198,7 +198,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
       auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78603);
       if(dimensions.invalid())
       {
-        return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+        return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
       }
       tupleDims = std::move(dimensions.value());
     }
@@ -209,15 +209,16 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     if(useDims)
     {
       resultOutputActions.warnings().push_back(
-          Warning{.code=-78604, .message="You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+          Warning{.code = -78604,
+                  .message = "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                             "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
   auto tupleCount = ComputeDimensionProduct(tupleDims, "Tuple");
   if(tupleCount.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
   }
   const usize numTuples = tupleCount.value();
 
@@ -240,7 +241,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
+      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
     }
 
     CreateFillPreflightVals(initFillValue, numComponents, preflightUpdatedValues);
@@ -251,13 +252,13 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_StartingFillValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
+      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_StepValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
+      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
     }
 
     CreateIncrementalPreflightVals(initIncFillValue, stepOperation, stepValue, numTuples, numComponents, preflightUpdatedValues);
@@ -268,19 +269,19 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitStartRange_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
+      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitEndRange_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
+      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateRangeOrderFunctor{}, arrayDataType, numComponents, initStartRange, initEndRange);
     if(result.outputActions.invalid())
     {
-      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
+      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
     }
 
     [[fallthrough]];
@@ -295,7 +296,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

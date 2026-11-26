@@ -25,7 +25,6 @@ ErodeDilateMask::ErodeDilateMask(DataStructure& dataStructure, const IFilter::Me
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ErodeDilateMask::getCancel() const
 {

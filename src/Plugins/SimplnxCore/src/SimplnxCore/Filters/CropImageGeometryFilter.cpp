@@ -184,7 +184,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
 
   ImageGeometryCropBounds bounds;
   IFilter::PreflightResult result = PreflightImageGeometryCrop(dataStructure, options, bounds);
-  s_HeaderCache[m_InstanceId] = {.xMin=bounds.xMin, .xMax=bounds.xMax, .yMax=bounds.yMax, .yMin=bounds.yMin, .zMax=bounds.zMax, .zMin=bounds.zMin};
+  s_HeaderCache[m_InstanceId] = {.xMin = bounds.xMin, .xMax = bounds.xMax, .yMax = bounds.yMax, .yMin = bounds.yMin, .zMax = bounds.zMax, .zMin = bounds.zMin};
   return result;
 }
 

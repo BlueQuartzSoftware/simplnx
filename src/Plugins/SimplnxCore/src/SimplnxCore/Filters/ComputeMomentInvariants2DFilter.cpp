@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pFeatureIdsArrayPathValue}, -9511);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   const DataPath omega1Path = pFeatureAttributeMatrixPathValue.createChildPath(pOmega1ArrayNameValue);
@@ -144,7 +144,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

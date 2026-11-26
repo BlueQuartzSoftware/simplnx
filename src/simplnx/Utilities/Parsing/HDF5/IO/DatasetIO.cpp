@@ -504,8 +504,9 @@ Result<nx::core::DataType> DatasetIO::getDataType() const
     result = {DataType::uint64};
     break;
   default:
-    result = {nonstd::make_unexpected(std::vector<Error>{Error{.code=-20012, .message="The selected datat set is not a supported type for "
-                                                                       "importing. Please select a different data set"}})};
+    result = {nonstd::make_unexpected(std::vector<Error>{Error{.code = -20012,
+                                                               .message = "The selected datat set is not a supported type for "
+                                                                          "importing. Please select a different data set"}})};
     break;
   }
   return result;
@@ -1656,7 +1657,7 @@ hid_t DatasetIO::CreateH5DatasetChunkProperties(const DimsType& chunkDims)
   return cparms;
 }
 
-nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo) 
+nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo)
 {
   // herr_t error = H5Pclose(datasetInfo.transferProp);
   // if(error < 0)

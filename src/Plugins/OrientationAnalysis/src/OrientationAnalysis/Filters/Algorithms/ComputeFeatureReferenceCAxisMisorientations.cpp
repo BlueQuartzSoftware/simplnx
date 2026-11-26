@@ -32,8 +32,6 @@ ComputeFeatureReferenceCAxisMisorientations::ComputeFeatureReferenceCAxisMisorie
 {
 }
 
-
-
 Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 {
   // The local ensemble cache avoids repeated cell-loop access.

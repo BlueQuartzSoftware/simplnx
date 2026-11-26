@@ -343,8 +343,6 @@ ComputeCoordinatesImageGeom::ComputeCoordinatesImageGeom(DataStructure& dataStru
 {
 }
 
-
-
 Result<> ComputeCoordinatesImageGeom::operator()()
 {
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);

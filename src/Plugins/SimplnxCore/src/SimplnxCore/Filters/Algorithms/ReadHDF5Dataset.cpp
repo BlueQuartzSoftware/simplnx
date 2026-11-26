@@ -21,8 +21,6 @@ ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-
-
 Result<> ReadHDF5Dataset::operator()()
 {
   auto pSelectedAttributeMatrixValue = m_InputValues->ImportHdf5Object.parent;

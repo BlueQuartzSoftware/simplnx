@@ -386,8 +386,6 @@ QuickSurfaceMeshScanline::QuickSurfaceMeshScanline(DataStructure& dataStructure,
   generator.seed(k_Seed);
 }
 
-
-
 Result<> QuickSurfaceMeshScanline::operator()()
 {
   const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();

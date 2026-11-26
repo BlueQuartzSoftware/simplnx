@@ -27,7 +27,6 @@ BadDataNeighborOrientationCheckWorklist::BadDataNeighborOrientationCheckWorklist
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheckWorklist::operator()()
 {

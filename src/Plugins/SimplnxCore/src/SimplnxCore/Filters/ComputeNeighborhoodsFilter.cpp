@@ -152,19 +152,20 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
   {
     if(pMultiplesOfAverageValue <= 0.0F)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-5732, "'Multiples of Equivalent Diameter' must be greater than zero.")};
+      return {.outputActions = MakeErrorResult<OutputActions>(-5732, "'Multiples of Equivalent Diameter' must be greater than zero.")};
     }
     auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pEquivalentDiametersArrayPathValue, pCentroidsArrayPathValue});
     if(!tupleValidityCheck)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-5730, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-5730, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
     }
   }
   else if(pSearchRadiusTypeValue == k_SearchRadiusIndex)
   {
     if(pSearchRadiusValue <= 0.0F)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-5733, "'Search Radius (microns)' must be greater than zero.")};
+      return {.outputActions = MakeErrorResult<OutputActions>(-5733, "'Search Radius (microns)' must be greater than zero.")};
     }
 
     // Give the user context for the absolute search radius relative to the geometry's physical size
@@ -214,7 +215,7 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

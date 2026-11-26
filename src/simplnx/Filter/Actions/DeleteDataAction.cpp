@@ -104,7 +104,7 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
 
 namespace nx::core
 {
-DeleteDataAction::DeleteDataAction(DataPath  path, DeleteDataAction::DeleteType type)
+DeleteDataAction::DeleteDataAction(DataPath path, DeleteDataAction::DeleteType type)
 : m_Path(std::move(path))
 , m_Type(type)
 {

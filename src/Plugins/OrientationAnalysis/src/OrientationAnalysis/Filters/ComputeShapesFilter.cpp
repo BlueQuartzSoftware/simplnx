@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPath}, -12806);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   auto featureAttrMatrixPath = pCentroidsArrayPath.getParent();
@@ -122,7 +122,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   const AttributeMatrix* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
 
   ShapeType tupleShape = featureAttrMatrix->getShape();
@@ -154,7 +154,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

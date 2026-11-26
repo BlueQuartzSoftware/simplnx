@@ -114,7 +114,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, gridGeomPath, cellArrayPaths, -654); tupleResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto& gridGeometry = dataStructure.getDataRefAs<IGridGeometry>(gridGeomPath);
@@ -131,7 +131,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 // -----------------------------------------------------------------------------

@@ -37,7 +37,7 @@ Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const D
   return INodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> VertexGeomIO::writeData(DataStructureWriter& structureReader, const VertexGeom& geometry, group_writer_type& parentGroupWriter, bool importable) 
+Result<> VertexGeomIO::writeData(DataStructureWriter& structureReader, const VertexGeom& geometry, group_writer_type& parentGroupWriter, bool importable)
 {
   return INodeGeom0dIO::WriteNodeGeom0dData(structureReader, geometry, parentGroupWriter, importable);
 }

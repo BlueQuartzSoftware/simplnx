@@ -112,7 +112,7 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   auto createArrayAction = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), calculatedTupleShape, calculatedComponentShape, pCalculatedArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

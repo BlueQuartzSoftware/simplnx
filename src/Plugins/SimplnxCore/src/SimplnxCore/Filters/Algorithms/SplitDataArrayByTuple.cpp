@@ -780,8 +780,6 @@ SplitDataArrayByTuple::SplitDataArrayByTuple(DataStructure& dataStructure, const
 {
 }
 
-
-
 const std::atomic_bool& SplitDataArrayByTuple::getCancel()
 {
   return m_ShouldCancel;

@@ -115,7 +115,6 @@ BadDataNeighborOrientationCheckScanline::BadDataNeighborOrientationCheckScanline
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheckScanline::operator()()
 {

@@ -118,13 +118,13 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
   if(dataStructure.getDataAs<IDataArray>(pContouringArrayPath) == nullptr)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(k_InvalidInputArrayError,
-                                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pContouringArrayPath.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pContouringArrayPath.toString()))};
   }
 
   if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, k_CellTupleCountError); result.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -141,7 +141,7 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{static_cast<usize>(1)}, std::vector<usize>{static_cast<usize>(3)}, vertexNormalsPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

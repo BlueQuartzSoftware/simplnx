@@ -32,7 +32,7 @@ constexpr StringLiteral k_FileExtension = "file_extension";
 } // namespace
 
 //-----------------------------------------------------------------------------
-GeneratedFileListParameter::GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+GeneratedFileListParameter::GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {

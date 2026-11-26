@@ -458,7 +458,6 @@ ExtractInternalSurfacesFromTriangleGeometry::ExtractInternalSurfacesFromTriangle
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
 {

@@ -94,7 +94,7 @@ public:
   {
   }
 
-  static Result<> prepareChunk(usize, usize) 
+  static Result<> prepareChunk(usize, usize)
   {
     return {};
   }
@@ -225,8 +225,6 @@ ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, con
 , m_MessageHandler(messageHandler)
 {
 }
-
-
 
 Result<> ComputeMisorientations::operator()()
 {

@@ -106,7 +106,7 @@ public:
   CentroidsObservedReadStore(const CentroidsObservedReadStore&) = default;
   CentroidsObservedReadStore(CentroidsObservedReadStore&&) = default;
   CentroidsObservedReadStore& operator=(const CentroidsObservedReadStore&) = delete;
-  CentroidsObservedReadStore& operator=(CentroidsObservedReadStore&&)  noexcept = default;
+  CentroidsObservedReadStore& operator=(CentroidsObservedReadStore&&) noexcept = default;
 
   Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
   {
@@ -119,7 +119,7 @@ public:
     auto result = DataStore<int32>::copyIntoBuffer(offset, buffer);
     if(m_ReadCount == m_WarnOnRead)
     {
-      result.warnings().push_back(Warning{.code=-91913, .message="Injected periodic centroid read warning"});
+      result.warnings().push_back(Warning{.code = -91913, .message = "Injected periodic centroid read warning"});
     }
     if(m_CancelAfterRead != nullptr && m_ReadCount == m_CancelOnRead)
     {

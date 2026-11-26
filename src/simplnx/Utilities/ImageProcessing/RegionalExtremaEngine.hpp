@@ -284,7 +284,7 @@ template <class T>
 class RegionalExtremaFlood
 {
 public:
-  RegionalExtremaFlood(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3  dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
+  RegionalExtremaFlood(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3 dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
                        const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
@@ -343,7 +343,7 @@ public:
   static constexpr usize k_DefaultFixed2DWorkValues = std::max<usize>(1, (36ULL * 1024ULL * 1024ULL) / sizeof(T));
   static constexpr usize k_DefaultFixed2DBufferValues = std::max<usize>(1, (14ULL * 1024ULL * 1024ULL) / sizeof(T));
 
-  RegionalExtremaSweep(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3  dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
+  RegionalExtremaSweep(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3 dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
                        const IFilter::MessageHandler& messageHandler, usize maxSlabValues = k_DefaultSlabValues, usize fixed2DWorkValues = k_DefaultFixed2DWorkValues,
                        usize fixed2DBufferValues = k_DefaultFixed2DBufferValues)
   : m_In(inStore)
@@ -425,7 +425,7 @@ template <class T>
 class RegionalExtremaSweepWithWorkingMemory
 {
 public:
-  RegionalExtremaSweepWithWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3  dims, RegionalExtremaOp op, bool fullyConnected,
+  RegionalExtremaSweepWithWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3 dims, RegionalExtremaOp op, bool fullyConnected,
                                         const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)

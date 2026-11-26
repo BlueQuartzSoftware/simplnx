@@ -53,7 +53,8 @@ bool UnloadSharedLibrary(void* handle)
 
 template <class Func>
 Func ImportFunction(void* handle, const char* funcName)
-requires (is_function_ptr_v<Func>) {
+requires(is_function_ptr_v<Func>)
+{
 #if defined(_WIN32)
   return reinterpret_cast<Func>(GetProcAddress(reinterpret_cast<HINSTANCE>(handle), funcName));
 #elif defined(__linux__) || defined(__APPLE__)
@@ -88,7 +89,7 @@ auto GetErrorMessage()
 }
 } // namespace
 
-PluginLoader::PluginLoader(std::filesystem::path  path)
+PluginLoader::PluginLoader(std::filesystem::path path)
 : m_Path(std::move(path))
 , m_Plugin(nullptr)
 {

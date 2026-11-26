@@ -175,7 +175,6 @@ ExtractVertexGeometry::ExtractVertexGeometry(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractVertexGeometry::getCancel()
 {

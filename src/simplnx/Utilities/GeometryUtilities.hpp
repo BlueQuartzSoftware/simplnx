@@ -164,7 +164,8 @@ T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const
  */
 template <class GeometryType = INodeGeometry1D>
 Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scaleFactor = std::nullopt)
-requires std::is_base_of<INodeGeometry1D, GeometryType>::value {
+requires std::is_base_of<INodeGeometry1D, GeometryType>::value
+{
   usize numXBins = 100;
   usize numYBins = 100;
   usize numZBins = 100;

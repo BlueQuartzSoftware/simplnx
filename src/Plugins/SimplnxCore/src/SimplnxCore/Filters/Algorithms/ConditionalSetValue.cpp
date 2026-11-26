@@ -457,8 +457,6 @@ ConditionalSetValue::ConditionalSetValue(DataStructure& dataStructure, const IFi
 {
 }
 
-
-
 Result<> ConditionalSetValue::operator()()
 {
   auto& targetArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);

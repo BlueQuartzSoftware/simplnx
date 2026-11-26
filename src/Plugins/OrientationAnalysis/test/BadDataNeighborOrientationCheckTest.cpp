@@ -1564,12 +1564,15 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 I
 
   // Case 1 covers all neighbor counts and phase configurations.
   const std::vector<Fixture> fixtures = {
-      {.relPath="case_1/case_1_1/case_1_1_1/case_1_1_1_input.dream3d", .numberOfNeighbors=1}, {.relPath="case_1/case_1_1/case_1_1_2/case_1_1_2_input.dream3d", .numberOfNeighbors=1}, {.relPath="case_1/case_1_1/case_1_1_3/case_1_1_3_input.dream3d", .numberOfNeighbors=1},
-      {.relPath="case_1/case_1_2/case_1_2_1/case_1_2_1_input.dream3d", .numberOfNeighbors=2}, {.relPath="case_1/case_1_2/case_1_2_2/case_1_2_2_input.dream3d", .numberOfNeighbors=2}, {.relPath="case_1/case_1_2/case_1_2_3/case_1_2_3_input.dream3d", .numberOfNeighbors=2},
-      {.relPath="case_1/case_1_3/case_1_3_1/case_1_3_1_input.dream3d", .numberOfNeighbors=3}, {.relPath="case_1/case_1_3/case_1_3_2/case_1_3_2_input.dream3d", .numberOfNeighbors=3}, {.relPath="case_1/case_1_3/case_1_3_3/case_1_3_3_input.dream3d", .numberOfNeighbors=3},
-      {.relPath="case_1/case_1_4/case_1_4_1/case_1_4_1_input.dream3d", .numberOfNeighbors=4}, {.relPath="case_1/case_1_4/case_1_4_2/case_1_4_2_input.dream3d", .numberOfNeighbors=4}, {.relPath="case_1/case_1_4/case_1_4_3/case_1_4_3_input.dream3d", .numberOfNeighbors=4},
-      {.relPath="case_1/case_1_5/case_1_5_1/case_1_5_1_input.dream3d", .numberOfNeighbors=5}, {.relPath="case_1/case_1_5/case_1_5_2/case_1_5_2_input.dream3d", .numberOfNeighbors=5}, {.relPath="case_1/case_1_5/case_1_5_3/case_1_5_3_input.dream3d", .numberOfNeighbors=5},
-      {.relPath="case_1/case_1_6/case_1_6_1/case_1_6_1_input.dream3d", .numberOfNeighbors=6}, {.relPath="case_1/case_1_6/case_1_6_2/case_1_6_2_input.dream3d", .numberOfNeighbors=6}, {.relPath="case_1/case_1_6/case_1_6_3/case_1_6_3_input.dream3d", .numberOfNeighbors=6},
+      {.relPath = "case_1/case_1_1/case_1_1_1/case_1_1_1_input.dream3d", .numberOfNeighbors = 1}, {.relPath = "case_1/case_1_1/case_1_1_2/case_1_1_2_input.dream3d", .numberOfNeighbors = 1},
+      {.relPath = "case_1/case_1_1/case_1_1_3/case_1_1_3_input.dream3d", .numberOfNeighbors = 1}, {.relPath = "case_1/case_1_2/case_1_2_1/case_1_2_1_input.dream3d", .numberOfNeighbors = 2},
+      {.relPath = "case_1/case_1_2/case_1_2_2/case_1_2_2_input.dream3d", .numberOfNeighbors = 2}, {.relPath = "case_1/case_1_2/case_1_2_3/case_1_2_3_input.dream3d", .numberOfNeighbors = 2},
+      {.relPath = "case_1/case_1_3/case_1_3_1/case_1_3_1_input.dream3d", .numberOfNeighbors = 3}, {.relPath = "case_1/case_1_3/case_1_3_2/case_1_3_2_input.dream3d", .numberOfNeighbors = 3},
+      {.relPath = "case_1/case_1_3/case_1_3_3/case_1_3_3_input.dream3d", .numberOfNeighbors = 3}, {.relPath = "case_1/case_1_4/case_1_4_1/case_1_4_1_input.dream3d", .numberOfNeighbors = 4},
+      {.relPath = "case_1/case_1_4/case_1_4_2/case_1_4_2_input.dream3d", .numberOfNeighbors = 4}, {.relPath = "case_1/case_1_4/case_1_4_3/case_1_4_3_input.dream3d", .numberOfNeighbors = 4},
+      {.relPath = "case_1/case_1_5/case_1_5_1/case_1_5_1_input.dream3d", .numberOfNeighbors = 5}, {.relPath = "case_1/case_1_5/case_1_5_2/case_1_5_2_input.dream3d", .numberOfNeighbors = 5},
+      {.relPath = "case_1/case_1_5/case_1_5_3/case_1_5_3_input.dream3d", .numberOfNeighbors = 5}, {.relPath = "case_1/case_1_6/case_1_6_1/case_1_6_1_input.dream3d", .numberOfNeighbors = 6},
+      {.relPath = "case_1/case_1_6/case_1_6_2/case_1_6_2_input.dream3d", .numberOfNeighbors = 6}, {.relPath = "case_1/case_1_6/case_1_6_3/case_1_6_3_input.dream3d", .numberOfNeighbors = 6},
   };
 
   for(const auto& fixture : fixtures)

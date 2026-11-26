@@ -283,8 +283,6 @@ AddBadData::AddBadData(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-
-
 const std::atomic_bool& AddBadData::getCancel()
 {
   return m_ShouldCancel;

@@ -30,8 +30,6 @@ RotateSampleRefFrame::RotateSampleRefFrame(DataStructure& dataStructure, const I
 {
 }
 
-
-
 const std::atomic_bool& RotateSampleRefFrame::getCancel()
 {
   return m_ShouldCancel;

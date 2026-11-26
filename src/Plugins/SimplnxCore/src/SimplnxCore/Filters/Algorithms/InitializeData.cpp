@@ -620,8 +620,6 @@ InitializeData::InitializeData(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-
-
 const std::atomic_bool& InitializeData::getCancel()
 {
   return m_ShouldCancel;

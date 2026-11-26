@@ -16,8 +16,6 @@ ComputeIPFColors::ComputeIPFColors(DataStructure& dataStructure, const IFilter::
 {
 }
 
-
-
 Result<> ComputeIPFColors::operator()()
 {
   // Dispatch checks storage residency. The selected executor performs typed access.

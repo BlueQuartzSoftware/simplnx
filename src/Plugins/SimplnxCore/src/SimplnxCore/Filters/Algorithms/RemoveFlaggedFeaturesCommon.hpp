@@ -111,7 +111,7 @@ public:
    * @param taskResult Receives the delegated preflight or execute failure.
    */
   RunCropImageGeometryImpl(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const DataPath& imageGeometryPath, const std::vector<uint64>& minVoxelVector,
-                           const std::vector<uint64>& maxVoxelVector, const DataPath& createdImgGeomPath, std::string  featureAttributeMatrixName, CopyFromArray::ParallelTaskResult& taskResult)
+                           const std::vector<uint64>& maxVoxelVector, const DataPath& createdImgGeomPath, std::string featureAttributeMatrixName, CopyFromArray::ParallelTaskResult& taskResult)
   : m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
   , m_ImageGeometryPath(imageGeometryPath)

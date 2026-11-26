@@ -7,8 +7,6 @@ using namespace nx::core;
 
 ReadCSVFile::ReadCSVFile() = default;
 
-
-
 Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, usize headersLineNumber, const std::vector<CSVType>& columnDataTypes,
                                const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const ShapeType& tupleDims, const std::vector<char>& delimiters, bool consecutiveDelimiters,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler)

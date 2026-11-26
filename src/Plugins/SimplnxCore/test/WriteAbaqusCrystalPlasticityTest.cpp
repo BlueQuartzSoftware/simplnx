@@ -163,7 +163,7 @@ public:
   }
 
   /** @brief Requires an OOC execution witness and rejects every other path. */
-  static void requireOocStoreExecution() 
+  static void requireOocStoreExecution()
   {
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     INFO("Dispatch counts: in-core=" << counts.InCore << ", OOC=" << counts.OutOfCore << ", OOC/resident=" << counts.OutOfCoreOnInMemoryStore << ", OOC/OOC=" << counts.OutOfCoreOnOutOfCoreStore

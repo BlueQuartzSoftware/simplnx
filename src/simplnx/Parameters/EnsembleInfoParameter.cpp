@@ -9,7 +9,6 @@
 #include <filesystem>
 #include <utility>
 
-
 namespace nx::core
 {
 namespace
@@ -24,7 +23,7 @@ constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
 } // namespace
 
 //-----------------------------------------------------------------------------
-EnsembleInfoParameter::EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+EnsembleInfoParameter::EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {

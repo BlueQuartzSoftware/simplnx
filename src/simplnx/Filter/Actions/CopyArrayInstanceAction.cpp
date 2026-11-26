@@ -27,7 +27,7 @@ Result<> DoCopy(IDataArray* inputDataArray, DataStructure& dataStructure, DataPa
 
 namespace nx::core
 {
-CopyArrayInstanceAction::CopyArrayInstanceAction(DataPath  selectedDataPath, const DataPath& createdDataPath)
+CopyArrayInstanceAction::CopyArrayInstanceAction(DataPath selectedDataPath, const DataPath& createdDataPath)
 : IDataCreationAction(createdDataPath)
 , m_SelectedDataPath(std::move(selectedDataPath))
 {

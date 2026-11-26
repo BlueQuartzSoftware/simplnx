@@ -132,7 +132,7 @@ struct CopyCellDataFunctor
           if(currentCellValue != firstFeatureValues[featureValueOffset + cellCompIdx] && result.warnings().empty())
           {
             result.warnings().push_back(
-                Warning{.code=-1000, .message=fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
+                Warning{.code = -1000, .message = fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
           }
           createdFeatureValues[featureValueOffset + cellCompIdx] = currentCellValue;
         }
@@ -161,7 +161,6 @@ CreateFeatureArrayFromElementArray::CreateFeatureArrayFromElementArray(DataStruc
 }
 
 // -----------------------------------------------------------------------------
-
 
 // -----------------------------------------------------------------------------
 Result<> CreateFeatureArrayFromElementArray::operator()()

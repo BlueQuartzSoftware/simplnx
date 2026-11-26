@@ -23,8 +23,6 @@ ReadAngData::ReadAngData(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-
-
 Result<> ReadAngData::operator()()
 {
   m_MessageHandler.sendInfoMessage(fmt::format("Reading .ang file '{}'", m_InputValues->InputFile.string()));

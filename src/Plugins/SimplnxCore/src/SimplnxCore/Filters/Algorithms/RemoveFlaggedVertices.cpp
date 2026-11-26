@@ -71,7 +71,6 @@ RemoveFlaggedVertices::RemoveFlaggedVertices(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedVertices::operator()()
 {

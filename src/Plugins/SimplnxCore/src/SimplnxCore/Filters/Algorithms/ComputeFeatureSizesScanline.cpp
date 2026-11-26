@@ -404,8 +404,6 @@ ComputeFeatureSizesScanline::ComputeFeatureSizesScanline(DataStructure& dataStru
 {
 }
 
-
-
 Result<> ComputeFeatureSizesScanline::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;

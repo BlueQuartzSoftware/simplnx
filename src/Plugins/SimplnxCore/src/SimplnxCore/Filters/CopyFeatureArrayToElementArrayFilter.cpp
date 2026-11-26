@@ -103,7 +103,8 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
@@ -119,7 +120,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -279,8 +279,17 @@ Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStruct
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::MorphologicalReconstructionExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath,    .dims=dims, .op=op, .fullyConnected=fullyConnected, .markerKind=markerKind, .height=height,
-                                                         .shouldCancel=shouldCancel,  .messageHandler=messageHandler, .differenceFromInput=differenceFromInput};
+  detail::MorphologicalReconstructionExecuteFn executeFn{.dataStructure = dataStructure,
+                                                         .inputArrayPath = inputArrayPath,
+                                                         .outputArrayPath = outputArrayPath,
+                                                         .dims = dims,
+                                                         .op = op,
+                                                         .fullyConnected = fullyConnected,
+                                                         .markerKind = markerKind,
+                                                         .height = height,
+                                                         .shouldCancel = shouldCancel,
+                                                         .messageHandler = messageHandler,
+                                                         .differenceFromInput = differenceFromInput};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -299,7 +308,16 @@ Result<> ExecuteReconstructionOpenCloseImageFilter(DataStructure& dataStructure,
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::ReconstructionOpenCloseExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .se=se, .firstOp=firstOp, .fullyConnected=fullyConnected, .preserveIntensities=preserveIntensities, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
+  detail::ReconstructionOpenCloseExecuteFn executeFn{.dataStructure = dataStructure,
+                                                     .inputArrayPath = inputArrayPath,
+                                                     .outputArrayPath = outputArrayPath,
+                                                     .dims = dims,
+                                                     .se = se,
+                                                     .firstOp = firstOp,
+                                                     .fullyConnected = fullyConnected,
+                                                     .preserveIntensities = preserveIntensities,
+                                                     .shouldCancel = shouldCancel,
+                                                     .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -318,7 +336,16 @@ Result<> ExecuteBinaryOpeningByReconstructionImageFilter(DataStructure& dataStru
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::BinaryReconstructionOpeningExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .se=se, .foreground=foreground, .background=background, .fullyConnected=fullyConnected, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
+  detail::BinaryReconstructionOpeningExecuteFn executeFn{.dataStructure = dataStructure,
+                                                         .inputArrayPath = inputArrayPath,
+                                                         .outputArrayPath = outputArrayPath,
+                                                         .dims = dims,
+                                                         .se = se,
+                                                         .foreground = foreground,
+                                                         .background = background,
+                                                         .fullyConnected = fullyConnected,
+                                                         .shouldCancel = shouldCancel,
+                                                         .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

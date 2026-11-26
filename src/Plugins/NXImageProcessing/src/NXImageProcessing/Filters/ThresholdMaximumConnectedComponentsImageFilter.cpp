@@ -97,7 +97,7 @@ IFilter::PreflightResult ThresholdMaximumConnectedComponentsImageFilter::preflig
   // AllNumeric admits every scalar numeric type (the legacy ScalarPixelIdTypeList), incl. float32/float64.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 Result<> ThresholdMaximumConnectedComponentsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,

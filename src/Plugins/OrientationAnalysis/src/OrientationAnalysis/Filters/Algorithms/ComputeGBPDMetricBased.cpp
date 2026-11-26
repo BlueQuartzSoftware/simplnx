@@ -197,10 +197,10 @@ public:
   , m_TotalFaceArea(totalFaceArea)
   , m_NumDistinctGBs(numDistinctGBs)
   , m_BallVolume(ballVolume)
-  , m_Crystal(crystal), m_NSym(m_OrientationOps[crystal]->getNumSymOps())
+  , m_Crystal(crystal)
+  , m_NSym(m_OrientationOps[crystal]->getNumSymOps())
   {
     m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-    
   }
 
   void probe(usize start, usize end) const
@@ -292,8 +292,6 @@ ComputeGBPDMetricBased::ComputeGBPDMetricBased(DataStructure& dataStructure, con
 , m_MessageHandler(mesgHandler)
 {
 }
-
-
 
 const std::atomic_bool& ComputeGBPDMetricBased::getCancel()
 {

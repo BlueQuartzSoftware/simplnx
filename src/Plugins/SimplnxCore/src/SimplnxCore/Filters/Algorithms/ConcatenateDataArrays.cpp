@@ -16,7 +16,6 @@ ConcatenateDataArrays::ConcatenateDataArrays(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ConcatenateDataArrays::getCancel()
 {

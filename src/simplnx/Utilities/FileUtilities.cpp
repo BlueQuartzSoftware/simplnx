@@ -316,7 +316,7 @@ Result<> FlushParsersImpl(const ParsersVector& dataParsers)
 }
 } // namespace
 
-AbstractDataParser::AbstractDataParser(IArray& array, std::string  columnName, usize columnIndex)
+AbstractDataParser::AbstractDataParser(IArray& array, std::string columnName, usize columnIndex)
 : m_Array(array)
 , m_ColumnName(std::move(columnName))
 , m_ColumnIndex(columnIndex)

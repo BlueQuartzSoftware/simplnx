@@ -325,7 +325,6 @@ TriangleDihedralAngle::TriangleDihedralAngle(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> TriangleDihedralAngle::operator()()
 {

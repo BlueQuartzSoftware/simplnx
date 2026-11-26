@@ -173,19 +173,19 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   auto imageIOResult = CreateImageIO(filePath);
   if(imageIOResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
   }
   const std::unique_ptr<IImageIO>& imageIO = imageIOResult.value();
 
   // Validate fill character is a single character
   if(fillChar.size() != 1)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-27010, fmt::format("The fill character must contain exactly one character, but it contains {} characters.", fillChar.size()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-27010, fmt::format("The fill character must contain exactly one character, but it contains {} characters.", fillChar.size()))};
   }
   if(!IsValidFillCharacter(fillChar.front()))
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(
-        -27018, fmt::format("The fill character '{}' is not valid in an output file name. Select one printable character that is not in the set '{}'.", fillChar, "{}\\/:*?\"<>|"))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -27018, fmt::format("The fill character '{}' is not valid in an output file name. Select one printable character that is not in the set '{}'.", fillChar, "{}\\/:*?\"<>|"))};
   }
 
   // Stored fastest to slowest i.e. X Y Z
@@ -205,8 +205,9 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       {
         typeNames.push_back(DataTypeToString(t).str());
       }
-      return {.outputActions=MakeErrorResult<OutputActions>(
-          -27011, fmt::format("The output file format for '{}' cannot write '{}' pixel data. Supported data types for this format: {}. Enable 'Create Color Table' to write this array as an RGB image "
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -27011,
+                  fmt::format("The output file format for '{}' cannot write '{}' pixel data. Supported data types for this format: {}. Enable 'Create Color Table' to write this array as an RGB image "
                               "instead.",
                               filePath.filename().string(), DataTypeToString(arrayDataType), fmt::join(typeNames, ", ")))};
     }
@@ -227,7 +228,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       {
         message += " Enable 'Create Color Table' to write this single-component array as an RGB image instead.";
       }
-      return {.outputActions=MakeErrorResult<OutputActions>(-27014, message)};
+      return {.outputActions = MakeErrorResult<OutputActions>(-27014, message)};
     }
   }
 
@@ -236,8 +237,8 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     // Color mapping requires a single-component scalar input; RGB is produced by the filter.
     if(imageArray.getNumberOfComponents() != 1)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-27012, fmt::format("When 'Create Color Table' is enabled the input array must have a single component, but '{}' has {} components.",
-                                                                 imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-27012, fmt::format("When 'Create Color Table' is enabled the input array must have a single component, but '{}' has {} components.",
+                                                                                  imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
     }
 
     // Validate the selected preset now so an unknown/empty/degenerate preset fails during preflight
@@ -246,7 +247,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(presetName);
     if(controlPointsResult.invalid() || controlPointsResult.value().empty() || controlPointsResult.value().size() < 8)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-27015, fmt::format("The selected color preset '{}' is invalid or does not define at least 2 control colors.", presetName))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-27015, fmt::format("The selected color preset '{}' is invalid or does not define at least 2 control colors.", presetName))};
     }
 
     if(useMask)
@@ -254,7 +255,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       auto tupleValidityCheck = dataStructure.validateNumberOfTuples({imageArrayPath, maskArrayPath});
       if(!tupleValidityCheck)
       {
-        return {.outputActions=MakeErrorResult<OutputActions>(-27013, fmt::format("The input array and mask array must have equal tuple counts.\n{}", tupleValidityCheck.error()))};
+        return {.outputActions = MakeErrorResult<OutputActions>(-27013, fmt::format("The input array and mask array must have equal tuple counts.\n{}", tupleValidityCheck.error()))};
       }
     }
   }
@@ -263,9 +264,9 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
 
   if(!nx::core::DoDimensionsMatch(imageArrayStore, imageGeom))
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
-                                                               StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
-                                                               StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
+                                                                                StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
+                                                                                StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
   }
 
   // Compute slice count based on plane and geometry dims
@@ -316,9 +317,10 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       const bool supportedComponents = (numComponents == 1 || numComponents == 3 || numComponents == 4);
       if(arrayDataType != DataType::uint8 || !supportedComponents)
       {
-        return {.outputActions=MakeErrorResult<OutputActions>(-27016, fmt::format("The scale bar can only be drawn on 8-bit images. '{}' is {} with {} component(s); supported inputs are uint8 with 1, 3 or 4 "
-                                                                   "components. Enable 'Create Color Table' to convert this array to an 8-bit RGB image instead.",
-                                                                   imageArrayPath.toString(), DataTypeToString(arrayDataType), numComponents))};
+        return {.outputActions =
+                    MakeErrorResult<OutputActions>(-27016, fmt::format("The scale bar can only be drawn on 8-bit images. '{}' is {} with {} component(s); supported inputs are uint8 with 1, 3 or 4 "
+                                                                       "components. Enable 'Create Color Table' to convert this array to an 8-bit RGB image instead.",
+                                                                       imageArrayPath.toString(), DataTypeToString(arrayDataType), numComponents))};
       }
     }
 
@@ -326,15 +328,15 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     const float32 horizontalSpacing = (plane == 2) ? spacing[1] : spacing[0];
     if(!std::isfinite(horizontalSpacing) || horizontalSpacing <= 0.0f)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(
-          -27017, fmt::format("The scale bar requires a positive, finite spacing along the written image's horizontal axis, but the Image Geometry's spacing is {}.", horizontalSpacing))};
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -27017, fmt::format("The scale bar requires a positive, finite spacing along the written image's horizontal axis, but the Image Geometry's spacing is {}.", horizontalSpacing))};
     }
 
     const usize bandHeight = ScaleBarRenderer::ComputeBandHeight(sliceH);
     preflightUpdatedValues.push_back({"Output Image Size (with scale bar)", fmt::format("{} x {}", sliceW, sliceH + bandHeight)});
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -31,7 +31,6 @@ ApproximatePointCloudHull::ApproximatePointCloudHull(DataStructure& dataStructur
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ApproximatePointCloudHull::operator()()
 {

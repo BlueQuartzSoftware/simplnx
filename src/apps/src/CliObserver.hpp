@@ -25,9 +25,9 @@ protected:
    */
   void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) override;
 
-  static void onCancelled() ;
+  static void onCancelled();
 
-  static void onFaultStateChanged(AbstractPipelineNode* node, FaultState state) ;
+  static void onFaultStateChanged(AbstractPipelineNode* node, FaultState state);
 
 private:
   std::vector<nod::scoped_connection> m_SignalConnections;

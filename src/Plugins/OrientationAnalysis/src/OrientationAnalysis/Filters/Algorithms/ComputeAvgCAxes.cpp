@@ -29,8 +29,6 @@ ComputeAvgCAxes::ComputeAvgCAxes(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-
-
 Result<> ComputeAvgCAxes::operator()()
 {
   // The local ensemble cache avoids cell-loop store access.
@@ -89,7 +87,7 @@ Result<> ComputeAvgCAxes::operator()()
   auto cellPhasesChunk = std::make_unique<int32[]>(k_ChunkSize);
   auto quatsChunk = std::make_unique<float32[]>(k_ChunkSize * 4);
 
-  m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message="Computing cell contributions"});
+  m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Computing cell contributions"});
 
   usize tupleIdx = 0;
   while(tupleIdx < totalPoints)
@@ -168,7 +166,7 @@ Result<> ComputeAvgCAxes::operator()()
     tupleIdx += chunkTuples;
   }
 
-  m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message="Computing final feature average C-Axis values"});
+  m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Computing final feature average C-Axis values"});
 
   for(usize featureIdx = 0; featureIdx < totalFeatures; featureIdx++)
   {

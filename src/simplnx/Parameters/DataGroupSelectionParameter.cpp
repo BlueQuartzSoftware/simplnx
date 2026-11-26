@@ -12,8 +12,7 @@
 
 namespace nx::core
 {
-DataGroupSelectionParameter::DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
-                                                         AllowedTypes  allowedTypes)
+DataGroupSelectionParameter::DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(std::move(allowedTypes))

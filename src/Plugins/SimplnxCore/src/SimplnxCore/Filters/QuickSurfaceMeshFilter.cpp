@@ -158,7 +158,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, pGridGeomDataPath, pFeatureIdsArrayPathValue, -76532, "Cell Feature Ids");
     if(featureIdsResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
     }
   }
 
@@ -202,7 +202,8 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     const IDataArray* elementArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
     if(elementArray->getNumberOfTuples() != elementTupleCount)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-76531, fmt::format("Cannot copy element data at path '{}'. DataArray does not have the correct tuple count.", selectedDataPath.toString()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-76531, fmt::format("Cannot copy element data at path '{}'. DataArray does not have the correct tuple count.", selectedDataPath.toString()))};
     }
 
     DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
@@ -229,7 +230,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     }
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

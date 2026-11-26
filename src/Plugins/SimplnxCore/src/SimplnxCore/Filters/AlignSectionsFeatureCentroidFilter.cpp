@@ -18,7 +18,6 @@
 
 #include <filesystem>
 
-
 namespace
 {
 
@@ -146,7 +145,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, {pGoodVoxelsArrayPath}, -68071);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -199,7 +198,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pGoodVoxelsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

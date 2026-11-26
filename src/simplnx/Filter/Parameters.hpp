@@ -120,7 +120,8 @@ public:
    */
   template <class ParameterT>
   void insertLinkableParameter(std::unique_ptr<ParameterT> parameter)
-  requires (std::is_base_of_v<IParameter, ParameterT>) {
+  requires(std::is_base_of_v<IParameter, ParameterT>)
+  {
     insertLinkableParameter(std::move(parameter), detail::CreateIsActiveFunc<ParameterT>());
   }
 

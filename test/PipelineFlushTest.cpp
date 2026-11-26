@@ -92,7 +92,7 @@ public:
   NumericCompletionStore(const NumericCompletionStore&) = default;
   NumericCompletionStore(NumericCompletionStore&&) = default;
   NumericCompletionStore& operator=(const NumericCompletionStore&) = delete;
-  NumericCompletionStore& operator=(NumericCompletionStore&&)  noexcept = default;
+  NumericCompletionStore& operator=(NumericCompletionStore&&) noexcept = default;
 
   /**
    * @brief Counts a legacy call without returning checked diagnostics.
@@ -417,8 +417,8 @@ public:
   ~SnapshotGroup() override = default;
 
   // Rvalues retain the source topology and shared fault control through the copy contract.
-  SnapshotGroup(SnapshotGroup&& other)
- noexcept   : SnapshotGroup(static_cast<const SnapshotGroup&>(other))
+  SnapshotGroup(SnapshotGroup&& other) noexcept
+  : SnapshotGroup(static_cast<const SnapshotGroup&>(other))
   {
   }
 
@@ -642,7 +642,7 @@ TEST_CASE("PipelineFlush retains execute diagnostics and fails before later filt
     fixture.firstControl->result.warnings().push_back({k_FilterWarning, "execute-warning-sentinel"});
     if(originalError)
     {
-      fixture.firstControl->result.m_Expected = nonstd::make_unexpected(ErrorCollection{{.code=k_FilterError, .message="execute-error-sentinel"}});
+      fixture.firstControl->result.m_Expected = nonstd::make_unexpected(ErrorCollection{{.code = k_FilterError, .message = "execute-error-sentinel"}});
     }
     fixture.flushControl->result = MakeErrorResult(k_FlushError, "backing.h5:/values: terminal-flush-sentinel");
     fixture.flushControl->result.warnings().push_back({k_FlushWarning, "flush-warning-sentinel"});

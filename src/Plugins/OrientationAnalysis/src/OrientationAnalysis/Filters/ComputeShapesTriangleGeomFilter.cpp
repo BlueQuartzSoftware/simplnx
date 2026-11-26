@@ -154,7 +154,7 @@ IFilter::PreflightResult ComputeShapesTriangleGeomFilter::preflightImpl(const Da
   }
 
   // Return both the resultOutputActions via std::move()
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

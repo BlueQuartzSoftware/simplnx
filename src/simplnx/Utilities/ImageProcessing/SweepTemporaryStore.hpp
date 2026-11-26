@@ -38,7 +38,7 @@ inline Result<Sweep2DPlan> CreateSweep2DPlan(usize dimX, usize dimY, usize maxBu
 {
   if(dimX == 0 || dimY == 0)
   {
-    return {Sweep2DPlan{.fullWidth=true, .coreRows=0, .coreColumns=0}};
+    return {Sweep2DPlan{.fullWidth = true, .coreRows = 0, .coreColumns = 0}};
   }
   if(maxBufferValues == 0 || tiledRows == 0 || fullWidthHaloRows == std::numeric_limits<usize>::max())
   {
@@ -50,7 +50,7 @@ inline Result<Sweep2DPlan> CreateSweep2DPlan(usize dimX, usize dimY, usize maxBu
   {
     const usize rowCapacity = maxBufferValues / dimX;
     const usize coreRows = std::min(dimY, rowCapacity - fullWidthHaloRows);
-    return {Sweep2DPlan{.fullWidth=true, .coreRows=coreRows, .coreColumns=dimX}};
+    return {Sweep2DPlan{.fullWidth = true, .coreRows = coreRows, .coreColumns = dimX}};
   }
 
   const usize valuesPerTileRow = maxBufferValues / tiledRows;
@@ -59,7 +59,7 @@ inline Result<Sweep2DPlan> CreateSweep2DPlan(usize dimX, usize dimY, usize maxBu
     return MakeErrorResult<Sweep2DPlan>(-8684,
                                         fmt::format("The bounded 2-D sweep buffer holds {} values, but {} tile rows require room for one core value and two X halos.", maxBufferValues, tiledRows));
   }
-  return {Sweep2DPlan{.fullWidth=false, .coreRows=1, .coreColumns=std::min(dimX, valuesPerTileRow - 2)}};
+  return {Sweep2DPlan{.fullWidth = false, .coreRows = 1, .coreColumns = std::min(dimX, valuesPerTileRow - 2)}};
 }
 
 /**

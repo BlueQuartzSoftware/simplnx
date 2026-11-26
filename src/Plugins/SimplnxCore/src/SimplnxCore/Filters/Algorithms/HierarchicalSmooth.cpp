@@ -807,8 +807,6 @@ HierarchicalSmooth::HierarchicalSmooth(DataStructure& dataStructure, const IFilt
 {
 }
 
-
-
 Result<> HierarchicalSmooth::operator()()
 {
   // Get the triangle geometry

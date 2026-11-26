@@ -141,7 +141,6 @@ PointSampleEdgeGeometry::PointSampleEdgeGeometry(DataStructure& dataStructure, P
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> PointSampleEdgeGeometry::operator()()
 {

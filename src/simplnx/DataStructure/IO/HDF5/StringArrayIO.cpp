@@ -79,7 +79,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   return {};
 }
 
-Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, group_writer_type& parentGroup, bool importable) 
+Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, group_writer_type& parentGroup, bool importable)
 {
   auto datasetWriter = parentGroup.createDataset(stringArray.getName());
 

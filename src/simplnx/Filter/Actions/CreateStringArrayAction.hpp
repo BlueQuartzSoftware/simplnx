@@ -19,7 +19,7 @@ public:
    * @param path The path where the StringArray will be created
    * @param initializeValue The initial value for all strings
    */
-  CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, std::string  initializeValue = "");
+  CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, std::string initializeValue = "");
 
   ~CreateStringArrayAction() noexcept override;
 

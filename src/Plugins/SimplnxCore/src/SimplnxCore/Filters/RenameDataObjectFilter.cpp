@@ -92,7 +92,8 @@ IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructu
   auto newName = filterArgs.value<std::string>(k_NewName_Key);
   if(!DataObject::IsValidName(newName))
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(k_InvalidNewName, fmt::format("New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", newName, dataGroupPath.toString()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(k_InvalidNewName, fmt::format("New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", newName, dataGroupPath.toString()))};
   }
 
   auto action = std::make_unique<RenameDataAction>(dataGroupPath, newName, allowOverwrite);

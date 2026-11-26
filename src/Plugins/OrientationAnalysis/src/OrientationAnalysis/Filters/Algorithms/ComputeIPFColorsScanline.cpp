@@ -37,7 +37,6 @@ ComputeIPFColorsScanline::ComputeIPFColorsScanline(DataStructure& dataStructure,
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeIPFColorsScanline::operator()()
 {

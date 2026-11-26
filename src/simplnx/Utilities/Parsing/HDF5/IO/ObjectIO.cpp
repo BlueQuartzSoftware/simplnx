@@ -11,13 +11,13 @@ namespace nx::core::HDF5
 {
 ObjectIO::ObjectIO() = default;
 
-ObjectIO::ObjectIO(hid_t parentId, std::string  objectName)
+ObjectIO::ObjectIO(hid_t parentId, std::string objectName)
 : m_ParentId(parentId)
 , m_ObjectName(std::move(objectName))
 {
 }
 
-ObjectIO::ObjectIO(std::filesystem::path  filepath, std::string  objectName)
+ObjectIO::ObjectIO(std::filesystem::path filepath, std::string objectName)
 : m_FilePath(std::move(filepath))
 , m_ObjectName(std::move(objectName))
 {
@@ -78,7 +78,7 @@ std::string ObjectIO::getObjectPath() const
   return path;
 }
 
-std::string ObjectIO::getParentName() 
+std::string ObjectIO::getParentName()
 {
   return "";
 }
@@ -346,7 +346,7 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
   return H5Aexists(selfId, attributeName.c_str()) > 0;
 }
 
-usize ObjectIO::getNumElementsInAttribute(hid_t attribId) 
+usize ObjectIO::getNumElementsInAttribute(hid_t attribId)
 {
   // getTypeFromId() self-locks, so retain the local HDF5 handles across the
   // lock boundary and call it without holding the non-recursive ApiLock.

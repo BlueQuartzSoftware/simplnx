@@ -95,7 +95,7 @@ nlohmann::json ReadHDF5DatasetParameter::DatasetImportInfo::writeJson() const
 }
 
 // -----------------------------------------------------------------------------
-ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {

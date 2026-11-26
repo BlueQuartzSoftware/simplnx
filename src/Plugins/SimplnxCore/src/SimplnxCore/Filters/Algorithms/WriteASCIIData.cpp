@@ -35,7 +35,6 @@ WriteASCIIData::WriteASCIIData(DataStructure& dataStructure, const IFilter::Mess
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteASCIIData::operator()()
 {

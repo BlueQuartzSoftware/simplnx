@@ -407,7 +407,6 @@ AlignGeometries::AlignGeometries(DataStructure& dataStructure, const IFilter::Me
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> AlignGeometries::operator()()
 {

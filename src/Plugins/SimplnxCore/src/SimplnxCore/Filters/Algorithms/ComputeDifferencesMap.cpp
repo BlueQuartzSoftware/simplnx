@@ -99,8 +99,6 @@ ComputeDifferencesMap::ComputeDifferencesMap(DataStructure& dataStructure, const
 {
 }
 
-
-
 Result<> ComputeDifferencesMap::operator()()
 {
   const auto& firstInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FirstInputArrayPath);

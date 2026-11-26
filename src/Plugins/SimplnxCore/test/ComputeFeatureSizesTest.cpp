@@ -284,7 +284,7 @@ public:
     return std::invoke(std::forward<CallableT>(callable));
   }
 
-  static void requireOocStoreExecution() 
+  static void requireOocStoreExecution()
   {
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     INFO("Dispatch counts: in-core=" << counts.InCore << ", OOC=" << counts.OutOfCore << ", OOC/resident=" << counts.OutOfCoreOnInMemoryStore << ", OOC/OOC=" << counts.OutOfCoreOnOutOfCoreStore
@@ -403,9 +403,9 @@ ObservedFeatureOutputs AddObservedFeatureOutputs(DataStructure& dataStructure, b
   auto& featureData = GetRequiredDataRef<AttributeMatrix>(dataStructure, k_FeatureAMPath);
   const usize numFeatures = featureData.getNumberOfTuples();
   ObservedFeatureOutputs outputs{
-      .NumElements=std::make_shared<ObservedDataStore<int32>>(numFeatures, rejectScalarWrites),
-      .Volumes=std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
-      .EquivalentDiameters=std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
+      .NumElements = std::make_shared<ObservedDataStore<int32>>(numFeatures, rejectScalarWrites),
+      .Volumes = std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
+      .EquivalentDiameters = std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
   };
   REQUIRE(Int32Array::Create(dataStructure, k_NumElementsName, outputs.NumElements, featureData.getId()) != nullptr);
   REQUIRE(Float32Array::Create(dataStructure, k_VolumesName, outputs.Volumes, featureData.getId()) != nullptr);
@@ -774,7 +774,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizesScanline: bounded output writes", "[S
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     Test::ValidateFeatureOutputFixture(dataStructure, geometryKind, Test::k_MultiBlockFeatureCount);
 
-    constexpr std::array<Test::BulkWriteRecord, 2> k_ExpectedWrites = {{{.Start=1, .Count=Test::k_OutputBlockTuples}, {.Start=Test::k_OutputBlockTuples + 1, .Count=2}}};
+    constexpr std::array<Test::BulkWriteRecord, 2> k_ExpectedWrites = {{{.Start = 1, .Count = Test::k_OutputBlockTuples}, {.Start = Test::k_OutputBlockTuples + 1, .Count = 2}}};
     CHECK(outputs.NumElements->getBulkWrites() == std::vector<Test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
     CHECK(outputs.Volumes->getBulkWrites() == std::vector<Test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
     CHECK(outputs.EquivalentDiameters->getBulkWrites() == std::vector<Test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
@@ -855,7 +855,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizesScanline: cancellation preserves comp
   CHECK(volumes[Test::k_MultiBlockFeatureCount - 1] == 0.0f);
   CHECK(equivalentDiameters[Test::k_MultiBlockFeatureCount - 1] == 0.0f);
 
-  const std::vector<Test::BulkWriteRecord> expectedWrites = {{.Start=1, .Count=Test::k_OutputBlockTuples}};
+  const std::vector<Test::BulkWriteRecord> expectedWrites = {{.Start = 1, .Count = Test::k_OutputBlockTuples}};
   CHECK(outputs.NumElements->getBulkWrites() == expectedWrites);
   CHECK(outputs.Volumes->getBulkWrites() == expectedWrites);
   CHECK(outputs.EquivalentDiameters->getBulkWrites() == expectedWrites);

@@ -128,7 +128,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   Result<> binCountResult = ValidateNumberOfBins(pNumberOfBinsValue);
   if(binCountResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
   }
   auto pRemoveBiasedFeaturesValue = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -154,7 +154,8 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(featureDataArrays);
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);
@@ -180,7 +181,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

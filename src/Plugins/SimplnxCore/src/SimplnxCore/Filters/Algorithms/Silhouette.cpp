@@ -16,8 +16,6 @@ Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-
-
 const std::atomic_bool& Silhouette::getCancel()
 {
   return m_ShouldCancel;

@@ -19,8 +19,6 @@ ReadEbsdPatternFile::ReadEbsdPatternFile(DataStructure& dataStructure, const Rea
 {
 }
 
-
-
 Result<> ReadEbsdPatternFile::operator()()
 {
   if(m_ShouldCancel)

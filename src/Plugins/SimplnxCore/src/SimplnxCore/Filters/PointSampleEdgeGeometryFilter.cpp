@@ -143,7 +143,7 @@ IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const Data
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -91,7 +91,6 @@ WriteNodesAndElementsFiles::WriteNodesAndElementsFiles(DataStructure& dataStruct
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& WriteNodesAndElementsFiles::getCancel()
 {

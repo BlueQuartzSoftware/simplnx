@@ -25,8 +25,6 @@ ReadStlFile::ReadStlFile(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-
-
 Result<> ReadStlFile::operator()()
 {
   const std::string stlFilePathStr = m_InputValues->stlFilePath.string();

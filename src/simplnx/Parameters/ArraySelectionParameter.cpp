@@ -30,7 +30,7 @@ struct fmt::formatter<nx::core::DataType>
     return ctx.begin();
   }
 
-  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx) 
+  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
   }
@@ -38,7 +38,7 @@ struct fmt::formatter<nx::core::DataType>
 
 namespace nx::core
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, const AllowedTypes& allowedTypes,
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes,
                                                  AllowedComponentShapes requiredComps, DataLocation location)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))

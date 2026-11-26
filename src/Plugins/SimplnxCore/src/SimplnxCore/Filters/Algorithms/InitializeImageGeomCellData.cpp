@@ -218,8 +218,6 @@ InitializeImageGeomCellData::InitializeImageGeomCellData(DataStructure& dataStru
 {
 }
 
-
-
 Result<> InitializeImageGeomCellData::operator()()
 {
   auto cellArrayPaths = m_InputValues->CellArrays;

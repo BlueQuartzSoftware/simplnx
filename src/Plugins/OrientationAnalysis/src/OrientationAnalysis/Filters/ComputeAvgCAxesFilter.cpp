@@ -99,7 +99,8 @@ IFilter::PreflightResult ComputeAvgCAxesFilter::preflightImpl(const DataStructur
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-6400, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-6400, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   {
@@ -110,7 +111,7 @@ IFilter::PreflightResult ComputeAvgCAxesFilter::preflightImpl(const DataStructur
 
   preflightUpdatedValues.push_back(
       {"Crystal Symmetry Warning:", "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure at least 1 phase is of this type."});
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

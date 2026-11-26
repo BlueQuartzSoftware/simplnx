@@ -123,15 +123,16 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
   {
     // CtfReader does not set its error-code member on every failure path, so fall back to the returned code.
     const int32 errorCode = reader.getErrorCode() < 0 ? reader.getErrorCode() : err;
-    return {.outputActions=MakeErrorResult<OutputActions>(errorCode, reader.getErrorMessage())};
+    return {.outputActions = MakeErrorResult<OutputActions>(errorCode, reader.getErrorMessage())};
   }
 
   // readHeaderOnly() can accept a header with zero dimensions.
   // Reject it before creating a zero-sized Image Geometry.
   if(reader.getXCells() < 1 || reader.getYCells() < 1)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-19604, fmt::format("The .ctf file header reports X Cells = {} and Y Cells = {}. Both must be at least 1. The file may be malformed or not a .ctf file.",
-                                                               reader.getXCells(), reader.getYCells()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-19604, fmt::format("The .ctf file header reports X Cells = {} and Y Cells = {}. Both must be at least 1. The file may be malformed or not a .ctf file.",
+                                                                   reader.getXCells(), reader.getYCells()))};
   }
 
   // .ctf files can carry more than one slice (ZCells > 1). A missing ZCells key parses as its
@@ -140,8 +141,8 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
   // for one slice — the copies would then see only sentinel bytes, never the file's data.
   if(reader.getZCells() < 0)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(
-        -19604, fmt::format("The .ctf file header reports Z Cells = {}. A negative slice count is not usable. The file may be malformed or not a .ctf file.", reader.getZCells()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -19604, fmt::format("The .ctf file header reports Z Cells = {}. A negative slice count is not usable. The file may be malformed or not a .ctf file.", reader.getZCells()))};
   }
   // A ZCells of 0 slips through the header-only read; it is caught at execute by the -19603
   // reader/geometry cell-count guard.
@@ -154,7 +155,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
   if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
@@ -235,7 +236,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -74,11 +74,11 @@ inline CatchSessionResult RunCatchSession(int argc, char* argv[])
   } catch(const std::exception& exception)
   {
     std::fprintf(stderr, "Test runner failed: %s\n", exception.what());
-    result = {.exitCode=255, .successful=false};
+    result = {.exitCode = 255, .successful = false};
   } catch(...)
   {
     std::fputs("Test runner failed with an unknown exception\n", stderr);
-    result = {.exitCode=255, .successful=false};
+    result = {.exitCode = 255, .successful = false};
   }
   return result;
 }

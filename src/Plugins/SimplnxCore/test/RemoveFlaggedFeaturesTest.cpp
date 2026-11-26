@@ -221,7 +221,7 @@ bool HasWarningCode(const std::vector<Warning>& warnings, int32 code)
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureA()
 {
-  return {.dims=SizeVec3{5, 2, 1}, .featureIds={1, 1, 1, 2, 3, 1, 4, 4, 4, 3}, .numFeatures=5, .flagged={false, false, true, true, false}};
+  return {.dims = SizeVec3{5, 2, 1}, .featureIds = {1, 1, 1, 2, 3, 1, 4, 4, 4, 3}, .numFeatures = 5, .flagged = {false, false, true, true, false}};
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -237,7 +237,7 @@ FixtureSpec FixtureA()
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureB()
 {
-  return {.dims=SizeVec3{4, 4, 1}, .featureIds={0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 3, 3, 0}, .numFeatures=4, .flagged={false, false, false, true}};
+  return {.dims = SizeVec3{4, 4, 1}, .featureIds = {0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 3, 3, 0}, .numFeatures = 4, .flagged = {false, false, false, true}};
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -251,14 +251,15 @@ FixtureSpec FixtureB()
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureE()
 {
-  return {.dims=SizeVec3{3, 3, 3},
-          .featureIds={
-              4, 4, 1, 4, 2, 1, 1, 1, 1, // z = 0
-              4, 1, 1, 2, 3, 2, 1, 1, 1, // z = 1
-              1, 1, 1, 1, 2, 1, 1, 1, 1, // z = 2
-          },
-          .numFeatures=5,
-          .flagged={false, false, false, true, true}};
+  return {.dims = SizeVec3{3, 3, 3},
+          .featureIds =
+              {
+                  4, 4, 1, 4, 2, 1, 1, 1, 1, // z = 0
+                  4, 1, 1, 2, 3, 2, 1, 1, 1, // z = 1
+                  1, 1, 1, 1, 2, 1, 1, 1, 1, // z = 2
+              },
+          .numFeatures = 5,
+          .flagged = {false, false, false, true, true}};
 }
 
 /**
@@ -690,7 +691,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - no fill pro
   // Feature 2 owns no cells but is not flagged, so the all-flagged guard passes. Every cell belongs to
   // the flagged feature 1, so after marking no cell has a non-negative face neighbor and the dilation
   // can never make progress.
-  BuildFixture(dataStructure, {.dims=SizeVec3{4, 1, 1}, .featureIds={1, 1, 1, 1}, .numFeatures=3, .flagged={false, true, false}});
+  BuildFixture(dataStructure, {.dims = SizeVec3{4, 1, 1}, .featureIds = {1, 1, 1, 1}, .numFeatures = 3, .flagged = {false, true, false}});
   REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, true), scope) == k_NoFillProgressError);
   // The marking pass has already run; the error reports that the array was modified.
   REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == std::vector<int32>{-1, -1, -1, -1});
@@ -749,7 +750,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does no
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   // One non-background feature makes the first extraction iteration the final crop iteration.
-  BuildFixture(dataStructure, {.dims=SizeVec3{2, 1, 1}, .featureIds={0, 1}, .numFeatures=2, .flagged={false, true}});
+  BuildFixture(dataStructure, {.dims = SizeVec3{2, 1, 1}, .featureIds = {0, 1}, .numFeatures = 2, .flagged = {false, true}});
   RemoveFlaggedFeaturesFilter filter;
   const auto args = MakeArgs(k_Extract, false);
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -835,7 +836,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract ze
   std::vector<bool> flagged(12, false);
   flagged[3] = true;
   flagged[11] = true;
-  BuildFixture(dataStructure, {.dims=SizeVec3{12, 1, 1}, .featureIds=Sequence(0, 12), .numFeatures=12, .flagged=flagged});
+  BuildFixture(dataStructure, {.dims = SizeVec3{12, 1, 1}, .featureIds = Sequence(0, 12), .numFeatures = 12, .flagged = flagged});
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Extract, false), scope));
 
   for(const int32 featureId : {3, 11})
@@ -1696,7 +1697,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[
     DYNAMIC_SECTION("Operation=" << operation)
     {
       DataStructure dataStructure;
-      BuildFixture(dataStructure, {.dims={3, 1, 1}, .featureIds={1, 2, 3}, .numFeatures=4, .flagged={false, false, true, false}});
+      BuildFixture(dataStructure, {.dims = {3, 1, 1}, .featureIds = {1, 2, 3}, .numFeatures = 4, .flagged = {false, false, true, false}});
       const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
       REQUIRE(featureAM != nullptr);
       const DataPath neighborListPath = k_FeatureAMPath.createChildPath("NeighborList");
@@ -1729,7 +1730,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested 
   UnitTest::AlgorithmTestScope scope(scenario);
   const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
   DataStructure ds;
-  BuildFixture(ds, FixtureSpec{.dims={3, 1, 1}, .featureIds={1, 2, 3}, .numFeatures=4, .flagged={false, true, false, true}});
+  BuildFixture(ds, FixtureSpec{.dims = {3, 1, 1}, .featureIds = {1, 2, 3}, .numFeatures = 4, .flagged = {false, true, false, true}});
   const auto* sourceFeatures = ds.getDataAs<AttributeMatrix>(k_FlaggedFeaturesPath.getParent());
   REQUIRE(sourceFeatures != nullptr);
   auto* nested = DataGroup::Create(ds, "Nested", ds.getData(k_ImageGeomPath)->getId());
@@ -1763,7 +1764,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction rejects Feature 
 {
   const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
   DataStructure ds;
-  BuildFixture(ds, FixtureSpec{.dims={3, 1, 1}, .featureIds={1, 2, 3}, .numFeatures=4, .flagged={false, true, false, true}});
+  BuildFixture(ds, FixtureSpec{.dims = {3, 1, 1}, .featureIds = {1, 2, 3}, .numFeatures = 4, .flagged = {false, true, false, true}});
   const auto* sourceFeatures = ds.getDataAs<AttributeMatrix>(k_FeatureAMPath);
   REQUIRE(sourceFeatures != nullptr);
   auto* nested = VertexGeom::Create(ds, "Nested Mesh", ds.getData(k_ImageGeomPath)->getId());

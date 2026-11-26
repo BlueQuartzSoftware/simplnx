@@ -117,7 +117,7 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

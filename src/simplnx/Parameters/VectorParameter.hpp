@@ -36,7 +36,7 @@ public:
   using ElementType = typename ValueType::value_type;
 
   VectorParameter() = delete;
-  VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, NamesType  names);
+  VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, NamesType names);
   VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
   ~VectorParameter() override = default;
 

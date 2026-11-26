@@ -16,7 +16,7 @@ public:
   using ValueType = uint64;
 
   ChoicesParameter() = delete;
-  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices  choices);
+  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices choices);
   ~ChoicesParameter() override = default;
 
   ChoicesParameter(const ChoicesParameter&) = delete;

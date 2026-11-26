@@ -182,8 +182,6 @@ CombineAttributeArrays::CombineAttributeArrays(DataStructure& dataStructure, con
 {
 }
 
-
-
 const std::atomic_bool& CombineAttributeArrays::getCancel()
 {
   return m_ShouldCancel;

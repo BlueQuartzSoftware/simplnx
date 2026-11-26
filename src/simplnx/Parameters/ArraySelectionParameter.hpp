@@ -30,7 +30,7 @@ public:
   };
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, const AllowedTypes& allowedTypes,
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes,
                           AllowedComponentShapes requiredComps = {}, DataLocation location = DataLocation::Any);
   ~ArraySelectionParameter() override = default;
 

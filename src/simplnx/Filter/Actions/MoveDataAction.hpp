@@ -18,7 +18,7 @@ public:
    * @param path The path to the DataObject to move
    * @param newParentPath The new parent path
    */
-  MoveDataAction(DataPath  path, DataPath  newParentPath);
+  MoveDataAction(DataPath path, DataPath newParentPath);
 
   ~MoveDataAction() noexcept override;
 

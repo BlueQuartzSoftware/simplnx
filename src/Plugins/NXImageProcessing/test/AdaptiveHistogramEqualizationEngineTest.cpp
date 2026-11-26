@@ -281,7 +281,9 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
       usize maximumWriteValues;
       usize writeCount;
     };
-    const std::array<TransferCase, 2> transferCases = {{{.label="full-width row blocks", .bufferBytes=342, .fullWidth=true, .coreRows=2, .coreColumns=9, .maximumReadValues=36, .maximumWriteValues=18, .writeCount=4}, {.label="overwide X tiles", .bufferBytes=68, .fullWidth=false, .coreRows=1, .coreColumns=2, .maximumReadValues=6, .maximumWriteValues=2, .writeCount=35}}};
+    const std::array<TransferCase, 2> transferCases = {
+        {{.label = "full-width row blocks", .bufferBytes = 342, .fullWidth = true, .coreRows = 2, .coreColumns = 9, .maximumReadValues = 36, .maximumWriteValues = 18, .writeCount = 4},
+         {.label = "overwide X tiles", .bufferBytes = 68, .fullWidth = false, .coreRows = 1, .coreColumns = 2, .maximumReadValues = 6, .maximumWriteValues = 2, .writeCount = 35}}};
     for(const TransferCase& transferCase : transferCases)
     {
       DYNAMIC_SECTION(transferCase.label)
@@ -335,7 +337,9 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
       usize maximumWriteValues;
       usize writeCount;
     };
-    const std::array<TransferCase, 2> transferCases = {{{.label="full-width row blocks", .targetBytes=216, .fullWidth=true, .coreRows=2, .coreColumns=9, .maximumReadValues=36, .maximumWriteValues=18, .writeCount=4}, {.label="overwide X tiles", .targetBytes=80, .fullWidth=false, .coreRows=1, .coreColumns=2, .maximumReadValues=6, .maximumWriteValues=2, .writeCount=35}}};
+    const std::array<TransferCase, 2> transferCases = {
+        {{.label = "full-width row blocks", .targetBytes = 216, .fullWidth = true, .coreRows = 2, .coreColumns = 9, .maximumReadValues = 36, .maximumWriteValues = 18, .writeCount = 4},
+         {.label = "overwide X tiles", .targetBytes = 80, .fullWidth = false, .coreRows = 1, .coreColumns = 2, .maximumReadValues = 6, .maximumWriteValues = 2, .writeCount = 35}}};
     for(const TransferCase& transferCase : transferCases)
     {
       DYNAMIC_SECTION(transferCase.label)

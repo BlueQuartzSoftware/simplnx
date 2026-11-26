@@ -554,7 +554,6 @@ WriteImageScanline::WriteImageScanline(DataStructure& dataStructure, const IFilt
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteImageScanline::operator()()
 {

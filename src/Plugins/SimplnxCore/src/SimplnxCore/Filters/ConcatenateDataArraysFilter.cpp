@@ -162,7 +162,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
                     arrayTypeName));
   }
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

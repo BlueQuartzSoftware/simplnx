@@ -83,29 +83,29 @@ std::optional<NiftiTypeInfo> NiftiDatatypeToSimplnx(int16 niftiDatatype)
   switch(niftiDatatype)
   {
   case NIFTI_TYPE_UINT8:
-    return NiftiTypeInfo{.dataType=DataType::uint8, .componentCount=1, .bitpix=8};
+    return NiftiTypeInfo{.dataType = DataType::uint8, .componentCount = 1, .bitpix = 8};
   case NIFTI_TYPE_INT8:
-    return NiftiTypeInfo{.dataType=DataType::int8, .componentCount=1, .bitpix=8};
+    return NiftiTypeInfo{.dataType = DataType::int8, .componentCount = 1, .bitpix = 8};
   case NIFTI_TYPE_UINT16:
-    return NiftiTypeInfo{.dataType=DataType::uint16, .componentCount=1, .bitpix=16};
+    return NiftiTypeInfo{.dataType = DataType::uint16, .componentCount = 1, .bitpix = 16};
   case NIFTI_TYPE_INT16:
-    return NiftiTypeInfo{.dataType=DataType::int16, .componentCount=1, .bitpix=16};
+    return NiftiTypeInfo{.dataType = DataType::int16, .componentCount = 1, .bitpix = 16};
   case NIFTI_TYPE_UINT32:
-    return NiftiTypeInfo{.dataType=DataType::uint32, .componentCount=1, .bitpix=32};
+    return NiftiTypeInfo{.dataType = DataType::uint32, .componentCount = 1, .bitpix = 32};
   case NIFTI_TYPE_INT32:
-    return NiftiTypeInfo{.dataType=DataType::int32, .componentCount=1, .bitpix=32};
+    return NiftiTypeInfo{.dataType = DataType::int32, .componentCount = 1, .bitpix = 32};
   case NIFTI_TYPE_UINT64:
-    return NiftiTypeInfo{.dataType=DataType::uint64, .componentCount=1, .bitpix=64};
+    return NiftiTypeInfo{.dataType = DataType::uint64, .componentCount = 1, .bitpix = 64};
   case NIFTI_TYPE_INT64:
-    return NiftiTypeInfo{.dataType=DataType::int64, .componentCount=1, .bitpix=64};
+    return NiftiTypeInfo{.dataType = DataType::int64, .componentCount = 1, .bitpix = 64};
   case NIFTI_TYPE_FLOAT32:
-    return NiftiTypeInfo{.dataType=DataType::float32, .componentCount=1, .bitpix=32};
+    return NiftiTypeInfo{.dataType = DataType::float32, .componentCount = 1, .bitpix = 32};
   case NIFTI_TYPE_FLOAT64:
-    return NiftiTypeInfo{.dataType=DataType::float64, .componentCount=1, .bitpix=64};
+    return NiftiTypeInfo{.dataType = DataType::float64, .componentCount = 1, .bitpix = 64};
   case NIFTI_TYPE_RGB24:
-    return NiftiTypeInfo{.dataType=DataType::uint8, .componentCount=3, .bitpix=24};
+    return NiftiTypeInfo{.dataType = DataType::uint8, .componentCount = 3, .bitpix = 24};
   case NIFTI_TYPE_RGBA32:
-    return NiftiTypeInfo{.dataType=DataType::uint8, .componentCount=4, .bitpix=32};
+    return NiftiTypeInfo{.dataType = DataType::uint8, .componentCount = 4, .bitpix = 32};
   default:
     return std::nullopt;
   }

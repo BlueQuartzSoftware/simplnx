@@ -31,7 +31,7 @@ constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
 } // namespace
 
 //-----------------------------------------------------------------------------
-ReadH5EbsdFileParameter::ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+ReadH5EbsdFileParameter::ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {
@@ -167,7 +167,7 @@ Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& jso
     {
       if(dataPath.empty())
       {
-        errors.push_back(Error{.code=FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message=fmt::format("{}Failed to parse '{}' as HDF5 DataPath", prefix.view(), dataPath)});
+        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as HDF5 DataPath", prefix.view(), dataPath)});
         continue;
       }
       dataPaths.push_back(dataPath);

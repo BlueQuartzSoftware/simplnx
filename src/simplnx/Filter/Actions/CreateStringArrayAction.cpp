@@ -13,7 +13,7 @@ using namespace nx::core;
 
 namespace nx::core
 {
-CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, std::string  initializeValue)
+CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, std::string initializeValue)
 : IDataCreationAction(path)
 , m_Dims(tDims)
 , m_InitializeValue(std::move(initializeValue))

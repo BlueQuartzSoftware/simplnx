@@ -75,12 +75,12 @@ struct Coordinate
   }
 };
 
-constexpr Coordinate k_TieCell = {.x=5, .y=5, .z=5};
-constexpr Coordinate k_TieNegativeXCell = {.x=4, .y=5, .z=5};
-constexpr Coordinate k_PositiveXBoundaryCell = {.x=0, .y=5, .z=5};
-constexpr Coordinate k_PositiveYBoundaryCell = {.x=5, .y=0, .z=5};
-constexpr Coordinate k_Feature3Seed = {.x=5, .y=5, .z=4};
-constexpr Coordinate k_Feature4Seed = {.x=5, .y=4, .z=5};
+constexpr Coordinate k_TieCell = {.x = 5, .y = 5, .z = 5};
+constexpr Coordinate k_TieNegativeXCell = {.x = 4, .y = 5, .z = 5};
+constexpr Coordinate k_PositiveXBoundaryCell = {.x = 0, .y = 5, .z = 5};
+constexpr Coordinate k_PositiveYBoundaryCell = {.x = 5, .y = 0, .z = 5};
+constexpr Coordinate k_Feature3Seed = {.x = 5, .y = 5, .z = 4};
+constexpr Coordinate k_Feature4Seed = {.x = 5, .y = 4, .z = 5};
 constexpr std::array<float32, 3> k_VectorOffsets = {0.25F, 0.5F, 0.75F};
 
 /**

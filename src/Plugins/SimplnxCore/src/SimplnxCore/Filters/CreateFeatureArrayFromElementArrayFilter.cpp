@@ -103,7 +103,7 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

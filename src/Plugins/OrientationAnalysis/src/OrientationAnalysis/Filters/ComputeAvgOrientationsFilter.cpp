@@ -153,8 +153,8 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   // Require at least one averaging method before execution.
   if(!pUseRodriguesAverage_Key && !pUseVonMisesFisher && !pUseWatson)
   {
-    return {
-        .outputActions=MakeErrorResult<OutputActions>(-54673, "No averaging method is enabled. Enable at least one of: 'Compute Rodrigues Average', 'Compute von Mises-Fisher Average', 'Compute Watson Average'.")};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -54673, "No averaging method is enabled. Enable at least one of: 'Compute Rodrigues Average', 'Compute von Mises-Fisher Average', 'Compute Watson Average'.")};
   }
 
   Result<OutputActions> resultOutputActions;
@@ -169,7 +169,8 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& cellFeatAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
@@ -221,7 +222,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=resultOutputActions};
+  return {.outputActions = resultOutputActions};
 }
 
 //------------------------------------------------------------------------------

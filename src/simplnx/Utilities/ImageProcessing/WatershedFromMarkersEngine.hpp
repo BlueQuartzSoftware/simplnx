@@ -71,7 +71,7 @@ inline std::vector<WsNeighborOffset> BuildWatershedOffsets(int effDim, bool full
         {
           continue; // face connectivity: only axial neighbors
         }
-        offsets.push_back(WsNeighborOffset{.dx=ox, .dy=oy, .dz=oz});
+        offsets.push_back(WsNeighborOffset{.dx = ox, .dy = oy, .dz = oz});
       }
     }
   }

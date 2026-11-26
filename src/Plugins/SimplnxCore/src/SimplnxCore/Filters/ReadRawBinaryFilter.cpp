@@ -144,13 +144,13 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   usize inputFileSize = fs::file_size(pInputFileValue);
   if(inputFileSize == 0)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-78705, fmt::format("File '{}' is empty.", pInputFileValue.string()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-78705, fmt::format("File '{}' is empty.", pInputFileValue.string()))};
   }
 
   auto componentDimensions = ConvertDimensions(pCompDimsData.at(0), "Component", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78701);
   if(componentDimensions.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
   }
   ShapeType compDims = std::move(componentDimensions.value());
   const usize numComponents = std::accumulate(compDims.begin(), compDims.end(), usize{1}, std::multiplies<>());
@@ -175,14 +175,15 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
     // Check 9: Not in AM + dims unchecked — error
     if(!useDims)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-78703, fmt::format("The DataArray to be created '{}' is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. "
-                                                                 "Check Set Tuple Dimensions to set the dimensions.",
-                                                                 pCreatedAttributeArrayPathValue.toString()))};
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(-78703, fmt::format("The DataArray to be created '{}' is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. "
+                                                                     "Check Set Tuple Dimensions to set the dimensions.",
+                                                                     pCreatedAttributeArrayPathValue.toString()))};
     }
     auto dimensions = ConvertDimensions(pTupleDimsData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78704);
     if(dimensions.invalid())
     {
-      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     tupleDims = std::move(dimensions.value());
   }
@@ -190,15 +191,15 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   auto tupleCount = ComputeDimensionProduct(tupleDims, "Tuple");
   if(tupleCount.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
   }
   const usize numTuples = tupleCount.value();
 
   // ---- Check 2: Skip header bytes >= file size ----
   if(pSkipHeaderBytesValue >= inputFileSize)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(
-        -78706, fmt::format("Skip Header Bytes ({}) is greater than or equal to the file size ({}) for file '{}'.", pSkipHeaderBytesValue, inputFileSize, pInputFileValue.string()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -78706, fmt::format("Skip Header Bytes ({}) is greater than or equal to the file size ({}) for file '{}'.", pSkipHeaderBytesValue, inputFileSize, pInputFileValue.string()))};
   }
 
   // ---- Data-fit checks (4/5/6/11) ----
@@ -224,10 +225,10 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   {
     if(!allowPartialFilling)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(-78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
-                                                                 "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}. "
-                                                                 "Enable 'Allow Partial Filling of Array' to read available data and default-initialize the remainder.",
-                                                                 requiredElements, numTuples, numComponents, availableElements))};
+      return {.outputActions = MakeErrorResult<OutputActions>(-78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
+                                                                                  "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}. "
+                                                                                  "Enable 'Allow Partial Filling of Array' to read available data and default-initialize the remainder.",
+                                                                                  requiredElements, numTuples, numComponents, availableElements))};
     }
     resultOutputActions.warnings().push_back(
         {-78710, fmt::format("The file contains only {} of the {} required elements. The remaining elements will be default-initialized to 0.", availableElements, requiredElements)});
@@ -265,7 +266,7 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
   preflightUpdatedValues.push_back({"Read Summary", summary});
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

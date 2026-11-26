@@ -4,7 +4,7 @@
 
 namespace nx::core
 {
-AbstractParameter::AbstractParameter(std::string  name, std::string  humanName, std::string  helpText)
+AbstractParameter::AbstractParameter(std::string name, std::string humanName, std::string helpText)
 : m_Name(std::move(name))
 , m_HumanName(std::move(humanName))
 , m_HelpText(std::move(helpText))

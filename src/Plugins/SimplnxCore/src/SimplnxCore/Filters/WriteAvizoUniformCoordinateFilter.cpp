@@ -91,7 +91,7 @@ IFilter::PreflightResult WriteAvizoUniformCoordinateFilter::preflightImpl(const 
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -5835); tupleResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   return {};

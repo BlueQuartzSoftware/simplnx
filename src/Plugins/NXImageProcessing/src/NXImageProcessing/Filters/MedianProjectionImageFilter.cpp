@@ -99,7 +99,7 @@ IFilter::PreflightResult MedianProjectionImageFilter::preflightImpl(const DataSt
   // SameAsInput OutTypeMap (kept in lock-step so the allocated and written output types agree).
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightAxisProjection(dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

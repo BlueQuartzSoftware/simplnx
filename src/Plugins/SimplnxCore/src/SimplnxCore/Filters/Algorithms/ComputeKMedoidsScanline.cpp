@@ -476,8 +476,6 @@ ComputeKMedoidsScanline::ComputeKMedoidsScanline(DataStructure& dataStructure, c
 {
 }
 
-
-
 void ComputeKMedoidsScanline::updateProgress(const std::string& message)
 {
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, message);

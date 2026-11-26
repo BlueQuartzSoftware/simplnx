@@ -84,13 +84,13 @@ IFilter::PreflightResult ClosingByReconstructionImageFilter::preflightImpl(const
   const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
   if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
   }
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& layoutInputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(auto layoutResult = ImageProcessing::ValidateMorphologyLayout(imageGeom.getDimensions(), kernelRadius, false, GetDataTypeSize(layoutInputArray.getDataType())); layoutResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK

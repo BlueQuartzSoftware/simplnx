@@ -72,7 +72,6 @@ CombineTransformationMatrices::CombineTransformationMatrices(DataStructure& data
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CombineTransformationMatrices::getCancel()
 {

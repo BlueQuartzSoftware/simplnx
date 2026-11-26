@@ -115,7 +115,6 @@ ErodeDilateCoordinationNumber::ErodeDilateCoordinationNumber(DataStructure& data
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ErodeDilateCoordinationNumber::getCancel() const
 {

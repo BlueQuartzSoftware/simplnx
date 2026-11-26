@@ -79,20 +79,21 @@ IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dat
   const DataType maskType = maskArray.getDataType();
   if(maskType != DataType::uint8 && maskType != DataType::uint16 && maskType != DataType::uint32)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-8100, fmt::format("Mask array '{}' must be uint8, uint16, or uint32, but is '{}'.", maskArrayPath.toString(), DataTypeToString(maskType)))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-8100, fmt::format("Mask array '{}' must be uint8, uint16, or uint32, but is '{}'.", maskArrayPath.toString(), DataTypeToString(maskType)))};
   }
   // The mask engine reads the mask as a single-component scalar (ApplyMask/ReadMaskKeepChunk index by tuple);
   // a multi-component mask would be mis-read, so require scalar here.
   if(maskArray.getNumberOfComponents() != 1)
   {
-    return {
-        .outputActions=MakeErrorResult<OutputActions>(-8105, fmt::format("Mask array '{}' must be single-component (scalar), but has {} components.", maskArrayPath.toString(), maskArray.getNumberOfComponents()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -8105, fmt::format("Mask array '{}' must be single-component (scalar), but has {} components.", maskArrayPath.toString(), maskArray.getNumberOfComponents()))};
   }
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(maskArray.getNumberOfTuples() != inputArray.getNumberOfTuples())
   {
-    return {
-        .outputActions=MakeErrorResult<OutputActions>(-8101, fmt::format("Mask array tuple count ({}) does not match input array tuple count ({}).", maskArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -8101, fmt::format("Mask array tuple count ({}) does not match input array tuple count ({}).", maskArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
   }
 
   // The Outside Value is a Float64 parameter cast to the input element type by the mask engine. That conversion
@@ -102,19 +103,19 @@ IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dat
   Result<> outsideGuard = ImageProcessing::ValidateScalarValueForType(inputArray.getDataType(), outsideValue, "Outside Value", -8102, -8103, -8104);
   if(outsideGuard.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(outsideGuard), OutputActions{})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(outsideGuard), OutputActions{})};
   }
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
-    return {.outputActions=std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
   for(Warning& warning : outsideGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> MaskImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

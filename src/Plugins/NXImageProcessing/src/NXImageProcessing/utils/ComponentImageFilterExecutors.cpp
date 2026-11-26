@@ -873,7 +873,13 @@ Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, cons
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ConnectedComponentExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=imageGeom.getDimensions(), .fullyConnected=fullyConnected, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
+  detail::ConnectedComponentExecuteFn executeFn{.dataStructure = dataStructure,
+                                                .inputArrayPath = inputArrayPath,
+                                                .outputArrayPath = outputArrayPath,
+                                                .dims = imageGeom.getDimensions(),
+                                                .fullyConnected = fullyConnected,
+                                                .shouldCancel = shouldCancel,
+                                                .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -885,7 +891,14 @@ Result<> ExecuteZeroCrossingImageFilter(DataStructure& dataStructure, const Data
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ZeroCrossingExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=imageGeom.getDimensions(), .foregroundValue=foregroundValue, .backgroundValue=backgroundValue, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
+  detail::ZeroCrossingExecuteFn executeFn{.dataStructure = dataStructure,
+                                          .inputArrayPath = inputArrayPath,
+                                          .outputArrayPath = outputArrayPath,
+                                          .dims = imageGeom.getDimensions(),
+                                          .foregroundValue = foregroundValue,
+                                          .backgroundValue = backgroundValue,
+                                          .shouldCancel = shouldCancel,
+                                          .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -898,8 +911,19 @@ Result<> ExecuteDoubleThresholdImageFilter(DataStructure& dataStructure, const D
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::DoubleThresholdExecuteFn executeFn{.dataStructure=dataStructure,  .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=imageGeom.getDimensions(), .threshold1=threshold1, .threshold2=threshold2, .threshold3=threshold3, .threshold4=threshold4, .insideValue=insideValue, .outsideValue=outsideValue,
-                                             .fullyConnected=fullyConnected, .shouldCancel=shouldCancel,   .messageHandler=messageHandler};
+  detail::DoubleThresholdExecuteFn executeFn{.dataStructure = dataStructure,
+                                             .inputArrayPath = inputArrayPath,
+                                             .outputArrayPath = outputArrayPath,
+                                             .dims = imageGeom.getDimensions(),
+                                             .threshold1 = threshold1,
+                                             .threshold2 = threshold2,
+                                             .threshold3 = threshold3,
+                                             .threshold4 = threshold4,
+                                             .insideValue = insideValue,
+                                             .outsideValue = outsideValue,
+                                             .fullyConnected = fullyConnected,
+                                             .shouldCancel = shouldCancel,
+                                             .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -910,7 +934,14 @@ Result<> ExecuteRelabelComponentImageFilter(DataStructure& dataStructure, const 
   using TypeSetPolicy = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
-  detail::RelabelComponentExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .numTuples=inputArray.getNumberOfTuples(), .minimumObjectSize=minimumObjectSize, .sortByObjectSize=sortByObjectSize, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
+  detail::RelabelComponentExecuteFn executeFn{.dataStructure = dataStructure,
+                                              .inputArrayPath = inputArrayPath,
+                                              .outputArrayPath = outputArrayPath,
+                                              .numTuples = inputArray.getNumberOfTuples(),
+                                              .minimumObjectSize = minimumObjectSize,
+                                              .sortByObjectSize = sortByObjectSize,
+                                              .shouldCancel = shouldCancel,
+                                              .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -922,7 +953,12 @@ Result<> ExecuteBinaryThinningImageFilter(DataStructure& dataStructure, const Da
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::BinaryThinningExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=imageGeom.getDimensions(), .shouldCancel=shouldCancel, .messageHandler=messageHandler};
+  detail::BinaryThinningExecuteFn executeFn{.dataStructure = dataStructure,
+                                            .inputArrayPath = inputArrayPath,
+                                            .outputArrayPath = outputArrayPath,
+                                            .dims = imageGeom.getDimensions(),
+                                            .shouldCancel = shouldCancel,
+                                            .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -935,8 +971,16 @@ Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& da
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ThresholdMaxCCExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=imageGeom.getDimensions(), .minimumObjectSizeInPixels=minimumObjectSizeInPixels, .upperBoundary=upperBoundary, .insideValue=insideValue,
-                                            .outsideValue=outsideValue,  .shouldCancel=shouldCancel,   .messageHandler=messageHandler};
+  detail::ThresholdMaxCCExecuteFn executeFn{.dataStructure = dataStructure,
+                                            .inputArrayPath = inputArrayPath,
+                                            .outputArrayPath = outputArrayPath,
+                                            .dims = imageGeom.getDimensions(),
+                                            .minimumObjectSizeInPixels = minimumObjectSizeInPixels,
+                                            .upperBoundary = upperBoundary,
+                                            .insideValue = insideValue,
+                                            .outsideValue = outsideValue,
+                                            .shouldCancel = shouldCancel,
+                                            .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

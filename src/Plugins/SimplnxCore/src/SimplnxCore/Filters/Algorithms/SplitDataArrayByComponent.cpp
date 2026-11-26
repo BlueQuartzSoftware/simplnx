@@ -340,8 +340,6 @@ SplitDataArrayByComponent::SplitDataArrayByComponent(DataStructure& dataStructur
 {
 }
 
-
-
 const std::atomic_bool& SplitDataArrayByComponent::getCancel()
 {
   return m_ShouldCancel;

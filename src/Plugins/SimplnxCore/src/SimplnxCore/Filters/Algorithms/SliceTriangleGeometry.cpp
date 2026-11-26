@@ -19,7 +19,6 @@ SliceTriangleGeometry::SliceTriangleGeometry(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& SliceTriangleGeometry::getCancel()
 {

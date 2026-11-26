@@ -21,8 +21,8 @@ constexpr StringLiteral k_ScanNames = "scan_names";
 } // namespace
 
 //-----------------------------------------------------------------------------
-OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
-                                                             const EbsdReaderType& readerType, ExtensionsType  extensionsType)
+OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
+                                                             const EbsdReaderType& readerType, ExtensionsType extensionsType)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 , m_AvailableExtensions(std::move(extensionsType))
@@ -149,7 +149,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::jso
     {
       if(name.empty())
       {
-        errors.push_back(Error{.code=FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message=fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name)});
+        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name)});
         continue;
       }
       scanNames.push_back(name);

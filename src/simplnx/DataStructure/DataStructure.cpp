@@ -1579,7 +1579,7 @@ Result<> DataStructure::transferDataArraysOoc()
 
     if(!ConvertIDataArray(dataArrayPtr, resolvedFormat))
     {
-      result.warnings().emplace_back(Warning{.code=-3570, .message=fmt::format("Cannot convert DataArray: '{}' to out-of-core", dataArrayPtr->getName())});
+      result.warnings().emplace_back(Warning{.code = -3570, .message = fmt::format("Cannot convert DataArray: '{}' to out-of-core", dataArrayPtr->getName())});
     }
   }
 

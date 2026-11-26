@@ -22,7 +22,7 @@ constexpr int32 k_RecursiveParentCode = -6407;
 
 namespace nx::core
 {
-MoveDataAction::MoveDataAction(DataPath  path, DataPath  newParentPath)
+MoveDataAction::MoveDataAction(DataPath path, DataPath newParentPath)
 : m_NewParentPath(std::move(newParentPath))
 , m_Path(std::move(path))
 {

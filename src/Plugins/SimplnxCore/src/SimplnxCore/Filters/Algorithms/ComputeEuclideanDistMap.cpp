@@ -398,8 +398,6 @@ ComputeEuclideanDistMap::ComputeEuclideanDistMap(DataStructure& dataStructure, c
 {
 }
 
-
-
 /**
  * @brief Computes direct distance maps with full-volume resident buffers.
  * @tparam T Specifies int32 city-block or float32 Euclidean output.

@@ -18,8 +18,6 @@ PartitionGeometry::PartitionGeometry(DataStructure& dataStructure, const IFilter
 {
 }
 
-
-
 Result<> PartitionGeometry::operator()()
 {
   const DataPath partitionIdsPath = m_InputValues->InputGeomCellAMPath.createChildPath(m_InputValues->PartitionIdsArrayName);

@@ -9,7 +9,7 @@
 
 namespace nx::core
 {
-DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
 {

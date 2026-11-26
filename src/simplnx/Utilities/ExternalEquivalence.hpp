@@ -240,7 +240,7 @@ private:
     {
       if(n.value().size == 0)
       {
-        n.value() = {.parent=label, .size=m_InitialComponentSize, .rank=0, .representative=label, .initialized=k_InitializedMarker};
+        n.value() = {.parent = label, .size = m_InitialComponentSize, .rank = 0, .representative = label, .initialized = k_InitializedMarker};
       }
       else
       {

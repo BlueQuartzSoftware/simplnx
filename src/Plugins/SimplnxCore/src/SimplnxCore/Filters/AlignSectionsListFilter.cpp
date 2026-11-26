@@ -133,7 +133,7 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
   // Cell Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeom.getCellDataPath(), {});
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -676,8 +676,7 @@ public:
    * @param transformationMatrix Maps source coordinates to output coordinates.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs  rotateArgs, Matrix4fR  transformationMatrix,
-                                                FilterProgressCallback* filterCallback)
+  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs rotateArgs, Matrix4fR transformationMatrix, FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(std::move(rotateArgs))
@@ -1043,7 +1042,7 @@ public:
    * @param sliceBySlice Preserves the destination Z index when true.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs  args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
+  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
                                          FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)

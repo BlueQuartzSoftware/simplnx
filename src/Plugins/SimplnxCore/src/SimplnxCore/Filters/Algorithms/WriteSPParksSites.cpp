@@ -105,8 +105,6 @@ WriteSPParksSites::WriteSPParksSites(DataStructure& dataStructure, const IFilter
 {
 }
 
-
-
 const std::atomic_bool& WriteSPParksSites::getCancel()
 {
   return m_ShouldCancel;

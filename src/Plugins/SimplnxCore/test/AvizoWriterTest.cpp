@@ -52,7 +52,7 @@ public:
   ObservedAvizoStore(const ObservedAvizoStore&) = default;
   ObservedAvizoStore(ObservedAvizoStore&&) = default;
   ObservedAvizoStore& operator=(const ObservedAvizoStore&) = delete;
-  ObservedAvizoStore& operator=(ObservedAvizoStore&&)  noexcept = default;
+  ObservedAvizoStore& operator=(ObservedAvizoStore&&) noexcept = default;
 
   /**
    * @brief Copies a source window or reports the selected read failure.
@@ -66,13 +66,13 @@ public:
     if(failReadAt == readCalls)
     {
       auto result = MakeErrorResult(-92561, "Injected Avizo second-block read failure");
-      result.warnings().push_back(Warning{.code=-92574, .message="Source failure warning"});
+      result.warnings().push_back(Warning{.code = -92574, .message = "Source failure warning"});
       return result;
     }
     auto result = DataStore<int32>::copyIntoBuffer(startIndex, buffer);
     if(result.valid() && warnOnRead)
     {
-      result.warnings().push_back(Warning{.code=-92573, .message="Successful source read warning"});
+      result.warnings().push_back(Warning{.code = -92573, .message = "Successful source read warning"});
     }
     return result;
   }
@@ -328,7 +328,7 @@ protected:
       throw std::bad_alloc{};
     }
     auto result = fault == StageFault::HeaderResult ? MakeErrorResult(-92562, "Injected header Result failure") : Result<>{};
-    result.warnings().push_back(Warning{.code=-92571, .message="Header stage warning"});
+    result.warnings().push_back(Warning{.code = -92571, .message = "Header stage warning"});
     return result;
   }
 
@@ -348,7 +348,7 @@ protected:
       throw std::bad_alloc{};
     }
     auto result = fault == StageFault::DataResult ? MakeErrorResult(-92563, "Injected data Result failure") : Result<>{};
-    result.warnings().push_back(Warning{.code=-92572, .message="Data stage warning"});
+    result.warnings().push_back(Warning{.code = -92572, .message = "Data stage warning"});
     return result;
   }
 };

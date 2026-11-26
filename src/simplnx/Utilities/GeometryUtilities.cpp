@@ -306,7 +306,7 @@ struct Edge
   , regionId(0)
   {
   }
-  Edge(Point3Df  start_, Point3Df  end_)
+  Edge(Point3Df start_, Point3Df end_)
   : start(std::move(start_))
   , end(std::move(end_))
   , valid(true)
@@ -677,7 +677,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
     } // END TRIANGLE LOOP
   } // END SLICE LOOP
 
-  return {.SliceVerts=std::move(slicedVerts), .SliceIds=std::move(sliceIds), .RegionIds=std::move(regionIds), .NumberOfSlices=numberOfSlices};
+  return {.SliceVerts = std::move(slicedVerts), .SliceIds = std::move(sliceIds), .RegionIds = std::move(regionIds), .NumberOfSlices = numberOfSlices};
 }
 
 // -----------------------------------------------------------------------------

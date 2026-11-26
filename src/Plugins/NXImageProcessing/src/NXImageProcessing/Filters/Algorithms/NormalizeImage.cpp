@@ -42,7 +42,6 @@ NormalizeImage::NormalizeImage(DataStructure& dataStructure, const IFilter::Mess
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> NormalizeImage::operator()()
 {

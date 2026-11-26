@@ -46,8 +46,8 @@ DataObject::DataObject(const DataObject& rhs)
 {
 }
 
-DataObject::DataObject(DataObject&& rhs)
- noexcept : m_DataStructure(rhs.m_DataStructure)
+DataObject::DataObject(DataObject&& rhs) noexcept
+: m_DataStructure(rhs.m_DataStructure)
 , m_ParentList(std::move(rhs.m_ParentList))
 , m_Id(rhs.m_Id)
 , m_Name(std::move(rhs.m_Name))

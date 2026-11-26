@@ -228,7 +228,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

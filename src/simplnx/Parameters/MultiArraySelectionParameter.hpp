@@ -19,8 +19,8 @@ public:
   using AllowedComponentShapes = std::vector<ShapeType>;
 
   MultiArraySelectionParameter() = delete;
-  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, AllowedTypes  allowedTypes,
-                               AllowedDataTypes  allowedDataTypes, AllowedComponentShapes requiredComps = {});
+  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes, AllowedDataTypes allowedDataTypes,
+                               AllowedComponentShapes requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;

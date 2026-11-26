@@ -38,7 +38,7 @@ Result<> TetrahedralGeomIO::finishImportingData(DataStructure& dataStructure, co
   return INodeGeom3dIO::FinishImportingNodeGeom3dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> TetrahedralGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TetrahedralGeom& geometry, group_writer_type& parentGroup, bool importable) 
+Result<> TetrahedralGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TetrahedralGeom& geometry, group_writer_type& parentGroup, bool importable)
 {
   return INodeGeom3dIO::WriteNodeGeom3dData(dataStructureWriter, geometry, parentGroup, importable);
 }

@@ -55,9 +55,9 @@ public:
    * @param helpText The help text that should be displayed to a user
    * @param defaultValue The default value for the parameter
    */
-  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
+  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
                                 /* const AllowedManufacturers& allowedManufacturers, */
-                                const EbsdReaderType& readerType, ExtensionsType  extensionsType);
+                                const EbsdReaderType& readerType, ExtensionsType extensionsType);
 
   ~OEMEbsdScanSelectionParameter() override = default;
 

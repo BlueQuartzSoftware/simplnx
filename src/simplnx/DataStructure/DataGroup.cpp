@@ -18,8 +18,8 @@ DataGroup::DataGroup(const DataGroup& other)
 {
 }
 
-DataGroup::DataGroup(DataGroup&& other)
- noexcept : BaseGroup(std::move(other))
+DataGroup::DataGroup(DataGroup&& other) noexcept
+: BaseGroup(std::move(other))
 {
 }
 

@@ -68,7 +68,8 @@ struct BinaryIntegerParamGuard
       }
       if(truncated != value)
       {
-        result.warnings().push_back(Warning{.code=k_BinaryValueTruncated, .message=fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
+        result.warnings().push_back(
+            Warning{.code = k_BinaryValueTruncated, .message = fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
       }
     }
     return result;
@@ -173,7 +174,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
   if(resultOutputActions.invalid())
   {
-    return {.outputActions=std::move(resultOutputActions)};
+    return {.outputActions = std::move(resultOutputActions)};
   }
 
   // BinaryReduce casts the Float64 foreground/background parameters to the input element type. For an
@@ -183,17 +184,17 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   if(ImageProcessing::GetIntegerScalarTypes().count(inputType) != 0)
   {
-    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foregroundValue=foregroundValue, .backgroundValue=backgroundValue});
+    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foregroundValue = foregroundValue, .backgroundValue = backgroundValue});
     if(paramGuard.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
     }
     for(Warning& warning : paramGuard.warnings())
     {
       resultOutputActions.warnings().push_back(std::move(warning));
     }
   }
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

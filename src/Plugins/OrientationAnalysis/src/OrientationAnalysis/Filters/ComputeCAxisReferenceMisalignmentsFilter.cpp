@@ -123,7 +123,7 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
   Result<> validationResult = ComputeCAxisReferenceMisalignments::ValidateInputs(dataStructure, inputValues);
   if(validationResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(validationResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(validationResult), {})};
   }
   std::vector<std::pair<std::string_view, DataPath>> inputPaths = {
       {"Input Quaternions", inputValues.QuatsArrayPath}, {"Phases", inputValues.PhasesArrayPath}, {"Crystal Structures", inputValues.CrystalStructuresArrayPath}};
@@ -135,10 +135,10 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
   {
     if(inputValues.OutputArrayPath == inputRef.second)
     {
-      return {.outputActions=MakeErrorResult<OutputActions>(ComputeCAxisReferenceMisalignments::k_OutputPathCollisionError,
-                                             fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
-                                                         "name that no input array uses.",
-                                                         inputValues.OutputArrayPath.toString(), inputRef.first, inputValues.OutputArrayPath.getTargetName()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(ComputeCAxisReferenceMisalignments::k_OutputPathCollisionError,
+                                                              fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
+                                                                          "name that no input array uses.",
+                                                                          inputValues.OutputArrayPath.toString(), inputRef.first, inputValues.OutputArrayPath.getTargetName()))};
     }
   }
   const auto& quatsRef = dataStructure.getDataRefAs<Float32Array>(inputValues.QuatsArrayPath);

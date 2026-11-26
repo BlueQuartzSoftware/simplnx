@@ -103,12 +103,13 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   const usize selectedArrayComp = selectedArray.getNumberOfComponents();
   if(selectedArrayComp < 2)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
   }
   if(selectedArrayComp < pCompNumberValue)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(
-        -45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ", pCompNumberValue, 0, (selectedArrayComp - 1)))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ",
+                                                                   pCompNumberValue, 0, (selectedArrayComp - 1)))};
   }
 
   if(pMoveComponentsToNewArrayValue)
@@ -140,7 +141,7 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -64,7 +64,6 @@ IParallelAlgorithm::IParallelAlgorithm()
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 bool IParallelAlgorithm::getParallelizationEnabled() const
 {

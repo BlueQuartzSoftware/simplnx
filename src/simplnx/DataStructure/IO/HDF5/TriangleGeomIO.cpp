@@ -38,7 +38,7 @@ Result<> TriangleGeomIO::finishImportingData(DataStructure& dataStructure, const
   return INodeGeom2dIO::FinishImportingNodeGeom2dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> TriangleGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TriangleGeom& geometry, group_writer_type& parentGroupWriter, bool importable) 
+Result<> TriangleGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TriangleGeom& geometry, group_writer_type& parentGroupWriter, bool importable)
 {
   return INodeGeom2dIO::WriteNodeGeom2dData(dataStructureWriter, geometry, parentGroupWriter, importable);
 }

@@ -9,7 +9,7 @@
 
 namespace nx::core
 {
-ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
 , m_DefaultValue(std::move(defaultValue))
 {

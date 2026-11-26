@@ -49,7 +49,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  static Result<> writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, group_writer_type& parentGroup, bool importable) ;
+  static Result<> writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, group_writer_type& parentGroup, bool importable);
 
   /**
    * @brief Replaces the AbstractDataStore using data from the HDF5 dataset.

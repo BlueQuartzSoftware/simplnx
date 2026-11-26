@@ -95,7 +95,8 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   const AttributeMatrix* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
   }
 
   // Instantiate and move the action that will create the output array
@@ -107,7 +108,7 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

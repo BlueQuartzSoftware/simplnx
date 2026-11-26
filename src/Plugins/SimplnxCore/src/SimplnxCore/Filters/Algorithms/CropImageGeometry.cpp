@@ -294,7 +294,6 @@ CropImageGeometry::CropImageGeometry(DataStructure& dataStructure, const IFilter
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> CropImageGeometry::operator()()
 {

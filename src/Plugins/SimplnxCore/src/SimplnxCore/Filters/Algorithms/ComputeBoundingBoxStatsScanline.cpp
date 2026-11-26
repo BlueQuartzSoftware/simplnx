@@ -1103,7 +1103,6 @@ ComputeBoundingBoxStatsScanline::ComputeBoundingBoxStatsScanline(DataStructure& 
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStatsScanline::operator()()
 {

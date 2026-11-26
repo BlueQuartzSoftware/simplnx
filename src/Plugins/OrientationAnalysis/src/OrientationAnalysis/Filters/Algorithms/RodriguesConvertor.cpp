@@ -133,8 +133,6 @@ RodriguesConvertor::RodriguesConvertor(DataStructure& dataStructure, const IFilt
 {
 }
 
-
-
 const std::atomic_bool& RodriguesConvertor::getCancel()
 {
   return m_ShouldCancel;

@@ -149,7 +149,7 @@ public:
    * @brief Returns the parent object name.
    * @return Name, or empty string for an invalid object.
    */
-  static std::string getParentName() ;
+  static std::string getParentName();
 
   /**
    * @brief Returns object attribute count.
@@ -554,13 +554,13 @@ protected:
    * @param filepath Specifies the HDF5 file.
    * @param objectPath Specifies the object path.
    */
-  ObjectIO(std::filesystem::path  filepath, std::string  objectPath);
+  ObjectIO(std::filesystem::path filepath, std::string objectPath);
   /**
    * @brief Creates a wrapper from a parent ID and child name.
    * @param parentId Specifies the parent HDF5 object.
    * @param objectName Specifies the child object name.
    */
-  ObjectIO(hid_t parentId, std::string  objectName);
+  ObjectIO(hid_t parentId, std::string objectName);
 
   /**
    * @brief Sets the target HDF5 file path.
@@ -628,7 +628,7 @@ protected:
    * @param attribId Specifies the attribute ID.
    * @return Element count, or 0 after a query failure.
    */
-  static usize getNumElementsInAttribute(hid_t attribId) ;
+  static usize getNumElementsInAttribute(hid_t attribId);
 
 private:
   std::filesystem::path m_FilePath;

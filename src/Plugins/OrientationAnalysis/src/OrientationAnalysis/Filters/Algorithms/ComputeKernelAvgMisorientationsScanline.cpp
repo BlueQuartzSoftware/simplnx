@@ -929,8 +929,6 @@ ComputeKernelAvgMisorientationsScanline::ComputeKernelAvgMisorientationsScanline
 {
 }
 
-
-
 Result<> ComputeKernelAvgMisorientationsScanline::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);

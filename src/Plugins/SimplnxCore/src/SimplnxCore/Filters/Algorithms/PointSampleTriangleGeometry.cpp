@@ -53,7 +53,6 @@ PointSampleTriangleGeometry::PointSampleTriangleGeometry(DataStructure& dataStru
 
 // -----------------------------------------------------------------------------
 
-
 Result<> PointSampleTriangleGeometry::operator()()
 {
   DataPath triangleGeometryDataPath = m_Inputs->pTriangleGeometry;

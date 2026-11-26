@@ -168,7 +168,7 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

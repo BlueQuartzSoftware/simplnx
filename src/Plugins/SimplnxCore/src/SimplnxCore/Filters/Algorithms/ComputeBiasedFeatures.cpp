@@ -18,7 +18,6 @@ ComputeBiasedFeatures::ComputeBiasedFeatures(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeBiasedFeatures::getCancel()
 {

@@ -125,14 +125,14 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pMaskArrayPathValue}, -6810); tupleResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
-  resultOutputActions.value().modifiedActions.emplace_back(
-      DataObjectModification{.modifiedPath=pMaskArrayPathValue, .modifiedType=DataObjectModification::ModifiedType::Modified, .dataObjectType=dataStructure.getData(pMaskArrayPathValue)->getDataObjectType()});
+  resultOutputActions.value().modifiedActions.emplace_back(DataObjectModification{
+      .modifiedPath = pMaskArrayPathValue, .modifiedType = DataObjectModification::ModifiedType::Modified, .dataObjectType = dataStructure.getData(pMaskArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

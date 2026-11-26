@@ -123,7 +123,7 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

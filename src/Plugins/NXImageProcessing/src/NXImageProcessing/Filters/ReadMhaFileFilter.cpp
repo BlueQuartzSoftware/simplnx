@@ -280,13 +280,13 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
 
   if(!fs::exists(pInputFilePath))
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-35820, fmt::format("Input MHA/MetaImage file does not exist: '{}'", pInputFilePath.string()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-35820, fmt::format("Input MHA/MetaImage file does not exist: '{}'", pInputFilePath.string()))};
   }
 
   auto metadataResult = mhd::ReadMetaImageHeader(pInputFilePath);
   if(metadataResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const mhd::MetaImageMetadata md = std::move(metadataResult).value();
 
@@ -295,7 +295,7 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
   std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
   if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
@@ -312,7 +312,7 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(tmpActionsResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
     }
 
     const DataPath croppedGeomPath({pImageGeomPath.getTargetName() + "_cropped"});
@@ -326,7 +326,7 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
     Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
     dims = croppedGeom.getDimensions().toContainer<std::vector<usize>>();
@@ -357,7 +357,7 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
     auto matrixResult = BuildTransformMatrix(md, pTranspose);
     if(matrixResult.invalid())
     {
-      return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(matrixResult)), {}), .outputValues=std::move(preflightUpdatedValues)};
+      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(matrixResult)), {}), .outputValues = std::move(preflightUpdatedValues)};
     }
     const ImageRotationUtilities::Matrix4fR mat = matrixResult.value();
     preflightUpdatedValues.push_back({"Transformation Matrix", ImageRotationUtilities::GenerateTransformationMatrixDescription(mat)});
@@ -380,7 +380,7 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
       Result<> stageResult = resultOutputActions.value().applyAll(stagedDataStructure, IDataAction::Mode::Preflight);
       if(stageResult.invalid())
       {
-        return {.outputActions=ConvertResultTo<OutputActions>(std::move(stageResult), {}), .outputValues=std::move(preflightUpdatedValues)};
+        return {.outputActions = ConvertResultTo<OutputActions>(std::move(stageResult), {}), .outputValues = std::move(preflightUpdatedValues)};
       }
 
       const ApplyTransformationToGeometryInputValues transformationInputValues = MakeTransformationInputValues(pImageGeomPath, pCellAttrMatName, mat, md.centerOfRotation, pInterpolationType);
@@ -408,12 +408,12 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
         {
           resultOutputActions.errors().push_back(e);
         }
-        return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+        return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
       }
     }
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

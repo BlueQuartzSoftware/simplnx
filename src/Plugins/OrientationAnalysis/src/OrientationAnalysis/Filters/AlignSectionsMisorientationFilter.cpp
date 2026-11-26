@@ -191,7 +191,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   }
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, cellArrayPaths, -68072); tupleResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
@@ -233,7 +233,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

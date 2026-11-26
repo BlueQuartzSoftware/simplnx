@@ -69,7 +69,7 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId)
   }
 }
 
-GrainMapperReader::GrainMapperReader(std::string  filePath, bool readDctData, bool readAbsorptionData)
+GrainMapperReader::GrainMapperReader(std::string filePath, bool readDctData, bool readAbsorptionData)
 : m_ReadDctData(readDctData)
 , m_ReadAbsorptionData(readAbsorptionData)
 , m_FileName(std::move(filePath))
@@ -137,7 +137,7 @@ std::map<std::string, DataType> GrainMapperReader::getNameToDataTypeMap() const
   return m_NameToDataTypeMap;
 }
 
-std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap() 
+std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap()
 {
   return GrainMapper3DUtilities::k_NameToCompDimMap;
 }

@@ -55,8 +55,6 @@ ReadStringDataArray::ReadStringDataArray(DataStructure& dataStructure, const IFi
 {
 }
 
-
-
 Result<> ReadStringDataArray::operator()()
 {
   auto& data = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->outputArrayPath);
@@ -117,7 +115,8 @@ Result<> ReadStringDataArray::operator()()
       if(tupleIndex == totalSize)
       {
         result.warnings().push_back(Warning{
-            .code=-76510, .message=fmt::format("Line #{} holds more values than the array's {} values (tuples x components). The extra values were ignored. Check the tuple dimensions.", lineNum + 1, totalSize)});
+            .code = -76510,
+            .message = fmt::format("Line #{} holds more values than the array's {} values (tuples x components). The extra values were ignored. Check the tuple dimensions.", lineNum + 1, totalSize)});
         break;
       }
       data[tupleIndex++] = value;

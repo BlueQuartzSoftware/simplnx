@@ -92,7 +92,8 @@ IFilter::PreflightResult ComputeCAxisLocationsFilter::preflightImpl(const DataSt
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-3520, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-3520, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   {
@@ -105,7 +106,7 @@ IFilter::PreflightResult ComputeCAxisLocationsFilter::preflightImpl(const DataSt
   resultOutputActions.warnings().push_back(
       {-3521, "Finding the c-axis locations requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these two types."});
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

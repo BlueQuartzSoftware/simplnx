@@ -29,8 +29,6 @@ RequireMinimumSizeFeatures::RequireMinimumSizeFeatures(DataStructure& dataStruct
 {
 }
 
-
-
 Result<> RequireMinimumSizeFeatures::operator()()
 {
   auto& featureIdsStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
@@ -59,7 +57,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
     }
   }
 
-  Error errorReturn = {.code=0, .message=""};
+  Error errorReturn = {.code = 0, .message = ""};
   Result<std::vector<bool>> activeObjectsResult =
       removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhases, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase, m_InputValues->MinAllowedFeaturesSize, errorReturn);
   if(activeObjectsResult.invalid())
@@ -166,7 +164,7 @@ Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32A
   }
   if(!good)
   {
-    errorReturn = Error{.code=-1, .message="The minimum size is larger than the largest Feature.  All Features would be removed"};
+    errorReturn = Error{.code = -1, .message = "The minimum size is larger than the largest Feature.  All Features would be removed"};
     return {std::move(activeObjects)};
   }
 

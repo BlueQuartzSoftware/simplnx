@@ -372,8 +372,6 @@ ReplaceElementAttributesWithNeighborValues::ReplaceElementAttributesWithNeighbor
 {
 }
 
-
-
 const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel() const
 {
   return m_ShouldCancel;

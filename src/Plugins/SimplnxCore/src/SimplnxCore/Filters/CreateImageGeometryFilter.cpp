@@ -102,12 +102,12 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
   auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
   if(spacingValidation.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
   }
   auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
   if(originValidation.invalid())
   {
-    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(originValidation))};
+    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(originValidation))};
   }
 
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
@@ -140,10 +140,10 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
   IFilter::PreflightResult preflightResult;
   // Assign/Move the resultOutputActions to the preflightResult object
 
-  std::vector<PreflightValue> preflightUpdatedValues = {{.name="BoxDimensions", .value=boxDimensions}};
+  std::vector<PreflightValue> preflightUpdatedValues = {{.name = "BoxDimensions", .value = boxDimensions}};
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

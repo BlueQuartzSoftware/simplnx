@@ -17,7 +17,6 @@ CreatePythonSkeleton::CreatePythonSkeleton(DataStructure& dataStructure, const I
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CreatePythonSkeleton::getCancel()
 {

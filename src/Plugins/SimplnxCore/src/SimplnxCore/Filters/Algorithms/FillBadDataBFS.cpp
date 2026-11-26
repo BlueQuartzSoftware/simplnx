@@ -71,7 +71,6 @@ FillBadDataBFS::FillBadDataBFS(DataStructure& dataStructure, const IFilter::Mess
 
 // -----------------------------------------------------------------------------
 
-
 Result<> FillBadDataBFS::operator()()
 {
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath)->getDataStoreRef();
@@ -349,8 +348,9 @@ Result<> FillBadDataBFS::operator()()
 
     if(count != 0 && !madeAssignment)
     {
-      m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Warning,
-                                    .message=fmt::format("{} bad-data voxel(s) could not be filled because they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
+      m_MessageHandler.sendMessage(
+          {.type = IFilter::Message::Type::Warning,
+           .message = fmt::format("{} bad-data voxel(s) could not be filled because they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
       break;
     }
 

@@ -51,7 +51,7 @@ public:
    * @brief Move constructor.
    * @param other The EdgeGeom to move from
    */
-  EdgeGeom(EdgeGeom&& other)  noexcept = default;
+  EdgeGeom(EdgeGeom&& other) noexcept = default;
 
   ~EdgeGeom() noexcept override = default;
 

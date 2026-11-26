@@ -318,7 +318,7 @@ Result<> MergeTwins::operator()()
   // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->RandomizeParentIds)
   { // Randomize Parent IDs
-    m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message="Randomizing Parent Ids...."});
+    m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Randomizing Parent Ids...."});
     if(Result<> randomizeResult = ClusterUtilities::RandomizeFeatureIds(featureParentIds, numParents); randomizeResult.invalid())
     {
       return mergeWarnings(std::move(randomizeResult));

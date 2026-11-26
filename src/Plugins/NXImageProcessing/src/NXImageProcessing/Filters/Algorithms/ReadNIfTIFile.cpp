@@ -356,7 +356,6 @@ ReadNIfTIFile::ReadNIfTIFile(DataStructure& dataStructure, const IFilter::Messag
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ReadNIfTIFile::operator()()
 {

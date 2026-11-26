@@ -30,8 +30,7 @@ public:
    */
   Ray()
   : m_Origin()
-  , 
-   m_Length(0)
+  , m_Length(0)
   {
   }
 
@@ -41,7 +40,7 @@ public:
    * @param ang
    * @param length
    */
-  Ray(PointType  origin, ZXZEulerType ang, LengthType length)
+  Ray(PointType origin, ZXZEulerType ang, LengthType length)
   : m_Origin(std::move(origin))
   , m_Angle(std::move(ang))
   , m_Length(length)
@@ -242,9 +241,9 @@ public:
    * @param length
    */
   CachedRay(const typename Ray<T>::PointType& origin, typename Ray<T>::ZXZEulerType ang, typename Ray<T>::LengthType length)
-  : Ray<T>(origin, std::move(ang), length), m_Endpoint(this->calculateEndpoint())
+  : Ray<T>(origin, std::move(ang), length)
+  , m_Endpoint(this->calculateEndpoint())
   {
-    
   }
 
   /**

@@ -1230,7 +1230,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
   using namespace nx::core::HDF5;
 
   // The writer regime the in-core write path uses to pick the on-disk chunk shape.
-  const ChunkShapeOptions k_WriterRegime{.targetBytes=k_TargetChunkBytes, .regime=ChunkShapeRegime::BundleOuterSlabs};
+  const ChunkShapeOptions k_WriterRegime{.targetBytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
 
   SECTION("eligible: single-chunk compressed write (level > 0) round-trips and writes the policy chunk shape")
   {
@@ -1492,7 +1492,7 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
   using Clock = std::chrono::steady_clock;
 
   // Match the regime the in-core write path uses to choose the on-disk chunk shape.
-  const ChunkShapeOptions k_WriterRegime{.targetBytes=k_TargetChunkBytes, .regime=ChunkShapeRegime::BundleOuterSlabs};
+  const ChunkShapeOptions k_WriterRegime{.targetBytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
   const int k_DeflateLevel = 5;
 
   WARN("ParallelChunkCodec write benchmark — hardware_concurrency = " << std::thread::hardware_concurrency());
@@ -1505,9 +1505,9 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
     const char* label;
   };
   const std::vector<Case> cases = {
-      {.dims={4096, 1024}, .label="~4.2M float32 (16 MiB)"},
-      {.dims={4096, 4096}, .label="~16.8M float32 (64 MiB)"},
-      {.dims={8192, 8192}, .label="~67.1M float32 (256 MiB)"},
+      {.dims = {4096, 1024}, .label = "~4.2M float32 (16 MiB)"},
+      {.dims = {4096, 4096}, .label = "~16.8M float32 (64 MiB)"},
+      {.dims = {8192, 8192}, .label = "~67.1M float32 (256 MiB)"},
   };
 
   for(const Case& testCase : cases)
@@ -1791,11 +1791,11 @@ template <typename FileT>
 void H8CreateDataset(const fs::path& path, bool oppositeOrder)
 {
   const auto values = H8Values<FileT>();
-  H8NativeHandle file{.id=H5I_INVALID_HID, .close=H5Fclose};
-  H8NativeHandle type{.id=H5I_INVALID_HID, .close=H5Tclose};
-  H8NativeHandle space{.id=H5I_INVALID_HID, .close=H5Sclose};
-  H8NativeHandle property{.id=H5I_INVALID_HID, .close=H5Pclose};
-  H8NativeHandle dataset{.id=H5I_INVALID_HID, .close=H5Dclose};
+  H8NativeHandle file{.id = H5I_INVALID_HID, .close = H5Fclose};
+  H8NativeHandle type{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle space{.id = H5I_INVALID_HID, .close = H5Sclose};
+  H8NativeHandle property{.id = H5I_INVALID_HID, .close = H5Pclose};
+  H8NativeHandle dataset{.id = H5I_INVALID_HID, .close = H5Dclose};
   std::lock_guard lock(Support::ApiLock());
   const hid_t nativeType = Support::HdfTypeForPrimitive<FileT>();
   type.id = H5Tcopy(nativeType);
@@ -1833,11 +1833,11 @@ void H8CreateDataset(const fs::path& path, bool oppositeOrder)
 template <typename MemoryT, typename FileT>
 std::vector<MemoryT> H8ReadNative(const fs::path& path, bool oppositeOrder)
 {
-  H8NativeHandle file{.id=H5I_INVALID_HID, .close=H5Fclose};
-  H8NativeHandle dataset{.id=H5I_INVALID_HID, .close=H5Dclose};
-  H8NativeHandle type{.id=H5I_INVALID_HID, .close=H5Tclose};
-  H8NativeHandle expectedType{.id=H5I_INVALID_HID, .close=H5Tclose};
-  H8NativeHandle space{.id=H5I_INVALID_HID, .close=H5Sclose};
+  H8NativeHandle file{.id = H5I_INVALID_HID, .close = H5Fclose};
+  H8NativeHandle dataset{.id = H5I_INVALID_HID, .close = H5Dclose};
+  H8NativeHandle type{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle expectedType{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle space{.id = H5I_INVALID_HID, .close = H5Sclose};
   std::lock_guard lock(Support::ApiLock());
   file.id = H5Fopen(path.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   REQUIRE(file.id >= 0);
@@ -2047,11 +2047,11 @@ TEST_CASE("H8 codecs reject reduced precision and same-size structured file type
   const int kind = GENERATE(0, 1, 2);
   INFO("file representation kind=" << kind);
   const auto path = testFilePath("H8_structured_type.h5");
-  H8NativeHandle file{.id=H5I_INVALID_HID, .close=H5Fclose};
-  H8NativeHandle fileType{.id=H5I_INVALID_HID, .close=H5Tclose};
-  H8NativeHandle space{.id=H5I_INVALID_HID, .close=H5Sclose};
-  H8NativeHandle property{.id=H5I_INVALID_HID, .close=H5Pclose};
-  H8NativeHandle dataset{.id=H5I_INVALID_HID, .close=H5Dclose};
+  H8NativeHandle file{.id = H5I_INVALID_HID, .close = H5Fclose};
+  H8NativeHandle fileType{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle space{.id = H5I_INVALID_HID, .close = H5Sclose};
+  H8NativeHandle property{.id = H5I_INVALID_HID, .close = H5Pclose};
+  H8NativeHandle dataset{.id = H5I_INVALID_HID, .close = H5Dclose};
   hid_t memoryType = H5I_INVALID_HID;
   {
     std::lock_guard lock(Support::ApiLock());
@@ -2192,7 +2192,7 @@ TEST_CASE("ParallelChunkCodec observes nominal edge and returned payload lifetim
   const auto before = GetCodecOwnershipStateForTesting();
   REQUIRE(before.outstandingBuffers == 0);
   REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({.context=&counters, .callback=&CodecOwnershipCountersForTesting::Observe});
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const std::array<uint64, 4> selected{0, 1, 2, 3};
   std::vector<std::byte> result(expected.size());
@@ -2217,12 +2217,12 @@ TEST_CASE("ParallelChunkCodec observation refuses active replacement", "[Paralle
   const auto before = GetCodecOwnershipStateForTesting();
   REQUIRE(before.outstandingBuffers == 0);
   REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({.context=&original, .callback=&CodecOwnershipCountersForTesting::Observe});
+  const auto previous = SetCodecIoObserverForTesting({.context = &original, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = testFilePath("ownership-control.h5");
   {
     LegacyPayloadTaskScopeForTesting task;
-    (void)SetCodecIoObserverForTesting({.context=&replacement, .callback=&CodecOwnershipCountersForTesting::Observe});
+    (void)SetCodecIoObserverForTesting({.context = &replacement, .callback = &CodecOwnershipCountersForTesting::Observe});
     LegacyPayloadTicketForTesting ticket;
     const std::vector<std::byte> bytes(64);
     ticket.acquire(path, "/data", bytes, LegacyPayloadKindForTesting::Nominal);
@@ -2242,7 +2242,7 @@ TEST_CASE("ParallelChunkCodec checks stranded receipts on each worker exit", "[P
   const auto before = GetCodecOwnershipStateForTesting();
   REQUIRE(before.outstandingBuffers == 0);
   REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({.context=&counters, .callback=&CodecOwnershipCountersForTesting::Observe});
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = testFilePath("ownership-worker-control.h5");
   const std::array<uint64, 2> selected{0, 1};
@@ -2275,7 +2275,7 @@ TEST_CASE("ParallelChunkCodec releases a throwing vector sink before error aggre
   const auto before = GetCodecOwnershipStateForTesting();
   REQUIRE(before.outstandingBuffers == 0);
   REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({.context=&counters, .callback=&CodecOwnershipCountersForTesting::Observe});
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = testFilePath("throwing-vector-sink-control.h5");
   const std::array<uint64, 1> selected{0};
@@ -2302,7 +2302,7 @@ TEST_CASE("ParallelChunkCodec observes simultaneous worker payloads deterministi
   const auto before = GetCodecOwnershipStateForTesting();
   REQUIRE(before.outstandingBuffers == 0);
   REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({.context=&counters, .callback=&CodecOwnershipCountersForTesting::Observe});
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = testFilePath("simultaneous-ownership-control.h5");
   std::latch acquired(2);
@@ -2378,7 +2378,7 @@ TEST_CASE("ParallelChunkCodec labels a non-codec vector return as unobserved", "
   const auto before = GetCodecOwnershipStateForTesting();
   REQUIRE(before.outstandingBuffers == 0);
   REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({.context=&counters, .callback=&CodecOwnershipCountersForTesting::Observe});
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const std::array<uint64, 1> selected{0};
   const auto loader = [](uint64) { return std::vector<std::byte>(64); };
@@ -2537,7 +2537,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     }
   }
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({.context=&observation, .callback=&BoundedCodecObservation::Observe, .boundedFault=&BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(output.data()), output.size() * sizeof(uint16));
   SECTION("zero allowance refuses with required and available bytes before payload I/O")
@@ -2680,7 +2680,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
   // Two selected four-byte chunks share one input buffer; deflate also owns four decoded bytes and its named workspace.
   const uint64 required = 8 + maximumStored + (compressed ? 4 + 128 * 1024 : 0);
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({.context=&observation, .callback=&BoundedCodecObservation::Observe, .boundedFault=&BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   SECTION("one byte short refuses before payload I/O")
   {
@@ -2854,7 +2854,7 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
   ParallelChunkCodec codec(path, "data", {2, 3}, {1, 2}, {1}, sizeof(uint16), dataset, codecMemoryType<uint16>());
   std::vector<uint16> output(6, 77);
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({.context=&observation, .callback=&BoundedCodecObservation::Observe, .boundedFault=&BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto result = codec.readExtentIntoBufferBounded(Extent({0, 0, 0}, {1, 2, 0}), nonstd::span<std::byte>(reinterpret_cast<std::byte*>(output.data()), output.size() * sizeof(uint16)), 16384);
   REQUIRE(result.valid());
@@ -2902,7 +2902,7 @@ TEST_CASE("Bounded codec rejects a second-pass request for an unprepared decoder
   BoundedCodecObservation observation;
   observation.inject = true;
   observation.fault = BoundedFaultPointForTesting::SecondPassUnpreparedDecoder;
-  const auto previous = SetCodecIoObserverForTesting({.context=&observation, .callback=&BoundedCodecObservation::Observe, .boundedFault=&BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   std::array<std::byte, 64> destination{};
   destination.fill(std::byte{0x7B});
@@ -2930,19 +2930,64 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
   // Literal outputs select from a dense row-major sequence that starts at 101.
   // These expectations do not use the reader's strides, chunk intersections or scatter helpers.
   const std::vector<Fixture> fixtures = {
-      {.name="full trailing suffix", .tupleShape={2, 3, 4}, .componentShape={1}, .physicalChunks={1, 3, 4, 1}, .extent=Extent({0, 0, 0, 0}, {1, 2, 3, 0}), .expected={101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112,
-                                                                                                  113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124}},
-      {.name="nonzero chunk and extent origins", .tupleShape={4, 3, 4}, .componentShape={1}, .physicalChunks={2, 3, 4, 1}, .extent=Extent({2, 1, 0, 0}, {3, 2, 3, 0}), .expected={129, 130, 131, 132, 133, 134, 135, 136, 141, 142, 143, 144, 145, 146, 147, 148}},
-      {.name="adjacent source with output row gaps", .tupleShape={2, 4}, .componentShape={1}, .physicalChunks={2, 2, 1}, .extent=Extent({0, 0, 0}, {1, 3, 0}), .expected={101, 102, 103, 104, 105, 106, 107, 108}},
-      {.name="adjacent output with nominal source gaps", .tupleShape={2, 4}, .componentShape={1}, .physicalChunks={2, 4, 1}, .extent=Extent({0, 1, 0}, {1, 2, 0}), .expected={102, 103, 106, 107}},
-      {.name="physical component splits", .tupleShape={2, 3}, .componentShape={3}, .physicalChunks={2, 3, 2}, .extent=Extent({0, 0, 0}, {1, 2, 2}), .expected={101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118}},
-      {.name="clamped physical edges retain nominal padding", .tupleShape={3, 5}, .componentShape={1}, .physicalChunks={2, 4, 1}, .extent=Extent({1, 2, 0}, {2, 4, 0}), .expected={108, 109, 110, 113, 114, 115}},
-      {.name="tuple and component strides", .tupleShape={3, 4}, .componentShape={3}, .physicalChunks={2, 3, 2}, .extent=Extent({0, 1, 0}, {2, 3, 2}, {2, 2, 2}), .expected={104, 106, 110, 112, 128, 130, 134, 136}},
-      {.name="rank one contiguous", .tupleShape={9}, .componentShape={}, .physicalChunks={4}, .extent=Extent({1}, {8}), .expected={102, 103, 104, 105, 106, 107, 108, 109}},
-      {.name="rank one strided", .tupleShape={9}, .componentShape={}, .physicalChunks={4}, .extent=Extent({1}, {8}, {3}), .expected={102, 105, 108}},
-      {.name="singleton axes inside a contiguous suffix", .tupleShape={2, 1, 3, 1}, .componentShape={1}, .physicalChunks={2, 1, 3, 1, 1}, .extent=Extent({0, 0, 0, 0, 0}, {1, 0, 2, 0, 0}), .expected={101, 102, 103, 104, 105, 106}},
-      {.name="single selected scalar", .tupleShape={1}, .componentShape={1}, .physicalChunks={1, 1}, .extent=Extent({0, 0}, {0, 0}), .expected={101}},
-      {.name="sparse fill stays scalar", .tupleShape={2, 4}, .componentShape={1}, .physicalChunks={2, 2, 1}, .extent=Extent({0, 0, 0}, {1, 3, 0}), .expected={513, 513, 513, 513, 513, 513, 513, 513}, .sparse=true}};
+      {.name = "full trailing suffix",
+       .tupleShape = {2, 3, 4},
+       .componentShape = {1},
+       .physicalChunks = {1, 3, 4, 1},
+       .extent = Extent({0, 0, 0, 0}, {1, 2, 3, 0}),
+       .expected = {101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124}},
+      {.name = "nonzero chunk and extent origins",
+       .tupleShape = {4, 3, 4},
+       .componentShape = {1},
+       .physicalChunks = {2, 3, 4, 1},
+       .extent = Extent({2, 1, 0, 0}, {3, 2, 3, 0}),
+       .expected = {129, 130, 131, 132, 133, 134, 135, 136, 141, 142, 143, 144, 145, 146, 147, 148}},
+      {.name = "adjacent source with output row gaps",
+       .tupleShape = {2, 4},
+       .componentShape = {1},
+       .physicalChunks = {2, 2, 1},
+       .extent = Extent({0, 0, 0}, {1, 3, 0}),
+       .expected = {101, 102, 103, 104, 105, 106, 107, 108}},
+      {.name = "adjacent output with nominal source gaps",
+       .tupleShape = {2, 4},
+       .componentShape = {1},
+       .physicalChunks = {2, 4, 1},
+       .extent = Extent({0, 1, 0}, {1, 2, 0}),
+       .expected = {102, 103, 106, 107}},
+      {.name = "physical component splits",
+       .tupleShape = {2, 3},
+       .componentShape = {3},
+       .physicalChunks = {2, 3, 2},
+       .extent = Extent({0, 0, 0}, {1, 2, 2}),
+       .expected = {101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118}},
+      {.name = "clamped physical edges retain nominal padding",
+       .tupleShape = {3, 5},
+       .componentShape = {1},
+       .physicalChunks = {2, 4, 1},
+       .extent = Extent({1, 2, 0}, {2, 4, 0}),
+       .expected = {108, 109, 110, 113, 114, 115}},
+      {.name = "tuple and component strides",
+       .tupleShape = {3, 4},
+       .componentShape = {3},
+       .physicalChunks = {2, 3, 2},
+       .extent = Extent({0, 1, 0}, {2, 3, 2}, {2, 2, 2}),
+       .expected = {104, 106, 110, 112, 128, 130, 134, 136}},
+      {.name = "rank one contiguous", .tupleShape = {9}, .componentShape = {}, .physicalChunks = {4}, .extent = Extent({1}, {8}), .expected = {102, 103, 104, 105, 106, 107, 108, 109}},
+      {.name = "rank one strided", .tupleShape = {9}, .componentShape = {}, .physicalChunks = {4}, .extent = Extent({1}, {8}, {3}), .expected = {102, 105, 108}},
+      {.name = "singleton axes inside a contiguous suffix",
+       .tupleShape = {2, 1, 3, 1},
+       .componentShape = {1},
+       .physicalChunks = {2, 1, 3, 1, 1},
+       .extent = Extent({0, 0, 0, 0, 0}, {1, 0, 2, 0, 0}),
+       .expected = {101, 102, 103, 104, 105, 106}},
+      {.name = "single selected scalar", .tupleShape = {1}, .componentShape = {1}, .physicalChunks = {1, 1}, .extent = Extent({0, 0}, {0, 0}), .expected = {101}},
+      {.name = "sparse fill stays scalar",
+       .tupleShape = {2, 4},
+       .componentShape = {1},
+       .physicalChunks = {2, 2, 1},
+       .extent = Extent({0, 0, 0}, {1, 3, 0}),
+       .expected = {513, 513, 513, 513, 513, 513, 513, 513},
+       .sparse = true}};
   const int filter = GENERATE(0, 1);
   for(const auto& fixture : fixtures)
   {
@@ -3011,7 +3056,7 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
       std::fill_n(guardedOutput.end() - guardValues, guardValues, trailingGuard);
       const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(guardedOutput.data() + guardValues), fixture.expected.size() * sizeof(uint16));
       BoundedCodecObservation observation;
-      const auto previous = SetCodecIoObserverForTesting({.context=&observation, .callback=&BoundedCodecObservation::Observe, .boundedFault=&BoundedCodecObservation::Fault});
+      const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
       auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
       constexpr uint64 allowance = 1024 * 1024;
       const auto result = codec.readExtentIntoBufferBounded(fixture.extent, destination, allowance);

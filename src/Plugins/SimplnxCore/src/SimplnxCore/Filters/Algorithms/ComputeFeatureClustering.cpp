@@ -125,8 +125,6 @@ ComputeFeatureClustering::ComputeFeatureClustering(DataStructure& dataStructure,
 {
 }
 
-
-
 const std::atomic_bool& ComputeFeatureClustering::getCancel()
 {
   return m_ShouldCancel;

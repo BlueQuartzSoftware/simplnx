@@ -264,8 +264,8 @@ public:
    * @brief Moves an array and its data-store ownership.
    * @param other Source array.
    */
-  DataArray(DataArray<T>&& other)
- noexcept   : IDataArray(std::move(other))
+  DataArray(DataArray<T>&& other) noexcept
+  : IDataArray(std::move(other))
   , m_DataStore(std::move(other.m_DataStore))
   {
   }

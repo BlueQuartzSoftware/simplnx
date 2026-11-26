@@ -10,7 +10,7 @@
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-CreateAttributeMatrixAction::CreateAttributeMatrixAction(const DataPath& path, ShapeType  shape)
+CreateAttributeMatrixAction::CreateAttributeMatrixAction(const DataPath& path, ShapeType shape)
 : IDataCreationAction(path)
 , m_TupleShape(std::move(shape))
 {

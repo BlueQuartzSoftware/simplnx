@@ -396,7 +396,6 @@ SharedFeatureFace::SharedFeatureFace(DataStructure& dataStructure, const IFilter
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& SharedFeatureFace::getCancel()
 {

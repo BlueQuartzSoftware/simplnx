@@ -67,7 +67,7 @@ public:
    * the provided BaseGroup.
    * @param other The BaseGroup to move from
    */
-  BaseGroup(BaseGroup&& other) noexcept ;
+  BaseGroup(BaseGroup&& other) noexcept;
 
   /**
    * @brief Destroys the BaseGroup and removes it from the list of it's

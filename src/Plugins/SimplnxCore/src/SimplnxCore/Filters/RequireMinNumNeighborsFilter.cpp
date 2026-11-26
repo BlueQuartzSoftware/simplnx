@@ -118,7 +118,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeomPath, featureIdsPath, -55575, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -145,13 +145,13 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeomPath, ignoredDataArrayPaths, -55573, "Cell Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
   auto featureAttributeMatrixResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeomPath, numNeighborsPath.getParent(), -55574, "Number of Neighbors", numNeighborsPath);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -201,7 +201,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   }
 
   // Return actions and updated preflight values.
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

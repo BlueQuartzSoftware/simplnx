@@ -17,7 +17,6 @@ TriangleNormal::TriangleNormal(DataStructure& dataStructure, const IFilter::Mess
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> TriangleNormal::operator()()
 {

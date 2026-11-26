@@ -19,7 +19,6 @@ IdentifySample::IdentifySample(DataStructure& dataStructure, const IFilter::Mess
 
 // -----------------------------------------------------------------------------
 
-
 Result<> IdentifySample::operator()()
 {
   auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);

@@ -49,7 +49,7 @@ public:
    * @brief Move constructor.
    * @param other The RectGridGeom to move from
    */
-  RectGridGeom(RectGridGeom&& other)  noexcept = default;
+  RectGridGeom(RectGridGeom&& other) noexcept = default;
 
   ~RectGridGeom() noexcept override = default;
 

@@ -6,7 +6,7 @@
 
 using namespace nx::core;
 
-DataRenamedMessage::DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string  oldName, std::string  newName)
+DataRenamedMessage::DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string oldName, std::string newName)
 : AbstractDataStructureMessage(dataStructure)
 , m_Id(identifier)
 , m_OldName(std::move(oldName))

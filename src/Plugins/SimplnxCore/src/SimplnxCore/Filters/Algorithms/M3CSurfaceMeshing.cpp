@@ -1108,7 +1108,7 @@ FaceEdgeLoops burnFaceEdgeLoops(const SiteId* afe, const Segment* e1, int nfedge
     }
   }
 
-  return FaceEdgeLoops{.burnt_list=std::move(burnt_list), .count=std::move(count), .loopID=loopID};
+  return FaceEdgeLoops{.burnt_list = std::move(burnt_list), .count = std::move(count), .loopID = loopID};
 }
 
 /**
@@ -1220,7 +1220,7 @@ FaceEdgeLoops burnAndOrientFaceEdgeLoops(const SiteId* afe, Segment* e1, int nfe
     }
   }
 
-  return FaceEdgeLoops{.burnt_list=std::move(burnt_list), .count=std::move(count), .loopID=loopID};
+  return FaceEdgeLoops{.burnt_list = std::move(burnt_list), .count = std::move(count), .loopID = loopID};
 }
 
 /**
@@ -3172,8 +3172,6 @@ M3CSurfaceMeshing::M3CSurfaceMeshing(DataStructure& dataStructure, M3CSurfaceMes
 {
 }
 
-
-
 Result<> M3CSurfaceMeshing::operator()()
 {
   // Every dynamic cell and mesh array selects the residency path. A selected
@@ -3350,10 +3348,11 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return {value == 0 ? maxGrainId : value};
   };
 
-  const NeighborAccessor neighbors{.ns=numSites, .nsp=numSitesPerPlane, .xDim=static_cast<int>(fileDim[0])};
+  const NeighborAccessor neighbors{.ns = numSites, .nsp = numSitesPerPlane, .xDim = static_cast<int>(fileDim[0])};
   const FloatVec3 spacing = imageGeom.getSpacing();
   const FloatVec3 origin = imageGeom.getOrigin();
-  const SiteCoords siteCoords{.fileDim0=fileDim[0], .fileDim1=fileDim[1], .fileNSP=fileDim[0] * fileDim[1], .res={spacing[0], spacing[1], spacing[2]}, .origin={origin[0], origin[1], origin[2]}};
+  const SiteCoords siteCoords{
+      .fileDim0 = fileDim[0], .fileDim1 = fileDim[1], .fileNSP = fileDim[0] * fileDim[1], .res = {spacing[0], spacing[1], spacing[2]}, .origin = {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
   const uint64 candidateCount = static_cast<uint64>(7 * numSites);
   const SiteId lastCube = numSites - numSitesPerPlane;
@@ -3483,7 +3482,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         {
           return MakeErrorResult(-90561, "M3C out-of-core local square edge buffer overflowed.");
         }
-        segments[static_cast<usize>(segmentCount)] = Segment{.node_id={nodeIds[0], nodeIds[1]}, .nSpin={pixelSpins[0], pixelSpins[1]}};
+        segments[static_cast<usize>(segmentCount)] = Segment{.node_id = {nodeIds[0], nodeIds[1]}, .nSpin = {pixelSpins[0], pixelSpins[1]}};
         square.edge_id[square.nEdge++] = static_cast<uint32>(segmentCount++);
       }
       else if(writeNodeTypes)
@@ -4146,7 +4145,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         {
           return first.invalid() ? ConvertResult(std::move(first)) : ConvertResult(std::move(second));
         }
-        transferValues[local] = {.faceIndex=destination + start + local, .firstcIndex=first.value(), .secondcIndex=second.value(), .faceLabel0=labelValues[local * 2], .faceLabel1=labelValues[local * 2 + 1]};
+        transferValues[local] = {
+            .faceIndex = destination + start + local, .firstcIndex = first.value(), .secondcIndex = second.value(), .faceLabel0 = labelValues[local * 2], .faceLabel1 = labelValues[local * 2 + 1]};
       }
       auto faceWrite = faceStore.copyFromBuffer((destination + start) * 3, nonstd::span<const IGeometry::MeshIndexType>(faceValues.data(), count * 3));
       auto labelWrite = faceLabelsStore.copyFromBuffer((destination + start) * 2, nonstd::span<const int32>(labelValues.data(), count * 2));
@@ -4292,9 +4292,9 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, featureIdsStore, point.data());
 
   // Calculate coordinates and neighbors on demand to avoid three full-volume arrays.
-  const SiteCoords siteCoords{.fileDim0=fileDim[0], .fileDim1=fileDim[1], .fileNSP=fileDim[0] * fileDim[1], .res={res[0], res[1], res[2]}, .origin={origin[0], origin[1], origin[2]}};
+  const SiteCoords siteCoords{.fileDim0 = fileDim[0], .fileDim1 = fileDim[1], .fileNSP = fileDim[0] * fileDim[1], .res = {res[0], res[1], res[2]}, .origin = {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
-  const NeighborAccessor neighbors{.ns=numSites, .nsp=numSitesPerPlane, .xDim=static_cast<int>(fileDim[0])};
+  const NeighborAccessor neighbors{.ns = numSites, .nsp = numSitesPerPlane, .xDim = static_cast<int>(fileDim[0])};
 
   // Each site owns top, back, and left squares. Seven candidate node types start unused.
   m_MessageHandler.sendInfoMessage("Initializing candidate nodes and squares...");
@@ -4363,9 +4363,9 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
   std::vector<int32> point(totalPoints + 1, 0);
   const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, featureIdsStore, point.data());
 
-  const SiteCoords siteCoords{.fileDim0=fileDim[0], .fileDim1=fileDim[1], .fileNSP=fileDim[0] * fileDim[1], .res={res[0], res[1], res[2]}, .origin={origin[0], origin[1], origin[2]}};
+  const SiteCoords siteCoords{.fileDim0 = fileDim[0], .fileDim1 = fileDim[1], .fileNSP = fileDim[0] * fileDim[1], .res = {res[0], res[1], res[2]}, .origin = {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
-  const NeighborAccessor neighbors{.ns=numSites, .nsp=numSitesPerPlane, .xDim=xDim};
+  const NeighborAccessor neighbors{.ns = numSites, .nsp = numSitesPerPlane, .xDim = xDim};
 
   // Mesh-scale vectors grow with output size. Only per-site squares are windowed.
   // Face edges reserve once from an early rate estimate. Triangles and cube IDs

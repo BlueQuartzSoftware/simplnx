@@ -251,7 +251,6 @@ ComputeKMedoidsDirect::ComputeKMedoidsDirect(DataStructure& dataStructure, const
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 void ComputeKMedoidsDirect::updateProgress(const std::string& message)
 {

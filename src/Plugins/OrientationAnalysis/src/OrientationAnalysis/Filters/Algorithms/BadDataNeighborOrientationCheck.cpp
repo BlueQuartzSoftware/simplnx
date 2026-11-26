@@ -17,8 +17,6 @@ BadDataNeighborOrientationCheck::BadDataNeighborOrientationCheck(DataStructure& 
 {
 }
 
-
-
 const std::atomic_bool& BadDataNeighborOrientationCheck::getCancel()
 {
   return m_ShouldCancel;

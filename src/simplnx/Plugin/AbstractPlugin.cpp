@@ -12,7 +12,7 @@
 
 using namespace nx::core;
 
-AbstractPlugin::AbstractPlugin(IdType identifier, std::string  name, std::string  description, std::string  vendor)
+AbstractPlugin::AbstractPlugin(IdType identifier, std::string name, std::string description, std::string vendor)
 : m_Id(identifier)
 , m_Name(std::move(name))
 , m_Description(std::move(description))

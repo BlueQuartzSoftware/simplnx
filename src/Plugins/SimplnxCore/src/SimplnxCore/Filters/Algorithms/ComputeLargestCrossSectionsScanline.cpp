@@ -27,7 +27,6 @@ ComputeLargestCrossSectionsScanline::ComputeLargestCrossSectionsScanline(DataStr
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSectionsScanline::operator()()
 {

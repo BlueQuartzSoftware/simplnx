@@ -285,7 +285,10 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: synthetic 2x2 montage", "
     FloatVec3 origin;
     uint8 fill;
   };
-  const std::vector<Expected> expected = {{.name="Mosaic-a", .origin={0.0f, 0.0f, 0.0f}, .fill=10}, {.name="Mosaic-b", .origin={100.0f, 0.0f, 0.0f}, .fill=20}, {.name="Mosaic-c", .origin={0.0f, 50.0f, 0.0f}, .fill=30}, {.name="Mosaic-d", .origin={100.0f, 50.0f, 0.0f}, .fill=40}};
+  const std::vector<Expected> expected = {{.name = "Mosaic-a", .origin = {0.0f, 0.0f, 0.0f}, .fill = 10},
+                                          {.name = "Mosaic-b", .origin = {100.0f, 0.0f, 0.0f}, .fill = 20},
+                                          {.name = "Mosaic-c", .origin = {0.0f, 50.0f, 0.0f}, .fill = 30},
+                                          {.name = "Mosaic-d", .origin = {100.0f, 50.0f, 0.0f}, .fill = 40}};
 
   for(const auto& e : expected)
   {
@@ -402,10 +405,10 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: grayscale conversion", "[
     std::string name;
     uint8 gray;
   };
-  const std::vector<Expected> expected = {{.name="Mosaic-gray_a", .gray=ExpectedLuminosity(200, 100, 50, weights)},
-                                          {.name="Mosaic-gray_b", .gray=ExpectedLuminosity(0, 0, 0, weights)},
-                                          {.name="Mosaic-gray_c", .gray=ExpectedLuminosity(255, 255, 255, weights)},
-                                          {.name="Mosaic-gray_d", .gray=ExpectedLuminosity(10, 20, 30, weights)}};
+  const std::vector<Expected> expected = {{.name = "Mosaic-gray_a", .gray = ExpectedLuminosity(200, 100, 50, weights)},
+                                          {.name = "Mosaic-gray_b", .gray = ExpectedLuminosity(0, 0, 0, weights)},
+                                          {.name = "Mosaic-gray_c", .gray = ExpectedLuminosity(255, 255, 255, weights)},
+                                          {.name = "Mosaic-gray_d", .gray = ExpectedLuminosity(10, 20, 30, weights)}};
 
   for(const auto& e : expected)
   {
@@ -450,7 +453,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: set image data type (uint
     std::string name;
     uint16 value;
   };
-  const std::vector<Expected> expected = {{.name="Mosaic-dt_a", .value=static_cast<uint16>(10 * 257)}, {.name="Mosaic-dt_b", .value=static_cast<uint16>(65535)}};
+  const std::vector<Expected> expected = {{.name = "Mosaic-dt_a", .value = static_cast<uint16>(10 * 257)}, {.name = "Mosaic-dt_b", .value = static_cast<uint16>(65535)}};
   for(const auto& e : expected)
   {
     const DataPath arrPath = groupPath.createChildPath(e.name).createChildPath("Tile Data").createChildPath("Image");
@@ -506,10 +509,10 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: forced out-of-core graysc
     std::string name;
     uint8 gray;
   };
-  const std::vector<Expected> expected = {{.name="Mosaic-ooc_a", .gray=ExpectedLuminosity(200, 100, 50, weights)},
-                                          {.name="Mosaic-ooc_b", .gray=ExpectedLuminosity(10, 20, 30, weights)},
-                                          {.name="Mosaic-ooc_c", .gray=ExpectedLuminosity(255, 128, 64, weights)},
-                                          {.name="Mosaic-ooc_d", .gray=ExpectedLuminosity(30, 60, 90, weights)}};
+  const std::vector<Expected> expected = {{.name = "Mosaic-ooc_a", .gray = ExpectedLuminosity(200, 100, 50, weights)},
+                                          {.name = "Mosaic-ooc_b", .gray = ExpectedLuminosity(10, 20, 30, weights)},
+                                          {.name = "Mosaic-ooc_c", .gray = ExpectedLuminosity(255, 128, 64, weights)},
+                                          {.name = "Mosaic-ooc_d", .gray = ExpectedLuminosity(30, 60, 90, weights)}};
   for(const auto& e : expected)
   {
     const DataPath arrPath = groupPath.createChildPath(e.name).createChildPath("Tile Data").createChildPath("Image");

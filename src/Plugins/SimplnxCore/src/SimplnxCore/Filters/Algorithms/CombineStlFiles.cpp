@@ -71,7 +71,6 @@ CombineStlFiles::CombineStlFiles(DataStructure& dataStructure, const IFilter::Me
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CombineStlFiles::getCancel()
 {

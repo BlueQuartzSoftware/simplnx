@@ -189,8 +189,6 @@ WritePoleFigure::WritePoleFigure(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-
-
 Result<> WritePoleFigure::operator()()
 {
   // Create the requested disk-output directory before phase processing.

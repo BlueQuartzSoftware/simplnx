@@ -15,7 +15,7 @@ public:
   using ValueType = DataPath;
 
   DataPathSelectionParameter() = delete;
-  DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~DataPathSelectionParameter() override = default;
 
   DataPathSelectionParameter(const DataPathSelectionParameter&) = delete;

@@ -72,8 +72,6 @@ WriteINLFile::WriteINLFile(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-
-
 const std::atomic_bool& WriteINLFile::getCancel()
 {
   return m_ShouldCancel;

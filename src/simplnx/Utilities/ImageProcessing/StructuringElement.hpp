@@ -234,7 +234,7 @@ inline StructuringElement MakeStructuringElement(KernelType type, const std::arr
 
         if(on)
         {
-          se.offsets.push_back(SEOffset{.dx=static_cast<int32>(dx), .dy=static_cast<int32>(dy), .dz=static_cast<int32>(dz)});
+          se.offsets.push_back(SEOffset{.dx = static_cast<int32>(dx), .dy = static_cast<int32>(dy), .dz = static_cast<int32>(dz)});
         }
       }
     }

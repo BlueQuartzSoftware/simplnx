@@ -121,7 +121,7 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
                                                        pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pImageGeometryPath.toString(), numCells));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

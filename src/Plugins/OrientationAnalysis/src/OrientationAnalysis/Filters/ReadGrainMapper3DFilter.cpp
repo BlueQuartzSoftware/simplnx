@@ -253,7 +253,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
         pAbsorptionCTImageGeometryPath.createChildPath(pAbsorptionCTCellAttributeMatrixNameValue).createChildPath(GrainMapper3DUtilities::Constants::k_DataGroupName)));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <fstream>
 
-
 using namespace nx::core;
 
 namespace
@@ -310,8 +309,6 @@ WriteAbaqusHexahedron::WriteAbaqusHexahedron(DataStructure& dataStructure, const
 , m_MessageHandler(mesgHandler)
 {
 }
-
-
 
 const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 {

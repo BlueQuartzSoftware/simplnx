@@ -1,11 +1,11 @@
 #include "simplnx/Filter/Actions/CreateGridMontageAction.hpp"
 
-#include <utility>
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
+#include <utility>
 
 namespace nx::core
 {
-CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, DimensionType  dims, OriginType  origin, SpacingType  spacing)
+CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing)
 : IDataCreationAction(path)
 , m_Dims(std::move(dims))
 , m_Origin(std::move(origin))

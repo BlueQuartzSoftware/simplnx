@@ -444,7 +444,7 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed bucket state ma
     usize dimY;
     usize dimZ;
   };
-  const std::array<Geometry, 2> geometries = {{{.dimX=9, .dimY=7, .dimZ=1}, {.dimX=8, .dimY=7, .dimZ=3}}};
+  const std::array<Geometry, 2> geometries = {{{.dimX = 9, .dimY = 7, .dimZ = 1}, {.dimX = 8, .dimY = 7, .dimZ = 3}}};
   for(const Geometry& geometry : geometries)
   {
     const usize count = geometry.dimX * geometry.dimY * geometry.dimZ;
@@ -870,7 +870,7 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: injected external floo
     usize dimY;
     usize dimZ;
   };
-  const std::array<Geometry, 2> geometries = {{{.dimX=9, .dimY=7, .dimZ=1}, {.dimX=8, .dimY=7, .dimZ=3}}};
+  const std::array<Geometry, 2> geometries = {{{.dimX = 9, .dimY = 7, .dimZ = 1}, {.dimX = 8, .dimY = 7, .dimZ = 3}}};
   for(const Geometry& geometry : geometries)
   {
     const usize count = geometry.dimX * geometry.dimY * geometry.dimZ;

@@ -211,7 +211,6 @@ KeepRemoveRankedFeatures::KeepRemoveRankedFeatures(DataStructure& dataStructure,
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& KeepRemoveRankedFeatures::getCancel()
 {

@@ -754,8 +754,6 @@ ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const
 {
 }
 
-
-
 Result<> ComputeArrayHistogram::operator()()
 {
   const IDataArray* maskArray = nullptr;

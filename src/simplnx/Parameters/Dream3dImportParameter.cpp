@@ -36,7 +36,7 @@ void Dream3dImportParameter::AddImageGeometryImportHint(std::vector<Error>& erro
 }
 
 //-----------------------------------------------------------------------------
-Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(std::move(defaultValue))
 {
@@ -131,7 +131,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
       std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
       if(!dataPath.has_value())
       {
-        errors.push_back(Error{.code=FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message=fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), dataPathString)});
+        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), dataPathString)});
         continue;
       }
       dataPaths.push_back(std::move(*dataPath));
@@ -182,7 +182,7 @@ Result<> Dream3dImportParameter::validate(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<> Dream3dImportParameter::validatePath(const ValueType& importData) 
+Result<> Dream3dImportParameter::validatePath(const ValueType& importData)
 {
   try
   {

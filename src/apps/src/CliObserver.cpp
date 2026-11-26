@@ -95,12 +95,12 @@ void PipelineObserver::onNotify(AbstractPipelineNode* /*node*/, const std::share
   std::cout << msg->toString() << std::endl;
 }
 
-void PipelineObserver::onCancelled() 
+void PipelineObserver::onCancelled()
 {
   std::cout << timestamp() << "  Pipeline has been cancelled" << std::endl;
 }
 
-void PipelineObserver::onFaultStateChanged(AbstractPipelineNode* node, FaultState state) 
+void PipelineObserver::onFaultStateChanged(AbstractPipelineNode* node, FaultState state)
 {
   switch(state)
   {

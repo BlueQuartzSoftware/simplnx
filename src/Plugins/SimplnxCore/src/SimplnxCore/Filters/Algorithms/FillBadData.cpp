@@ -22,7 +22,6 @@ FillBadData::FillBadData(DataStructure& dataStructure, const IFilter::MessageHan
 
 // -----------------------------------------------------------------------------
 
-
 Result<> FillBadData::operator()()
 {
   std::vector<const IArray*> targets;

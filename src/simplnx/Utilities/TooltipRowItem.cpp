@@ -9,13 +9,13 @@ TooltipRowItem::TooltipRowItem()
 {
 }
 
-TooltipRowItem::TooltipRowItem(std::string  title)
+TooltipRowItem::TooltipRowItem(std::string title)
 : m_Type(Type::Title)
 , m_Title(std::move(title))
 {
 }
 
-TooltipRowItem::TooltipRowItem(std::string  title, std::string  value)
+TooltipRowItem::TooltipRowItem(std::string title, std::string value)
 : m_Type(Type::Value)
 , m_Title(std::move(title))
 , m_Value(std::move(value))

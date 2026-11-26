@@ -93,7 +93,7 @@ public:
   }
 
 protected:
-  AbstractPlugin(IdType identifier, std::string  name, std::string  description, std::string  vendor);
+  AbstractPlugin(IdType identifier, std::string name, std::string description, std::string vendor);
 
   /**
    * @brief Registers a filter factory.

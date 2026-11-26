@@ -10,8 +10,7 @@
 using namespace nx::core;
 
 DataStructObserver::DataStructObserver(DataStructure& dataStruct)
-: 
- m_DataStructure(dataStruct)
+: m_DataStructure(dataStruct)
 {
   startObservingStructure(&dataStruct);
 }

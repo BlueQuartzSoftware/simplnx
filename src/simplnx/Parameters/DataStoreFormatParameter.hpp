@@ -27,7 +27,7 @@ public:
 
   DataStoreFormatParameter() = delete;
 
-  DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
 
   ~DataStoreFormatParameter() override = default;
 
@@ -55,7 +55,7 @@ public:
    *
    * The result queries Application each call so plugin registrations are visible.
    */
-  static AvailableValuesType availableValues() ;
+  static AvailableValuesType availableValues();
 
   /**
    * @brief Returns registered format identifiers with display names.
@@ -63,7 +63,7 @@ public:
    * Application provides Automatic, In Memory, and registered plugin formats.
    * @return Format identifier and display-name pairs.
    */
-  static std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames() ;
+  static std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames();
 
   /**
    * @brief Validates a selected data-store format.

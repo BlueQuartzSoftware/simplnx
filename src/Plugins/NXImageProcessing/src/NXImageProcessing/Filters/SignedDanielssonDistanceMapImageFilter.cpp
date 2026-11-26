@@ -80,7 +80,7 @@ IFilter::PreflightResult SignedDanielssonDistanceMapImageFilter::preflightImpl(c
   // float32 output array. IntegerOnly restricts the input to the integer scalar types.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> SignedDanielssonDistanceMapImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

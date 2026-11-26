@@ -10,7 +10,7 @@
 
 namespace nx::core
 {
-AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
+AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
 {

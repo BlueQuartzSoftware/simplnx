@@ -96,13 +96,13 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -16801, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, pIgnoredDataArrayPathsValue, -16802, "Attribute Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
@@ -111,7 +111,7 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
 
   if(pCoordinationNumberValue < 0 || pCoordinationNumberValue > 6)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-16800, fmt::format("Coordination Number must be between 0 and 6. Current value: {}", pCoordinationNumberValue))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-16800, fmt::format("Coordination Number must be between 0 and 6. Current value: {}", pCoordinationNumberValue))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -122,7 +122,7 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, pIgnoredDataArrayPathsValue);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

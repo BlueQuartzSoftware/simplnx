@@ -21,7 +21,6 @@ WriteFeatureDataCSV::WriteFeatureDataCSV(DataStructure& dataStructure, const IFi
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteFeatureDataCSV::operator()()
 {

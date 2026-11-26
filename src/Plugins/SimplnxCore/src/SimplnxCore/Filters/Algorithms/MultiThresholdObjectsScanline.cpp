@@ -302,8 +302,6 @@ MultiThresholdObjectsScanline::MultiThresholdObjectsScanline(DataStructure& data
 {
 }
 
-
-
 Result<> MultiThresholdObjectsScanline::operator()()
 {
   auto thresholdsObject = m_InputValues->ArrayThresholdsObject;

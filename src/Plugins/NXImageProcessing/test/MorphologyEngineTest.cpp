@@ -935,10 +935,10 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline uses 
     MorphOp secondOp;
     ImageProcessing::detail::MorphologyCompositeOutputMode outputMode;
   };
-  const std::array<Case, 4> cases = {{{.firstOp=MorphOp::Erode, .secondOp=MorphOp::Dilate, .outputMode=ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
-                                      {.firstOp=MorphOp::Dilate, .secondOp=MorphOp::Erode, .outputMode=ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
-                                      {.firstOp=MorphOp::Erode, .secondOp=MorphOp::Dilate, .outputMode=ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology},
-                                      {.firstOp=MorphOp::Dilate, .secondOp=MorphOp::Erode, .outputMode=ImageProcessing::detail::MorphologyCompositeOutputMode::MorphologyMinusOriginal}}};
+  const std::array<Case, 4> cases = {{{.firstOp = MorphOp::Erode, .secondOp = MorphOp::Dilate, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
+                                      {.firstOp = MorphOp::Dilate, .secondOp = MorphOp::Erode, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
+                                      {.firstOp = MorphOp::Erode, .secondOp = MorphOp::Dilate, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology},
+                                      {.firstOp = MorphOp::Dilate, .secondOp = MorphOp::Erode, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::MorphologyMinusOriginal}}};
   for(const bool safeBorder : {false, true})
   {
     for(const Case testCase : cases)
@@ -1230,7 +1230,12 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: interior X range excludes incomp
     usize expectedBegin;
     usize expectedEnd;
   };
-  const std::array<Case, 6> cases = {{{.boundDimX=9, .outputOriginX=0, .outputWidth=9, .radiusX=2, .expectedBegin=2, .expectedEnd=7}, {.boundDimX=9, .outputOriginX=1, .outputWidth=4, .radiusX=2, .expectedBegin=1, .expectedEnd=4}, {.boundDimX=9, .outputOriginX=3, .outputWidth=2, .radiusX=2, .expectedBegin=0, .expectedEnd=2}, {.boundDimX=4, .outputOriginX=0, .outputWidth=4, .radiusX=2, .expectedBegin=0, .expectedEnd=0}, {.boundDimX=9, .outputOriginX=7, .outputWidth=2, .radiusX=2, .expectedBegin=0, .expectedEnd=0}, {.boundDimX=9, .outputOriginX=2, .outputWidth=4, .radiusX=0, .expectedBegin=0, .expectedEnd=4}}};
+  const std::array<Case, 6> cases = {{{.boundDimX = 9, .outputOriginX = 0, .outputWidth = 9, .radiusX = 2, .expectedBegin = 2, .expectedEnd = 7},
+                                      {.boundDimX = 9, .outputOriginX = 1, .outputWidth = 4, .radiusX = 2, .expectedBegin = 1, .expectedEnd = 4},
+                                      {.boundDimX = 9, .outputOriginX = 3, .outputWidth = 2, .radiusX = 2, .expectedBegin = 0, .expectedEnd = 2},
+                                      {.boundDimX = 4, .outputOriginX = 0, .outputWidth = 4, .radiusX = 2, .expectedBegin = 0, .expectedEnd = 0},
+                                      {.boundDimX = 9, .outputOriginX = 7, .outputWidth = 2, .radiusX = 2, .expectedBegin = 0, .expectedEnd = 0},
+                                      {.boundDimX = 9, .outputOriginX = 2, .outputWidth = 4, .radiusX = 0, .expectedBegin = 0, .expectedEnd = 4}}};
   for(const Case testCase : cases)
   {
     const auto [begin, end] = ImageProcessing::detail::MorphologyInteriorXRange(testCase.boundDimX, testCase.outputOriginX, testCase.outputWidth, testCase.radiusX);
@@ -1880,7 +1885,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: bounded gradient 2D transfers ne
     usize maximumReadValues;
     usize maximumWriteValues;
   };
-  const std::array<TransferCase, 2> transferCases = {{{.label="full-width blocks", .targetBytes=216, .maximumReadValues=9, .maximumWriteValues=18}, {.label="overwide X tiles", .targetBytes=64, .maximumReadValues=4, .maximumWriteValues=2}}};
+  const std::array<TransferCase, 2> transferCases = {{{.label = "full-width blocks", .targetBytes = 216, .maximumReadValues = 9, .maximumWriteValues = 18},
+                                                      {.label = "overwide X tiles", .targetBytes = 64, .maximumReadValues = 4, .maximumWriteValues = 2}}};
 
   for(const TransferCase& transferCase : transferCases)
   {
@@ -2527,7 +2533,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius flat-fold represen
   {
     StructuringElement se;
     se.radius = {0, 0, 1073741823};
-    se.offsets = {{.dx=0, .dy=0, .dz=-1073741823}, {.dx=0, .dy=0, .dz=1073741823}};
+    se.offsets = {{.dx = 0, .dy = 0, .dz = -1073741823}, {.dx = 0, .dy = 0, .dz = 1073741823}};
     const std::array<uint32, 3> radius = {0, 0, 1073741823};
     auto layout = ValidateMorphologyLayout({131072, 131072, 2}, radius, false, 1);
     SIMPLNX_RESULT_REQUIRE_VALID(layout);
@@ -2537,7 +2543,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius flat-fold represen
   {
     StructuringElement se;
     se.radius = {0, 0, 4};
-    se.offsets = {{.dx=0, .dy=0, .dz=-4}, {.dx=0, .dy=0, .dz=4}};
+    se.offsets = {{.dx = 0, .dy = 0, .dz = -4}, {.dx = 0, .dy = 0, .dz = 4}};
     const std::array<uint32, 3> radius = {0, 0, 4};
     auto layout = ValidateMorphologyLayout({usize{1} << 30, usize{1} << 30, 4}, radius, false, 1);
     SIMPLNX_RESULT_REQUIRE_VALID(layout);

@@ -18,7 +18,7 @@ public:
   using AllowedTypes = std::set<DataObject::Type>;
 
   AttributeMatrixSelectionParameter() = delete;
-  AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
+  AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~AttributeMatrixSelectionParameter() override = default;
 
   AttributeMatrixSelectionParameter(const AttributeMatrixSelectionParameter&) = delete;

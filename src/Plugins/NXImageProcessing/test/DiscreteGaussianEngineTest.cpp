@@ -26,8 +26,8 @@ usize FlatIndex(usize x, usize y, usize z, usize dimX, usize dimY)
 }
 
 template <class T>
-std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, const std::vector<float64>& variance, uint32 maxKernelWidth, const std::vector<float64>& maxError, bool useSpacing, FloatVec3 spacing,
-                     const DiscreteGaussianPassOptions& options = {})
+std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, const std::vector<float64>& variance, uint32 maxKernelWidth, const std::vector<float64>& maxError, bool useSpacing,
+                     FloatVec3 spacing, const DiscreteGaussianPassOptions& options = {})
 {
   DataStore<T> inStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   for(usize i = 0; i < field.size(); ++i)

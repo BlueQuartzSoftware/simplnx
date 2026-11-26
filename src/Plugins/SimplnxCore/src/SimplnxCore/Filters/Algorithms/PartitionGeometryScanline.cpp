@@ -58,8 +58,6 @@ PartitionGeometryScanline::PartitionGeometryScanline(DataStructure& dataStructur
 {
 }
 
-
-
 const std::atomic_bool& PartitionGeometryScanline::getCancel()
 {
   return m_ShouldCancel;

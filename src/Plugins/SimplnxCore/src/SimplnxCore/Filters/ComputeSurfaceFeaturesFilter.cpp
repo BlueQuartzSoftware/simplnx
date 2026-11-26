@@ -95,14 +95,14 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pFeatureGeometryPathValue, {filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key)}, -1099);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
   usize geometryDimensionality = featureGeometry.getDimensionality();
   if(geometryDimensionality != 3 && geometryDimensionality != 2)
   {
-    return {.outputActions=MakeErrorResult<OutputActions>(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()))};
+    return {.outputActions = MakeErrorResult<OutputActions>(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -118,7 +118,7 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
       std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue), "", "0");
   resultOutputActions.value().appendAction(std::move(createSurfaceFeaturesAction));
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

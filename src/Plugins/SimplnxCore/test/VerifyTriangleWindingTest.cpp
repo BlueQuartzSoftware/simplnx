@@ -1020,7 +1020,7 @@ void ApplyWindingActions(DataStructure& dataStructure, const Arguments& args)
 
 Result<> RunVerifyTriangleWinding(DataStructure& dataStructure)
 {
-  VerifyTriangleWindingInputValues inputs{.TargetGeometryPath=k_SupportGeometryPath, .LabelsPath=k_SupportLabelsPath, .RepairNormals=false, .TriangleNormalsPath={}};
+  VerifyTriangleWindingInputValues inputs{.TargetGeometryPath = k_SupportGeometryPath, .LabelsPath = k_SupportLabelsPath, .RepairNormals = false, .TriangleNormalsPath = {}};
   const std::atomic_bool cancelled = false;
   return VerifyTriangleWinding(dataStructure, {}, cancelled, &inputs)();
 }

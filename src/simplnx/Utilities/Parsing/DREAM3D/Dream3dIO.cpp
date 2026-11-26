@@ -2139,7 +2139,7 @@ Result<DataObject*> readLegacyImageGeom(DataStructure& dataStructure, const nx::
           k_InvalidSpacingCount, fmt::format("Legacy image geometry '{}' in '{}' requires three spacing values. Found {}.", name, geomGroup.getFilePath().string(), spacing.size()));
     }
 
-    return {DREAM3D::ImageGeometryMetadata{.origin=FloatVec3(origin), .spacing=FloatVec3(spacing)}};
+    return {DREAM3D::ImageGeometryMetadata{.origin = FloatVec3(origin), .spacing = FloatVec3(spacing)}};
   };
   auto metadata = DREAM3D::detail::ImportImageMetadata(*geom, geomGroup.getFilePath(), readMetadata(), deferredImageMetadata);
   return ConvertResultTo<DataObject*>(std::move(metadata), geom);

@@ -20,7 +20,6 @@ ComputeTriangleGeomVolumes::ComputeTriangleGeomVolumes(DataStructure& dataStruct
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeTriangleGeomVolumes::getCancel()
 {

@@ -274,7 +274,6 @@ IdentifySampleBFS::IdentifySampleBFS(DataStructure& dataStructure, const IFilter
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> IdentifySampleBFS::operator()()
 {

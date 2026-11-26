@@ -171,7 +171,6 @@ ComputeIPFColorsDirect::ComputeIPFColorsDirect(DataStructure& dataStructure, con
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeIPFColorsDirect::operator()()
 {

@@ -375,8 +375,9 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
     else if(convertToGrayscale && !validInputForGrayScaleConversion)
     {
       outputResult.warnings().emplace_back(
-          Warning{.code=-74320, .message=fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.",
-                                      srcImageDataPath.getTargetName())});
+          Warning{.code = -74320,
+                  .message = fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.",
+                                         srcImageDataPath.getTargetName())});
     }
 
     auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(destImageGeomPath);
@@ -466,8 +467,6 @@ ReadImageStack::ReadImageStack(DataStructure& dataStructure, const IFilter::Mess
 , m_MessageHandler(mesgHandler)
 {
 }
-
-
 
 Result<> ReadImageStack::operator()()
 {

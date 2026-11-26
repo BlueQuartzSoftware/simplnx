@@ -85,7 +85,7 @@ struct WidenIntegerArrayToUInt32Fn
 Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel)
 {
   const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
-  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{.dataStructure=dataStructure, .srcPath=srcPath, .dst=dst, .shouldCancel=shouldCancel});
+  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{.dataStructure = dataStructure, .srcPath = srcPath, .dst = dst, .shouldCancel = shouldCancel});
 }
 
 /**
@@ -140,7 +140,7 @@ struct NarrowUInt32StoreToIntegerArrayFn
 Result<> NarrowUInt32StoreToIntegerArray(const AbstractDataStore<uint32>& src, DataStructure& dataStructure, const DataPath& dstPath, const std::atomic_bool& shouldCancel)
 {
   const auto& dstArray = dataStructure.getDataRefAs<IDataArray>(dstPath);
-  return IntegerOnly::dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{.src=src, .dataStructure=dataStructure, .dstPath=dstPath, .shouldCancel=shouldCancel});
+  return IntegerOnly::dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{.src = src, .dataStructure = dataStructure, .dstPath = dstPath, .shouldCancel = shouldCancel});
 }
 
 /**
@@ -404,8 +404,15 @@ Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& data
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::MorphologicalWatershedFromMarkersExecuteFn executeFn{.dataStructure=dataStructure,     .inputArrayPath=inputArrayPath, .markerArrayPath=markerArrayPath, .outputArrayPath=outputArrayPath, .dims=imageGeom.getDimensions(),
-                                                               .markWatershedLine=markWatershedLine, .fullyConnected=fullyConnected, .shouldCancel=shouldCancel,    .messageHandler=messageHandler};
+  detail::MorphologicalWatershedFromMarkersExecuteFn executeFn{.dataStructure = dataStructure,
+                                                               .inputArrayPath = inputArrayPath,
+                                                               .markerArrayPath = markerArrayPath,
+                                                               .outputArrayPath = outputArrayPath,
+                                                               .dims = imageGeom.getDimensions(),
+                                                               .markWatershedLine = markWatershedLine,
+                                                               .fullyConnected = fullyConnected,
+                                                               .shouldCancel = shouldCancel,
+                                                               .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -417,7 +424,15 @@ Result<> ExecuteMorphologicalWatershedImageFilter(DataStructure& dataStructure, 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::MorphologicalWatershedExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=imageGeom.getDimensions(), .level=level, .markWatershedLine=markWatershedLine, .fullyConnected=fullyConnected, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
+  detail::MorphologicalWatershedExecuteFn executeFn{.dataStructure = dataStructure,
+                                                    .inputArrayPath = inputArrayPath,
+                                                    .outputArrayPath = outputArrayPath,
+                                                    .dims = imageGeom.getDimensions(),
+                                                    .level = level,
+                                                    .markWatershedLine = markWatershedLine,
+                                                    .fullyConnected = fullyConnected,
+                                                    .shouldCancel = shouldCancel,
+                                                    .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

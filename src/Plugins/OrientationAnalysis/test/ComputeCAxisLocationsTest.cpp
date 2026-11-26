@@ -46,35 +46,35 @@ constexpr float32 k_Sin_OneEighthPi_OverSqrt3F = k_Sin_OneEighthPiF / k_Sqrt3F;
 
 const std::vector<FixtureData> k_Fixtures = {
     // no rotation
-    {.inputQuat={0.0f, 0.0f, 0.0f, 1.0f}, .expectedOutput={0.0f, 0.0f, 1.0f}},
+    {.inputQuat = {0.0f, 0.0f, 0.0f, 1.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
     // +90 about x
-    {.inputQuat={k_HalfSqrt2F, 0.0f, 0.0f, k_HalfSqrt2F}, .expectedOutput={0.0f, 1.0f, 0.0f}},
+    {.inputQuat = {k_HalfSqrt2F, 0.0f, 0.0f, k_HalfSqrt2F}, .expectedOutput = {0.0f, 1.0f, 0.0f}},
     // +90 about y
-    {.inputQuat={0.0f, k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}, .expectedOutput={-1.0f, 0.0f, 0.0f}},
+    {.inputQuat = {0.0f, k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}, .expectedOutput = {-1.0f, 0.0f, 0.0f}},
     // +90 about z
-    {.inputQuat={0.0f, 0.0f, k_HalfSqrt2F, k_HalfSqrt2F}, .expectedOutput={0.0f, 0.0f, 1.0f}},
+    {.inputQuat = {0.0f, 0.0f, k_HalfSqrt2F, k_HalfSqrt2F}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
     // 180 about x; flip z sign
-    {.inputQuat={1.0f, 0.0f, 0.0f, 0.0f}, .expectedOutput={0.0f, 0.0f, 1.0f}},
+    {.inputQuat = {1.0f, 0.0f, 0.0f, 0.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
     // 180 about y; flip z sign
-    {.inputQuat={0.0f, 1.0f, 0.0f, 0.0f}, .expectedOutput={0.0f, 0.0f, 1.0f}},
+    {.inputQuat = {0.0f, 1.0f, 0.0f, 0.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
     // 180 about z
-    {.inputQuat={0.0f, 0.0f, 1.0f, 0.0f}, .expectedOutput={0.0f, 0.0f, 1.0f}},
+    {.inputQuat = {0.0f, 0.0f, 1.0f, 0.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
     // 120 about (1, 1, 1)
-    {.inputQuat={0.5f, 0.5f, 0.5f, 0.5f}, .expectedOutput={0.0f, 1.0f, 0.0f}},
+    {.inputQuat = {0.5f, 0.5f, 0.5f, 0.5f}, .expectedOutput = {0.0f, 1.0f, 0.0f}},
     // +45 about x
-    {.inputQuat={k_Sin_OneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput={0.0f, k_HalfSqrt2F, k_HalfSqrt2F}},
+    {.inputQuat = {k_Sin_OneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, k_HalfSqrt2F, k_HalfSqrt2F}},
     // +45 about y
-    {.inputQuat={0.0f, k_Sin_OneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput={-k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
+    {.inputQuat = {0.0f, k_Sin_OneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {-k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
     // +45 about z
-    {.inputQuat={0.0f, 0.0f, k_Sin_OneEighthPiF, k_Cos_OneEighthPiF}, .expectedOutput={0.0f, 0.0f, 1.0f}},
+    {.inputQuat = {0.0f, 0.0f, k_Sin_OneEighthPiF, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
     // -45 about x
-    {.inputQuat={-k_Sin_OneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput={0.0f, -k_HalfSqrt2F, k_HalfSqrt2F}},
+    {.inputQuat = {-k_Sin_OneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, -k_HalfSqrt2F, k_HalfSqrt2F}},
     // -45 about y
-    {.inputQuat={0.0f, -k_Sin_OneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput={k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
+    {.inputQuat = {0.0f, -k_Sin_OneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
     // -45 about z
-    {.inputQuat={0.0f, 0.0f, -k_Sin_OneEighthPiF, k_Cos_OneEighthPiF}, .expectedOutput={0.0f, 0.0f, 1.0f}},
+    {.inputQuat = {0.0f, 0.0f, -k_Sin_OneEighthPiF, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
     // +45 around (1, 1, 1); v_out = ((2 - sqrt(6) - sqrt(2))/6, (2 + sqrt(6) - sqrt(2))/6, (1 + sqrt(2))/3)
-    {.inputQuat={k_Sin_OneEighthPi_OverSqrt3F, k_Sin_OneEighthPi_OverSqrt3F, k_Sin_OneEighthPi_OverSqrt3F, k_Cos_OneEighthPiF}, .expectedOutput={-0.3106172, 0.50587934, 0.80473787}},
+    {.inputQuat = {k_Sin_OneEighthPi_OverSqrt3F, k_Sin_OneEighthPi_OverSqrt3F, k_Sin_OneEighthPi_OverSqrt3F, k_Cos_OneEighthPiF}, .expectedOutput = {-0.3106172, 0.50587934, 0.80473787}},
 };
 
 template <class T>

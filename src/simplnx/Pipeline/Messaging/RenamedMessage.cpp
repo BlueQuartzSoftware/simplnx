@@ -8,7 +8,7 @@
 
 using namespace nx::core;
 
-RenamedMessage::RenamedMessage(Pipeline* pipeline, std::string  newName, std::string  oldName)
+RenamedMessage::RenamedMessage(Pipeline* pipeline, std::string newName, std::string oldName)
 : AbstractPipelineMessage(pipeline)
 , m_NewName(std::move(newName))
 , m_OldName(std::move(oldName))

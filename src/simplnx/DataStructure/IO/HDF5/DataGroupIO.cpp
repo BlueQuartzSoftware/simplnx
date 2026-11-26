@@ -27,7 +27,7 @@ Result<> DataGroupIO::readData(DataStructureReader& structureReader, const group
   return BaseGroupIO::ReadBaseGroupData(structureReader, *dataGroup, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> DataGroupIO::writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable) 
+Result<> DataGroupIO::writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable)
 {
   auto groupWriter = parentGroup.createGroup(dataGroup.getName());
   return WriteBaseGroupData(dataStructureWriter, dataGroup, parentGroup, importable);

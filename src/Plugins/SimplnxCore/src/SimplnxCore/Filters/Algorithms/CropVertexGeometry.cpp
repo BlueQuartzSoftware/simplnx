@@ -42,7 +42,6 @@ CropVertexGeometry::CropVertexGeometry(DataStructure& dataStructure, const IFilt
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> CropVertexGeometry::operator()()
 {

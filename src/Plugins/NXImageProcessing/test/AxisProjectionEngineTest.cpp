@@ -765,7 +765,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: pre-cancelled projection lea
   }
   SECTION("associative binary")
   {
-    requirePreserved(BinaryReduce{.foregroundValue=1.0, .backgroundValue=0.0});
+    requirePreserved(BinaryReduce{.foregroundValue = 1.0, .backgroundValue = 0.0});
   }
 }
 
@@ -919,7 +919,8 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded true-2-D
   {
     constexpr usize k_ValuesPerColumn = sizeof(BinaryReduce::State<int32>) + sizeof(int32) + sizeof(int32);
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 3 * k_ValuesPerColumn;
-    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3{7, 5, 1}, 1, BinaryReduce{.foregroundValue=1.0, .backgroundValue=-4.0}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeYTiles);
+    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3{7, 5, 1}, 1, BinaryReduce{.foregroundValue = 1.0, .backgroundValue = -4.0}, k_Target,
+                                                           projection_detail::AxisProjection2DRoute::AssociativeYTiles);
   }
 
   SECTION("singleton Z chunks")

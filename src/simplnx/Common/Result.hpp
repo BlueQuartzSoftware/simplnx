@@ -183,7 +183,8 @@ Result<ToT> ConvertInvalidResult(Result<FromT>&& result)
 
 template <class ToT, class FromT>
 Result<ToT> ConvertResultTo(Result<FromT>&& from)
-requires (std::is_convertible_v<FromT, ToT>) {
+requires(std::is_convertible_v<FromT, ToT>)
+{
   if(from.invalid())
   {
     return {{nonstd::make_unexpected(std::move(from.errors()))}, std::move(from.warnings())};
@@ -207,7 +208,7 @@ requires (std::is_convertible_v<FromT, ToT>) {
 template <class T = void>
 Result<T> MakeErrorResult(int32 code, std::string message)
 {
-  return {{nonstd::make_unexpected(std::vector<Error>{{.code=code, .message=std::move(message)}})}};
+  return {{nonstd::make_unexpected(std::vector<Error>{{.code = code, .message = std::move(message)}})}};
 }
 
 /**
@@ -219,7 +220,7 @@ Result<T> MakeErrorResult(int32 code, std::string message)
 inline Result<> MakeWarningVoidResult(int32 code, std::string message)
 {
   Result<> result;
-  result.warnings().push_back(Warning{.code=code, .message=std::move(message)});
+  result.warnings().push_back(Warning{.code = code, .message = std::move(message)});
   return result;
 }
 

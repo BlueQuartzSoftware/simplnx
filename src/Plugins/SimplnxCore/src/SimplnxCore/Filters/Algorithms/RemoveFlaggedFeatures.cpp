@@ -21,8 +21,6 @@ RemoveFlaggedFeatures::RemoveFlaggedFeatures(DataStructure& dataStructure, const
 {
 }
 
-
-
 const std::atomic_bool& RemoveFlaggedFeatures::getCancel()
 {
   return m_ShouldCancel;

@@ -26,7 +26,7 @@ public:
    * @param origin The origin of the montage
    * @param spacing The spacing of the montage
    */
-  CreateGridMontageAction(const DataPath& path, DimensionType  dims, OriginType  origin, SpacingType  spacing);
+  CreateGridMontageAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing);
 
   ~CreateGridMontageAction() noexcept override = default;
 

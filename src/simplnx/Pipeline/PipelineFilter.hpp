@@ -73,7 +73,7 @@ public:
    * @param filter
    * @param args = {}
    */
-  PipelineFilter(IFilter::UniquePointer&& filter, Arguments  args = {});
+  PipelineFilter(IFilter::UniquePointer&& filter, Arguments args = {});
 
   ~PipelineFilter() noexcept override;
 

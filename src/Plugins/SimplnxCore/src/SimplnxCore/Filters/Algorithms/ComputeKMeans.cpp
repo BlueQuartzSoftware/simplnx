@@ -19,7 +19,6 @@ ComputeKMeans::ComputeKMeans(DataStructure& dataStructure, const IFilter::Messag
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeKMeans::getCancel()
 {

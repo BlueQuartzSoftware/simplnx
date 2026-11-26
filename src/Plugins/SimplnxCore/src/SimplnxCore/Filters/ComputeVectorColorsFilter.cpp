@@ -98,7 +98,7 @@ IFilter::PreflightResult ComputeVectorColorsFilter::preflightImpl(const DataStru
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
+  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

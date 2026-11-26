@@ -326,7 +326,6 @@ WriteImageDirect::WriteImageDirect(DataStructure& dataStructure, const IFilter::
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteImageDirect::operator()()
 {

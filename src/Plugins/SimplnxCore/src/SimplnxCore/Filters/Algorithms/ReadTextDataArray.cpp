@@ -46,8 +46,6 @@ ReadTextDataArray::ReadTextDataArray(DataStructure& dataStructure, const IFilter
 {
 }
 
-
-
 Result<> ReadTextDataArray::operator()()
 {
   const auto& inputFilePath = m_InputValues->InputFile;

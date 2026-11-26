@@ -77,8 +77,6 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 {
 }
 
-
-
 Result<> ComputeKernelAvgMisorientations::operator()()
 {
   const auto* featureIds = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);

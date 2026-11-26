@@ -213,8 +213,6 @@ ComputeKernelAvgMisorientationsDirect::ComputeKernelAvgMisorientationsDirect(Dat
 {
 }
 
-
-
 Result<> ComputeKernelAvgMisorientationsDirect::operator()()
 {
   if(Result<> validationResult = ValidateKernelAvgMisorientationsPhaseIndices(m_DataStructure, *m_InputValues); validationResult.invalid())

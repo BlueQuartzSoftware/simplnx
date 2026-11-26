@@ -234,7 +234,7 @@ public:
    *
    * The parser copies selectedGroupPath and infixEquation.
    */
-  ArrayCalculatorParser(const DataStructure& dataStructure, DataPath  selectedGroupPath, std::string  infixEquation, const std::atomic_bool& shouldCancel);
+  ArrayCalculatorParser(const DataStructure& dataStructure, DataPath selectedGroupPath, std::string infixEquation, const std::atomic_bool& shouldCancel);
   /**
    * @brief Destroys the equation parser.
    */

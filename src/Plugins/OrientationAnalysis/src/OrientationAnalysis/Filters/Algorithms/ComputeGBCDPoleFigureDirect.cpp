@@ -10,7 +10,6 @@
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <utility>
 
-
 using namespace nx::core;
 
 namespace
@@ -36,7 +35,7 @@ private:
   const std::vector<float32>& m_MisorientationRotation;
 
 public:
-  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, ebsdlib::LaueOps::Pointer  orientOps, const std::vector<float32>& gbcdDeltasArray,
+  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, ebsdlib::LaueOps::Pointer orientOps, const std::vector<float32>& gbcdDeltasArray,
                             const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const float64* gbcdPtr, int32 phaseOfInterest,
                             const std::vector<float32>& misorientationRotation)
   : m_PoleFigure(poleFigurePtr)
@@ -255,7 +254,6 @@ ComputeGBCDPoleFigureDirect::ComputeGBCDPoleFigureDirect(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeGBCDPoleFigureDirect::getCancel()

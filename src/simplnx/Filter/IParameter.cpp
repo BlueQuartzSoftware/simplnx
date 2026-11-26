@@ -44,7 +44,7 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
   }
   else
   {
-    warnings.push_back(Warning{.code=-1, .message=fmt::format("{}: Parameter key '{}' does not exist. Assuming version={}. To fix this, save the pipeline file.", name(), k_VersionKey, version)});
+    warnings.push_back(Warning{.code = -1, .message = fmt::format("{}: Parameter key '{}' does not exist. Assuming version={}. To fix this, save the pipeline file.", name(), k_VersionKey, version)});
   }
 
   nlohmann::json valueJson;
@@ -54,7 +54,7 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
   }
   else
   {
-    warnings.push_back(Warning{.code=-2, .message=fmt::format("{}: Parameter key '{}' does not exist. Assuming json is the current json object", name(), k_ValueKey, version)});
+    warnings.push_back(Warning{.code = -2, .message = fmt::format("{}: Parameter key '{}' does not exist. Assuming json is the current json object", name(), k_ValueKey, version)});
     valueJson = json;
   }
 

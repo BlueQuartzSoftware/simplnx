@@ -118,7 +118,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, imageGeomPath, {featureIdsPath}, -24501);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);

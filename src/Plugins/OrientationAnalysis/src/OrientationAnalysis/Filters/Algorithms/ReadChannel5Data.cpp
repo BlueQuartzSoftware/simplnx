@@ -67,7 +67,6 @@ ReadChannel5Data::ReadChannel5Data(DataStructure& dataStructure, const IFilter::
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 Result<> ReadChannel5Data::operator()()
 {

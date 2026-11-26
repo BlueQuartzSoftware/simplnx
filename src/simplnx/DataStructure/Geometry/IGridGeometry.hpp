@@ -17,7 +17,7 @@ public:
 
   IGridGeometry() = delete;
   IGridGeometry(const IGridGeometry&) = default;
-  IGridGeometry(IGridGeometry&&)  noexcept = default;
+  IGridGeometry(IGridGeometry&&) noexcept = default;
 
   IGridGeometry& operator=(const IGridGeometry&) = delete;
   IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;

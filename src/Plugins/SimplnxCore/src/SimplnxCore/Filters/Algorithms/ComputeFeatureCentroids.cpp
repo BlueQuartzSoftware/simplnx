@@ -96,8 +96,6 @@ ComputeFeatureCentroids::ComputeFeatureCentroids(DataStructure& dataStructure, c
 {
 }
 
-
-
 const std::atomic_bool& ComputeFeatureCentroids::getCancel()
 {
   return m_ShouldCancel;
@@ -229,7 +227,7 @@ Result<> ComputeFeatureCentroids::operator()()
   }
   if(m_InputValues->IsPeriodic)
   {
-    m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message="Checking for periodic data."});
+    m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Checking for periodic data."});
     // Reuse the range minima as a constant-time feature/axis-to-candidate lookup.
     std::array<std::vector<uint64>*, 3> rangeStores = {&rangeX, &rangeY, &rangeZ};
     const std::array<usize, 3> dims = {xPoints, yPoints, zPoints};
@@ -373,7 +371,7 @@ Result<> ComputeFeatureCentroids::operator()()
           occupancyScans++;
           if(std::has_single_bit(occupancyScans))
           {
-            m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message=fmt::format("ComputeFeatureCentroids completed {} periodic occupancy scan(s).", occupancyScans)});
+            m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = fmt::format("ComputeFeatureCentroids completed {} periodic occupancy scan(s).", occupancyScans)});
           }
         }
       }
@@ -462,7 +460,7 @@ Result<> ComputeFeatureCentroids::operator()()
           }
           centroidsBuf[fi] = static_cast<float32>(static_cast<double>(origin[candidate.Axis]) + (static_cast<double>(spacing[candidate.Axis]) * wrappedIndexCenter));
         }
-        m_MessageHandler.sendMessage({.type=IFilter::Message::Type::Info, .message="ComputeFeatureCentroids adjusted centroids of features that wrap the periodic boundary."});
+        m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "ComputeFeatureCentroids adjusted centroids of features that wrap the periodic boundary."});
       }
     }
   }

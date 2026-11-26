@@ -11,7 +11,7 @@
 namespace nx::core
 {
 template <class T>
-VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, NamesType  names)
+VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, NamesType names)
 : VectorParameterBase(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_Names(std::move(names))

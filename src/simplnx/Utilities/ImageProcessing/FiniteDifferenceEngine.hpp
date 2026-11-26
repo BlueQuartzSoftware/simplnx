@@ -110,7 +110,7 @@ inline FiniteDifferenceInteriorRange CreateFiniteDifferenceInteriorRange(usize d
   {
     return {};
   }
-  return {.begin=unsignedRadius, .end=dimension - unsignedRadius};
+  return {.begin = unsignedRadius, .end = dimension - unsignedRadius};
 }
 
 struct FiniteDifferenceResidentMemoryAllocation
@@ -271,7 +271,7 @@ inline FiniteDifference2DBufferPlan BuildFiniteDifference2DBufferPlan(usize nx, 
 // Curvature-flow update functor (radius 1, no global data). See the Parity model (itkCurvatureFlowFunction).
 struct CurvatureFlowFn
 {
-  static int64 radius() 
+  static int64 radius()
   {
     return 1;
   }
@@ -597,7 +597,7 @@ struct GradientAnisoFn
   bool gradientMagnitudeFixed = false;
   double fixedAvgGradMagSq = 0.0;
 
-  static int64 radius() 
+  static int64 radius()
   {
     return 1;
   }
@@ -705,7 +705,7 @@ struct CurvatureAnisoFn
   bool gradientMagnitudeFixed = false;
   double fixedAvgGradMagSq = 0.0;
 
-  static int64 radius() 
+  static int64 radius()
   {
     return 1;
   }

@@ -14,8 +14,6 @@ WriteGBCDTriangleData::WriteGBCDTriangleData(DataStructure& dataStructure, const
 {
 }
 
-
-
 const std::atomic_bool& WriteGBCDTriangleData::getCancel()
 {
   return m_ShouldCancel;

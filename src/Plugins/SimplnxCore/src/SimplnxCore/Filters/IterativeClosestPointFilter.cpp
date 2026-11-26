@@ -93,7 +93,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   if(numIterations < 1)
   {
     auto ss = fmt::format("Must perform at least 1 iteration. Current value: {}", numIterations);
-    return {.outputActions=MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformArrayPath);
@@ -108,7 +108,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, movingVertexPath, {});
   }
 
-  return {.outputActions=std::move(resultOutputActions)};
+  return {.outputActions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -19,7 +19,6 @@ ComputeKMedoids::ComputeKMedoids(DataStructure& dataStructure, const IFilter::Me
 
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeKMedoids::getCancel()
 {
