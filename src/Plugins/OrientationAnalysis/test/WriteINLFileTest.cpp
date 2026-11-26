@@ -342,7 +342,7 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[
   std::string line;
   while(std::getline(inputStream, line))
   {
-    if(line.rfind("# Symmetry_", 0) == 0)
+    if(line.starts_with("# Symmetry_"))
     {
       ++headerCount;
       REQUIRE(headerCount < numCells);

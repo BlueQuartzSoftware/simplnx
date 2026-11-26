@@ -723,7 +723,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress complet
   bool sawSuccess = false;
   for(const auto& message : messages)
   {
-    if(message.type == IFilter::Message::Type::Progress && message.message.find("Extracting Features:") == 0)
+    if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Extracting Features:"))
     {
       CHECK_FALSE(sawSuccess);
       CHECK(message.progress >= lastProgress);
@@ -762,7 +762,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does no
   const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
     recordingHandler.sendMessage(message);
     // reset() opens the throttle gate, so this callback deterministically precedes the last crop's preflight.
-    if(message.type == IFilter::Message::Type::Progress && message.message.find("Extracting Features:") == 0 && message.progress == 0)
+    if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Extracting Features:") && message.progress == 0)
     {
       cancel = true;
     }
@@ -777,7 +777,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does no
   for(const auto& message : messages)
   {
     CAPTURE(message.message);
-    if(message.type == IFilter::Message::Type::Progress && message.message.find("Extracting Features:") == 0)
+    if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Extracting Features:"))
     {
       CHECK(message.progress < 100);
     }

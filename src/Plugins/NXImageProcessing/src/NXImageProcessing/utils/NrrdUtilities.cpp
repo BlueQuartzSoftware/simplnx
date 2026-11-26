@@ -379,7 +379,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     return MakeErrorResult<NrrdMetadata>(-35701, fmt::format("NRRD file '{}' is empty or unreadable.", pathStr));
   }
   line = StripCR(line);
-  if(line.rfind("NRRD", 0) != 0)
+  if(!line.starts_with("NRRD"))
   {
     return MakeErrorResult<NrrdMetadata>(-35702, fmt::format("File '{}' is not a NRRD file (first line '{}' does not begin with 'NRRD').", pathStr, line));
   }
@@ -732,7 +732,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     // contains spaces (e.g. "data file: my scan.raw") is valid -- teem takes the
     // whole remainder of the line as one filename -- so it must NOT be misread as
     // a multi-file spec (the previous whitespace-count check did exactly that).
-    if(dfLower == "list" || dfLower.rfind("list ", 0) == 0 || dataFileField.find('%') != std::string::npos)
+    if(dfLower == "list" || dfLower.starts_with("list ") || dataFileField.find('%') != std::string::npos)
     {
       return MakeErrorResult<NrrdMetadata>(-35709, fmt::format("NRRD '{}': detached 'data file' LIST / multi-file / sprintf forms are not supported.", pathStr));
     }

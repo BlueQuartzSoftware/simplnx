@@ -432,7 +432,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before fi
       bool recognizedLabel = false;
       for(usize labelIndex = 0; labelIndex < labels.size(); labelIndex++)
       {
-        if(message.message.find(labels[labelIndex] + ":") == 0)
+        if(message.message.starts_with(labels[labelIndex] + ":"))
         {
           recognizedLabel = true;
           CHECK(fileNumbers[labelIndex] > completedFiles);

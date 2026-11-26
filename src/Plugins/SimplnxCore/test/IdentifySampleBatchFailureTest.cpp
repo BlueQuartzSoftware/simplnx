@@ -629,7 +629,7 @@ IFilter::MessageHandler Messages(FailureState& state, HandlerKind handler)
         throw PlaneFailure(303);
       }
     }
-    if(message.type == IFilter::Message::Type::Progress && message.message.rfind("Identifying Sample Slices: ", 0) == 0)
+    if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Identifying Sample Slices: "))
     {
       ++state.progressCalls;
       if(message.message == fmt::format("Identifying Sample Slices: {}/{}", state.primaryPlane, k_X))
@@ -1942,7 +1942,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   auto inputs = Inputs();
   inputs.SliceBySlicePlaneIndex = plane;
   const IFilter::MessageHandler messages{[&state](const IFilter::Message& message) {
-    if(message.type == IFilter::Message::Type::Progress && message.message.rfind("Identifying Sample Slices: ", 0) == 0)
+    if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Identifying Sample Slices: "))
     {
       state.sliceOrderMatches = state.sliceOrderMatches && message.message.starts_with(fmt::format("Identifying Sample Slices: {}/19", state.sliceMessages + 1));
       ++state.sliceMessages;
