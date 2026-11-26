@@ -149,7 +149,7 @@ Result<> WriteNodesAndElementsFiles::operator()()
     std::vector<std::string> arrayHeaders;
     if(m_InputValues->NumberNodes)
     {
-      arrayHeaders.push_back("NODE_NUM");
+      arrayHeaders.emplace_back("NODE_NUM");
     }
     arrayHeaders.insert(arrayHeaders.end(), {"X", "Y", "Z"});
 
@@ -167,9 +167,9 @@ Result<> WriteNodesAndElementsFiles::operator()()
     std::vector<std::string> arrayHeaders;
     if(m_InputValues->NumberElements)
     {
-      arrayHeaders.push_back("ELEMENT_NUM");
+      arrayHeaders.emplace_back("ELEMENT_NUM");
     }
-    arrayHeaders.push_back("NUM_VERTS_IN_ELEMENT");
+    arrayHeaders.emplace_back("NUM_VERTS_IN_ELEMENT");
     for(usize i = 0; i < cellsArray->getNumberOfComponents(); i++)
     {
       std::string vertexHeader = fmt::format("V{}_Index", i);

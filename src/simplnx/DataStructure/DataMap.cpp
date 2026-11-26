@@ -336,7 +336,7 @@ void DataMap::updateIds(const std::unordered_map<DataObject::IdType, DataObject:
 
     // Copy and remove updated values
     auto ptr = m_Map[updatedId.first];
-    movedValues.emplace_back(UpdatedValueType{updatedId.first, ptr});
+    movedValues.emplace_back(updatedId.first, ptr);
     m_Map.erase(updatedId.first);
   }
 

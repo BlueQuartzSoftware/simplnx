@@ -487,17 +487,17 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
         const auto token = ToLower(tok);
         if(token == "nan" || token == "+nan" || token == "-nan")
         {
-          spacings.push_back(std::nullopt);
+          spacings.emplace_back(std::nullopt);
           continue;
         }
         try
         {
           usize parsed = 0;
           const auto spacing = std::stod(tok, &parsed);
-          spacings.push_back(parsed == tok.size() ? spacing : std::nan(""));
+          spacings.emplace_back(parsed == tok.size() ? spacing : std::nan(""));
         } catch(const std::logic_error&)
         {
-          spacings.push_back(std::nan(""));
+          spacings.emplace_back(std::nan(""));
         }
       }
     }

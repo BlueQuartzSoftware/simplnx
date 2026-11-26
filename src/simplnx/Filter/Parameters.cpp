@@ -102,7 +102,7 @@ void Parameters::linkParameters(std::string groupKey, std::string_view childKey,
     throw std::invalid_argument(fmt::format("Parameters::linkParameters(...): Group '{}' cannot be a child of group '{}'", childKey, groupKey));
   }
 
-  MapAt(m_ParamGroups, childKey, "Parameters::linkParameters(...): Key '{}' does not exist").push_back({std::move(groupKey), std::move(associatedValue)});
+  MapAt(m_ParamGroups, childKey, "Parameters::linkParameters(...): Key '{}' does not exist").emplace_back(std::move(groupKey), std::move(associatedValue));
 }
 
 bool Parameters::isParameterActive(std::string_view key, const Arguments& args) const

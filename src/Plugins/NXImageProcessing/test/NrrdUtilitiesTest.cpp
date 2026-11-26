@@ -586,8 +586,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_raw.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: detached_raw.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: detached_raw.rawdata");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "detached_raw.rawdata", raw);
     readAndCheck(hdr);
   }
@@ -595,8 +595,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_gz.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: gzip");
-    lines.push_back("data file: detached_gz.rawdata.gz");
+    lines.emplace_back("encoding: gzip");
+    lines.emplace_back("data file: detached_gz.rawdata.gz");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "detached_gz.rawdata.gz", GzipCompress(raw));
     readAndCheck(hdr);
   }
@@ -604,8 +604,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_spaces.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: my scan data.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: my scan data.rawdata");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "my scan data.rawdata", raw);
     readAndCheck(hdr);
   }
@@ -613,8 +613,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_list.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: LIST");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: LIST");
     WriteNhdrHeaderOnly(hdr, lines);
     const auto result = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(result.invalid());
@@ -624,8 +624,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_missing.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: does_not_exist_zzz.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: does_not_exist_zzz.rawdata");
     WriteNhdrHeaderOnly(hdr, lines);
     const auto result = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(result.invalid());

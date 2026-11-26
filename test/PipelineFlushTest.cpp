@@ -477,15 +477,15 @@ struct CompletionTrace
    */
   CompletionTrace(Pipeline& pipeline, PipelineFilter* firstNode)
   {
-    connections.push_back(pipeline.getPipelineRunStateSignal().connect([this](AbstractPipelineNode*, RunState state) { pipelineStates.push_back(state); }));
-    connections.push_back(pipeline.getCancelledSignal().connect([this]() { ++cancelledCalls; }));
-    connections.push_back(pipeline.getFilterFaultDetailSignal().connect(
+    connections.emplace_back(pipeline.getPipelineRunStateSignal().connect([this](AbstractPipelineNode*, RunState state) { pipelineStates.push_back(state); }));
+    connections.emplace_back(pipeline.getCancelledSignal().connect([this]() { ++cancelledCalls; }));
+    connections.emplace_back(pipeline.getFilterFaultDetailSignal().connect(
         [this](AbstractPipelineNode*, int32 index, const WarningCollection& warnings, const ErrorCollection& errors) { rootDetails.push_back({index, warnings, errors}); }));
     if(firstNode != nullptr)
     {
-      connections.push_back(firstNode->getFilterRunStateSignal().connect([this](AbstractPipelineNode*, int32, RunState state) { nodeStates.push_back(state); }));
-      connections.push_back(firstNode->getFilterUpdateSignal().connect([this](AbstractPipelineNode*, int32, const std::string& message) { updates.push_back(message); }));
-      connections.push_back(firstNode->getFilterFaultDetailSignal().connect(
+      connections.emplace_back(firstNode->getFilterRunStateSignal().connect([this](AbstractPipelineNode*, int32, RunState state) { nodeStates.push_back(state); }));
+      connections.emplace_back(firstNode->getFilterUpdateSignal().connect([this](AbstractPipelineNode*, int32, const std::string& message) { updates.push_back(message); }));
+      connections.emplace_back(firstNode->getFilterFaultDetailSignal().connect(
           [this](AbstractPipelineNode*, int32 index, const WarningCollection& warnings, const ErrorCollection& errors) { nodeDetails.push_back({index, warnings, errors}); }));
     }
   }

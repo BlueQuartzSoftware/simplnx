@@ -113,7 +113,7 @@ SpMat sliceSparse(const SpMat& mat, const matindex& rowIdx, const matindex& colI
       auto rowFound = rowMap.find(static_cast<int>(it.row()));
       if(rowFound != rowMap.end())
       {
-        triplets.push_back(Triplet(rowFound->second, colFound->second, it.value()));
+        triplets.emplace_back(rowFound->second, colFound->second, it.value());
       }
     }
   }
@@ -266,12 +266,12 @@ public:
     {
       int l = it->first.first;
       int m = it->first.second;
-      tripletList.push_back(Triplet(l, m, -1.0));
-      tripletList.push_back(Triplet(m, l, -1.0));
+      tripletList.emplace_back(l, m, -1.0);
+      tripletList.emplace_back(m, l, -1.0);
     }
     for(int i = 0; i < static_cast<int>(m_DiagCount.size()); i++)
     {
-      tripletList.push_back(Triplet(i, i, m_DiagCount[i]));
+      tripletList.emplace_back(i, i, m_DiagCount[i]);
     }
 
     SpMat gl(static_cast<int>(m_Unique.size()), static_cast<int>(m_Unique.size()));
@@ -307,7 +307,7 @@ private:
       if(m_FreeBoundary[n].second == start)
       {
         thisSec.push_back(n);
-        m_FreeBoundarySegments.push_back(std::make_pair(thisSec[0], thisSec[1]));
+        m_FreeBoundarySegments.emplace_back(thisSec[0], thisSec[1]);
         thisSec.clear();
       }
       else if(thisSec.empty())
@@ -397,7 +397,7 @@ private:
     while(!windingDict.empty())
     {
       int next = it->second.back();
-      outList.push_back(std::make_pair(it->first, next));
+      outList.emplace_back(it->first, next);
       it->second.pop_back();
       if(it->second.empty())
       {
@@ -423,10 +423,10 @@ SpMat laplacian2D(int n, const std::string& type = "serial")
   tripletList.reserve(3 * n);
   for(int i = 0; i < n; i++)
   {
-    tripletList.push_back(Triplet(i, i, -1.0));
+    tripletList.emplace_back(i, i, -1.0);
     if(i != n - 1)
     {
-      tripletList.push_back(Triplet(i, i + 1, 1.0));
+      tripletList.emplace_back(i, i + 1, 1.0);
     }
   }
   SpMat temp(n, n);
@@ -459,11 +459,11 @@ std::tuple<SpMat, SpMat> analyzeLaplacian(const SpMat& gl)
     {
       if(it.value() < -0.5)
       {
-        at.push_back(Triplet(static_cast<int>(it.row()), static_cast<int>(it.col()), it.value()));
+        at.emplace_back(static_cast<int>(it.row()), static_cast<int>(it.col()), it.value());
       }
       else if(it.value() > 0.5)
       {
-        dt.push_back(Triplet(static_cast<int>(it.row()), static_cast<int>(it.col()), it.value()));
+        dt.emplace_back(static_cast<int>(it.row()), static_cast<int>(it.col()), it.value());
       }
     }
   }

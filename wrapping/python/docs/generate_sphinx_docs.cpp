@@ -596,13 +596,13 @@ std::vector<std::string> ConvertFilterDoc(const std::filesystem::path& docFilePa
     if(nx::core::StringUtilities::starts_with(line, "## Example Pipelines"))
     {
       extractLines = true;
-      outputLines.push_back("@PARAMETER_TABLE@");
+      outputLines.emplace_back("@PARAMETER_TABLE@");
     }
 
     if(!extractLines && nx::core::StringUtilities::starts_with(line, "## License & Copyright"))
     {
       extractLines = true;
-      outputLines.push_back("@PARAMETER_TABLE@");
+      outputLines.emplace_back("@PARAMETER_TABLE@");
     }
     if(extractLines)
     {

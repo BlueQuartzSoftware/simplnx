@@ -403,7 +403,7 @@ PipelineFilter::RenamedPaths findAllRenamePaths(const std::vector<DataPath>& old
     {
       if(checkIfRename(createdPath, oldPath))
       {
-        renamedPairs.push_back({createdPath, oldPath});
+        renamedPairs.emplace_back(createdPath, oldPath);
       }
     }
   }
