@@ -157,7 +157,7 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     }
   }
 
-  auto* pFeatureAM = dataStructure.getDataAs<AttributeMatrix>(pFeatureVolumesPath.getParent());
+  const auto* pFeatureAM = dataStructure.getDataAs<AttributeMatrix>(pFeatureVolumesPath.getParent());
   if(pFeatureAM == nullptr)
   {
     return MakePreflightErrorResult(-15673, fmt::format("Feature Volumes [{}] must be stored in an Attribute Matrix.", pFeatureVolumesPath.toString()));
@@ -199,7 +199,7 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     }
   }
 
-  auto* pParentAM = dataStructure.getDataAs<AttributeMatrix>(pParentVolumesPath.getParent());
+  const auto* pParentAM = dataStructure.getDataAs<AttributeMatrix>(pParentVolumesPath.getParent());
   if(pParentAM == nullptr)
   {
     return MakePreflightErrorResult(-15670, fmt::format("Parent Volumes [{}] must be stored in an Attribute Matrix.", pParentVolumesPath.toString()));

@@ -101,8 +101,8 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  auto clusterIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  const auto *clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  const auto *clusterIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
   if(clusterArray->getNumberOfTuples() != clusterIds->getNumberOfTuples())
   {
     return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArray->getName(), clusterArray->getNumberOfTuples(),

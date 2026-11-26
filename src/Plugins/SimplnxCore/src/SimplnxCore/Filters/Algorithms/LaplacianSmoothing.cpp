@@ -633,7 +633,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     return result;
   }
 
-  auto inode2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
+  auto *inode2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
   if(nullptr != inode2DPtr)
   {
     //  Generate the Unique Edges

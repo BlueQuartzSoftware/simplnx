@@ -375,8 +375,8 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
   const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
-  auto& cellPhasesStore = cellPhases.getDataStoreRef();
-  auto& quatsStore = quats.getDataStoreRef();
+  const auto& cellPhasesStore = cellPhases.getDataStoreRef();
+  const auto& quatsStore = quats.getDataStoreRef();
 
   // The local ensemble cache avoids hot-loop store access.
   const auto& crystalStructuresStore = crystalStructuresArray.getDataStoreRef();

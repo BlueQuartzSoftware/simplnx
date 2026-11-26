@@ -453,7 +453,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   }
 
   // Unknown keys become warnings instead of preventing compatible pipeline loads.
-  for(auto& [key, val] : json.items())
+  for(const auto& [key, val] : json.items())
   {
     if(key != "parameters_version" && !params.contains(key))
     {

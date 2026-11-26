@@ -131,7 +131,7 @@ BoundingBox3Df INodeGeometry0D::getBoundingBox() const
 
   try
   {
-    auto& vertexListStore = vertexList.getDataStoreRef();
+    const auto& vertexListStore = vertexList.getDataStoreRef();
 
     for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
     {
@@ -160,7 +160,7 @@ Result<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
   try
   {
     const IGeometry::SharedVertexList& vertexList = getVerticesRef();
-    auto& vertexListStore = vertexList.getDataStoreRef();
+    const auto& vertexListStore = vertexList.getDataStoreRef();
 
     std::set<float32> pointSet;
     for(usize tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
@@ -202,7 +202,7 @@ void INodeGeometry0D::setVertexCoordinate(usize vertId, const Point3D<float32>& 
 
 Point3D<float32> INodeGeometry0D::getVertexCoordinate(usize vertId) const
 {
-  auto& vertices = getVerticesRef();
+  const auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
   Point3D<float32> coordinate;
   for(usize i = 0; i < 3; i++)

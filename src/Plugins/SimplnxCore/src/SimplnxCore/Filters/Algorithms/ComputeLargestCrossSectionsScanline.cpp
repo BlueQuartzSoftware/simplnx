@@ -32,7 +32,7 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdsStore = featureIds.getDataStoreRef();
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
   auto& largestCrossSectStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath).getDataStoreRef();
   const usize numFeatures = largestCrossSectStore.getNumberOfTuples();
 

@@ -108,7 +108,7 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   ShapeType tupleDims = {};
 
-  auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
+  const auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
   if(parentAM == nullptr)
   {
     if(!useDims)

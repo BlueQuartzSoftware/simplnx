@@ -561,7 +561,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
                   fmt::format("The data object at data path '{}' is not a node geometry.  Only node geometries are supported by this filter.", inputGeometryPath.toString()))};
     }
 
-    auto* verticesArray = iNodeGeomPtr->getVertices();
+    const auto* verticesArray = iNodeGeomPtr->getVertices();
     if(verticesArray == nullptr)
     {
       // There are no vertices, which means this is not a valid node geometry
@@ -569,7 +569,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
                                                               fmt::format("The chosen node geometries do not have a shared vertex array.  All node geometries MUST have a shared vertex array."))};
     }
 
-    auto& iGeom = *iGeomPtr;
+    const auto& iGeom = *iGeomPtr;
 
     // If the optional has not been set yet, set it
     if(!geometryTypeOpt.has_value())

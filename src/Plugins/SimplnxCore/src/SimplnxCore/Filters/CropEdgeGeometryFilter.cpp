@@ -171,7 +171,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   const auto featureAmPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
   const auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_EdgeFeatureIdsPath_Key);
 
-  auto& srcEdgeGeom = dataStructure.getDataRefAs<EdgeGeom>(srcEdgeGeomPath);
+  const auto& srcEdgeGeom = dataStructure.getDataRefAs<EdgeGeom>(srcEdgeGeomPath);
 
   if(!pCropXDim && !pCropYDim && !pCropZDim)
   {
@@ -232,10 +232,10 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     const AttributeMatrix& selectedVertexData = *srcEdgeGeomPtr->getVertexAttributeMatrix();
     const AttributeMatrix& selectedEdgeData = *srcEdgeGeomPtr->getEdgeAttributeMatrix();
     {
-      auto& vertexAttrMatrix = srcEdgeGeom.getVertexAttributeMatrixRef();
-      auto& edgeAttrMatrix = srcEdgeGeom.getEdgeAttributeMatrixRef();
-      auto& verticesArray = srcEdgeGeom.getVerticesRef();
-      auto& edgesArray = srcEdgeGeom.getEdgesRef();
+      const auto& vertexAttrMatrix = srcEdgeGeom.getVertexAttributeMatrixRef();
+      const auto& edgeAttrMatrix = srcEdgeGeom.getEdgeAttributeMatrixRef();
+      const auto& verticesArray = srcEdgeGeom.getVerticesRef();
+      const auto& edgesArray = srcEdgeGeom.getEdgesRef();
       resultOutputActions.value().appendAction(
           std::make_unique<CreateEdgeGeometryAction>(destEdgeGeomPath, 1, 1, vertexAttrMatrix.getName(), edgeAttrMatrix.getName(), verticesArray.getName(), edgesArray.getName()));
 

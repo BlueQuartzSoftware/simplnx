@@ -217,7 +217,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   if(!pUseCustomOutputType)
   {
     // Create Feature Ids array with the same type as the input Face Labels array, but always single component
-    auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
+    const auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
     outputType = faceLabelsArray.getDataType();
   }
   DataPath featIdsPath = cellAttributeMatrixPath.createChildPath(pFeatureIdsArrayNameValue);

@@ -107,8 +107,8 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
   {
     return {};
   }
-  auto endPos = str.end();
-  auto startPos = str.begin();
+  const auto *endPos = str.end();
+  const auto *startPos = str.begin();
 
   std::vector<std::string> tokens;
   tokens.reserve(str.size() / 2);

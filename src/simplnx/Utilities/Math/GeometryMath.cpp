@@ -34,7 +34,7 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D
     return {ll, ur}; // will be invalid
   }
 
-  auto& vertexListStore = vertexList.getDataStoreRef();
+  const auto& vertexListStore = vertexList.getDataStoreRef();
 
   for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
   {

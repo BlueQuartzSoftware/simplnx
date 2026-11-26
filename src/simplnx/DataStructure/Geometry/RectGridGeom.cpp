@@ -604,9 +604,9 @@ Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx[3]) const
 
 Point3D<float32> RectGridGeom::getPlaneCoordsf(usize x, usize y, usize z) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float32> coords;
   coords[0] = (*xBnds)[x];
@@ -621,9 +621,9 @@ Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx) const
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float32> coords;
   coords[0] = (*xBnds)[column];
@@ -634,9 +634,9 @@ Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx) const
 
 Point3D<float64> RectGridGeom::getPlaneCoords(usize idx[3]) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float64> coords;
   coords[0] = static_cast<float64>((*xBnds)[idx[0]]);
@@ -647,9 +647,9 @@ Point3D<float64> RectGridGeom::getPlaneCoords(usize idx[3]) const
 
 Point3D<float64> RectGridGeom::getPlaneCoords(usize x, usize y, usize z) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float64> coords;
   coords[0] = static_cast<float64>((*xBnds)[x]);
@@ -664,9 +664,9 @@ Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float64> coords;
   coords[0] = static_cast<float64>((*xBnds)[column]);
@@ -677,9 +677,9 @@ Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
 
 Point3D<float32> RectGridGeom::getCoordsf(usize idx[3]) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float32> coords;
   coords[0] = 0.5f * ((*xBnds)[idx[0]] + (*xBnds)[idx[0] + 1]);
@@ -690,9 +690,9 @@ Point3D<float32> RectGridGeom::getCoordsf(usize idx[3]) const
 
 Point3D<float32> RectGridGeom::getCoordsf(usize x, usize y, usize z) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float32> coords;
   coords[0] = 0.5f * ((*xBnds)[x] + (*xBnds)[x + 1]);
@@ -707,9 +707,9 @@ Point3D<float32> RectGridGeom::getCoordsf(usize idx) const
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float32> coords;
   coords[0] = 0.5f * ((*xBnds)[column] + (*xBnds)[column + 1]);
@@ -720,9 +720,9 @@ Point3D<float32> RectGridGeom::getCoordsf(usize idx) const
 
 Point3D<float64> RectGridGeom::getCoords(usize idx[3]) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float64> coords;
   coords[0] = 0.5 * (static_cast<float64>((*xBnds)[idx[0]]) + (*xBnds)[idx[0] + 1]);
@@ -733,9 +733,9 @@ Point3D<float64> RectGridGeom::getCoords(usize idx[3]) const
 
 Point3D<float64> RectGridGeom::getCoords(usize x, usize y, usize z) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float64> coords;
   coords[0] = 0.5 * (static_cast<float64>((*xBnds)[x]) + (*xBnds)[x + 1]);
@@ -750,9 +750,9 @@ Point3D<float64> RectGridGeom::getCoords(usize idx) const
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto *xBnds = getXBounds();
+  const auto *yBnds = getYBounds();
+  const auto *zBnds = getZBounds();
 
   Point3D<float64> coords;
   coords[0] = 0.5 * (static_cast<float64>((*xBnds)[column]) + (*xBnds)[column + 1]);
@@ -763,9 +763,9 @@ Point3D<float64> RectGridGeom::getCoords(usize idx) const
 
 std::optional<usize> RectGridGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
 {
-  auto& xBnds = *getXBounds();
-  auto& yBnds = *getYBounds();
-  auto& zBnds = *getZBounds();
+  const auto& xBnds = *getXBounds();
+  const auto& yBnds = *getYBounds();
+  const auto& zBnds = *getZBounds();
 
   if(xCoord < xBnds.front() || xCoord >= xBnds.back())
   {
@@ -793,9 +793,9 @@ std::optional<usize> RectGridGeom::getIndex(float32 xCoord, float32 yCoord, floa
 
 std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
 {
-  auto& xBnds = *getXBounds();
-  auto& yBnds = *getYBounds();
-  auto& zBnds = *getZBounds();
+  const auto& xBnds = *getXBounds();
+  const auto& yBnds = *getYBounds();
+  const auto& zBnds = *getZBounds();
 
   if(xCoord < xBnds.front() || xCoord >= xBnds.back())
   {

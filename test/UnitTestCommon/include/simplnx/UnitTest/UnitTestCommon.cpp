@@ -902,11 +902,11 @@ void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& imageGeomDim
 void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataStructure, const DataPath& exemplarAttributeMatrix, const DataStructure& computedDataStructure,
                                               const DataPath& computedAttributeMatrix, bool allMustMatch)
 {
-  auto& exemplarAttrMatr = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
+  const auto& exemplarAttrMatr = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
   // std::vector<DataPath> selectedCellArrays;
 
   // Each exemplar child selects the corresponding computed array by name.
-  for(auto& exemplarArrayPath : exemplarAttrMatr)
+  for(const auto& exemplarArrayPath : exemplarAttrMatr)
   {
 
     DataPath exemplarDataArrayPath = exemplarAttributeMatrix.createChildPath(exemplarArrayPath.second->getName());
@@ -999,11 +999,11 @@ void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataS
 // -----------------------------------------------------------------------------
 void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath& attributeMatrix, const std::string& exemplarDataContainerName)
 {
-  auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
+  const auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
   std::vector<DataPath> selectedCellArrays;
 
   // Snapshot the child paths before the comparison starts.
-  for(auto& child : cellDataGroup)
+  for(const auto& child : cellDataGroup)
   {
     selectedCellArrays.push_back(attributeMatrix.createChildPath(child.second->getName()));
   }

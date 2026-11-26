@@ -680,7 +680,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: SIMPL Backward
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

@@ -195,7 +195,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   for(const auto& data_array : copyVertexPaths)
   {
     copiedArrays.push_back(data_array);
-    auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
+    const auto *targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
@@ -220,7 +220,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   for(const auto& data_array : copyTrianglePaths)
   {
     copiedArrays.push_back(data_array);
-    auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
+    const auto *targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());

@@ -125,7 +125,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
   ShapeType compDims = std::vector<usize>{numComponents};
   ShapeType tupleDims = {};
 
-  auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
+  const auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
   if(parentAM == nullptr)
   {
     if(!useDims)

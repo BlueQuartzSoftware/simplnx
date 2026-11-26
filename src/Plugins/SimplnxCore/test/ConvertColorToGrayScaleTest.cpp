@@ -276,9 +276,9 @@ void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructur
 {
   DataPath arrayName({m_GeomName});
   arrayName = arrayName.createChildPath(m_outputArrayPrefix + m_DataArrayName);
-  auto* testArray = dataStructure.getDataAs<UInt8Array>(arrayName);
+  const auto* testArray = dataStructure.getDataAs<UInt8Array>(arrayName);
   REQUIRE(testArray != nullptr);
-  auto& testData = testArray->getDataStoreRef();
+  const auto& testData = testArray->getDataStoreRef();
 
   const std::vector<uint8>& colorArray{algorithmMap[algoMapIndex]};
 
@@ -492,7 +492,7 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScaleFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

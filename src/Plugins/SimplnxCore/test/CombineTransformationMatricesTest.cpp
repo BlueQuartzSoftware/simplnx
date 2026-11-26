@@ -102,8 +102,8 @@ void CreateTestVertexGeometry(DataStructure& dataStructure, const std::string& g
 
 void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemplaryGeomPath, const DataPath& resultGeomPath)
 {
-  auto exemplaryGeom = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
-  auto resultGeom = dataStructure.getDataAs<ImageGeom>(resultGeomPath);
+  const auto *exemplaryGeom = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
+  const auto *resultGeom = dataStructure.getDataAs<ImageGeom>(resultGeomPath);
   UnitTest::CompareImageGeometry(exemplaryGeom, resultGeom, UnitTest::EPSILON);
 
   REQUIRE_NOTHROW(exemplaryGeom->getCellDataRef());
@@ -189,8 +189,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  auto stepByStepGeom = dataStructure.getDataAs<ImageGeom>(k_StepByStepGeomPath);
-  auto combinedGeom = dataStructure.getDataAs<ImageGeom>(k_CombinedGeomPath);
+  auto *stepByStepGeom = dataStructure.getDataAs<ImageGeom>(k_StepByStepGeomPath);
+  auto *combinedGeom = dataStructure.getDataAs<ImageGeom>(k_CombinedGeomPath);
   UnitTest::CompareImageGeometry(stepByStepGeom, combinedGeom);
 
   REQUIRE_NOTHROW(stepByStepGeom->getCellDataRef());
@@ -435,8 +435,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  auto stepByStepGeom = dataStructure.getDataAs<VertexGeom>(k_StepByStepGeomPath);
-  auto combinedGeom = dataStructure.getDataAs<VertexGeom>(k_CombinedGeomPath);
+  auto *stepByStepGeom = dataStructure.getDataAs<VertexGeom>(k_StepByStepGeomPath);
+  auto *combinedGeom = dataStructure.getDataAs<VertexGeom>(k_CombinedGeomPath);
 
   REQUIRE_NOTHROW(stepByStepGeom->getVertexAttributeMatrixRef());
   REQUIRE_NOTHROW(combinedGeom->getVertexAttributeMatrixRef());

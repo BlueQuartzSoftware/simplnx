@@ -298,7 +298,7 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() co
   if(parentPipeline->isEmpty())
   {
     auto name = parentPipeline->getName();
-    auto filterList = parentPipeline->getFilterList();
+    auto *filterList = parentPipeline->getFilterList();
     return std::make_unique<Pipeline>(name, filterList);
   }
 

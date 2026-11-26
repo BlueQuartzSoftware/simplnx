@@ -181,7 +181,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   const SizeVec3 imageDims = imageGeomRef.getDimensions();
   ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
 
-  auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
+  const auto *vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
   std::vector<DataPath> dataArrays = {vertexGeomPath.createChildPath(vertexGeom->getVertices()->getName())};
 
   // Create flat DataArrays for interpolated arrays (output type = float64)
@@ -189,7 +189,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(interpolatePath);
 
-    auto srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(interpolatePath);
+    const auto *srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(interpolatePath);
     if(srcDataArrayPtr->getDataType() == DataType::boolean)
     {
       return MakePreflightErrorResult(-205, fmt::format("Boolean array '{}' cannot be selected for interpolation. Select a numeric array.", interpolatePath.toString()));
@@ -251,7 +251,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(copyPath);
 
-    auto srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(copyPath);
+    const auto *srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(copyPath);
     if(srcDataArrayPtr->getDataType() == DataType::boolean)
     {
       return MakePreflightErrorResult(-205, fmt::format("Boolean array '{}' cannot be selected for copying. Select a numeric array.", copyPath.toString()));

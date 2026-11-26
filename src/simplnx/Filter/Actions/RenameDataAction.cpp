@@ -77,7 +77,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
   {
     return MakeErrorResult(k_InvalidNewName, fmt::format("{}New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", prefix, m_NewName, m_Path.toString()));
   }
-  auto dataObject = dataStructure.getData(m_Path);
+  auto *dataObject = dataStructure.getData(m_Path);
   if(dataObject == nullptr)
   {
     std::string ss = fmt::format("{}Source DataPath '{}' does not exist to rename to {}", prefix, m_Path.toString(), m_NewName);

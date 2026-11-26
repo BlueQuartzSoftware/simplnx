@@ -238,8 +238,8 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
   // Local buffers use bulk reads for both in-memory and OOC stores.
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& quatsStore = quats.getDataStoreRef();
-  auto& cellPhasesStore = cellPhases.getDataStoreRef();
+  const auto& quatsStore = quats.getDataStoreRef();
+  const auto& cellPhasesStore = cellPhases.getDataStoreRef();
 
   const AbstractDataStore<uint8>* maskUInt8StorePtr = nullptr;
   const AbstractDataStore<bool>* maskBoolStorePtr = nullptr;

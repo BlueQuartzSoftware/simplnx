@@ -212,7 +212,7 @@ Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArra
 
   std::vector<DataPath> dataPaths;
 
-  for(auto& iter : json)
+  for(const auto& iter : json)
   {
     auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
     if(dataContainerNameResult.invalid())

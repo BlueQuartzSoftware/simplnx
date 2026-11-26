@@ -720,7 +720,7 @@ struct ComputeHistogramFunctor
     {
       return countsResult;
     }
-    const auto maxElement = std::max_element(counts.get(), counts.get() + numBins);
+    auto *const maxElement = std::max_element(counts.get(), counts.get() + numBins);
     mostPopulatedStore.setComponent(0, 0, static_cast<uint64>(std::distance(counts.get(), maxElement)));
     mostPopulatedStore.setComponent(0, 1, *maxElement);
 

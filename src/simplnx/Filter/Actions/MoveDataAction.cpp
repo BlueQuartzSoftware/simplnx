@@ -33,7 +33,7 @@ MoveDataAction::~MoveDataAction() noexcept = default;
 Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "MoveDataAction: ";
-  auto dataObject = dataStructure.getData(m_Path);
+  auto *dataObject = dataStructure.getData(m_Path);
   if(dataObject == nullptr)
   {
     return MakeErrorResult(k_MissingDataObjectCode, fmt::format("{}Could not find DataObject at '{}'", prefix, m_Path.toString()));

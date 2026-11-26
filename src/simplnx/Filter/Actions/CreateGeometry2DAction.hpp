@@ -104,13 +104,13 @@ public:
       return MakeErrorResult(-5504, fmt::format("{}CreateGeometry2DAction: Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
     }
 
-    const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
+    auto *const vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
     {
       return MakeErrorResult(-5505, fmt::format("{}CreateGeometry2DAction: Could not find vertices array at path '{}'", prefix, m_InputVertices.toString()));
     }
 
-    const auto faces = dataStructure.getDataAs<DataArray<MeshIndexType>>(m_InputFaces);
+    auto *const faces = dataStructure.getDataAs<DataArray<MeshIndexType>>(m_InputFaces);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && faces == nullptr)
     {
       return MakeErrorResult(-5506, fmt::format("{}CreateGeometry2DAction: Could not find faces array at path '{}'", prefix, m_InputFaces.toString()));

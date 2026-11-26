@@ -60,7 +60,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
   uint64& zMax = bounds.zMax;
   uint64& zMin = bounds.zMin;
 
-  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+  const auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
   {
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
     std::string cropOptionsStr = "This filter will crop the image in the following dimension(s):  ";

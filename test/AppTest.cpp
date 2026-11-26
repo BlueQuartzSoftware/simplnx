@@ -274,7 +274,7 @@ TEST_CASE("Application::getPlugin", "[Application]")
   {
     // Create a random UUID that should not exist
     Uuid randomUuid = Uuid::FromString("00000000-0000-0000-0000-000000000000").value();
-    auto* plugin = app->getPlugin(randomUuid);
+    const auto* plugin = app->getPlugin(randomUuid);
     REQUIRE(plugin == nullptr);
   }
 
@@ -285,7 +285,7 @@ TEST_CASE("Application::getPlugin", "[Application]")
     {
       auto* firstPlugin = *plugins.begin();
       auto uuid = firstPlugin->getId();
-      auto* foundPlugin = app->getPlugin(uuid);
+      const auto* foundPlugin = app->getPlugin(uuid);
       REQUIRE(foundPlugin != nullptr);
       REQUIRE(foundPlugin == firstPlugin);
     }

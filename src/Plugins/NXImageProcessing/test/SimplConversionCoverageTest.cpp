@@ -180,7 +180,7 @@ TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixtu
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   const NXImageProcessingPlugin plugin;
   const AbstractPlugin::SIMPLMapType simplMap = plugin.getSimplToSimplnxMap();

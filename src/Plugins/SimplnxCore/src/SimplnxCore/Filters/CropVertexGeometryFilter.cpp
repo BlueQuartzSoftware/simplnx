@@ -151,7 +151,7 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     }
   }
 
-  auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
+  const auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
   if(vertexAM == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())),
@@ -165,7 +165,7 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 
   for(auto&& targetArrayPath : targetArrays)
   {
-    auto& targetArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
+    const auto& targetArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
 
     DataType type = targetArray.getDataType();
     auto tDims = targetArray.getNumberOfTuples();

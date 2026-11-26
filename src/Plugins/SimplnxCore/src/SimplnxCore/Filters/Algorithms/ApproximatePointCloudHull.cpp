@@ -211,7 +211,7 @@ Result<> ApproximatePointCloudHull::operator()()
     }
   }
   auto* hullVerts = hull->getVertices();
-  auto tmpVertData = tmpVerts.data();
+  auto *tmpVertData = tmpVerts.data();
   for(usize i = 0; i < hull->getNumberOfVertices() * 3; i++)
   {
     (*hullVerts)[i] = tmpVertData[i];

@@ -19,7 +19,7 @@ PYBIND11_MODULE(orientationanalysis, mod)
 
   auto& internals = Internals::Instance();
 
-  auto* plugin = internals.addPlugin<OrientationAnalysisPlugin>();
+  const auto* plugin = internals.addPlugin<OrientationAnalysisPlugin>();
 
   auto h5EbsdReaderParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ReadH5EbsdFileParameter);
   auto oemEbsdScanSelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, OEMEbsdScanSelectionParameter);

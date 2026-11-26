@@ -71,8 +71,8 @@ Result<> ComputeCAxisLocations::operator()()
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
 
-  auto& quatsStoreRef = quatsArrayRef.getDataStoreRef();
-  auto& cellPhasesStoreRef = cellPhasesArrayRef.getDataStoreRef();
+  const auto& quatsStoreRef = quatsArrayRef.getDataStoreRef();
+  const auto& cellPhasesStoreRef = cellPhasesArrayRef.getDataStoreRef();
   auto& cAxisLocationsStoreRef = cAxisLocationsArrayRef.getDataStoreRef();
 
   for(usize chunkStart = 0; chunkStart < totalPoints; chunkStart += k_ChunkSize)

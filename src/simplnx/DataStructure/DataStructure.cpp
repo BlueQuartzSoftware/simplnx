@@ -287,7 +287,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
 
 std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType identifier) const
 {
-  auto* dataObject = getData(identifier);
+  const auto* dataObject = getData(identifier);
   if(dataObject == nullptr)
   {
     return {};
@@ -501,7 +501,7 @@ std::shared_ptr<const DataObject> DataStructure::getSharedData(DataObject::IdTyp
 
 std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path)
 {
-  auto dataObject = getData(path);
+  auto *dataObject = getData(path);
   if(dataObject == nullptr)
   {
     return nullptr;
@@ -511,7 +511,7 @@ std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path)
 
 std::shared_ptr<const DataObject> DataStructure::getSharedData(const DataPath& path) const
 {
-  auto dataObject = getData(path);
+  const auto *dataObject = getData(path);
   if(dataObject == nullptr)
   {
     return nullptr;
@@ -569,7 +569,7 @@ bool DataStructure::removeData(DataObject* data)
   }
   for(DataObject::IdType parentId : parentIds)
   {
-    auto parent = getDataAs<BaseGroup>(parentId);
+    auto *parent = getDataAs<BaseGroup>(parentId);
     if(!parent->remove(data))
     {
       return false;
@@ -594,7 +594,7 @@ std::vector<DataObject*> DataStructure::getTopLevelData() const
 {
   std::vector<DataObject*> topLevel(m_RootGroup.getSize(), nullptr);
   usize index = 0;
-  for(auto& iter : m_RootGroup)
+  for(const auto& iter : m_RootGroup)
   {
     auto obj = iter.second;
     topLevel[index++] = (obj.get());
@@ -710,7 +710,7 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
     return insertIntoRoot(dataObject);
   }
 
-  auto parentGroup = getDataAs<BaseGroup>(dataPath);
+  auto *parentGroup = getDataAs<BaseGroup>(dataPath);
   return insertIntoParent(dataObject, parentGroup);
 }
 
@@ -1261,7 +1261,7 @@ void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObjec
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)
 {
   auto& target = m_DataObjects[targetId];
-  auto newParent = dynamic_cast<BaseGroup*>(getData(newParentId));
+  auto *newParent = dynamic_cast<BaseGroup*>(getData(newParentId));
   if(newParent == nullptr)
   {
     return false;
@@ -1279,7 +1279,7 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
 bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType parentId)
 {
   const auto& target = m_DataObjects[targetId];
-  const auto parent = dynamic_cast<BaseGroup*>(getData(parentId));
+  auto *const parent = dynamic_cast<BaseGroup*>(getData(parentId));
   const auto targetPtr = target.lock();
   if(targetPtr == nullptr)
   {
@@ -1316,7 +1316,7 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
 
   // Keep copied objects alive while the root map rebinds their DataStructure.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(auto& [identifier, dataWkPtr] : rhs.m_DataObjects)
+  for(const auto& [identifier, dataWkPtr] : rhs.m_DataObjects)
   {
     auto dataPtr = dataWkPtr.lock();
     if(dataPtr != nullptr)
@@ -1359,7 +1359,7 @@ nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const 
   usize tupleCount = std::numeric_limits<usize>::max();
   for(const auto& dataPath : dataPaths)
   {
-    auto* dataObject = getData(dataPath);
+    const auto* dataObject = getData(dataPath);
 
     const DataObject::Type dataObjectType = dataObject->getDataObjectType();
     size_t numTuples = 0;

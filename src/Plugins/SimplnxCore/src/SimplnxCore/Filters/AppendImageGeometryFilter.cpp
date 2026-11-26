@@ -224,8 +224,8 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
       auto inputDataArrayPath = inputCellDataPath.createChildPath(name);
       auto destDataArrayPath = destCellDataPath.createChildPath(name);
 
-      auto inputDataArray = dataStructure.getDataAs<IArray>(inputDataArrayPath);
-      auto destDataArray = dataStructure.getDataAs<IArray>(destDataArrayPath);
+      const auto *inputDataArray = dataStructure.getDataAs<IArray>(inputDataArrayPath);
+      const auto *destDataArray = dataStructure.getDataAs<IArray>(destDataArrayPath);
       if(inputDataArray == nullptr && dataStructure.containsData(inputDataArrayPath))
       {
         resultOutputActions.warnings().push_back(
@@ -301,8 +301,8 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
         std::vector<usize> destCellDataDims(destGeomDimsVec.rbegin(), destGeomDimsVec.rend());
         if(arrayType == IArray::ArrayType::DataArray)
         {
-          auto inputIDataArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
-          auto destIDataArray = dataStructure.getDataAs<IDataArray>(destDataArrayPath);
+          const auto *inputIDataArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
+          const auto *destIDataArray = dataStructure.getDataAs<IDataArray>(destDataArrayPath);
           auto dataType = inputIDataArray != nullptr ? inputIDataArray->getDataType() : destIDataArray->getDataType();
           auto compShape = inputDataArray != nullptr ? inputDataArray->getComponentShape() : destDataArray->getComponentShape();
           auto cellDataDims = pSaveAsNewGeometry ? newCellDataDims : destCellDataDims;
@@ -312,8 +312,8 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
         }
         if(arrayType == IArray::ArrayType::NeighborListArray)
         {
-          auto inputINeighborlist = dataStructure.getDataAs<INeighborList>(inputDataArrayPath);
-          auto destINeighborlist = dataStructure.getDataAs<INeighborList>(destDataArrayPath);
+          const auto *inputINeighborlist = dataStructure.getDataAs<INeighborList>(inputDataArrayPath);
+          const auto *destINeighborlist = dataStructure.getDataAs<INeighborList>(destDataArrayPath);
           auto dataType = inputINeighborlist != nullptr ? inputINeighborlist->getDataType() : destINeighborlist->getDataType();
           auto cellDataDims = pSaveAsNewGeometry ? newCellDataDims : destCellDataDims;
           auto cellArrayPath = pSaveAsNewGeometry ? newArrayPath : destArrayPath;

@@ -572,9 +572,9 @@ void CreateScalarData(DataStructure& dataStructure, const std::string& name, Dat
 DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure;
-  auto group1 = DataGroup::Create(dataStructure, DataNames::k_Group1Name);
-  auto group2 = DataGroup::Create(dataStructure, DataNames::k_Group2Name, group1->getId());
-  auto group3 = DataGroup::Create(dataStructure, DataNames::k_Group3Name, group2->getId());
+  auto *group1 = DataGroup::Create(dataStructure, DataNames::k_Group1Name);
+  auto *group2 = DataGroup::Create(dataStructure, DataNames::k_Group2Name, group1->getId());
+  auto *group3 = DataGroup::Create(dataStructure, DataNames::k_Group3Name, group2->getId());
 
   ShapeType tupleShape = {10};
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, DataNames::k_AttributeMatrixName, tupleShape, group1->getId());
@@ -1401,7 +1401,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_Group2Name})) != nullptr);
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_Group2Name, DataNames::k_Group3Name})) != nullptr);
-    auto attMatrix = dataStructure.getDataAs<AttributeMatrix>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName}));
+    auto *attMatrix = dataStructure.getDataAs<AttributeMatrix>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName}));
     REQUIRE(attMatrix != nullptr);
     REQUIRE(attMatrix->getShape() == ShapeType{10});
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name})) != nullptr);
@@ -1463,7 +1463,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     auto importPipeline = CreateImportPipeline();
     REQUIRE(importPipeline.execute());
     auto importDataStructure = importPipeline[0]->getDataStructure();
-    auto group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
+    auto *group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
     auto size = importDataStructure.getSize();
     REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
@@ -1476,7 +1476,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     auto importPipeline = CreateImportPipeline();
     REQUIRE(importPipeline.preflight());
     auto importDataStructure = importPipeline[0]->getPreflightStructure();
-    auto group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
+    auto *group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
     auto size = importDataStructure.getSize();
     REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
@@ -1816,7 +1816,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[Sim
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1851,7 +1851,7 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[Si
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -2657,7 +2657,7 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
     auto* goodImage = ImageGeom::Create(original, goodGeometry.getTargetName());
     REQUIRE(goodImage != nullptr);
     goodImage->setDimensions({1, 1, 1});
-    const auto cellData = AttributeMatrix::Create(original, goodCellData.getTargetName(), ShapeType{1, 1, 1}, goodImage->getId());
+    auto *const cellData = AttributeMatrix::Create(original, goodCellData.getTargetName(), ShapeType{1, 1, 1}, goodImage->getId());
     REQUIRE(cellData != nullptr);
     goodImage->setCellData(*cellData);
     const auto writeResult = DREAM3D::WriteFile(file, original);

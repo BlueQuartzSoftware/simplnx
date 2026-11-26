@@ -100,7 +100,7 @@ usize HexahedralGeom::getNumberOfVerticesPerCell() const
 
 usize HexahedralGeom::getNumberOfCells() const
 {
-  auto& elements = getPolyhedraRef();
+  const auto& elements = getPolyhedraRef();
   return elements.getNumberOfTuples();
 }
 

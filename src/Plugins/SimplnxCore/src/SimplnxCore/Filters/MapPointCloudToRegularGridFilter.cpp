@@ -69,7 +69,7 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
   auto* image = dataStructure.getDataAs<ImageGeom>(newImageGeomPath);
 
   usize numVerts = pointCloud->getNumberOfVertices();
-  auto& vertex = pointCloud->getVertices()->getDataStoreRef();
+  const auto& vertex = pointCloud->getVertices()->getDataStoreRef();
 
   const auto* mask = useMask ? dataStructure.getDataAs<BoolArray>(maskArrayPath)->getDataStore() : nullptr;
   if(useMask && mask == nullptr)

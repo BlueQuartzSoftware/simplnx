@@ -307,7 +307,7 @@ void CheckFeatureIdsModified(const DataStructure& dataStructure)
  */
 void CheckOutput(const DataStructure& dataStructure, ChoicesParameter::ValueType operation, const DirectionType& directions, int32 iterations)
 {
-  const auto exemplarIter = std::find_if(k_Exemplars.cbegin(), k_Exemplars.cend(),
+  const auto *const exemplarIter = std::find_if(k_Exemplars.cbegin(), k_Exemplars.cend(),
                                          [&](const ExemplarRecord& record) { return record.operation == operation && record.directions == directions && record.iterations == iterations; });
   if(exemplarIter == k_Exemplars.cend())
   {
@@ -703,7 +703,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: SIMPL Backwards Compatibility"
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

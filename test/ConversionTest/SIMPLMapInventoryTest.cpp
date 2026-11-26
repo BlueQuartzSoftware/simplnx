@@ -51,7 +51,7 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   auto plugins = filterList->getLoadedPlugins();
 
@@ -124,7 +124,7 @@ TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][In
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   auto plugins = filterList->getLoadedPlugins();
 

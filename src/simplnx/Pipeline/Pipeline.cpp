@@ -299,7 +299,7 @@ bool Pipeline::preflightFrom(index_type index, RenamedPaths& /*renamedPaths*/, c
     return false;
   }
 
-  auto node = at(index - 1);
+  auto *node = at(index - 1);
   DataStructure dataStructure = node->getPreflightStructure();
   return preflightFrom(index, dataStructure, shouldCancel);
 }
@@ -500,7 +500,7 @@ bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const
 
 bool Pipeline::insertAt(index_type index, const FilterHandle& handle, const Arguments& args)
 {
-  auto filterList = getActiveFilterList();
+  auto *filterList = getActiveFilterList();
   IFilter::UniquePointer filter = filterList->createFilter(handle);
   return insertAt(index, std::move(filter), args);
 }
@@ -539,7 +539,7 @@ bool Pipeline::remove(iterator iter)
   }
 
   index_type index = iter - begin();
-  auto node = iter->get();
+  auto *node = iter->get();
   node->setParentPipeline(nullptr);
   m_Collection.erase(iter);
   notify(std::make_shared<NodeRemovedMessage>(this, index));
@@ -554,7 +554,7 @@ bool Pipeline::remove(const_iterator iter)
   }
 
   index_type index = iter - begin();
-  auto node = iter->get();
+  auto *node = iter->get();
   node->setParentPipeline(nullptr);
   m_Collection.erase(iter);
   notify(std::make_shared<NodeRemovedMessage>(this, index));
@@ -615,7 +615,7 @@ bool Pipeline::contains(IFilter* filter) const
 {
   for(const auto& node : *this)
   {
-    auto filterNode = dynamic_cast<PipelineFilter*>(node.get());
+    auto *filterNode = dynamic_cast<PipelineFilter*>(node.get());
     if(filterNode == nullptr)
     {
       continue;

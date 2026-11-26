@@ -1883,7 +1883,7 @@ Result<DataObject*> readLegacyVertexGeom(DataStructure& dataStructure, const nx:
 
 Result<DataObject*> readLegacyTriangleGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight)
 {
-  auto geom = TriangleGeom::Create(dataStructure, name);
+  auto *geom = TriangleGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502681, fmt::format("Failed to create legacy Triangle Geometry '{}'.", name));
@@ -1914,7 +1914,7 @@ Result<DataObject*> readLegacyTriangleGeom(DataStructure& dataStructure, const n
 
 Result<DataObject*> readLegacyTetrahedralGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight)
 {
-  auto geom = TetrahedralGeom::Create(dataStructure, name);
+  auto *geom = TetrahedralGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502682, fmt::format("Failed to create legacy Tetrahedral Geometry '{}'.", name));
@@ -1945,7 +1945,7 @@ Result<DataObject*> readLegacyTetrahedralGeom(DataStructure& dataStructure, cons
 
 Result<DataObject*> readLegacyRectGridGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight, bool deferBoundsValidation)
 {
-  auto geom = RectGridGeom::Create(dataStructure, name);
+  auto *geom = RectGridGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502683, fmt::format("Failed to create legacy RectGrid Geometry '{}'.", name));
@@ -2008,7 +2008,7 @@ Result<DataObject*> readLegacyRectGridGeom(DataStructure& dataStructure, const n
 
 Result<DataObject*> readLegacyQuadGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight)
 {
-  auto geom = QuadGeom::Create(dataStructure, name);
+  auto *geom = QuadGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502684, fmt::format("Failed to create legacy Quad Geometry '{}'.", name));
@@ -2039,7 +2039,7 @@ Result<DataObject*> readLegacyQuadGeom(DataStructure& dataStructure, const nx::c
 
 Result<DataObject*> readLegacyHexGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight)
 {
-  auto geom = HexahedralGeom::Create(dataStructure, name);
+  auto *geom = HexahedralGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502685, fmt::format("Failed to create legacy Hexahedral Geometry '{}'.", name));
@@ -2070,7 +2070,7 @@ Result<DataObject*> readLegacyHexGeom(DataStructure& dataStructure, const nx::co
 
 Result<DataObject*> readLegacyEdgeGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, bool preflight)
 {
-  auto geom = EdgeGeom::Create(dataStructure, name);
+  auto *geom = EdgeGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502686, fmt::format("Failed to create legacy Edge Geometry '{}'.", name));
@@ -2101,7 +2101,7 @@ Result<DataObject*> readLegacyEdgeGeom(DataStructure& dataStructure, const nx::c
 
 Result<DataObject*> readLegacyImageGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& geomGroup, const std::string& name, DREAM3D::DeferredImageMetadata* deferredImageMetadata)
 {
-  auto geom = ImageGeom::Create(dataStructure, name);
+  auto *geom = ImageGeom::Create(dataStructure, name);
   if(geom == nullptr)
   {
     return MakeErrorResult<DataObject*>(-502687, fmt::format("Failed to create legacy Image Geometry '{}'.", name));

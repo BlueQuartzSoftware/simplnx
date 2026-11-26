@@ -263,7 +263,7 @@ void CheckIntTestDataSingleComponent(const DataStructure& dataStructure, ArrayTh
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -310,7 +310,7 @@ void CheckFloatTestDataSingleComponent(const DataStructure& dataStructure, Array
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -354,7 +354,7 @@ void CheckIntTestDataMultiComponent(const DataStructure& dataStructure, ArrayThr
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -391,7 +391,7 @@ void CheckExemplar(const DataStructure& dataStructure, const std::array<bool, k_
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -701,7 +701,7 @@ void CheckThresholdSet1(DataStructure& dataStructure, bool inverted)
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -714,7 +714,7 @@ void CheckThresholdSet2(DataStructure& dataStructure, bool inverted)
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -727,7 +727,7 @@ void CheckThresholdSet3(DataStructure& dataStructure, bool inverted)
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -749,7 +749,7 @@ void CheckThresholdSet4(DataStructure& dataStructure, bool inverted)
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -771,7 +771,7 @@ void CheckThresholdSet5(DataStructure& dataStructure, bool inverted)
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -793,7 +793,7 @@ void CheckThresholdSet6(DataStructure& dataStructure, bool inverted)
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -817,7 +817,7 @@ void CheckThresholdSet7(DataStructure& dataStructure, bool inverted)
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -1354,7 +1354,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conver
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   // A legacy "Threshold Objects (Advanced)" pipeline whose thresholds are a leaf sibling to an inverted
   // nested set, with the nested set's children joined by Or:
@@ -1413,7 +1413,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compati
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto *filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

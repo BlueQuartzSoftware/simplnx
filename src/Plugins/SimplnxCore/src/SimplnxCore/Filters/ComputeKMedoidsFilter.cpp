@@ -117,7 +117,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  const auto *clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
   if(clusterArray == nullptr)
   {
     return MakePreflightErrorResult(-7584, "Array to Cluster MUST be a valid DataPath.");

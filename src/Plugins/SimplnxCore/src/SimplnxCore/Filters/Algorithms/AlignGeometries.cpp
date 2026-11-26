@@ -21,11 +21,11 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   switch(geomType)
   {
   case IGeometry::Type::Image: {
-    auto& image = dynamic_cast<const ImageGeom&>(geometry);
+    const auto& image = dynamic_cast<const ImageGeom&>(geometry);
     return image.getOrigin();
   }
   case IGeometry::Type::RectGrid: {
-    auto& rectGrid = dynamic_cast<const RectGridGeom&>(geometry);
+    const auto& rectGrid = dynamic_cast<const RectGridGeom&>(geometry);
     const auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
     const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
     const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
@@ -54,7 +54,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     return origin;
   }
   case IGeometry::Type::Vertex: {
-    auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
+    const auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
     const auto& vertices = vertex.getVertices()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
@@ -234,7 +234,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   case IGeometry::Type::Triangle:
     [[fallthrough]];
   case IGeometry::Type::Quad: {
-    auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
+    const auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
     const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;

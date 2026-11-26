@@ -108,7 +108,7 @@ public:
       return MakeErrorResult(-6104, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
     }
 
-    const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
+    auto *const vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
     {
       return MakeErrorResult(-6105, fmt::format("{}Could not find vertices array at path '{}'", prefix, m_InputVertices.toString()));
