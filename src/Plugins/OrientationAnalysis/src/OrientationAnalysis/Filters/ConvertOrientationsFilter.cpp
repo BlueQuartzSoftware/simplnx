@@ -94,7 +94,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
   if(inputType == outputType)
   {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
+    return {.outputActions=MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
                                            fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
   }
 
@@ -104,7 +104,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
   if(inputCompShape.size() > 1)
   {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
+    return {.outputActions=MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
                                            fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float>, float>;
@@ -116,7 +116,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
     std::stringstream message;
     message << "Number of components for input array is not correct for input representation type. " << representationNames[static_cast<size_t>(inputType)] << " should have "
             << representationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
+    return {.outputActions=MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 

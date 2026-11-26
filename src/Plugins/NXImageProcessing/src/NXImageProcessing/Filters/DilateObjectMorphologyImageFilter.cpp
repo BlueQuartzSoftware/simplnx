@@ -98,19 +98,19 @@ IFilter::PreflightResult DilateObjectMorphologyImageFilter::preflightImpl(const 
   const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
   if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
   }
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& layoutInputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(auto layoutResult = ImageProcessing::ValidateMorphologyLayout(imageGeom.getDimensions(), kernelRadius, false, GetDataTypeSize(layoutInputArray.getDataType())); layoutResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Dilate Object Morphology requires a single-component (scalar) input array, but '{}' has {} components.",
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Dilate Object Morphology requires a single-component (scalar) input array, but '{}' has {} components.",
                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
@@ -118,7 +118,7 @@ IFilter::PreflightResult DilateObjectMorphologyImageFilter::preflightImpl(const 
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions=std::move(resultOutputActions)};
   }
 
   // The Float64 Object Value is cast to the input element type by the object-morphology façade. That
@@ -129,13 +129,13 @@ IFilter::PreflightResult DilateObjectMorphologyImageFilter::preflightImpl(const 
   Result<> paramGuard = ImageProcessing::ValidateScalarValueForType(inputType, objectValue, "Object Value", k_NonFiniteObjectValue, k_ObjectValueOutOfRange, k_ObjectValueTruncated);
   if(paramGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
   }
   for(Warning& warning : paramGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 Result<> DilateObjectMorphologyImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

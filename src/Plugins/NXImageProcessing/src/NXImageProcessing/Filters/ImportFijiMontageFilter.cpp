@@ -94,7 +94,7 @@ struct TilePaths
 TilePaths MakeTilePaths(const fiji::FijiTile& tile, bool parentGroup, const std::string& groupName, const std::string& cellAmName, const std::string& arrayName)
 {
   const DataPath geomPath = parentGroup ? DataPath({groupName, tile.imageName}) : DataPath({tile.imageName});
-  return {geomPath, geomPath.createChildPath(cellAmName).createChildPath(arrayName)};
+  return {.geomPath=geomPath, .arrayPath=geomPath.createChildPath(cellAmName).createChildPath(arrayName)};
 }
 } // namespace
 
@@ -266,7 +266,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   auto tilesResult = loadTiles(inputFile, imagePrefix, /*needMetadata=*/true);
   if(tilesResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(tilesResult)), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(tilesResult)), {})};
   }
   std::vector<fiji::FijiTile> tiles = std::move(tilesResult.value());
 
@@ -337,7 +337,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   }
 
   preflightUpdatedValues.push_back({"Import Information", fmt::format("Imported Image Count: {}", tiles.size())});
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -402,7 +402,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
       {
         messageHandler.sendWarningMessage(fmt::format("|-- Error reading tile ({}): code {} - {}", tile.filePath.filename().string(), error.code, error.message));
       }
-      result.warnings().emplace_back(Warning{-35940, fmt::format("Tile '{}' could not be read and was skipped.", tile.filePath.filename().string())});
+      result.warnings().emplace_back(Warning{.code=-35940, .message=fmt::format("Tile '{}' could not be read and was skipped.", tile.filePath.filename().string())});
       const auto& failedArray = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath);
       if(convertToGrayScale && IsGrayscaleConvertible(failedArray.getDataType(), failedArray.getNumberOfComponents()))
       {
@@ -435,7 +435,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
       }
       if(!IsGrayscaleConvertible(imageArray.getDataType(), imageArray.getNumberOfComponents()))
       {
-        result.warnings().emplace_back(Warning{-35932, fmt::format("Tile array '{}' is not uint8; grayscale conversion skipped.", paths.arrayPath.getTargetName())});
+        result.warnings().emplace_back(Warning{.code=-35932, .message=fmt::format("Tile array '{}' is not uint8; grayscale conversion skipped.", paths.arrayPath.getTargetName())});
         continue;
       }
 

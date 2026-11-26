@@ -176,7 +176,7 @@ struct SIMPLNX_EXPORT OutputActions
    */
   void appendDataObjectModificationNotification(const DataPath& dataPath, DataObjectModification::ModifiedType modifiedType)
   {
-    modifiedActions.push_back(DataObjectModification{dataPath, modifiedType});
+    modifiedActions.push_back(DataObjectModification{.modifiedPath=dataPath, .modifiedType=modifiedType});
   }
 
   /**

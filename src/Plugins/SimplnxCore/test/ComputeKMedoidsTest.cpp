@@ -95,7 +95,7 @@ KMedoidsInputValues buildParityData(DataStructure& dataStructure, int32 maskKind
   auto medoidStore = std::make_shared<DataStore<float64>>(ShapeType{3}, ShapeType{2}, std::optional<float64>{});
   REQUIRE(Float64Array::Create(dataStructure, "Medoids", medoidStore, featureData->getId()) != nullptr);
   medoidStore->fill(-1.0);
-  return {2, metric, maskKind != 0, k_ParityInputPath, k_ParityMaskPath, k_ParityIdsPath, k_ParityMedoidsPath, 5489};
+  return {.InitClusters=2, .DistanceMetric=metric, .UseMask=maskKind != 0, .ClusteringArrayPath=k_ParityInputPath, .MaskArrayPath=k_ParityMaskPath, .FeatureIdsArrayPath=k_ParityIdsPath, .MedoidsArrayPath=k_ParityMedoidsPath, .Seed=5489};
 }
 
 /**
@@ -117,7 +117,7 @@ KMedoidsInputValues buildEmptyData(DataStructure& dataStructure)
   auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, imageGeom->getId());
   REQUIRE(featureData != nullptr);
   REQUIRE(Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "Medoids", ShapeType{2}, ShapeType{2}, featureData->getId()) != nullptr);
-  return {1, ClusterUtilities::Euclidean, false, k_ParityInputPath, {}, k_ParityIdsPath, k_ParityMedoidsPath, 5489};
+  return {.InitClusters=1, .DistanceMetric=ClusterUtilities::Euclidean, .UseMask=false, .ClusteringArrayPath=k_ParityInputPath, .MaskArrayPath={}, .FeatureIdsArrayPath=k_ParityIdsPath, .MedoidsArrayPath=k_ParityMedoidsPath, .Seed=5489};
 }
 } // namespace
 

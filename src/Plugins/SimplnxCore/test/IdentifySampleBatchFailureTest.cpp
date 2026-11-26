@@ -761,10 +761,10 @@ Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlan
   const auto originalManager = collection.begin()->second;
   Outcome outcome;
   {
-    const auto oldObserver = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+    const auto oldObserver = SetIdentifySampleSliceObserverForTesting({.context=&counts, .callback=&LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(oldObserver); });
     REQUIRE(oldObserver.callback == nullptr);
-    const auto oldDiagnostic = SetIdentifySampleDiagnosticControlForTesting({&state, &FailDiagnostic});
+    const auto oldDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context=&state, .beforeAggregate=&FailDiagnostic});
     const auto restoreDiagnostic = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleDiagnosticControlForTesting(oldDiagnostic); });
     REQUIRE(oldDiagnostic.beforeAggregate == nullptr);
     const ScopedRecordManager overrideManager(state);
@@ -1225,10 +1225,10 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
   control.occupied = occupied.sizeBytes();
   Outcome outcome;
   {
-    const auto old = SetIdentifySampleExtraAllocationControlForTesting({&control, &AllocationControl::Before});
+    const auto old = SetIdentifySampleExtraAllocationControlForTesting({.context=&control, .beforeAllocate=&AllocationControl::Before});
     const auto restore = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleExtraAllocationControlForTesting(old); });
     REQUIRE(old.beforeAllocate == nullptr);
-    const auto oldObserver = SetIdentifySampleSliceObserverForTesting({&observations, &OwnerObservations::Observe});
+    const auto oldObserver = SetIdentifySampleSliceObserverForTesting({.context=&observations, .callback=&OwnerObservations::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(oldObserver); });
     REQUIRE(oldObserver.callback == nullptr);
     state.armed = true;
@@ -1287,18 +1287,18 @@ TEST_CASE("IdentifySample allocation and diagnostic controls restore nested and 
   AllocationControl inner;
   FailureState outerDiagnostic;
   FailureState innerDiagnostic;
-  const auto originalAllocation = SetIdentifySampleExtraAllocationControlForTesting({&outer, &AllocationControl::Before});
+  const auto originalAllocation = SetIdentifySampleExtraAllocationControlForTesting({.context=&outer, .beforeAllocate=&AllocationControl::Before});
   const auto restoreAllocation = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleExtraAllocationControlForTesting(originalAllocation); });
-  const auto originalDiagnostic = SetIdentifySampleDiagnosticControlForTesting({&outerDiagnostic, &FailDiagnostic});
+  const auto originalDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context=&outerDiagnostic, .beforeAggregate=&FailDiagnostic});
   const auto restoreDiagnostic = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleDiagnosticControlForTesting(originalDiagnostic); });
   REQUIRE(originalAllocation.context == nullptr);
   REQUIRE(originalAllocation.beforeAllocate == nullptr);
   REQUIRE(originalDiagnostic.context == nullptr);
   REQUIRE(originalDiagnostic.beforeAggregate == nullptr);
   {
-    const auto priorAllocation = SetIdentifySampleExtraAllocationControlForTesting({&inner, &AllocationControl::Before});
+    const auto priorAllocation = SetIdentifySampleExtraAllocationControlForTesting({.context=&inner, .beforeAllocate=&AllocationControl::Before});
     const auto restoreInnerAllocation = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleExtraAllocationControlForTesting(priorAllocation); });
-    const auto priorDiagnostic = SetIdentifySampleDiagnosticControlForTesting({&innerDiagnostic, &FailDiagnostic});
+    const auto priorDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context=&innerDiagnostic, .beforeAggregate=&FailDiagnostic});
     const auto restoreInnerDiagnostic = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleDiagnosticControlForTesting(priorDiagnostic); });
     REQUIRE(priorAllocation.context == &outer);
     REQUIRE(priorAllocation.beforeAllocate == &AllocationControl::Before);
@@ -1339,8 +1339,8 @@ TEST_CASE("IdentifySample checked slice dimensions fail before owners and transf
     int32 code;
   };
   const usize labelByteBound = std::numeric_limits<usize>::max() / sizeof(int64);
-  std::vector<InvalidDimensions> cases{{{std::numeric_limits<usize>::max(), 1, 1}, -45464}, {{k_SignedMaximum, 3, 1}, -45463},         {{1, k_SignedMaximum / 2 + 1, 1}, -45464},
-                                       {{k_SignedMaximum / 2 + 1, 2, 1}, -45465},           {{8, 1, k_SignedMaximum / 7 + 1}, -45465}, {{1, labelByteBound / 2 + 1, 1}, -45463}};
+  std::vector<InvalidDimensions> cases{{.dimensions={std::numeric_limits<usize>::max(), 1, 1}, .code=-45464}, {.dimensions={k_SignedMaximum, 3, 1}, .code=-45463},         {.dimensions={1, k_SignedMaximum / 2 + 1, 1}, .code=-45464},
+                                       {.dimensions={k_SignedMaximum / 2 + 1, 2, 1}, .code=-45465},           {.dimensions={8, 1, k_SignedMaximum / 7 + 1}, .code=-45465}, {.dimensions={1, labelByteBound / 2 + 1, 1}, .code=-45463}};
   const usize vectorBound = std::vector<int64>().max_size();
   REQUIRE(vectorBound <= labelByteBound);
   const usize overCapacityRowWidth = vectorBound / 2 + 1;
@@ -1372,7 +1372,7 @@ TEST_CASE("IdentifySample checked slice dimensions fail before owners and transf
   counts.selected = &data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
   const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
   {
-    const auto prior = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+    const auto prior = SetIdentifySampleSliceObserverForTesting({.context=&counts, .callback=&LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
     state.armed = true;
     const auto disarm = MakeScopeGuard([&]() noexcept { state.armed = false; });
@@ -1417,7 +1417,7 @@ TEST_CASE("IdentifySample safe zero dimensions retain valid empty work", "[.Iden
   REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath));
   counts.selected = &data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
   {
-    const auto prior = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+    const auto prior = SetIdentifySampleSliceObserverForTesting({.context=&counts, .callback=&LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
     state.armed = true;
     const auto disarm = MakeScopeGuard([&]() noexcept { state.armed = false; });
@@ -1504,7 +1504,7 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
   ErrorCollection errors;
   WarningCollection warnings;
   {
-    const auto prior = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+    const auto prior = SetIdentifySampleSliceObserverForTesting({.context=&counts, .callback=&LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
     const ScopedRecordManager overrideManager(state);
     REQUIRE(overrideManager.selected());
@@ -1624,7 +1624,7 @@ TEST_CASE("IdentifySample orthogonal CCL owns only its used plane carrier", "[.I
     const std::atomic_bool cancel = false;
     IdentifySampleCCL algorithm(data, messages, cancel, &inputs);
     {
-      const auto prior = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+      const auto prior = SetIdentifySampleSliceObserverForTesting({.context=&counts, .callback=&LogicalCounters::Observe});
       const auto restore = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
       const auto result = algorithm();
       SIMPLNX_RESULT_REQUIRE_VALID(result);
@@ -1668,7 +1668,7 @@ TEST_CASE("IdentifySample filter pre-cancellation stops before algorithm dispatc
     const auto args = IdentifySampleBatchTest::ArgumentsFor(2, false);
     const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
     {
-      const auto prior = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+      const auto prior = SetIdentifySampleSliceObserverForTesting({.context=&counts, .callback=&LogicalCounters::Observe});
       const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
       const auto priorDispatch = GetAlgorithmPathExecutionCounts();
       const auto restoreDispatch = MakeScopeGuard([&]() noexcept { SetAlgorithmPathExecutionCounts(priorDispatch); });
@@ -1768,7 +1768,7 @@ struct OrthogonalTransferState
   {
     REQUIRE(transferCount < transfers.size());
     auto& transfer = transfers[transferCount++];
-    transfer = {write, start, count, false};
+    transfer = {.write=write, .start=start, .count=count, .success=false};
     return transfer;
   }
 };
@@ -1963,7 +1963,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   Outcome outcome;
   std::string exceptionMessage;
   {
-    const auto prior = SetIdentifySampleSliceObserverForTesting({&counts, &LogicalCounters::Observe});
+    const auto prior = SetIdentifySampleSliceObserverForTesting({.context=&counts, .callback=&LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
     const ScopedRecordManager overrideManager(recordState);
     REQUIRE(overrideManager.selected());

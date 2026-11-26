@@ -102,18 +102,18 @@ nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataS
 
   if(preflightWarning)
   {
-    resultOutputActions.warnings().push_back(Warning{-666000, "Intentional preflight warning generated"});
+    resultOutputActions.warnings().push_back(Warning{.code=-666000, .message="Intentional preflight warning generated"});
   }
   if(preflightError)
   {
-    return {MakeErrorResult<OutputActions>(-666001, "Intentional preflight error generated")};
+    return {.outputActions=MakeErrorResult<OutputActions>(-666001, "Intentional preflight error generated")};
   }
   if(preflightException)
   {
     throw std::runtime_error("Intentional preflight runtime excption generated");
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& /*dataStructur
 
   if(executeWarning)
   {
-    resultActions.warnings().push_back(Warning{-666000, "Intentional execute warning generated"});
+    resultActions.warnings().push_back(Warning{.code=-666000, .message="Intentional execute warning generated"});
   }
   if(executeError)
   {

@@ -102,7 +102,7 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
     return MakePreflightErrorResult(-61860, "Size mismatch between cell feature indices and cell phases arrays.");
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

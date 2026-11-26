@@ -104,7 +104,7 @@ IFilter::PreflightResult ThresholdImageFilter::preflightImpl(const DataStructure
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 Result<> ThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -118,7 +118,7 @@ Result<> ThresholdImageFilter::executeImpl(DataStructure& dataStructure, const A
   auto upper = filterArgs.value<float64>(k_Upper_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
 
-  const ThresholdOperation operation{lower, upper, outsideValue};
+  const ThresholdOperation operation{.lower=lower, .upper=upper, .outsideValue=outsideValue};
 
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }

@@ -117,7 +117,7 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(triangleArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto faceLabels = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
@@ -131,7 +131,7 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   tupleValidityCheck = dataStructure.validateNumberOfTuples(imageArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pFirstFaceIPFColorsArrayNameValue);
@@ -142,7 +142,7 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   auto secondAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(secondAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

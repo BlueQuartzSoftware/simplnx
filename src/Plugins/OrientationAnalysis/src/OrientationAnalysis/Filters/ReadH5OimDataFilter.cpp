@@ -206,7 +206,7 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

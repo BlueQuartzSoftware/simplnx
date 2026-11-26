@@ -77,7 +77,7 @@ IFilter::PreflightResult ZeroCrossingImageFilter::preflightImpl(const DataStruct
   // unsigned types (matching the legacy SignedScalarPixelIdTypeList). There is no minimum-dimension requirement.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::SignedScalar, ImageProcessing::AlwaysUInt8>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 Result<> ZeroCrossingImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

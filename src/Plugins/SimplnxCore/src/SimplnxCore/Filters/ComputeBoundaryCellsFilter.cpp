@@ -102,7 +102,7 @@ IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStr
   const usize numCells = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath).getNumberOfCells();
   if(numFeatureIds != numCells)
   {
-    return {MakeErrorResult<OutputActions>(
+    return {.outputActions=MakeErrorResult<OutputActions>(
         -5320,
         fmt::format("The selected Image geometry '{}' and feature ids array '{}' have mismatching number of elements. Make sure the selected feature ids was created for the selected Image geometry.",
                     pImageGeometryPath.toString(), pFeatureIdsArrayPathValue.toString()))};
@@ -111,7 +111,7 @@ IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStr
   auto action = std::make_unique<CreateArrayAction>(DataType::int8, featureIds.getTupleShape(), std::vector<usize>{1}, boundaryCellsArrayPath);
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

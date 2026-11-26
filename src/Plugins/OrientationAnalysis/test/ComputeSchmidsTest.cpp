@@ -272,11 +272,11 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle,
 
   // clang-format off
   const std::vector<OracleRow> rows = {
-      {"[0,0,1]", {0.0F, 0.0F, 1.0F}, 0.4082482904638630, 0,  {0, 0, 100},  0.5773502691896258, 0.7071067811865476},
-      {"[1,1,1]", {1.0F, 1.0F, 1.0F}, 0.2721655269759087, 4,  {57, 57, 57}, 0.3333333333333333, 0.8164965809277260},
-      {"[0,1,1]", {0.0F, 1.0F, 1.0F}, 0.4082482904638630, 1,  {0, 70, 70},  0.8164965809277260, 0.5000000000000000},
-      {"[1,2,3]", {1.0F, 2.0F, 3.0F}, 0.4665694748158435, 10, {26, 53, 80}, 0.6172133998483701, 0.7559289460184544},
-      {"[3,6,9]", {3.0F, 6.0F, 9.0F}, 0.4665694748158435, 10, {26, 53, 80}, 0.6172133998483701, 0.7559289460184544},
+      {.label="[0,0,1]", .loading={0.0F, 0.0F, 1.0F}, .m=0.4082482904638630, .slipSystem=0,  .poles={0, 0, 100},  .cosPhi=0.5773502691896258, .cosLambda=0.7071067811865476},
+      {.label="[1,1,1]", .loading={1.0F, 1.0F, 1.0F}, .m=0.2721655269759087, .slipSystem=4,  .poles={57, 57, 57}, .cosPhi=0.3333333333333333, .cosLambda=0.8164965809277260},
+      {.label="[0,1,1]", .loading={0.0F, 1.0F, 1.0F}, .m=0.4082482904638630, .slipSystem=1,  .poles={0, 70, 70},  .cosPhi=0.8164965809277260, .cosLambda=0.5000000000000000},
+      {.label="[1,2,3]", .loading={1.0F, 2.0F, 3.0F}, .m=0.4665694748158435, .slipSystem=10, .poles={26, 53, 80}, .cosPhi=0.6172133998483701, .cosLambda=0.7559289460184544},
+      {.label="[3,6,9]", .loading={3.0F, 6.0F, 9.0F}, .m=0.4665694748158435, .slipSystem=10, .poles={26, 53, 80}, .cosPhi=0.6172133998483701, .cosLambda=0.7559289460184544},
   };
   // clang-format on
 
@@ -381,10 +381,10 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convent
   const float64 k_ExpectedLambda = 0.7559289460184544; // 4/sqrt(28)
 
   const std::vector<QuatRow> rows = {
-      {"identity (0,0,0,1)", {0.0F, 0.0F, 0.0F, 1.0F}, 10, {26, 53, 80}},
-      {"180 deg about Z (0,0,1,0)", {0.0F, 0.0F, 1.0F, 0.0F}, 8, {-26, -53, 80}},
-      {"120 deg about [111] (.5,.5,.5,.5)", {0.5F, 0.5F, 0.5F, 0.5F}, 6, {80, 26, 53}},
-      {"180 deg about X (1,0,0,0)", {1.0F, 0.0F, 0.0F, 0.0F}, 1, {26, -53, -80}},
+      {.label="identity (0,0,0,1)", .quat={0.0F, 0.0F, 0.0F, 1.0F}, .slipSystem=10, .poles={26, 53, 80}},
+      {.label="180 deg about Z (0,0,1,0)", .quat={0.0F, 0.0F, 1.0F, 0.0F}, .slipSystem=8, .poles={-26, -53, 80}},
+      {.label="120 deg about [111] (.5,.5,.5,.5)", .quat={0.5F, 0.5F, 0.5F, 0.5F}, .slipSystem=6, .poles={80, 26, 53}},
+      {.label="180 deg about X (1,0,0,0)", .quat={1.0F, 0.0F, 0.0F, 0.0F}, .slipSystem=1, .poles={26, -53, -80}},
   };
 
   for(const auto& row : rows)
@@ -472,9 +472,9 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path"
 
   // clang-format off
   const std::vector<OverrideRow> rows = {
-      {"[1,2,3]", {1.0F, 2.0F, 3.0F}, 0.4285714285714286, 3, {26, 53, 80},  0.6405223126794245, 1.0068536854342678},
-      {"[1,1,1]", {1.0F, 1.0F, 1.0F}, 0.3333333333333333, 0, {57, 57, 57},  0.9553166181245093, 0.9553166181245093},
-      {"[0,0,1]", {0.0F, 0.0F, 1.0F}, 0.0000000000000000, 0, {0, 0, 100},   0.0000000000000000, 0.0000000000000000},
+      {.label="[1,2,3]", .loading={1.0F, 2.0F, 3.0F}, .m=0.4285714285714286, .symOpIndex=3, .poles={26, 53, 80},  .phiRadians=0.6405223126794245, .lambdaRadians=1.0068536854342678},
+      {.label="[1,1,1]", .loading={1.0F, 1.0F, 1.0F}, .m=0.3333333333333333, .symOpIndex=0, .poles={57, 57, 57},  .phiRadians=0.9553166181245093, .lambdaRadians=0.9553166181245093},
+      {.label="[0,0,1]", .loading={0.0F, 0.0F, 1.0F}, .m=0.0000000000000000, .symOpIndex=0, .poles={0, 0, 100},   .phiRadians=0.0000000000000000, .lambdaRadians=0.0000000000000000},
   };
   // clang-format on
 

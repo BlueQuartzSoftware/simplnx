@@ -218,7 +218,7 @@ Result<> ExecuteMorphologyImageFilter(DataStructure& dataStructure, const DataPa
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::MorphologyExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, shouldCancel, messageHandler};
+  detail::MorphologyExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .se=se, .op=op, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -236,7 +236,7 @@ Result<> ExecuteMorphologyCompositeImageFilter(DataStructure& dataStructure, con
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::MorphologyCompositeExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, safeBorder, shouldCancel, messageHandler};
+  detail::MorphologyCompositeExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .se=se, .op=op, .safeBorder=safeBorder, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

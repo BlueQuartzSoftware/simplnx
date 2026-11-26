@@ -68,7 +68,7 @@ struct ParsedItem
 // The parser uses this static definition to disambiguate unary minus.
 const OperatorDef& getUnaryNegativeOp()
 {
-  static const OperatorDef s_UnaryNeg = {"neg", OperatorDef::UnaryPrefix, 4, 1, OperatorDef::Right, OperatorDef::None, [](double x) { return -x; }, nullptr};
+  static const OperatorDef s_UnaryNeg = {.token="neg", .kind=OperatorDef::UnaryPrefix, .precedence=4, .numArgs=1, .associativity=OperatorDef::Right, .trigMode=OperatorDef::None, .unaryOp=[](double x) { return -x; }, .binaryOp=nullptr};
   return s_UnaryNeg;
 }
 
@@ -593,7 +593,7 @@ Result<ShapeSimResult> simulateShapes(const DataStructure& dataStructure, const 
                                                fmt::format("Tuple/component extraction [{}, {}] at expression item {} has no operand.", item.tupleIndex, item.componentIndex, i));
       }
       // Literal tuple/component extraction supplies a scalar without reading its value.
-      stack.back() = {true, 1};
+      stack.back() = {.isScalar=true, .numComponents=1};
       break;
     }
 
@@ -1161,8 +1161,8 @@ Result<> ArrayCalculatorParser::parse()
         }
         if(arrayExists)
         {
-          result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                                              fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a number."
+          result.warnings().push_back(Warning{.code=static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                              .message=fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a number."
                                                           "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
                                                           tok.text, tok.text)});
         }
@@ -1186,8 +1186,8 @@ Result<> ArrayCalculatorParser::parse()
           }
           if(arrayExists)
           {
-            result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                                                fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
+            result.warnings().push_back(Warning{.code=static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                                .message=fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
                                                             "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
                                                             tok.text, tok.text)});
           }
@@ -1219,8 +1219,8 @@ Result<> ArrayCalculatorParser::parse()
           }
           if(arrayExists)
           {
-            result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                                                fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a built-in constant."
+            result.warnings().push_back(Warning{.code=static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                                .message=fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a built-in constant."
                                                             "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
                                                             tok.text, tok.text)});
           }
@@ -1362,8 +1362,8 @@ Result<> ArrayCalculatorParser::parse()
         }
         if(arrayExists)
         {
-          result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                                              fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
+          result.warnings().push_back(Warning{.code=static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                              .message=fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
                                                           "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
                                                           tok.text, tok.text)});
         }

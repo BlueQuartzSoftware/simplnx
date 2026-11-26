@@ -175,7 +175,7 @@ InitializationOutputs ExecuteInitialization(UnitTest::AlgorithmTestScenario scen
   const UInt64Array* storedSeed = nullptr;
   REQUIRE_NOTHROW(storedSeed = &dataStructure.getDataRefAs<UInt64Array>(DataPath({"InitializeImageGeomCellData Seed"})));
   REQUIRE((*storedSeed)[0] == seed);
-  return {ReadValues<int32>(dataStructure, k_Int32ArrayPath), ReadValues<float32>(dataStructure, k_Float32ArrayPath)};
+  return {.int32Values=ReadValues<int32>(dataStructure, k_Int32ArrayPath), .float32Values=ReadValues<float32>(dataStructure, k_Float32ArrayPath)};
 }
 
 template <class T, class PredicateT>

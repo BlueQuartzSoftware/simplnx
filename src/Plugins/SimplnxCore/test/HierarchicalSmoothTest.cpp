@@ -61,7 +61,7 @@ struct Line
 
 Plane bisectorPlane(const F64Vec3& p, const F64Vec3& q)
 {
-  return Plane{{(p[0] + q[0]) / 2.0, (p[1] + q[1]) / 2.0, (p[2] + q[2]) / 2.0}, normalized(q - p)};
+  return Plane{.point={(p[0] + q[0]) / 2.0, (p[1] + q[1]) / 2.0, (p[2] + q[2]) / 2.0}, .normal=normalized(q - p)};
 }
 
 float64 distanceToPlane(const F64Vec3& x, const Plane& plane)
@@ -84,7 +84,7 @@ Line tripleLine(const F64Vec3& a, const F64Vec3& b, const F64Vec3& c)
   const F64Vec3 w2 = cross(ac, abXac);
   const F64Vec3 toCenter = {(w1[0] * ac2 + w2[0] * ab2) / denom, (w1[1] * ac2 + w2[1] * ab2) / denom, (w1[2] * ac2 + w2[2] * ab2) / denom};
   // Direction sign depends on seed ordering, but distanceToLine projects out the parallel component.
-  return Line{{a[0] + toCenter[0], a[1] + toCenter[1], a[2] + toCenter[2]}, normalized(abXac)};
+  return Line{.point={a[0] + toCenter[0], a[1] + toCenter[1], a[2] + toCenter[2]}, .direction=normalized(abXac)};
 }
 
 float64 distanceToLine(const F64Vec3& x, const Line& line)
@@ -228,8 +228,8 @@ MeshPaths buildVoronoiMesh(DataStructure& dataStructure, const SizeVec3& dims, c
   auto execute = qsm.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
-  return MeshPaths{triangleGeomPath, triangleGeomPath.createChildPath("Vertex Data").createChildPath("Node Type"), triangleGeomPath.createChildPath("Face Data").createChildPath("Face Labels"),
-                   triangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName)};
+  return MeshPaths{.triangleGeom=triangleGeomPath, .nodeType=triangleGeomPath.createChildPath("Vertex Data").createChildPath("Node Type"), .faceLabels=triangleGeomPath.createChildPath("Face Data").createChildPath("Face Labels"),
+                   .vertices=triangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName)};
 }
 
 void runHierarchicalSmooth(DataStructure& dataStructure, const MeshPaths& paths)

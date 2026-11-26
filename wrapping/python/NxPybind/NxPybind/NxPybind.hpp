@@ -656,10 +656,10 @@ protected:
       return result;
     } catch(const py::error_already_set& pyException)
     {
-      return {MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
+      return {.outputActions=MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
     } catch(const std::exception& exception)
     {
-      return {MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
+      return {.outputActions=MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
     }
   }
 

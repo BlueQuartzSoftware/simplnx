@@ -132,7 +132,7 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
   auto phaseTypesAction = std::make_unique<CreateArrayAction>(DataType::uint32, tupleDims, std::vector<usize>{1}, phaseTypesPath);
   resultOutputActions.value().appendAction(std::move(phaseTypesAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

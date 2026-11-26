@@ -103,7 +103,7 @@ IFilter::PreflightResult IntensityWindowingImageFilter::preflightImpl(const Data
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
@@ -117,7 +117,7 @@ Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const IntensityWindowingOperation operation{windowMinimum, windowMaximum, outputMinimum, outputMaximum};
+  const IntensityWindowingOperation operation{.windowMinimum=windowMinimum, .windowMaximum=windowMaximum, .outputMinimum=outputMinimum, .outputMaximum=outputMaximum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

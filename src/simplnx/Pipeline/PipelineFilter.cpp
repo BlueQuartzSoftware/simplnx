@@ -171,7 +171,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
   clearFaultState();
   if(m_Filter == nullptr)
   {
-    m_Errors.push_back(Error{-10, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    m_Errors.push_back(Error{.code=-10, .message="This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
     setHasErrors();
     setPreflightStructure(dataStructure, false);
     sendFilterFaultMessage(m_Index, getFaultState());
@@ -269,7 +269,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
 
   if(m_Filter == nullptr)
   {
-    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    m_Errors.push_back(Error{.code=-11, .message="This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
   }
 
   IFilter::ExecuteResult result;
@@ -285,7 +285,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
   }
   else
   {
-    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    m_Errors.push_back(Error{.code=-11, .message="This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
   }
 
   auto completionResult = endExecutionChecked(dataStructure);
@@ -681,7 +681,7 @@ nx::core::WarningCollection convertErrors(const nx::core::ErrorCollection& error
   WarningCollection warnings;
   for(const auto& error : errors)
   {
-    warnings.emplace_back(Warning{error.code, prefix + error.message});
+    warnings.emplace_back(Warning{.code=error.code, .message=prefix + error.message});
   }
   return warnings;
 }

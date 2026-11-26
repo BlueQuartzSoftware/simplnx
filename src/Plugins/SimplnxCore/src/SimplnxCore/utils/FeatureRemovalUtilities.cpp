@@ -330,7 +330,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     {
       if(path == args.FeatureIdsArrayPath)
       {
-        result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature Ids array '{}' was listed in the arrays to ignore. It is the array being filled and "
+        result.warnings().push_back(Warning{.code=k_FeatureIdsCannotBeIgnoredWarning, .message=fmt::format("The Feature Ids array '{}' was listed in the arrays to ignore. It is the array being filled and "
                                                                                             "cannot be ignored, so it was removed from the list.",
                                                                                             path.toString())});
         continue;

@@ -1779,7 +1779,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   filterMessage.def(py::init<>());
   filterMessage.def(py::init<IFilter::Message::Type, const std::string&>());
-  filterMessage.def(py::init([](IFilter::Message::Type type, std::string message, int32 progress) { return IFilter::Message{type, std::move(message), progress}; }), "type"_a, "message"_a,
+  filterMessage.def(py::init([](IFilter::Message::Type type, std::string message, int32 progress) { return IFilter::Message{.type=type, .message=std::move(message), .progress=progress}; }), "type"_a, "message"_a,
                     "progress"_a);
   filterMessage.def_readwrite("type", &IFilter::Message::type);
   filterMessage.def_readwrite("message", &IFilter::Message::message);
@@ -1787,7 +1787,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   // Progress information now lives on Message itself, so ProgressMessage is no longer a distinct
   // type. This factory keeps the IFilter.ProgressMessage(message, progress) call shape working.
-  filter.def_static("ProgressMessage", [](std::string message, int32 progress) { return IFilter::Message{IFilter::Message::Type::Progress, std::move(message), progress}; }, "message"_a, "progress"_a);
+  filter.def_static("ProgressMessage", [](std::string message, int32 progress) { return IFilter::Message{.type=IFilter::Message::Type::Progress, .message=std::move(message), .progress=progress}; }, "message"_a, "progress"_a);
 
   py::class_<IFilter::MessageHandler> messageHandler(filter, "MessageHandler");
   messageHandler.def(py::init<>());

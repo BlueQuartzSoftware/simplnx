@@ -130,7 +130,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
       std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
       if(!dataPath.has_value())
       {
-        errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), dataPathString)});
+        errors.push_back(Error{.code=FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message=fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), dataPathString)});
         continue;
       }
       dataPaths.push_back(std::move(*dataPath));

@@ -127,7 +127,7 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   const auto* avgQuats = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
   if(avgQuats->getNumberOfComponents() != 4)
   {
-    return {MakeErrorResult<OutputActions>(
+    return {.outputActions=MakeErrorResult<OutputActions>(
         -34500, fmt::format("Input Average Quaternions array at path '{}' has {} components but 4 are required.", pAvgQuatsArrayPathValue.toString(), avgQuats->getNumberOfComponents()))};
   }
 
@@ -140,7 +140,7 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-34501, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-34501, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -158,7 +158,7 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

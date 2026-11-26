@@ -138,7 +138,7 @@ inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3& dims, uint64 grantB
   const usize usefulBytes = dims[2] * (planeInputBytes + planeOutputBytes);
   if(grantBytes >= usefulBytes)
   {
-    return {dims[2], dims[2], dims[2] * planeInputBytes, dims[2] * planeOutputBytes};
+    return {.corePlanes=dims[2], .inputPlanes=dims[2], .inputBytes=dims[2] * planeInputBytes, .outputBytes=dims[2] * planeOutputBytes};
   }
 
   const uint64 haloBytes = uint64{4} * planeInputBytes;
@@ -146,7 +146,7 @@ inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3& dims, uint64 grantB
   const usize quotient = grantBytes > haloBytes ? static_cast<usize>((grantBytes - haloBytes) / bytesPerCorePlane) : 0;
   const usize corePlanes = std::clamp(std::max<usize>(1, quotient), usize{1}, dims[2] - 1);
   const usize inputPlanes = std::min(dims[2], corePlanes + 4);
-  return {corePlanes, inputPlanes, inputPlanes * planeInputBytes, corePlanes * planeOutputBytes};
+  return {.corePlanes=corePlanes, .inputPlanes=inputPlanes, .inputBytes=inputPlanes * planeInputBytes, .outputBytes=corePlanes * planeOutputBytes};
 }
 
 /** @brief Gives the maximum value count in one direct-route plane group. */

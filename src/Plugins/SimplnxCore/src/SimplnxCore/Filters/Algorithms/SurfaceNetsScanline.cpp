@@ -1014,7 +1014,7 @@ Result<> SurfaceNetsScanline::operator()()
         return ConvertResult(std::move(quadRecord));
       if(quadRecord.value().VertexId == std::numeric_limits<uint64>::max())
         return MakeErrorResult(-62056, "SurfaceNets edge quad is missing one of its required vertices.");
-      vData[n] = {static_cast<usize>(quadRecord.value().VertexId), {0.0f, 0.0f, 0.0f}};
+      vData[n] = {.VertexId=static_cast<usize>(quadRecord.value().VertexId), .Position={0.0f, 0.0f, 0.0f}};
     }
     const bool frontFacing = label0.value() < label1.value();
     LabelType firstLabel = label0.value() == MMSurfaceNet::Padding ? -1 : label0.value();

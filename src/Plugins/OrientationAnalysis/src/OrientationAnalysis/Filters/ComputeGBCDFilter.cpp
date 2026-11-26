@@ -139,7 +139,7 @@ IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& d
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float64, tupleShape, componentShape, faceEnsembleAttributeMatrixPath.createChildPath(pGBCDArrayNameValue));
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

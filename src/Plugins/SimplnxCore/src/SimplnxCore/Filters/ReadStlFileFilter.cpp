@@ -180,7 +180,7 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& /
   // the appropriate methods. (None to store for this filter... yet)
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

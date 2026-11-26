@@ -92,7 +92,7 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
+    return {.outputActions=MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 

@@ -126,7 +126,7 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
   if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -12018); prefixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
   }
 
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -137,7 +137,7 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
 
   if(auto targetsResult = AbaqusElementSets::validateOutputTargets(outputPath, prefix, -12019); targetsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
   }
 
   const int32 numDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
@@ -170,7 +170,7 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
   }
   const usize cellCount = imageGeom.getNumberOfCells();
 

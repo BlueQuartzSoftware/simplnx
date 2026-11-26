@@ -100,18 +100,18 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
   {
     finalOutputPath.concat(extension);
     results.warnings().push_back(Warning{
-        -2580, fmt::format("Output file '{}' is missing an extension. A {} extension will be added to the provided output file so that the extracted pipeline will be written to the file at path '{}'",
+        .code=-2580, .message=fmt::format("Output file '{}' is missing an extension. A {} extension will be added to the provided output file so that the extracted pipeline will be written to the file at path '{}'",
                            outputFile.string(), extension, finalOutputPath.string())});
   }
   if(finalOutputPath.extension().string() != extension)
   {
     finalOutputPath.replace_extension(extension);
     results.warnings().push_back(
-        Warning{-2581, fmt::format("Output file '{}' has the incorrect extension. A {} extension will be used instead so that the extracted pipeline will be written to the file at path '{}'",
+        Warning{.code=-2581, .message=fmt::format("Output file '{}' has the incorrect extension. A {} extension will be used instead so that the extracted pipeline will be written to the file at path '{}'",
                                    outputFile.string(), extension, finalOutputPath.string())});
   }
 
-  return {results};
+  return {.outputActions=results};
 }
 
 //------------------------------------------------------------------------------

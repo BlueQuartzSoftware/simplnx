@@ -504,7 +504,7 @@ Result<nx::core::DataType> DatasetIO::getDataType() const
     result = {DataType::uint64};
     break;
   default:
-    result = {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datat set is not a supported type for "
+    result = {nonstd::make_unexpected(std::vector<Error>{Error{.code=-20012, .message="The selected datat set is not a supported type for "
                                                                        "importing. Please select a different data set"}})};
     break;
   }

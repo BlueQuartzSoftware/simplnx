@@ -104,13 +104,13 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -14605, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, pIgnoredDataArrayPathsValue, -14604, "Attribute Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
@@ -125,27 +125,27 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   if(!xDirOn && !yDirOn && !zDirOn)
   {
-    return {MakeErrorResult<OutputActions>(k_NoDirectionsError, "ErodeDilateBadData requires at least one direction to operate over")};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NoDirectionsError, "ErodeDilateBadData requires at least one direction to operate over")};
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   auto dims = imageGeom.getDimensions();
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
-    return {MakeErrorResult<OutputActions>(k_NoGeometryDimensionsError, "ErodeDilateBadData requires that the ImageGeom have its dimensions set. No dimension may be 0.")};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NoGeometryDimensionsError, "ErodeDilateBadData requires that the ImageGeom have its dimensions set. No dimension may be 0.")};
   }
 
   std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
                                            "level data should be rerun to ensure accurate final results from your pipeline.";
-  preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
-  resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
+  preflightUpdatedValues.emplace_back(PreflightValue{.name="Feature Data Modification Warning", .value=featureModificationWarning});
+  resultOutputActions.warnings().push_back(Warning{.code=-14600, .message=featureModificationWarning});
 
   // Report arrays that the filter modifies in place.
   // Cell Data arrays are modified.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, pIgnoredDataArrayPathsValue);
 
   // Return actions and updated preflight values.
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

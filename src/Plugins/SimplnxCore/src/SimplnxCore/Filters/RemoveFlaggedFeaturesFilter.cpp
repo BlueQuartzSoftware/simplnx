@@ -126,7 +126,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -9893, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   if((operationType == to_underlying(Functionality::Remove) || operationType == to_underlying(Functionality::ExtractThenRemove)) && fillRemovedFeatures)
@@ -134,7 +134,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -9894, "Attribute Arrays to Ignore");
     if(ignoredArraysResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
     }
   }
 
@@ -143,7 +143,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
       ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, cellFeatureAttributeMatrixPath, -9895, "Flagged Features", pFlaggedFeaturesArrayPathValue);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   if(operationType == to_underlying(Functionality::Extract) || operationType == to_underlying(Functionality::ExtractThenRemove))
@@ -151,7 +151,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(elementDataResult), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(elementDataResult), {})};
     }
   }
 
@@ -182,7 +182,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     }
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

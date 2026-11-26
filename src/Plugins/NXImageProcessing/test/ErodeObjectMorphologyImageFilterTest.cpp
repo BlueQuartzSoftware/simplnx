@@ -58,7 +58,7 @@ constexpr int32 k_ValueTruncated = -8533;
 
 // The standard correctness configurations: 3D uniform + 3D non-cubic radius on a multi-object/edge-touching
 // image, plus a genuinely 2D (Z=1) image.
-const std::vector<omt::ObjCase> k_Configs = {{"3D r{1,1,1}", {1, 1, 1}, 12, 12, 12}, {"3D r{2,1,1}", {2, 1, 1}, 12, 12, 12}, {"2D Z=1 r{2,2,0}", {2, 2, 0}, 20, 16, 1}};
+const std::vector<omt::ObjCase> k_Configs = {{.label="3D r{1,1,1}", .radius={1, 1, 1}, .dimX=12, .dimY=12, .dimZ=12}, {.label="3D r{2,1,1}", .radius={2, 1, 1}, .dimX=12, .dimY=12, .dimZ=12}, {.label="2D Z=1 r{2,2,0}", .radius={2, 2, 0}, .dimX=20, .dimY=16, .dimZ=1}};
 
 const char* KernelName(KernelType kt)
 {

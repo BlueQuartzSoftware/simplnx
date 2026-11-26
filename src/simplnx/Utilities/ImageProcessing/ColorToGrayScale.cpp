@@ -29,19 +29,19 @@ IFilter::PreflightResult nx::core::PreflightColorToGrayScale(const DataStructure
   {
     if(inputValues.ColorWeights[0] < 0.0F || inputValues.ColorWeights[1] < 0.0F || inputValues.ColorWeights[2] < 0.0F)
     {
-      return {MakeErrorResult<OutputActions>(-10704, "One or more of the Color Weight values is negative. All weights must be zero or positive.")};
+      return {.outputActions=MakeErrorResult<OutputActions>(-10704, "One or more of the Color Weight values is negative. All weights must be zero or positive.")};
     }
 
     const float colorWeightSum = inputValues.ColorWeights[0] + inputValues.ColorWeights[1] + inputValues.ColorWeights[2];
     if(colorWeightSum < .9800 || colorWeightSum > 1.02)
     {
-      return {MakeErrorResult<OutputActions>(-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum))};
+      return {.outputActions=MakeErrorResult<OutputActions>(-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum))};
     }
   }
 
   if(inputValues.InputDataArrayPaths.empty())
   {
-    return {MakeErrorResult<OutputActions>(-10705, fmt::format("No input arrays selected for conversion."))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-10705, fmt::format("No input arrays selected for conversion."))};
   }
 
   for(const auto& inputDataArrayPath : inputValues.InputDataArrayPaths)
@@ -74,7 +74,7 @@ IFilter::PreflightResult nx::core::PreflightColorToGrayScale(const DataStructure
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, inputArray.getIDataStoreRef().getTupleShape(), std::vector<usize>(1, 1), outputDataArrayPath));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 namespace

@@ -64,7 +64,7 @@ Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json&
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
+      errors.push_back(Error{.code=FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message=fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
       continue;
     }
     paths.push_back(std::move(*path));
@@ -111,13 +111,13 @@ Result<> MultiPathSelectionParameter::validatePaths(const DataStructure& dataStr
 
     if(path.empty())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
+      errors.push_back(Error{.code=FilterParameter::Constants::k_Validate_Empty_Value, .message=fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
     const DataObject* object = dataStructure.getData(path);
     if(object == nullptr)
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
+      errors.push_back(Error{.code=FilterParameter::Constants::k_Validate_Does_Not_Exist, .message=fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
   }

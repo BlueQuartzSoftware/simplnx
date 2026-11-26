@@ -137,7 +137,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -78125, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   if(fillRemovedFeatures)
@@ -145,7 +145,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
     auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -78126, "Attribute Arrays to Ignore");
     if(ignoredArraysResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
     }
   }
 
@@ -153,7 +153,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
       ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, pRankingArrayPathValue.getParent(), -78127, "Feature Ranking Array", pRankingArrayPathValue);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -168,7 +168,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   const usize numTuples = rankingArray.getNumberOfTuples();
   if(numTuples < 2)
   {
-    return {MakeErrorResult<OutputActions>(k_NotEnoughFeatures,
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NotEnoughFeatures,
                                            fmt::format("The Feature Attribute Matrix at path '{}' holds {} tuple(s), but at least 2 are required. Tuple 0 is the unused dummy feature, so there "
                                                        "must be at least one real Feature to rank.",
                                                        featureAttributeMatrixPath.toString(), numTuples))};
@@ -182,7 +182,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   const usize amTupleCount = std::accumulate(amShape.cbegin(), amShape.cend(), static_cast<usize>(1), std::multiplies<>());
   if(numTuples != amTupleCount)
   {
-    return {MakeErrorResult<OutputActions>(k_TupleCountMismatch, fmt::format("The Feature Ranking Array at path '{}' has {} tuples but its parent Attribute Matrix '{}' has {}. They must match.",
+    return {.outputActions=MakeErrorResult<OutputActions>(k_TupleCountMismatch, fmt::format("The Feature Ranking Array at path '{}' has {} tuples but its parent Attribute Matrix '{}' has {}. They must match.",
                                                                              pRankingArrayPathValue.toString(), numTuples, featureAttributeMatrixPath.toString(), amTupleCount))};
   }
 
@@ -195,13 +195,13 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   {
     if(pNumFeaturesValue == 0)
     {
-      return {MakeErrorResult<OutputActions>(k_ZeroNumFeatures, "'Number of Features' is 0, which would select no Features. Enter a value of 1 or greater.")};
+      return {.outputActions=MakeErrorResult<OutputActions>(k_ZeroNumFeatures, "'Number of Features' is 0, which would select no Features. Enter a value of 1 or greater.")};
     }
     resolvedCount = static_cast<usize>(pNumFeaturesValue);
     if(resolvedCount > numFeatures)
     {
       resultOutputActions.m_Warnings.push_back(
-          Warning{k_NumFeaturesClamped, fmt::format("'Number of Features' is {}, but only {} Features exist. Clamping the selection to {}.", pNumFeaturesValue, numFeatures, numFeatures)});
+          Warning{.code=k_NumFeaturesClamped, .message=fmt::format("'Number of Features' is {}, but only {} Features exist. Clamping the selection to {}.", pNumFeaturesValue, numFeatures, numFeatures)});
       resolvedCount = numFeatures;
     }
   }
@@ -209,14 +209,14 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   {
     if(pPercentValue <= 0.0 || pPercentValue > 100.0)
     {
-      return {MakeErrorResult<OutputActions>(k_PercentOutOfRange, fmt::format("'Percent' is {}, which is outside the allowed range (0, 100].", pPercentValue))};
+      return {.outputActions=MakeErrorResult<OutputActions>(k_PercentOutOfRange, fmt::format("'Percent' is {}, which is outside the allowed range (0, 100].", pPercentValue))};
     }
     if(pCriterionValue == to_underlying(RankCriterion::PercentOfCount))
     {
       resolvedCount = static_cast<usize>(std::llround(pPercentValue / 100.0 * static_cast<float64>(numFeatures)));
       if(resolvedCount == 0)
       {
-        resultOutputActions.m_Warnings.push_back(Warning{k_PercentRoundedToZero, fmt::format("{}% of {} Features rounds to 0. Selecting 1 Feature instead.", pPercentValue, numFeatures)});
+        resultOutputActions.m_Warnings.push_back(Warning{.code=k_PercentRoundedToZero, .message=fmt::format("{}% of {} Features rounds to 0. Selecting 1 Feature instead.", pPercentValue, numFeatures)});
         resolvedCount = 1;
       }
     }
@@ -235,12 +235,12 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
     if(flaggedCount == 0)
     {
       resultOutputActions.m_Warnings.push_back(
-          Warning{k_NothingFlagged, fmt::format("The current settings leave all {} Features surviving, so no Features will be removed and this filter will do nothing.", numFeatures)});
+          Warning{.code=k_NothingFlagged, .message=fmt::format("The current settings leave all {} Features surviving, so no Features will be removed and this filter will do nothing.", numFeatures)});
     }
     else if(flaggedCount == numFeatures)
     {
       resultOutputActions.m_Warnings.push_back(
-          Warning{k_EverythingFlagged, fmt::format("The current settings flag all {} Features for removal, which would leave nothing behind. This filter will fail during execute.", numFeatures)});
+          Warning{.code=k_EverythingFlagged, .message=fmt::format("The current settings flag all {} Features for removal, which would leave nothing behind. This filter will fail during execute.", numFeatures)});
     }
   }
 
@@ -257,7 +257,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
     return result;
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

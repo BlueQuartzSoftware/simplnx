@@ -179,7 +179,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   }
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, cellArrayPaths, -3543); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   // Handle Array Creation
@@ -209,7 +209,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   // Cell Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPathValue.getParent(), {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

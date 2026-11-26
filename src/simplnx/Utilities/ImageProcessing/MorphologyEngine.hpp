@@ -1227,7 +1227,7 @@ inline AxisAddRemoveSets ComputeAxisAddRemoveSets(const StructuringElement& se)
       const int32 qz = o.dz + axisStep[a][2];
       if(!contains(qx, qy, qz))
       {
-        result.added[a].push_back(SEOffset{qx, qy, qz});
+        result.added[a].push_back(SEOffset{.dx=qx, .dy=qy, .dz=qz});
       }
       const int32 px = o.dx - axisStep[a][0];
       const int32 py = o.dy - axisStep[a][1];
@@ -1850,7 +1850,7 @@ public:
    */
   PackedBinaryPlanesView view() const
   {
-    return {m_Words.data(), m_Layout, m_ZLo, m_Depth, m_Capacity, m_Head};
+    return {.words=m_Words.data(), .layout=m_Layout, .zLo=m_ZLo, .depth=m_Depth, .capacity=m_Capacity, .head=m_Head};
   }
 
 private:
@@ -1987,7 +1987,7 @@ inline BinaryMorphWord ExtractPackedBinaryWord(const PackedBinaryPlanesView& vie
 inline BinaryMorphWord ExtractPackedBinaryWord(const BinaryMorphWord* packedInput, const PackedBinaryPlaneLayout& layout, const SizeVec3& boundDims, usize stagedZLo, usize stagedDepth, int64 xStart,
                                                int64 y, int64 z, bool boundaryToForeground)
 {
-  return ExtractPackedBinaryWord({packedInput, layout, stagedZLo, stagedDepth, stagedDepth, 0}, boundDims, xStart, y, z, boundaryToForeground);
+  return ExtractPackedBinaryWord({.words=packedInput, .layout=layout, .zLo=stagedZLo, .depth=stagedDepth, .capacity=stagedDepth, .head=0}, boundDims, xStart, y, z, boundaryToForeground);
 }
 
 /**

@@ -91,15 +91,15 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
       std::sqrt(pRotationAxisAngleValue[0] * pRotationAxisAngleValue[0] + pRotationAxisAngleValue[1] * pRotationAxisAngleValue[1] + pRotationAxisAngleValue[2] * pRotationAxisAngleValue[2]);
   if(axisMagnitude < std::numeric_limits<float32>::epsilon())
   {
-    return {MakeErrorResult<OutputActions>(-96200, fmt::format("Rotation axis <{}, {}, {}> has zero length. The ijk components must define a non-zero direction.", pRotationAxisAngleValue[0],
+    return {.outputActions=MakeErrorResult<OutputActions>(-96200, fmt::format("Rotation axis <{}, {}, {}> has zero length. The ijk components must define a non-zero direction.", pRotationAxisAngleValue[0],
                                                                pRotationAxisAngleValue[1], pRotationAxisAngleValue[2]))};
   }
 
   resultOutputActions.value().modifiedActions.emplace_back(
-      DataObjectModification{pCellEulerAnglesArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
+      DataObjectModification{.modifiedPath=pCellEulerAnglesArrayPathValue, .modifiedType=DataObjectModification::ModifiedType::Modified, .dataObjectType=dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

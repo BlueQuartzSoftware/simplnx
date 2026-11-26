@@ -92,14 +92,14 @@ IFilter::PreflightResult HMaximaImageFilter::preflightImpl(const DataStructure& 
   // value; reject it here so the offset is always well-defined.
   if(!std::isfinite(height))
   {
-    return {MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Maxima requires a finite Height, but the supplied value was {}.", height))};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Maxima requires a finite Height, but the supplied value was {}.", height))};
   }
   // A negative Height has no meaning (no regional maximum has negative depth) and would push the (input - Height)
   // marker ABOVE the mask, violating reconstruction-by-dilation's marker<=mask precondition (ITK throws). Require
   // Height >= 0; 0 is a valid no-op.
   if(height < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Maxima requires a non-negative Height, but the supplied value was {}.", height))};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Maxima requires a non-negative Height, but the supplied value was {}.", height))};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK

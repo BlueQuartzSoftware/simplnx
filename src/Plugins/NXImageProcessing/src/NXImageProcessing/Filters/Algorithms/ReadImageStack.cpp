@@ -375,7 +375,7 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
     else if(convertToGrayscale && !validInputForGrayScaleConversion)
     {
       outputResult.warnings().emplace_back(
-          Warning{-74320, fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.",
+          Warning{.code=-74320, .message=fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.",
                                       srcImageDataPath.getTargetName())});
     }
 

@@ -152,7 +152,7 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
 
   if(auto result = ValidateCellTupleCount(dataStructure, pGridGeometryPath, cellArrayPaths, -90201); result.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   const DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
@@ -203,7 +203,7 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

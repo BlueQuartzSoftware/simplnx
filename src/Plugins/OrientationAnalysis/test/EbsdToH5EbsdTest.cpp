@@ -195,7 +195,7 @@ const std::string k_InputPath = fmt::format("{}/Small_IN100", unit_test::k_TestF
 const std::string k_FilePrefix = "Slice_";
 const std::string k_FileSuffix;
 const std::string k_FileExtension = ".ang";
-GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex, k_IncrementIndex, k_PaddingDigits, k_Ordering, k_InputPath, k_FilePrefix, k_FileSuffix, k_FileExtension};
+GeneratedFileListParameter::ValueType k_FileListInfo = {.startIndex=k_StartIndex, .endIndex=k_EndIndex, .incrementIndex=k_IncrementIndex, .paddingDigits=k_PaddingDigits, .ordering=k_Ordering, .inputPath=k_InputPath, .filePrefix=k_FilePrefix, .fileSuffix=k_FileSuffix, .fileExtension=k_FileExtension};
 
 } // namespace
 

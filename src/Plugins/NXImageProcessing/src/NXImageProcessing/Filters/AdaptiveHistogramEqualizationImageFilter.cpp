@@ -91,7 +91,7 @@ IFilter::PreflightResult AdaptiveHistogramEqualizationImageFilter::preflightImpl
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Adaptive Histogram Equalization requires a single-component (scalar) input array, but '{}' has {} components.",
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Adaptive Histogram Equalization requires a single-component (scalar) input array, but '{}' has {} components.",
                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 

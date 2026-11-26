@@ -110,7 +110,7 @@ inline FiniteDifferenceInteriorRange CreateFiniteDifferenceInteriorRange(usize d
   {
     return {};
   }
-  return {unsignedRadius, dimension - unsignedRadius};
+  return {.begin=unsignedRadius, .end=dimension - unsignedRadius};
 }
 
 struct FiniteDifferenceResidentMemoryAllocation

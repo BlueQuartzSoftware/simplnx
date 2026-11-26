@@ -154,7 +154,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
     {
       if(!selectedTriangleArrays.empty() && nullptr == srcTriangleAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5251, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions=MakeErrorResult<OutputActions>(-5251, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
     }
@@ -162,7 +162,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
     {
       if(nullptr == srcTriangleAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5252, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions=MakeErrorResult<OutputActions>(-5252, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -184,7 +184,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
     {
       if(!selectedVertexArrays.empty() && nullptr == srcVertexAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5553, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions=MakeErrorResult<OutputActions>(-5553, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
@@ -192,7 +192,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
     {
       if(nullptr == srcVertexAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5554, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.outputActions=MakeErrorResult<OutputActions>(-5554, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -206,7 +206,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

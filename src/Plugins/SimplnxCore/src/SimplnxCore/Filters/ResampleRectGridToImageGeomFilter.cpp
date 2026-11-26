@@ -107,7 +107,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   if(pDimensionsValue[0] < 0)
@@ -196,7 +196,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   createdGeometryDesc << dims[0] << " Voxels\n" << dims[1] << " Voxels\n" << dims[2] << " Voxels\n";
   preflightUpdatedValues.push_back({"Created Image Geometry Info", createdGeometryDesc.str()});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

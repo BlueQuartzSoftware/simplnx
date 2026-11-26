@@ -90,7 +90,7 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
+    return {.outputActions=MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
                                            fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   // Instantiate and move the action that will create the output array
@@ -102,7 +102,7 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

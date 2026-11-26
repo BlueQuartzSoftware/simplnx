@@ -104,7 +104,7 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, geometryPath, {featureIdsPath}, -74771);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);

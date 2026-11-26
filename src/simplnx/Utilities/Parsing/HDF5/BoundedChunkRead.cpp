@@ -302,7 +302,7 @@ Status queryRecord(hid_t dataset, const hsize_t* origin, ParallelChunkCodec::Chu
     diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk metadata has contradictory address and length."));
     return Status::Failed;
   }
-  record = {address != HADDR_UNDEF, mask, static_cast<uint64>(address), static_cast<uint64>(bytes)};
+  record = {.allocated=address != HADDR_UNDEF, .filterMask=mask, .storedAddress=static_cast<uint64>(address), .storedSize=static_cast<uint64>(bytes)};
   return Status::Complete;
 }
 

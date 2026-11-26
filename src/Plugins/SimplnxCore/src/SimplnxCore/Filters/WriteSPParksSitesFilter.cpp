@@ -89,7 +89,7 @@ IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStruct
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -77453); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   return {};

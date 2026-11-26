@@ -341,12 +341,12 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     if(featureAmResult.invalid())
     {
       featureAmResult.errors().front().message += " Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.";
-      return {ConvertInvalidResult<OutputActions>(std::move(featureAmResult))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(featureAmResult))};
     }
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(inputValues.RenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, inputValues.FeatureIdsArrayPath, *selectedCellData))
     {
@@ -398,7 +398,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom.getCellDataPath(), {});
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------

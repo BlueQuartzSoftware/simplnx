@@ -98,7 +98,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
 
     if(dataObject->getParentIds().size() > 1)
     {
-      return {ConvertResultTo<OutputActions>(
+      return {.outputActions=ConvertResultTo<OutputActions>(
           MakeWarningVoidResult(-61501, fmt::format("The object is multi-parented, deleting this data could affect other unintended nodes. Consider using the Delete DataPath instead.")), {})};
     }
 

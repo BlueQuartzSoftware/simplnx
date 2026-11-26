@@ -96,7 +96,7 @@ IFilter::PreflightResult LabelContourImageFilter::preflightImpl(const DataStruct
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Label Contour requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(),
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Label Contour requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(),
                                                                          inputArray.getNumberOfComponents()))};
   }
 
@@ -104,7 +104,7 @@ IFilter::PreflightResult LabelContourImageFilter::preflightImpl(const DataStruct
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions=std::move(resultOutputActions)};
   }
 
   // The Float64 background parameter is cast to the (integer) input element type by the contour façade. That
@@ -114,13 +114,13 @@ IFilter::PreflightResult LabelContourImageFilter::preflightImpl(const DataStruct
   Result<> paramGuard = ImageProcessing::ValidateBackgroundInRange(inputType, backgroundValue, k_NonFiniteBackgroundValue, k_BackgroundValueOutOfRange, k_BackgroundValueTruncated);
   if(paramGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
   }
   for(Warning& warning : paramGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 Result<> LabelContourImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

@@ -137,7 +137,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       {
         std::string ss = fmt::format("{}The object at '{}' will be replaced under the selected parent. Other placements and their children are kept. Objects left with no placement are deleted.",
                                      prefix, m_Path.replaceName(m_NewName).toString());
-        result.warnings().emplace_back(Warning{-6602, ss});
+        result.warnings().emplace_back(Warning{.code=-6602, .message=ss});
         return result;
       }
       auto removalResult = RemovePlacementRecursively(dataStructure, targetId, selectedParent == nullptr ? 0 : selectedParent->getId(), m_Path.replaceName(m_NewName));

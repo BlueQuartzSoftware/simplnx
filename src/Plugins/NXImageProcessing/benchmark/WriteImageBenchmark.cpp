@@ -307,8 +307,8 @@ OocCounters ReadOocCounters(const AbstractDataStore<T>& store)
 
 OocCounters SubtractCounters(const OocCounters& after, const OocCounters& before)
 {
-  return {after.returnedExtentReads - before.returnedExtentReads, after.callerExtentReads - before.callerExtentReads, after.chunkCacheMisses - before.chunkCacheMisses,
-          after.metadataBatches - before.metadataBatches};
+  return {.returnedExtentReads=after.returnedExtentReads - before.returnedExtentReads, .callerExtentReads=after.callerExtentReads - before.callerExtentReads, .chunkCacheMisses=after.chunkCacheMisses - before.chunkCacheMisses,
+          .metadataBatches=after.metadataBatches - before.metadataBatches};
 }
 
 template <typename T>

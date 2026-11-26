@@ -103,7 +103,7 @@ IFilter::PreflightResult CreatePythonSkeletonFilter::preflightImpl(const DataStr
   auto namesResult = ParsePythonFilterNames(filterNames);
   if(namesResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(namesResult))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(namesResult))};
   }
   const auto& filterList = namesResult.value();
 

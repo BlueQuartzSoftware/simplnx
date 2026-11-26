@@ -140,14 +140,14 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
   if(dataStructure.getDataAs<IDataArray>(pGBEuclideanDistancesArrayPathValue) == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(
+    return {.outputActions=MakeErrorResult<OutputActions>(
         k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pGBEuclideanDistancesArrayPathValue.toString()))};
   }
 
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, k_CellTupleCountError);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   PreflightResult preflightResult;
@@ -156,24 +156,24 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
 
   if(!pBoundaryNoiseValue && !pPoissonNoiseValue)
   {
-    return {MakeErrorResult<OutputActions>(-76234, fmt::format("At least one type of noise must be selected"))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-76234, fmt::format("At least one type of noise must be selected"))};
   }
 
   if(pPoissonVolFractionValue > 1.0 || pPoissonVolFractionValue < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(-76235, fmt::format("Poisson Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pPoissonVolFractionValue))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-76235, fmt::format("Poisson Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pPoissonVolFractionValue))};
   }
 
   if(pBoundaryVolFractionValue > 1.0 || pBoundaryVolFractionValue < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(-76236, fmt::format("Boundary Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pBoundaryVolFractionValue))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-76236, fmt::format("Boundary Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pBoundaryVolFractionValue))};
   }
 
   auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
   auto* cellAM = imgGeomPtr->getCellData();
   if(cellAM == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
   }
 
   const auto childArrayPaths = GetAllChildArrayDataPaths(dataStructure, imgGeomPtr->getCellDataPath());
@@ -183,7 +183,7 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
     {
       if(dataStructure.getDataAs<IDataArray>(arrayPath) == nullptr)
       {
-        return {MakeErrorResult<OutputActions>(
+        return {.outputActions=MakeErrorResult<OutputActions>(
             -76239, fmt::format("Cell array '{}' is not a numeric DataArray. Move StringArray and NeighborList objects out of the geometry's cell Attribute Matrix before adding bad data.",
                                 arrayPath.toString()))};
       }
@@ -200,7 +200,7 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imgGeomPtr->getCellDataPath(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

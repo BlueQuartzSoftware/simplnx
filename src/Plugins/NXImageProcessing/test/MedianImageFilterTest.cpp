@@ -211,7 +211,7 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles
     usize maximumReadValues;
     usize maximumWriteValues;
   };
-  const std::array<TransferCase, 2> transferCases = {{{"full-width row blocks", 216, true, 2, 9, 36, 18}, {"overwide X tiles", 80, false, 1, 2, 6, 2}}};
+  const std::array<TransferCase, 2> transferCases = {{{.label="full-width row blocks", .bufferBytes=216, .fullWidth=true, .coreRows=2, .coreColumns=9, .maximumReadValues=36, .maximumWriteValues=18}, {.label="overwide X tiles", .bufferBytes=80, .fullWidth=false, .coreRows=1, .coreColumns=2, .maximumReadValues=6, .maximumWriteValues=2}}};
 
   for(const TransferCase& transferCase : transferCases)
   {

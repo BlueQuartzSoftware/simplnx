@@ -615,19 +615,19 @@ TEST_CASE("HDF5 hyperslab rejects malformed selections after rank and size valid
     const char* diagnostic;
   };
   const std::array<Selection, 13> selections{{
-      {"empty start rank", {}, {1, 2}, "rank"},
-      {"short start rank", {1}, {1, 2}, "rank"},
-      {"empty count rank", {1, 1}, {}, "rank"},
-      {"short count rank", {1, 1}, {1}, "rank"},
-      {"excess count rank", {1, 1}, {1, 2, 1}, "rank"},
-      {"both ranks empty", {}, {}, "rank"},
-      {"start at nonempty boundary", {2, 0}, {1, 1}, "axis"},
-      {"start beyond extent", {3, 0}, {1, 1}, "axis"},
-      {"count beyond remaining extent", {1, 2}, {1, 2}, "axis"},
-      {"maximum start", {std::numeric_limits<uint64>::max(), 0}, {1, 1}, "axis"},
-      {"maximum count", {0, 0}, {std::numeric_limits<uint64>::max(), 1}, "axis"},
-      {"empty first axis does not hide invalid second axis", {0, 4}, {0, 0}, "axis"},
-      {"empty selection beyond both boundaries", {2, 4}, {0, 0}, "axis"},
+      {.name="empty start rank", .start={}, .count={1, 2}, .diagnostic="rank"},
+      {.name="short start rank", .start={1}, .count={1, 2}, .diagnostic="rank"},
+      {.name="empty count rank", .start={1, 1}, .count={}, .diagnostic="rank"},
+      {.name="short count rank", .start={1, 1}, .count={1}, .diagnostic="rank"},
+      {.name="excess count rank", .start={1, 1}, .count={1, 2, 1}, .diagnostic="rank"},
+      {.name="both ranks empty", .start={}, .count={}, .diagnostic="rank"},
+      {.name="start at nonempty boundary", .start={2, 0}, .count={1, 1}, .diagnostic="axis"},
+      {.name="start beyond extent", .start={3, 0}, .count={1, 1}, .diagnostic="axis"},
+      {.name="count beyond remaining extent", .start={1, 2}, .count={1, 2}, .diagnostic="axis"},
+      {.name="maximum start", .start={std::numeric_limits<uint64>::max(), 0}, .count={1, 1}, .diagnostic="axis"},
+      {.name="maximum count", .start={0, 0}, .count={std::numeric_limits<uint64>::max(), 1}, .diagnostic="axis"},
+      {.name="empty first axis does not hide invalid second axis", .start={0, 4}, .count={0, 0}, .diagnostic="axis"},
+      {.name="empty selection beyond both boundaries", .start={2, 4}, .count={0, 0}, .diagnostic="axis"},
   }};
   const usize caseIndex = GENERATE(Catch::Generators::range(usize{0}, usize{13}));
   const auto& selection = selections[caseIndex];

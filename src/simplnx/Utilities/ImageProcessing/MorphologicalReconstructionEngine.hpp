@@ -248,7 +248,7 @@ inline ReconstructionWorkingMemoryFraction SelectReconstructionWorkingMemoryFrac
 {
   if(dims[2] > 1 && (source == ReconstructionMarkerSource::MaskMinusHeight || source == ReconstructionMarkerSource::MaskPlusHeight))
   {
-    return {k_ReconstructionDerivedMarker3DPreferredUsefulNumerator, k_ReconstructionDerivedMarker3DPreferredUsefulDenominator};
+    return {.numerator=k_ReconstructionDerivedMarker3DPreferredUsefulNumerator, .denominator=k_ReconstructionDerivedMarker3DPreferredUsefulDenominator};
   }
   return {};
 }

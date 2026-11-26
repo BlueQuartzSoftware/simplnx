@@ -813,7 +813,7 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persis
 
       DataStore<int16> maskStore = MakeStore(mask, dimX, dimY, dimZ);
       DataStore<int16> outputStore(tupleShape, componentShape, int16{0});
-      const ReconstructionMarkerOptions options{source, 0.0};
+      const ReconstructionMarkerOptions options{.source=source, .height=0.0};
       ReconstructSweep<int16, true> sweep{
           maskStore, maskStore, outputStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, 3 * planeValues, std::numeric_limits<usize>::max(), options, 0, 0, false, 0};
       REQUIRE(sweep().valid());
@@ -1026,7 +1026,7 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask
     const bool dilation = op == ReconstructOp::Dilation;
     const std::vector<int16> marker = dilation ? MarkerBelow<int16>(mask, height) : MarkerAbove<int16>(mask, height);
     const std::vector<int16> expected = ReconstructOracle(marker, mask, dimX, dimY, dimZ, op, /*fullyConnected=*/true);
-    const ReconstructionMarkerOptions options{dilation ? ReconstructionMarkerSource::MaskMinusHeight : ReconstructionMarkerSource::MaskPlusHeight, height};
+    const ReconstructionMarkerOptions options{.source=dilation ? ReconstructionMarkerSource::MaskMinusHeight : ReconstructionMarkerSource::MaskPlusHeight, .height=height};
 
     DataStore<int16> maskStore = MakeStore(mask, dimX, dimY, dimZ);
     DataStore<int16> vincentOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int16{0});
@@ -1080,7 +1080,7 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask
         }
       }
       const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-      const ReconstructionMarkerOptions options{source, 0.0};
+      const ReconstructionMarkerOptions options{.source=source, .height=0.0};
 
       DataStore<int16> maskStore = MakeStore(mask, dimX, dimY, dimZ);
       DataStore<int16> vincentOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int16{0});

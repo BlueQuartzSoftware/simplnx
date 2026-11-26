@@ -1330,7 +1330,7 @@ struct IdentifySampleSliceCCLFunctor
           terminal = true;
           break;
         }
-        primaryLocation = {DeferredSlicePhase::ReportPlane, batchStart + p, batchStart, completedPlaneCount, std::nullopt};
+        primaryLocation = {.Phase=DeferredSlicePhase::ReportPlane, .PlaneIndex=batchStart + p, .FirstCompletedPlane=batchStart, .CompletedPlaneCount=completedPlaneCount, .CommitZ=std::nullopt};
         try
         {
           // Keep this callback inside the guard so a failure still publishes the completed prefix.
@@ -1363,7 +1363,7 @@ struct IdentifySampleSliceCCLFunctor
       // A completed prefix must finish its publication attempt even after cancellation.
       for(usize z = 0; completedPlaneCount != 0 && z < layout.Z; ++z)
       {
-        commitLocation = {DeferredSlicePhase::ReadPrefix, 0, batchStart, completedPlaneCount, z};
+        commitLocation = {.Phase=DeferredSlicePhase::ReadPrefix, .PlaneIndex=0, .FirstCompletedPlane=batchStart, .CompletedPlaneCount=completedPlaneCount, .CommitZ=z};
         try
         {
           auto readResult = NX_IDENTIFY_SAMPLE_SLICE_READ(maskArray, store, z * layout.XyValues, nonstd::span<T>(zBuffer.get(), layout.XyValues));

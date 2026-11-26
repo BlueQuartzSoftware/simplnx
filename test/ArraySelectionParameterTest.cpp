@@ -103,7 +103,7 @@ TEST_CASE("ArraySelectionParameter location and clone", "[simplnx][Parameters]")
     DataPath path;
     IDataStore::StoreType actual;
   };
-  const std::vector<StoreCase> stores = {{residentPath, IDataStore::StoreType::InMemory}, {reportedOocPath, IDataStore::StoreType::OutOfCore}, {emptyPath, IDataStore::StoreType::Empty}};
+  const std::vector<StoreCase> stores = {{.path=residentPath, .actual=IDataStore::StoreType::InMemory}, {.path=reportedOocPath, .actual=IDataStore::StoreType::OutOfCore}, {.path=emptyPath, .actual=IDataStore::StoreType::Empty}};
 
   const std::vector<ArraySelectionParameter::DataLocation> locations = {ArraySelectionParameter::DataLocation::Any, ArraySelectionParameter::DataLocation::InMemory,
                                                                         ArraySelectionParameter::DataLocation::OutOfCore};

@@ -76,7 +76,7 @@ struct TransferCall
 };
 
 /** @brief Specifies the complete expected bulk order; failures permit only its corresponding prefix. */
-constexpr std::array<TransferCall, 4> k_CompleteTransfers{{{Transfer::ReadNodes, 0, 4}, {Transfer::ReadVertices, 0, 12}, {Transfer::ReadEdges, 0, 12}, {Transfer::WriteVertices, 0, 12}}};
+constexpr std::array<TransferCall, 4> k_CompleteTransfers{{{.operation=Transfer::ReadNodes, .offset=0, .values=4}, {.operation=Transfer::ReadVertices, .offset=0, .values=12}, {.operation=Transfer::ReadEdges, .offset=0, .values=12}, {.operation=Transfer::WriteVertices, .offset=0, .values=12}}};
 
 /**
  * @struct FailureCase
@@ -92,7 +92,7 @@ struct FailureCase
 
 /** @brief Supplies independent stopping-order expectations for each bulk failure. */
 constexpr std::array<FailureCase, 4> k_FailureCases{
-    {{"node read", Transfer::ReadNodes, -560, 1}, {"vertex read", Transfer::ReadVertices, -561, 2}, {"edge read", Transfer::ReadEdges, -562, 3}, {"vertex write", Transfer::WriteVertices, -563, 4}}};
+    {{.name="node read", .operation=Transfer::ReadNodes, .contextCode=-560, .expectedCalls=1}, {.name="vertex read", .operation=Transfer::ReadVertices, .contextCode=-561, .expectedCalls=2}, {.name="edge read", .operation=Transfer::ReadEdges, .contextCode=-562, .expectedCalls=3}, {.name="vertex write", .operation=Transfer::WriteVertices, .contextCode=-563, .expectedCalls=4}}};
 
 /**
  * @struct TransferTrace
@@ -209,9 +209,9 @@ InputStores BuildGraph(DataStructure& dataStructure, TransferTrace& trace)
   auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {4}, geometryPtr->getId());
   REQUIRE(vertexDataPtr != nullptr);
   geometryPtr->setVertexAttributeMatrix(*vertexDataPtr);
-  InputStores stores{std::make_shared<RecordingStore<float32>>(4, 3, trace, Transfer::ReadVertices, Transfer::WriteVertices),
-                     std::make_shared<RecordingStore<int8>>(4, 1, trace, Transfer::ReadNodes, Transfer::WriteNodes),
-                     std::make_shared<RecordingStore<IGeometry::MeshIndexType>>(6, 2, trace, Transfer::ReadEdges, Transfer::WriteEdges)};
+  InputStores stores{.vertices=std::make_shared<RecordingStore<float32>>(4, 3, trace, Transfer::ReadVertices, Transfer::WriteVertices),
+                     .nodes=std::make_shared<RecordingStore<int8>>(4, 1, trace, Transfer::ReadNodes, Transfer::WriteNodes),
+                     .edges=std::make_shared<RecordingStore<IGeometry::MeshIndexType>>(6, 2, trace, Transfer::ReadEdges, Transfer::WriteEdges)};
   auto* verticesPtr = Float32Array::Create(dataStructure, k_VerticesPath.getTargetName(), stores.vertices, geometryPtr->getId());
   auto* nodesPtr = Int8Array::Create(dataStructure, k_NodeTypesPath.getTargetName(), stores.nodes, vertexDataPtr->getId());
   auto* edgesPtr = IGeometry::MeshIndexArrayType::Create(dataStructure, k_EdgesPath.getTargetName(), stores.edges, geometryPtr->getId());

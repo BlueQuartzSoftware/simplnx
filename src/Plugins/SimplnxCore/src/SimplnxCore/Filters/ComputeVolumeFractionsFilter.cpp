@@ -95,7 +95,7 @@ IFilter::PreflightResult ComputeVolumeFractionsFilter::preflightImpl(const DataS
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, cellEnsembleData.getShape(), std::vector<usize>{1}, volFractionsArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

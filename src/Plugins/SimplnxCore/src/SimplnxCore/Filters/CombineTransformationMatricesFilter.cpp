@@ -109,7 +109,7 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
     auto totalElements = inputDataArray.getNumberOfTuples() * inputDataArray.getNumberOfComponents();
     if(totalElements != 16)
     {
-      return {MakeErrorResult<OutputActions>(to_underlying(CombineTransformationMatrices::ErrorCodes::WrongElementCount),
+      return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(CombineTransformationMatrices::ErrorCodes::WrongElementCount),
                                              fmt::format("Input transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
                                                          inputArrayPaths[i].toString(), totalElements, inputDataArray.getNumberOfTuples(), inputDataArray.getNumberOfComponents()))};
     }
@@ -150,7 +150,7 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -91,7 +91,7 @@ IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const 
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions=std::move(resultOutputActions)};
   }
 
   // Resident watershed retains the exact RAM flood and its available-memory guard. OOC watershed uses bounded
@@ -105,7 +105,7 @@ IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const 
   {
     if(!DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
     {
-      return {MakeErrorResult<OutputActions>(
+      return {.outputActions=MakeErrorResult<OutputActions>(
           -79048,
           fmt::format("Morphological watershed input '{}' is planned out-of-core, but no temporary-record storage provider is registered for the external flood.", selectedInputArray.toString()))};
     }
@@ -117,14 +117,14 @@ IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const 
   }
   if(memoryCheck.invalid())
   {
-    return {std::move(memoryCheck)};
+    return {.outputActions=std::move(memoryCheck)};
   }
   for(auto& warning : memoryCheck.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 Result<> MorphologicalWatershedImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

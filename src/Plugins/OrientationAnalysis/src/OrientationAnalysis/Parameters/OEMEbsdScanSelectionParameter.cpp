@@ -148,7 +148,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::jso
     {
       if(name.empty())
       {
-        errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name)});
+        errors.push_back(Error{.code=FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message=fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name)});
         continue;
       }
       scanNames.push_back(name);

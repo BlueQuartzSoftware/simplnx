@@ -183,7 +183,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

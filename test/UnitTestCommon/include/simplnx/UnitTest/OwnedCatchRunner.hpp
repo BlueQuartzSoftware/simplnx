@@ -47,17 +47,17 @@ inline int RunOwnedCatchSession(int argc, char* argv[])
   } catch(const std::exception& exception)
   {
     std::cerr << "Test runner failed: " << exception.what() << '\n';
-    result = {255, false};
+    result = {.exitCode=255, .successful=false};
   } catch(...)
   {
     std::fputs("Test runner failed with an unknown exception\n", stderr);
-    result = {255, false};
+    result = {.exitCode=255, .successful=false};
   }
 
   // RunCatchSession destroys Session and its listeners before checked Application teardown.
   if(!FinishTestApplication())
   {
-    result = {1, false};
+    result = {.exitCode=1, .successful=false};
   }
   const int exitCode = profile.finishExitCode(result.exitCode, result.successful, error);
   if(!error.empty())

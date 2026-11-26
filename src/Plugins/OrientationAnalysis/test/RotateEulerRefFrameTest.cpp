@@ -54,21 +54,21 @@ struct FixtureData
 
 const std::vector<FixtureData> k_Fixtures = {
     // F1: g = I, rotate frame +90 about z. phi1' = 0 - pi/2 mod 2pi = 3pi/2.
-    {"F1 identity + z90", {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 90.0F}, {4.712388980384709, 0.0, 0.0}},
+    {.name="F1 identity + z90", .eulerIn={0.0F, 0.0F, 0.0F}, .axisAngle={0.0F, 0.0F, 1.0F, 90.0F}, .expected={4.712388980384709, 0.0, 0.0}},
     // F2: general orientation, z-axis: phi1' = 1.0 - pi/6; Phi, phi2 unchanged.
-    {"F2 general + z30", {1.0F, 0.5F, 0.3F}, {0.0F, 0.0F, 1.0F, 30.0F}, {0.476401224401701, 0.5, 0.3}},
+    {.name="F2 general + z30", .eulerIn={1.0F, 0.5F, 0.3F}, .axisAngle={0.0F, 0.0F, 1.0F, 30.0F}, .expected={0.476401224401701, 0.5, 0.3}},
     // F3: wrap-around: phi1' = 0.1 - pi/2 + 2pi.
-    {"F3 wraparound + z90", {0.1F, 0.5F, 0.3F}, {0.0F, 0.0F, 1.0F, 90.0F}, {4.812388980384732, 0.5, 0.3}},
+    {.name="F3 wraparound + z90", .eulerIn={0.1F, 0.5F, 0.3F}, .axisAngle={0.0F, 0.0F, 1.0F, 90.0F}, .expected={4.812388980384732, 0.5, 0.3}},
     // F4: g = I, +90 about x: g' = R_active(x, 90) => om2eu = (pi, pi/2, pi) by hand.
-    {"F4 identity + x90", {0.0F, 0.0F, 0.0F}, {1.0F, 0.0F, 0.0F, 90.0F}, {3.141592653589793, 1.570796326794897, 3.141592653589793}},
+    {.name="F4 identity + x90", .eulerIn={0.0F, 0.0F, 0.0F}, .axisAngle={1.0F, 0.0F, 0.0F, 90.0F}, .expected={3.141592653589793, 1.570796326794897, 3.141592653589793}},
     // F5: axis (2,0,0) must normalize to (1,0,0); expected identical to F4.
-    {"F5 unnormalized axis x90", {0.0F, 0.0F, 0.0F}, {2.0F, 0.0F, 0.0F, 90.0F}, {3.141592653589793, 1.570796326794897, 3.141592653589793}},
+    {.name="F5 unnormalized axis x90", .eulerIn={0.0F, 0.0F, 0.0F}, .axisAngle={2.0F, 0.0F, 0.0F, 90.0F}, .expected={3.141592653589793, 1.570796326794897, 3.141592653589793}},
     // F6: w = 0 is a no-op for already-canonical inputs.
-    {"F6 zero angle no-op", {5.0F, 1.0F, 2.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {5.0, 1.0, 2.0}},
+    {.name="F6 zero angle no-op", .eulerIn={5.0F, 1.0F, 2.0F}, .axisAngle={0.0F, 0.0F, 1.0F, 0.0F}, .expected={5.0, 1.0, 2.0}},
     // F7: g = I, +120 about (1,1,1): R_active maps x->y->z->x; om2eu = (pi, pi/2, pi/2) by hand.
-    {"F7 identity + 111 120", {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F, 120.0F}, {3.141592653589793, 1.570796326794896, 1.570796326794897}},
+    {.name="F7 identity + 111 120", .eulerIn={0.0F, 0.0F, 0.0F}, .axisAngle={1.0F, 1.0F, 1.0F, 120.0F}, .expected={3.141592653589793, 1.570796326794896, 1.570796326794897}},
     // F8: general orientation, y-axis 45 deg. No closed form; value from the numpy oracle script.
-    {"F8 general + y45", {0.8F, 1.1F, 0.4F}, {0.0F, 1.0F, 0.0F, 45.0F}, {0.208427151998385, 0.687549596714496, 1.288701818256954}},
+    {.name="F8 general + y45", .eulerIn={0.8F, 1.1F, 0.4F}, .axisAngle={0.0F, 1.0F, 0.0F, 45.0F}, .expected={0.208427151998385, 0.687549596714496, 1.288701818256954}},
 };
 
 // Creates a DataStructure holding a cell AttributeMatrix with one float32 3-component

@@ -254,7 +254,7 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pInputArrayPathValue}, -59204);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   FloatVec3 imageGeomSpacing = dataStructure.getDataAs<ImageGeom>(pGeometryPathValue)->getSpacing();
@@ -303,7 +303,7 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   CreateCompatibleArrays(resultOutputActions, dataStructure, filterArgs, unifiedBoundsPtr->getTupleShape(), outputAMPath);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -438,7 +438,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     auto validation = ValidateAdvancedParameters(pCellLengthValue, pPartitionGridOriginValue);
     if(validation.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
   }
 
@@ -460,7 +460,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     Result<> result = dataCheckPartitioningMode<ImageGeom>(dataStructure, filterArgs, geometry);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(result), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(result), {})};
     }
     psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
     inputGeometryInformation = GenerateInputGeometryDisplayText(geometry.getDimensions(), geometry.getOrigin(), geometry.getSpacing(), geometry.getUnits());
@@ -481,7 +481,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Vertex geometry space unknown during preflight.";
     break;
@@ -490,7 +490,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Edge geometry space unknown during preflight.";
     break;
@@ -499,7 +499,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Triangle geometry space unknown during preflight.";
     break;
@@ -508,7 +508,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Quad geometry space unknown during preflight.";
     break;
@@ -517,7 +517,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Tetrahedral geometry space unknown during preflight.";
     break;
@@ -526,7 +526,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Hexahedral geometry space unknown during preflight.";
     break;
@@ -535,13 +535,13 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   if(psInfo.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
   }
 
   const auto startingFeatureId = filterArgs.value<int32>(k_StartingFeatureID_Key);
   if(startingFeatureId < 0)
   {
-    return {MakeErrorResult<OutputActions>(-3046, fmt::format("Starting Feature ID ({}) must be non-negative so partition IDs can index the feature Attribute Matrix.", startingFeatureId))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-3046, fmt::format("Starting Feature ID ({}) must be non-negative so partition IDs can index the feature Attribute Matrix.", startingFeatureId))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -592,7 +592,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   if(pUseVertexMask && (iGeom.getGeomType() == IGeometry::Type::Image || iGeom.getGeomType() == IGeometry::Type::RectGrid))
   {
-    return {MakeErrorResult<OutputActions>(-3019, fmt::format("{}: The input geometry is {}, which is not vertex-based.  Vertex mask cannot be used.", humanName(), iGeom.getTypeName()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-3019, fmt::format("{}: The input geometry is {}, which is not vertex-based.  Vertex mask cannot be used.", humanName(), iGeom.getTypeName()))};
   }
 
   if(pUseVertexMask)
@@ -609,7 +609,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     }
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------

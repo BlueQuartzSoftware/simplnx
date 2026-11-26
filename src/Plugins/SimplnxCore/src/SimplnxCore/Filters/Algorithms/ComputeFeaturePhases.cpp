@@ -138,7 +138,7 @@ Result<> ComputeFeaturePhases::operator()()
       const usize remainder = position - k_MaxListedFeatures;
       warnStr.append(fmt::format(", and {} more {}", remainder, remainder == 1 ? "occurrence" : "occurrences"));
     }
-    result.warnings().push_back(Warning{-500, std::move(warnStr)});
+    result.warnings().push_back(Warning{.code=-500, .message=std::move(warnStr)});
   }
 
   return result;

@@ -71,13 +71,13 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
 
   if(!fs::exists(inputFilePath))
   {
-    return {MakeErrorResult<OutputActions>(-35720, fmt::format("Input NRRD file does not exist: '{}'", inputFilePath.string()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-35720, fmt::format("Input NRRD file does not exist: '{}'", inputFilePath.string()))};
   }
 
   auto metadataResult = nrrd::ReadNrrdHeader(inputFilePath);
   if(metadataResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const nrrd::NrrdMetadata md = std::move(metadataResult).value();
 
@@ -86,7 +86,7 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
   FloatVec3 spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
   if(auto result = ImageIO::ResolveCropGeometry(inputFilePath, overrides, processing, centerOrigin, dims, origin, spacing); result.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
@@ -102,7 +102,7 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(tmpActionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
     }
 
     const DataPath croppedGeomPath({imageGeomPath.getTargetName() + "_cropped"});
@@ -116,7 +116,7 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
     Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
@@ -129,7 +129,7 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
   {
     if(auto result = ImageIO::ApplyPostprocessedGeometry(inputFilePath, overrides, centerOrigin, dims, origin, spacing); result.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(result))};
     }
   }
 
@@ -153,12 +153,12 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
   if(md.affineHasRotation)
   {
     resultOutputActions.warnings().push_back(Warning{
-        -35750, fmt::format("NRRD file '{}' has non-axis-aligned 'space directions'. The ImageGeom in simplnx is axis-aligned; the rotation/permutation component has been dropped and only the "
+        .code=-35750, .message=fmt::format("NRRD file '{}' has non-axis-aligned 'space directions'. The ImageGeom in simplnx is axis-aligned; the rotation/permutation component has been dropped and only the "
                             "per-axis spacing (column magnitudes) and origin were extracted. Voxels are loaded in their stored order.",
                             md.filePath)});
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 } // namespace
 
@@ -298,14 +298,14 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
   auto imageIOResult = CreateImageIO(fileName);
   if(imageIOResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
   }
   auto& imageIO = imageIOResult.value();
 
   auto metadataResult = imageIO->readMetadata(fileName);
   if(metadataResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const auto& metadata = metadataResult.value();
 
@@ -318,7 +318,7 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
 
   if(auto result = ImageIO::ResolveCropGeometry(fileName, overrides, originSpacingProcessing, shouldCenterOrigin, dims, origin, spacing); result.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   // Cropping uses the shared planner on a temporary Image Geometry.
@@ -336,11 +336,11 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
     tmpGeomPtr->setDimensions(dims);
     if(auto result = tmpGeomPtr->setOrigin(origin); result.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(result))};
     }
     if(auto result = tmpGeomPtr->setSpacing(spacing); result.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(result))};
     }
 
     const ImageGeometryCropOptions cropOptions = CreateCropOptions(tmpGeomPath, {}, croppingOptions, zCropActive, true);
@@ -356,7 +356,7 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
     Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(tmpGeomPath);
@@ -370,7 +370,7 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
   {
     if(auto result = ImageIO::ApplyPostprocessedGeometry(fileName, overrides, shouldCenterOrigin, dims, origin, spacing); result.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(result))};
     }
   }
 
@@ -408,7 +408,7 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
 
   preflightUpdatedValues.push_back({"Image Information", summary});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

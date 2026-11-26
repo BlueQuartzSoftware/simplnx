@@ -447,14 +447,14 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
   auto metadataResult = ReadHeaderMetaData(pVGHeaderFileValue, overrides.Spacing.has_value());
   if(metadataResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
 
   HeaderMetadata metadata = metadataResult.value();
   FloatVec3 origin{0.0F, 0.0F, 0.0F};
   if(auto geometryResult = overrides.apply(pVGHeaderFileValue, origin, metadata.Spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -469,7 +469,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
 
   if(!fs::exists(fiData))
   {
-    return {MakeErrorResult<OutputActions>(k_FileDoesNotExist, fmt::format("The Volume Graphics data file does not exist. '{}'", metadata.DataFilePath))};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_FileDoesNotExist, fmt::format("The Volume Graphics data file does not exist. '{}'", metadata.DataFilePath))};
   }
 
   const DataPath dap = pNewImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
@@ -477,7 +477,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
       std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{metadata.Dimensions[2], metadata.Dimensions[1], metadata.Dimensions[0]}, std::vector<usize>{1}, dap);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

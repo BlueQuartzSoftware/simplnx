@@ -453,7 +453,7 @@ TEST_CASE("Preferences names nonfinite OOC thresholds without changing values", 
     const char* description;
   };
   const std::array<NonfiniteCase, 3> values = {
-      {{std::numeric_limits<double>::quiet_NaN(), "NaN"}, {std::numeric_limits<double>::infinity(), "+Infinity"}, {-std::numeric_limits<double>::infinity(), "-Infinity"}}};
+      {{.number=std::numeric_limits<double>::quiet_NaN(), .description="NaN"}, {.number=std::numeric_limits<double>::infinity(), .description="+Infinity"}, {.number=-std::numeric_limits<double>::infinity(), .description="-Infinity"}}};
   for(const auto& key : k_ThresholdKeys)
   {
     for(const auto& nonfinite : values)

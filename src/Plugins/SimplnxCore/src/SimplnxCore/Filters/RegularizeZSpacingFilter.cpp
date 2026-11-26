@@ -165,7 +165,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
   Result<std::vector<float32>> zBoundsResult = ReadZBoundsFile(inputFile, origZDim + 1);
   if(zBoundsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(zBoundsResult)), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ConvertResult(std::move(zBoundsResult)), {})};
   }
   const std::vector<float32> zBoundValues = zBoundsResult.value();
 
@@ -265,14 +265,14 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(renumberFeatures)
     {
       auto locationResult = ValidateArrayInGeometryCellData(dataStructure, srcImagePath, featureIdsArrayPath, -67433, "Cell Feature Ids");
       if(locationResult.invalid())
       {
-        return {ConvertResultTo<OutputActions>(std::move(locationResult), {})};
+        return {.outputActions=ConvertResultTo<OutputActions>(std::move(locationResult), {})};
       }
       const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
       if(featureIds.getNumberOfTuples() != srcImageGeom.getNumberOfCells())
@@ -331,7 +331,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom.getCellDataPath(), {});
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

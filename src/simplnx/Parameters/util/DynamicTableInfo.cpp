@@ -161,7 +161,7 @@ std::optional<DynamicTableInfo::TableDims> DynamicTableInfo::GetTableDims(const 
   usize numRows = table.size();
   if(numRows == 0)
   {
-    return {{0, 0}};
+    return {{.numRows=0, .numCols=0}};
   }
   usize lastNumCols = table.front().size();
   for(usize i = 1; i < numRows; i++)
@@ -173,7 +173,7 @@ std::optional<DynamicTableInfo::TableDims> DynamicTableInfo::GetTableDims(const 
       return {};
     }
   }
-  return {{numRows, lastNumCols}};
+  return {{.numRows=numRows, .numCols=lastNumCols}};
 }
 
 Result<> DynamicTableInfo::validate(const TableDataType& table) const

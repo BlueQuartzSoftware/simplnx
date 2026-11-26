@@ -391,8 +391,8 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
     const char* Name;
     void (*Run)(DataStructure&);
   };
-  const std::array<MesherCase, 3> mesherCases = {MesherCase{"QuickSurfaceMesh", &RunQuickSurfaceMesh}, MesherCase{"SurfaceNets", &RunSurfaceNets},
-                                                 MesherCase{"M3CSurfaceMeshing", &RunM3CSurfaceMeshing}};
+  const std::array<MesherCase, 3> mesherCases = {MesherCase{.Name="QuickSurfaceMesh", .Run=&RunQuickSurfaceMesh}, MesherCase{.Name="SurfaceNets", .Run=&RunSurfaceNets},
+                                                 MesherCase{.Name="M3CSurfaceMeshing", .Run=&RunM3CSurfaceMeshing}};
 
   for(const auto& mesherCase : mesherCases)
   {

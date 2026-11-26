@@ -267,7 +267,7 @@ inline Result<ObjectMorphologyPlaneWindow> CreateObjectMorphologyPlaneWindow(usi
   }
   const usize origin = batchBegin > halo ? batchBegin - halo : 0;
   const usize end = halo >= dimZ || batchEnd > dimZ - halo ? dimZ : batchEnd + halo;
-  return {ObjectMorphologyPlaneWindow{origin, end}};
+  return {ObjectMorphologyPlaneWindow{.origin=origin, .end=end}};
 }
 
 template <class T>
@@ -416,7 +416,7 @@ Result<> FinalizeObjectMorphologyOutputWindow(AbstractDataStore<T>& outStore, T*
   {
     return ConvertInvalidResult<void>(std::move(retainedResult));
   }
-  current = {finalEnd, oldEnd};
+  current = {.origin=finalEnd, .end=oldEnd};
   return {};
 }
 
@@ -1034,7 +1034,7 @@ private:
       const usize remainingDepth = m_Dims[2] - batchBegin;
       const usize batchDepth = std::min(plan.computeBatchDepth, remainingDepth);
       const usize batchEnd = batchBegin + batchDepth;
-      const detail::ObjectMorphologyPlaneWindow sourceRange{batchBegin, batchEnd};
+      const detail::ObjectMorphologyPlaneWindow sourceRange{.origin=batchBegin, .end=batchEnd};
       auto desiredInputResult = detail::CreateObjectMorphologyPlaneWindow(batchBegin, batchEnd, inputHalo, m_Dims[2]);
       if(desiredInputResult.invalid())
       {

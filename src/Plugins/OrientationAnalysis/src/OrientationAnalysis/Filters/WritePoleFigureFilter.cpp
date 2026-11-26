@@ -200,7 +200,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
   if(pImageSizeValue <= 0)
   {
-    return {MakeErrorResult<OutputActions>(-680002, fmt::format("'Image Size (Square Pixels)' must be greater than zero. Value given: {}", pImageSizeValue)), {}};
+    return {.outputActions=MakeErrorResult<OutputActions>(-680002, fmt::format("'Image Size (Square Pixels)' must be greater than zero. Value given: {}", pImageSizeValue)), .outputValues={}};
   }
   // The marker radius is only active (and only used) for the Discrete pole figure type.
   if(filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key) == 1ULL)
@@ -208,14 +208,14 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     const auto pDiscreteMarkerRadiusValue = filterArgs.value<int32>(k_DiscreteMarkerRadius_Key);
     if(pDiscreteMarkerRadiusValue < 1)
     {
-      return {MakeErrorResult<OutputActions>(-680003, fmt::format("'Discrete Marker Radius (Pixels)' must be at least 1. Value given: {}", pDiscreteMarkerRadiusValue)), {}};
+      return {.outputActions=MakeErrorResult<OutputActions>(-680003, fmt::format("'Discrete Marker Radius (Pixels)' must be at least 1. Value given: {}", pDiscreteMarkerRadiusValue)), .outputValues={}};
     }
   }
 
   const auto* materialNamePtr = dataStructure.getDataAs<StringArray>(pMaterialNameArrayPathValue);
   if(nullptr == materialNamePtr)
   {
-    return {MakeErrorResult<OutputActions>(-680000, fmt::format("MaterialNames DataArray should be of type 'StringArray'. Selected array was '{}'", pMaterialNameArrayPathValue.toString())), {}};
+    return {.outputActions=MakeErrorResult<OutputActions>(-680000, fmt::format("MaterialNames DataArray should be of type 'StringArray'. Selected array was '{}'", pMaterialNameArrayPathValue.toString())), .outputValues={}};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -291,7 +291,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   }
 
   // Return actions and updated preflight values.
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

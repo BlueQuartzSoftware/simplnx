@@ -88,17 +88,17 @@ struct NodeTypeCase
 // For K4, a uniform pass scales each displacement from the centroid by 1 - 4*lambda/3.
 // These explicit coordinates use that closed form, not the production edge traversal.
 constexpr std::array<NodeTypeCase, 7> k_NodeTypeCases{{
-    {"Unused", NodeType::Unused, k_InputCoordinates},
-    {"Default", NodeType::Default, {1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F}},
-    {"TriplePoint", NodeType::TriplePoint, {1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F}},
-    {"QuadPoint", NodeType::QuadPoint, {0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
-    {"SurfaceDefault",
-     NodeType::SurfaceDefault,
-     {1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F}},
-    {"SurfaceTriplePoint", NodeType::SurfaceTriplePoint, {0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
-    {"SurfaceQuadPoint",
-     NodeType::SurfaceQuadPoint,
-     {5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F}},
+    {.name="Unused", .nodeType=NodeType::Unused, .expected=k_InputCoordinates},
+    {.name="Default", .nodeType=NodeType::Default, .expected={1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F}},
+    {.name="TriplePoint", .nodeType=NodeType::TriplePoint, .expected={1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F}},
+    {.name="QuadPoint", .nodeType=NodeType::QuadPoint, .expected={0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
+    {.name="SurfaceDefault",
+     .nodeType=NodeType::SurfaceDefault,
+     .expected={1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F}},
+    {.name="SurfaceTriplePoint", .nodeType=NodeType::SurfaceTriplePoint, .expected={0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
+    {.name="SurfaceQuadPoint",
+     .nodeType=NodeType::SurfaceQuadPoint,
+     .expected={5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F}},
 }};
 
 /**
@@ -115,16 +115,16 @@ struct IterationCase
 
 // Two lambda=1/4 passes have centroid factor 4/9. One Taubin pair with a mu factor of -1 has a centroid factor of 8/9.
 constexpr std::array<IterationCase, 4> k_IterationCases{{
-    {"zero plain iterations", 0, false, k_InputCoordinates},
-    {"zero Taubin iterations", 0, true, k_InputCoordinates},
-    {"two plain iterations",
-     2,
-     false,
-     {5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F, 5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F, 5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F}},
-    {"one Taubin iteration",
-     1,
-     true,
-     {1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F}},
+    {.name="zero plain iterations", .iterations=0, .useTaubin=false, .expected=k_InputCoordinates},
+    {.name="zero Taubin iterations", .iterations=0, .useTaubin=true, .expected=k_InputCoordinates},
+    {.name="two plain iterations",
+     .iterations=2,
+     .useTaubin=false,
+     .expected={5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F, 5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F, 5.0F / 18.0F, 5.0F / 18.0F, 5.0F / 18.0F, 7.0F / 6.0F}},
+    {.name="one Taubin iteration",
+     .iterations=1,
+     .useTaubin=true,
+     .expected={1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F}},
 }};
 
 /**

@@ -35,7 +35,7 @@ Result<> checkGeometryArraysCompatible(const Float32AbstractDataStore& vertices,
     {
       return MakeErrorResult(-8340, msg);
     }
-    warningResults.warnings().push_back(Warning{-9841, msg});
+    warningResults.warnings().push_back(Warning{.code=-9841, .message=msg});
   }
   return warningResults;
 }
@@ -54,7 +54,7 @@ Result<> checkGridBoundsResolution(const Float32AbstractDataStore& bounds, bool 
       {
         return MakeErrorResult(-8342, msg);
       }
-      warningResults.warnings().push_back(Warning{-8343, msg});
+      warningResults.warnings().push_back(Warning{.code=-8343, .message=msg});
     }
     val = bounds[i];
   }

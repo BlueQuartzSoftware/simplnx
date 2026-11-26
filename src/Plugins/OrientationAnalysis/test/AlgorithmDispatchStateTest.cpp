@@ -428,7 +428,7 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the targe
   }
   const auto originalMode = preferences->value(Preferences::k_DataStorageMode_Key);
   const auto originalThreshold = preferences->value(Preferences::k_LargeDataSize_Key);
-  const AlgorithmPathExecutionCounts originalCounts{11, 13, 17, 19, 23, 29};
+  const AlgorithmPathExecutionCounts originalCounts{.InCore=11, .OutOfCore=13, .InCoreOnInMemoryStore=17, .InCoreOnOutOfCoreStore=19, .OutOfCoreOnInMemoryStore=23, .OutOfCoreOnOutOfCoreStore=29};
   ForceInCoreAlgorithm() = originalForceInCore;
   ForceOocAlgorithm() = originalForceOutOfCore;
   SetAlgorithmPathExecutionCounts(originalCounts);

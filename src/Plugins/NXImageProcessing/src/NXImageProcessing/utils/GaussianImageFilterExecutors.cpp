@@ -79,8 +79,8 @@ Result<> ApplyGradientMagnitudeRecursiveGaussian3D(const AbstractDataStore<T>& i
     if(dim < 2)
     {
       const uint32 otherAxis = dim == 0 ? 1u : 0u;
-      const RecursiveGaussianPlaneAxis derivative{dim, sigma, static_cast<double>(spacing[dim]), 1, normalizeAcrossScale};
-      const RecursiveGaussianPlaneAxis smoothing{otherAxis, sigma, static_cast<double>(spacing[otherAxis]), 0, normalizeAcrossScale};
+      const RecursiveGaussianPlaneAxis derivative{.axis=dim, .sigma=sigma, .spacing=static_cast<double>(spacing[dim]), .order=1, .normalizeAcrossScale=normalizeAcrossScale};
+      const RecursiveGaussianPlaneAxis smoothing{.axis=otherAxis, .sigma=sigma, .spacing=static_cast<double>(spacing[otherAxis]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
       auto workSink = [&](usize planeOffset, nonstd::span<float32> filteredPlane) { return work.copyFromBuffer(planeOffset, nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size())); };
       if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(input, dims, derivative, smoothing, shouldCancel, messageHandler, workSink); result.invalid())
       {
@@ -108,8 +108,8 @@ Result<> ApplyGradientMagnitudeRecursiveGaussian3D(const AbstractDataStore<T>& i
     {
       return result;
     }
-    const RecursiveGaussianPlaneAxis smoothX{0, sigma, static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
-    const RecursiveGaussianPlaneAxis smoothY{1, sigma, static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothX{.axis=0, .sigma=sigma, .spacing=static_cast<double>(spacing[0]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothY{.axis=1, .sigma=sigma, .spacing=static_cast<double>(spacing[1]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
     if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<float32>(work, dims, smoothX, smoothY, shouldCancel, messageHandler, terminalSink); result.invalid())
     {
       return result;
@@ -171,8 +171,8 @@ Result<> ApplyLaplacianRecursiveGaussian3D(const AbstractDataStore<T>& input, Ab
     if(dim < 2)
     {
       const uint32 otherAxis = dim == 0 ? 1u : 0u;
-      const RecursiveGaussianPlaneAxis derivative{dim, sigma, static_cast<double>(spacing[dim]), 2, normalizeAcrossScale};
-      const RecursiveGaussianPlaneAxis smoothing{otherAxis, sigma, static_cast<double>(spacing[otherAxis]), 0, normalizeAcrossScale};
+      const RecursiveGaussianPlaneAxis derivative{.axis=dim, .sigma=sigma, .spacing=static_cast<double>(spacing[dim]), .order=2, .normalizeAcrossScale=normalizeAcrossScale};
+      const RecursiveGaussianPlaneAxis smoothing{.axis=otherAxis, .sigma=sigma, .spacing=static_cast<double>(spacing[otherAxis]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
       auto workSink = [&](usize planeOffset, nonstd::span<float32> filteredPlane) { return work.copyFromBuffer(planeOffset, nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size())); };
       if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(input, dims, derivative, smoothing, shouldCancel, messageHandler, workSink); result.invalid())
       {
@@ -200,8 +200,8 @@ Result<> ApplyLaplacianRecursiveGaussian3D(const AbstractDataStore<T>& input, Ab
     {
       return result;
     }
-    const RecursiveGaussianPlaneAxis smoothX{0, sigma, static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
-    const RecursiveGaussianPlaneAxis smoothY{1, sigma, static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothX{.axis=0, .sigma=sigma, .spacing=static_cast<double>(spacing[0]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothY{.axis=1, .sigma=sigma, .spacing=static_cast<double>(spacing[1]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
     if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<float32>(work, dims, smoothX, smoothY, shouldCancel, messageHandler, terminalSink); result.invalid())
     {
       return result;
@@ -233,8 +233,8 @@ Result<> ApplySmoothingRecursiveGaussian3D(const AbstractDataStore<T>& input, Ab
     }
     return output.copyFromBuffer(planeOffset, nonstd::span<const T>(outputPlane.data(), filteredPlane.size()));
   };
-  const RecursiveGaussianPlaneAxis first{0, sigma[0], static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
-  const RecursiveGaussianPlaneAxis second{1, sigma[1], static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
+  const RecursiveGaussianPlaneAxis first{.axis=0, .sigma=sigma[0], .spacing=static_cast<double>(spacing[0]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
+  const RecursiveGaussianPlaneAxis second{.axis=1, .sigma=sigma[1], .spacing=static_cast<double>(spacing[1]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
   return RecursiveGaussianXYPlaneCascadeToSink<float32>(work, dims, first, second, shouldCancel, messageHandler, outputSink);
 }
 
@@ -253,8 +253,8 @@ Result<> ApplyGradientMagnitudeRecursiveGaussian2D(const AbstractDataStore<T>& i
       }
       return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(contribution, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(filtered.data(), filtered.size()));
     };
-    const RecursiveGaussianPlaneAxis derivative{0, sigma, static_cast<double>(spacing[0]), 1, normalizeAcrossScale};
-    const RecursiveGaussianPlaneAxis smoothing{1, sigma, static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis derivative{.axis=0, .sigma=sigma, .spacing=static_cast<double>(spacing[0]), .order=1, .normalizeAcrossScale=normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothing{.axis=1, .sigma=sigma, .spacing=static_cast<double>(spacing[1]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
     if(Result<> result = RecursiveGaussian2DXYCascadeToSink<T>(input, work, checkpoints, dims, derivative, smoothing, plan, shouldCancel, messageHandler, terminalSink); result.invalid())
     {
       return result;
@@ -276,8 +276,8 @@ Result<> ApplyGradientMagnitudeRecursiveGaussian2D(const AbstractDataStore<T>& i
       }
       return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(accumulator, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(reusable.data(), reusable.size()));
     };
-    const RecursiveGaussianPlaneAxis derivative{1, sigma, static_cast<double>(spacing[1]), 1, normalizeAcrossScale};
-    const RecursiveGaussianPlaneAxis smoothing{0, sigma, static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis derivative{.axis=1, .sigma=sigma, .spacing=static_cast<double>(spacing[1]), .order=1, .normalizeAcrossScale=normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothing{.axis=0, .sigma=sigma, .spacing=static_cast<double>(spacing[0]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
     if(Result<> result = RecursiveGaussian2DYXCascadeToSink<T>(input, work, checkpoints, dims, derivative, smoothing, plan, shouldCancel, messageHandler, terminalSink); result.invalid())
     {
       return result;
@@ -301,8 +301,8 @@ Result<> ApplyLaplacianRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
       }
       return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(contribution, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(filtered.data(), filtered.size()));
     };
-    const RecursiveGaussianPlaneAxis derivative{0, sigma, static_cast<double>(spacing[0]), 2, normalizeAcrossScale};
-    const RecursiveGaussianPlaneAxis smoothing{1, sigma, static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis derivative{.axis=0, .sigma=sigma, .spacing=static_cast<double>(spacing[0]), .order=2, .normalizeAcrossScale=normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothing{.axis=1, .sigma=sigma, .spacing=static_cast<double>(spacing[1]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
     if(Result<> result = RecursiveGaussian2DXYCascadeToSink<T>(input, work, checkpoints, dims, derivative, smoothing, plan, shouldCancel, messageHandler, terminalSink); result.invalid())
     {
       return result;
@@ -323,8 +323,8 @@ Result<> ApplyLaplacianRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
       }
       return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(accumulator, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(reusable.data(), reusable.size()));
     };
-    const RecursiveGaussianPlaneAxis derivative{1, sigma, static_cast<double>(spacing[1]), 2, normalizeAcrossScale};
-    const RecursiveGaussianPlaneAxis smoothing{0, sigma, static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis derivative{.axis=1, .sigma=sigma, .spacing=static_cast<double>(spacing[1]), .order=2, .normalizeAcrossScale=normalizeAcrossScale};
+    const RecursiveGaussianPlaneAxis smoothing{.axis=0, .sigma=sigma, .spacing=static_cast<double>(spacing[0]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
     if(Result<> result = RecursiveGaussian2DYXCascadeToSink<T>(input, work, checkpoints, dims, derivative, smoothing, plan, shouldCancel, messageHandler, terminalSink); result.invalid())
     {
       return result;
@@ -351,8 +351,8 @@ Result<> ApplySmoothingRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
     }
     return ImageProcessing::WriteRecursiveGaussian2DBlock<T>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const T>(outputBuffer.data(), outputBuffer.size()));
   };
-  const RecursiveGaussianPlaneAxis smoothY{1, sigma[1], static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
-  const RecursiveGaussianPlaneAxis smoothX{0, sigma[0], static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
+  const RecursiveGaussianPlaneAxis smoothY{.axis=1, .sigma=sigma[1], .spacing=static_cast<double>(spacing[1]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
+  const RecursiveGaussianPlaneAxis smoothX{.axis=0, .sigma=sigma[0], .spacing=static_cast<double>(spacing[0]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
   return RecursiveGaussian2DYXCascadeToSink<T>(input, work, checkpoints, dims, smoothY, smoothX, plan, shouldCancel, messageHandler, terminalSink);
 }
 
@@ -492,8 +492,8 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
         };
 
         const uint32 otherAxis = dim == 0 ? 1u : 0u;
-        const RecursiveGaussianPlaneAxis derivative{dim, sigma, static_cast<double>(spacing[dim]), 1, normalizeAcrossScale};
-        const RecursiveGaussianPlaneAxis smoothing{otherAxis, sigma, static_cast<double>(spacing[otherAxis]), 0, normalizeAcrossScale};
+        const RecursiveGaussianPlaneAxis derivative{.axis=dim, .sigma=sigma, .spacing=static_cast<double>(spacing[dim]), .order=1, .normalizeAcrossScale=normalizeAcrossScale};
+        const RecursiveGaussianPlaneAxis smoothing{.axis=otherAxis, .sigma=sigma, .spacing=static_cast<double>(spacing[otherAxis]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
         if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, derivative, smoothing, shouldCancel, messageHandler, terminalSink); result.invalid())
         {
           return result;
@@ -789,8 +789,8 @@ struct LaplacianRecursiveGaussianExecuteFn
         };
 
         const uint32 otherAxis = dim == 0 ? 1u : 0u;
-        const RecursiveGaussianPlaneAxis derivative{dim, sigma, static_cast<double>(spacing[dim]), 2, normalizeAcrossScale};
-        const RecursiveGaussianPlaneAxis smoothing{otherAxis, sigma, static_cast<double>(spacing[otherAxis]), 0, normalizeAcrossScale};
+        const RecursiveGaussianPlaneAxis derivative{.axis=dim, .sigma=sigma, .spacing=static_cast<double>(spacing[dim]), .order=2, .normalizeAcrossScale=normalizeAcrossScale};
+        const RecursiveGaussianPlaneAxis smoothing{.axis=otherAxis, .sigma=sigma, .spacing=static_cast<double>(spacing[otherAxis]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
         if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, derivative, smoothing, shouldCancel, messageHandler, terminalSink); result.invalid())
         {
           return result;
@@ -899,8 +899,8 @@ struct SmoothingRecursiveGaussianExecuteFn
         return outStore.copyFromBuffer(planeOffset, nonstd::span<const T>(outputPlane.data(), filteredPlane.size()));
       };
 
-      const RecursiveGaussianPlaneAxis first{1, sigma[1], static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
-      const RecursiveGaussianPlaneAxis second{0, sigma[0], static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
+      const RecursiveGaussianPlaneAxis first{.axis=1, .sigma=sigma[1], .spacing=static_cast<double>(spacing[1]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
+      const RecursiveGaussianPlaneAxis second{.axis=0, .sigma=sigma[0], .spacing=static_cast<double>(spacing[0]), .order=0, .normalizeAcrossScale=normalizeAcrossScale};
       return RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, first, second, shouldCancel, messageHandler, outputSink);
     }
 
@@ -985,7 +985,7 @@ Result<> ExecuteGradientMagnitudeRecursiveGaussianImageFilter(DataStructure& dat
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::GradientMagnitudeRecursiveGaussianExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler};
+  detail::GradientMagnitudeRecursiveGaussianExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .spacing=spacing, .sigma=sigma, .normalizeAcrossScale=normalizeAcrossScale, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -999,7 +999,7 @@ Result<> ExecuteGradientMagnitudeImageFilter(DataStructure& dataStructure, const
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::GradientMagnitudeExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, useImageSpacing, shouldCancel, messageHandler};
+  detail::GradientMagnitudeExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .spacing=spacing, .useImageSpacing=useImageSpacing, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -1013,7 +1013,7 @@ Result<> ExecuteLaplacianRecursiveGaussianImageFilter(DataStructure& dataStructu
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::LaplacianRecursiveGaussianExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler};
+  detail::LaplacianRecursiveGaussianExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .spacing=spacing, .sigma=sigma, .normalizeAcrossScale=normalizeAcrossScale, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -1027,7 +1027,7 @@ Result<> ExecuteSmoothingRecursiveGaussianImageFilter(DataStructure& dataStructu
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::SmoothingRecursiveGaussianExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler};
+  detail::SmoothingRecursiveGaussianExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .spacing=spacing, .sigma=sigma, .normalizeAcrossScale=normalizeAcrossScale, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -1042,7 +1042,7 @@ Result<> ExecuteDiscreteGaussianImageFilter(DataStructure& dataStructure, const 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::DiscreteGaussianExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, variance, maximumError, maximumKernelWidth, useImageSpacing, shouldCancel, messageHandler};
+  detail::DiscreteGaussianExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .spacing=spacing, .variance=variance, .maximumError=maximumError, .maximumKernelWidth=maximumKernelWidth, .useImageSpacing=useImageSpacing, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

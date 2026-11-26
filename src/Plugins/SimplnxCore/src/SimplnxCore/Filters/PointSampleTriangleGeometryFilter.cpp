@@ -155,7 +155,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     const DataObject* maskArray = dataStructure.getData(pMaskArrayPath);
     if(nullptr == maskArray)
     {
-      Error result = {-500, fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};
+      Error result = {.code=-500, .message=fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};
       errors.push_back(result);
     }
   }
@@ -171,7 +171,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

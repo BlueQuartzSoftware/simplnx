@@ -172,7 +172,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, filterArgs.value<std::string>(k_InitValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
     }
 
     CreateFillPreflightVals(initFillValue, numComp, preflightUpdatedValues);
@@ -183,7 +183,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, filterArgs.value<std::string>(k_StartingFillValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
     }
 
     if(iDataArray.getDataType() == DataType::boolean)
@@ -218,7 +218,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
       result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, DataType::uint8, numComp, filterArgs.value<std::string>(k_StepValue_Key), 1);
       if(result.outputActions.invalid())
       {
-        return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+        return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
       }
     }
     else
@@ -226,7 +226,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
       result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, filterArgs.value<std::string>(k_StepValue_Key), 1);
       if(result.outputActions.invalid())
       {
-        return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+        return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
       }
     }
 
@@ -238,19 +238,19 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, filterArgs.value<std::string>(k_InitStartRange_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, filterArgs.value<std::string>(k_InitEndRange_Key), 1);
     if(result.outputActions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateRangeOrderFunctor{}, iDataArray.getDataType(), numComp, initStartRange, initEndRange);
     if(result.outputActions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.outputActions=MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues=std::move(preflightUpdatedValues)};
     }
 
     [[fallthrough]];
@@ -268,7 +268,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
   // Inform users that the following arrays are going to be modified in place
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, filterArgs.value<DataPath>(k_ArrayPath_Key));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -135,7 +135,7 @@ IFilter::PreflightResult RescaleIntensityImageFilter::preflightImpl(const DataSt
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 Result<> RescaleIntensityImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
@@ -147,7 +147,7 @@ Result<> RescaleIntensityImageFilter::executeImpl(DataStructure& dataStructure, 
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const RescaleIntensityOperation operation{outputMinimum, outputMaximum};
+  const RescaleIntensityOperation operation{.outputMinimum=outputMinimum, .outputMaximum=outputMaximum};
   return ImageProcessing::ExecuteTwoPassImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

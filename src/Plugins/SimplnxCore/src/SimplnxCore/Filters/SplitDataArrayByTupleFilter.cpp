@@ -421,12 +421,12 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
 
   if(pSplitDimension >= inputArray.getTupleShape().size())
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
+    return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
                                            fmt::format("The chosen Split Dimension ({}) is not a dimension of the input array '{}', which has tuple shape ({}). {}", pSplitDimension,
                                                        pInputArrayPath.toString(), valuesToString(inputArray.getTupleShape()),
                                                        inputArray.getTupleShape().empty() ? "Select an input array with at least one tuple dimension." :
                                                                                             fmt::format("Enter a Split Dimension from 0 to {}.", inputArray.getTupleShape().size() - 1))),
-            preflightUpdatedValues};
+            .outputValues=preflightUpdatedValues};
   }
 
   auto splitDimension = static_cast<usize>(pSplitDimension);
@@ -438,7 +438,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
                                            arrayPaths, preflightUpdatedValues);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(result), {}), preflightUpdatedValues};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(result), {}), .outputValues=preflightUpdatedValues};
     }
 
     if(pOutputContainer == SplitDataArrayByTuple::OutputContainer::NewDataGroup)
@@ -453,7 +453,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
                                             dataStructure, arrayPaths, tupleShapes, preflightUpdatedValues);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(result), {}), preflightUpdatedValues};
+      return {.outputActions=ConvertResultTo<OutputActions>(std::move(result), {}), .outputValues=preflightUpdatedValues};
     }
 
     if(pOutputContainer == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix)
@@ -483,15 +483,15 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
       break;
     }
     case IArray::ArrayType::Any: {
-      return {MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
+      return {.outputActions=MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
                                              fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", pInputArrayPath.toString())),
-              preflightUpdatedValues};
+              .outputValues=preflightUpdatedValues};
     }
     default: {
-      return {MakeErrorResult<OutputActions>(
+      return {.outputActions=MakeErrorResult<OutputActions>(
                   to_underlying(SplitDataArrayByTuple::ErrorCodes::UnsupportedArrayType),
                   fmt::format("The input array '{}' has an array type that is currently not supported by this filter, so please contact the developers.", pInputArrayPath.toString())),
-              preflightUpdatedValues};
+              .outputValues=preflightUpdatedValues};
     }
     }
   }
@@ -505,7 +505,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   s_HeaderCache[m_InstanceId].outputArrayPaths = arrayPaths;
   s_HeaderCache[m_InstanceId].outputTupleShapes = tupleShapes;
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

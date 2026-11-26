@@ -51,18 +51,18 @@ std::string AppendDetail(std::string text, std::string_view detail)
 
 void IFilter::MessageHandler::sendProgressMessage(std::string message, int32 percent) const
 {
-  sendMessage(Message{Message::Type::Progress, std::move(message), std::clamp(percent, 0, 100)});
+  sendMessage(Message{.type=Message::Type::Progress, .message=std::move(message), .progress=std::clamp(percent, 0, 100)});
 }
 
 void IFilter::MessageHandler::sendProgressCount(std::string label, usize current, usize max, std::string_view detail) const
 {
-  sendMessage(Message{Message::Type::Progress, AppendDetail(fmt::format("{}: {}/{}", label, current, max), detail), CalculateProgressBarValue(current, max)});
+  sendMessage(Message{.type=Message::Type::Progress, .message=AppendDetail(fmt::format("{}: {}/{}", label, current, max), detail), .progress=CalculateProgressBarValue(current, max)});
 }
 
 void IFilter::MessageHandler::sendProgressPercent(std::string label, usize current, usize max, int32 decimals, std::string_view detail) const
 {
   const float64 percent = (max == 0) ? 0.0 : (static_cast<float64>(current) / static_cast<float64>(max) * 100.0);
-  sendMessage(Message{Message::Type::Progress, AppendDetail(fmt::format("{}: {:.{}f}%", label, percent, decimals), detail), CalculateProgressBarValue(current, max)});
+  sendMessage(Message{.type=Message::Type::Progress, .message=AppendDetail(fmt::format("{}: {:.{}f}%", label, percent, decimals), detail), .progress=CalculateProgressBarValue(current, max)});
 }
 
 namespace
@@ -107,7 +107,7 @@ std::pair<Arguments, std::vector<Warning>> GetResolvedArgs(const Arguments& filt
   {
     if(!params.contains(name))
     {
-      warnings.push_back(Warning{-1, fmt::format("The list of arguments for Filter '{}' contained the argument key '{}' which is not an accepted argument key. The accepted Keys are:\n{}",
+      warnings.push_back(Warning{.code=-1, .message=fmt::format("The list of arguments for Filter '{}' contained the argument key '{}' which is not an accepted argument key. The accepted Keys are:\n{}",
                                                  filter.humanName(), name, fmt::join(params.getKeys(), ", "))});
 
       continue;
@@ -279,7 +279,7 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
   {
     Result<OutputActions> cancellationResult = MakeErrorResult<OutputActions>(-1, "Filter cancelled");
     cancellationResult.warnings() = std::move(implResult.outputActions.warnings());
-    return {std::move(cancellationResult), std::move(implResult.outputValues)};
+    return {.outputActions=std::move(cancellationResult), .outputValues=std::move(implResult.outputValues)};
   }
 
   return implResult;
@@ -291,7 +291,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
   PreflightResult preflightResult = preflight(dataStructure, filterArgs, messageHandler, shouldCancel, executionContext);
   if(preflightResult.outputActions.invalid())
   {
-    return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result=ConvertResult(std::move(preflightResult.outputActions)), .outputValues=std::move(preflightResult.outputValues)};
   }
 
   OutputActions outputActions = std::move(preflightResult.outputActions.value());
@@ -304,7 +304,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   if(preflightActionsResult.invalid())
   {
-    return ExecuteResult{std::move(preflightActionsResult), std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result=std::move(preflightActionsResult), .outputValues=std::move(preflightResult.outputValues)};
   }
 
   Parameters params = parameters();
@@ -332,7 +332,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
     {
       message = "A filter ran out of memory while executing.";
     }
-    return ExecuteResult{MergeResults(std::move(preflightActionsResult), MakeErrorResult(-272, std::move(message))), std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result=MergeResults(std::move(preflightActionsResult), MakeErrorResult(-272, std::move(message))), .outputValues=std::move(preflightResult.outputValues)};
   } catch(const std::exception& e)
   {
     // Backstop any other exception that escapes executeImpl. The backstop converts an escaped
@@ -369,20 +369,20 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
   // error is only reported when execution itself succeeded.
   if(shouldCancel && executeImplResult.valid())
   {
-    return ExecuteResult{MergeResults(std::move(preflightActionsResult), MakeErrorResult(-1, "Filter cancelled")), std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result=MergeResults(std::move(preflightActionsResult), MakeErrorResult(-1, "Filter cancelled")), .outputValues=std::move(preflightResult.outputValues)};
   }
 
   Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
 
   if(preflightActionsExecuteResult.invalid())
   {
-    return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result=std::move(preflightActionsExecuteResult), .outputValues=std::move(preflightResult.outputValues)};
   }
   Result<> deferredActionsResult = outputActions.applyDeferred(dataStructure, IDataAction::Mode::Execute);
   Result<> postDeferredResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
   if(postDeferredResult.invalid())
   {
-    return ExecuteResult{std::move(postDeferredResult), std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result=std::move(postDeferredResult), .outputValues=std::move(preflightResult.outputValues)};
   }
 
   Result<> geometryValidationResult = dataStructure.validateGeometries();
@@ -391,7 +391,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   Result<> finalResult = MergeResults(std::move(postDeferredResult), std::move(validationResult));
 
-  return ExecuteResult{std::move(finalResult), std::move(preflightResult.outputValues)};
+  return ExecuteResult{.result=std::move(finalResult), .outputValues=std::move(preflightResult.outputValues)};
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
@@ -436,7 +436,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   {
     if(!json.contains(name))
     {
-      warnings.push_back(Warning{-5432, fmt::format("Parameter key not found in JSON for filter: '{}'\n    Parameter Key '{}' missing from the JSON", className(), name)});
+      warnings.push_back(Warning{.code=-5432, .message=fmt::format("Parameter key not found in JSON for filter: '{}'\n    Parameter Key '{}' missing from the JSON", className(), name)});
       args.insert(name, param->defaultValue());
       paramKeyNotFound.push_back(name);
       continue;
@@ -457,7 +457,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     if(key != "parameters_version" && !params.contains(key))
     {
       warnings.push_back(
-          Warning{-5433, fmt::format("JSON has parameter key that does not exist in filter '{}' parameter key set.\n    JSON Key '{}' missing from the parameter list", className(), key)});
+          Warning{.code=-5433, .message=fmt::format("JSON has parameter key that does not exist in filter '{}' parameter key set.\n    JSON Key '{}' missing from the parameter list", className(), key)});
       jsonKeyNotFound.push_back(key);
     }
   }
@@ -469,7 +469,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   {
     if(!std::get<0>(match).empty() && !std::get<1>(match).empty())
     {
-      warnings.push_back(Warning{-5434, fmt::format("Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
+      warnings.push_back(Warning{.code=-5434, .message=fmt::format("Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
                                                     "'{}' with a match distance of {}.\n    Suggested change is '{}' ==> '{}' (This is *ONLY* a suggestion.)\n    You can open the pipeline file in a "
                                                     "text editor and make the changes if those changes make sense.",
                                                     className(), std::get<0>(match), std::get<1>(match), std::get<2>(match), std::get<0>(match), std::get<1>(match))});

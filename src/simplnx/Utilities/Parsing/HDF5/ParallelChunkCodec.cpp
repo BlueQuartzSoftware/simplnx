@@ -90,8 +90,8 @@ void settleStrandedLegacyReceipt() noexcept
 
 CodecOwnershipStateForTesting GetCodecOwnershipStateForTesting() noexcept
 {
-  return {LegacyOutstanding.load(std::memory_order_relaxed), LegacyTasks.load(std::memory_order_relaxed), LegacyIntegrityFailures.load(std::memory_order_relaxed),
-          LegacyUnobservedReturns.load(std::memory_order_relaxed), LegacyErrorAggregations.load(std::memory_order_relaxed)};
+  return {.outstandingBuffers=LegacyOutstanding.load(std::memory_order_relaxed), .activeTasks=LegacyTasks.load(std::memory_order_relaxed), .integrityFailures=LegacyIntegrityFailures.load(std::memory_order_relaxed),
+          .unobservedReturns=LegacyUnobservedReturns.load(std::memory_order_relaxed), .errorAggregations=LegacyErrorAggregations.load(std::memory_order_relaxed)};
 }
 
 BoundedReadTaskScopeForTesting::BoundedReadTaskScopeForTesting() noexcept
@@ -137,7 +137,7 @@ void LegacyPayloadTicketForTesting::acquire(const std::filesystem::path& file, s
     LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
     return;
   }
-  m_Record = {&file, dataset, bytes.data(), bytes.capacity(), kind, true};
+  m_Record = {.file=&file, .dataset=dataset, .data=bytes.data(), .capacity=bytes.capacity(), .kind=kind, .charged=true};
   LegacyOutstanding.fetch_add(1, std::memory_order_relaxed);
   ++LegacyThreadOutstanding;
   ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::LegacyAcquired, bytes.capacity(), static_cast<uint64>(kind));
@@ -1022,7 +1022,7 @@ ParallelChunkCodec::PreparedChunkBytes ParallelChunkCodec::prepareChunkBytesImpl
 {
   if(isLikelyIncompressible(nominalBytes, m_DeflateLevel))
   {
-    return {{}, 0x1U};
+    return {.filteredBytes={}, .filterMask=0x1U};
   }
 
   std::vector<std::byte> compressed = compressChunkBytesImpl(flatChunkIndex, nominalBytes, firstErrorOut, errorMutex);
@@ -1032,9 +1032,9 @@ ParallelChunkCodec::PreparedChunkBytes ParallelChunkCodec::prepareChunkBytesImpl
   }
   if(compressed.size() >= nominalBytes.size())
   {
-    return {{}, 0x1U};
+    return {.filteredBytes={}, .filterMask=0x1U};
   }
-  return {std::move(compressed), 0};
+  return {.filteredBytes=std::move(compressed), .filterMask=0};
 }
 
 bool ParallelChunkCodec::writeCompressedChunkImpl(uint64 flatChunkIndex, nonstd::span<const std::byte> storedBytes, uint32 filterMask, std::string* firstErrorOut, std::mutex& errorMutex) const

@@ -244,7 +244,7 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: first anisotropic conducta
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const ImageProcessing::detail::GradientAnisoFn function{/*m_K=*/0.0, /*conductance=*/3.0, /*interval=*/1u};
+  const ImageProcessing::detail::GradientAnisoFn function{/*m_K=*/.m_K=0.0, /*conductance=*/.conductance=3.0, /*interval=*/.interval=1u};
   const Result<> firstIterationResult = ImageProcessing::ApplyFiniteDifference3DPingPong<float32, ImageProcessing::detail::GradientAnisoFn, float64>(
       inputStore, outputStore, firstStore, secondStore, dims, {1.0, 1.0, 1.0}, function, 0.05, /*numberOfIterations=*/1, shouldCancel, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(firstIterationResult);
@@ -274,7 +274,7 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: later anisotropic conducta
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const ImageProcessing::detail::GradientAnisoFn function{/*m_K=*/0.0, /*conductance=*/3.0, /*interval=*/1u};
+  const ImageProcessing::detail::GradientAnisoFn function{/*m_K=*/.m_K=0.0, /*conductance=*/.conductance=3.0, /*interval=*/.interval=1u};
   const Result<> secondIterationResult = ImageProcessing::ApplyFiniteDifference3DPingPong<float32, ImageProcessing::detail::GradientAnisoFn, float64>(
       inputStore, outputStore, firstStore, secondStore, dims, {1.0, 1.0, 1.0}, function, 0.05, /*numberOfIterations=*/2, shouldCancel, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(secondIterationResult);
@@ -317,7 +317,7 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: direct interior neighbors 
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const ImageProcessing::detail::CurvatureAnisoFn function{/*m_K=*/0.0, /*conductance=*/3.0, /*interval=*/1u};
+  const ImageProcessing::detail::CurvatureAnisoFn function{/*m_K=*/.m_K=0.0, /*conductance=*/.conductance=3.0, /*interval=*/.interval=1u};
   const Result<> residentResult =
       ImageProcessing::ApplyFiniteDifference(residentInput, residentOutput, dims, FloatVec3{1.0f, 1.0f, 1.0f}, function, 0.05, /*numberOfIterations=*/2, shouldCancel, messageHandler);
   SIMPLNX_RESULT_REQUIRE_VALID(residentResult);

@@ -105,7 +105,7 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
     const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(featureIdsPath);
     if(mask.getNumberOfTuples() != featureIds.getNumberOfTuples())
     {
-      return {MakeErrorResult<OutputActions>(
+      return {.outputActions=MakeErrorResult<OutputActions>(
           -53802, fmt::format("Cell mask '{}' has {} tuples, but Feature Ids '{}' has {} tuples. Select arrays with the same tuple count, or select a mask in Feature Attribute Matrix '{}'.",
                               maskPath.toString(), mask.getNumberOfTuples(), featureIdsPath.toString(), featureIds.getNumberOfTuples(), featureAMPath.toString()))};
     }
@@ -119,7 +119,7 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
     const auto ensemblePath = featureAMPath.replaceName(filterArgs.value<std::string>(k_CellEnsembleAMName_Key));
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(ensemblePath, ShapeType{2}));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

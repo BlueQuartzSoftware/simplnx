@@ -96,7 +96,7 @@ public:
      */
     void sendMessage(Message::Type type, std::string message) const
     {
-      sendMessage(Message{type, std::move(message)});
+      sendMessage(Message{.type=type, .message=std::move(message)});
     }
 
     /**
@@ -105,7 +105,7 @@ public:
      */
     void sendInfoMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Info, std::move(message)});
+      sendMessage(Message{.type=Message::Type::Info, .message=std::move(message)});
     }
 
     /**
@@ -114,7 +114,7 @@ public:
      */
     void sendDebugMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Debug, std::move(message)});
+      sendMessage(Message{.type=Message::Type::Debug, .message=std::move(message)});
     }
 
     /**
@@ -123,7 +123,7 @@ public:
      */
     void sendWarningMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Warning, std::move(message)});
+      sendMessage(Message{.type=Message::Type::Warning, .message=std::move(message)});
     }
 
     /**
@@ -132,7 +132,7 @@ public:
      */
     void sendErrorMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Error, std::move(message)});
+      sendMessage(Message{.type=Message::Type::Error, .message=std::move(message)});
     }
 
     /**
@@ -203,7 +203,7 @@ public:
    */
   static PreflightResult MakePreflightErrorResult(int32 errorCode, const std::string& errorMessage)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, errorMessage}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{.code=errorCode, .message=errorMessage}})};
   }
 
   /**

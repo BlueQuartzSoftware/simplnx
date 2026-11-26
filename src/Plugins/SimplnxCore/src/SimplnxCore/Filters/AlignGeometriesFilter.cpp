@@ -82,7 +82,7 @@ IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructur
   auto pMovingGeomPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pMovingGeomPath, {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -91,29 +91,29 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
   auto readerResult = CreateEbsdPatternFileReader(inputFile);
   if(readerResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(readerResult))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(readerResult))};
   }
   auto fileInfoResult = readerResult.value()->readFileInfo();
   if(fileInfoResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(fileInfoResult))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(fileInfoResult))};
   }
   const EbsdPatternFileInfo& fileInfo = fileInfoResult.value();
 
   auto patternCountSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.numberOfPatterns, "the imported pattern count", inputFile);
   if(patternCountSizeResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(patternCountSizeResult))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(patternCountSizeResult))};
   }
   auto patternHeightSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.patternHeight, "the pattern height", inputFile);
   if(patternHeightSizeResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(patternHeightSizeResult))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(patternHeightSizeResult))};
   }
   auto patternWidthSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.patternWidth, "the pattern width", inputFile);
   if(patternWidthSizeResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(patternWidthSizeResult))};
+    return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(patternWidthSizeResult))};
   }
 
   Result<OutputActions> outputActions;
@@ -125,7 +125,7 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
     tupleShape = parentAttributeMatrixPtr->getShape();
     if(parentAttributeMatrixPtr->getNumberOfTuples() != fileInfo.numberOfPatterns)
     {
-      return {MakeErrorResult<OutputActions>(
+      return {.outputActions=MakeErrorResult<OutputActions>(
           -78040, fmt::format("Output Attribute Matrix '{}' has {} tuples, but EBSD pattern file '{}' contains {} importable patterns. Select an Attribute Matrix with exactly {} tuples or create "
                               "the output array outside an Attribute Matrix.",
                               outputArrayPath.getParent().toString(), parentAttributeMatrixPtr->getNumberOfTuples(), inputFile.string(), fileInfo.numberOfPatterns, fileInfo.numberOfPatterns))};
@@ -141,17 +141,17 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
   {
     if(numberOfRows == 0 || numberOfColumns == 0)
     {
-      return {MakeErrorResult<OutputActions>(
+      return {.outputActions=MakeErrorResult<OutputActions>(
           -78042, fmt::format("Version 1 scan dimensions for EBSD pattern file '{}' must be positive. Rows: {}. Columns: {}.", inputFile.string(), numberOfRows, numberOfColumns))};
     }
     auto patternCountResult = EbsdPatternFileUtilities::CheckedMultiply(numberOfRows, numberOfColumns, "the user-supplied version 1 scan pattern count", inputFile);
     if(patternCountResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(patternCountResult))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(patternCountResult))};
     }
     if(patternCountResult.value() != fileInfo.numberOfPatterns)
     {
-      return {MakeErrorResult<OutputActions>(-78043, fmt::format("Version 1 scan dimensions for EBSD pattern file '{}' describe {} patterns ({} rows x {} columns), but the file contains {} complete "
+      return {.outputActions=MakeErrorResult<OutputActions>(-78043, fmt::format("Version 1 scan dimensions for EBSD pattern file '{}' describe {} patterns ({} rows x {} columns), but the file contains {} complete "
                                                                  "patterns.",
                                                                  inputFile.string(), patternCountResult.value(), numberOfRows, numberOfColumns, fileInfo.numberOfPatterns))};
     }
@@ -166,12 +166,12 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
     auto numberOfRowsSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.numberOfRows.value(), "the stored scan row count", inputFile);
     if(numberOfRowsSizeResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(numberOfRowsSizeResult))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(numberOfRowsSizeResult))};
     }
     auto numberOfColumnsSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.numberOfColumns.value(), "the stored scan column count", inputFile);
     if(numberOfColumnsSizeResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(numberOfColumnsSizeResult))};
+      return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(numberOfColumnsSizeResult))};
     }
     tupleShape = {numberOfRowsSizeResult.value(), numberOfColumnsSizeResult.value()};
     if(setScanDimensions)
@@ -201,7 +201,7 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
   }
   fileSummary += fmt::format("\nOutput Tuple Shape: [{}]\nOutput Component Shape: [{}]", fmt::join(tupleShape, ", "), fmt::join(componentShape, ", "));
   updatedValues.push_back({"EBSD Pattern File Information", std::move(fileSummary)});
-  return {std::move(outputActions), std::move(updatedValues)};
+  return {.outputActions=std::move(outputActions), .outputValues=std::move(updatedValues)};
 }
 
 Result<> ReadEbsdPatternFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

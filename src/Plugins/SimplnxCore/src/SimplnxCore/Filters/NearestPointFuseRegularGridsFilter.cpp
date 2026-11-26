@@ -108,7 +108,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
     const usize cellCount = dataStructure.getDataRefAs<ImageGeom>(geometryPath).getNumberOfCells();
     if(tupleCount != cellCount)
     {
-      return {MakeErrorResult<OutputActions>(-5565,
+      return {.outputActions=MakeErrorResult<OutputActions>(-5565,
                                              fmt::format("**{}** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.",
                                                          parameterName, matrixPath.toString(), tupleCount, geometryPath.toString(), cellCount))};
     }
@@ -159,7 +159,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   //    }
   //  }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -206,7 +206,7 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

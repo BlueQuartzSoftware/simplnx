@@ -274,8 +274,8 @@ protected:
     {
       result = MakeErrorResult<OutputActions>(k_PreflightErrorCode, "The controlled preflight operation failed");
     }
-    result.warnings().push_back(Warning{k_PreflightWarningCode, "The controlled preflight warning"});
-    return {std::move(result), {{k_PreflightValueName.str(), k_PreflightValueText.str()}}};
+    result.warnings().push_back(Warning{.code=k_PreflightWarningCode, .message="The controlled preflight warning"});
+    return {.outputActions=std::move(result), .outputValues={{.name=k_PreflightValueName.str(), .value=k_PreflightValueText.str()}}};
   }
 
   /**
@@ -328,7 +328,7 @@ public:
   {
     (*m_InvocationCount)++;
     Result<> result = MakeErrorResult(k_DeferredErrorCode, "The controlled deferred action failed");
-    result.warnings().push_back(Warning{k_DeferredWarningCode, "The controlled deferred warning"});
+    result.warnings().push_back(Warning{.code=k_DeferredWarningCode, .message="The controlled deferred warning"});
     return result;
   }
 
@@ -441,8 +441,8 @@ protected:
     actions.appendDeferredAction(std::make_unique<FailingDeferredAction>(m_FailingInvocationCount));
     actions.appendDeferredAction(std::make_unique<RecordingDeferredAction>(m_FollowingInvocationCount));
     Result<OutputActions> result{std::move(actions)};
-    result.warnings().push_back(Warning{k_PreflightWarningCode, "The controlled preflight warning"});
-    return {std::move(result), {{k_PreflightValueName.str(), k_PreflightValueText.str()}}};
+    result.warnings().push_back(Warning{.code=k_PreflightWarningCode, .message="The controlled preflight warning"});
+    return {.outputActions=std::move(result), .outputValues={{.name=k_PreflightValueName.str(), .value=k_PreflightValueText.str()}}};
   }
 
   /**

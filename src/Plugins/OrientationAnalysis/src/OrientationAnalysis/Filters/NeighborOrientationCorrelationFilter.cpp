@@ -122,7 +122,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   // silently does nothing.
   if(pLevelValue < 0)
   {
-    return {MakeErrorResult<OutputActions>(k_InvalidLevel, fmt::format("Cleanup Level must be 0 or greater (the filter runs 6 - Level cleanup passes). Value supplied: {}", pLevelValue))};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_InvalidLevel, fmt::format("Cleanup Level must be 0 or greater (the filter runs 6 - Level cleanup passes). Value supplied: {}", pLevelValue))};
   }
   if(pLevelValue >= 6)
   {
@@ -172,19 +172,19 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   if(!tupleValidityCheck)
   {
     return {
-        MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+        .outputActions=MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, pImageGeomPathValue, {pConfidenceIndexArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -580098); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeom.getCellDataPath(), {});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

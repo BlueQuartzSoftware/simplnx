@@ -213,7 +213,7 @@ Result<> ExecuteBinaryMorphologyImageFilter(DataStructure& dataStructure, const 
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::BinaryMorphologyExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, foreground, background, boundaryToForeground, shouldCancel, messageHandler};
+  detail::BinaryMorphologyExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .se=se, .op=op, .foreground=foreground, .background=background, .boundaryToForeground=boundaryToForeground, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -232,7 +232,7 @@ Result<> ExecuteBinaryMorphologyCompositeImageFilter(DataStructure& dataStructur
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::BinaryMorphologyCompositeExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, foreground, background, safeBorder, shouldCancel, messageHandler};
+  detail::BinaryMorphologyCompositeExecuteFn executeFn{.dataStructure=dataStructure, .inputArrayPath=inputArrayPath, .outputArrayPath=outputArrayPath, .dims=dims, .se=se, .op=op, .foreground=foreground, .background=background, .safeBorder=safeBorder, .shouldCancel=shouldCancel, .messageHandler=messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

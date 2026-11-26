@@ -117,7 +117,7 @@ Result<> ReadStringDataArray::operator()()
       if(tupleIndex == totalSize)
       {
         result.warnings().push_back(Warning{
-            -76510, fmt::format("Line #{} holds more values than the array's {} values (tuples x components). The extra values were ignored. Check the tuple dimensions.", lineNum + 1, totalSize)});
+            .code=-76510, .message=fmt::format("Line #{} holds more values than the array's {} values (tuples x components). The extra values were ignored. Check the tuple dimensions.", lineNum + 1, totalSize)});
         break;
       }
       data[tupleIndex++] = value;

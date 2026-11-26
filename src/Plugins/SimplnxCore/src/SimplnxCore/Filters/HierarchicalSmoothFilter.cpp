@@ -92,7 +92,7 @@ IFilter::PreflightResult HierarchicalSmoothFilter::preflightImpl(const DataStruc
   // Inform users that the geometry vertex coordinates are going to be modified in place
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriangleGeomPath, {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

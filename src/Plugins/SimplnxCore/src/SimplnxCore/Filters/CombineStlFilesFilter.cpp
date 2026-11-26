@@ -205,7 +205,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createFileListAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

@@ -145,13 +145,13 @@ inline DiscreteGaussianStoragePlan SelectDiscreteGaussianStoragePlan(IDataStore:
 {
   if(inputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {true, true, std::move(inputDataFormat)};
+    return {.useFusedPlanePass=true, .useTemporaryRecordStore=true, .workingDataFormat=std::move(inputDataFormat)};
   }
   if(outputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {true, true, std::move(outputDataFormat)};
+    return {.useFusedPlanePass=true, .useTemporaryRecordStore=true, .workingDataFormat=std::move(outputDataFormat)};
   }
-  return {forceFusedPlanePass, false, std::move(inputDataFormat)};
+  return {.useFusedPlanePass=forceFusedPlanePass, .useTemporaryRecordStore=false, .workingDataFormat=std::move(inputDataFormat)};
 }
 
 // Verbatim port of itk::GaussianOperator's modified-Bessel functions (all double).

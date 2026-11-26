@@ -642,7 +642,7 @@ TEST_CASE("PipelineFlush retains execute diagnostics and fails before later filt
     fixture.firstControl->result.warnings().push_back({k_FilterWarning, "execute-warning-sentinel"});
     if(originalError)
     {
-      fixture.firstControl->result.m_Expected = nonstd::make_unexpected(ErrorCollection{{k_FilterError, "execute-error-sentinel"}});
+      fixture.firstControl->result.m_Expected = nonstd::make_unexpected(ErrorCollection{{.code=k_FilterError, .message="execute-error-sentinel"}});
     }
     fixture.flushControl->result = MakeErrorResult(k_FlushError, "backing.h5:/values: terminal-flush-sentinel");
     fixture.flushControl->result.warnings().push_back({k_FlushWarning, "flush-warning-sentinel"});

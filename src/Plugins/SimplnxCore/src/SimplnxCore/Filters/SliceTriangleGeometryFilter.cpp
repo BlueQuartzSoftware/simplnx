@@ -177,7 +177,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
   auto result = SliceTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid() && dataStructure.getDataRefAs<TriangleGeom>(inputValues.CADDataContainerName).getNumberOfFaces() == 0)
   {
-    result.warnings().push_back(Warning{-62105, fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.CADDataContainerName.toString())});
+    result.warnings().push_back(Warning{.code=-62105, .message=fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.CADDataContainerName.toString())});
   }
   return result;
 }

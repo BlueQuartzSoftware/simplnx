@@ -113,12 +113,12 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue});
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -9805); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   ShapeType tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();
@@ -142,7 +142,7 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
   resultOutputActions.warnings().push_back(
       {-9801, "Finding the feature reference c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these two types."});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

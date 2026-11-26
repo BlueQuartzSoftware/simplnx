@@ -183,7 +183,7 @@ IFilter::PreflightResult ComputeGBCDMetricBasedFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-7236, fmt::format("The phase of interest index ({}) is larger than the number of Ensembles ({})", pPhaseOfInterestValue, numEnsembles));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

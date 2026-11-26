@@ -96,14 +96,14 @@ IFilter::PreflightResult HConvexImageFilter::preflightImpl(const DataStructure& 
   // value; reject it here so the offset is always well-defined.
   if(!std::isfinite(height))
   {
-    return {MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Convex requires a finite Height, but the supplied value was {}.", height))};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Convex requires a finite Height, but the supplied value was {}.", height))};
   }
   // A negative Height has no meaning here and would push the internal (input - Height) HMaxima marker ABOVE the
   // mask, violating reconstruction-by-dilation's marker<=mask precondition (ITK throws). Require Height >= 0; 0 is
   // a valid no-op.
   if(height < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Convex requires a non-negative Height, but the supplied value was {}.", height))};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Convex requires a non-negative Height, but the supplied value was {}.", height))};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK

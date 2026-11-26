@@ -77,7 +77,7 @@ IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataS
   // Triangle geometry face list is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriGeomPathValue, {});
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -109,7 +109,7 @@ inline Result<FastChamferResidentMemoryAllocation> ReserveFastChamferResidentWor
     return ConvertInvalidResult<FastChamferResidentMemoryAllocation>(std::move(requiredResult));
   }
   auto reservation = ReserveWorkingMemory(requiredResult.value(), requiredResult.value());
-  return {FastChamferResidentMemoryAllocation{std::move(reservation), requiredResult.value()}};
+  return {FastChamferResidentMemoryAllocation{.reservation=std::move(reservation), .requiredBytes=requiredResult.value()}};
 }
 
 inline bool Chamfer2DFullWidthPeak(usize columns, usize rows, usize& peak)

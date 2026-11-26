@@ -139,7 +139,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
       auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
       if(dimensions.invalid())
       {
-        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+        return {.outputActions=ConvertInvalidResult<OutputActions>(std::move(dimensions))};
       }
       tupleDims = std::move(dimensions.value());
     }
@@ -150,7 +150,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     if(useDims)
     {
       resultOutputActions.warnings().push_back(
-          Warning{-78604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+          Warning{.code=-78604, .message="You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
                           "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
@@ -161,7 +161,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -80,16 +80,16 @@ void ForEachAxisVisit(int64 n, Function&& function)
 {
   if(n <= 1)
   {
-    function(AxisVisit{0, 0});
+    function(AxisVisit{.coord=0, .pull=0});
     return;
   }
   for(int64 index = 1; index < n; ++index)
   {
-    function(AxisVisit{index, -1});
+    function(AxisVisit{.coord=index, .pull=-1});
   }
   for(int64 index = n - 2; index >= 0; --index)
   {
-    function(AxisVisit{index, 1});
+    function(AxisVisit{.coord=index, .pull=1});
   }
 }
 

@@ -124,7 +124,7 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::move(createArray));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

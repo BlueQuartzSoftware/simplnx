@@ -101,7 +101,7 @@ IFilter::PreflightResult SumProjectionImageFilter::preflightImpl(const DataStruc
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

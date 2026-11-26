@@ -1376,7 +1376,7 @@ Result<> RepairTriangleWindingExternalImpl(INodeGeometry2D::SharedFaceList::stor
       }
       ++groupEnd;
     }
-    auto writeResult = indexCache.write(source, NeighborIndex{neighborOffset, groupEnd - neighborOffset}, shouldCancel);
+    auto writeResult = indexCache.write(source, NeighborIndex{.First=neighborOffset, .Count=groupEnd - neighborOffset}, shouldCancel);
     if(writeResult.invalid())
     {
       return writeResult;

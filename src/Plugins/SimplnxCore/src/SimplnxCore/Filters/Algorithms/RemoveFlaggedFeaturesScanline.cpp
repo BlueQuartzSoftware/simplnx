@@ -710,7 +710,7 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
       {
         listed += ", ...";
       }
-      result.warnings().push_back(Warning{k_EmptyFeatureSkippedWarning, fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
+      result.warnings().push_back(Warning{.code=k_EmptyFeatureSkippedWarning, .message=fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
                                                                                     "them. Feature ID(s): {}",
                                                                                     emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
     }
@@ -768,7 +768,7 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
       {
         if(path == m_InputValues->FeatureIdsArrayPath)
         {
-          result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
+          result.warnings().push_back(Warning{.code=k_FeatureIdsCannotBeIgnoredWarning, .message=fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
                                                                                               "cannot be ignored, so it was removed from the ignore list.",
                                                                                               path.toString())});
           continue;

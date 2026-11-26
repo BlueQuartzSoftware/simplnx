@@ -368,7 +368,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::X)));
   resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::Y)));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

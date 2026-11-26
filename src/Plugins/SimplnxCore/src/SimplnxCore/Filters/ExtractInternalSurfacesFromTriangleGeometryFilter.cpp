@@ -138,13 +138,13 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   if(triangleGeom.getVertices() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
   }
 
   if(triangleGeom.getFaces() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not a Shared Face List");
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
+    return {.outputActions=MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
   }
 
   // Only the array the selected criterion needs is validated for matching tuple counts.
@@ -199,7 +199,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
-      return {MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
+      return {.outputActions=MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
     }
 
     DataType type = targetDataArray->getDataType();
@@ -224,7 +224,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
-      return {MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
+      return {.outputActions=MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
     }
 
     DataType type = targetDataArray->getDataType();

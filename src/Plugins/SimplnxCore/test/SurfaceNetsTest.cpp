@@ -675,8 +675,8 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[Simpl
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
-      SurfaceNetsTransferData{0, {0, 1}},
-      SurfaceNetsTransferData{1, {2, std::numeric_limits<usize>::max()}},
+      SurfaceNetsTransferData{.faceIndex=0, .quadNxArrayIndices={0, 1}},
+      SurfaceNetsTransferData{.faceIndex=1, .quadNxArrayIndices={2, std::numeric_limits<usize>::max()}},
   };
   TransferTuple<int32> transfer(dataStructure, sourcePath, destinationPath);
   auto surfaceNetsTransferResult = transfer.surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(records.data(), records.size()));
@@ -721,8 +721,8 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[Simp
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
-      SurfaceNetsTransferData{0, {0, 1}},
-      SurfaceNetsTransferData{1, {2, std::numeric_limits<usize>::max()}},
+      SurfaceNetsTransferData{.faceIndex=0, .quadNxArrayIndices={0, 1}},
+      SurfaceNetsTransferData{.faceIndex=1, .quadNxArrayIndices={2, std::numeric_limits<usize>::max()}},
   };
   TransferFeatureTuple<int32, int32> transfer(dataStructure, sourcePath, destinationPath, featureIdsPath);
   auto surfaceNetsTransferResult = transfer.surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(records.data(), records.size()));

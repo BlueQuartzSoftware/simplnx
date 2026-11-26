@@ -154,7 +154,7 @@ inline Result<ConnectedComponentResidentProvisionalAllocation> ReserveConnectedC
     return ConvertInvalidResult<ConnectedComponentResidentProvisionalAllocation>(std::move(requiredResult));
   }
   auto reservation = ReserveWorkingMemory(requiredResult.value(), requiredResult.value());
-  return {ConnectedComponentResidentProvisionalAllocation{std::move(reservation), requiredResult.value()}};
+  return {ConnectedComponentResidentProvisionalAllocation{.reservation=std::move(reservation), .requiredBytes=requiredResult.value()}};
 }
 
 struct ConnectedComponentResidentMemoryAllocation
@@ -518,7 +518,7 @@ inline void EncodeLineGeometryInto(nonstd::span<const T> row, int64 nX, const Pr
       {
         ++x;
       }
-      line.push_back(CcRun{start, x - start, 0u});
+      line.push_back(CcRun{.start=start, .length=x - start, .label=0u});
     }
     else
     {

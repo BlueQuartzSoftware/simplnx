@@ -118,13 +118,13 @@ inline RecursiveGaussianStoragePlan SelectRecursiveGaussianStoragePlan(IDataStor
 {
   if(inputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {true, std::move(inputDataFormat)};
+    return {.useTemporaryRecordStore=true, .workingDataFormat=std::move(inputDataFormat)};
   }
   if(outputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {true, std::move(outputDataFormat)};
+    return {.useTemporaryRecordStore=true, .workingDataFormat=std::move(outputDataFormat)};
   }
-  return {false, std::move(inputDataFormat)};
+  return {.useTemporaryRecordStore=false, .workingDataFormat=std::move(inputDataFormat)};
 }
 
 /**
@@ -2022,8 +2022,8 @@ inline Result<> SetSquaredOverSpacing(AbstractDataStore<float32>& dst, const Abs
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
       total, sizeof(float32), options.targetScratchBytes,
-      {{src.getStoreType(), src.getTupleShape(), src.getNumberOfComponents(), "squared-derivative input"},
-       {dst.getStoreType(), dst.getTupleShape(), dst.getNumberOfComponents(), "squared-derivative output", detail::PointwiseEndpointLayout::Access::Write}});
+      {{.storeType=src.getStoreType(), .tupleShape=src.getTupleShape(), .numComponents=src.getNumberOfComponents(), .name="squared-derivative input"},
+       {.storeType=dst.getStoreType(), .tupleShape=dst.getTupleShape(), .numComponents=dst.getNumberOfComponents(), .name="squared-derivative output", .access=detail::PointwiseEndpointLayout::Access::Write}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
@@ -2085,8 +2085,8 @@ inline Result<> AccumulateSquaredOverSpacing(AbstractDataStore<float32>& acc, co
   }
   Result<detail::PointwiseBatchPlan> planResult =
       detail::MakeRecursiveGaussianPostprocessingPlan(total, sizeof(float32) * 2, options.targetScratchBytes,
-                                                      {{acc.getStoreType(), acc.getTupleShape(), acc.getNumberOfComponents(), "gradient accumulator", detail::PointwiseEndpointLayout::Access::Write},
-                                                       {deriv.getStoreType(), deriv.getTupleShape(), deriv.getNumberOfComponents(), "gradient derivative"}});
+                                                      {{.storeType=acc.getStoreType(), .tupleShape=acc.getTupleShape(), .numComponents=acc.getNumberOfComponents(), .name="gradient accumulator", .access=detail::PointwiseEndpointLayout::Access::Write},
+                                                       {.storeType=deriv.getStoreType(), .tupleShape=deriv.getTupleShape(), .numComponents=deriv.getNumberOfComponents(), .name="gradient derivative"}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
@@ -2167,8 +2167,8 @@ inline Result<> SetScaledDerivative(AbstractDataStore<float32>& dst, const Abstr
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
       total, sizeof(float32), options.targetScratchBytes,
-      {{src.getStoreType(), src.getTupleShape(), src.getNumberOfComponents(), "scaled-derivative input"},
-       {dst.getStoreType(), dst.getTupleShape(), dst.getNumberOfComponents(), "scaled-derivative output", detail::PointwiseEndpointLayout::Access::Write}});
+      {{.storeType=src.getStoreType(), .tupleShape=src.getTupleShape(), .numComponents=src.getNumberOfComponents(), .name="scaled-derivative input"},
+       {.storeType=dst.getStoreType(), .tupleShape=dst.getTupleShape(), .numComponents=dst.getNumberOfComponents(), .name="scaled-derivative output", .access=detail::PointwiseEndpointLayout::Access::Write}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
@@ -2238,8 +2238,8 @@ inline Result<> AccumulateScaledDerivative(AbstractDataStore<float32>& acc, cons
   }
   Result<detail::PointwiseBatchPlan> planResult =
       detail::MakeRecursiveGaussianPostprocessingPlan(total, sizeof(float32) * 2, options.targetScratchBytes,
-                                                      {{acc.getStoreType(), acc.getTupleShape(), acc.getNumberOfComponents(), "Laplacian accumulator", detail::PointwiseEndpointLayout::Access::Write},
-                                                       {deriv.getStoreType(), deriv.getTupleShape(), deriv.getNumberOfComponents(), "Laplacian derivative"}});
+                                                      {{.storeType=acc.getStoreType(), .tupleShape=acc.getTupleShape(), .numComponents=acc.getNumberOfComponents(), .name="Laplacian accumulator", .access=detail::PointwiseEndpointLayout::Access::Write},
+                                                       {.storeType=deriv.getStoreType(), .tupleShape=deriv.getTupleShape(), .numComponents=deriv.getNumberOfComponents(), .name="Laplacian derivative"}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
@@ -2344,7 +2344,7 @@ inline Result<> SqrtStoreInPlace(AbstractDataStore<float32>& store, const std::a
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
       total, sizeof(float32), options.targetScratchBytes,
-      {{store.getStoreType(), store.getTupleShape(), store.getNumberOfComponents(), "gradient square-root output", detail::PointwiseEndpointLayout::Access::Write}});
+      {{.storeType=store.getStoreType(), .tupleShape=store.getTupleShape(), .numComponents=store.getNumberOfComponents(), .name="gradient square-root output", .access=detail::PointwiseEndpointLayout::Access::Write}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));

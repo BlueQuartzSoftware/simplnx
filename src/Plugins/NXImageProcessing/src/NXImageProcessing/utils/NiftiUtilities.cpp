@@ -83,29 +83,29 @@ std::optional<NiftiTypeInfo> NiftiDatatypeToSimplnx(int16 niftiDatatype)
   switch(niftiDatatype)
   {
   case NIFTI_TYPE_UINT8:
-    return NiftiTypeInfo{DataType::uint8, 1, 8};
+    return NiftiTypeInfo{.dataType=DataType::uint8, .componentCount=1, .bitpix=8};
   case NIFTI_TYPE_INT8:
-    return NiftiTypeInfo{DataType::int8, 1, 8};
+    return NiftiTypeInfo{.dataType=DataType::int8, .componentCount=1, .bitpix=8};
   case NIFTI_TYPE_UINT16:
-    return NiftiTypeInfo{DataType::uint16, 1, 16};
+    return NiftiTypeInfo{.dataType=DataType::uint16, .componentCount=1, .bitpix=16};
   case NIFTI_TYPE_INT16:
-    return NiftiTypeInfo{DataType::int16, 1, 16};
+    return NiftiTypeInfo{.dataType=DataType::int16, .componentCount=1, .bitpix=16};
   case NIFTI_TYPE_UINT32:
-    return NiftiTypeInfo{DataType::uint32, 1, 32};
+    return NiftiTypeInfo{.dataType=DataType::uint32, .componentCount=1, .bitpix=32};
   case NIFTI_TYPE_INT32:
-    return NiftiTypeInfo{DataType::int32, 1, 32};
+    return NiftiTypeInfo{.dataType=DataType::int32, .componentCount=1, .bitpix=32};
   case NIFTI_TYPE_UINT64:
-    return NiftiTypeInfo{DataType::uint64, 1, 64};
+    return NiftiTypeInfo{.dataType=DataType::uint64, .componentCount=1, .bitpix=64};
   case NIFTI_TYPE_INT64:
-    return NiftiTypeInfo{DataType::int64, 1, 64};
+    return NiftiTypeInfo{.dataType=DataType::int64, .componentCount=1, .bitpix=64};
   case NIFTI_TYPE_FLOAT32:
-    return NiftiTypeInfo{DataType::float32, 1, 32};
+    return NiftiTypeInfo{.dataType=DataType::float32, .componentCount=1, .bitpix=32};
   case NIFTI_TYPE_FLOAT64:
-    return NiftiTypeInfo{DataType::float64, 1, 64};
+    return NiftiTypeInfo{.dataType=DataType::float64, .componentCount=1, .bitpix=64};
   case NIFTI_TYPE_RGB24:
-    return NiftiTypeInfo{DataType::uint8, 3, 24};
+    return NiftiTypeInfo{.dataType=DataType::uint8, .componentCount=3, .bitpix=24};
   case NIFTI_TYPE_RGBA32:
-    return NiftiTypeInfo{DataType::uint8, 4, 32};
+    return NiftiTypeInfo{.dataType=DataType::uint8, .componentCount=4, .bitpix=32};
   default:
     return std::nullopt;
   }

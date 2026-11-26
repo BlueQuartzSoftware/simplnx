@@ -136,7 +136,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // Validate the number of tuples in the arrays (if any) and the number of tuples in the input grid geometry (which is also the same
@@ -146,7 +146,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPaths.front());
     if(dataArray.getNumberOfTuples() != geomElementCount)
     {
-      return {MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
+      return {.outputActions=MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
                                                                 " selected DataArrays have {} tuples.)",
                                                                 pInputGeometryPathValue.toString(), geomElementCount, dataArray.getNumberOfTuples()))};
     }
@@ -174,7 +174,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

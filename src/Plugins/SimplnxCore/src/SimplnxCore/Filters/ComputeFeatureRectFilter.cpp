@@ -95,7 +95,7 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
     const auto& dim = tDims[i];
     if(dim > std::numeric_limits<uint32>::max())
     {
-      return {MakeErrorResult<OutputActions>(
+      return {.outputActions=MakeErrorResult<OutputActions>(
           -2000, fmt::format("Data Object at '{}': Dimension {} has a value of {}, which is larger than the maximum uint32 value ({}).  Please contact BlueQuartz Software for further information.",
                              featureRectArrayPath.toString(), i + 1, dim, std::numeric_limits<uint32>::max()))};
     }
@@ -107,7 +107,7 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.outputActions=std::move(resultOutputActions), .outputValues=std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

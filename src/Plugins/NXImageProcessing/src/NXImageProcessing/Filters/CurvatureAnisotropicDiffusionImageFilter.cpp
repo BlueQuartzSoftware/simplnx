@@ -92,7 +92,7 @@ IFilter::PreflightResult CurvatureAnisotropicDiffusionImageFilter::preflightImpl
     ImageProcessing::AppendUnstableTimeStepWarning(resultOutputActions, timeStep, imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 Result<> CurvatureAnisotropicDiffusionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -114,8 +114,8 @@ Result<> CurvatureAnisotropicDiffusionImageFilter::executeImpl(DataStructure& da
   // ITK-fidelity defaults (false/0.0) since this filter (matching the legacy wrapper) never exposes them.
   return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureAnisoFn, ImageProcessing::FloatingScalar>(
       dataStructure, imageGeomPath, selectedInputArray, outputArrayPath,
-      ImageProcessing::detail::CurvatureAnisoFn{/*m_K=*/0.0, /*conductance=*/conductanceParameter,
-                                                /*interval=*/conductanceScalingUpdateInterval},
+      ImageProcessing::detail::CurvatureAnisoFn{/*m_K=*/.m_K=0.0, /*conductance=*/.conductance=conductanceParameter,
+                                                /*interval=*/.interval=conductanceScalingUpdateInterval},
       timeStep, numberOfIterations, shouldCancel, messageHandler);
 }
 } // namespace nx::core

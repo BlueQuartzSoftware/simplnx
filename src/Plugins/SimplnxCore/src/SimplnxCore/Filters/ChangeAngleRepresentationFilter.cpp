@@ -78,7 +78,7 @@ IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const Da
 
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, pAnglesDataPathValue);
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

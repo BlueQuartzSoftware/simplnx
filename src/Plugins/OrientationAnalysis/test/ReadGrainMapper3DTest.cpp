@@ -461,7 +461,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_PartialIpfColors", "
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  GrainMapperFixtureSpec spec{{7, 3, 1}};
+  GrainMapperFixtureSpec spec{.dimensions={7, 3, 1}};
   spec.ipfStorage = {IpfStorage::Absent, IpfStorage::Absent, IpfStorage::Absent};
   bool convertIpfColors = true;
 
@@ -543,7 +543,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_BatchBoundaries", "[
 
   SECTION("Datasets below the transfer boundary retain component order")
   {
-    const GrainMapperFixtureSpec spec{{7, 3, 1}};
+    const GrainMapperFixtureSpec spec{.dimensions={7, 3, 1}};
     const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Small.h5", spec);
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
@@ -565,7 +565,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_BatchBoundaries", "[
 
   SECTION("Large row and plane batches retain values through the partial tail")
   {
-    const GrainMapperFixtureSpec spec{{256, 257, 2}};
+    const GrainMapperFixtureSpec spec{.dimensions={256, 257, 2}};
     const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Batched.h5", spec);
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
@@ -591,7 +591,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_ConversionCancellati
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
 
-  const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Cancel.h5", GrainMapperFixtureSpec{{256, 257, 2}});
+  const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Cancel.h5", GrainMapperFixtureSpec{.dimensions={256, 257, 2}});
   const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
     std::error_code errorCode;
     fs::remove(inputFile, errorCode);
@@ -635,7 +635,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_MalformedShapes", "[
 
   SECTION("Rodrigues dimensions that do not contain triples fail")
   {
-    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_BadRodrigues.h5", GrainMapperFixtureSpec{{2, 1, 1}, 2});
+    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_BadRodrigues.h5", GrainMapperFixtureSpec{.dimensions={2, 1, 1}, .rodriguesComponentCount=2});
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
       fs::remove(inputFile, errorCode);
@@ -652,7 +652,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_MalformedShapes", "[
 
   SECTION("A dataset longer than the geometry reports its reachable destination mismatch")
   {
-    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_PhaseOverflow.h5", GrainMapperFixtureSpec{{2, 1, 1}, 3, 3});
+    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_PhaseOverflow.h5", GrainMapperFixtureSpec{.dimensions={2, 1, 1}, .rodriguesComponentCount=3, .phaseTupleCount=3});
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
       fs::remove(inputFile, errorCode);

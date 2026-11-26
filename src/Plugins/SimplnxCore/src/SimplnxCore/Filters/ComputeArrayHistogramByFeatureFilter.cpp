@@ -133,12 +133,12 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
 
   if(pNumberOfBinsValue <= 0)
   {
-    return {MakeErrorResult<OutputActions>(-57208, fmt::format("Number of Bins ({}) must be greater than zero.", pNumberOfBinsValue)), {}};
+    return {.outputActions=MakeErrorResult<OutputActions>(-57208, fmt::format("Number of Bins ({}) must be greater than zero.", pNumberOfBinsValue)), .outputValues={}};
   }
   if(static_cast<usize>(pNumberOfBinsValue) > std::numeric_limits<usize>::max() / 2)
   {
-    return {MakeErrorResult<OutputActions>(-57210, fmt::format("Number of Bins ({}) is too large to create a bin-range component shape with two values per bin on this platform.", pNumberOfBinsValue)),
-            {}};
+    return {.outputActions=MakeErrorResult<OutputActions>(-57210, fmt::format("Number of Bins ({}) is too large to create a bin-range component shape with two values per bin on this platform.", pNumberOfBinsValue)),
+            .outputValues={}};
   }
 
   const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pCellFeatureIdsArrayPathValue);
@@ -169,16 +169,16 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
     if(featureIdsArray.getNumberOfTuples() != dataArray->getNumberOfTuples())
     {
-      return {MakeErrorResult<OutputActions>(-57209,
+      return {.outputActions=MakeErrorResult<OutputActions>(-57209,
                                              fmt::format("Cell Feature Ids array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
                                                          pCellFeatureIdsArrayPathValue.toString(), featureIdsArray.getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples())),
-              {}};
+              .outputValues={}};
     }
     if(maskArray && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
     {
-      return {MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
+      return {.outputActions=MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
                                                                  pMaskArrayPathValue.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples())),
-              {}};
+              .outputValues={}};
     }
 
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
@@ -207,7 +207,7 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

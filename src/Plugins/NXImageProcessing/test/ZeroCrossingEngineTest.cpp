@@ -681,7 +681,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles pr
     usize maximumReadValues;
     usize maximumWriteValues;
   };
-  const std::array<TransferCase, 2> transferCases = {{{"full-width row blocks", 162, 36, 18}, {"overwide X tiles", 50, 4, 2}}};
+  const std::array<TransferCase, 2> transferCases = {{{.label="full-width row blocks", .targetBytes=162, .maximumReadValues=36, .maximumWriteValues=18}, {.label="overwide X tiles", .targetBytes=50, .maximumReadValues=4, .maximumWriteValues=2}}};
 
   for(const TransferCase& transferCase : transferCases)
   {

@@ -124,33 +124,33 @@ TEST_CASE("simplnx::StructuringElement: Ordered offset oracles", "[simplnx][Stru
 {
   SECTION("Unit cube")
   {
-    const std::vector<SEOffset> box = {{-1, -1, -1}, {0, -1, -1}, {1, -1, -1}, {-1, 0, -1}, {0, 0, -1}, {1, 0, -1}, {-1, 1, -1}, {0, 1, -1}, {1, 1, -1},
-                                       {-1, -1, 0},  {0, -1, 0},  {1, -1, 0},  {-1, 0, 0},  {0, 0, 0},  {1, 0, 0},  {-1, 1, 0},  {0, 1, 0},  {1, 1, 0},
-                                       {-1, -1, 1},  {0, -1, 1},  {1, -1, 1},  {-1, 0, 1},  {0, 0, 1},  {1, 0, 1},  {-1, 1, 1},  {0, 1, 1},  {1, 1, 1}};
-    const std::vector<SEOffset> ball = {{0, -1, -1}, {-1, 0, -1}, {0, 0, -1}, {1, 0, -1}, {0, 1, -1}, {-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {-1, 0, 0}, {0, 0, 0},
-                                        {1, 0, 0},   {-1, 1, 0},  {0, 1, 0},  {1, 1, 0},  {0, -1, 1}, {-1, 0, 1},  {0, 0, 1},  {1, 0, 1},  {0, 1, 1}};
-    const std::vector<SEOffset> annulus = {{0, -1, -1}, {-1, 0, -1}, {0, 0, -1}, {1, 0, -1}, {0, 1, -1}, {-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {-1, 0, 0},
-                                           {1, 0, 0},   {-1, 1, 0},  {0, 1, 0},  {1, 1, 0},  {0, -1, 1}, {-1, 0, 1},  {0, 0, 1},  {1, 0, 1},  {0, 1, 1}};
+    const std::vector<SEOffset> box = {{.dx=-1, .dy=-1, .dz=-1}, {.dx=0, .dy=-1, .dz=-1}, {.dx=1, .dy=-1, .dz=-1}, {.dx=-1, .dy=0, .dz=-1}, {.dx=0, .dy=0, .dz=-1}, {.dx=1, .dy=0, .dz=-1}, {.dx=-1, .dy=1, .dz=-1}, {.dx=0, .dy=1, .dz=-1}, {.dx=1, .dy=1, .dz=-1},
+                                       {.dx=-1, .dy=-1, .dz=0},  {.dx=0, .dy=-1, .dz=0},  {.dx=1, .dy=-1, .dz=0},  {.dx=-1, .dy=0, .dz=0},  {.dx=0, .dy=0, .dz=0},  {.dx=1, .dy=0, .dz=0},  {.dx=-1, .dy=1, .dz=0},  {.dx=0, .dy=1, .dz=0},  {.dx=1, .dy=1, .dz=0},
+                                       {.dx=-1, .dy=-1, .dz=1},  {.dx=0, .dy=-1, .dz=1},  {.dx=1, .dy=-1, .dz=1},  {.dx=-1, .dy=0, .dz=1},  {.dx=0, .dy=0, .dz=1},  {.dx=1, .dy=0, .dz=1},  {.dx=-1, .dy=1, .dz=1},  {.dx=0, .dy=1, .dz=1},  {.dx=1, .dy=1, .dz=1}};
+    const std::vector<SEOffset> ball = {{.dx=0, .dy=-1, .dz=-1}, {.dx=-1, .dy=0, .dz=-1}, {.dx=0, .dy=0, .dz=-1}, {.dx=1, .dy=0, .dz=-1}, {.dx=0, .dy=1, .dz=-1}, {.dx=-1, .dy=-1, .dz=0}, {.dx=0, .dy=-1, .dz=0}, {.dx=1, .dy=-1, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=0, .dy=0, .dz=0},
+                                        {.dx=1, .dy=0, .dz=0},   {.dx=-1, .dy=1, .dz=0},  {.dx=0, .dy=1, .dz=0},  {.dx=1, .dy=1, .dz=0},  {.dx=0, .dy=-1, .dz=1}, {.dx=-1, .dy=0, .dz=1},  {.dx=0, .dy=0, .dz=1},  {.dx=1, .dy=0, .dz=1},  {.dx=0, .dy=1, .dz=1}};
+    const std::vector<SEOffset> annulus = {{.dx=0, .dy=-1, .dz=-1}, {.dx=-1, .dy=0, .dz=-1}, {.dx=0, .dy=0, .dz=-1}, {.dx=1, .dy=0, .dz=-1}, {.dx=0, .dy=1, .dz=-1}, {.dx=-1, .dy=-1, .dz=0}, {.dx=0, .dy=-1, .dz=0}, {.dx=1, .dy=-1, .dz=0}, {.dx=-1, .dy=0, .dz=0},
+                                           {.dx=1, .dy=0, .dz=0},   {.dx=-1, .dy=1, .dz=0},  {.dx=0, .dy=1, .dz=0},  {.dx=1, .dy=1, .dz=0},  {.dx=0, .dy=-1, .dz=1}, {.dx=-1, .dy=0, .dz=1},  {.dx=0, .dy=0, .dz=1},  {.dx=1, .dy=0, .dz=1},  {.dx=0, .dy=1, .dz=1}};
     RequireOffsets(KernelType::Box, {1, 1, 1}, box);
     RequireOffsets(KernelType::Ball, {1, 1, 1}, ball);
     RequireOffsets(KernelType::Annulus, {1, 1, 1}, annulus);
-    RequireOffsets(KernelType::Cross, {1, 1, 1}, {{0, 0, -1}, {0, -1, 0}, {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}});
+    RequireOffsets(KernelType::Cross, {1, 1, 1}, {{.dx=0, .dy=0, .dz=-1}, {.dx=0, .dy=-1, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=0, .dy=0, .dz=0}, {.dx=1, .dy=0, .dz=0}, {.dx=0, .dy=1, .dz=0}, {.dx=0, .dy=0, .dz=1}});
   }
   SECTION("Unit square")
   {
-    const std::vector<SEOffset> square = {{-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {-1, 1, 0}, {0, 1, 0}, {1, 1, 0}};
+    const std::vector<SEOffset> square = {{.dx=-1, .dy=-1, .dz=0}, {.dx=0, .dy=-1, .dz=0}, {.dx=1, .dy=-1, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=0, .dy=0, .dz=0}, {.dx=1, .dy=0, .dz=0}, {.dx=-1, .dy=1, .dz=0}, {.dx=0, .dy=1, .dz=0}, {.dx=1, .dy=1, .dz=0}};
     RequireOffsets(KernelType::Box, {1, 1, 0}, square);
     RequireOffsets(KernelType::Ball, {1, 1, 0}, square);
-    RequireOffsets(KernelType::Annulus, {1, 1, 0}, {{-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {-1, 0, 0}, {1, 0, 0}, {-1, 1, 0}, {0, 1, 0}, {1, 1, 0}});
-    RequireOffsets(KernelType::Cross, {1, 1, 0}, {{0, -1, 0}, {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {0, 1, 0}});
+    RequireOffsets(KernelType::Annulus, {1, 1, 0}, {{.dx=-1, .dy=-1, .dz=0}, {.dx=0, .dy=-1, .dz=0}, {.dx=1, .dy=-1, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=1, .dy=0, .dz=0}, {.dx=-1, .dy=1, .dz=0}, {.dx=0, .dy=1, .dz=0}, {.dx=1, .dy=1, .dz=0}});
+    RequireOffsets(KernelType::Cross, {1, 1, 0}, {{.dx=0, .dy=-1, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=0, .dy=0, .dz=0}, {.dx=1, .dy=0, .dz=0}, {.dx=0, .dy=1, .dz=0}});
   }
   SECTION("Asymmetric plane")
   {
     RequireOffsets(KernelType::Box, {2, 1, 0},
-                   {{-2, -1, 0}, {-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {2, -1, 0}, {-2, 0, 0}, {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {-2, 1, 0}, {-1, 1, 0}, {0, 1, 0}, {1, 1, 0}, {2, 1, 0}});
-    RequireOffsets(KernelType::Ball, {2, 1, 0}, {{-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {-2, 0, 0}, {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {-1, 1, 0}, {0, 1, 0}, {1, 1, 0}});
-    RequireOffsets(KernelType::Annulus, {2, 1, 0}, {{-1, -1, 0}, {0, -1, 0}, {1, -1, 0}, {-2, 0, 0}, {2, 0, 0}, {-1, 1, 0}, {0, 1, 0}, {1, 1, 0}});
-    RequireOffsets(KernelType::Cross, {2, 1, 0}, {{0, -1, 0}, {-2, 0, 0}, {-1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {0, 1, 0}});
+                   {{.dx=-2, .dy=-1, .dz=0}, {.dx=-1, .dy=-1, .dz=0}, {.dx=0, .dy=-1, .dz=0}, {.dx=1, .dy=-1, .dz=0}, {.dx=2, .dy=-1, .dz=0}, {.dx=-2, .dy=0, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=0, .dy=0, .dz=0}, {.dx=1, .dy=0, .dz=0}, {.dx=2, .dy=0, .dz=0}, {.dx=-2, .dy=1, .dz=0}, {.dx=-1, .dy=1, .dz=0}, {.dx=0, .dy=1, .dz=0}, {.dx=1, .dy=1, .dz=0}, {.dx=2, .dy=1, .dz=0}});
+    RequireOffsets(KernelType::Ball, {2, 1, 0}, {{.dx=-1, .dy=-1, .dz=0}, {.dx=0, .dy=-1, .dz=0}, {.dx=1, .dy=-1, .dz=0}, {.dx=-2, .dy=0, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=0, .dy=0, .dz=0}, {.dx=1, .dy=0, .dz=0}, {.dx=2, .dy=0, .dz=0}, {.dx=-1, .dy=1, .dz=0}, {.dx=0, .dy=1, .dz=0}, {.dx=1, .dy=1, .dz=0}});
+    RequireOffsets(KernelType::Annulus, {2, 1, 0}, {{.dx=-1, .dy=-1, .dz=0}, {.dx=0, .dy=-1, .dz=0}, {.dx=1, .dy=-1, .dz=0}, {.dx=-2, .dy=0, .dz=0}, {.dx=2, .dy=0, .dz=0}, {.dx=-1, .dy=1, .dz=0}, {.dx=0, .dy=1, .dz=0}, {.dx=1, .dy=1, .dz=0}});
+    RequireOffsets(KernelType::Cross, {2, 1, 0}, {{.dx=0, .dy=-1, .dz=0}, {.dx=-2, .dy=0, .dz=0}, {.dx=-1, .dy=0, .dz=0}, {.dx=0, .dy=0, .dz=0}, {.dx=1, .dy=0, .dz=0}, {.dx=2, .dy=0, .dz=0}, {.dx=0, .dy=1, .dz=0}});
   }
 }
 
@@ -180,11 +180,11 @@ TEST_CASE("simplnx::MorphologyLayout: Representation boundaries", "[simplnx][Str
     int32 code;
     std::string phrase;
   };
-  const std::vector<LayoutCase> cases = {{{std::numeric_limits<usize>::max() - 1, 1, 1}, {1, 0, 0}, true, 1, k_MorphologyPaddedExtentError, "padded extent"},
-                                         {{signedMax - 2, 1, 1}, {2, 0, 0}, false, 1, k_MorphologyCoordinateError, "coordinate"},
-                                         {{3, 3, 1024}, {100000000, 100000000, 0}, true, 1, k_MorphologyVolumeError, "volume"},
-                                         {{usize{1} << 32, usize{1} << 31, 1}, {0, 0, 0}, false, 1, k_MorphologyPlaneError, "plane"},
-                                         {{usize{1} << 31, usize{1} << 31, 1}, {0, 0, 0}, false, 8, k_MorphologyByteCountError, "byte"}};
+  const std::vector<LayoutCase> cases = {{.dims={std::numeric_limits<usize>::max() - 1, 1, 1}, .radius={1, 0, 0}, .safeBorder=true, .bytes=1, .code=k_MorphologyPaddedExtentError, .phrase="padded extent"},
+                                         {.dims={signedMax - 2, 1, 1}, .radius={2, 0, 0}, .safeBorder=false, .bytes=1, .code=k_MorphologyCoordinateError, .phrase="coordinate"},
+                                         {.dims={3, 3, 1024}, .radius={100000000, 100000000, 0}, .safeBorder=true, .bytes=1, .code=k_MorphologyVolumeError, .phrase="volume"},
+                                         {.dims={usize{1} << 32, usize{1} << 31, 1}, .radius={0, 0, 0}, .safeBorder=false, .bytes=1, .code=k_MorphologyPlaneError, .phrase="plane"},
+                                         {.dims={usize{1} << 31, usize{1} << 31, 1}, .radius={0, 0, 0}, .safeBorder=false, .bytes=8, .code=k_MorphologyByteCountError, .phrase="byte"}};
   for(const auto& item : cases)
   {
     CAPTURE(item.phrase);
@@ -206,12 +206,12 @@ TEST_CASE("simplnx::MorphologyLayout: Representation boundaries", "[simplnx][Str
     result = ValidateMorphologyLayout(dims, radius, false, 1);
     RequireError(result, k_MorphologyCoordinateError, "coordinate");
   }
-  const std::vector<LayoutCase> controls = {{{signedMax - 1, 1, 1}, {0, 0, 0}, false, 1, 0, "large X"},
-                                            {{1, signedMax - 1, 1}, {0, 0, 0}, false, 1, 0, "large Y"},
-                                            {{3, 3, 1024}, {100000000, 100000000, 0}, false, 1, 0, "Safe Border off"},
-                                            {{3, 3, 1}, {0, 0, 2147483646u}, true, 1, 0, "2D ignores Z padding"},
-                                            {{131072, 131072, 2}, {0, 0, 1073741823}, false, 1, 0, "unrepresentable flat delta"},
-                                            {{usize{1} << 30, usize{1} << 30, 4}, {0, 0, 4}, false, 1, 0, "flat delta plus volume"}};
+  const std::vector<LayoutCase> controls = {{.dims={signedMax - 1, 1, 1}, .radius={0, 0, 0}, .safeBorder=false, .bytes=1, .code=0, .phrase="large X"},
+                                            {.dims={1, signedMax - 1, 1}, .radius={0, 0, 0}, .safeBorder=false, .bytes=1, .code=0, .phrase="large Y"},
+                                            {.dims={3, 3, 1024}, .radius={100000000, 100000000, 0}, .safeBorder=false, .bytes=1, .code=0, .phrase="Safe Border off"},
+                                            {.dims={3, 3, 1}, .radius={0, 0, 2147483646u}, .safeBorder=true, .bytes=1, .code=0, .phrase="2D ignores Z padding"},
+                                            {.dims={131072, 131072, 2}, .radius={0, 0, 1073741823}, .safeBorder=false, .bytes=1, .code=0, .phrase="unrepresentable flat delta"},
+                                            {.dims={usize{1} << 30, usize{1} << 30, 4}, .radius={0, 0, 4}, .safeBorder=false, .bytes=1, .code=0, .phrase="flat delta plus volume"}};
   for(const auto& item : controls)
   {
     CAPTURE(item.phrase);

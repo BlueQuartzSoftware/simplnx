@@ -561,13 +561,13 @@ TEST_CASE("SimplnxCore::TriangleNormal: block transfer contracts", "[SimplnxCore
     const char* contextMessage;
   };
   const std::array<ContractCase, 7> cases = {
-      {{"complete", NormalStoreRole::Normals, false, 0, 5, k_NormalBlockFaces + 1, 0, ""},
-       {"vertex read", NormalStoreRole::Vertices, false, 1, 1, 0, -65810, "Error reading vertex coordinates for triangle normal calculation."},
-       {"first face read", NormalStoreRole::Faces, false, 1, 2, 0, -65811, "Error reading connectivity for triangle normal calculation at triangle 0 (262144 triangles)."},
-       {"tail face read", NormalStoreRole::Faces, false, 2, 4, k_NormalBlockFaces, -65811, "Error reading connectivity for triangle normal calculation at triangle 262144 (1 triangles)."},
-       {"first output write", NormalStoreRole::Normals, true, 1, 3, 0, -65812, "Error writing normals at triangle 0 (262144 triangles)."},
-       {"tail output write", NormalStoreRole::Normals, true, 2, 5, k_NormalBlockFaces, -65812, "Error writing normals at triangle 262144 (1 triangles)."},
-       {"cancel after first block", NormalStoreRole::Normals, false, 0, 3, k_NormalBlockFaces, 0, ""}}};
+      {{.name="complete", .failingRole=NormalStoreRole::Normals, .failingWrite=false, .failingCall=0, .traceLength=5, .completedFaces=k_NormalBlockFaces + 1, .contextCode=0, .contextMessage=""},
+       {.name="vertex read", .failingRole=NormalStoreRole::Vertices, .failingWrite=false, .failingCall=1, .traceLength=1, .completedFaces=0, .contextCode=-65810, .contextMessage="Error reading vertex coordinates for triangle normal calculation."},
+       {.name="first face read", .failingRole=NormalStoreRole::Faces, .failingWrite=false, .failingCall=1, .traceLength=2, .completedFaces=0, .contextCode=-65811, .contextMessage="Error reading connectivity for triangle normal calculation at triangle 0 (262144 triangles)."},
+       {.name="tail face read", .failingRole=NormalStoreRole::Faces, .failingWrite=false, .failingCall=2, .traceLength=4, .completedFaces=k_NormalBlockFaces, .contextCode=-65811, .contextMessage="Error reading connectivity for triangle normal calculation at triangle 262144 (1 triangles)."},
+       {.name="first output write", .failingRole=NormalStoreRole::Normals, .failingWrite=true, .failingCall=1, .traceLength=3, .completedFaces=0, .contextCode=-65812, .contextMessage="Error writing normals at triangle 0 (262144 triangles)."},
+       {.name="tail output write", .failingRole=NormalStoreRole::Normals, .failingWrite=true, .failingCall=2, .traceLength=5, .completedFaces=k_NormalBlockFaces, .contextCode=-65812, .contextMessage="Error writing normals at triangle 262144 (1 triangles)."},
+       {.name="cancel after first block", .failingRole=NormalStoreRole::Normals, .failingWrite=false, .failingCall=0, .traceLength=3, .completedFaces=k_NormalBlockFaces, .contextCode=0, .contextMessage=""}}};
   const auto& contract = cases[caseIndex];
   CAPTURE(scenario, contract.name);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -581,7 +581,7 @@ TEST_CASE("SimplnxCore::TriangleNormal: block transfer contracts", "[SimplnxCore
   state.failingWrite = contract.failingWrite;
   state.failingCall = contract.failingCall;
   state.cancelAfterFirstWrite = caseIndex == 6;
-  TriangleNormalInputValues inputValues{k_NormalGeometryPath, "Normals"};
+  TriangleNormalInputValues inputValues{.InputTriangleGeometryPath=k_NormalGeometryPath, .OutputNormalsArrayName="Normals"};
   const IFilter::MessageHandler messages{};
   NormalTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleNormal(fixture.dataStructure, messages, state.shouldCancel, &inputValues)(); });
@@ -602,11 +602,11 @@ TEST_CASE("SimplnxCore::TriangleNormal: block transfer contracts", "[SimplnxCore
     CHECK(result.errors()[1].message == contract.contextMessage);
   }
   CHECK(state.shouldCancel.load() == state.cancelAfterFirstWrite);
-  const std::array<NormalTransfer, 5> expected = {{{NormalStoreRole::Vertices, false, 0, 18},
-                                                   {NormalStoreRole::Faces, false, 0, 786432},
-                                                   {NormalStoreRole::Normals, true, 0, 786432},
-                                                   {NormalStoreRole::Faces, false, 786432, 3},
-                                                   {NormalStoreRole::Normals, true, 786432, 3}}};
+  const std::array<NormalTransfer, 5> expected = {{{.role=NormalStoreRole::Vertices, .write=false, .start=0, .count=18},
+                                                   {.role=NormalStoreRole::Faces, .write=false, .start=0, .count=786432},
+                                                   {.role=NormalStoreRole::Normals, .write=true, .start=0, .count=786432},
+                                                   {.role=NormalStoreRole::Faces, .write=false, .start=786432, .count=3},
+                                                   {.role=NormalStoreRole::Normals, .write=true, .start=786432, .count=3}}};
   REQUIRE(calls.size() == contract.traceLength);
   for(usize callIndex = 0; callIndex < calls.size(); ++callIndex)
   {
@@ -634,7 +634,7 @@ TEST_CASE("SimplnxCore::TriangleNormal: early exit controls", "[SimplnxCore][Tri
   scope.requireExpectedStore(*fixture.facesPtr);
   scope.requireExpectedStore(*outputPtr);
   state.shouldCancel = preCancelled;
-  TriangleNormalInputValues inputValues{k_NormalGeometryPath, "Normals"};
+  TriangleNormalInputValues inputValues{.InputTriangleGeometryPath=k_NormalGeometryPath, .OutputNormalsArrayName="Normals"};
   const IFilter::MessageHandler messages{};
   NormalTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleNormal(fixture.dataStructure, messages, state.shouldCancel, &inputValues)(); });

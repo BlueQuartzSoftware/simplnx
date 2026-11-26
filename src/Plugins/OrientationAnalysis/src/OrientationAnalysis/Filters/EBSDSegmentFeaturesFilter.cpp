@@ -129,7 +129,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   auto tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   if(tolerance == 0.0F)
   {
-    return {MakeErrorResult<OutputActions>(-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName()))};
   }
 
   // Validate the Grid Geometry
@@ -154,7 +154,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.outputActions=MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // Create the Cell Level FeatureIds array
@@ -172,7 +172,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  return {resultOutputActions, preflightUpdatedValues};
+  return {.outputActions=resultOutputActions, .outputValues=preflightUpdatedValues};
 }
 
 //------------------------------------------------------------------------------

@@ -78,7 +78,7 @@ public:
     Result<> result = DataStore<int32>::readExtentIntoBuffer(extent, destination);
     if(result.valid() && m_AddExtentWarning)
     {
-      result.warnings().push_back(Warning{k_ExtentWarningCode, "TrackingDataStore extent-read warning."});
+      result.warnings().push_back(Warning{.code=k_ExtentWarningCode, .message="TrackingDataStore extent-read warning."});
     }
     return result;
   }
@@ -586,7 +586,7 @@ TEST_CASE("Resident bounded result construction failure preserves the whole call
     ++*static_cast<uint64*>(context);
     return true;
   };
-  const auto previous = HDF5::SetCodecIoObserverForTesting({&attempts, nullptr, fault});
+  const auto previous = HDF5::SetCodecIoObserverForTesting({.context=&attempts, .callback=nullptr, .boundedFault=fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)HDF5::SetCodecIoObserverForTesting(previous); });
   REQUIRE_THROWS_AS(static_cast<void>(store.readExtentIntoBufferBounded(Extent({0}, {1}), nonstd::span<int32>(output.data(), 2), 0)), std::bad_alloc);
   REQUIRE(attempts == 1);

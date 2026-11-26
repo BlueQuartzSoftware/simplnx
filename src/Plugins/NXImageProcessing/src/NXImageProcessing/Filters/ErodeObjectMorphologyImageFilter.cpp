@@ -103,19 +103,19 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
   if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
   }
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& layoutInputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(auto layoutResult = ImageProcessing::ValidateMorphologyLayout(imageGeom.getDimensions(), kernelRadius, false, GetDataTypeSize(layoutInputArray.getDataType())); layoutResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Erode Object Morphology requires a single-component (scalar) input array, but '{}' has {} components.",
+    return {.outputActions=MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Erode Object Morphology requires a single-component (scalar) input array, but '{}' has {} components.",
                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
@@ -123,7 +123,7 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.outputActions=std::move(resultOutputActions)};
   }
 
   // Both the Float64 Object Value and Background Value are cast to the input element type by the
@@ -137,12 +137,12 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   {
     // Intentional: on an error we abort preflight and drop any warning accumulated so far (mirrors
     // ValidateBinaryFgBgInRange); the warning reappears once the erroring value is fixed.
-    return {ConvertResultTo<OutputActions>(std::move(objectGuard), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(objectGuard), OutputActions{})};
   }
   Result<> backgroundGuard = ImageProcessing::ValidateScalarValueForType(inputType, backgroundValue, "Background Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(backgroundGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(backgroundGuard), OutputActions{})};
+    return {.outputActions=ConvertResultTo<OutputActions>(std::move(backgroundGuard), OutputActions{})};
   }
   for(Warning& warning : objectGuard.warnings())
   {
@@ -152,7 +152,7 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.outputActions=std::move(resultOutputActions)};
 }
 Result<> ErodeObjectMorphologyImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

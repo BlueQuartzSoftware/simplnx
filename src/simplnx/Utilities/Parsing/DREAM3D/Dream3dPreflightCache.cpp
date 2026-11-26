@@ -69,7 +69,7 @@ std::optional<FileMetadata> ReadFileMetadata(const fs::path& filePath, std::erro
   {
     return std::nullopt;
   }
-  return FileMetadata{static_cast<uint64>(fileSize), mtime};
+  return FileMetadata{.fileSize=static_cast<uint64>(fileSize), .mtime=mtime};
 }
 
 template <class T>
@@ -114,7 +114,7 @@ Result<NeutralMetadataHandout> ReadFromDisk(const fs::path& filePath, bool neutr
   {
     return ConvertInvalidResult<NeutralMetadataHandout>(std::move(result));
   }
-  NeutralMetadataHandout handout{std::move(result.value()), std::move(version), std::move(deferredImageMetadata)};
+  NeutralMetadataHandout handout{.dataStructure=std::move(result.value()), .fileVersion=std::move(version), .deferredImageMetadata=std::move(deferredImageMetadata)};
   return ConvertResultTo<NeutralMetadataHandout>(ConvertResult(std::move(result)), std::move(handout));
 }
 

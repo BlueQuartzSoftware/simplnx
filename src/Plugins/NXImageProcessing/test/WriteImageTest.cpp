@@ -606,9 +606,9 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plan
     FloatVec3 origin;
     FloatVec3 spacing;
   };
-  const std::array<PlaneMetadata, 3> metadataCases = {PlaneMetadata{k_XYPlane, {3, 2, 1}, {10.0f, 20.0f, 0.0f}, {1.0f, 2.0f, 1.0f}},
-                                                      PlaneMetadata{k_XZPlane, {3, 2, 1}, {10.0f, 40.0f, 0.0f}, {1.0f, 4.0f, 1.0f}},
-                                                      PlaneMetadata{k_YZPlane, {2, 2, 1}, {20.0f, 40.0f, 0.0f}, {2.0f, 4.0f, 1.0f}}};
+  const std::array<PlaneMetadata, 3> metadataCases = {PlaneMetadata{.plane=k_XYPlane, .dimensions={3, 2, 1}, .origin={10.0f, 20.0f, 0.0f}, .spacing={1.0f, 2.0f, 1.0f}},
+                                                      PlaneMetadata{.plane=k_XZPlane, .dimensions={3, 2, 1}, .origin={10.0f, 40.0f, 0.0f}, .spacing={1.0f, 4.0f, 1.0f}},
+                                                      PlaneMetadata{.plane=k_YZPlane, .dimensions={2, 2, 1}, .origin={20.0f, 40.0f, 0.0f}, .spacing={2.0f, 4.0f, 1.0f}}};
 
   for(const PlaneMetadata& metadataCase : metadataCases)
   {
