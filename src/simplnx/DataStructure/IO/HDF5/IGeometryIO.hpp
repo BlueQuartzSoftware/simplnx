@@ -19,7 +19,7 @@ public:
    * @brief Protected constructor.
    */
   IGeometryIO();
-  virtual ~IGeometryIO() noexcept;
+  ~IGeometryIO() noexcept override;
 
   IGeometryIO(const IGeometryIO& other) = delete;
   IGeometryIO(IGeometryIO&& other) = delete;

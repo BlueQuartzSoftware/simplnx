@@ -19,7 +19,7 @@ public:
    * @brief Default constructor.
    */
   BaseGroupIO();
-  virtual ~BaseGroupIO() noexcept;
+  ~BaseGroupIO() noexcept override;
 
   BaseGroupIO(const BaseGroupIO& other) = delete;
   BaseGroupIO(BaseGroupIO&& other) = delete;
