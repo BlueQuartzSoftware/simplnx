@@ -8,6 +8,7 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -35,9 +36,9 @@ void Dream3dImportParameter::AddImageGeometryImportHint(std::vector<Error>& erro
 }
 
 //-----------------------------------------------------------------------------
-Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 

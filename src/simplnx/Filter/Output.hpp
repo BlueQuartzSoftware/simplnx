@@ -9,6 +9,7 @@
 #include <nonstd/span.hpp>
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace nx::core
@@ -70,8 +71,8 @@ public:
    * @brief Constructs an IDataCreationAction that takes a DataPath specifying the path to be created.
    * @param createdPath
    */
-  IDataCreationAction(const DataPath& createdPath)
-  : m_CreatedPath(createdPath)
+  IDataCreationAction(DataPath  createdPath)
+  : m_CreatedPath(std::move(createdPath))
   {
   }
   ~IDataCreationAction() noexcept override = default;

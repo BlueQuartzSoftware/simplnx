@@ -14,7 +14,7 @@ public:
   using ValueType = DataPath;
 
   ArrayCreationParameter() = delete;
-  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
   ~ArrayCreationParameter() override = default;
 
   ArrayCreationParameter(const ArrayCreationParameter&) = delete;

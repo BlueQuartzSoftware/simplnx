@@ -817,11 +817,11 @@ template <class T>
 class ObjectMorphScatter
 {
 public:
-  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
+  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
                      T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_BoxOffsets(boxOffsets)
   , m_Op(op)
@@ -934,11 +934,11 @@ template <class T>
 class ObjectMorphGather
 {
 public:
-  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
+  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
                     T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = 64ULL * 1024ULL * 1024ULL)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_BoxOffsets(boxOffsets)
   , m_Op(op)

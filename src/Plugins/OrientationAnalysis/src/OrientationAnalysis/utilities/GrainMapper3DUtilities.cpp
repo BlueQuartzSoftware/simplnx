@@ -10,6 +10,8 @@
 
 #include <fmt/format.h>
 
+#include <utility>
+
 using namespace nx::core;
 using namespace H5Support;
 
@@ -67,10 +69,10 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId)
   }
 }
 
-GrainMapperReader::GrainMapperReader(const std::string& filePath, bool readDctData, bool readAbsorptionData)
+GrainMapperReader::GrainMapperReader(std::string  filePath, bool readDctData, bool readAbsorptionData)
 : m_ReadDctData(readDctData)
 , m_ReadAbsorptionData(readAbsorptionData)
-, m_FileName(filePath)
+, m_FileName(std::move(filePath))
 {
   m_NameToDataTypeMap = {{GM3DConst::k_CompletenessName, DataType::float32}, {GM3DConst::k_GrainIdName, DataType::int32},      {GM3DConst::k_MaskName, DataType::uint8},
                          {GM3DConst::k_PhaseIdName, DataType::uint8},        {GM3DConst::k_RodriguesName, DataType::float32},  {GM3DConst::k_EulerZXZName, DataType::float32},

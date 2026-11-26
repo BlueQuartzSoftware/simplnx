@@ -9,6 +9,7 @@
 #include <fmt/ranges.h>
 
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
@@ -20,11 +21,11 @@ constexpr StringLiteral k_ScanNames = "scan_names";
 } // namespace
 
 //-----------------------------------------------------------------------------
-OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                             const EbsdReaderType& readerType, const ExtensionsType& extensionsType)
+OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
+                                                             const EbsdReaderType& readerType, ExtensionsType  extensionsType)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
-, m_AvailableExtensions(extensionsType)
+, m_DefaultValue(std::move(defaultValue))
+, m_AvailableExtensions(std::move(extensionsType))
 , m_ReaderType(readerType)
 {
 }

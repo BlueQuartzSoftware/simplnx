@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
@@ -65,9 +66,9 @@ nlohmann::json CreatePipelineJson(std::string_view name, nlohmann::json filterAr
 }
 } // namespace
 
-Pipeline::Pipeline(ExecutionContext executionContext, const std::string& name, FilterList* filterList)
+Pipeline::Pipeline(ExecutionContext executionContext, std::string  name, FilterList* filterList)
 : AbstractPipelineNode()
-, m_Name(name)
+, m_Name(std::move(name))
 , m_FilterList(filterList)
 , m_ExecutionContext(std::move(executionContext))
 {

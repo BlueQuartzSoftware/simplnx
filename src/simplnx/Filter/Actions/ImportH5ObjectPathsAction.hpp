@@ -25,7 +25,7 @@ public:
    * @param paths The paths to import. An empty list imports no objects.
    * @param useDefaultGeometryValues Use 0 for invalid stored image origin components and 1 for invalid spacing components.
    */
-  ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths, bool useDefaultGeometryValues = false);
+  ImportH5ObjectPathsAction(std::filesystem::path  importFile, PathsType  paths, bool useDefaultGeometryValues = false);
 
   ~ImportH5ObjectPathsAction() noexcept override;
 

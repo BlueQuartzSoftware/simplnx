@@ -70,7 +70,7 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId);
 class ORIENTATIONANALYSIS_EXPORT GrainMapperReader
 {
 public:
-  explicit GrainMapperReader(const std::string& filePath, bool readDctData, bool readAbsorptionData);
+  explicit GrainMapperReader(std::string  filePath, bool readDctData, bool readAbsorptionData);
   ~GrainMapperReader();
 
   typedef struct

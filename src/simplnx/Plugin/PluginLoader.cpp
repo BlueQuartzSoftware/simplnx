@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 #include <memory>
+#include <utility>
 
 // fmt >= 8.0.0
 #if FMT_VERSION >= 80000
@@ -87,8 +88,8 @@ auto GetErrorMessage()
 }
 } // namespace
 
-PluginLoader::PluginLoader(const std::filesystem::path& path)
-: m_Path(path)
+PluginLoader::PluginLoader(std::filesystem::path  path)
+: m_Path(std::move(path))
 , m_Plugin(nullptr)
 {
   loadPlugin();

@@ -3149,11 +3149,11 @@ template <class T>
 class MorphScanline
 {
 public:
-  MorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
+  MorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
                 const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = detail::k_MorphologySlabTargetBytes)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_ShouldCancel(shouldCancel)
@@ -3395,11 +3395,11 @@ template <class T>
 class MorphDirect
 {
 public:
-  MorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
+  MorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
               const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_ShouldCancel(shouldCancel)
@@ -3697,11 +3697,11 @@ template <class T>
 class MorphWorkingMemory
 {
 public:
-  MorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
+  MorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
                      const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_ShouldCancel(shouldCancel)
@@ -4246,11 +4246,11 @@ template <class T>
 class MorphGradientScanline
 {
 public:
-  MorphGradientScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
+  MorphGradientScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
                         const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = detail::k_MorphologySlabTargetBytes)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
@@ -4485,11 +4485,11 @@ template <class T>
 class MorphGradientDirect
 {
 public:
-  MorphGradientDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
+  MorphGradientDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
                       const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
@@ -4765,11 +4765,11 @@ template <class T>
 class MorphGradientWorkingMemory
 {
 public:
-  MorphGradientWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
+  MorphGradientWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
@@ -4892,11 +4892,11 @@ template <class T>
 class BinaryMorphScanline
 {
 public:
-  BinaryMorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
+  BinaryMorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = detail::k_MorphologySlabTargetBytes)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_Fg(foreground)
@@ -5175,11 +5175,11 @@ template <class T>
 class BinaryMorphDirect
 {
 public:
-  BinaryMorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
+  BinaryMorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
                     const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_Fg(foreground)
@@ -5506,11 +5506,11 @@ template <class T>
 class BinaryMorphWorkingMemory
 {
 public:
-  BinaryMorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background,
+  BinaryMorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3  dims, const StructuringElement& se, MorphOp op, T foreground, T background,
                            bool boundaryToForeground, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_Fg(foreground)

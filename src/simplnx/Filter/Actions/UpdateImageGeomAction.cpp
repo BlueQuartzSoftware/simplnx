@@ -4,14 +4,16 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace nx::core
 {
-UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path, bool centerOrigin)
+UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, DataPath  path, bool centerOrigin)
 : m_Origin(origin)
 , m_Spacing(spacing)
-, m_Path(path)
+, m_Path(std::move(path))
 , m_CenterOrigin(centerOrigin)
 {
 }

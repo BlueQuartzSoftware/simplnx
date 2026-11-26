@@ -19,7 +19,7 @@ public:
   using AllowedTypes = std::set<BaseGroup::GroupType>;
 
   DataGroupSelectionParameter() = delete;
-  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, AllowedTypes  allowedTypes);
   ~DataGroupSelectionParameter() override = default;
 
   DataGroupSelectionParameter(const DataGroupSelectionParameter&) = delete;

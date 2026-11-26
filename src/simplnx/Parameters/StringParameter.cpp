@@ -17,9 +17,9 @@
 
 namespace nx::core
 {
-StringParameter::StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+StringParameter::StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 

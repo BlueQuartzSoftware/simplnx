@@ -17,7 +17,7 @@ public:
   using AllowedComponentShapes = std::vector<ShapeType>;
 
   ArrayThresholdsParameter() = delete;
-  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, AllowedComponentShapes requiredComps = {});
+  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue, AllowedComponentShapes requiredComps = {});
   ~ArrayThresholdsParameter() override = default;
 
   ArrayThresholdsParameter(const ArrayThresholdsParameter&) = delete;

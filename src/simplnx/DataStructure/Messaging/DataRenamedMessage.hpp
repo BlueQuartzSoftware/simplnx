@@ -26,7 +26,7 @@ public:
    * @param prevName
    * @param newName
    */
-  DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType dataId, const std::string& prevName, const std::string& newName);
+  DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType dataId, std::string  prevName, std::string  newName);
 
   /**
    * @brief Creates a copy of the target DataRenamedMessage.

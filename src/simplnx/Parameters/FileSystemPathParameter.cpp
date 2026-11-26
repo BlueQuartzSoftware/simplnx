@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -117,12 +118,12 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 namespace nx::core
 {
 //-----------------------------------------------------------------------------
-FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                 const ExtensionsType& extensionsType, PathType pathType, bool acceptAllExtensions)
+FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
+                                                 ExtensionsType  extensionsType, PathType pathType, bool acceptAllExtensions)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 , m_PathType(pathType)
-, m_AvailableExtensions(extensionsType)
+, m_AvailableExtensions(std::move(extensionsType))
 , m_acceptAllExtensions(acceptAllExtensions)
 {
   ExtensionsType validatedExtensions;

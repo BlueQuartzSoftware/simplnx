@@ -94,10 +94,10 @@ std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handl
   return std::make_unique<PipelineFilter>(std::move(filter), args);
 }
 
-PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args)
+PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, Arguments  args)
 : AbstractPipelineFilter()
 , m_Filter(std::move(filter))
-, m_Arguments(args)
+, m_Arguments(std::move(args))
 {
 }
 

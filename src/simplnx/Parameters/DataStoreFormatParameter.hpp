@@ -27,7 +27,7 @@ public:
 
   DataStoreFormatParameter() = delete;
 
-  DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
 
   ~DataStoreFormatParameter() override = default;
 

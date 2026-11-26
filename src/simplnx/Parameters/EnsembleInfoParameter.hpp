@@ -29,7 +29,7 @@ public:
 
   EnsembleInfoParameter() = delete;
 
-  EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
 
   ~EnsembleInfoParameter() override = default;
 

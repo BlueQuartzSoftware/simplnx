@@ -306,9 +306,9 @@ struct Edge
   , regionId(0)
   {
   }
-  Edge(const Point3Df& start_, const Point3Df& end_)
-  : start(start_)
-  , end(end_)
+  Edge(Point3Df  start_, Point3Df  end_)
+  : start(std::move(start_))
+  , end(std::move(end_))
   , valid(true)
   , regionId(0)
   {

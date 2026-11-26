@@ -30,6 +30,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -931,10 +932,10 @@ public:
                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
@@ -1108,7 +1109,7 @@ public:
   , m_Out(outStore)
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_ResidentLimit2D(residentLimit)
   , m_ProgressThrottle(progressThrottle)
@@ -1759,10 +1760,10 @@ public:
                          usize visitArrayLimit = detail::k_DanielssonVisitArrayLimit, usize residentPrefixPlanes = 0, detail::DanielssonVectorTransferStats* transferStats = nullptr)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   , m_ResidentLimit2D(residentLimit2D)
@@ -2068,10 +2069,10 @@ public:
                                   const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {

@@ -30,6 +30,7 @@
 #include <mutex>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 /**
  * @namespace nx::core
@@ -2229,17 +2230,17 @@ public:
    * @pre Source and destination arrays and grid-value arrays outlive this mapper.
    * @pre xGridValues, yGridValues, and zGridValues are not null.
    */
-  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims,
-                             const std::vector<float32>& imageGeoSpacing, const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues,
+  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, FloatVec3  origin, SizeVec3  imageGeoDims,
+                             const std::vector<float32>& imageGeoSpacing, SizeVec3  rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues,
                              const Float32Array* zGridValues)
   : m_ArrayType(destCellArray.getArrayType())
   , m_TaskResult(taskResult)
   , m_InputCellArray(&inputCellArray)
   , m_DestCellArray(&destCellArray)
-  , m_Origin(origin)
-  , m_ImageGeomDims(imageGeoDims)
+  , m_Origin(std::move(origin))
+  , m_ImageGeomDims(std::move(imageGeoDims))
   , m_ImageGeomSpacing(imageGeoSpacing)
-  , m_RectGridDims(rectGridDims)
+  , m_RectGridDims(std::move(rectGridDims))
   , m_XGridValues(xGridValues)
   , m_YGridValues(yGridValues)
   , m_ZGridValues(zGridValues)

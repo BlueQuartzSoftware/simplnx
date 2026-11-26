@@ -5,20 +5,21 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include <mutex>
+#include <utility>
 
 namespace nx::core::HDF5
 {
 ObjectIO::ObjectIO() = default;
 
-ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
+ObjectIO::ObjectIO(hid_t parentId, std::string  objectName)
 : m_ParentId(parentId)
-, m_ObjectName(objectName)
+, m_ObjectName(std::move(objectName))
 {
 }
 
-ObjectIO::ObjectIO(const std::filesystem::path& filepath, const std::string& objectName)
-: m_FilePath(filepath)
-, m_ObjectName(objectName)
+ObjectIO::ObjectIO(std::filesystem::path  filepath, std::string  objectName)
+: m_FilePath(std::move(filepath))
+, m_ObjectName(std::move(objectName))
 {
 }
 

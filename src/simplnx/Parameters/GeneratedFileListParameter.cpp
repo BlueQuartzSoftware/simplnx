@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <type_traits>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -31,9 +32,9 @@ constexpr StringLiteral k_FileExtension = "file_extension";
 } // namespace
 
 //-----------------------------------------------------------------------------
-GeneratedFileListParameter::GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+GeneratedFileListParameter::GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 

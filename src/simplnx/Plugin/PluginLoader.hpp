@@ -68,7 +68,7 @@ public:
    * destroyed.
    * @param path
    */
-  PluginLoader(const std::filesystem::path& path);
+  PluginLoader(std::filesystem::path  path);
 
   ~PluginLoader() noexcept override;
 

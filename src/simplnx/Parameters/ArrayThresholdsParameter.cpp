@@ -6,14 +6,15 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
                                                    AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
-, m_DefaultValue(defaultValue)
-, m_RequiredComponentShapes(requiredComps)
+, m_DefaultValue(std::move(defaultValue))
+, m_RequiredComponentShapes(std::move(requiredComps))
 {
 }
 

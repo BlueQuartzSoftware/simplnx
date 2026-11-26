@@ -24,7 +24,7 @@ public:
    * @param newName
    * @param oldName
    */
-  RenamedMessage(Pipeline* pipeline, const std::string& newName, const std::string& oldName);
+  RenamedMessage(Pipeline* pipeline, std::string  newName, std::string  oldName);
 
   ~RenamedMessage() override;
 

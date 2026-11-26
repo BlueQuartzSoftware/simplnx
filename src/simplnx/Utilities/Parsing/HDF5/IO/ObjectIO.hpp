@@ -554,13 +554,13 @@ protected:
    * @param filepath Specifies the HDF5 file.
    * @param objectPath Specifies the object path.
    */
-  ObjectIO(const std::filesystem::path& filepath, const std::string& objectPath);
+  ObjectIO(std::filesystem::path  filepath, std::string  objectPath);
   /**
    * @brief Creates a wrapper from a parent ID and child name.
    * @param parentId Specifies the parent HDF5 object.
    * @param objectName Specifies the child object name.
    */
-  ObjectIO(hid_t parentId, const std::string& objectName);
+  ObjectIO(hid_t parentId, std::string  objectName);
 
   /**
    * @brief Sets the target HDF5 file path.

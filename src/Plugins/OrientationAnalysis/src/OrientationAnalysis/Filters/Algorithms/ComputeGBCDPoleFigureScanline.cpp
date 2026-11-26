@@ -11,6 +11,7 @@
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -40,12 +41,12 @@ private:
   usize m_OutputOffset = 0;
 
 public:
-  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, const ebsdlib::LaueOps::Pointer& orientOps, const std::vector<float32>& gbcdDeltasArray,
+  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, ebsdlib::LaueOps::Pointer  orientOps, const std::vector<float32>& gbcdDeltasArray,
                             const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const float64* gbcdPtr, int32 phaseOfInterest,
                             const std::vector<float32>& misorientationRotation, usize outputOffset)
   : m_PoleFigure(poleFigurePtr)
   , m_Dimensions(dimensions)
-  , m_OrientOps(orientOps)
+  , m_OrientOps(std::move(orientOps))
   , m_GbcdDeltas(gbcdDeltasArray)
   , m_GbcdLimits(gbcdLimitsArray)
   , m_GbcdSizes(gbcdSizesArray)

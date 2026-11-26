@@ -5,6 +5,8 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace
@@ -20,9 +22,9 @@ constexpr int32 k_RecursiveParentCode = -6407;
 
 namespace nx::core
 {
-MoveDataAction::MoveDataAction(const DataPath& path, const DataPath& newParentPath)
-: m_NewParentPath(newParentPath)
-, m_Path(path)
+MoveDataAction::MoveDataAction(DataPath  path, DataPath  newParentPath)
+: m_NewParentPath(std::move(newParentPath))
+, m_Path(std::move(path))
 {
 }
 

@@ -249,7 +249,7 @@ public:
   ContiguousConversionImpl(const uint8* inputData, uint8* outputData, FloatVec3 colorWeights, usize numComponents, int32 colorChannel)
   : m_InputData(inputData)
   , m_OutputData(outputData)
-  , m_ColorWeights(colorWeights)
+  , m_ColorWeights(std::move(colorWeights))
   , m_NumComponents(numComponents)
   , m_ColorChannel(colorChannel)
   {
@@ -335,11 +335,11 @@ class ConvertColorToGrayScaleDirect
 {
 public:
   ConvertColorToGrayScaleDirect(const UInt8AbstractDataStore& inputColorData, UInt8AbstractDataStore& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType,
-                                const FloatVec3& colorWeights, int32 colorChannel, const std::atomic_bool&)
+                                FloatVec3  colorWeights, int32 colorChannel, const std::atomic_bool&)
   : m_InputColorData(inputColorData)
   , m_OutputGrayData(outputGrayData)
   , m_ConversionType(conversionType)
-  , m_ColorWeights(colorWeights)
+  , m_ColorWeights(std::move(colorWeights))
   , m_ColorChannel(colorChannel)
   {
   }
@@ -467,11 +467,11 @@ public:
    * @param shouldCancel Stops before later chunks when true.
    */
   ConvertColorToGrayScaleScanline(const UInt8AbstractDataStore& inputColorData, UInt8AbstractDataStore& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType,
-                                  const FloatVec3& colorWeights, int32 colorChannel, const std::atomic_bool& shouldCancel)
+                                  FloatVec3  colorWeights, int32 colorChannel, const std::atomic_bool& shouldCancel)
   : m_InputColorData(inputColorData)
   , m_OutputGrayData(outputGrayData)
   , m_ConversionType(conversionType)
-  , m_ColorWeights(colorWeights)
+  , m_ColorWeights(std::move(colorWeights))
   , m_ColorChannel(colorChannel)
   , m_ShouldCancel(shouldCancel)
   {

@@ -18,6 +18,7 @@
 #include <functional>
 #include <mutex>
 #include <optional>
+#include <utility>
 
 using namespace nx::core;
 
@@ -139,8 +140,8 @@ public:
   , m_DistBuf(distBuf)
   , m_OutputStore(outputStore)
   , m_TotalVoxels(totalVoxels)
-  , m_Dims(dims)
-  , m_Spacing(spacing)
+  , m_Dims(std::move(dims))
+  , m_Spacing(std::move(spacing))
   , m_TaskResult(taskResult)
   , m_ShouldCancel(shouldCancel)
   , m_ReportProgress(reportProgress)

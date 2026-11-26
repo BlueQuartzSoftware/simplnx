@@ -15,6 +15,7 @@
 #include <memory>
 #include <numbers>
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
@@ -747,10 +748,10 @@ const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
   return s_Registry;
 }
 
-ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, const std::atomic_bool& shouldCancel)
+ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure, DataPath  selectedGroupPath, std::string  infixEquation, const std::atomic_bool& shouldCancel)
 : m_DataStructure(dataStructure)
-, m_SelectedGroupPath(selectedGroupPath)
-, m_InfixEquation(infixEquation)
+, m_SelectedGroupPath(std::move(selectedGroupPath))
+, m_InfixEquation(std::move(infixEquation))
 , m_ShouldCancel(shouldCancel)
 {
 }

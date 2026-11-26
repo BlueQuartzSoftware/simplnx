@@ -5,6 +5,7 @@
 #include "simplnx/Common/Array.hpp"
 
 #include <nonstd/span.hpp>
+#include <utility>
 
 namespace nx::core
 {
@@ -60,8 +61,8 @@ public:
    * @param upperRight
    */
   BoundingBox(PointType lowerLeft, PointType upperRight)
-  : m_Lower(lowerLeft)
-  , m_Upper(upperRight)
+  : m_Lower(std::move(lowerLeft))
+  , m_Upper(std::move(upperRight))
   {
   }
 

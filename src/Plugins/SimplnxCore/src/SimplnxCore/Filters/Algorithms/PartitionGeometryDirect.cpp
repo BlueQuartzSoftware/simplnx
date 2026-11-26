@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -76,9 +77,9 @@ public:
    * @param outOfBoundsValue Supplies IDs for exterior cells.
    * @param shouldCancel Stops active ranges when true.
    */
-  PartitionImageGeometryImpl(const SizeVec3& inputDimensions, const std::vector<usize>& xPartitionIndices, const std::vector<usize>& yPartitionIndices, const std::vector<usize>& zPartitionIndices,
+  PartitionImageGeometryImpl(SizeVec3  inputDimensions, const std::vector<usize>& xPartitionIndices, const std::vector<usize>& yPartitionIndices, const std::vector<usize>& zPartitionIndices,
                              int32* partitionIds, int startingPartitionId, int outOfBoundsValue, const std::atomic_bool& shouldCancel)
-  : m_InputDimensions(inputDimensions)
+  : m_InputDimensions(std::move(inputDimensions))
   , m_XPartitionIndices(xPartitionIndices)
   , m_YPartitionIndices(yPartitionIndices)
   , m_ZPartitionIndices(zPartitionIndices)

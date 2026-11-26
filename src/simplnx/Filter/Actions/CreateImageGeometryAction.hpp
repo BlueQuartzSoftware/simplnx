@@ -28,7 +28,7 @@ public:
    * @param cellAttributeMatrixName The name of the cell AttributeMatrix to be created
    * @param units The length units for the geometry
    */
-  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
+  CreateImageGeometryAction(const DataPath& path, DimensionType  dims, OriginType  origin, SpacingType  spacing, std::string  cellAttributeMatrixName,
                             IGeometry::LengthUnit units = IGeometry::LengthUnit::Micrometer);
 
   ~CreateImageGeometryAction() noexcept override;

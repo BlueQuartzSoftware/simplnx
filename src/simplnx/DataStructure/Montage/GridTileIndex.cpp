@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
@@ -11,9 +12,9 @@ GridTileIndex::GridTileIndex()
 {
 }
 
-GridTileIndex::GridTileIndex(const GridMontage* montage, const SizeVec3& pos)
+GridTileIndex::GridTileIndex(const GridMontage* montage, SizeVec3  pos)
 : AbstractTileIndex(montage)
-, m_Pos(pos)
+, m_Pos(std::move(pos))
 {
 }
 

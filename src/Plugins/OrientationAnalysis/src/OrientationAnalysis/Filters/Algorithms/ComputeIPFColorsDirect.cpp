@@ -10,6 +10,7 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <utility>
 
 using namespace nx::core;
 
@@ -30,7 +31,7 @@ public:
   ComputeIPFColorsImpl(ComputeIPFColorsDirect* filter, nx::core::FloatVec3 referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures,
                        int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors, ebsdlib::ColorKeyKind colorKey)
   : m_Filter(filter)
-  , m_ReferenceDir(referenceDir)
+  , m_ReferenceDir(std::move(referenceDir))
   , m_CellEulerAngles(eulers.getDataStoreRef())
   , m_CellPhases(phases.getDataStoreRef())
   , m_CrystalStructures(crystalStructures.getDataStoreRef())

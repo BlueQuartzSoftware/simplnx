@@ -13,6 +13,7 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <Eigen/Dense>
+#include <utility>
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
 #include <tbb/concurrent_vector.h>
@@ -250,7 +251,7 @@ public:
 #else
                     const std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    float64 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, const Matrix3dR& gFixedT)
+                    float64 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, Matrix3dR  gFixedT)
   : m_DistributionValues(distributionValues)
   , m_ErrorValues(errorValues)
   , m_SamplePtsX(samplePtsX)
@@ -261,7 +262,7 @@ public:
   , m_TotalFaceArea(totalFaceArea)
   , m_NumDistinctGBs(numDistinctGBs)
   , m_BallVolume(ballVolume)
-  , m_GFixedT(gFixedT)
+  , m_GFixedT(std::move(gFixedT))
   {
   }
 

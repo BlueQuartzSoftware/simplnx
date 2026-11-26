@@ -41,8 +41,8 @@ public:
    * @param ang
    * @param length
    */
-  Ray(const PointType& origin, ZXZEulerType ang, LengthType length)
-  : m_Origin(origin)
+  Ray(PointType  origin, ZXZEulerType ang, LengthType length)
+  : m_Origin(std::move(origin))
   , m_Angle(std::move(ang))
   , m_Length(length)
   {

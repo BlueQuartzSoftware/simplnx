@@ -7,6 +7,7 @@
 #include <fmt/core.h>
 
 #include <optional>
+#include <utility>
 
 using namespace nx::core;
 
@@ -60,9 +61,9 @@ Result<> RemovePlacementRecursively(DataStructure& dataStructure, DataObject::Id
 
 namespace nx::core
 {
-RenameDataAction::RenameDataAction(const DataPath& path, const std::string& newName, bool overwrite)
-: m_NewName(newName)
-, m_Path(path)
+RenameDataAction::RenameDataAction(DataPath  path, std::string  newName, bool overwrite)
+: m_NewName(std::move(newName))
+, m_Path(std::move(path))
 , m_Overwrite(overwrite)
 {
 }

@@ -33,6 +33,7 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <nlohmann/json.hpp>
+#include <utility>
 
 using namespace nx::core;
 namespace
@@ -94,9 +95,9 @@ nlohmann::json ReadHDF5DatasetParameter::DatasetImportInfo::writeJson() const
 }
 
 // -----------------------------------------------------------------------------
-ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 

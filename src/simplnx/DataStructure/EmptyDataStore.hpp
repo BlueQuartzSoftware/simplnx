@@ -14,6 +14,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -524,9 +525,9 @@ private:
   {
   };
 
-  EmptyDataStore(ValidatedConstruction, const ShapeType& tupleShape, const ShapeType& componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
-  : m_ComponentShape(componentShape)
-  , m_TupleShape(tupleShape)
+  EmptyDataStore(ValidatedConstruction, ShapeType  tupleShape, ShapeType  componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
+  : m_ComponentShape(std::move(componentShape))
+  , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(componentCount)
   , m_NumTuples(tupleCount)
   , m_DataFormat(std::move(dataFormat))

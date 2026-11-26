@@ -1,5 +1,7 @@
 #include "TooltipRowItem.hpp"
 
+#include <utility>
+
 using namespace nx::core;
 
 TooltipRowItem::TooltipRowItem()
@@ -7,16 +9,16 @@ TooltipRowItem::TooltipRowItem()
 {
 }
 
-TooltipRowItem::TooltipRowItem(const std::string& title)
+TooltipRowItem::TooltipRowItem(std::string  title)
 : m_Type(Type::Title)
-, m_Title(title)
+, m_Title(std::move(title))
 {
 }
 
-TooltipRowItem::TooltipRowItem(const std::string& title, const std::string& value)
+TooltipRowItem::TooltipRowItem(std::string  title, std::string  value)
 : m_Type(Type::Value)
-, m_Title(title)
-, m_Value(value)
+, m_Title(std::move(title))
+, m_Value(std::move(value))
 {
 }
 

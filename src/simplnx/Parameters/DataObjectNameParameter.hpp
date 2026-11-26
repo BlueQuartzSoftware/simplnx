@@ -14,7 +14,7 @@ public:
   using ValueType = std::string;
 
   DataObjectNameParameter() = delete;
-  DataObjectNameParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataObjectNameParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
   ~DataObjectNameParameter() override = default;
 
   DataObjectNameParameter(const DataObjectNameParameter&) = delete;

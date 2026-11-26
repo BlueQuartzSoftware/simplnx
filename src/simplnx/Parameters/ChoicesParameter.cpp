@@ -6,6 +6,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 template <>
 struct fmt::formatter<nx::core::Error>
@@ -23,10 +24,10 @@ struct fmt::formatter<nx::core::Error>
 
 namespace nx::core
 {
-ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const Choices& choices)
+ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices  choices)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
-, m_Choices(choices)
+, m_Choices(std::move(choices))
 {
 }
 

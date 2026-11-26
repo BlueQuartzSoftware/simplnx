@@ -8,16 +8,17 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                           const AllowedTypes& allowedTypes, const AllowedDataTypes& allowedDataTypes, AllowedComponentShapes requiredComps)
+MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
+                                                           AllowedTypes  allowedTypes, AllowedDataTypes  allowedDataTypes, AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
-, m_AllowedTypes(allowedTypes)
-, m_AllowedDataTypes(allowedDataTypes)
-, m_RequiredComponentShapes(requiredComps)
+, m_DefaultValue(std::move(defaultValue))
+, m_AllowedTypes(std::move(allowedTypes))
+, m_AllowedDataTypes(std::move(allowedDataTypes))
+, m_RequiredComponentShapes(std::move(requiredComps))
 {
 }
 

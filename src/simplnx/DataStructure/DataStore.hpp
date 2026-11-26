@@ -25,6 +25,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -89,10 +90,10 @@ public:
    * @param componentShape Component dimensions in slowest-to-fastest order.
    * @param initValue Initial value retained for future growth; nullopt leaves initial elements unwritten.
    */
-  DataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue)
+  DataStore(ShapeType  tupleShape, ShapeType  componentShape, std::optional<T> initValue)
   : parent_type(initValue)
-  , m_ComponentShape(componentShape)
-  , m_TupleShape(tupleShape)
+  , m_ComponentShape(std::move(componentShape))
+  , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   {

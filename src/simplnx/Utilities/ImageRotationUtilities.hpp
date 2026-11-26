@@ -22,6 +22,7 @@
 #include <mutex>
 #include <new>
 #include <string_view>
+#include <utility>
 
 /**
  * @namespace nx::core::ImageRotationUtilities
@@ -675,12 +676,12 @@ public:
    * @param transformationMatrix Maps source coordinates to output coordinates.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR& transformationMatrix,
+  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs  rotateArgs, Matrix4fR  transformationMatrix,
                                                 FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
-  , m_Params(rotateArgs)
-  , m_TransformationMatrix(transformationMatrix)
+  , m_Params(std::move(rotateArgs))
+  , m_TransformationMatrix(std::move(transformationMatrix))
   , m_FilterCallback(filterCallback)
   {
   }
@@ -1042,11 +1043,11 @@ public:
    * @param sliceBySlice Preserves the destination Z index when true.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
+  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs  args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
                                          FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
-  , m_Params(args)
+  , m_Params(std::move(args))
   , m_TransformationMatrix(transformationMatrix)
   , m_SliceBySlice(sliceBySlice)
   , m_FilterCallback(filterCallback)

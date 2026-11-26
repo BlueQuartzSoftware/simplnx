@@ -8,14 +8,15 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                       const AllowedTypes& allowedTypes)
+GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue,
+                                                       AllowedTypes  allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
-, m_AllowedTypes(allowedTypes)
+, m_DefaultValue(std::move(defaultValue))
+, m_AllowedTypes(std::move(allowedTypes))
 {
 }
 

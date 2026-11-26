@@ -13,6 +13,7 @@
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -30,9 +31,9 @@ constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
 } // namespace
 
 //-----------------------------------------------------------------------------
-ReadH5EbsdFileParameter::ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadH5EbsdFileParameter::ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 

@@ -27,6 +27,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -246,7 +247,7 @@ public:
   FastChamferDistance(AbstractDataStore<float32>& store, SizeVec3 dims, float32 maxDist, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                       usize residentLimit2D = detail::k_Chamfer2DResidentLimit, bool negateOutput = false, usize rowGroupRows = detail::k_ChamferRowGroupRows)
   : m_Store(store)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_MaxDist(maxDist)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)

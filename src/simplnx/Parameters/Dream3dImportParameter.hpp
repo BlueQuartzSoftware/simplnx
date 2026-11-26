@@ -86,7 +86,7 @@ public:
   using ValueType = ImportData;
 
   Dream3dImportParameter() = delete;
-  Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType  defaultValue);
   ~Dream3dImportParameter() override = default;
 
   Dream3dImportParameter(const Dream3dImportParameter&) = delete;

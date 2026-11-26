@@ -13,6 +13,7 @@
 #include <limits>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 using namespace nx::core;
 
@@ -144,8 +145,8 @@ public:
   , m_YDim(yDim)
   , m_NumTriangles(numTriangles)
   , m_NumFaceLabelComps(numFaceLabelComps)
-  , m_Origin(origin)
-  , m_Spacing(spacing)
+  , m_Origin(std::move(origin))
+  , m_Spacing(std::move(spacing))
   , m_FacesBuffer(facesBuffer)
   , m_VerticesBuffer(verticesBuffer)
   , m_FaceLabelsBuffer(faceLabelsBuffer)

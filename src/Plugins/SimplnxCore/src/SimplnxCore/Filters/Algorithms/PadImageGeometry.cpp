@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <functional>
+#include <utility>
 
 using namespace nx::core;
 
@@ -20,12 +21,12 @@ template <typename T>
 class PadImageGeomDataArray
 {
 public:
-  PadImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, const SizeVec3& paddedDims, const PadImageGeometryInputValues* inputValues,
+  PadImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, SizeVec3  paddedDims, const PadImageGeometryInputValues* inputValues,
                         const std::atomic_bool& shouldCancel)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SrcImageGeom(srcImageGeom)
-  , m_PaddedDims(paddedDims)
+  , m_PaddedDims(std::move(paddedDims))
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
   {
