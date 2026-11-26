@@ -14,14 +14,14 @@ class SIMPLNX_EXPORT QuadGeom : public INodeGeometry2D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 4;
-  static inline constexpr usize k_NumVerts = 4;
-  static inline constexpr StringLiteral k_VoxelSizes = "Quad Areas";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Quads Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Quad Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Quad Centroids";
-  static inline constexpr StringLiteral k_TypeName = "QuadGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 4;
+  static constexpr usize k_NumVerts = 4;
+  static constexpr StringLiteral k_VoxelSizes = "Quad Areas";
+  static constexpr StringLiteral k_EltsContainingVert = "Quads Containing Vert";
+  static constexpr StringLiteral k_EltNeighbors = "Quad Neighbors";
+  static constexpr StringLiteral k_EltCentroids = "Quad Centroids";
+  static constexpr StringLiteral k_TypeName = "QuadGeom";
   /**
    * @brief Creates a new QuadGeom in the specified DataStructure.
    * @param dataStructure The DataStructure to create the QuadGeom in

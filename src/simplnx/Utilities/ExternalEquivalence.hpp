@@ -257,7 +257,7 @@ private:
   /**
    * @brief Marks records that use the current five-field Node layout.
    */
-  static inline constexpr uint64 k_InitializedMarker = 0x45515549564E4F44ULL;
+  static constexpr uint64 k_InitializedMarker = 0x45515549564E4F44ULL;
   std::unique_ptr<ITemporaryRecordStore> m_Store;
   BoundedRecordPageCache<Node> m_Cache;
   uint64 m_InitialComponentSize = 1;

@@ -117,7 +117,7 @@ public:
    * @param index
    * @return reference
    */
-  inline reference operator[](size_type index)
+  reference operator[](size_type index)
   {
     return m_Array[index];
   }
@@ -127,7 +127,7 @@ public:
    * @param index
    * @return const_reference
    */
-  inline const_reference operator[](size_type index) const
+  const_reference operator[](size_type index) const
   {
     return m_Array[index];
   }
@@ -137,7 +137,7 @@ public:
    * @param index
    * @return reference
    */
-  inline reference at(size_type index)
+  reference at(size_type index)
   {
     assert(index < Dimensions);
     return m_Array.at(index);
@@ -148,7 +148,7 @@ public:
    * @param index
    * @return const_reference
    */
-  inline const_reference at(size_type index) const
+  const_reference at(size_type index) const
   {
     assert(index < Dimensions);
     return m_Array.at(index);
@@ -378,7 +378,7 @@ public:
    * @brief Returns the current X value.
    * @return value_type
    */
-  inline T getX() const
+  T getX() const
   {
     return ParentType::operator[](0);
   }
@@ -387,7 +387,7 @@ public:
    * @brief Returns the current Y value.
    * @return value_type
    */
-  inline T getY() const
+  T getY() const
   {
     return ParentType::operator[](1);
   }
@@ -396,7 +396,7 @@ public:
    * @brief Assigns a new X value.
    * @param x
    */
-  inline void setX(const T& x)
+  void setX(const T& x)
   {
     (*this)[0] = x;
   }
@@ -405,7 +405,7 @@ public:
    * @brief Assigns a new Y value.
    * @param y
    */
-  inline void setY(const T& y)
+  void setY(const T& y)
   {
     (*this)[1] = y;
   }
@@ -416,7 +416,7 @@ public:
    * @param x
    * @param y
    */
-  inline void setValues(const T& x, const T& y)
+  void setValues(const T& x, const T& y)
   {
     (*this)[0] = x;
     (*this)[1] = y;
@@ -445,7 +445,7 @@ public:
    * @brief Returns the dot product of this and an input Vec2
    * @return Vec2<T>
    */
-  inline T dot(const Vec2<T>& v) const
+  T dot(const Vec2<T>& v) const
   {
     return (*this)[0] * v[0] + (*this)[1] * v[1];
   }
@@ -454,7 +454,7 @@ public:
    * @brief Returns the sum of squares of this
    * @return T
    */
-  inline T sumOfSquares() const
+  T sumOfSquares() const
   {
     return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1];
   }
@@ -462,7 +462,7 @@ public:
   /**
    * @brief Returns the magnitude of the 3x1 vector
    */
-  inline T magnitude() const
+  T magnitude() const
   {
     return std::sqrt(sumOfSquares());
   }
@@ -472,7 +472,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 elemMultiply(const Vec2& v) const
+  Vec2 elemMultiply(const Vec2& v) const
   {
     return Vec2((*this)[0] * v.x, (*this)[1] * v.y);
   }
@@ -482,7 +482,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 elemDivide(const Vec2& v) const
+  Vec2 elemDivide(const Vec2& v) const
   {
     return Vec2((*this)[0] / v.x, (*this)[1] / v.y);
   }
@@ -492,7 +492,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator+(const Vec2& v) const
+  Vec2 operator+(const Vec2& v) const
   {
     return Vec2((*this)[0] + v[0], (*this)[1] + v[1]);
   }
@@ -501,7 +501,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator-(const Vec2& v) const
+  Vec2 operator-(const Vec2& v) const
   {
     return Vec2((*this)[0] - v[0], (*this)[1] - v[1]);
   }
@@ -510,7 +510,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator-() const
+  Vec2 operator-() const
   {
     return Vec2(-(*this)[0], -(*this)[1]);
   }
@@ -519,7 +519,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator*(const T r) const
+  Vec2 operator*(const T r) const
   {
     return Vec2((*this)[0] * r, (*this)[1] * r);
   }
@@ -528,7 +528,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator/(const T r) const
+  Vec2 operator/(const T r) const
   {
     return Vec2((*this)[0] / r, (*this)[1] / r);
   }
@@ -537,7 +537,7 @@ public:
    * @param Vec2
    * @return Current Instance is returned
    */
-  inline Vec2& operator/=(const T r)
+  Vec2& operator/=(const T r)
   {
     (*this)[0] /= r;
     (*this)[1] /= r;
@@ -548,7 +548,7 @@ public:
    * @param Vec2
    * @return Current Instance is returned
    */
-  inline Vec2& operator*=(const T r)
+  Vec2& operator*=(const T r)
   {
     (*this)[0] *= r;
     (*this)[1] *= r;
@@ -673,7 +673,7 @@ public:
    * @brief Returns the current X value.
    * @return value_type
    */
-  inline T getX() const
+  T getX() const
   {
     return ParentType::operator[](0);
   }
@@ -682,7 +682,7 @@ public:
    * @brief Returns the current Y value.
    * @return value_type
    */
-  inline T getY() const
+  T getY() const
   {
     return ParentType::operator[](1);
   }
@@ -691,7 +691,7 @@ public:
    * @brief Returns the current Z value.
    * @return value_type
    */
-  inline T getZ() const
+  T getZ() const
   {
     return ParentType::operator[](2);
   }
@@ -700,7 +700,7 @@ public:
    * @brief Assigns a new X value.
    * @param x
    */
-  inline void setX(const T& x)
+  void setX(const T& x)
   {
     (*this)[0] = x;
   }
@@ -709,7 +709,7 @@ public:
    * @brief Assigns a new Y value.
    * @param y
    */
-  inline void setY(const T& y)
+  void setY(const T& y)
   {
     (*this)[1] = y;
   }
@@ -718,7 +718,7 @@ public:
    * @brief Assigns a new Z value.
    * @param z
    */
-  inline void setZ(const T& z)
+  void setZ(const T& z)
   {
     (*this)[2] = z;
   }
@@ -730,7 +730,7 @@ public:
    * @param y
    * @param z
    */
-  inline void setValues(const T& x, const T& y, const T& z)
+  void setValues(const T& x, const T& y, const T& z)
   {
     (*this)[0] = x;
     (*this)[1] = y;
@@ -761,7 +761,7 @@ public:
    * @brief Returns the cross product of this and an input Vec3
    * @return Vec3<T>
    */
-  inline Vec3 cross(const Vec3<T>& v) const
+  Vec3 cross(const Vec3<T>& v) const
   {
     return Vec3<T>((*this)[1] * v[2] - (*this)[2] * v[1], (*this)[2] * v[0] - (*this)[0] * v[2], (*this)[0] * v[1] - (*this)[1] * v[0]);
   }
@@ -770,7 +770,7 @@ public:
    * @brief Returns the dot product of this and an input Vec3
    * @return Vec3<T>
    */
-  inline T dot(const Vec3<T>& v) const
+  T dot(const Vec3<T>& v) const
   {
     return (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
   }
@@ -779,7 +779,7 @@ public:
    * @brief Returns the sum of squares of this
    * @return T
    */
-  inline T sumOfSquares() const
+  T sumOfSquares() const
   {
     return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1] + (*this)[2] * (*this)[2];
   }
@@ -787,7 +787,7 @@ public:
   /**
    * @brief Returns the magnitude of the 3x1 vector
    */
-  inline T magnitude() const
+  T magnitude() const
   {
     return std::sqrt(dot(*this));
   }
@@ -803,7 +803,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 elemMultiply(const Vec3& v) const
+  Vec3 elemMultiply(const Vec3& v) const
   {
     return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
   }
@@ -813,7 +813,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 elemDivide(const Vec3& v) const
+  Vec3 elemDivide(const Vec3& v) const
   {
     return Vec3((*this)[0] / v.x, (*this)[1] / v.y, (*this)[2] / v.z);
   }
@@ -823,7 +823,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator+(const Vec3& v) const
+  Vec3 operator+(const Vec3& v) const
   {
     return Vec3((*this)[0] + v[0], (*this)[1] + v[1], (*this)[2] + v[2]);
   }
@@ -832,7 +832,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator-(const Vec3& v) const
+  Vec3 operator-(const Vec3& v) const
   {
     return Vec3((*this)[0] - v[0], (*this)[1] - v[1], (*this)[2] - v[2]);
   }
@@ -841,7 +841,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator-() const
+  Vec3 operator-() const
   {
     return Vec3(-(*this)[0], -(*this)[1], -(*this)[2]);
   }
@@ -850,7 +850,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator*(const T r) const
+  Vec3 operator*(const T r) const
   {
     return Vec3((*this)[0] * r, (*this)[1] * r, (*this)[2] * r);
   }
@@ -859,12 +859,12 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator/(const T r) const
+  Vec3 operator/(const T r) const
   {
     return Vec3((*this)[0] / r, (*this)[1] / r, (*this)[2] / r);
   }
 
-  inline bool operator<(const Vec3& v) const
+  bool operator<(const Vec3& v) const
   {
     return dot(*this) < dot(v); // Ignore the square root of the value. Not needed for this function
   }
@@ -874,7 +874,7 @@ public:
    * @param Vec3
    * @return Current Instance is returned
    */
-  inline Vec3& operator/=(const T r)
+  Vec3& operator/=(const T r)
   {
     (*this)[0] /= r;
     (*this)[1] /= r;
@@ -886,7 +886,7 @@ public:
    * @param Vec3
    * @return Current Instance is returned
    */
-  inline Vec3& operator*=(const T r)
+  Vec3& operator*=(const T r)
   {
     (*this)[0] *= r;
     (*this)[1] *= r;
@@ -899,7 +899,7 @@ public:
    * @param scalar
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator+(T scalar) const
+  Vec3 operator+(T scalar) const
   {
     return Vec3((*this)[0] + scalar, (*this)[1] + scalar, (*this)[2] + scalar);
   }
@@ -908,7 +908,7 @@ public:
    * @brief Returns the dot product of this vector with itself (sum of squares)
    * @return T
    */
-  inline T dot() const
+  T dot() const
   {
     return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1] + (*this)[2] * (*this)[2];
   }
@@ -917,7 +917,7 @@ public:
    * @brief Returns a Vec3 containing the absolute value of each element
    * @return Vec3<T>
    */
-  inline Vec3 abs() const
+  Vec3 abs() const
   {
     return Vec3(std::abs((*this)[0]), std::abs((*this)[1]), std::abs((*this)[2]));
   }
@@ -1087,7 +1087,7 @@ public:
    * @brief Returns the current X value.
    * @return value_type
    */
-  inline T getX() const
+  T getX() const
   {
     return ParentType::operator[](0);
   }
@@ -1096,7 +1096,7 @@ public:
    * @brief Returns the current Y value.
    * @return value_type
    */
-  inline T getY() const
+  T getY() const
   {
     return ParentType::operator[](1);
   }
@@ -1105,7 +1105,7 @@ public:
    * @brief Returns the current Z value.
    * @return value_type
    */
-  inline T getZ() const
+  T getZ() const
   {
     return ParentType::operator[](2);
   }
@@ -1114,7 +1114,7 @@ public:
    * @brief Returns the current W value.
    * @return value_type
    */
-  inline T getW() const
+  T getW() const
   {
     return ParentType::operator[](3);
   }
@@ -1123,7 +1123,7 @@ public:
    * @brief Assigns a new X value.
    * @param x
    */
-  inline void setX(const T& x)
+  void setX(const T& x)
   {
     (*this)[0] = x;
   }
@@ -1132,7 +1132,7 @@ public:
    * @brief Assigns a new Y value.
    * @param y
    */
-  inline void setY(const T& y)
+  void setY(const T& y)
   {
     (*this)[1] = y;
   }
@@ -1141,7 +1141,7 @@ public:
    * @brief Assigns a new Z value.
    * @param z
    */
-  inline void setZ(const T& z)
+  void setZ(const T& z)
   {
     (*this)[2] = z;
   }
@@ -1150,7 +1150,7 @@ public:
    * @brief Assigns a new W value.
    * @param w
    */
-  inline void setW(const T& w)
+  void setW(const T& w)
   {
     (*this)[3] = w;
   }
@@ -1163,7 +1163,7 @@ public:
    * @param z
    * @param w
    */
-  inline void setValues(const T& x, const T& y, const T& z, const T& w)
+  void setValues(const T& x, const T& y, const T& z, const T& w)
   {
     (*this)[0] = x;
     (*this)[1] = y;
@@ -1319,7 +1319,7 @@ public:
    * @param j
    * @param k
    */
-  inline void setValues(const T& x, const T& y, const T& z, const T& i, const T& j, const T& k)
+  void setValues(const T& x, const T& y, const T& z, const T& i, const T& j, const T& k)
   {
     (*this)[0] = x;
     (*this)[1] = y;

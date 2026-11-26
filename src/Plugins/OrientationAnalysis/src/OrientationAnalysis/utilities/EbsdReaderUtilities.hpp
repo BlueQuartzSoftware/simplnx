@@ -53,7 +53,7 @@ inline constexpr float64 k_HexagonalAlignmentDegrees = 30.0;
  * @param crystalStructure EbsdLib crystal-structure value.
  * @return True for 6/m or 6/mmm; false for other structures, including unknown.
  */
-inline constexpr bool IsHexagonalCrystalStructure(uint32 crystalStructure)
+constexpr bool IsHexagonalCrystalStructure(uint32 crystalStructure)
 {
   return crystalStructure == ebsdlib::CrystalStructure::Hexagonal_Low || crystalStructure == ebsdlib::CrystalStructure::Hexagonal_High;
 }

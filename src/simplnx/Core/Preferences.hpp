@@ -41,20 +41,20 @@ class SIMPLNX_EXPORT Preferences
   friend class AbstractPlugin;
 
 public:
-  static inline constexpr int32 k_FailedToCreateDirectory_Code = -585;
-  static inline constexpr int32 k_FileDoesNotExist_Code = -586;
-  static inline constexpr int32 k_FileCouldNotOpen_Code = -587;
-  static inline constexpr int32 k_JsonParseError_Code = -588;
+  static constexpr int32 k_FailedToCreateDirectory_Code = -585;
+  static constexpr int32 k_FileDoesNotExist_Code = -586;
+  static constexpr int32 k_FileCouldNotOpen_Code = -587;
+  static constexpr int32 k_JsonParseError_Code = -588;
 
-  static inline constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";
+  static constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";
 
   // Migration reads this legacy key. The core does not write it.
-  static inline constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";
+  static constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";
 
   // Migration maps this legacy format value to ForceInCore.
-  static inline constexpr StringLiteral k_InMemoryFormat = "Simplnx-Default-In-Memory";
+  static constexpr StringLiteral k_InMemoryFormat = "Simplnx-Default-In-Memory";
 
-  static inline constexpr StringLiteral k_LargeDataStructureSize_Key = "large_datastructure_size";
+  static constexpr StringLiteral k_LargeDataStructureSize_Key = "large_datastructure_size";
 
   // The preferences file stores Large Data Size under this key, in GB with two decimals.
   // Memory keeps the value in bytes under k_LargeDataSize_Key.
@@ -71,19 +71,19 @@ public:
   static constexpr uint64 k_MaxOocSizeHundredths = 1717986918399;
 
   // Migration reads this legacy key. The core does not write it.
-  static inline constexpr StringLiteral k_ForceOocData_Key = "force_ooc_data";
+  static constexpr StringLiteral k_ForceOocData_Key = "force_ooc_data";
 
   // The persisted value is the DataStorageMode integer.
-  static inline constexpr StringLiteral k_DataStorageMode_Key = "data_storage_mode";
+  static constexpr StringLiteral k_DataStorageMode_Key = "data_storage_mode";
 
-  static inline constexpr nx::core::StringLiteral k_OoCTempDirectory_ID = "ooc_temp_directory";
+  static constexpr nx::core::StringLiteral k_OoCTempDirectory_ID = "ooc_temp_directory";
 
-  static inline constexpr StringLiteral k_AutoRangeComputation_Key = "auto_range_computation";
+  static constexpr StringLiteral k_AutoRangeComputation_Key = "auto_range_computation";
 
-  static inline constexpr StringLiteral k_CacheMemoryBudgetBytes_Key = "cache_memory_budget_bytes";
+  static constexpr StringLiteral k_CacheMemoryBudgetBytes_Key = "cache_memory_budget_bytes";
 
   // Migration reads this legacy key. The core does not write it.
-  static inline constexpr StringLiteral k_LegacyMemoryBudgetBytes_Key = "memory_budget_bytes";
+  static constexpr StringLiteral k_LegacyMemoryBudgetBytes_Key = "memory_budget_bytes";
 
   /**
    * @brief Returns the default per-user preferences path.

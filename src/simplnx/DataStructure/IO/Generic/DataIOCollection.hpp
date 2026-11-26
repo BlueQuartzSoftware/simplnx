@@ -87,12 +87,12 @@ public:
   /**
    * @brief Labels automatic format resolution.
    */
-  static inline constexpr const char* k_AutomaticDisplayName = "Automatic";
+  static constexpr const char* k_AutomaticDisplayName = "Automatic";
 
   /**
    * @brief Labels explicit in-memory storage.
    */
-  static inline constexpr const char* k_InMemoryDisplayName = "In Memory";
+  static constexpr const char* k_InMemoryDisplayName = "In Memory";
 
   /**
    * @brief Creates the built-in in-memory and HDF5 managers.

@@ -24,15 +24,15 @@ public:
   ConvertOrientationsToVertexGeometryFilter& operator=(ConvertOrientationsToVertexGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputType_Key = "input_representation_index";
-  static inline constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
-  static inline constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
-  static inline constexpr StringLiteral k_ConvertToFundamentalZone_Key = "convert_to_fundamental_zone";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "output_vertex_geometry_path";
-  static inline constexpr StringLiteral k_VertexAttrMatrixName_Key = "output_vertex_attr_matrix_name";
-  static inline constexpr StringLiteral k_SharedVertexListName_Key = "output_shared_vertex_list_name";
+  static constexpr StringLiteral k_InputType_Key = "input_representation_index";
+  static constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
+  static constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
+  static constexpr StringLiteral k_ConvertToFundamentalZone_Key = "convert_to_fundamental_zone";
+  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteral k_VertexGeometryPath_Key = "output_vertex_geometry_path";
+  static constexpr StringLiteral k_VertexAttrMatrixName_Key = "output_vertex_attr_matrix_name";
+  static constexpr StringLiteral k_SharedVertexListName_Key = "output_shared_vertex_list_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

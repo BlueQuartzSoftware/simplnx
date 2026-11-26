@@ -32,24 +32,24 @@ inline endian checkEndian()
   return u8[0] == std::byte{0x01} ? endian::big : endian::little;
 }
 
-inline constexpr uint16 byteswap16(uint16 value) noexcept
+constexpr uint16 byteswap16(uint16 value) noexcept
 {
   return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);
 }
 
-inline constexpr uint32 byteswap32(uint32 value) noexcept
+constexpr uint32 byteswap32(uint32 value) noexcept
 {
   return ((value & 0x000000FFu) << 24) | ((value & 0x00FF0000u) >> 8) | ((value & 0x0000FF00u) << 8) | ((value & 0xFF000000u) >> 24);
 }
 
-inline constexpr uint64 byteswap64(uint64 value) noexcept
+constexpr uint64 byteswap64(uint64 value) noexcept
 {
   return (((value & 0xFF00000000000000ull) >> 56) | ((value & 0x00FF000000000000ull) >> 40) | ((value & 0x0000FF0000000000ull) >> 24) | ((value & 0x000000FF00000000ull) >> 8) |
           ((value & 0x00000000FF000000ull) << 8) | ((value & 0x0000000000FF0000ull) << 24) | ((value & 0x000000000000FF00ull) << 40) | ((value & 0x00000000000000FFull) << 56));
 }
 
 template <class T, endian Endianness = endian::native, usize Size = sizeof(T)>
-inline constexpr T bit_cast_int(const std::byte* data) noexcept
+constexpr T bit_cast_int(const std::byte* data) noexcept
 {
   static_assert(std::is_integral_v<T>);
   static_assert(Size <= sizeof(T));
@@ -94,7 +94,7 @@ To bit_cast(const From& src) noexcept
 }
 
 template <class T>
-inline constexpr T byteswap(T value) noexcept
+constexpr T byteswap(T value) noexcept
 {
   static_assert(std::is_arithmetic_v<T>, "byteswap only works on arithmetic types");
   if constexpr(sizeof(T) == sizeof(uint8))

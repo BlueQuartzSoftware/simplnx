@@ -873,10 +873,10 @@ protected:
   }
 
 private:
-  static inline constexpr int32 k_PlannedPathError = -10610;
-  static inline constexpr int32 k_PlannedCreationError = -10611;
-  static inline constexpr int32 k_PlannedInsertionError = -10612;
-  static inline constexpr int32 k_NullStoreError = -10613;
+  static constexpr int32 k_PlannedPathError = -10610;
+  static constexpr int32 k_PlannedCreationError = -10611;
+  static constexpr int32 k_PlannedInsertionError = -10612;
+  static constexpr int32 k_NullStoreError = -10613;
 
   static Result<DataPath> ResolveProspectivePath(DataStructure& dataStructure, const std::string& name, const std::optional<IdType>& parentId)
   {

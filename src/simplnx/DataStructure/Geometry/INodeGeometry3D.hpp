@@ -7,9 +7,9 @@ namespace nx::core
 class SIMPLNX_EXPORT INodeGeometry3D : public INodeGeometry2D
 {
 public:
-  static inline constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
-  static inline constexpr StringLiteral k_SharedPolyhedronListName = "Shared Polyhedron List";
-  static inline constexpr StringLiteral k_TypeName = "INodeGeometry3D";
+  static constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
+  static constexpr StringLiteral k_SharedPolyhedronListName = "Shared Polyhedron List";
+  static constexpr StringLiteral k_TypeName = "INodeGeometry3D";
 
   INodeGeometry3D() = delete;
   INodeGeometry3D(const INodeGeometry3D&) = default;

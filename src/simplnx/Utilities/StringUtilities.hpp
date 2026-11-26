@@ -88,9 +88,9 @@ void tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, 
 template <bool ConsecutiveAsEmptyV, bool EmptyInitialV, bool EmptyFinalV>
 struct SplitTypeOptions
 {
-  static inline constexpr bool AllowConsecutiveAsEmpty = ConsecutiveAsEmptyV;
-  static inline constexpr bool AllowEmptyInital = EmptyInitialV;
-  static inline constexpr bool AllowEmptyFinal = EmptyFinalV;
+  static constexpr bool AllowConsecutiveAsEmpty = ConsecutiveAsEmptyV;
+  static constexpr bool AllowEmptyInital = EmptyInitialV;
+  static constexpr bool AllowEmptyFinal = EmptyFinalV;
 };
 
 using SplitIgnoreEmpty = SplitTypeOptions<false, false, false>;

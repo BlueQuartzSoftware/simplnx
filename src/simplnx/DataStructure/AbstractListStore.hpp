@@ -266,22 +266,22 @@ public:
 
     ~iterator() noexcept = default;
 
-    inline bool isValid() const
+    bool isValid() const
     {
       return m_Index < m_DataStore->size();
     }
 
-    inline iterator operator+(usize offset) const
+    iterator operator+(usize offset) const
     {
       return iterator(*m_DataStore, m_Index + offset);
     }
 
-    inline iterator operator-(usize offset) const
+    iterator operator-(usize offset) const
     {
       return iterator(*m_DataStore, m_Index - offset);
     }
 
-    inline iterator& operator+=(usize offset)
+    iterator& operator+=(usize offset)
     {
       m_Index += offset;
       return *this;
@@ -294,14 +294,14 @@ public:
     }
 
     // prefix
-    inline iterator& operator++()
+    iterator& operator++()
     {
       m_Index++;
       return *this;
     }
 
     // postfix
-    inline iterator operator++(int)
+    iterator operator++(int)
     {
       iterator iter = *this;
       m_Index++;
@@ -309,21 +309,21 @@ public:
     }
 
     // prefix
-    inline iterator& operator--()
+    iterator& operator--()
     {
       m_Index--;
       return *this;
     }
 
     // postfix
-    inline iterator operator--(int)
+    iterator operator--(int)
     {
       iterator iter = *this;
       m_Index--;
       return iter;
     }
 
-    inline difference_type operator-(const iterator& rhs) const
+    difference_type operator-(const iterator& rhs) const
     {
       return m_Index - rhs.m_Index;
     }
@@ -335,37 +335,37 @@ public:
       first.swap(second);
     }
 
-    inline reference operator*() const
+    reference operator*() const
     {
       return ReferenceList(*m_DataStore, m_Index);
     }
 
-    inline bool operator==(const iterator& rhs) const
+    bool operator==(const iterator& rhs) const
     {
       return m_Index == rhs.m_Index;
     }
 
-    inline bool operator!=(const iterator& rhs) const
+    bool operator!=(const iterator& rhs) const
     {
       return !(*this == rhs);
     }
 
-    inline bool operator<(const iterator& rhs) const
+    bool operator<(const iterator& rhs) const
     {
       return m_Index < rhs.m_Index;
     }
 
-    inline bool operator>(const iterator& rhs) const
+    bool operator>(const iterator& rhs) const
     {
       return m_Index > rhs.m_Index;
     }
 
-    inline bool operator<=(const iterator& rhs) const
+    bool operator<=(const iterator& rhs) const
     {
       return m_Index <= rhs.m_Index;
     }
 
-    inline bool operator>=(const iterator& rhs) const
+    bool operator>=(const iterator& rhs) const
     {
       return m_Index >= rhs.m_Index;
     }
@@ -489,7 +489,7 @@ public:
       return m_Index - rhs.m_Index;
     }
 
-    inline reference operator*() const
+    reference operator*() const
     {
       return ConstReferenceList(*m_DataStore, m_Index);
     }

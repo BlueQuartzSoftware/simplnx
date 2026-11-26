@@ -145,8 +145,8 @@ protected:
 class ThrowingFilter : public BackstopFilterBase<ThrowingFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "ThrowingFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
+  static constexpr StringLiteral k_FilterName = "ThrowingFilter";
+  static constexpr StringLiteral k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
 
 protected:
   /**
@@ -170,8 +170,8 @@ protected:
 class NonStandardThrowingFilter : public BackstopFilterBase<NonStandardThrowingFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "NonStandardThrowingFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
+  static constexpr StringLiteral k_FilterName = "NonStandardThrowingFilter";
+  static constexpr StringLiteral k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
 
 protected:
   /**
@@ -196,8 +196,8 @@ protected:
 class CancelAfterErrorFilter : public BackstopFilterBase<CancelAfterErrorFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "CancelAfterErrorFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
+  static constexpr StringLiteral k_FilterName = "CancelAfterErrorFilter";
+  static constexpr StringLiteral k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
 
   /**
    * @brief Selects the flag executeImpl raises.
@@ -238,8 +238,8 @@ private:
 class CancellingPreflightFilter : public BackstopFilterBase<CancellingPreflightFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "CancellingPreflightFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
+  static constexpr StringLiteral k_FilterName = "CancellingPreflightFilter";
+  static constexpr StringLiteral k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
 
   /**
    * @brief Selects the cancellation flag and preflight validity for the test.
@@ -393,8 +393,8 @@ private:
 class DeferredFailureFilter : public BackstopFilterBase<DeferredFailureFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "DeferredFailureFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
+  static constexpr StringLiteral k_FilterName = "DeferredFailureFilter";
+  static constexpr StringLiteral k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
 
   /**
    * @brief Constructs the filter with internal invocation counters.

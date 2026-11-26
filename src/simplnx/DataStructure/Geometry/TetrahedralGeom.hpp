@@ -14,14 +14,14 @@ class SIMPLNX_EXPORT TetrahedralGeom : public INodeGeometry3D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 3;
-  static inline constexpr usize k_NumVerts = 4;
-  static inline constexpr StringLiteral k_VoxelSizes = "Tet Volumes";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Elements Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Tet Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Tet Centroids";
-  static inline constexpr StringLiteral k_TypeName = "TetrahedralGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 3;
+  static constexpr usize k_NumVerts = 4;
+  static constexpr StringLiteral k_VoxelSizes = "Tet Volumes";
+  static constexpr StringLiteral k_EltsContainingVert = "Elements Containing Vert";
+  static constexpr StringLiteral k_EltNeighbors = "Tet Neighbors";
+  static constexpr StringLiteral k_EltCentroids = "Tet Centroids";
+  static constexpr StringLiteral k_TypeName = "TetrahedralGeom";
 
   /**
    * @brief Creates a new TetrahedralGeom in the specified DataStructure.

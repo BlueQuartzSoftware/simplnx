@@ -517,8 +517,8 @@ public:
   }
 
 private:
-  static inline constexpr int32 k_CreationError = -10602;
-  static inline constexpr int32 k_ResizeError = -10603;
+  static constexpr int32 k_CreationError = -10602;
+  static constexpr int32 k_ResizeError = -10603;
 
   struct ValidatedConstruction
   {

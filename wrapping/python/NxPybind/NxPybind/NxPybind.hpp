@@ -193,7 +193,7 @@ class PythonPlugin;
 class Internals
 {
 public:
-  static inline constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
+  static constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
 
   Internals()
   : m_App(Application::GetOrCreateInstance())

@@ -77,7 +77,7 @@ public:
   }
 
 private:
-  static inline constexpr uint32_t k_NumJunctionsBitShift = 29;
+  static constexpr uint32_t k_NumJunctionsBitShift = 29;
 
   // The bitflag
   // The last 3 bits of the bitflag are the number of junctions

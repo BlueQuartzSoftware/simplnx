@@ -14,13 +14,13 @@ class SIMPLNX_EXPORT EdgeGeom : public INodeGeometry1D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumVerts = 2;
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr StringLiteral k_VoxelSizes = "Edge Lengths";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Edges Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Edge Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Edge Centroids";
-  static inline constexpr StringLiteral k_TypeName = "EdgeGeom";
+  static constexpr usize k_NumVerts = 2;
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr StringLiteral k_VoxelSizes = "Edge Lengths";
+  static constexpr StringLiteral k_EltsContainingVert = "Edges Containing Vert";
+  static constexpr StringLiteral k_EltNeighbors = "Edge Neighbors";
+  static constexpr StringLiteral k_EltCentroids = "Edge Centroids";
+  static constexpr StringLiteral k_TypeName = "EdgeGeom";
 
   /**
    * @brief Creates a new EdgeGeom in the specified DataStructure.

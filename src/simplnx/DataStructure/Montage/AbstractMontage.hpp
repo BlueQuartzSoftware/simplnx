@@ -23,7 +23,7 @@ public:
   using ConstIterator = CollectionType::const_iterator;
   using BoundsType = void;
 
-  static inline constexpr StringLiteral k_TypeName = "AbstractMontage";
+  static constexpr StringLiteral k_TypeName = "AbstractMontage";
 
   /**
    * @brief Creates a copy of the target AbstractMontage but does not add it to
