@@ -25,7 +25,7 @@ namespace
 const fs::path exemplarFilePath = fs::path(fmt::format("{}/write_lammps_test/testing/LAMMPS_Grid.txt", unit_test::k_TestFilesDir));
 const fs::path writtenFilePath = fs::path(fmt::format("{}/LAMMPS.txt", unit_test::k_BinaryTestOutputDir));
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 

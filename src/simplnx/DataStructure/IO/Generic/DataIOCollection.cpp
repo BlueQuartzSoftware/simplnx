@@ -25,7 +25,7 @@ DataIOCollection::DataIOCollection()
 }
 DataIOCollection::~DataIOCollection() noexcept = default;
 
-Result<> DataIOCollection::addIOManager(std::shared_ptr<IDataIOManager> manager)
+Result<> DataIOCollection::addIOManager(const std::shared_ptr<IDataIOManager>& manager)
 {
   if(manager == nullptr)
   {

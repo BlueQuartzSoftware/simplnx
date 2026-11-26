@@ -290,6 +290,6 @@ std::shared_ptr<DataIOManager> DataStructureReader::getDataReader() const
 
 std::shared_ptr<IDataIO> DataStructureReader::getDataFactory(typename IDataIOManager::factory_id_type typeName) const
 {
-  return getDataReader()->getFactoryAs<IDataIO>(typeName);
+  return getDataReader()->getFactoryAs<IDataIO>(std::move(typeName));
 }
 } // namespace nx::core::HDF5

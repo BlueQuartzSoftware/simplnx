@@ -376,7 +376,7 @@ public:
    * @param maxTriangles Limits triangles in one file.
    * @param shouldCancel Stops before later triangles when true.
    */
-  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const std::string header, const TriStore& triangles, const VertexStore& vertices,
+  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const std::string& header, const TriStore& triangles, const VertexStore& vertices,
                         const Int32AbstractDataStore& featureIds, const int32 featureId, const std::vector<usize>& triangleIndices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_LimitBoundAtomicFile(limitBoundAtomicFile)

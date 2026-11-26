@@ -237,7 +237,7 @@ public:
    * @param reportProgress Reports completed items through the synchronized callback.
    */
   ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
-                                       Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree,
+                                       Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType& rtree,
                                        float32 initialSearchHalfExtent, const std::function<void(usize)>& reportProgress)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)

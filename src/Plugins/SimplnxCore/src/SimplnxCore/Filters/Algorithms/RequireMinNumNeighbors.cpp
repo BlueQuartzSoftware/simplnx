@@ -222,7 +222,7 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
   return {std::move(activeObjects)};
 }
 
-Result<> RequireMinNumNeighbors::assignBadVoxels(SizeVec3 dimensions, usize totalFeatures)
+Result<> RequireMinNumNeighbors::assignBadVoxels(const SizeVec3& dimensions, usize totalFeatures)
 {
   return FillBadVoxels(m_DataStructure, m_InputValues->FeatureIdsPath, dimensions, m_InputValues->IgnoredVoxelArrayPaths, totalFeatures, m_MessageHandler, m_ShouldCancel);
 }

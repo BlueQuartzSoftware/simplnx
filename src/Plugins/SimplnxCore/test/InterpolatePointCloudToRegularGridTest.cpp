@@ -91,7 +91,7 @@ DataStructure createTestDataStructure(const std::vector<uint64>& voxelIndices, c
   return ds;
 }
 
-Arguments getBaseArgs(bool useMask, uint64 technique, std::vector<float32> kernelSize, bool findLength = false, bool findMin = false, bool findMax = false, bool findMean = false,
+Arguments getBaseArgs(bool useMask, uint64 technique, const std::vector<float32>& kernelSize, bool findLength = false, bool findMin = false, bool findMax = false, bool findMean = false,
                       bool findStdDev = false, bool findSum = false)
 {
   using F = InterpolatePointCloudToRegularGridFilter;

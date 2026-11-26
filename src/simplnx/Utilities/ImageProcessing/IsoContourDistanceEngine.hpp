@@ -1027,7 +1027,7 @@ template <class T>
 Result<> ApplyIsoContourDistance(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, float64 levelSetValue, float64 farValue, FloatVec3 spacing,
                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  IsoContourDistance<T> engine(inStore, outStore, dims, levelSetValue, farValue, spacing, shouldCancel, messageHandler);
+  IsoContourDistance<T> engine(inStore, outStore, dims, levelSetValue, farValue, std::move(spacing), shouldCancel, messageHandler);
   return engine();
 }
 } // namespace nx::core::ImageProcessing

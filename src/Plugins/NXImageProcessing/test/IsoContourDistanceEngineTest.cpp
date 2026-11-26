@@ -383,7 +383,7 @@ std::vector<float32> RunDirect(const std::vector<T>& field, const SizeVec3& dims
   DataStore<float32> outputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 0.0f);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  IsoContourDistance<T> engine(inputStore, outputStore, dims, levelSet, farValue, spacing, shouldCancel, messageHandler);
+  IsoContourDistance<T> engine(inputStore, outputStore, dims, levelSet, farValue, std::move(spacing), shouldCancel, messageHandler);
   const Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
   std::vector<float32> output(field.size());
@@ -421,7 +421,7 @@ IsoContourCountingResult RunSlabCounting(const std::vector<T>& field, const Size
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  IsoContourDistance<T> engine(inputStore, outputStore, dims, levelSet, farValue, spacing, shouldCancel, messageHandler);
+  IsoContourDistance<T> engine(inputStore, outputStore, dims, levelSet, farValue, std::move(spacing), shouldCancel, messageHandler);
   const Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
   std::vector<float32> output(field.size());
@@ -447,7 +447,7 @@ void RequireBitIdentical(const std::vector<float32>& actual, const std::vector<f
 template <class T>
 std::vector<float32> RunEngine(const std::vector<T>& field, usize dx, usize dy, usize dz, float64 levelSet, float64 farValue, FloatVec3 spacing)
 {
-  return RunDirect(field, SizeVec3{dx, dy, dz}, levelSet, farValue, spacing);
+  return RunDirect(field, SizeVec3{dx, dy, dz}, levelSet, farValue, std::move(spacing));
 }
 } // namespace
 

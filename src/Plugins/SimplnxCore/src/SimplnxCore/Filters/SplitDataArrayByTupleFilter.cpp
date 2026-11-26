@@ -140,7 +140,7 @@ Result<usize> commonMultiplier(const std::vector<usize>& dividend, const std::ve
 }
 
 Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputContainer, const DataPath& inputArrayPath, const DataPath& newDataGroupPath, const DataPath& existingDataGroupPath,
-                                  const std::vector<usize>& inputArrayTupleShape, const std::vector<std::vector<float64>> splitDimensionCounts, usize splitDimension,
+                                  const std::vector<usize>& inputArrayTupleShape, const std::vector<std::vector<float64>>& splitDimensionCounts, usize splitDimension,
                                   std::vector<std::vector<usize>>& splitArrayTupleShapes, std::vector<DataPath>& arrayPaths, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
   splitArrayTupleShapes = std::vector<std::vector<usize>>(splitDimensionCounts.size(), inputArrayTupleShape);

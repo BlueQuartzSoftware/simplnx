@@ -183,7 +183,7 @@ ArrayThresholdSet CreateSingleThreshold(const DataPath& arrayPath, ArrayThreshol
  * @param dataStructure
  * @param thresholdSet ThresholdSet to use for the MultiThresholdObjectsFilter
  */
-void RunThresholdSetTest(DataStructure& dataStructure, ArrayThresholdSet thresholdSet)
+void RunThresholdSetTest(DataStructure& dataStructure, const ArrayThresholdSet& thresholdSet)
 {
   const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);

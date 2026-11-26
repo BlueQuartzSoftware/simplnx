@@ -93,6 +93,7 @@
 #include <string_view>
 
 #include <filesystem>
+#include <utility>
 
 using namespace nx::core;
 using namespace nx::core::NxPybind;
@@ -291,7 +292,7 @@ static void BindVec2(py::module_& m, const char* name)
   py::class_<Vec>(m, name)
       .def(py::init<>())
       .def(py::init<T, T>())
-      .def(py::init([](py::sequence s) {
+      .def(py::init([](const py::sequence& s) {
         if(py::len(s) != 2)
           throw py::type_error("Expected length-2 sequence");
         return Vec{s[0].cast<T>(), s[1].cast<T>()};
@@ -333,7 +334,7 @@ auto BindDataStore(py::handle scope, const char* name)
 {
   py::class_<DataStore<T>, AbstractDataStore<T>, std::shared_ptr<DataStore<T>>> dataStore(scope, name);
   dataStore.def(py::init<const ShapeType&, const ShapeType&, std::optional<T>>(), "tuple_shape"_a, "component_shape"_a, "init_value"_a = std::optional<T>{});
-  dataStore.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  dataStore.def_property_readonly_static("dtype", []([[maybe_unused]] const py::object& self) { return py::dtype::of<T>(); });
   dataStore.def(
       "npview",
       [](DataStore<T>& dataStore_) {
@@ -367,7 +368,7 @@ template <class T>
 auto BindDataArray(py::handle scope, const char* name)
 {
   py::class_<DataArray<T>, IDataArray, std::shared_ptr<DataArray<T>>> dataArray(scope, name);
-  dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] const py::object& self) { return py::dtype::of<T>(); });
   dataArray.def(
       "npview",
       [](DataArray<T>& dataArray_) {
@@ -419,7 +420,7 @@ auto BindNeighborList(py::handle scope, const char* name)
   using NeighborListType = NeighborList<T>;
 
   auto neighborList = py::class_<NeighborListType, INeighborList, std::shared_ptr<NeighborListType>>(scope, name);
-  neighborList.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  neighborList.def_property_readonly_static("dtype", []([[maybe_unused]] const py::object& self) { return py::dtype::of<T>(); });
   neighborList.def("get_list", &NeighborListType::getList, "grain_id"_a);
   neighborList.def("set_list", py::overload_cast<int32, const typename NeighborListType::VectorType&>(&NeighborListType::setList), "grain_id"_a, "neighbor_list"_a);
   neighborList.def(
@@ -682,7 +683,7 @@ public:
    * @param target Unused Python reload target argument.
    * @return An importlib specification, or Python None when fullname is not registered.
    */
-  py::object findSpec(const std::string& fullname, py::object /*path*/, py::object /*target*/) const
+  py::object findSpec(const std::string& fullname, const py::object& /*path*/, const py::object& /*target*/) const
   {
     if(!containsModule(fullname))
     {
@@ -1001,8 +1002,8 @@ PYBIND11_MODULE(simplnx, mod)
   parameters.def("insert", py::overload_cast<Parameters::Separator>(&Parameters::insert));
   parameters.def("insert_linkable_parameter", &PyInsertLinkableParameter<BoolParameter>);
   parameters.def("insert_linkable_parameter", &PyInsertLinkableParameter<ChoicesParameter>);
-  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, BoolParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
-  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, ChoicesParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
+  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, BoolParameter::ValueType value) { self.linkParameters(std::move(groupKey), childKey, value); });
+  parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, ChoicesParameter::ValueType value) { self.linkParameters(std::move(groupKey), childKey, value); });
   parameters.def("__getitem__", [](Parameters& self, std::string_view key) { return self.at(key).get(); }, py::return_value_policy::reference_internal);
 
   py::class_<IArrayThreshold, std::shared_ptr<IArrayThreshold>> iArrayThreshold(mod, "IArrayThreshold");

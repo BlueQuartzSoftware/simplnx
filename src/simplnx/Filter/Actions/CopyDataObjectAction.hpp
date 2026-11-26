@@ -19,7 +19,7 @@ public:
    * @param newPath The path where the copied BaseGroup will be created
    * @param allCreatedPaths All DataPaths that will be created by this action
    */
-  CopyDataObjectAction(DataPath  path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths);
+  CopyDataObjectAction(DataPath  path, const DataPath& newPath, const std::vector<DataPath>& allCreatedPaths);
 
   ~CopyDataObjectAction() noexcept override;
 

@@ -40,7 +40,7 @@ inline const DataPath k_FeatureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
  * are unaffected; pass an anisotropic value to exercise axis-specific spacing bugs.
  * @return A DataStructure containing ImageGeom/CellData/FeatureIds.
  */
-inline DataStructure CreateCylinderInBox(bool flushWithBottom, FloatVec3 spacing = {1.0F, 1.0F, 1.0F})
+inline DataStructure CreateCylinderInBox(bool flushWithBottom, const FloatVec3& spacing = {1.0F, 1.0F, 1.0F})
 {
   DataStructure dataStructure;
 

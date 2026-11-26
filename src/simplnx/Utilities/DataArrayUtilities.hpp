@@ -338,7 +338,7 @@ SIMPLNX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueA
  * @return True if conversion succeeds.
  */
 template <typename T>
-bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
+bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>>& dataArray, const std::string& dataFormat)
 {
   if(dataArray == nullptr)
   {

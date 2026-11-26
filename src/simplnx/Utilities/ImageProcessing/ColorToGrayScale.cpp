@@ -312,7 +312,7 @@ public:
   }
 
   template <typename T>
-  static void RunContiguous(T impl, size_t totalPoints)
+  static void RunContiguous(const T& impl, size_t totalPoints)
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalPoints);

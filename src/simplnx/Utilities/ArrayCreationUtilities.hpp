@@ -79,7 +79,7 @@ SIMPLNX_EXPORT std::string ResolveStorageFormat(const DataStructure& dataStructu
  */
 template <class T>
 Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& compShape, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat = "",
-                     std::string fillValue = "", const std::optional<ShapeType>& chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
+                     const std::string& fillValue = "", const std::optional<ShapeType>& chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
 {
   auto parentPath = path.getParent();
 

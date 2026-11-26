@@ -222,7 +222,7 @@ DataStructure GetTestDataStructure()
 }
 
 template <typename T>
-DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataStructure, ShapeType tupleShape, ShapeType componentShape, DataObject::IdType parentId)
+DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId)
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;

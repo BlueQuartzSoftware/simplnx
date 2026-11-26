@@ -101,7 +101,7 @@ private:
    *
    * Nonignored sibling arrays update sequentially. Feature IDs update last.
    */
-  Result<> assignBadVoxels(SizeVec3 dimensions, usize totalFeatures);
+  Result<> assignBadVoxels(const SizeVec3& dimensions, usize totalFeatures);
 
   DataStructure& m_DataStructure;
   const RequireMinNumNeighborsInputValues* m_InputValues = nullptr;

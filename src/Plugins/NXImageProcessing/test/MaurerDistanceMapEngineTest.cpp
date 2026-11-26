@@ -847,7 +847,7 @@ std::vector<float32> RunInCore(const std::vector<int32>& pattern, usize dx, usiz
   DataStore<float32> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, 0.0f);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceInCore<T> engine(inStore, outStore, SizeVec3{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, spacing, shouldCancel, messageHandler);
+  MaurerDistanceInCore<T> engine(inStore, outStore, SizeVec3{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, std::move(spacing), shouldCancel, messageHandler);
   const Result<> r = engine();
   REQUIRE(r.valid());
   std::vector<float32> out(pattern.size());
@@ -870,7 +870,7 @@ std::vector<float32> RunSlab(const std::vector<int32>& pattern, usize dx, usize 
   DataStore<float32> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, 0.0f);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceSlab<T> engine(inStore, outStore, SizeVec3{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, spacing, shouldCancel, messageHandler);
+  MaurerDistanceSlab<T> engine(inStore, outStore, SizeVec3{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, std::move(spacing), shouldCancel, messageHandler);
   const Result<> r = engine();
   REQUIRE(r.valid());
   std::vector<float32> out(pattern.size());

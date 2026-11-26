@@ -452,7 +452,7 @@ public:
    * @param taskResult Stores the first copy error from all output tasks.
    * @pre All arguments outlive this task.
    */
-  SplitDataArrayByTupleImpl(const ArrayType& inputArray, ArrayType& outputArray, const std::vector<usize> inputTupleShapeOffsets, const std::atomic_bool& shouldCancel,
+  SplitDataArrayByTupleImpl(const ArrayType& inputArray, ArrayType& outputArray, const std::vector<usize>& inputTupleShapeOffsets, const std::atomic_bool& shouldCancel,
                             CopyFromArray::ParallelTaskResult& taskResult)
   : m_InputArray(inputArray)
   , m_OutputArray(outputArray)

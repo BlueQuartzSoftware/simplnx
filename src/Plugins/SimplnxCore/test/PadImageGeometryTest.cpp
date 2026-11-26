@@ -748,7 +748,7 @@ DataStructure CreatePadFeatureFixture(bool addFeatureAm, bool addEnsembleAm)
   return dataStructure;
 }
 
-Arguments MakePadArgs(bool padX, bool padY, bool padZ, std::vector<int32> xMinMax, std::vector<int32> yMinMax, std::vector<int32> zMinMax, int32 fillValue, bool updateOrigin)
+Arguments MakePadArgs(bool padX, bool padY, bool padZ, const std::vector<int32>& xMinMax, const std::vector<int32>& yMinMax, const std::vector<int32>& zMinMax, int32 fillValue, bool updateOrigin)
 {
   const DataPath srcGeomPath({"Geom"});
   Arguments args;

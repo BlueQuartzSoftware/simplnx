@@ -53,7 +53,7 @@ struct IsIntegerType
  * Per-index output uses the supplied tuple dimensions. Standardized output
  * retains the input tuple count.
  */
-OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims)
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, const ShapeType& tupleDims)
 {
   auto findLength = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key);
   auto findMin = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindMin_Key);

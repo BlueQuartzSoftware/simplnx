@@ -102,7 +102,7 @@ protected:
    *
    * The method creates one filter to obtain and validate its UUID.
    */
-  void addFilter(FilterCreationFunc filterFunc);
+  void addFilter(const FilterCreationFunc& filterFunc);
 
   void addDataIOManager(const IOManagerPointer& ioManager);
 

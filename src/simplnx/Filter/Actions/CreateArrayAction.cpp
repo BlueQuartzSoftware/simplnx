@@ -1,5 +1,7 @@
 #include "CreateArrayAction.hpp"
 
+#include <utility>
+
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
@@ -29,7 +31,7 @@ struct CreateArrayFunctor
   Result<> operator()(DataStructure& dataStructure, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat,
                       std::string fillValue, const std::optional<ShapeType>& chunkShapeHint, DataStoreInitializationMode initializationMode)
   {
-    return ArrayCreationUtilities::CreateArray<T>(dataStructure, tDims, cDims, path, mode, dataFormat, fillValue, chunkShapeHint, initializationMode);
+    return ArrayCreationUtilities::CreateArray<T>(dataStructure, tDims, cDims, path, mode, dataFormat, std::move(fillValue), chunkShapeHint, initializationMode);
   }
 };
 } // namespace

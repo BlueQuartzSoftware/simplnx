@@ -386,7 +386,7 @@ Arguments CreateWriterArguments(IFilter& filter, usize plane, const fs::path& ou
 }
 
 template <typename T>
-Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, const Uuid& writerUuid, std::string writerName, std::string caseName, usize plane, std::string extension,
+Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, const Uuid& writerUuid, std::string writerName, std::string caseName, usize plane, const std::string& extension,
                           bool createColorTable)
 {
   IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(writerUuid);

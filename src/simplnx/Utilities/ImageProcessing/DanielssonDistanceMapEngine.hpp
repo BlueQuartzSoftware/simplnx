@@ -2146,7 +2146,7 @@ private:
  */
 template <class T>
 Result<> ApplyDanielssonDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, bool /*inputIsBinary*/, bool squaredDistance, bool useSpacing,
-                                    FloatVec3 spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                                    const FloatVec3& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   if(std::max({dims[0], dims[1], dims[2]}) > detail::k_DanielssonMaxDimension)
   {

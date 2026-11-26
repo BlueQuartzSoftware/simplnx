@@ -2638,7 +2638,7 @@ private:
  */
 template <class T>
 Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, T backgroundValue, bool insideIsPositive, bool squaredDistance,
-                                      bool useSpacing, FloatVec3 spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
+                                      bool useSpacing, const FloatVec3& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                       const IFilter::MessageHandler& messageHandler)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)

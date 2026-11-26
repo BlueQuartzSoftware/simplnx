@@ -67,7 +67,7 @@ IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType i
   return m_InitializerMap.at(identifier)();
 }
 
-void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
+void AbstractPlugin::addFilter(const FilterCreationFunc& filterFunc)
 {
   IFilter::UniquePointer filter = filterFunc();
   if(filter == nullptr)
@@ -101,5 +101,5 @@ void AbstractPlugin::addDataIOManager(const IOManagerPointer& ioManager)
 void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& value)
 {
   Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
-  preferences->addDefaultValues(getName(), keyName, value);
+  preferences->addDefaultValues(getName(), std::move(keyName), value);
 }

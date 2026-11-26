@@ -99,7 +99,7 @@ public:
  * @param throwAllocation Selects the filter allocation-error path on the second read.
  */
 template <class FilterType, class StoreType = SecondBlockFailureStore<DataStore<int32>>>
-void CheckSecondBlockFailure(bool writeBinary, bool existingDestination, std::shared_ptr<StoreType> store = std::make_shared<StoreType>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7}),
+void CheckSecondBlockFailure(bool writeBinary, bool existingDestination, const std::shared_ptr<StoreType>& store = std::make_shared<StoreType>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7}),
                              bool throwAllocation = false)
 {
   namespace fs = std::filesystem;

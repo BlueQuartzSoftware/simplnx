@@ -113,8 +113,8 @@ struct FloatComparisonFixture
    * @param computedTuples Computed tuple shape; an empty shape selects one tuple per value.
    * @param computedComponents Computed component shape.
    */
-  FloatComparisonFixture(std::vector<T> exemplary, std::vector<T> computed, ShapeType exemplaryTuples = {}, ShapeType exemplaryComponents = {1}, ShapeType computedTuples = {},
-                         ShapeType computedComponents = {1})
+  FloatComparisonFixture(std::vector<T> exemplary, std::vector<T> computed, ShapeType exemplaryTuples = {}, const ShapeType& exemplaryComponents = {1}, ShapeType computedTuples = {},
+                         const ShapeType& computedComponents = {1})
   : exemplaryValues(std::move(exemplary))
   , computedValues(std::move(computed))
   {

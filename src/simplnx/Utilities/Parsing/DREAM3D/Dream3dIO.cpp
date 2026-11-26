@@ -3373,7 +3373,7 @@ Result<DataStructure> LoadDataStructureWithHandler(const fs::path& filePath, con
 
   DataStructure dataStructure;
   // Install storage policy before any finalizer selects array stores.
-  dataStructure.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(std::move(resolver));
   for(const auto& objectPath : allPaths)
   {
     auto objectResult = LoadDataObjectFromHDF5(importStructure, dataStructure, objectPath, dataFileReader, useDeferredLoad);

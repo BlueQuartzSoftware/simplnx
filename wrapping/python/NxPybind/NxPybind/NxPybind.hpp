@@ -257,7 +257,7 @@ public:
   }
 
   template <class T>
-  const T* addPlugin(std::shared_ptr<T> plugin)
+  const T* addPlugin(const std::shared_ptr<T>& plugin)
   {
     static_assert(std::is_base_of_v<AbstractPlugin, T>);
 

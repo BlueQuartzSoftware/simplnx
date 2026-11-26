@@ -89,7 +89,7 @@ protected:
    *
    * Sibling arrays update sequentially. Feature IDs update last.
    */
-  Result<> assignBadVoxels(SizeVec3 dimensions);
+  Result<> assignBadVoxels(const SizeVec3& dimensions);
 
   /**
    * @brief Selects active features and applies their compacted IDs to cells.

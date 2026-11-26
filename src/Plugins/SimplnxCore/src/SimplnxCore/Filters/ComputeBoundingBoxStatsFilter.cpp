@@ -32,7 +32,7 @@ struct IsIntegerType
   }
 };
 
-void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims, const DataPath& outputAMPath)
+void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& filterArgs, const ShapeType& tupleDims, const DataPath& outputAMPath)
 {
   auto calculateLength = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateLength_Key);
   auto calculateMin = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMin_Key);

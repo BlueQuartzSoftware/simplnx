@@ -1808,7 +1808,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
 }
 
 template <class T, class F, class Real>
-Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::array<double, 3>& sc, F fn, float64 timeStep,
+Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::array<double, 3>& sc, const F& fn, float64 timeStep,
                                      uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D)
 {
   const usize nx = dims[0];

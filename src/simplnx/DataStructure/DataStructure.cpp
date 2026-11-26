@@ -525,7 +525,7 @@ bool DataStructure::removeData(DataObject::IdType identifier)
   return removeData(data);
 }
 
-void DataStructure::setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject)
+void DataStructure::setData(DataObject::IdType identifier, const std::shared_ptr<DataObject>& dataObject)
 {
   if(dataObject == nullptr)
   {

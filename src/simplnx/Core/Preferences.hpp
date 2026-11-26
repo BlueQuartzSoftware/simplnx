@@ -333,7 +333,7 @@ public:
 protected:
   void setDefaultValues();
 
-  void addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value);
+  void addDefaultValues(const std::string& pluginName, std::string valueName, const nlohmann::json& value);
 
 private:
   nlohmann::json m_DefaultValues;

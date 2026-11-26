@@ -14,6 +14,7 @@
 #include <array>
 #include <atomic>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -392,7 +393,7 @@ Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::FiniteDifferenceExecuteFn<F> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler};
+  detail::FiniteDifferenceExecuteFn<F> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, std::move(fn), timeStep, numberOfIterations, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

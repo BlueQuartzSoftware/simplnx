@@ -791,7 +791,7 @@ protected:
 
   bool insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup);
 
-  void setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject);
+  void setData(DataObject::IdType identifier, const std::shared_ptr<DataObject>& dataObject);
 
 private:
   /**

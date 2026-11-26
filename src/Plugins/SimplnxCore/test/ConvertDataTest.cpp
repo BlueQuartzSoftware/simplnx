@@ -78,7 +78,7 @@ void checkConvertedArray(DataArray<T>* originalDataArray, DataArray<U>* converte
 }
 
 template <typename T, typename U>
-void TestConversion(DataStructure& dataStructure, ConvertDataFilter& filter, std::string /*arrayName*/, DataType newType, std::string newArrayName, bool checkArray = true)
+void TestConversion(DataStructure& dataStructure, ConvertDataFilter& filter, const std::string& /*arrayName*/, DataType newType, const std::string& newArrayName, bool checkArray = true)
 {
   Arguments args = getArgs(DataArrayPath, newType, newArrayName);
   auto executeResults = filter.execute(dataStructure, args);

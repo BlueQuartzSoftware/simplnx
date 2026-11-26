@@ -35,7 +35,7 @@ const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContain
 const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
 const std::string k_PartNumberName = "Part Number";
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 

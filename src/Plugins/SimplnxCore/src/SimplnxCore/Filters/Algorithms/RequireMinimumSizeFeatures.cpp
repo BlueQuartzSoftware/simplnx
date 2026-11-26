@@ -115,7 +115,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
   return {};
 }
 
-Result<> RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions)
+Result<> RequireMinimumSizeFeatures::assignBadVoxels(const SizeVec3& dimensions)
 {
   return FillBadVoxels(m_DataStructure, m_InputValues->FeatureIdsPath, dimensions, {}, std::nullopt, m_MessageHandler, m_ShouldCancel);
 }

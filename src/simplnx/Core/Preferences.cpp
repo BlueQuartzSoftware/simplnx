@@ -407,14 +407,14 @@ void Preferences::setDefaultValues()
   m_DefaultValues[k_AutoRangeComputation_Key] = k_AutoRangeComputationDefault;
 }
 
-void Preferences::addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value)
+void Preferences::addDefaultValues(const std::string& pluginName, std::string valueName, const nlohmann::json& value)
 {
   auto& pluginGroup = m_DefaultValues[k_Plugin_Key];
   if(!pluginGroup.contains(pluginName))
   {
     pluginGroup[pluginName] = nlohmann::json::object();
   }
-  pluginGroup[pluginName][valueName] = value;
+  pluginGroup[pluginName][std::move(valueName)] = value;
 }
 
 void Preferences::clear()

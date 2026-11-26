@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <utility>
 
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 
@@ -79,7 +80,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
       NeighborList<int32>::Create(dataStructure, sampleNeighborListPath.getTargetName(), attrMatrixDims, dataStructure.getDataRefAs<AttributeMatrix>(sampleCellDataPath).getId());
   sampleNeighborList->setList(0, std::vector<int32>{1, 2, 3});
 
-  auto refAction = CreateImageGeometryAction(refImageGeomPath, refDims, refOrigin, refSpacing, refCellDataName, IGeometry::LengthUnit::Micrometer);
+  auto refAction = CreateImageGeometryAction(refImageGeomPath, std::move(refDims), std::move(refOrigin), std::move(refSpacing), refCellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> refActionResult = refAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(refActionResult);
 

@@ -12,6 +12,7 @@
 #include <atomic>
 #include <cmath>
 #include <limits>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -83,7 +84,7 @@ std::vector<T> RunCurvatureFlow(const std::vector<T>& field, usize dx, usize dy,
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   const nx::core::ImageProcessing::detail::CurvatureFlowFn fn{};
-  const Result<> r = ApplyFiniteDifference<T>(inStore, outStore, SizeVec3{dx, dy, dz}, spacing, fn, timeStep, nIter, shouldCancel, messageHandler);
+  const Result<> r = ApplyFiniteDifference<T>(inStore, outStore, SizeVec3{dx, dy, dz}, std::move(spacing), fn, timeStep, nIter, shouldCancel, messageHandler);
   REQUIRE(r.valid());
   std::vector<T> out(field.size());
   for(usize i = 0; i < out.size(); ++i)
