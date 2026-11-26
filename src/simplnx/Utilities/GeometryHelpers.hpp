@@ -429,7 +429,7 @@ template <typename T, typename K>
       {
         visited[loop_neighbors[k]] = false;
       }
-      dynamicList->setElementList(t, linkCount[t], &(loop_neighbors[0]));
+      dynamicList->setElementList(t, linkCount[t], loop_neighbors.data());
     }
   }
 
