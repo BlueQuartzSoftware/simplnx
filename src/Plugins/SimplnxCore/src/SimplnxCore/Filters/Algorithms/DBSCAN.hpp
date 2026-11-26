@@ -22,12 +22,12 @@ struct SIMPLNXCORE_EXPORT DBSCANInputValues
   DataPath MaskArrayPath;
   bool UseMask = false;
   DataPath FeatureIdsArrayPath;
-  float32 Epsilon;
-  int32 MinPoints;
+  float32 Epsilon{};
+  int32 MinPoints{};
   ClusterUtilities::DistanceMetric DistanceMetric;
   DataPath FeatureAM;
-  ChoicesParameter::ValueType ParseOrder;
-  std::mt19937_64::result_type Seed;
+  ChoicesParameter::ValueType ParseOrder{};
+  std::mt19937_64::result_type Seed{};
 };
 
 /**

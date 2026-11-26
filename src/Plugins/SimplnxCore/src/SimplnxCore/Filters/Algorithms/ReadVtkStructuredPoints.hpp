@@ -23,8 +23,8 @@ struct SIMPLNXCORE_EXPORT ReadVtkStructuredPointsInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
   ImageIO::GeometryOverrides GeometryOverrides;
-  bool ReadPointData;
-  bool ReadCellData;
+  bool ReadPointData{};
+  bool ReadCellData{};
   DataPath PointGeomPath;
   DataPath ImageGeomPath;
   std::string PointAttributeMatrixName;

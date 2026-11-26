@@ -22,8 +22,8 @@ const ChoicesParameter::ValueType k_NewLineIndex = 5;
 struct SIMPLNXCORE_EXPORT ReadStringDataArrayInputValues
 {
   FileSystemPathParameter::ValueType inputFileValue;
-  usize skipLineCount;
-  usize delimiterIndex;
+  usize skipLineCount{};
+  usize delimiterIndex{};
   DataPath outputArrayPath;
   std::string dataFormat;
 };

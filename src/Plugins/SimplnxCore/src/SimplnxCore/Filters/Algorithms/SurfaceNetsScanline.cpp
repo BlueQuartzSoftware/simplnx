@@ -425,7 +425,7 @@ Result<> SurfaceNetsScanline::operator()()
         //   [5] = (i+1, j,   k+1)   right-back-top
         //   [6] = (i+1, j+1, k+1)   right-front-top
         //   [7] = (i,   j+1, k+1)   left-front-top
-        std::array<int32, 8> cellLabels;
+        std::array<int32, 8> cellLabels{};
 
         cellLabels[0] = cornerLabel(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
         cellLabels[1] = cornerLabel(i + 1, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);

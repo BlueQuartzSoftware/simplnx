@@ -23,13 +23,13 @@ struct SIMPLNXCORE_EXPORT PadImageGeometryInputValues
   VectorInt32Parameter::ValueType XMinMax;
   VectorInt32Parameter::ValueType YMinMax;
   VectorInt32Parameter::ValueType ZMinMax;
-  bool PadInX;
-  bool PadInY;
-  bool PadInZ;
-  int32 DefaultFillValue;
-  bool UpdateOrigin;
+  bool PadInX{};
+  bool PadInY{};
+  bool PadInZ{};
+  int32 DefaultFillValue{};
+  bool UpdateOrigin{};
   DataPath AttributeMatrixPath;
-  bool RemoveOriginalGeometry;
+  bool RemoveOriginalGeometry{};
 };
 
 /**

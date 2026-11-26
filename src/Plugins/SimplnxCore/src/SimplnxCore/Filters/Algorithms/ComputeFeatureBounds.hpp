@@ -26,7 +26,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeatureBoundsInputValues
 {
-  ChoicesParameter::ValueType OutputType;
+  ChoicesParameter::ValueType OutputType{};
   DataPath GeometryPath;
   DataPath FeatureAMPath;
   DataPath FeatureIdsArrayPath;
@@ -34,7 +34,7 @@ struct SIMPLNXCORE_EXPORT ComputeFeatureBoundsInputValues
   DataPath MaxArrayPath;
   DataPath UnifiedArrayPath;
 
-  bool CreateEdgeGeometry;
+  bool CreateEdgeGeometry{};
   DataGroupCreationParameter::ValueType EdgeGeometryDataPath;
   DataObjectNameParameter::ValueType EdgeAttributeMatrixName;
   DataObjectNameParameter::ValueType FeatureIdsArrayName;

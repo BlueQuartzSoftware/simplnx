@@ -60,8 +60,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT PointSampleTriangleGeometryInputs
 {
-  int32 pNumberOfSamples;
-  bool pUseMask;
+  int32 pNumberOfSamples{};
+  bool pUseMask{};
   DataPath pTriangleGeometry;
   DataPath pTriangleAreasArrayPath;
   DataPath pMaskArrayPath;
@@ -69,7 +69,7 @@ struct SIMPLNXCORE_EXPORT PointSampleTriangleGeometryInputs
   DataPath pVertexGeometryPath;
   DataPath pVertexGroupDataPath;
   MultiArraySelectionParameter::ValueType pCreatedDataArrayPaths;
-  uint64 Seed;
+  uint64 Seed{};
 };
 
 /**

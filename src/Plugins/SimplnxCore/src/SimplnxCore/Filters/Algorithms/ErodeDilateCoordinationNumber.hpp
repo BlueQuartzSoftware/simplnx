@@ -19,8 +19,8 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ErodeDilateCoordinationNumberInputValues
 {
-  int32 CoordinationNumber;
-  bool Loop;
+  int32 CoordinationNumber{};
+  bool Loop{};
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
   DataPath InputImageGeometry;

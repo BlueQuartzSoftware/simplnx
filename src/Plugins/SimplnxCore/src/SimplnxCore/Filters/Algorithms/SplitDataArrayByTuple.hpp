@@ -18,7 +18,7 @@ struct SIMPLNXCORE_EXPORT SplitDataArrayByTupleInputValues
 {
   DataPath InputArrayPath;
   std::vector<DataPath> OutputArrayPaths;
-  usize SplitDimension;
+  usize SplitDimension{};
 };
 
 /**

@@ -17,7 +17,7 @@ struct SIMPLNXCORE_EXPORT ApproximatePointCloudHullInputValues
 {
   VectorFloat32Parameter::ValueType GridResolution;
   GeometrySelectionParameter::ValueType InputVertexGeometryPath;
-  UInt64Parameter::ValueType MinEmptyNeighbors;
+  UInt64Parameter::ValueType MinEmptyNeighbors{};
   DataGroupCreationParameter::ValueType OutputVertexGeometryPath;
 };
 

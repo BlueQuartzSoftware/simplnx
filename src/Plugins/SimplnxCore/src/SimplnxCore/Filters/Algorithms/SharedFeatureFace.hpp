@@ -18,7 +18,7 @@ struct SIMPLNXCORE_EXPORT SharedFeatureFaceInputValues
   DataPath GrainBoundaryAttributeMatrixPath;
   DataPath FeatureFaceLabelsArrayPath;
   DataPath FeatureFaceNumTrianglesArrayPath;
-  bool ShouldRandomizeFeatureIds;
+  bool ShouldRandomizeFeatureIds{};
 };
 
 /**

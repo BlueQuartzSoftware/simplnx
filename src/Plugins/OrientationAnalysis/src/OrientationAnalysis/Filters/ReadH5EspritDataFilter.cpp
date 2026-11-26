@@ -222,7 +222,7 @@ Result<> ReadH5EspritDataFilter::executeImpl(DataStructure& dataStructure, const
                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadH5DataInputValues inputValues;
-  ReadH5EspritDataInputValues espritInputValues;
+  ReadH5EspritDataInputValues espritInputValues{};
 
   inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);

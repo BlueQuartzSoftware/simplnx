@@ -512,7 +512,7 @@ protected:
 
 private:
   std::shared_ptr<store_type> m_Store;
-  bool m_IsAllocated;
+  bool m_IsAllocated{};
   value_type m_InitValue;
 };
 

@@ -17,7 +17,7 @@ struct SIMPLNXCORE_EXPORT FlyingEdges3DInputValues
   DataPath triangleGeomPath;
   DataPath contouringArrayPath;
   DataPath normalsArrayPath;
-  float64 isoVal;
+  float64 isoVal{};
 };
 
 /**

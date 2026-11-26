@@ -12,13 +12,13 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT MapPointCloudToRegularGridInputValues
 {
-  bool UseMask;
+  bool UseMask{};
   DataPath ImageGeomPath;
   DataPath MaskArrayPath;
   DataPath VertexGeomPath;
   DataPath VoxelIndicesPath;
-  uint64 OutOfBoundsValue;
-  ChoicesParameter::ValueType OutOfBoundsHandling;
+  uint64 OutOfBoundsValue{};
+  ChoicesParameter::ValueType OutOfBoundsHandling{};
 };
 
 /**

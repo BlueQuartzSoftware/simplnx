@@ -11,7 +11,7 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientationsInputValues
 {
-  bool ComputeAvgMisors;
+  bool ComputeAvgMisors{};
   DataPath NeighborListArrayPath;
   DataPath AvgQuatsArrayPath;
   DataPath FeaturePhasesArrayPath;

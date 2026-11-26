@@ -22,7 +22,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT UncertainRegularGridSampleSurfaceMeshInputValues
 {
-  uint64 SeedValue;
+  uint64 SeedValue{};
   VectorUInt64Parameter::ValueType Dimensions;
   VectorFloat32Parameter::ValueType Spacing;
   VectorFloat32Parameter::ValueType Origin;

@@ -23,7 +23,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT AlignGeometriesInputValues
 {
-  ChoicesParameter::ValueType AlignmentTypeIndex;
+  ChoicesParameter::ValueType AlignmentTypeIndex{};
   GeometrySelectionParameter::ValueType InputMovingGeometryPath;
   GeometrySelectionParameter::ValueType InputTargetGeometryPath;
 };

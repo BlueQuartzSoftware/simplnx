@@ -19,9 +19,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
 {
-  ChoicesParameter::ValueType PartitioningMode;
-  int32 StartingFeatureID;
-  int32 OutOfBoundsFeatureID;
+  ChoicesParameter::ValueType PartitioningMode{};
+  int32 StartingFeatureID{};
+  int32 OutOfBoundsFeatureID{};
   VectorInt32Parameter::ValueType NumberOfCellsPerAxis;
   VectorFloat32Parameter::ValueType PartitionGridOrigin;
   VectorFloat32Parameter::ValueType CellLength;
@@ -34,7 +34,7 @@ struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
   DataPath InputGeometryToPartition;
   std::string PartitionIdsArrayName;
   DataPath ExistingPartitionGridPath;
-  bool UseVertexMask;
+  bool UseVertexMask{};
   DataPath VertexMaskPath;
   std::string FeatureAttrMatrixName;
 };

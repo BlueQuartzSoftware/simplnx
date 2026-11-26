@@ -21,11 +21,11 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT GroupMicroTextureRegionsInputValues
 {
-  bool UseNonContiguousNeighbors;
+  bool UseNonContiguousNeighbors{};
   DataPath NonContiguousNeighborListArrayPath;
   DataPath ContiguousNeighborListArrayPath;
-  bool UseRunningAverage;
-  float32 CAxisTolerance;
+  bool UseRunningAverage{};
+  float32 CAxisTolerance{};
   DataPath FeatureIdsArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath VolumesArrayPath;
@@ -34,8 +34,8 @@ struct ORIENTATIONANALYSIS_EXPORT GroupMicroTextureRegionsInputValues
   DataPath NewCellFeatureAttributeMatrixName;
   DataPath CellParentIdsArrayName;
   DataPath FeatureParentIdsArrayName;
-  bool RandomizeParentIds;
-  uint64 SeedValue;
+  bool RandomizeParentIds{};
+  uint64 SeedValue{};
 };
 
 /**

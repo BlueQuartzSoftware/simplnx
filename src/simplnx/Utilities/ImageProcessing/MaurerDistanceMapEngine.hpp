@@ -1158,12 +1158,12 @@ struct Maurer3DSlabParameters
 {
   SizeVec3 dims;
   T backgroundValue;
-  bool insideIsPositive;
-  bool squaredDistance;
-  bool useSpacing;
+  bool insideIsPositive{};
+  bool squaredDistance{};
+  bool useSpacing{};
   FloatVec3 spacing;
-  usize maxYRows;
-  usize workerCount;
+  usize maxYRows{};
+  usize workerCount{};
 };
 
 /**

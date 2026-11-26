@@ -21,9 +21,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
 {
-  bool RepairTriangleWinding;
-  ChoicesParameter::ValueType BoundingBoxSkinMode;
-  bool SharpBoundingBoxEdges;
+  bool RepairTriangleWinding{};
+  ChoicesParameter::ValueType BoundingBoxSkinMode{};
+  bool SharpBoundingBoxEdges{};
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;

@@ -22,8 +22,8 @@ struct SIMPLNXCORE_EXPORT ReadRawBinaryInputValues
   FileSystemPathParameter::ValueType inputFileValue;
   NumericType scalarTypeValue;
   ShapeType componentDimsValue;
-  ChoicesParameter::ValueType endianValue;
-  uint64 skipHeaderBytesValue;
+  ChoicesParameter::ValueType endianValue{};
+  uint64 skipHeaderBytesValue{};
   DataPath createdAttributeArrayPathValue;
 };
 

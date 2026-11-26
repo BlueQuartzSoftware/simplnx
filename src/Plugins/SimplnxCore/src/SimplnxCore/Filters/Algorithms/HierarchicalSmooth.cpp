@@ -585,9 +585,9 @@ struct VolumeSolverData
   meshnode nodeSmooth;
   facelabel label;
   nodetype type;
-  int maxIterations;
-  double error;
-  double errorThreshold;
+  int maxIterations{};
+  double error{};
+  double errorThreshold{};
   OrderedEdgeDict<std::vector<int>> boundaryDict;
 };
 

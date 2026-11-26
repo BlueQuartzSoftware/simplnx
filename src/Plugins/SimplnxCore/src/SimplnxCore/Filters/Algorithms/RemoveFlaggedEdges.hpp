@@ -36,11 +36,11 @@ struct SIMPLNXCORE_EXPORT RemoveFlaggedEdgesInputValues
   DataPath MaskArrayPath;
   DataPath ReducedEdgeGeometry;
   // These variables are associated with the Edge Data Handling
-  nx::core::ChoicesParameter::ValueType EdgeDataHandling;
+  nx::core::ChoicesParameter::ValueType EdgeDataHandling{};
   MultiArraySelectionParameter::ValueType SelectedEdgeData;
   DataPath EdgeAttributeMatrixPath;
   // These variables are associated with the Vertex Data Handling
-  nx::core::ChoicesParameter::ValueType VertexDataHandling;
+  nx::core::ChoicesParameter::ValueType VertexDataHandling{};
   MultiArraySelectionParameter::ValueType SelectedVertexData;
   DataPath VertexAttributeMatrixPath;
 };

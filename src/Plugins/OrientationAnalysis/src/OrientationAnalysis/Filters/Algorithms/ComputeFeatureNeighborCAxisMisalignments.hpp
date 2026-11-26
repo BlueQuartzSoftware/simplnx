@@ -15,7 +15,7 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborCAxisMisalignmentsInputValues
 {
-  bool FindAvgMisals;
+  bool FindAvgMisals{};
   DataPath NeighborListArrayPath;
   DataPath AvgQuatsArrayPath;
   DataPath FeaturePhasesArrayPath;

@@ -18,7 +18,7 @@ struct SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolumeInputValues
   DataPath FeatureIdsArrayPath;
   DataPath NumCellsArrayPath;
   DataPath SurfaceAreaVolumeRatioArrayName;
-  bool CalculateSphericity;
+  bool CalculateSphericity{};
   DataPath SphericityArrayName;
   DataPath InputImageGeometry;
 };

@@ -19,15 +19,15 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ComputeBoundingBoxStatsInputValues
 {
   // Options
-  bool CalculateLength;
-  bool CalculateMin;
-  bool CalculateMax;
-  bool CalculateSummation;
-  bool CalculateMean;
-  bool CalculateMedian;
-  bool CalculateMode;
-  bool CalculateNumUniqueValues;
-  bool CalculateStdDev;
+  bool CalculateLength{};
+  bool CalculateMin{};
+  bool CalculateMax{};
+  bool CalculateSummation{};
+  bool CalculateMean{};
+  bool CalculateMedian{};
+  bool CalculateMode{};
+  bool CalculateNumUniqueValues{};
+  bool CalculateStdDev{};
 
   // Input
   DataPath GeometryPath;

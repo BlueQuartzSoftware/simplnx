@@ -24,7 +24,7 @@ struct SIMPLNXCORE_EXPORT ExtractInternalSurfacesFromTriangleGeometryInputValues
   MultiArraySelectionParameter::ValueType CopyTriangleArrayPaths;
   MultiArraySelectionParameter::ValueType CopyVertexArrayPaths;
   GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
-  uint64 CriterionMode;
+  uint64 CriterionMode{};
   VectorInt8Parameter::ValueType NodeTypeRange;
   ArraySelectionParameter::ValueType NodeTypesPath;
   DataPath FaceLabelsPath;

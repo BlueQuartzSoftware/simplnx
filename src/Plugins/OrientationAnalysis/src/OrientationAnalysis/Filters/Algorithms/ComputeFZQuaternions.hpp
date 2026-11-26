@@ -23,7 +23,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeFZQuaternionsInputValues
   ArraySelectionParameter::ValueType InputQuatsArrayPath;
   ArraySelectionParameter::ValueType MaskArrayPath;
   DataObjectNameParameter::ValueType OutputFzQuatsArrayName;
-  BoolParameter::ValueType UseMask;
+  BoolParameter::ValueType UseMask{};
 };
 
 /**

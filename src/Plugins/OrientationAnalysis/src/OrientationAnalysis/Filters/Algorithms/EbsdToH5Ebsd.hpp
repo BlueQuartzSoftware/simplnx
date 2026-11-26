@@ -44,9 +44,9 @@ const std::vector<float32> k_HedmSampleTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 struct ORIENTATIONANALYSIS_EXPORT EbsdToH5EbsdInputValues
 {
 
-  Float32Parameter::ValueType ZSpacing;
-  ChoicesParameter::ValueType StackingOrder;
-  ChoicesParameter::ValueType ReferenceFrame;
+  Float32Parameter::ValueType ZSpacing{};
+  ChoicesParameter::ValueType StackingOrder{};
+  ChoicesParameter::ValueType ReferenceFrame{};
   FileSystemPathParameter::ValueType OutputPath;
   GeneratedFileListParameter::ValueType InputFileListInfo;
 };

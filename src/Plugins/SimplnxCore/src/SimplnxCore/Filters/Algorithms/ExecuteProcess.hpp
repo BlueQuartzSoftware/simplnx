@@ -15,8 +15,8 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ExecuteProcessInputValues
 {
   StringParameter::ValueType Arguments;
-  bool Blocking;
-  int32 Timeout;
+  bool Blocking{};
+  int32 Timeout{};
   FileSystemPathParameter::ValueType LogFile;
 };
 

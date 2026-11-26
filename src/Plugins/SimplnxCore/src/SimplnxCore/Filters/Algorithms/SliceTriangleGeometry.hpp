@@ -22,11 +22,11 @@ constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
 
 struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 {
-  ChoicesParameter::ValueType SliceRange;
-  float32 Zstart;
-  float32 Zend;
-  float32 SliceResolution;
-  bool HaveRegionIds;
+  ChoicesParameter::ValueType SliceRange{};
+  float32 Zstart{};
+  float32 Zend{};
+  float32 SliceResolution{};
+  bool HaveRegionIds{};
   DataPath CADDataContainerName;
   DataPath RegionIdArrayPath;
   DataGroupCreationParameter::ValueType SliceDataContainerName;

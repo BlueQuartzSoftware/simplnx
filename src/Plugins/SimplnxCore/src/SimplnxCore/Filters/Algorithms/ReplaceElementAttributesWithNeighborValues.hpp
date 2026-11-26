@@ -29,9 +29,9 @@ inline const ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_Great
  */
 struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues
 {
-  float32 MinConfidence;
-  ChoicesParameter::ValueType SelectedComparison;
-  bool Loop;
+  float32 MinConfidence{};
+  ChoicesParameter::ValueType SelectedComparison{};
+  bool Loop{};
   DataPath InputArrayPath;
   DataPath SelectedImageGeometryPath;
 };

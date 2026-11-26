@@ -19,9 +19,9 @@ struct SIMPLNXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
 {
   DataPath ImageGeometryPath;
   DataPath MaskArrayPath;
-  bool UseReferenceSlice;
-  int32 ReferenceSlice;
-  bool StoreAlignmentShifts;
+  bool UseReferenceSlice{};
+  int32 ReferenceSlice{};
+  bool StoreAlignmentShifts{};
   DataPath AlignmentAMPath;
   DataPath SlicesArrayPath;
   DataPath RelativeShiftsArrayPath;

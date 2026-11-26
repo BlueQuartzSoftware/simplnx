@@ -19,14 +19,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT WriteAbaqusHexahedronInputValues
 {
-  bool UseReducedIntegration;
-  int32 HourglassStiffness;
+  bool UseReducedIntegration{};
+  int32 HourglassStiffness{};
   StringParameter::ValueType JobName;
   FileSystemPathParameter::ValueType OutputPath;
   StringParameter::ValueType FilePrefix;
   DataPath FeatureIdsArrayPath;
   DataPath ImageGeometryPath;
-  bool WriteDummyNode;
+  bool WriteDummyNode{};
 };
 
 /**

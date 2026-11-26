@@ -26,7 +26,7 @@ struct SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesInputValues
   AttributeMatrixSelectionParameter::ValueType FeatureAttributeMatrixPath;
   ArraySelectionParameter::ValueType FeatureIdsPath;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  BoolParameter::ValueType MarkFeature0Neighbors;
+  BoolParameter::ValueType MarkFeature0Neighbors{};
   DataObjectNameParameter::ValueType SurfaceFeaturesArrayName;
 };
 

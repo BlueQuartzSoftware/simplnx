@@ -40,7 +40,7 @@ struct SizeGBCD
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDInputValues
 {
-  float32 GBCDRes;
+  float32 GBCDRes{};
   DataPath TriangleGeometryPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath SurfaceMeshFaceNormalsArrayPath;

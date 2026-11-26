@@ -16,10 +16,10 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT WriteFeatureDataCSVInputValues
 {
   AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
-  ChoicesParameter::ValueType DelimiterIndex;
+  ChoicesParameter::ValueType DelimiterIndex{};
   FileSystemPathParameter::ValueType FeatureDataFile;
-  BoolParameter::ValueType WriteNeighborlistData;
-  BoolParameter::ValueType WriteNumFeaturesLine;
+  BoolParameter::ValueType WriteNeighborlistData{};
+  BoolParameter::ValueType WriteNumFeaturesLine{};
 };
 
 /**

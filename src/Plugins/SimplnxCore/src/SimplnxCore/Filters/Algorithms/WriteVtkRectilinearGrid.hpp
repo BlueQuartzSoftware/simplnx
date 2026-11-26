@@ -20,7 +20,7 @@ class IDataArray;
 struct SIMPLNXCORE_EXPORT WriteVtkRectilinearGridInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
-  bool WriteBinaryFile;
+  bool WriteBinaryFile{};
   DataPath ImageGeometryPath;
   MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
 };

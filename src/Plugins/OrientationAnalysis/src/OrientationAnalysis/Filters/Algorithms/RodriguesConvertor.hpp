@@ -20,7 +20,7 @@ struct ORIENTATIONANALYSIS_EXPORT RodriguesConvertorInputValues
 {
   DataPath RodriguesDataArrayPath;
   DataPath OutputDataArrayPath;
-  bool DeleteOriginalData;
+  bool DeleteOriginalData{};
 };
 
 /**

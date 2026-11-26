@@ -359,7 +359,7 @@ public:
 
 private:
   ShapeType m_TupleShape;
-  ShapeType::value_type m_NumTuples;
+  ShapeType::value_type m_NumTuples{};
   std::vector<std::vector<T>> m_Array;
 };
 

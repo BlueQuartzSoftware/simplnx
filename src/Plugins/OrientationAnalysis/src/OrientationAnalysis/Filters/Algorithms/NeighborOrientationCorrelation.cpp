@@ -238,7 +238,7 @@ Result<> NeighborOrientationCorrelation::operator()()
             const std::array<int64, k_NumFaceNeighbors> neighborBufX = {xIdx, xIdx, xIdx - 1, xIdx + 1, xIdx, xIdx};
             const std::array<int64, k_NumFaceNeighbors> neighborBufY = {yIdx, yIdx - 1, yIdx, yIdx, yIdx + 1, yIdx};
 
-            std::array<ebsdlib::QuatD, k_NumFaceNeighbors> nQuats;
+            std::array<ebsdlib::QuatD, k_NumFaceNeighbors> nQuats{};
             std::array<int32, k_NumFaceNeighbors> nPhases = {};
 
             for(usize f = 0; f < k_NumFaceNeighbors; f++)

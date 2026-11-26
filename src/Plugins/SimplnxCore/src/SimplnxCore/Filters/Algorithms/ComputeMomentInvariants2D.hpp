@@ -19,10 +19,10 @@ struct SIMPLNXCORE_EXPORT ComputeMomentInvariants2DInputValues
   DataPath ImageGeometryPath;
   DataPath FeatureIdsArrayPath;
   DataPath FeatureRectArrayPath;
-  bool NormalizeMomentInvariants;
+  bool NormalizeMomentInvariants{};
   DataPath Omega1ArrayPath;
   DataPath Omega2ArrayPath;
-  bool SaveCentralMoments;
+  bool SaveCentralMoments{};
   DataPath CentralMomentsArrayPath;
 };
 

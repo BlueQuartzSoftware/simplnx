@@ -14,15 +14,15 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT LaplacianSmoothingInputValues
 {
   DataPath pTriangleGeometryDataPath;
-  int32 pIterationSteps;
-  float32 pLambda;
-  bool pUseTaubinSmoothing;
-  float32 pMuFactor;
-  float32 pTripleLineLambda;
-  float32 pQuadPointLambda;
-  float32 pSurfacePointLambda;
-  float32 pSurfaceTripleLineLambda;
-  float32 pSurfaceQuadPointLambda;
+  int32 pIterationSteps{};
+  float32 pLambda{};
+  bool pUseTaubinSmoothing{};
+  float32 pMuFactor{};
+  float32 pTripleLineLambda{};
+  float32 pQuadPointLambda{};
+  float32 pSurfacePointLambda{};
+  float32 pSurfaceTripleLineLambda{};
+  float32 pSurfaceQuadPointLambda{};
   DataPath pSurfaceMeshNodeTypeArrayPath;
 };
 

@@ -14,8 +14,8 @@ struct SIMPLNXCORE_EXPORT HierarchicalSmoothInputValues
   DataPath triangleGeometryDataPath;
   DataPath nodeTypeArrayPath;
   DataPath faceLabelsArrayPath;
-  int32 maxIterations;
-  float64 errorThreshold;
+  int32 maxIterations{};
+  float64 errorThreshold{};
 };
 
 /**

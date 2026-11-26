@@ -18,10 +18,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RequireMinNumNeighborsInputValues
 {
-  bool ApplyToSinglePhase;
+  bool ApplyToSinglePhase{};
   DataPath FeaturePhasesPath;
-  uint64 PhaseNumber;
-  uint64 MinNumNeighbors;
+  uint64 PhaseNumber{};
+  uint64 MinNumNeighbors{};
   DataPath ImageGeomPath;
   DataPath FeatureIdsPath;
   DataPath NumNeighborsPath;

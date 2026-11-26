@@ -19,11 +19,11 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ConditionalSetValueInputValues
 {
   ArraySelectionParameter::ValueType ConditionalArrayPath;
-  BoolParameter::ValueType InvertMask;
+  BoolParameter::ValueType InvertMask{};
   StringParameter::ValueType RemoveValue;
   StringParameter::ValueType ReplaceValue;
   ArraySelectionParameter::ValueType SelectedArrayPath;
-  BoolParameter::ValueType UseConditional;
+  BoolParameter::ValueType UseConditional{};
 };
 
 /**

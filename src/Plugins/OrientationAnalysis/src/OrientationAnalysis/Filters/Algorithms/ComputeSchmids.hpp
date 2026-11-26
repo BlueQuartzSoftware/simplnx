@@ -34,8 +34,8 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ComputeSchmidsInputValues
 {
   VectorFloat32Parameter::ValueType LoadingDirection;
-  bool StoreAngleComponents;
-  bool OverrideSystem;
+  bool StoreAngleComponents{};
+  bool OverrideSystem{};
   VectorFloat32Parameter::ValueType SlipPlane;
   VectorFloat32Parameter::ValueType SlipDirection;
   DataPath FeaturePhasesArrayPath;

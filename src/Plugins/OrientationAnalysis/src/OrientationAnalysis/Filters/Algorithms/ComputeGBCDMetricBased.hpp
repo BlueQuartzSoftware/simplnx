@@ -14,14 +14,14 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDMetricBasedInputValues
 {
-  int32 PhaseOfInterest;
+  int32 PhaseOfInterest{};
   VectorFloat32Parameter::ValueType MisorientationRotation;
-  ChoicesParameter::ValueType ChosenLimitDists;
-  int32 NumSamplPts;
-  bool ExcludeTripleLines;
+  ChoicesParameter::ValueType ChosenLimitDists{};
+  int32 NumSamplPts{};
+  bool ExcludeTripleLines{};
   FileSystemPathParameter::ValueType DistOutputFile;
   FileSystemPathParameter::ValueType ErrOutputFile;
-  bool SaveRelativeErr;
+  bool SaveRelativeErr{};
   DataPath NodeTypesArrayPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath SurfaceMeshFaceNormalsArrayPath;

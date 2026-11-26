@@ -39,12 +39,12 @@ enum class RankCriterion : uint64
 
 struct SIMPLNXCORE_EXPORT KeepRemoveRankedFeaturesInputValues
 {
-  uint64 Operation;
-  uint64 RankFrom;
-  uint64 Criterion;
-  uint64 NumFeatures;
-  float64 Percent;
-  bool FillRemovedFeatures;
+  uint64 Operation{};
+  uint64 RankFrom{};
+  uint64 Criterion{};
+  uint64 NumFeatures{};
+  float64 Percent{};
+  bool FillRemovedFeatures{};
   DataPath ImageGeometryPath;
   DataPath FeatureIdsArrayPath;
   DataPath RankingArrayPath;

@@ -25,10 +25,10 @@ struct NXIMAGEPROCESSING_EXPORT ReadBinaryCTNorthstarInputValues
   std::vector<std::pair<fs::path, usize>> DataFilePaths;
   SizeVec3 OriginalGeometryDims;
   SizeVec3 ImportedGeometryDims;
-  bool ImportSubvolume;
+  bool ImportSubvolume{};
   IntVec3 StartVoxelCoord;
   IntVec3 EndVoxelCoord;
-  ChoicesParameter::ValueType LengthUnit;
+  ChoicesParameter::ValueType LengthUnit{};
 };
 
 /**

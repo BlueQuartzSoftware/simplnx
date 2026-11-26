@@ -1137,7 +1137,7 @@ private:
   // Advancing one cube row loads at most one new slice.
   static constexpr usize k_MaxResidentSlices = 4;
   mutable std::array<std::vector<T>, k_MaxResidentSlices> m_SliceBuffers;
-  mutable std::array<int64, k_MaxResidentSlices> m_SliceBufferZ;
+  mutable std::array<int64, k_MaxResidentSlices> m_SliceBufferZ{};
   mutable Result<> m_ReadResult;
 
   /**

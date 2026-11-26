@@ -20,13 +20,13 @@ struct SIMPLNXCORE_EXPORT CombineStlFilesInputValues
   DataPath FaceNormalsArrayName;
 
   DataPath PartNumberIndexArrayPath;
-  bool CreatePartNumbers;
+  bool CreatePartNumbers{};
 
   DataPath FaceLabelIndexArrayPath;
-  bool CreateFaceLabels;
+  bool CreateFaceLabels{};
 
   DataPath VertexFileIndexArrayPath;
-  bool LabelVertices;
+  bool LabelVertices{};
 
   DataObjectNameParameter::ValueType CellFeatureAttributeMatrixName;
   DataObjectNameParameter::ValueType ActiveArrayName;

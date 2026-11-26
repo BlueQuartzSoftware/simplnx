@@ -23,11 +23,11 @@ struct SIMPLNXCORE_EXPORT CropEdgeGeometryInputValues
   DataPath destEdgeGeomPath;
   std::vector<float32> minCoords;
   std::vector<float32> maxCoords;
-  bool removeOriginalGeometry;
-  bool cropXDim;
-  bool cropYDim;
-  bool cropZDim;
-  uint64 boundaryIntersectionBehavior;
+  bool removeOriginalGeometry{};
+  bool cropXDim{};
+  bool cropYDim{};
+  bool cropZDim{};
+  uint64 boundaryIntersectionBehavior{};
   BoolParameter::ValueType clearFeatureAttributeMatrix = false;
   BoolParameter::ValueType renumberFeatures = false;
   AttributeMatrixSelectionParameter::ValueType featureAttributeMatrixPath;

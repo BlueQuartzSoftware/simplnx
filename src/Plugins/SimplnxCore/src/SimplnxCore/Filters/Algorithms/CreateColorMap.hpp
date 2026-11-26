@@ -13,7 +13,7 @@ struct SIMPLNXCORE_EXPORT CreateColorMapInputValues
   std::string PresetName;
   DataPath SelectedDataArrayPath;
   DataPath RgbArrayPath;
-  bool UseMask;
+  bool UseMask{};
   DataPath MaskArrayPath;
   std::vector<uint8> InvalidColor;
 };

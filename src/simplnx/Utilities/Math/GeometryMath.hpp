@@ -844,7 +844,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
   {
     crossings = 0;
 
-    std::array<T, 3> eulerAngles;
+    std::array<T, 3> eulerAngles{};
 
     float rand1 = distribution(generator);
     float rand2 = distribution(generator);

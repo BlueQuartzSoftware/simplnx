@@ -18,9 +18,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ExtractComponentAsArrayInputValues
 {
-  bool MoveComponentsToNewArray;
-  bool RemoveComponentsFromArray;
-  int32 CompNumber;
+  bool MoveComponentsToNewArray{};
+  bool RemoveComponentsFromArray{};
+  int32 CompNumber{};
   DataPath TempArrayPath;
   DataPath BaseArrayPath;
   DataPath NewArrayPath;

@@ -291,7 +291,7 @@ public:
     // We could parallelize over the features?
     for(usize featureId = featureIdStart; featureId < featureIdEnd; featureId++)
     {
-      ShapeResultValues currentResult;
+      ShapeResultValues currentResult{};
       currentResult.featureId = featureId;
       // ===== The following section calculates the moment of inertia tensor (Cinertia) and omega3s =======
       if(m_ShouldCancel)

@@ -17,7 +17,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeVectorColorsInputValues
 {
-  bool UseMask;
+  bool UseMask{};
   DataPath VectorsArrayPath;
   DataPath MaskArrayPath;
   DataPath CellVectorColorsArrayPath;

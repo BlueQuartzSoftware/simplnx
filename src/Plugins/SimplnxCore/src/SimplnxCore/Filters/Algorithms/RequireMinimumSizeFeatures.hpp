@@ -19,13 +19,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RequireMinimumSizeFeaturesInputValues
 {
-  BoolParameter::ValueType ApplySinglePhase;
+  BoolParameter::ValueType ApplySinglePhase{};
   ArraySelectionParameter::ValueType FeatureIdsPath;
   ArraySelectionParameter::ValueType FeaturePhasesPath;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  Int64Parameter::ValueType MinAllowedFeaturesSize;
+  Int64Parameter::ValueType MinAllowedFeaturesSize{};
   ArraySelectionParameter::ValueType FeatureNumCellsPath;
-  Int32Parameter::ValueType PhaseNumber;
+  Int32Parameter::ValueType PhaseNumber{};
 };
 
 /**

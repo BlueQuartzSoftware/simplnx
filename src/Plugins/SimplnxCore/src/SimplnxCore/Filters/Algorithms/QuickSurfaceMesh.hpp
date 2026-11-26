@@ -24,9 +24,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 {
-  bool FixProblemVoxels;      ///< When true, run iterative problem-voxel correction before meshing
-  bool RepairTriangleWinding; ///< When true, run winding repair on the output triangle mesh
-  ChoicesParameter::ValueType BoundingBoxSkinMode;
+  bool FixProblemVoxels{};      ///< When true, run iterative problem-voxel correction before meshing
+  bool RepairTriangleWinding{}; ///< When true, run winding repair on the output triangle mesh
+  ChoicesParameter::ValueType BoundingBoxSkinMode{};
 
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;

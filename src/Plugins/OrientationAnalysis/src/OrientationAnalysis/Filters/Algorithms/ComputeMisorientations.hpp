@@ -36,7 +36,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeMisorientationsInputValues
   DataPath InputOrientationPath1;
   DataPath InputOrientationPath2;
   VectorFloat32Parameter::ValueType ReferenceOrientation;
-  ChoicesParameter::ValueType ComputationType;
+  ChoicesParameter::ValueType ComputationType{};
   DataPath InputPhasesArrayPath;
   DataPath OutputMisorientationsPath;
   DataPath InputCrystalStructuresArrayPath;

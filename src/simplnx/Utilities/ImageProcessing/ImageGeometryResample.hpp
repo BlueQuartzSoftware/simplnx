@@ -28,13 +28,13 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
   std::vector<uint64> ExactDimensions;
   DataPath SelectedImageGeometryPath;
   DataPath CellDataGroupPath;
-  bool RemoveOriginalImageGeom;
+  bool RemoveOriginalImageGeom{};
   DataPath CreatedImageGeometryPath;
   // Recreate the Feature AM with no arrays; required for RenumberFeatures.
   bool ClearFeatureAttributeMatrix = false;
   // Report unchanged Feature data only for callers that request this information.
   bool ReportUnclearedFeatureData = false;
-  bool RenumberFeatures;
+  bool RenumberFeatures{};
   DataPath FeatureIdsArrayPath;
   DataPath CellFeatureAttributeMatrix;
 };

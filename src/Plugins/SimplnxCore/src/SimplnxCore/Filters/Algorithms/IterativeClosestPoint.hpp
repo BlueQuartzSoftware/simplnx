@@ -11,8 +11,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT IterativeClosestPointInputValues
 {
-  bool ApplyTransformation;
-  uint64 NumIterations;
+  bool ApplyTransformation{};
+  uint64 NumIterations{};
   DataPath MovingVertexPath;
   DataPath TargetVertexPath;
   DataPath TransformArrayPath;

@@ -19,8 +19,8 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckInputValues
 {
-  float32 MisorientationTolerance;
-  int32 NumberOfNeighbors;
+  float32 MisorientationTolerance{};
+  int32 NumberOfNeighbors{};
   DataPath ImageGeomPath;
   DataPath QuatsArrayPath;
   DataPath MaskArrayPath;

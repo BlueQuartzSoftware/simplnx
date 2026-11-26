@@ -32,8 +32,8 @@ struct ORIENTATIONANALYSIS_EXPORT ReadChannel5DataInputValues
   DataPath DataContainerName;
   std::string CellAttributeMatrixName;
   std::string CellEnsembleAttributeMatrixName;
-  bool EdaxHexagonalAlignment;
-  bool CreateCompatibleArrays;
+  bool EdaxHexagonalAlignment{};
+  bool CreateCompatibleArrays{};
 };
 
 /**

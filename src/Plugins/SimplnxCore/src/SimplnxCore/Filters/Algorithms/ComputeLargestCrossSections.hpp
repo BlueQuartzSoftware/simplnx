@@ -16,7 +16,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeLargestCrossSectionsInputValues
 {
-  ChoicesParameter::ValueType Plane;
+  ChoicesParameter::ValueType Plane{};
   DataPath ImageGeometryPath;
   DataPath FeatureIdsArrayPath;
   DataPath LargestCrossSectionsArrayPath;

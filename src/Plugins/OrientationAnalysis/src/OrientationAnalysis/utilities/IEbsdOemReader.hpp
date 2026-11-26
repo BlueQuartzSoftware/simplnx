@@ -23,12 +23,12 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 {
   OEMEbsdScanSelectionParameter::ValueType SelectedScanNames;
-  bool ReadPatternData;
+  bool ReadPatternData{};
   DataPath ImageGeometryPath;
   DataPath CellAttributeMatrixPath;
   DataPath CellEnsembleAttributeMatrixPath;
-  bool EdaxHexagonalAlignment;
-  bool ConvertPhaseToInt32;
+  bool EdaxHexagonalAlignment{};
+  bool ConvertPhaseToInt32{};
 };
 
 /**

@@ -409,8 +409,8 @@ void MMCellMap::getVertexPosition(size_t vertexIndex, float position[3]) const
 // The caller is responsible for bounds checking to allow for optimal performance.
 void MMCellMap::getEdgeLabels(int cellIndex[3], const MMCellFlag::Edge edge, int32_t quadLabels[2], usize quadNxArrayIndices[2]) const
 {
-  std::array<int32_t, 3> firstCellLabels;
-  std::array<int32_t, 3> secondCellLabels;
+  std::array<int32_t, 3> firstCellLabels{};
+  std::array<int32_t, 3> secondCellLabels{};
 
   switch(edge)
   {

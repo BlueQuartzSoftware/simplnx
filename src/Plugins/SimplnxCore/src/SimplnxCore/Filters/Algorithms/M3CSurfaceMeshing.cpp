@@ -459,7 +459,7 @@ struct NeighborAccessor
     const SiteId j = within - (i - 1);                 // multiple of xDim, 0..nsp-xDim
     const SiteId k = ((site_id - 1) / nsp) * nsp;
 
-    Neighbor n;
+    Neighbor n{};
     n.neigh_id[0] = 0; // index 0 unused
 
     // same plane
@@ -3542,7 +3542,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     {
       return {};
     }
-    Face square;
+    Face square{};
     std::array<Segment, 64> segments{};
     int segmentCount = 0;
     auto squareResult = buildSquare(squareId, square, segments, segmentCount, true);
@@ -4437,7 +4437,7 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 
               if(pixSpin[0] > 0 || pixSpin[1] > 0)
               {
-                Segment seg;
+                Segment seg{};
                 seg.node_id[0] = nodeID[0];
                 seg.node_id[1] = nodeID[1];
                 seg.nSpin[0] = pixSpin[0];

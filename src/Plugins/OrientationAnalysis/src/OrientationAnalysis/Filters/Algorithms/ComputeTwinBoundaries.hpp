@@ -20,9 +20,9 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeTwinBoundariesInputValues
 {
-  bool FindCoherence;
-  float32 AngleTolerance;
-  float32 AxisTolerance;
+  bool FindCoherence{};
+  float32 AngleTolerance{};
+  float32 AxisTolerance{};
   DataPath FaceLabelsArrayPath;
   DataPath FaceNormalsArrayPath;
   DataPath AvgQuatsArrayPath;

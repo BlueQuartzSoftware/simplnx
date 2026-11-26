@@ -16,9 +16,9 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeNeighborhoodsInputValues
 {
-  uint64 SearchRadiusType;
-  float32 MultiplesOfAverage;
-  float32 SearchRadius;
+  uint64 SearchRadiusType{};
+  float32 MultiplesOfAverage{};
+  float32 SearchRadius{};
   DataPath EquivalentDiametersArrayPath;
   DataPath CentroidsArrayPath;
   DataPath NeighborhoodsArrayName;

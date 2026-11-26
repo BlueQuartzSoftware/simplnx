@@ -36,11 +36,11 @@ struct SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesInputValues
   DataPath MaskArrayPath;
   DataPath ReducedTriangleGeometry;
   // These variables are associated with the Edge Data Handling
-  nx::core::ChoicesParameter::ValueType TriangleDataHandling;
+  nx::core::ChoicesParameter::ValueType TriangleDataHandling{};
   MultiArraySelectionParameter::ValueType SelectedTriangleData;
   DataPath TriangleAttributeMatrixPath;
   // These variables are associated with the Vertex Data Handling
-  nx::core::ChoicesParameter::ValueType VertexDataHandling;
+  nx::core::ChoicesParameter::ValueType VertexDataHandling{};
   MultiArraySelectionParameter::ValueType SelectedVertexData;
   DataPath VertexAttributeMatrixPath;
 };

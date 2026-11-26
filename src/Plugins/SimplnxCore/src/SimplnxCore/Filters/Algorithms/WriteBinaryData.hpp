@@ -19,7 +19,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT WriteBinaryDataInputValues
 {
-  ChoicesParameter::ValueType EndianIndex;
+  ChoicesParameter::ValueType EndianIndex{};
   StringParameter::ValueType FileExtension;
   MultiArraySelectionParameter::ValueType InputDataArrayPaths;
   FileSystemPathParameter::ValueType OutputPath;

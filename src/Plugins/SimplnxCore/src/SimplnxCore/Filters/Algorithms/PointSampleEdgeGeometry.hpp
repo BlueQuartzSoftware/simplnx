@@ -9,10 +9,10 @@ namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT PointSampleEdgeGeometryInputValues
 {
-  float32 ScanVectorSamplingRes;
+  float32 ScanVectorSamplingRes{};
   DataPath ScanVectorGeometryPath;
   DataPath SampledVertexGeometryPath;
-  bool CalculateCumulativeSampleDistance;
+  bool CalculateCumulativeSampleDistance{};
   std::string CumulativeSampleDistanceArrayName;
   std::string EdgeIdsArrayName;
   DataPath pVertexGroupDataPath;

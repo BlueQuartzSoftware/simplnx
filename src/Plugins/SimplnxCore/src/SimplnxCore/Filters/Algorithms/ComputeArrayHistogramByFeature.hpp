@@ -28,7 +28,7 @@ struct SIMPLNXCORE_EXPORT ComputeArrayHistogramByFeatureInputValues
   MultiArraySelectionParameter::ValueType CreatedBinMostPopulatedDataPaths = {};
   std::optional<MultiArraySelectionParameter::ValueType> CreatedBinModalRangesDataPaths;
   DataPath FeatureIdsArrayPath;
-  bool UseMask;
+  bool UseMask{};
   DataPath MaskArrayPath;
 };
 

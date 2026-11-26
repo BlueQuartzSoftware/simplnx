@@ -1751,7 +1751,7 @@ namespace
 struct H8NativeHandle
 {
   hid_t id = H5I_INVALID_HID;
-  herr_t (*close)(hid_t);
+  herr_t (*close)(hid_t){};
 
   /** @brief Closes a valid owned ID after all enclosing native guards have ended. */
   ~H8NativeHandle()
@@ -2904,7 +2904,7 @@ TEST_CASE("Bounded codec rejects a second-pass request for an unprepared decoder
   observation.fault = BoundedFaultPointForTesting::SecondPassUnpreparedDecoder;
   const auto previous = SetCodecIoObserverForTesting({.context=&observation, .callback=&BoundedCodecObservation::Observe, .boundedFault=&BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
-  std::array<std::byte, 64> destination;
+  std::array<std::byte, 64> destination{};
   destination.fill(std::byte{0x7B});
   const auto result = codec.readExtentIntoBufferBounded(Extent({0, 0}, {63, 0}), destination, 65536);
   REQUIRE(result.invalid());

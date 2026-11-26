@@ -16,14 +16,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT KMedoidsInputValues
 {
-  uint64 InitClusters;
+  uint64 InitClusters{};
   ClusterUtilities::DistanceMetric DistanceMetric;
   bool UseMask = false;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath MedoidsArrayPath;
-  uint64 Seed;
+  uint64 Seed{};
 };
 
 /**

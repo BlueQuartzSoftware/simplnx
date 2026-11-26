@@ -20,7 +20,7 @@ struct SIMPLNXCORE_EXPORT NearestPointFuseRegularGridsInputValues
   DataPath SamplingGeometryPath;
   DataPath ReferenceCellAttributeMatrixPath;
   DataPath SamplingCellAttributeMatrixPath;
-  float64 fillValue;
+  float64 fillValue{};
 };
 
 /**

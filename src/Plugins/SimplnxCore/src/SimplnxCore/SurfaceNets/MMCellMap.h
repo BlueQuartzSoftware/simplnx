@@ -62,7 +62,7 @@ public:
 
   struct Cell
   {
-    size_t vertexIndex;
+    size_t vertexIndex{};
     MMCellFlag flag;
   };
 
