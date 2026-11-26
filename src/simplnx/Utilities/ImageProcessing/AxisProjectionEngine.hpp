@@ -14,6 +14,7 @@
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -53,7 +54,7 @@ inline constexpr usize k_AxisProjectionMedianMaxWorkers = 8;
 inline usize AxisProjectionMedianWorkerCount(usize columns)
 {
   const usize hardwareWorkers = std::max<usize>(1, static_cast<usize>(std::thread::hardware_concurrency()));
-  return std::max<usize>(1, std::min(columns, std::min(k_AxisProjectionMedianMaxWorkers, hardwareWorkers)));
+  return std::max<usize>(1, std::min({columns, k_AxisProjectionMedianMaxWorkers, hardwareWorkers}));
 }
 
 inline bool AxisProjectionCheckedMultiply(usize left, usize right, usize& product)
@@ -424,7 +425,7 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection X-chunk target ({} bytes) cannot hold one reducer state and one output value.", targetBytes));
       }
       const usize maximumOutputValues = (availableBytes - sizeof(StateType) - sizeof(TIn)) / sizeof(TOut);
-      plan.outputValues = std::min(dimY, std::min(k_AxisProjectionExternalOutputValues, maximumOutputValues));
+      plan.outputValues = std::min({dimY, k_AxisProjectionExternalOutputValues, maximumOutputValues});
       if(plan.outputValues == 0)
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection X-chunk target ({} bytes) cannot hold one output value.", targetBytes));
@@ -597,7 +598,7 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection external Median Y target ({} bytes) cannot hold a transpose value and row transfer.", targetBytes));
       }
-      plan.blockRows = std::min(dimY, std::min<usize>(256, transposeCapacity / 2));
+      plan.blockRows = std::min({dimY, static_cast<unsigned long>(256), transposeCapacity / 2});
       plan.tileColumns = std::min(dimX, transposeCapacity / (plan.blockRows + 1));
       if(plan.tileColumns == 0)
       {

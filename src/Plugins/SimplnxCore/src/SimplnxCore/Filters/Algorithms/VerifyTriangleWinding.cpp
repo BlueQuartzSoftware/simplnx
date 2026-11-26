@@ -137,7 +137,7 @@ Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, Ab
   // The existing dense feature accumulator is separate from this new bounded payload.
   const usize bytesPerTriangle = (3 * sizeof(MeshIndexType)) + (3 * sizeof(usize)) + (18 * sizeof(float32)) + (idComponents * sizeof(int32));
   auto& budget = CacheMemoryBudgetManager::instance();
-  const usize requestedCapacity = static_cast<usize>(std::min<uint64>(std::min(triangleCount, maxSize / bytesPerTriangle), budget.maximumWorkingMemoryBytes() / bytesPerTriangle));
+  const usize requestedCapacity = static_cast<usize>(std::min<uint64>({triangleCount, maxSize / bytesPerTriangle, budget.maximumWorkingMemoryBytes() / bytesPerTriangle}));
   const usize requestedBytes = requestedCapacity * bytesPerTriangle;
   auto reservation = budget.reserveWorkingMemory(requestedBytes);
   const usize blockCapacity = static_cast<usize>(std::min<uint64>(triangleCount, reservation.sizeBytes() / bytesPerTriangle));
