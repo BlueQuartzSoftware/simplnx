@@ -52,7 +52,7 @@ nlohmann::json CalculatorParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   if(!json.is_object())

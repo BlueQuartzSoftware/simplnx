@@ -150,7 +150,7 @@ public:
    * @param length
    * @return PointType
    */
-  PointType getPointAtDist(LengthType  /*length*/) const
+  PointType getPointAtDist(LengthType /*length*/) const
   {
     throw std::runtime_error("Ray.hpp: PointType getPointAtDist(LengthType length) const is not implemented.");
   }

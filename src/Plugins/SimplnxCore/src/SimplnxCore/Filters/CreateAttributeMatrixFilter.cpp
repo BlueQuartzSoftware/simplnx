@@ -62,8 +62,8 @@ IFilter::UniquePointer CreateAttributeMatrixFilter::clone() const
   return std::make_unique<CreateAttributeMatrixFilter>();
 }
 
-IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto dataObjectPath = filterArgs.value<DataPath>(k_DataObjectPath);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
@@ -83,8 +83,8 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
-Result<> CreateAttributeMatrixFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+Result<> CreateAttributeMatrixFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

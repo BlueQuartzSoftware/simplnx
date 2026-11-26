@@ -135,7 +135,7 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
   Operator function for H5Ovisit.  This function prints the
   name and type of the object passed to it.
  ************************************************************/
-herr_t VisitorFunction(hid_t locId, const char* name, const H5O_info_t* info, void*  /*operatorData*/)
+herr_t VisitorFunction(hid_t locId, const char* name, const H5O_info_t* info, void* /*operatorData*/)
 {
   herr_t status;
 

@@ -98,8 +98,8 @@ IFilter::UniquePointer ComputeFeatureNeighborMisorientationsFilter::clone() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -162,8 +162,8 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureNeighborMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFeatureNeighborMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                  const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeatureNeighborMisorientationsInputValues inputValues;
 

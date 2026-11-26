@@ -20,7 +20,7 @@ CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, const
 
 CreateImageGeometryAction::~CreateImageGeometryAction() noexcept = default;
 
-Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateImageGeometryAction: ";
   // Check for empty Geometry DataPath

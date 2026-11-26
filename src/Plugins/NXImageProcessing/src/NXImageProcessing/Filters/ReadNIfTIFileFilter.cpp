@@ -162,8 +162,8 @@ IFilter::UniquePointer ReadNIfTIFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                            const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pUseAffineIfPresent = filterArgs.value<bool>(k_UseAffineIfPresent_Key);
@@ -322,8 +322,8 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadNIfTIFileInputValues inputValues;
   inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
@@ -339,7 +339,7 @@ Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Ar
 }
 
 //------------------------------------------------------------------------------
-Result<Arguments> ReadNIfTIFileFilter::FromSIMPLJson(const nlohmann::json&  /*json*/)
+Result<Arguments> ReadNIfTIFileFilter::FromSIMPLJson(const nlohmann::json& /*json*/)
 {
   Arguments args = ReadNIfTIFileFilter().getDefaultArguments();
   // New filter in simplnx; no SIMPL v6 equivalent.

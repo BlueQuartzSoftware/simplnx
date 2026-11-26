@@ -946,7 +946,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
 
 template <class T, bool UseTemporaryWork>
 template <bool Dilation, class WorkStore, class MaskStore>
-Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(WorkStore& workStore, const MaskStore& maskStore, usize dimX, usize dimY, usize dimZ, usize sliceValues, usize  /*vol*/,
+Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(WorkStore& workStore, const MaskStore& maskStore, usize dimX, usize dimY, usize dimZ, usize sliceValues, usize /*vol*/,
                                                                             const detail::ReconstructionPersistentPrefixPlan& plan, bool initializeWork)
 {
   ThrottledMessageHandler progressThrottle(m_MessageHandler);

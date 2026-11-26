@@ -65,7 +65,7 @@ nlohmann::json CropGeometryParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CropGeometryParameter' JSON Error: ";
   static const std::string nameDiv = name() + "/";

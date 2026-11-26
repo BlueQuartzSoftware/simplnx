@@ -283,7 +283,7 @@ using AccumulationValueType = std::conditional_t<std::is_floating_point_v<T>, fl
  */
 template <typename T>
 inline void FindInterpolationValues(const RotateArgs& params, usize octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray,
-                                    std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, Point3Df&  /*hitVoxelCenterPoint*/)
+                                    std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, Point3Df& /*hitVoxelCenterPoint*/)
 {
   const std::array<Vector3i64, 8>& indexOffset = k_AllOctantOffsets[octant];
 

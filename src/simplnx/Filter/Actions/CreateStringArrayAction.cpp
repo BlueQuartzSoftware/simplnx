@@ -20,7 +20,7 @@ CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims
 
 CreateStringArrayAction::~CreateStringArrayAction() noexcept = default;
 
-Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "CreateStringArrayAction: ";
   auto parentPath = path().getParent();

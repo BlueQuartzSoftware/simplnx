@@ -502,8 +502,8 @@ IFilter::UniquePointer CombineNodeBasedGeometriesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputGeometryPaths = filterArgs.value<MultiPathSelectionParameter::ValueType>(k_InputGeometries_Key);
   auto outputGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputGeometryPath_Key);
@@ -963,8 +963,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineNodeBasedGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CombineNodeBasedGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CombineNodeBasedGeometriesInputValues inputValues;
 

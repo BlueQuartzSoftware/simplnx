@@ -142,13 +142,13 @@ StringArray::const_reference StringArray::at(usize index) const
   return m_Strings->at(index);
 }
 
-std::string StringArray::toString(usize tupleIndex, usize compIndex, const std::string&  /*format*/) const
+std::string StringArray::toString(usize tupleIndex, usize compIndex, const std::string& /*format*/) const
 {
   const usize valueIndex = tupleIndex * getNumberOfComponents() + compIndex;
   return at(valueIndex);
 }
 
-bool StringArray::setValueFromString(usize tupleIndex, usize  /*compIndex*/, const std::string& value)
+bool StringArray::setValueFromString(usize tupleIndex, usize /*compIndex*/, const std::string& value)
 {
   setValue(tupleIndex, value);
   return true;

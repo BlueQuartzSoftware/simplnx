@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
+#include "MD5/MD5.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -15,7 +16,6 @@
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "MD5/MD5.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "NXImageProcessing/Filters/ReadImageFilter.hpp"

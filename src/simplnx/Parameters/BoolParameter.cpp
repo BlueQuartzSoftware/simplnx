@@ -36,7 +36,7 @@ nlohmann::json BoolParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> BoolParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> BoolParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'BoolParameter' JSON Error: ";
   if(!json.is_boolean())

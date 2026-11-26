@@ -928,7 +928,7 @@ void GeneratePythonSphinxIndex()
  * @param argv
  * @return
  */
-int main(int32_t  /*argc*/, char**  /*argv*/)
+int main(int32_t /*argc*/, char** /*argv*/)
 {
   // try
   {

@@ -53,7 +53,7 @@ nlohmann::json DynamicTableParameter::toJsonImpl(const std::any& value) const
   return DynamicTableInfo::WriteData(table);
 }
 
-Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   return {ConvertResultTo<std::any>(DynamicTableInfo::ReadData(json))};
 }

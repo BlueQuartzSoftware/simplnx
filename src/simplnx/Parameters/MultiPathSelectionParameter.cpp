@@ -42,7 +42,7 @@ nlohmann::json MultiPathSelectionParameter::toJsonImpl(const std::any& value) co
   return json;
 }
 
-Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
   if(!json.is_array())

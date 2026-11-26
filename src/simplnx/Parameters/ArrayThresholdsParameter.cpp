@@ -40,7 +40,7 @@ nlohmann::json ArrayThresholdsParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
   auto thresholds = ArrayThresholdSet::FromJson(json);
@@ -142,7 +142,7 @@ Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStruct
   return {};
 }
 
-Result<std::any> ArrayThresholdsParameter::resolve(DataStructure&  /*dataStructure*/, const std::any&  /*value*/) const
+Result<std::any> ArrayThresholdsParameter::resolve(DataStructure& /*dataStructure*/, const std::any& /*value*/) const
 {
   return {};
 }

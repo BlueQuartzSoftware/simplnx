@@ -342,7 +342,7 @@ public:
    * @param datasetReader The HDF5 DatasetIO (unused)
    * @throw std::runtime_error Always throws because HDF5 read is not implemented
    */
-  void readHdf5(const HDF5::DatasetIO&  /*datasetReader*/) override
+  void readHdf5(const HDF5::DatasetIO& /*datasetReader*/) override
   {
     throw std::runtime_error("ListStore cannot read from HDF5");
   }
@@ -352,7 +352,7 @@ public:
    * @param datasetReader The HDF5 DatasetIO (unused)
    * @throw std::runtime_error Always throws because HDF5 write is not implemented
    */
-  void writeHdf5(HDF5::DatasetIO&  /*datasetReader*/) override
+  void writeHdf5(HDF5::DatasetIO& /*datasetReader*/) override
   {
     throw std::runtime_error("ListStore cannot write to HDF5");
   }

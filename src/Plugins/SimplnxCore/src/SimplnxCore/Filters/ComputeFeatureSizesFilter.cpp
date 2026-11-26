@@ -91,8 +91,8 @@ IFilter::UniquePointer ComputeFeatureSizesFilter::clone() const
   return std::make_unique<ComputeFeatureSizesFilter>();
 }
 
-IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
 
@@ -154,8 +154,8 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
-Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeatureSizesInputValues inputValues;
 

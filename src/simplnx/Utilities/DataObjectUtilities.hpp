@@ -45,7 +45,7 @@ namespace nx::core
  * @return Either the original 'id' if this was already visited or the new 'id' if it was not visited already.
  */
 constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<DataObject::IdType>& originalId, const std::pair<DataObject::IdType, DataObject::IdType>& updatedId,
-                                                                        std::vector<bool>& visited, usize visitedIndex)
+                                                                 std::vector<bool>& visited, usize visitedIndex)
 {
   if(originalId == updatedId.first && !visited[visitedIndex])
   {

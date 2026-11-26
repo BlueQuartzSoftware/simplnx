@@ -74,8 +74,8 @@ IFilter::UniquePointer DeleteDataFilter::clone() const
   return std::make_unique<DeleteDataFilter>();
 }
 
-IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                         const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   // auto deletionType = static_cast<DeletionType>(filterArgs.value<ChoicesParameter::ValueType>(k_DeletionType_Key));
   const auto dataObjectPaths = filterArgs.value<MultiPathSelectionParameter::ValueType>(k_DataPath_Key);
@@ -199,8 +199,8 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
   return {std::move(deleteActions)};
 }
 
-Result<> DeleteDataFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                       const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+Result<> DeleteDataFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

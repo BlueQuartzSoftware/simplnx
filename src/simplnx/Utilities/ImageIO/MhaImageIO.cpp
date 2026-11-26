@@ -153,13 +153,13 @@ Result<ImageMetadata> MhaImageIO::readMetadata(const std::filesystem::path& file
                                         fmt::format("MHA input through the ImageIO backend is not supported for '{}'. Use the 'Read MHA/MetaImage File' filter.", filePath.string()));
 }
 
-Result<> MhaImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8>  /*buffer*/, usize pageIndex) const
+Result<> MhaImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> /*buffer*/, usize pageIndex) const
 {
   return MakeErrorResult(k_ErrorReadUnsupported,
                          fmt::format("MHA input through the ImageIO backend is not supported for '{}' at page index {}. Use the 'Read MHA/MetaImage File' filter.", filePath.string(), pageIndex));
 }
 
-Result<> MhaImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback&  /*callback*/, usize pageIndex) const
+Result<> MhaImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& /*callback*/, usize pageIndex) const
 {
   return MakeErrorResult(k_ErrorReadUnsupported,
                          fmt::format("MHA input through the ImageIO backend is not supported for '{}' at page index {}. Use the 'Read MHA/MetaImage File' filter.", filePath.string(), pageIndex));

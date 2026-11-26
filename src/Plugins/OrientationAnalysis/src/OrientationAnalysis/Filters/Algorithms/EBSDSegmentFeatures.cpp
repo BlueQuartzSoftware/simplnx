@@ -316,7 +316,7 @@ void EBSDSegmentFeatures::deallocateSliceBuffers()
   m_NextBufferUseSequence = 1;
 }
 
-Result<> EBSDSegmentFeatures::prepareForSlice(int64 iz, int64  /*dimX*/, int64  /*dimY*/, int64  /*dimZ*/)
+Result<> EBSDSegmentFeatures::prepareForSlice(int64 iz, int64 /*dimX*/, int64 /*dimY*/, int64 /*dimZ*/)
 {
   if(iz < 0)
   {

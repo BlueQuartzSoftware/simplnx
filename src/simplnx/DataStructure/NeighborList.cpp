@@ -288,7 +288,7 @@ bool NeighborList<T>::empty() const
 }
 
 template <typename T>
-void NeighborList<T>::setNumberOfComponents(int32  /*nc*/)
+void NeighborList<T>::setNumberOfComponents(int32 /*nc*/)
 {
   throw std::runtime_error(fmt::format("{}:({}): NeighborLists do NOT have components", __FILE__, __LINE__));
 }

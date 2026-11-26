@@ -66,8 +66,8 @@ IFilter::UniquePointer MaskImageFilter::clone() const
 {
   return std::make_unique<MaskImageFilter>();
 }
-IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                        const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -116,8 +116,8 @@ IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dat
   }
   return {std::move(resultOutputActions)};
 }
-Result<> MaskImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> MaskImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskImageDataPath_Key);

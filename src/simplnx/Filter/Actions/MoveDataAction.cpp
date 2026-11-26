@@ -28,7 +28,7 @@ MoveDataAction::MoveDataAction(const DataPath& path, const DataPath& newParentPa
 
 MoveDataAction::~MoveDataAction() noexcept = default;
 
-Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode  /*mode*/) const
+Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
   static constexpr StringLiteral prefix = "MoveDataAction: ";
   auto dataObject = dataStructure.getData(m_Path);

@@ -53,7 +53,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
       std::cout << timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << progress << "% " << message << std::endl;
     }));
 
-    m_SignalConnections.push_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t  /*filterIndex*/, nx::core::FaultState state) {
+    m_SignalConnections.push_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t /*filterIndex*/, nx::core::FaultState state) {
       if(state == nx::core::FaultState::Errors)
       {
         std::cout << timestamp() << "  [" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
@@ -65,7 +65,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
     }));
 
     m_SignalConnections.push_back(cxFilter->getFilterFaultDetailSignal().connect(
-        [currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t  /*filterIndex*/, const nx::core::WarningCollection& warnings, const nx::core::ErrorCollection& errors) {
+        [currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t /*filterIndex*/, const nx::core::WarningCollection& warnings, const nx::core::ErrorCollection& errors) {
           if(!warnings.empty())
           {
             std::cout << "[" << currentFilterIndex << "] Warnings During Execution" << std::endl;
@@ -90,7 +90,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
 
 PipelineObserver::~PipelineObserver() = default;
 
-void PipelineObserver::onNotify(AbstractPipelineNode*  /*node*/, const std::shared_ptr<AbstractPipelineMessage>& msg)
+void PipelineObserver::onNotify(AbstractPipelineNode* /*node*/, const std::shared_ptr<AbstractPipelineMessage>& msg)
 {
   std::cout << msg->toString() << std::endl;
 }

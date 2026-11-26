@@ -159,7 +159,7 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
 }
 
 //------------------------------------------------------------------------------
-inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, const FilterList& filterList, const fs::path&  /*shiftsFile*/)
+inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, const FilterList& filterList, const fs::path& /*shiftsFile*/)
 {
   INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionMisorientationFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_AlignSectionMisorientationFilterHandle);
@@ -196,7 +196,7 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 }
 
 //------------------------------------------------------------------------------
-inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, const FilterList& filterList, const fs::path&  /*shiftsFile*/)
+inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, const FilterList& filterList, const fs::path& /*shiftsFile*/)
 {
   INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionsFeatureCentroidFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_AlignSectionsFeatureCentroidFilterHandle);

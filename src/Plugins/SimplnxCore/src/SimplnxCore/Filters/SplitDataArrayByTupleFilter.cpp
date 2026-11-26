@@ -391,8 +391,8 @@ IFilter::UniquePointer SplitDataArrayByTupleFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_DataArrayPath_Key);
   auto pRemoveOriginal = filterArgs.value<bool>(k_DeleteOriginal_Key);
@@ -509,8 +509,8 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> SplitDataArrayByTupleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> SplitDataArrayByTupleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   SplitDataArrayByTupleInputValues inputValues;
   inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_DataArrayPath_Key);

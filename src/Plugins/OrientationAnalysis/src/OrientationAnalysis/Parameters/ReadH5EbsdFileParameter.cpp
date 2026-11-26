@@ -84,7 +84,7 @@ nlohmann::json ReadH5EbsdFileParameter::toJsonImpl(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ReadH5EbsdFileParameter' Error: ";
 

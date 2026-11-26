@@ -134,8 +134,8 @@ IFilter::UniquePointer RegularizeZSpacingFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
@@ -336,7 +336,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
 
 //------------------------------------------------------------------------------
 Result<> RegularizeZSpacingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RegularizeZSpacingInputValues inputValues;
 

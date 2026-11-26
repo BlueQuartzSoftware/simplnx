@@ -380,7 +380,7 @@ Result<> FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, Ex
 }
 
 // Resolve component roots lazily and classify each provisional label by size.
-Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, int32 startLabel, int32  /*nextLabel*/, ExternalEquivalence& equivalences,
+Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, int32 startLabel, int32 /*nextLabel*/, ExternalEquivalence& equivalences,
                                               usize maxPhase) const
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);

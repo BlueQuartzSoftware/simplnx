@@ -65,8 +65,8 @@ IFilter::UniquePointer MoveDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                       const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto dataPaths = filterArgs.value<MultiPathSelectionParameter::ValueType>(k_SourceDataPaths_Key);
   auto newParentPath = filterArgs.value<DataPath>(k_DestinationParentPath_Key);
@@ -106,8 +106,8 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> MoveDataFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+Result<> MoveDataFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

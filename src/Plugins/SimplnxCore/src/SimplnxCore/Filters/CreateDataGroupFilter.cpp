@@ -54,8 +54,8 @@ IFilter::UniquePointer CreateDataGroupFilter::clone() const
   return std::make_unique<CreateDataGroupFilter>();
 }
 
-IFilter::PreflightResult CreateDataGroupFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CreateDataGroupFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   DataPath dataObjectPath = filterArgs.value<DataPath>(k_DataObjectPath);
 
@@ -67,8 +67,8 @@ IFilter::PreflightResult CreateDataGroupFilter::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
-Result<> CreateDataGroupFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
-                                            const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+Result<> CreateDataGroupFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

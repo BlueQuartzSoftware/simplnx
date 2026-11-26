@@ -62,7 +62,7 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
 }
 
 // -----------------------------------------------------------------------------
-std::string GenerateExampleFile(int32 start, int32 end, int32  /*increment*/, Ordering order, std::string_view  /*inputPath*/, std::string_view filePrefix, std::string_view fileSuffix,
+std::string GenerateExampleFile(int32 start, int32 end, int32 /*increment*/, Ordering order, std::string_view /*inputPath*/, std::string_view filePrefix, std::string_view fileSuffix,
                                 std::string_view fileExtension, uint32 paddingDigits)
 {
   int32 index = 0;

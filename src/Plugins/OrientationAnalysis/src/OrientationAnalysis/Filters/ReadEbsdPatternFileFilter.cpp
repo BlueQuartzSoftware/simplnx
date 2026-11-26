@@ -79,8 +79,8 @@ IFilter::UniquePointer ReadEbsdPatternFileFilter::clone() const
   return std::make_unique<ReadEbsdPatternFileFilter>();
 }
 
-IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& executionContext) const
 {
   const fs::path inputFile = executionContext.getAbsolutePath(filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key));
   const bool setScanDimensions = filterArgs.value<bool>(k_SetScanDimensions_Key);
@@ -204,7 +204,7 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
   return {std::move(outputActions), std::move(updatedValues)};
 }
 
-Result<> ReadEbsdPatternFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+Result<> ReadEbsdPatternFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadEbsdPatternFileInputValues inputValues;
@@ -216,7 +216,7 @@ Result<> ReadEbsdPatternFileFilter::executeImpl(DataStructure& dataStructure, co
   return ReadEbsdPatternFile(dataStructure, inputValues, shouldCancel, messageHandler)();
 }
 
-Result<Arguments> ReadEbsdPatternFileFilter::FromSIMPLJson(const nlohmann::json&  /*json*/)
+Result<Arguments> ReadEbsdPatternFileFilter::FromSIMPLJson(const nlohmann::json& /*json*/)
 {
   return {ReadEbsdPatternFileFilter().getDefaultArguments()};
 }

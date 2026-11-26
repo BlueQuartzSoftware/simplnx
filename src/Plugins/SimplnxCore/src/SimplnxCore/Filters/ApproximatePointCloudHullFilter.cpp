@@ -76,8 +76,8 @@ IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                        const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto gridResolution = filterArgs.value<std::vector<float32>>(k_GridResolution_Key);
   auto vertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath_Key);
@@ -101,8 +101,8 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ApproximatePointCloudHullInputValues inputValues;
   inputValues.GridResolution = filterArgs.value<VectorFloat32Parameter::ValueType>(k_GridResolution_Key);

@@ -85,8 +85,8 @@ IFilter::UniquePointer SharedFeatureFaceFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto triangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   auto pFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
@@ -141,8 +141,8 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> SharedFeatureFaceFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> SharedFeatureFaceFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   SharedFeatureFaceInputValues inputValues;
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);

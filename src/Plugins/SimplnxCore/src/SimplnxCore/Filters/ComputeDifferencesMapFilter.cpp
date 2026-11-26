@@ -132,8 +132,8 @@ IFilter::UniquePointer ComputeDifferencesMapFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto firstInputArrayPath = filterArgs.value<DataPath>(k_FirstInputArrayPath_Key);
   auto secondInputArrayPath = filterArgs.value<DataPath>(k_SecondInputArrayPath_Key);
@@ -190,8 +190,8 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeDifferencesMapInputValues inputValues;
 

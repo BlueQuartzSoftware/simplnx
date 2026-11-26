@@ -508,7 +508,7 @@ nlohmann::json Preferences::pluginValue(const std::string& pluginName, const std
 
   return {};
 }
-nlohmann::json Preferences::defaultPluginValue(const std::string&  /*pluginName*/, const std::string& valueName) const
+nlohmann::json Preferences::defaultPluginValue(const std::string& /*pluginName*/, const std::string& valueName) const
 {
   if(m_DefaultValues[k_Plugin_Key].contains(valueName))
   {

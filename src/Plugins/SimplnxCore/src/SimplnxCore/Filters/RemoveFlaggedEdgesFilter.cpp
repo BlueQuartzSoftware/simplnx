@@ -104,8 +104,8 @@ IFilter::UniquePointer RemoveFlaggedEdgesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_InputEdgeGeometryPath_Key);
   auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
@@ -202,8 +202,8 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RemoveFlaggedEdgesInputValues inputValues;
 

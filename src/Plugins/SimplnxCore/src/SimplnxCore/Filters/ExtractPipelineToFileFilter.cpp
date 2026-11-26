@@ -72,8 +72,8 @@ IFilter::UniquePointer ExtractPipelineToFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto importFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
   auto outputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
@@ -115,8 +115,8 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractPipelineToFileInputValues inputValues;
   inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
@@ -125,7 +125,7 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
   return ExtractPipelineToFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
-Result<Arguments> ExtractPipelineToFileFilter::FromSIMPLJson(const nlohmann::json&  /*json*/)
+Result<Arguments> ExtractPipelineToFileFilter::FromSIMPLJson(const nlohmann::json& /*json*/)
 {
   return {};
 }

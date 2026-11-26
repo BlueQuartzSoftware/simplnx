@@ -103,8 +103,8 @@ IFilter::UniquePointer VerifyTriangleWindingFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pLabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
   Result<DataPath> targetGeomResult = ::FindParentGeometry(pLabelsPath, dataStructure);
@@ -157,8 +157,8 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   VerifyTriangleWindingInputValues inputValues;
 

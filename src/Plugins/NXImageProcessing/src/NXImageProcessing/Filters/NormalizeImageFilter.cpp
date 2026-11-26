@@ -71,8 +71,8 @@ IFilter::UniquePointer NormalizeImageFilter::clone() const
 {
   return std::make_unique<NormalizeImageFilter>();
 }
-IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   const auto inputValues = CreateInputValues(filterArgs);
@@ -87,8 +87,8 @@ IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure
       dataStructure, inputValues.InputArrayPath, imageGeomPath, inputValues.OutputArrayPath);
   return {std::move(resultOutputActions)};
 }
-Result<> NormalizeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> NormalizeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   const auto inputValues = CreateInputValues(filterArgs);
   return NormalizeImage(dataStructure, messageHandler, shouldCancel, &inputValues)();

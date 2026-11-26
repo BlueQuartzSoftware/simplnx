@@ -261,8 +261,8 @@ IFilter::UniquePointer ReadMhaFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
-                                                          const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pCroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
@@ -417,8 +417,8 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -488,7 +488,7 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 }
 
 //------------------------------------------------------------------------------
-Result<Arguments> ReadMhaFileFilter::FromSIMPLJson(const nlohmann::json&  /*json*/)
+Result<Arguments> ReadMhaFileFilter::FromSIMPLJson(const nlohmann::json& /*json*/)
 {
   Arguments args = ReadMhaFileFilter().getDefaultArguments();
   // New filter in simplnx; no SIMPL v6 equivalent.

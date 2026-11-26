@@ -69,7 +69,7 @@ nlohmann::json ReadCSVFileParameter::toJsonImpl(const std::any& value) const
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   return {ConvertResultTo<std::any>(ReadCSVData::ReadJson(json))};
 }

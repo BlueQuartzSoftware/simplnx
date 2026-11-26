@@ -43,7 +43,7 @@ Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_
   return {};
 }
 
-Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type&  /*dataStructureGroup*/) const
+Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& /*dataStructureGroup*/) const
 {
   auto* geometry = dataStructure.getDataAs<EdgeGeom>(dataPath);
   if(geometry == nullptr)

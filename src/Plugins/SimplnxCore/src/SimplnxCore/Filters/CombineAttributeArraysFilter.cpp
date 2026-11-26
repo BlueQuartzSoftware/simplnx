@@ -83,8 +83,8 @@ IFilter::UniquePointer CombineAttributeArraysFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
-                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
+IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   // auto normalizeDataValue = filterArgs.value<bool>(k_NormalizeData_Key);
   auto moveValuesValue = filterArgs.value<bool>(k_MoveValues_Key);
@@ -145,8 +145,8 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
+Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CombineAttributeArraysInputValues inputValues;
 

@@ -284,13 +284,13 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
   return returnValue;
 }
 
-bool Pipeline::preflightFrom(index_type index, const std::atomic_bool&  /*shouldCancel*/)
+bool Pipeline::preflightFrom(index_type index, const std::atomic_bool& /*shouldCancel*/)
 {
   RenamedPaths renamedPaths;
   return preflightFrom(index, renamedPaths);
 }
 
-bool Pipeline::preflightFrom(index_type index, RenamedPaths&  /*renamedPaths*/, const std::atomic_bool& shouldCancel)
+bool Pipeline::preflightFrom(index_type index, RenamedPaths& /*renamedPaths*/, const std::atomic_bool& shouldCancel)
 {
   if(index == 0)
   {

@@ -83,7 +83,7 @@ nlohmann::json OEMEbsdScanSelectionParameter::toJsonImpl(const std::any& value) 
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
+Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'OEMEbsdScanSelectionParameter' Error: ";
 
