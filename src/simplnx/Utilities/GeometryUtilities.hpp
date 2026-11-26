@@ -174,15 +174,15 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   SharedVertList& vertices = geom.getVertices()->getDataStoreRef();
 
   INodeGeometry1D::MeshIndexArrayType* cells = nullptr;
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     cells = geom.getPolyhedra();
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     cells = geom.getFaces();
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     cells = geom.getEdges();
   }
@@ -291,17 +291,17 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   // Update the triangle nodes to reflect the unique ids
   IGeometry::MeshIndexType nCells = 0;
   usize nVerticesPerCell = 0;
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     nCells = geom.getNumberOfPolyhedra();
     nVerticesPerCell = geom.getNumberOfVerticesPerCell();
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     nCells = geom.getNumberOfFaces();
     nVerticesPerCell = geom.getNumberOfVerticesPerFace();
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     nCells = geom.getNumberOfEdges();
     nVerticesPerCell = geom.getNumberOfVerticesPerEdge();
@@ -321,7 +321,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
     }
   }
 
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     auto resizeResult = geom.getPolyhedraAttributeMatrix()->resizeTuples({geom.getNumberOfPolyhedra()});
     if(resizeResult.invalid())
@@ -329,7 +329,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
       return resizeResult;
     }
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     auto resizeResult = geom.getFaceAttributeMatrix()->resizeTuples({geom.getNumberOfFaces()});
     if(resizeResult.invalid())
@@ -337,7 +337,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
       return resizeResult;
     }
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     auto resizeResult = geom.getEdgeAttributeMatrix()->resizeTuples({geom.getNumberOfEdges()});
     if(resizeResult.invalid())

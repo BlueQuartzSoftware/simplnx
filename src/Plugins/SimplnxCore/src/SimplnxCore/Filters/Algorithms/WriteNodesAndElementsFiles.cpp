@@ -22,7 +22,7 @@ namespace
 template <typename T>
 void WriteValue(std::ofstream& file, const T& value)
 {
-  if constexpr(std::is_floating_point<T>::value)
+  if constexpr(std::is_floating_point_v<T>)
   {
     // For floating-point numbers, use up to 4 decimal places
     file << std::fixed << std::setprecision(4) << value;

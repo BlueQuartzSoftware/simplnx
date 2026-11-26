@@ -72,37 +72,37 @@ private:
 
   void setMemb()
   {
-    if constexpr(std::is_same<T, int8>::value)
+    if constexpr(std::is_same_v<T, int8>)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir.view(), "int8"));
       m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "int8"));
       setFillValue(-65, -63, -61);
     }
-    else if constexpr(std::is_same<T, int32>::value)
+    else if constexpr(std::is_same_v<T, int32>)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir.view(), "int32"));
       m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "int32"));
       setFillValue(-6500, -6498, -6496);
     }
-    else if constexpr(std::is_same<T, uint8>::value)
+    else if constexpr(std::is_same_v<T, uint8>)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint8"));
       m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "uint8"));
       setFillValue(65, 67, 69);
     }
-    else if constexpr(std::is_same<T, uint32>::value)
+    else if constexpr(std::is_same_v<T, uint32>)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint32"));
       m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "uint32"));
       setFillValue(6500, 6502, 6504);
     }
-    else if constexpr(std::is_same<T, float32>::value)
+    else if constexpr(std::is_same_v<T, float32>)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir.view(), "float32"));
       m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "float32"));
       setFillValue(8.00, 67.001, 69.000001);
     }
-    else if constexpr(std::is_same<T, float64>::value)
+    else if constexpr(std::is_same_v<T, float64>)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir.view(), "float64"));
       m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "float64"));
