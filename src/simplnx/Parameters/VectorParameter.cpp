@@ -69,11 +69,11 @@ nlohmann::json VectorParameter<T>::toJsonImpl(const std::any& value) const
 template <class T>
 Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'VectorParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'VectorParameter' JSON Error: ";
 
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", k_Prefix, name()));
   }
   ValueType vec;
   for(usize i = 0; i < json.size(); i++)
@@ -83,7 +83,7 @@ Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, Ve
     {
       if(!element.is_number())
       {
-        return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value for array index '{}' is not a number", prefix, i));
+        return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value for array index '{}' is not a number", k_Prefix, i));
       }
     }
     else
@@ -226,16 +226,16 @@ Result<OutputT> FormatErrorMessage(std::string&& prefix, ConversionState convSta
 template <typename T>
 Result<std::vector<T>> KeyValueConversion(const nlohmann::json& json, const std::string& key, usize pos, std::vector<T>& outputVec)
 {
-  using OutputT = std::vector<T>;
+  using OutputTType = std::vector<T>;
 
   if(!json.contains(key))
   {
-    return MakeErrorResult<OutputT>(-2, fmt::format("Vec{}FilterParameter json '{}' does not contain a value for key '{}'", outputVec.size(), json.dump(), key));
+    return MakeErrorResult<OutputTType>(-2, fmt::format("Vec{}FilterParameter json '{}' does not contain a value for key '{}'", outputVec.size(), json.dump(), key));
   }
 
   if(!json[key].is_number())
   {
-    return MakeErrorResult<OutputT>(-3, fmt::format("Vec{}FilterParameter json '{}' value for key '{}' is not a number", outputVec.size(), json.dump(), key));
+    return MakeErrorResult<OutputTType>(-3, fmt::format("Vec{}FilterParameter json '{}' value for key '{}' is not a number", outputVec.size(), json.dump(), key));
   }
 
   ConversionState convState;
@@ -270,7 +270,7 @@ Result<std::vector<T>> KeyValueConversion(const nlohmann::json& json, const std:
     [[fallthrough]];
   }
   case Overflow: {
-    return FormatErrorMessage<OutputT>(fmt::format("Vec{}FilterParameter json '{}' cannot convert value at key `{}` to appropriate type without", outputVec.size(), json.dump(), key), convState);
+    return FormatErrorMessage<OutputTType>(fmt::format("Vec{}FilterParameter json '{}' cannot convert value at key `{}` to appropriate type without", outputVec.size(), json.dump(), key), convState);
   }
   }
 
@@ -280,11 +280,11 @@ Result<std::vector<T>> KeyValueConversion(const nlohmann::json& json, const std:
 template <typename T>
 Result<std::vector<T>> JsonValueConversion(const nlohmann::json& json, usize pos, std::vector<T>& outputVec)
 {
-  using OutputT = std::vector<T>;
+  using OutputTType = std::vector<T>;
 
   if(!json.is_number())
   {
-    return MakeErrorResult<OutputT>(-3, fmt::format("Vec{}FilterParameter json '{}' value is not a number", outputVec.size(), json.dump()));
+    return MakeErrorResult<OutputTType>(-3, fmt::format("Vec{}FilterParameter json '{}' value is not a number", outputVec.size(), json.dump()));
   }
 
   ConversionState convState;
@@ -319,7 +319,7 @@ Result<std::vector<T>> JsonValueConversion(const nlohmann::json& json, usize pos
     [[fallthrough]];
   }
   case Overflow: {
-    return FormatErrorMessage<OutputT>(fmt::format("Vec{}FilterParameter json '{}' cannot convert value to appropriate type without", outputVec.size(), json.dump()), convState);
+    return FormatErrorMessage<OutputTType>(fmt::format("Vec{}FilterParameter json '{}' cannot convert value to appropriate type without", outputVec.size(), json.dump()), convState);
   }
   }
 
@@ -329,7 +329,7 @@ Result<std::vector<T>> JsonValueConversion(const nlohmann::json& json, usize pos
 template <uint8 VecSizeV, typename T>
 Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
 {
-  using OutputT = std::vector<T>;
+  using OutputTType = std::vector<T>;
 
   static const std::string x = "x";
   static const std::string y = "y";
@@ -338,12 +338,12 @@ Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
 
   if(!json.is_object())
   {
-    return MakeErrorResult<OutputT>(-1, fmt::format("Vec3FilterParameter json '{}' is not an object", json.dump()));
+    return MakeErrorResult<OutputTType>(-1, fmt::format("Vec3FilterParameter json '{}' is not an object", json.dump()));
   }
 
-  OutputT value(VecSizeV);
+  OutputTType value(VecSizeV);
 
-  Result<OutputT> xConv = KeyValueConversion(json, x, 0, value);
+  Result<OutputTType> xConv = KeyValueConversion(json, x, 0, value);
   if(xConv.invalid())
   {
     return xConv;
@@ -351,7 +351,7 @@ Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
 
   if constexpr(VecSizeV > 1)
   {
-    Result<OutputT> yConv = KeyValueConversion(json, y, 1, value);
+    Result<OutputTType> yConv = KeyValueConversion(json, y, 1, value);
     if(yConv.invalid())
     {
       return yConv;
@@ -359,7 +359,7 @@ Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
   }
   if constexpr(VecSizeV > 2)
   {
-    Result<OutputT> zConv = KeyValueConversion(json, z, 2, value);
+    Result<OutputTType> zConv = KeyValueConversion(json, z, 2, value);
     if(zConv.invalid())
     {
       return zConv;
@@ -367,7 +367,7 @@ Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
   }
   if constexpr(VecSizeV > 3)
   {
-    Result<OutputT> wConv = KeyValueConversion(json, w, 3, value);
+    Result<OutputTType> wConv = KeyValueConversion(json, w, 3, value);
     if(wConv.invalid())
     {
       return wConv;
@@ -408,26 +408,26 @@ template <typename T>
 Result<typename MultiToVec3FilterParameterConverter<T>::ValueType> MultiToVec3FilterParameterConverter<T>::convert(const nlohmann::json& json1, const nlohmann::json& json2,
                                                                                                                    const nlohmann::json& json3)
 {
-  using OutputT = std::vector<T>;
+  using OutputTType = std::vector<T>;
 
   static const std::string x = "x";
   static const std::string y = "y";
   static const std::string z = "z";
 
   std::vector<T> value(3);
-  Result<OutputT> xConv = JsonValueConversion(json1, 0, value);
+  Result<OutputTType> xConv = JsonValueConversion(json1, 0, value);
   if(xConv.invalid())
   {
     return xConv;
   }
 
-  Result<OutputT> yConv = JsonValueConversion(json2, 1, value);
+  Result<OutputTType> yConv = JsonValueConversion(json2, 1, value);
   if(yConv.invalid())
   {
     return yConv;
   }
 
-  Result<OutputT> zConv = JsonValueConversion(json3, 2, value);
+  Result<OutputTType> zConv = JsonValueConversion(json3, 2, value);
   if(zConv.invalid())
   {
     return zConv;
@@ -517,7 +517,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT Vec4FilterParameterConverter<float64>;
 template <typename T>
 Result<typename AxisAngleFilterParameterConverter<T>::ValueType> AxisAngleFilterParameterConverter<T>::convert(const nlohmann::json& json)
 {
-  using OutputT = std::vector<T>;
+  using OutputTType = std::vector<T>;
 
   static const std::string angle = "angle";
   static const std::string h = "h";
@@ -531,25 +531,25 @@ Result<typename AxisAngleFilterParameterConverter<T>::ValueType> AxisAngleFilter
 
   std::vector<T> value(4);
 
-  Result<OutputT> angleConv = KeyValueConversion(json, angle, 0, value);
+  Result<OutputTType> angleConv = KeyValueConversion(json, angle, 0, value);
   if(angleConv.invalid())
   {
     return angleConv;
   }
 
-  Result<OutputT> hConv = KeyValueConversion(json, h, 1, value);
+  Result<OutputTType> hConv = KeyValueConversion(json, h, 1, value);
   if(hConv.invalid())
   {
     return hConv;
   }
 
-  Result<OutputT> kConv = KeyValueConversion(json, k, 2, value);
+  Result<OutputTType> kConv = KeyValueConversion(json, k, 2, value);
   if(kConv.invalid())
   {
     return kConv;
   }
 
-  Result<OutputT> lConv = KeyValueConversion(json, l, 3, value);
+  Result<OutputTType> lConv = KeyValueConversion(json, l, 3, value);
   if(lConv.invalid())
   {
     return lConv;

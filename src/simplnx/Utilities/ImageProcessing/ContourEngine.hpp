@@ -352,8 +352,8 @@ struct ContourRollingPlaneBody
         {
           continue;
         }
-        const T* neighborPlane = needsPreviousPlane ? previousPlane : (needsNextPlane ? nextPlane : currentPlane);
-        neighbors[count++] = neighborPlane[static_cast<usize>(neighborY) * dimX + static_cast<usize>(neighborX)];
+        const T* neighborPlanePtr = needsPreviousPlane ? previousPlane : (needsNextPlane ? nextPlane : currentPlane);
+        neighbors[count++] = neighborPlanePtr[static_cast<usize>(neighborY) * dimX + static_cast<usize>(neighborX)];
       }
       outPlane[tuple] = predicate(center, nonstd::span<const T>(neighbors.data(), count));
     }
@@ -642,7 +642,7 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
 
   while(true)
   {
-    T* currentBandData = bandStorage[bandParity].get();
+    T* currentBandDataPtr = bandStorage[bandParity].get();
     const usize currentBandStart = bandStart;
     const usize currentBandCount = bandCount;
     const bool isLastBand = currentBandStart + currentBandCount >= dimZ;
@@ -662,13 +662,13 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
       const usize z = currentBandStart + computed;
       const bool hasPrevious = z != 0;
       const bool hasNext = computed + 1 < currentBandCount;
-      const T* previousPlane = computed > 0 ? currentBandData + (computed - 1) * sliceValues : (hasPreviousCarry ? previousPlaneCarry.get() : nullptr);
-      const T* nextPlane = hasNext ? currentBandData + (computed + 1) * sliceValues : nullptr;
+      const T* previousPlanePtr = computed > 0 ? currentBandDataPtr + (computed - 1) * sliceValues : (hasPreviousCarry ? previousPlaneCarry.get() : nullptr);
+      const T* nextPlanePtr = hasNext ? currentBandDataPtr + (computed + 1) * sliceValues : nullptr;
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, sliceValues);
-      parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previousPlane = previousPlane,
-                                                                               .currentPlane = currentBandData + computed * sliceValues,
-                                                                               .nextPlane = nextPlane,
+      parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previousPlane = previousPlanePtr,
+                                                                               .currentPlane = currentBandDataPtr + computed * sliceValues,
+                                                                               .nextPlane = nextPlanePtr,
                                                                                .outPlane = outputBand.get() + computed * sliceValues,
                                                                                .offsets = neighborOffsets.data(),
                                                                                .numOffsets = neighborOffsets.size(),
@@ -708,11 +708,11 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
     // for a single-plane band, the boundary plane carried from the band before it.
     const usize deferredLocal = currentBandCount - 1;
     const usize deferredZ = currentBandStart + deferredLocal;
-    const T* deferredPrevious = deferredLocal > 0 ? currentBandData + (deferredLocal - 1) * sliceValues : (hasPreviousCarry ? previousPlaneCarry.get() : nullptr);
+    const T* deferredPreviousPtr = deferredLocal > 0 ? currentBandDataPtr + (deferredLocal - 1) * sliceValues : (hasPreviousCarry ? previousPlaneCarry.get() : nullptr);
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, sliceValues);
-    parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previousPlane = deferredPrevious,
-                                                                             .currentPlane = currentBandData + deferredLocal * sliceValues,
+    parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previousPlane = deferredPreviousPtr,
+                                                                             .currentPlane = currentBandDataPtr + deferredLocal * sliceValues,
                                                                              .nextPlane = bandStorage[nextParity].get(),
                                                                              .outPlane = outputBand.get(),
                                                                              .offsets = neighborOffsets.data(),
@@ -732,7 +732,7 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
       return result;
     }
 
-    std::copy_n(currentBandData + deferredLocal * sliceValues, sliceValues, previousPlaneCarry.get());
+    std::copy_n(currentBandDataPtr + deferredLocal * sliceValues, sliceValues, previousPlaneCarry.get());
     hasPreviousCarry = true;
     bandParity = nextParity;
     bandStart = nextBandStart;

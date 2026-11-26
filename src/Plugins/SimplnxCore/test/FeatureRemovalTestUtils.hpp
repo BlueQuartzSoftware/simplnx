@@ -46,17 +46,17 @@ inline void BuildInput(DataStructure& dataStructure)
 {
   const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  imageGeom->setDimensions({k_Dim, k_Dim, k_Dim});
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataName, cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
-  auto* featureData = AttributeMatrix::Create(dataStructure, k_FeatureDataName, {3}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeomPtr->setDimensions({k_Dim, k_Dim, k_Dim});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureDataName, {3}, imageGeomPtr->getId());
 
-  auto& featureIds = CreateArray<int32>(dataStructure, k_FeatureIdsPath, cellShape, {1}, cellData->getId());
-  auto& cellValues = CreateArray<float32>(dataStructure, k_CellValuesPath, cellShape, {k_ValueComponents}, cellData->getId());
-  auto& numCells = CreateArray<int32>(dataStructure, k_NumCellsPath, {3}, {1}, featureData->getId());
-  auto& numNeighbors = CreateArray<int32>(dataStructure, k_NumNeighborsPath, {3}, {1}, featureData->getId());
-  auto& featureMarker = CreateArray<int32>(dataStructure, k_FeatureMarkerPath, {3}, {1}, featureData->getId());
+  auto& featureIds = CreateArray<int32>(dataStructure, k_FeatureIdsPath, cellShape, {1}, cellDataPtr->getId());
+  auto& cellValues = CreateArray<float32>(dataStructure, k_CellValuesPath, cellShape, {k_ValueComponents}, cellDataPtr->getId());
+  auto& numCells = CreateArray<int32>(dataStructure, k_NumCellsPath, {3}, {1}, featureDataPtr->getId());
+  auto& numNeighbors = CreateArray<int32>(dataStructure, k_NumNeighborsPath, {3}, {1}, featureDataPtr->getId());
+  auto& featureMarker = CreateArray<int32>(dataStructure, k_FeatureMarkerPath, {3}, {1}, featureDataPtr->getId());
 
   std::vector<int32> featureIdSlice(k_SliceTuples);
   std::vector<float32> valueSlice(k_SliceTuples * k_ValueComponents);

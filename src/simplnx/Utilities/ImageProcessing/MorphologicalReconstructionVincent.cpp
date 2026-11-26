@@ -15,11 +15,11 @@ template <class T>
 template <bool Dilation>
 Result<> ReconstructVincent<T>::runImpl()
 {
-  using Tr = detail::ReconTraits<T, Dilation>;
+  using TraitsType = detail::ReconTraits<T, Dilation>;
   const int64 nX = static_cast<int64>(m_Dims[0]);
-  const int64 nY = static_cast<int64>(m_Dims[1]);
-  const int64 nZ = static_cast<int64>(m_Dims[2]);
-  const usize vol = static_cast<usize>(nX * nY * nZ);
+  const int64 ny = static_cast<int64>(m_Dims[1]);
+  const int64 nz = static_cast<int64>(m_Dims[2]);
+  const usize vol = static_cast<usize>(nX * ny * nz);
   if(vol == 0)
   {
     return {};
@@ -45,8 +45,8 @@ Result<> ReconstructVincent<T>::runImpl()
   }
 
   const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
-  auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   // flat() is affine, so an in-bounds neighbor's index is simply p + (a constant delta per offset). Precompute
   // the delta once per offset and add it in the hot loops, instead of recomputing the multiply-based flat() for
@@ -58,7 +58,7 @@ Result<> ReconstructVincent<T>::runImpl()
     detail::ReconOffset off;
     int64 delta;
   };
-  const int64 nXY = nX * nY;
+  const int64 nXY = nX * ny;
   auto withDeltas = [nXY, nX](const std::vector<detail::ReconOffset>& offs) {
     std::vector<NeighborDelta> nd;
     nd.reserve(offs.size());
@@ -96,13 +96,13 @@ Result<> ReconstructVincent<T>::runImpl()
   auto sweepHalf = [&](bool forward, const std::vector<NeighborDelta>& neighbors, bool& changed) {
     if(useWavefront)
     {
-      for(usize planeIndex = 0; planeIndex < static_cast<usize>(nZ); ++planeIndex)
+      for(usize planeIndex = 0; planeIndex < static_cast<usize>(nz); ++planeIndex)
       {
         if(m_ShouldCancel)
         {
           return false;
         }
-        const int64 z = forward ? static_cast<int64>(planeIndex) : nZ - 1 - static_cast<int64>(planeIndex);
+        const int64 z = forward ? static_cast<int64>(planeIndex) : nz - 1 - static_cast<int64>(planeIndex);
         // Cross-plane deltas in `neighbors` read plane z's already-finished predecessor (z-1 for forward, z+1 for
         // reverse), which the previous outer-loop iteration fully completed and synchronized before this
         // iteration begins -- an ordinary read of already-settled memory, not a race.
@@ -124,10 +124,10 @@ Result<> ReconstructVincent<T>::runImpl()
               {
                 if(inBounds(x + neighbor.off.dx, y + neighbor.off.dy, z + neighbor.off.dz))
                 {
-                  value = Tr::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+                  value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
                 }
               }
-              const T newValue = Tr::clampToMask(value, mask[position]);
+              const T newValue = TraitsType::clampToMask(value, mask[position]);
               if(newValue != work[position])
               {
                 work[position] = newValue;
@@ -144,16 +144,16 @@ Result<> ReconstructVincent<T>::runImpl()
       }
       return true;
     }
-    for(usize planeIndex = 0; planeIndex < static_cast<usize>(nZ); ++planeIndex)
+    for(usize planeIndex = 0; planeIndex < static_cast<usize>(nz); ++planeIndex)
     {
       if(m_ShouldCancel)
       {
         return false;
       }
-      const int64 z = forward ? static_cast<int64>(planeIndex) : nZ - 1 - static_cast<int64>(planeIndex);
-      for(usize rowIndex = 0; rowIndex < static_cast<usize>(nY); ++rowIndex)
+      const int64 z = forward ? static_cast<int64>(planeIndex) : nz - 1 - static_cast<int64>(planeIndex);
+      for(usize rowIndex = 0; rowIndex < static_cast<usize>(ny); ++rowIndex)
       {
-        const int64 y = forward ? static_cast<int64>(rowIndex) : nY - 1 - static_cast<int64>(rowIndex);
+        const int64 y = forward ? static_cast<int64>(rowIndex) : ny - 1 - static_cast<int64>(rowIndex);
         for(usize columnIndex = 0; columnIndex < static_cast<usize>(nX); ++columnIndex)
         {
           const int64 x = forward ? static_cast<int64>(columnIndex) : nX - 1 - static_cast<int64>(columnIndex);
@@ -163,10 +163,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + neighbor.off.dx, y + neighbor.off.dy, z + neighbor.off.dz))
             {
-              value = Tr::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+              value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
             }
           }
-          const T newValue = Tr::clampToMask(value, mask[position]);
+          const T newValue = TraitsType::clampToMask(value, mask[position]);
           if(newValue != work[position])
           {
             work[position] = newValue;
@@ -219,7 +219,7 @@ Result<> ReconstructVincent<T>::runImpl()
   // --- Phase 1: forward raster scan over PREVIOUS neighbors (reads already-updated work). ---
   if(useWavefront)
   {
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(m_ShouldCancel)
       {
@@ -242,13 +242,13 @@ Result<> ReconstructVincent<T>::runImpl()
             {
               if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
               {
-                v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+                v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
               }
             }
             // The wavefront path writes conditionally, tracking blockChanged for RunPlaneWavefront's per-block
             // changed-flag contract, unlike the unconditional assignment in the serial path below; both leave
             // work[p] holding the identical final value.
-            const T newValue = Tr::clampToMask(v, mask[p]);
+            const T newValue = TraitsType::clampToMask(v, mask[p]);
             if(newValue != work[p])
             {
               work[p] = newValue;
@@ -265,13 +265,13 @@ Result<> ReconstructVincent<T>::runImpl()
   }
   else
   {
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      for(int64 y = 0; y < nY; ++y)
+      for(int64 y = 0; y < ny; ++y)
       {
         for(int64 x = 0; x < nX; ++x)
         {
@@ -281,10 +281,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
             {
-              v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+              v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
             }
           }
-          work[p] = Tr::clampToMask(v, mask[p]);
+          work[p] = TraitsType::clampToMask(v, mask[p]);
         }
       }
     }
@@ -294,7 +294,7 @@ Result<> ReconstructVincent<T>::runImpl()
   if(useWavefront)
   {
     bool overflowed = false;
-    for(int64 z = nZ - 1; z >= 0 && !overflowed; --z)
+    for(int64 z = nz - 1; z >= 0 && !overflowed; --z)
     {
       if(m_ShouldCancel)
       {
@@ -320,10 +320,10 @@ Result<> ReconstructVincent<T>::runImpl()
             {
               if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
               {
-                v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+                v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
               }
             }
-            v = Tr::clampToMask(v, mask[p]);
+            v = TraitsType::clampToMask(v, mask[p]);
             work[p] = v;
             for(const NeighborDelta& nd : laterN)
             {
@@ -332,7 +332,7 @@ Result<> ReconstructVincent<T>::runImpl()
                 continue;
               }
               const usize q = static_cast<usize>(static_cast<int64>(p) + nd.delta);
-              if(Tr::compare(v, work[q]) && Tr::compare(mask[q], work[q]))
+              if(TraitsType::compare(v, work[q]) && TraitsType::compare(mask[q], work[q]))
               {
                 seeds.push_back(static_cast<uint64>(p));
                 break;
@@ -354,13 +354,13 @@ Result<> ReconstructVincent<T>::runImpl()
   }
   else
   {
-    for(int64 z = nZ - 1; z >= 0; --z)
+    for(int64 z = nz - 1; z >= 0; --z)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      for(int64 y = nY - 1; y >= 0; --y)
+      for(int64 y = ny - 1; y >= 0; --y)
       {
         for(int64 x = nX - 1; x >= 0; --x)
         {
@@ -370,10 +370,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
             {
-              v = Tr::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+              v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
             }
           }
-          v = Tr::clampToMask(v, mask[p]);
+          v = TraitsType::clampToMask(v, mask[p]);
           work[p] = v;
           for(const NeighborDelta& nd : laterN)
           {
@@ -382,7 +382,7 @@ Result<> ReconstructVincent<T>::runImpl()
               continue;
             }
             const usize q = static_cast<usize>(static_cast<int64>(p) + nd.delta);
-            if(Tr::compare(v, work[q]) && Tr::compare(mask[q], work[q]))
+            if(TraitsType::compare(v, work[q]) && TraitsType::compare(mask[q], work[q]))
             {
               if(!fifo->tryPush(static_cast<uint64>(p)))
               {
@@ -397,7 +397,7 @@ Result<> ReconstructVincent<T>::runImpl()
   }
 
   // --- Phase 3: FIFO flood over the FULL neighborhood (random access). ---
-  const usize sliceValues = static_cast<usize>(nX * nY);
+  const usize sliceValues = static_cast<usize>(nX * ny);
   while(!fifo->empty())
   {
     if(m_ShouldCancel)
@@ -407,7 +407,7 @@ Result<> ReconstructVincent<T>::runImpl()
     const usize p = fifo->front();
     fifo->pop();
     const int64 px = static_cast<int64>(p % static_cast<usize>(nX));
-    const int64 py = static_cast<int64>((p / static_cast<usize>(nX)) % static_cast<usize>(nY));
+    const int64 py = static_cast<int64>((p / static_cast<usize>(nX)) % static_cast<usize>(ny));
     const int64 pz = static_cast<int64>(p / sliceValues);
     const T v = work[p];
     for(const NeighborDelta& nd : allN)
@@ -417,9 +417,9 @@ Result<> ReconstructVincent<T>::runImpl()
         continue;
       }
       const usize q = static_cast<usize>(static_cast<int64>(p) + nd.delta);
-      if(Tr::compare(v, work[q]) && work[q] != mask[q])
+      if(TraitsType::compare(v, work[q]) && work[q] != mask[q])
       {
-        work[q] = Tr::compare(mask[q], v) ? v : mask[q];
+        work[q] = TraitsType::compare(mask[q], v) ? v : mask[q];
         if(!fifo->tryPush(static_cast<uint64>(q)))
         {
           return finishWithResidentSweeps();

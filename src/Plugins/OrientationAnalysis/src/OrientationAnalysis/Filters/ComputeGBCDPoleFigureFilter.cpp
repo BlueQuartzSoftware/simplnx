@@ -157,15 +157,15 @@ Result<> ComputeGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.CellIntensityArrayName = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
 
-  auto* gbcdArray = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
+  auto* gbcdArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
   // A disk-backed GBCD selects the phase-slice scanline executor. A resident
   // GBCD selects the full-cache direct executor.
-  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArray}, dataStructure, messageHandler, shouldCancel, &inputValues);
+  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArrayPtr}, dataStructure, messageHandler, shouldCancel, &inputValues);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_PhaseOfInterestKey = "PhaseOfInterest";
 constexpr StringLiteral k_MisorientationRotationKey = "MisorientationRotation";
@@ -176,7 +176,7 @@ constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArra
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_IntensityArrayNameKey = "IntensityArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -185,35 +185,35 @@ Result<Arguments> ComputeGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AxisAngleFilterParameterConverter<float32>>(args, json, SIMPL::k_MisorientationRotationKey, k_MisorientationRotation_Key));
-  Result<> dimResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_OutputDimensionKey, k_OutputImageDimension_Key);
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AxisAngleFilterParameterConverter<float32>>(args, json, simpl::k_MisorientationRotationKey, k_MisorientationRotation_Key));
+  Result<> dimResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_OutputDimensionKey, k_OutputImageDimension_Key);
   if(dimResult.valid())
   {
     // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.
     results.push_back(std::move(dimResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  Result<> imageResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryName_Key);
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  Result<> imageResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryName_Key);
   if(imageResult.invalid())
   {
     // 6.5 pulled this from crystal structures array
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_ImageGeometryName_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_ImageGeometryName_Key));
   }
   else
   {
     results.push_back(std::move(imageResult));
   }
   Result<> cellAMResult =
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key);
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key);
   if(cellAMResult.valid())
   {
     // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.
     results.push_back(std::move(cellAMResult));
   }
-  Result<> intensityResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_IntensityArrayNameKey, k_CellIntensityArrayName_Key);
+  Result<> intensityResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_IntensityArrayNameKey, k_CellIntensityArrayName_Key);
   if(intensityResult.valid())
   {
     // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.

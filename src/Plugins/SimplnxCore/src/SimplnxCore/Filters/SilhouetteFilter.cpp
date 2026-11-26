@@ -101,12 +101,12 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  const auto* clusterIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
-  if(clusterArray->getNumberOfTuples() != clusterIds->getNumberOfTuples())
+  const auto* clusterArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  const auto* clusterIdsPtr = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  if(clusterArrayPtr->getNumberOfTuples() != clusterIdsPtr->getNumberOfTuples())
   {
-    return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArray->getName(), clusterArray->getNumberOfTuples(),
-                                                       clusterIds->getName(), clusterIds->getNumberOfTuples()));
+    return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArrayPtr->getName(),
+                                                       clusterArrayPtr->getNumberOfTuples(), clusterIdsPtr->getName(), clusterIdsPtr->getNumberOfTuples()));
   }
 
   if(pUseMaskValue && !CheckArraysHaveSameTupleCount(dataStructure, {pSelectedArrayPathValue, pMaskArrayPathValue, pFeatureIdsArrayPathValue}))
@@ -114,12 +114,12 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
     const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(pMaskArrayPathValue);
     return MakePreflightErrorResult(-8977, fmt::format("Attribute Array to Silhouette DataArray '{}' ({} tuples), Mask Array DataArray '{}' ({} tuples), and Cluster Ids DataArray '{}' ({} tuples) "
                                                        "must have the same number of tuples.",
-                                                       pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), pMaskArrayPathValue.toString(), maskArray.getNumberOfTuples(),
-                                                       pFeatureIdsArrayPathValue.toString(), clusterIds->getNumberOfTuples()));
+                                                       pSelectedArrayPathValue.toString(), clusterArrayPtr->getNumberOfTuples(), pMaskArrayPathValue.toString(), maskArray.getNumberOfTuples(),
+                                                       pFeatureIdsArrayPathValue.toString(), clusterIdsPtr->getNumberOfTuples()));
   }
 
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, clusterArray->getTupleShape(), std::vector<usize>{1}, pSilhouetteArrayPathValue);
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, clusterArrayPtr->getTupleShape(), std::vector<usize>{1}, pSilhouetteArrayPathValue);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -144,7 +144,7 @@ Result<> SilhouetteFilter::executeImpl(DataStructure& dataStructure, const Argum
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_DistanceMetricKey = "DistanceMetric";
 constexpr StringLiteral k_UseMaskKey = "UseMask";
@@ -152,7 +152,7 @@ constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_SilhouetteArrayPathKey = "SilhouetteArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> SilhouetteFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -161,12 +161,12 @@ Result<Arguments> SilhouetteFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DistanceMetricKey, k_DistanceMetric_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseMaskKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_SilhouetteArrayPathKey, k_SilhouetteArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DistanceMetricKey, k_DistanceMetric_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_SilhouetteArrayPathKey, k_SilhouetteArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

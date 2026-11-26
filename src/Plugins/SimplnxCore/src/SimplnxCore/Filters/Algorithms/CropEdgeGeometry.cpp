@@ -118,11 +118,11 @@ Result<> CopyAttributeArrays(const AttributeMatrix& source, AttributeMatrix& des
     }
     auto& output = destination.at(object->getName());
     messageHandler.sendInfoMessage(fmt::format("Cropping Edge Geometry || Copying Array {}", object->getName()));
-    if(const auto* array = dynamic_cast<const IDataArray*>(object.get()); array != nullptr)
+    if(const auto* arrayPtr = dynamic_cast<const IDataArray*>(object.get()); arrayPtr != nullptr)
     {
-      ExecuteParallelFunction<CropEdgeGeomArray>(array->getDataType(), taskRunner, *array, dynamic_cast<IDataArray&>(output), sourceIndices, shouldCancel, taskResult);
+      ExecuteParallelFunction<CropEdgeGeomArray>(arrayPtr->getDataType(), taskRunner, *arrayPtr, dynamic_cast<IDataArray&>(output), sourceIndices, shouldCancel, taskResult);
     }
-    else if(const auto* strings = dynamic_cast<const StringArray*>(object.get()); strings != nullptr)
+    else if(const auto* stringsPtr = dynamic_cast<const StringArray*>(object.get()); stringsPtr != nullptr)
     {
       auto& outputStrings = dynamic_cast<StringArray&>(output);
       for(usize i = 0; i < sourceIndices.size(); ++i)
@@ -131,12 +131,12 @@ Result<> CopyAttributeArrays(const AttributeMatrix& source, AttributeMatrix& des
         {
           break;
         }
-        outputStrings[i] = (*strings)[sourceIndices[i]];
+        outputStrings[i] = (*stringsPtr)[sourceIndices[i]];
       }
     }
-    else if(const auto* neighbors = dynamic_cast<const INeighborList*>(object.get()); neighbors != nullptr)
+    else if(const auto* neighborsPtr = dynamic_cast<const INeighborList*>(object.get()); neighborsPtr != nullptr)
     {
-      ExecuteNeighborFunction(CopyGatheredNeighborLists{}, neighbors->getDataType(), *neighbors, dynamic_cast<INeighborList&>(output), sourceIndices, shouldCancel);
+      ExecuteNeighborFunction(CopyGatheredNeighborLists{}, neighborsPtr->getDataType(), *neighborsPtr, dynamic_cast<INeighborList&>(output), sourceIndices, shouldCancel);
     }
   }
   taskRunner.wait();
@@ -157,7 +157,7 @@ Result<> CopyAttributeArrays(const AttributeMatrix& source, AttributeMatrix& des
  * @param vmax  Maximum allowable value along the axis.
  * @return std::pair<float32, float32> Updated (t_min, t_max) after clipping.
  */
-std::pair<float32, float32> clip(float32 t_min, float32 t_max, float32 v1, float32 v2, float32 vmin, float32 vmax)
+std::pair<float32, float32> Clip(float32 t_min, float32 t_max, float32 v1, float32 v2, float32 vmin, float32 vmax)
 {
   if(v1 < v2)
   { // Moving towards increasing coordinate
@@ -196,8 +196,8 @@ std::pair<float32, float32> clip(float32 t_min, float32 t_max, float32 v1, float
  * MUST be in the format (x_min, y_min, z_min, x_max, y_max, z_max).
  * @return std::tuple<float32, float32, float32> Adjusted 3D coordinates of the outside vertex.
  */
-std::tuple<float32, float32, float32> interpolate_outside_vertex(const std::tuple<float32, float32, float32>& insideVertex, const std::tuple<float32, float32, float32>& outsideVertex,
-                                                                 std::array<float32, 6> boundingBox)
+std::tuple<float32, float32, float32> InterpolateOutsideVertex(const std::tuple<float32, float32, float32>& insideVertex, const std::tuple<float32, float32, float32>& outsideVertex,
+                                                               std::array<float32, 6> boundingBox)
 {
   float32 x1 = std::get<0>(insideVertex);
   float32 y1 = std::get<1>(insideVertex);
@@ -206,39 +206,39 @@ std::tuple<float32, float32, float32> interpolate_outside_vertex(const std::tupl
   float32 y2 = std::get<1>(outsideVertex);
   float32 z2 = std::get<2>(outsideVertex);
 
-  float32 t_min = 0.0f;
-  float32 t_max = 1.0f;
+  float32 tMin = 0.0f;
+  float32 tMax = 1.0f;
 
-  float32 x_min = boundingBox[0];
-  float32 y_min = boundingBox[1];
-  float32 z_min = boundingBox[2];
-  float32 x_max = boundingBox[3];
-  float32 y_max = boundingBox[4];
-  float32 z_max = boundingBox[5];
+  float32 xMin = boundingBox[0];
+  float32 yMin = boundingBox[1];
+  float32 zMin = boundingBox[2];
+  float32 xMax = boundingBox[3];
+  float32 yMax = boundingBox[4];
+  float32 zMax = boundingBox[5];
 
   // Apply clipping for each axis: X, Y, Z
-  std::tie(t_min, t_max) = clip(t_min, t_max, x1, x2, x_min, x_max);
-  std::tie(t_min, t_max) = clip(t_min, t_max, y1, y2, y_min, y_max);
-  std::tie(t_min, t_max) = clip(t_min, t_max, z1, z2, z_min, z_max);
+  std::tie(tMin, tMax) = Clip(tMin, tMax, x1, x2, xMin, xMax);
+  std::tie(tMin, tMax) = Clip(tMin, tMax, y1, y2, yMin, yMax);
+  std::tie(tMin, tMax) = Clip(tMin, tMax, z1, z2, zMin, zMax);
 
-  if(t_min > t_max)
+  if(tMin > tMax)
   {
     // No intersection with the bounding box; return the original outside vertex
     return {x2, y2, z2};
   }
 
   // Use t_max to find the intersection point on the bounding box
-  float32 t = t_max;
+  float32 t = tMax;
 
   // Calculate the new coordinates by interpolating with parameter t
-  float32 new_x = x1 + t * (x2 - x1);
-  float32 new_y = y1 + t * (y2 - y1);
-  float32 new_z = z1 + t * (z2 - z1);
+  float32 newX = x1 + t * (x2 - x1);
+  float32 newY = y1 + t * (y2 - y1);
+  float32 newZ = z1 + t * (z2 - z1);
 
-  return {new_x, new_y, new_z};
+  return {newX, newY, newZ};
 }
 
-bool is_inside(float32 x, float32 y, float32 z, const std::array<float32, 6>& boundingBox)
+bool IsInside(float32 x, float32 y, float32 z, const std::array<float32, 6>& boundingBox)
 {
   return (x >= boundingBox[0] && x <= boundingBox[3]) && (y >= boundingBox[1] && y <= boundingBox[4]) && (z >= boundingBox[2] && z <= boundingBox[5]);
 }
@@ -301,9 +301,9 @@ Result<> CropEdgeGeometry::operator()()
   std::vector<usize> edgeSources;
   std::vector<std::array<uint64, 2>> keptEdges;
   std::vector<bool> vertexReferenced(numVertices, false);
-  using ClipPoint = std::tuple<float32, float32, float32>;
-  std::map<std::pair<uint64, ClipPoint>, uint64> clipVertexMapping;
-  std::unordered_map<uint64, ClipPoint> interpolatedValuesMap;
+  using ClipPointType = std::tuple<float32, float32, float32>;
+  std::map<std::pair<uint64, ClipPointType>, uint64> clipVertexMapping;
+  std::unordered_map<uint64, ClipPointType> interpolatedValuesMap;
   std::vector<usize> duplicateSources;
 
   for(usize i = 0; i < numEdges; ++i)
@@ -326,16 +326,16 @@ Result<> CropEdgeGeometry::operator()()
     float32 x1 = srcVertices[3 * v0 + 0];
     float32 y1 = srcVertices[3 * v0 + 1];
     float32 z1 = srcVertices[3 * v0 + 2];
-    bool v0_inside = is_inside(x1, y1, z1, boundingBox);
+    bool v0Inside = IsInside(x1, y1, z1, boundingBox);
 
     float32 x2 = srcVertices[3 * v1 + 0];
     float32 y2 = srcVertices[3 * v1 + 1];
     float32 z2 = srcVertices[3 * v1 + 2];
-    bool v1_inside = is_inside(x2, y2, z2, boundingBox);
+    bool v1Inside = IsInside(x2, y2, z2, boundingBox);
 
-    bool edgeOutsideBoundary = !v0_inside && !v1_inside;
-    bool edgeInsideBoundary = v0_inside && v1_inside;
-    bool edgeIntersectingBoundary = (v0_inside && !v1_inside) || (!v0_inside && v1_inside);
+    bool edgeOutsideBoundary = !v0Inside && !v1Inside;
+    bool edgeInsideBoundary = v0Inside && v1Inside;
+    bool edgeIntersectingBoundary = (v0Inside && !v1Inside) || (!v0Inside && v1Inside);
 
     if(edgeOutsideBoundary)
     {
@@ -347,7 +347,7 @@ Result<> CropEdgeGeometry::operator()()
       // Found an edge intersecting the boundary
       uint64 insideVertexIdx = v0;
       uint64 outsideVertexIdx = v1;
-      if(v1_inside)
+      if(v1Inside)
       {
         insideVertexIdx = v1;
         outsideVertexIdx = v0;
@@ -370,7 +370,7 @@ Result<> CropEdgeGeometry::operator()()
       }
       if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
       {
-        const auto clipPoint = interpolate_outside_vertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
+        const auto clipPoint = InterpolateOutsideVertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
         const auto key = std::make_pair(outsideVertexIdx, clipPoint);
         auto iter = clipVertexMapping.find(key);
         if(iter == clipVertexMapping.end())
@@ -386,7 +386,7 @@ Result<> CropEdgeGeometry::operator()()
           interpolatedValuesMap.emplace(clippedVertexIdx, clipPoint);
           iter = clipVertexMapping.emplace(key, clippedVertexIdx).first;
         }
-        if(v0_inside)
+        if(v0Inside)
         {
           v1 = iter->second;
         }

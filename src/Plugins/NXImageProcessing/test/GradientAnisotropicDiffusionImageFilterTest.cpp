@@ -20,26 +20,26 @@ namespace rt = recon_test;
 
 namespace
 {
-using GradientAnisoFilter = GradientAnisotropicDiffusionImageFilter;
+using GradientAnisoFilterType = GradientAnisotropicDiffusionImageFilter;
 
 // Sets the geometry, input, and output keys plus TimeStep, ConductanceParameter, ConductanceScalingUpdateInterval,
 // and NumberOfIterations on the Arguments. The helper runs preflight and execute, and requires that both steps
 // succeed.
-void RunGradientAniso(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float64 timeStep, float64 conductanceParameter, uint32 conductanceScalingUpdateInterval, uint32 numberOfIterations,
-                      const std::string& outputName = "Output")
+void RunGradientAniso(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 timeStep, float64 conductanceParameter, uint32 conductanceScalingUpdateInterval,
+                      uint32 numberOfIterations, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(GradientAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(GradientAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(GradientAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(GradientAnisoFilter::k_TimeStep_Key, std::make_any<float64>(timeStep));
-  args.insertOrAssign(GradientAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(conductanceParameter));
-  args.insertOrAssign(GradientAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(conductanceScalingUpdateInterval));
-  args.insertOrAssign(GradientAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
-  auto preflightResult = filter.preflight(ds, args);
+  args.insertOrAssign(GradientAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(GradientAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(GradientAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(GradientAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(timeStep));
+  args.insertOrAssign(GradientAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(conductanceParameter));
+  args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(conductanceScalingUpdateInterval));
+  args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -80,69 +80,69 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
     // BEFORE preflightImpl/PreflightImageFilter ever runs -- so this asserts rejection, not a specific error code
     // (unlike the multi-component case below, which int32 with 1 component sails past that parameter check and is
     // rejected inside PreflightImageFilter itself, where the code IS stable).
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int32> field = MakeRamp<int32>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, field);
-    GradientAnisoFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, field);
+    GradientAnisoFilterType filter;
     Arguments args;
-    args.insertOrAssign(GradientAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(GradientAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradientAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradientAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.0625));
-    args.insertOrAssign(GradientAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-    args.insertOrAssign(GradientAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-    args.insertOrAssign(GradientAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    const auto result = filter.preflight(ds, args);
+    args.insertOrAssign(GradientAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(GradientAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(GradientAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradientAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.0625));
+    args.insertOrAssign(GradientAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+    args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+    args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   }
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, std::vector<float32>(36, 0.0f));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 0.0f));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<float32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<float32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<float32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    GradientAnisoFilter filter;
+    GradientAnisoFilterType filter;
     Arguments args;
-    args.insertOrAssign(GradientAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(GradientAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(GradientAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradientAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.0625));
-    args.insertOrAssign(GradientAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-    args.insertOrAssign(GradientAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-    args.insertOrAssign(GradientAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    const auto result = filter.preflight(ds, args);
+    args.insertOrAssign(GradientAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(GradientAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(GradientAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradientAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.0625));
+    args.insertOrAssign(GradientAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+    args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+    args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar float input creates a SameAsInput output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = MakeRamp<float32>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, field);
-    GradientAnisoFilter filter;
-    RunGradientAniso(filter, ds, inputPath, 0.0625, 3.0, 1u, 5u);
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, field);
+    GradientAnisoFilterType filter;
+    RunGradientAniso(filter, dataStructure, inputPath, 0.0625, 3.0, 1u, 5u);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
   }
   SECTION("over-large TimeStep is VALID but carries a stability warning")
   {
     // effDim==2 (Z==1), unit spacing -> stable bound = 1/2^3 = 0.125. 0.5 is well above that.
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = MakeRamp<float32>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, field);
-    GradientAnisoFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, field);
+    GradientAnisoFilterType filter;
     Arguments args;
-    args.insertOrAssign(GradientAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(GradientAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(GradientAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(GradientAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.5));
-    args.insertOrAssign(GradientAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-    args.insertOrAssign(GradientAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-    args.insertOrAssign(GradientAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    const auto result = filter.preflight(ds, args);
+    args.insertOrAssign(GradientAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(GradientAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(GradientAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(GradientAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.5));
+    args.insertOrAssign(GradientAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+    args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+    args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
     REQUIRE_FALSE(result.outputActions.warnings().empty());
     REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
@@ -183,16 +183,16 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: constant 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 7.0f));
-  GradientAnisoFilter filter;
-  RunGradientAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/5u);
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 7.0f));
+  GradientAnisoFilterType filter;
+  RunGradientAniso(filter, dataStructure, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/5u);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  rt::RequireExact<float32>(ds.getDataRefAs<IDataArray>(outputPath), ds.getDataRefAs<IDataArray>(inputPath));
+  rt::RequireExact<float32>(dataStructure.getDataRefAs<IDataArray>(outputPath), dataStructure.getDataRefAs<IDataArray>(inputPath));
 }
 
 // -----------------------------------------------------------------------------
@@ -206,21 +206,21 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: over-larg
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6;
-  constexpr usize DY = 6;
-  constexpr usize DZ = 6;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  GradientAnisoFilter filter;
+  constexpr usize k_Dx = 6;
+  constexpr usize k_Dy = 6;
+  constexpr usize k_Dz = 6;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  GradientAnisoFilterType filter;
   Arguments args;
-  args.insertOrAssign(GradientAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-  args.insertOrAssign(GradientAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(GradientAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(GradientAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.5));
-  args.insertOrAssign(GradientAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-  args.insertOrAssign(GradientAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-  args.insertOrAssign(GradientAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-  const auto result = filter.preflight(ds, args);
+  args.insertOrAssign(GradientAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+  args.insertOrAssign(GradientAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(GradientAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(GradientAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.5));
+  args.insertOrAssign(GradientAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+  args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+  args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+  const auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   REQUIRE_FALSE(result.outputActions.warnings().empty());
   REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
@@ -237,16 +237,16 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero cond
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  GradientAnisoFilter filter;
-  RunGradientAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/0u, /*numberOfIterations=*/5u);
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  GradientAnisoFilterType filter;
+  RunGradientAniso(filter, dataStructure, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/0u, /*numberOfIterations=*/5u);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
+  REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
 }
 
 // -----------------------------------------------------------------------------
@@ -258,14 +258,14 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero iter
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  GradientAnisoFilter filter;
-  RunGradientAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/0u);
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  GradientAnisoFilterType filter;
+  RunGradientAniso(filter, dataStructure, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/0u);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  rt::RequireExact<float32>(ds.getDataRefAs<IDataArray>(outputPath), ds.getDataRefAs<IDataArray>(inputPath));
+  rt::RequireExact<float32>(dataStructure.getDataRefAs<IDataArray>(outputPath), dataStructure.getDataRefAs<IDataArray>(inputPath));
 }

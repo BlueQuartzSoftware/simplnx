@@ -24,14 +24,14 @@ struct ThresholdOperation
 {
   float64 lower = 0.0;
   float64 upper = 1.0;
-  float64 outsideValue = 0.0;
+  float64 outside_value = 0.0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
     const T lowerT = static_cast<T>(lower);
     const T upperT = static_cast<T>(upper);
-    const U outsideValueU = static_cast<U>(outsideValue);
+    const U outsideValueU = static_cast<U>(outside_value);
     return [lowerT, upperT, outsideValueU](T value) -> U { return (value < lowerT || value > upperT) ? outsideValueU : static_cast<U>(value); };
   }
 };
@@ -118,21 +118,21 @@ Result<> ThresholdImageFilter::executeImpl(DataStructure& dataStructure, const A
   auto upper = filterArgs.value<float64>(k_Upper_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
 
-  const ThresholdOperation operation{.lower = lower, .upper = upper, .outsideValue = outsideValue};
+  const ThresholdOperation operation{.lower = lower, .upper = upper, .outside_value = outsideValue};
 
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_LowerKey = "Lower";
 constexpr StringLiteral k_UpperKey = "Upper";
 constexpr StringLiteral k_OutsideValueKey = "OutsideValue";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ThresholdImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -140,12 +140,12 @@ Result<Arguments> ThresholdImageFilter::FromSIMPLJson(const nlohmann::json& json
   Arguments args = ThresholdImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_LowerKey, k_Lower_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_UpperKey, k_Upper_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutsideValueKey, k_OutsideValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_LowerKey, k_Lower_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_UpperKey, k_Upper_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutsideValueKey, k_OutsideValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

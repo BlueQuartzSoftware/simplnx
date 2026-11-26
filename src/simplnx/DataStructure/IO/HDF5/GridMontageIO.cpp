@@ -23,8 +23,8 @@ std::string GridMontageIO::getTypeName() const
 Result<> GridMontageIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                  const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* montage = GridMontage::Import(structureReader.getDataStructure(), objectName, importId, parentId);
-  return BaseGroupIO::ReadBaseGroupData(structureReader, *montage, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  auto* montagePtr = GridMontage::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  return BaseGroupIO::ReadBaseGroupData(structureReader, *montagePtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable)
 {

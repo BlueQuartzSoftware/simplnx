@@ -39,7 +39,7 @@ constexpr usize k_ChunkSize = 65536;
  * @param comparisonValue Specifies the typed comparison value.
  */
 template <class CompT, class InputT, class MaskT>
-void filterChunkWithComparison(const InputT* inputBuffer, usize numComponents, usize componentIndex, usize chunkTuples, MaskT trueValue, MaskT falseValue, MaskT* outputBuffer, InputT comparisonValue)
+void FilterChunkWithComparison(const InputT* inputBuffer, usize numComponents, usize componentIndex, usize chunkTuples, MaskT trueValue, MaskT falseValue, MaskT* outputBuffer, InputT comparisonValue)
 {
   for(usize i = 0; i < chunkTuples; ++i)
   {
@@ -63,22 +63,22 @@ void filterChunkWithComparison(const InputT* inputBuffer, usize numComponents, u
  * @param comparisonValue Specifies the typed comparison value.
  */
 template <class InputT, class MaskT>
-void filterChunk(ArrayThreshold::ComparisonType compOperator, const InputT* inputBuffer, usize numComponents, usize componentIndex, usize chunkTuples, MaskT trueValue, MaskT falseValue,
+void FilterChunk(ArrayThreshold::ComparisonType compOperator, const InputT* inputBuffer, usize numComponents, usize componentIndex, usize chunkTuples, MaskT trueValue, MaskT falseValue,
                  MaskT* outputBuffer, InputT comparisonValue)
 {
   switch(compOperator)
   {
   case ArrayThreshold::ComparisonType::LessThan:
-    filterChunkWithComparison<std::less<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
+    FilterChunkWithComparison<std::less<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
     break;
   case ArrayThreshold::ComparisonType::GreaterThan:
-    filterChunkWithComparison<std::greater<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
+    FilterChunkWithComparison<std::greater<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
     break;
   case ArrayThreshold::ComparisonType::Operator_Equal:
-    filterChunkWithComparison<std::equal_to<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
+    FilterChunkWithComparison<std::equal_to<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
     break;
   case ArrayThreshold::ComparisonType::Operator_NotEqual:
-    filterChunkWithComparison<std::not_equal_to<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
+    FilterChunkWithComparison<std::not_equal_to<>, InputT, MaskT>(inputBuffer, numComponents, componentIndex, chunkTuples, trueValue, falseValue, outputBuffer, comparisonValue);
     break;
   default: {
     std::string errorMessage = fmt::format("MultiThresholdObjects Comparison Operator not understood: '{}'", static_cast<int>(compOperator));
@@ -100,7 +100,7 @@ void filterChunk(ArrayThreshold::ComparisonType compOperator, const InputT* inpu
  * @param shouldCancel Stops later tuples when true.
  */
 template <typename MaskT>
-void insertThresholdChunk(usize chunkTuples, MaskT* currentBuffer, IArrayThreshold::UnionOperator unionOperator, MaskT* newBuffer, bool inverse, MaskT trueValue, MaskT falseValue,
+void InsertThresholdChunk(usize chunkTuples, MaskT* currentBuffer, IArrayThreshold::UnionOperator unionOperator, MaskT* newBuffer, bool inverse, MaskT trueValue, MaskT falseValue,
                           const std::atomic_bool& shouldCancel)
 {
   for(usize i = 0; i < chunkTuples; i++)
@@ -165,7 +165,7 @@ struct ChunkedThresholdHelper
     }
 
     InputT comparisonValueTyped = static_cast<InputT>(compValue);
-    filterChunk<InputT, MaskT>(compOperator, inputBuffer.get(), numComponents, componentIndex, chunkTuples, trueValue, falseValue, tempBuffer, comparisonValueTyped);
+    FilterChunk<InputT, MaskT>(compOperator, inputBuffer.get(), numComponents, componentIndex, chunkTuples, trueValue, falseValue, tempBuffer, comparisonValueTyped);
     return {};
   }
 };
@@ -194,21 +194,21 @@ Result<> EvaluateScanlineNode(const IArrayThreshold& node, const DataStructure& 
   {
     return {};
   }
-  if(const auto* threshold = dynamic_cast<const ArrayThreshold*>(&node); threshold != nullptr)
+  if(const auto* thresholdPtr = dynamic_cast<const ArrayThreshold*>(&node); thresholdPtr != nullptr)
   {
-    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(threshold->getArrayPath());
-    Result<> result = ExecuteDataFunction(ChunkedThresholdHelper{}, inputArray.getDataType(), inputArray, threshold->getComparisonType(), threshold->getComparisonValue(),
-                                          threshold->getComponentIndex(), chunkStart, chunkTuples, trueValue, falseValue, output);
+    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(thresholdPtr->getArrayPath());
+    Result<> result = ExecuteDataFunction(ChunkedThresholdHelper{}, inputArray.getDataType(), inputArray, thresholdPtr->getComparisonType(), thresholdPtr->getComparisonValue(),
+                                          thresholdPtr->getComponentIndex(), chunkStart, chunkTuples, trueValue, falseValue, output);
     if(result.invalid())
     {
       return result;
     }
   }
-  else if(const auto* thresholdSet = dynamic_cast<const ArrayThresholdSet*>(&node); thresholdSet != nullptr)
+  else if(const auto* thresholdSetPtr = dynamic_cast<const ArrayThresholdSet*>(&node); thresholdSetPtr != nullptr)
   {
     std::fill_n(output, chunkTuples, falseValue);
     bool hasChild = false;
-    for(const auto& child : thresholdSet->getArrayThresholds())
+    for(const auto& child : thresholdSetPtr->getArrayThresholds())
     {
       if(shouldCancel)
       {
@@ -227,7 +227,7 @@ Result<> EvaluateScanlineNode(const IArrayThreshold& node, const DataStructure& 
       }
       else
       {
-        insertThresholdChunk(chunkTuples, output, child->getUnionOperator(), childOutput.get(), false, trueValue, falseValue, shouldCancel);
+        InsertThresholdChunk(chunkTuples, output, child->getUnionOperator(), childOutput.get(), false, trueValue, falseValue, shouldCancel);
       }
     }
   }

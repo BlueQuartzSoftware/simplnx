@@ -35,18 +35,18 @@ constexpr usize k_NoCandidate = std::numeric_limits<usize>::max();
 // Occupancy selects a seam, while the final Kahan pass retains voxel multiplicities.
 struct AxisCandidate
 {
-  usize FeatureId = 0;
-  usize Axis = 0;
-  usize First = 0;
-  usize Previous = 0;
-  usize LargestGap = 0;
-  usize Cut = 0;
-  usize WindowStart = 0;
-  usize WindowLength = 0;
-  usize WordOffset = 0;
-  bool HasOccupied = false;
-  bool TiedLargestGap = false;
-  bool Adjust = false;
+  usize feature_id = 0;
+  usize axis = 0;
+  usize first = 0;
+  usize previous = 0;
+  usize largest_gap = 0;
+  usize cut = 0;
+  usize window_start = 0;
+  usize window_length = 0;
+  usize word_offset = 0;
+  bool has_occupied = false;
+  bool tied_largest_gap = false;
+  bool adjust = false;
 };
 
 bool WouldMultiplyOverflow(usize lhs, usize rhs)
@@ -64,26 +64,26 @@ usize WordCount(usize cellCount)
 // The cut is the occupied coordinate immediately before the largest empty circular gap.
 void ObserveOccupiedCoordinate(AxisCandidate& candidate, usize coordinate)
 {
-  if(!candidate.HasOccupied)
+  if(!candidate.has_occupied)
   {
-    candidate.First = coordinate;
-    candidate.Previous = coordinate;
-    candidate.HasOccupied = true;
+    candidate.first = coordinate;
+    candidate.previous = coordinate;
+    candidate.has_occupied = true;
     return;
   }
 
-  const usize gap = coordinate - candidate.Previous;
-  if(gap > candidate.LargestGap)
+  const usize gap = coordinate - candidate.previous;
+  if(gap > candidate.largest_gap)
   {
-    candidate.LargestGap = gap;
-    candidate.Cut = candidate.Previous;
-    candidate.TiedLargestGap = false;
+    candidate.largest_gap = gap;
+    candidate.cut = candidate.previous;
+    candidate.tied_largest_gap = false;
   }
-  else if(gap == candidate.LargestGap)
+  else if(gap == candidate.largest_gap)
   {
-    candidate.TiedLargestGap = true;
+    candidate.tied_largest_gap = true;
   }
-  candidate.Previous = coordinate;
+  candidate.previous = coordinate;
 }
 } // namespace
 
@@ -233,7 +233,7 @@ Result<> ComputeFeatureCentroids::operator()()
     const std::array<usize, 3> dims = {xPoints, yPoints, zPoints};
     std::vector<AxisCandidate> candidates;
     usize usefulWords = 0;
-    constexpr usize preferredWords = static_cast<usize>(k_PreferredOccupancyBytes / sizeof(uint64));
+    constexpr usize k_PreferredWords = static_cast<usize>(k_PreferredOccupancyBytes / sizeof(uint64));
     for(usize featureId = 0; featureId < totalFeatures; featureId++)
     {
       for(usize axis = 0; axis < 3; axis++)
@@ -244,11 +244,11 @@ Result<> ComputeFeatureCentroids::operator()()
         if(spansExtent)
         {
           const usize candidateWords = WordCount(dims[axis]);
-          usefulWords += std::min(candidateWords, preferredWords - usefulWords);
+          usefulWords += std::min(candidateWords, k_PreferredWords - usefulWords);
           rangeStore[featureId * 2] = candidates.size();
           AxisCandidate candidate;
-          candidate.FeatureId = featureId;
-          candidate.Axis = axis;
+          candidate.feature_id = featureId;
+          candidate.axis = axis;
           candidates.push_back(candidate);
         }
         else
@@ -288,11 +288,11 @@ Result<> ComputeFeatureCentroids::operator()()
           while(nextCandidate < candidates.size() && usedWords < availableWords)
           {
             auto& candidate = candidates[nextCandidate];
-            const usize remaining = dims[candidate.Axis] - nextCoordinate;
+            const usize remaining = dims[candidate.axis] - nextCoordinate;
             const usize windowLength = std::min(remaining, (availableWords - usedWords) * 64);
-            candidate.WindowStart = nextCoordinate;
-            candidate.WindowLength = windowLength;
-            candidate.WordOffset = usedWords;
+            candidate.window_start = nextCoordinate;
+            candidate.window_length = windowLength;
+            candidate.word_offset = usedWords;
             usedWords += WordCount(windowLength);
             lastCandidateExclusive = nextCandidate + 1;
             if(windowLength == remaining)
@@ -339,10 +339,10 @@ Result<> ComputeFeatureCentroids::operator()()
                 }
                 const auto& candidate = candidates[candidateIndex];
                 const usize coordinate = coordinates[axis];
-                if(coordinate >= candidate.WindowStart && coordinate - candidate.WindowStart < candidate.WindowLength)
+                if(coordinate >= candidate.window_start && coordinate - candidate.window_start < candidate.window_length)
                 {
-                  const usize local = coordinate - candidate.WindowStart;
-                  (*occupancy)[candidate.WordOffset + (local / 64)] |= uint64{1} << (local % 64);
+                  const usize local = coordinate - candidate.window_start;
+                  (*occupancy)[candidate.word_offset + (local / 64)] |= uint64{1} << (local % 64);
                 }
               }
             }
@@ -352,18 +352,18 @@ Result<> ComputeFeatureCentroids::operator()()
           for(usize candidateIndex = firstCandidate; candidateIndex < lastCandidateExclusive; candidateIndex++)
           {
             auto& candidate = candidates[candidateIndex];
-            const usize wordCount = WordCount(candidate.WindowLength);
+            const usize wordCount = WordCount(candidate.window_length);
             for(usize wordIndex = 0; wordIndex < wordCount; wordIndex++)
             {
               if((wordIndex % 1024 == 0) && m_ShouldCancel)
               {
                 return result;
               }
-              uint64 word = (*occupancy)[candidate.WordOffset + wordIndex];
+              uint64 word = (*occupancy)[candidate.word_offset + wordIndex];
               while(word != 0)
               {
                 const usize bit = static_cast<usize>(std::countr_zero(word));
-                ObserveOccupiedCoordinate(candidate, candidate.WindowStart + (wordIndex * 64) + bit);
+                ObserveOccupiedCoordinate(candidate, candidate.window_start + (wordIndex * 64) + bit);
                 word &= word - 1;
               }
             }
@@ -379,24 +379,24 @@ Result<> ComputeFeatureCentroids::operator()()
       bool anyAdjusted = false;
       for(auto& candidate : candidates)
       {
-        if(!candidate.HasOccupied)
+        if(!candidate.has_occupied)
         {
           continue;
         }
-        const usize closingGap = dims[candidate.Axis] - candidate.Previous + candidate.First;
-        if(closingGap > candidate.LargestGap)
+        const usize closingGap = dims[candidate.axis] - candidate.previous + candidate.first;
+        if(closingGap > candidate.largest_gap)
         {
-          candidate.LargestGap = closingGap;
-          candidate.TiedLargestGap = false;
+          candidate.largest_gap = closingGap;
+          candidate.tied_largest_gap = false;
         }
-        else if(closingGap == candidate.LargestGap)
+        else if(closingGap == candidate.largest_gap)
         {
-          candidate.TiedLargestGap = true;
+          candidate.tied_largest_gap = true;
         }
-        candidate.Adjust = candidate.LargestGap > 1 && !candidate.TiedLargestGap;
-        if(candidate.Adjust)
+        candidate.adjust = candidate.largest_gap > 1 && !candidate.tied_largest_gap;
+        if(candidate.adjust)
         {
-          const usize fi = (candidate.FeatureId * 3) + candidate.Axis;
+          const usize fi = (candidate.feature_id * 3) + candidate.axis;
           kahanSum[fi] = 0.0;
           kahanComp[fi] = 0.0;
           anyAdjusted = true;
@@ -430,12 +430,12 @@ Result<> ComputeFeatureCentroids::operator()()
             for(usize axis = 0; axis < 3; axis++)
             {
               const usize candidateIndex = static_cast<usize>((*rangeStores[axis])[fid * 2]);
-              if(candidateIndex == k_NoCandidate || !candidates[candidateIndex].Adjust)
+              if(candidateIndex == k_NoCandidate || !candidates[candidateIndex].adjust)
               {
                 continue;
               }
               const auto& candidate = candidates[candidateIndex];
-              const double unwrapped = static_cast<double>(coordinates[axis]) + 0.5 + (coordinates[axis] <= candidate.Cut ? static_cast<double>(dims[axis]) : 0.0);
+              const double unwrapped = static_cast<double>(coordinates[axis]) + 0.5 + (coordinates[axis] <= candidate.cut ? static_cast<double>(dims[axis]) : 0.0);
               const usize fi = (fid * 3) + axis;
               const double componentValue = unwrapped - kahanComp[fi];
               const double temp = kahanSum[fi] + componentValue;
@@ -448,17 +448,17 @@ Result<> ComputeFeatureCentroids::operator()()
 
         for(const auto& candidate : candidates)
         {
-          if(!candidate.Adjust)
+          if(!candidate.adjust)
           {
             continue;
           }
-          const usize fi = (candidate.FeatureId * 3) + candidate.Axis;
-          double wrappedIndexCenter = std::fmod(kahanSum[fi] / static_cast<double>(voxelCount[fi]), static_cast<double>(dims[candidate.Axis]));
+          const usize fi = (candidate.feature_id * 3) + candidate.axis;
+          double wrappedIndexCenter = std::fmod(kahanSum[fi] / static_cast<double>(voxelCount[fi]), static_cast<double>(dims[candidate.axis]));
           if(wrappedIndexCenter < 0.0)
           {
-            wrappedIndexCenter += static_cast<double>(dims[candidate.Axis]);
+            wrappedIndexCenter += static_cast<double>(dims[candidate.axis]);
           }
-          centroidsBuf[fi] = static_cast<float32>(static_cast<double>(origin[candidate.Axis]) + (static_cast<double>(spacing[candidate.Axis]) * wrappedIndexCenter));
+          centroidsBuf[fi] = static_cast<float32>(static_cast<double>(origin[candidate.axis]) + (static_cast<double>(spacing[candidate.axis]) * wrappedIndexCenter));
         }
         m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "ComputeFeatureCentroids adjusted centroids of features that wrap the periodic boundary."});
       }

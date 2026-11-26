@@ -17,8 +17,8 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   if(pipeline != nullptr)
   {
     startObservingNode(pipeline);
-    pipeline->getCancelledSignal().connect([this]() { onCancelled(); });
-    pipeline->getPipelineFaultSignal().connect([this](AbstractPipelineNode* node, FaultState state) { onFaultStateChanged(node, state); });
+    pipeline->getCancelledSignal().connect([this]() { OnCancelled(); });
+    pipeline->getPipelineFaultSignal().connect([this](AbstractPipelineNode* node, FaultState state) { OnFaultStateChanged(node, state); });
   }
   if(pipeline == nullptr)
   {
@@ -95,12 +95,12 @@ void PipelineObserver::onNotify(AbstractPipelineNode* /*node*/, const std::share
   std::cout << msg->toString() << '\n';
 }
 
-void PipelineObserver::onCancelled()
+void PipelineObserver::OnCancelled()
 {
   std::cout << timestamp() << "  Pipeline has been cancelled" << '\n';
 }
 
-void PipelineObserver::onFaultStateChanged(AbstractPipelineNode* node, FaultState state)
+void PipelineObserver::OnFaultStateChanged(AbstractPipelineNode* node, FaultState state)
 {
   switch(state)
   {

@@ -48,11 +48,11 @@ struct CombineAttributeArraysImpl
 
     usize maxInputComponents = 0;
     usize componentOffset = 0;
-    for(DataObject* inputArrayObject : inputArraysVec)
+    for(DataObject* inputArrayObjectPtr : inputArraysVec)
     {
-      auto* inputArray = dynamic_cast<InputArrayType*>(inputArrayObject);
-      const usize componentCount = inputArray->getNumberOfComponents();
-      inputArrays.push_back(inputArray);
+      auto* inputArrayPtr = dynamic_cast<InputArrayType*>(inputArrayObjectPtr);
+      const usize componentCount = inputArrayPtr->getNumberOfComponents();
+      inputArrays.push_back(inputArrayPtr);
       componentCounts.push_back(componentCount);
       componentOffsets.push_back(componentOffset);
       componentOffset += componentCount;

@@ -176,7 +176,7 @@ private:
   ValueType m_DefaultValue;
   PathType m_PathType;
   ExtensionsType m_AvailableExtensions;
-  bool m_acceptAllExtensions = false;
+  bool m_AcceptAllExtensions = false;
 };
 
 namespace SIMPLConversion

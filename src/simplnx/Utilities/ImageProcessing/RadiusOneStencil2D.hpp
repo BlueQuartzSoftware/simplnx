@@ -377,8 +377,8 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, outputRows * outputColumns);
       const usize outputStart = outputYBegin * dimX + outputXBegin;
-      OutputT* blockOutput = plan.fixedOutput ? outputBuffer.get() + outputStart : outputBuffer.get();
-      const auto body = bodyFactory(inputBuffer.get(), blockOutput, inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputColumns);
+      OutputT* blockOutputPtr = plan.fixedOutput ? outputBuffer.get() + outputStart : outputBuffer.get();
+      const auto body = bodyFactory(inputBuffer.get(), blockOutputPtr, inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputColumns);
 #ifdef SIMPLNX_ENABLE_MULTICORE
       if(maximumWorkers > 0)
       {

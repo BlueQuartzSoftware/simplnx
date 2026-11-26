@@ -125,14 +125,14 @@ Result<> ConvertColorToGrayScaleFilter::executeImpl(DataStructure& dataStructure
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ConversionAlgorithmKey = "ConversionAlgorithm";
 constexpr StringLiteral k_ColorWeightsKey = "ColorWeights";
 constexpr StringLiteral k_ColorChannelKey = "ColorChannel";
 constexpr StringLiteral k_InputDataArrayVectorKey = "InputDataArrayVector";
 constexpr StringLiteral k_OutputArrayPrefixKey = "OutputArrayPrefix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConvertColorToGrayScaleFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -141,11 +141,11 @@ Result<Arguments> ConvertColorToGrayScaleFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_ConversionAlgorithmKey, k_ConversionAlgorithm_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ColorWeightsKey, k_ColorWeights_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_ColorChannelKey, k_ColorChannel_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputDataArrayVectorKey, k_InputDataArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputArrayPrefixKey, k_OutputArrayPrefix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_ConversionAlgorithmKey, k_ConversionAlgorithm_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ColorWeightsKey, k_ColorWeights_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ColorChannelKey, k_ColorChannel_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputDataArrayVectorKey, k_InputDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_OutputArrayPrefixKey, k_OutputArrayPrefix_Key));
 
   // Create new attribute matrix and output attribute matrix name parameters are not applicable to NX
 

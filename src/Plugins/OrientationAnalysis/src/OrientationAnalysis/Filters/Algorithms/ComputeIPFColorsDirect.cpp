@@ -60,10 +60,10 @@ public:
   void convert(size_t start, size_t end) const
   {
     using MaskArrayType = DataArray<T>;
-    const MaskArrayType* maskArray = nullptr;
+    const MaskArrayType* maskArrayPtr = nullptr;
     if(nullptr != m_GoodVoxels)
     {
-      maskArray = dynamic_cast<const MaskArrayType*>(m_GoodVoxels);
+      maskArrayPtr = dynamic_cast<const MaskArrayType*>(m_GoodVoxels);
     }
 
     // Each worker owns its LaueOps instances.
@@ -95,9 +95,9 @@ public:
 
       // If a mask is active, skip voxels marked as bad (mask == false/0).
       calcIPF = true;
-      if(nullptr != maskArray)
+      if(nullptr != maskArrayPtr)
       {
-        calcIPF = (*maskArray)[i];
+        calcIPF = (*maskArrayPtr)[i];
       }
       // Guard against phase IDs that exceed the crystal structures array length.
       // This indicates corrupt input data; we count occurrences for a post-run warning.
@@ -203,11 +203,11 @@ Result<> ComputeIPFColorsDirect::operator()()
   algArrays.push_back(&crystalStructures);
   algArrays.push_back(&ipfColors);
 
-  nx::core::IDataArray* maskArray = nullptr;
+  nx::core::IDataArray* maskArrayPtr = nullptr;
   if(m_InputValues->useMask)
   {
-    maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
-    algArrays.push_back(maskArray);
+    maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
+    algArrays.push_back(maskArrayPtr);
   }
 
   const auto validateNegativePhases = [&](const auto* typedMaskArrayPtr) -> Result<> {
@@ -226,11 +226,11 @@ Result<> ComputeIPFColorsDirect::operator()()
   };
 
   Result<> validationResult;
-  if(maskArray == nullptr)
+  if(maskArrayPtr == nullptr)
   {
     validationResult = validateNegativePhases(static_cast<const BoolArray*>(nullptr));
   }
-  else if(maskArray->getDataType() == DataType::boolean)
+  else if(maskArrayPtr->getDataType() == DataType::boolean)
   {
     validationResult = validateNegativePhases(m_DataStructure.getDataAs<BoolArray>(m_InputValues->maskArrayPath));
   }
@@ -249,7 +249,7 @@ Result<> ComputeIPFColorsDirect::operator()()
   dataAlg.setRange(0, totalPoints);
   dataAlg.requireArraysInMemory(algArrays);
 
-  dataAlg.execute(ComputeIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, maskArray, ipfColors, m_InputValues->colorKey));
+  dataAlg.execute(ComputeIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, maskArrayPtr, ipfColors, m_InputValues->colorKey));
 
   // After execution, check whether any phase IDs exceeded the ensemble bounds.
   if(m_PhaseWarningCount > 0)

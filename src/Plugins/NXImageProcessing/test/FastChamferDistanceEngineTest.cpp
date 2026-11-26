@@ -25,9 +25,9 @@ using namespace nx::core::ImageProcessing;
 
 namespace
 {
-constexpr float32 kW0 = 0.92644f; // axis weight
-constexpr float32 kW1 = 1.34065f; // face-diagonal weight
-constexpr float32 kW2 = 1.65849f; // cube-diagonal weight
+constexpr float32 k_W0 = 0.92644f; // axis weight
+constexpr float32 k_W1 = 1.34065f; // face-diagonal weight
+constexpr float32 k_W2 = 1.65849f; // cube-diagonal weight
 
 usize FlatIndex(usize x, usize y, usize z, usize dimX, usize dimY)
 {
@@ -55,15 +55,15 @@ std::vector<float32> RunChamfer(std::vector<float32> field, usize dx, usize dy, 
 
 struct ReferenceChamferNeighbor
 {
-  int32 offsetX = 0;
-  int32 offsetY = 0;
-  int32 offsetZ = 0;
+  int32 offset_x = 0;
+  int32 offset_y = 0;
+  int32 offset_z = 0;
   float32 weight = 0.0f;
 };
 
 std::vector<ReferenceChamferNeighbor> MakeReferenceForwardNeighbors()
 {
-  const std::array<float32, 3> weights = {kW0, kW1, kW2};
+  const std::array<float32, 3> weights = {k_W0, k_W1, k_W2};
   std::vector<ReferenceChamferNeighbor> neighbors;
   neighbors.reserve(13);
   for(int32 offsetZ = -1; offsetZ <= 1; ++offsetZ)
@@ -91,7 +91,7 @@ std::vector<float32> ReferenceChamfer(std::vector<float32> field, usize dx, usiz
   backwardNeighbors.reserve(forwardNeighbors.size());
   for(const ReferenceChamferNeighbor& neighbor : forwardNeighbors)
   {
-    backwardNeighbors.push_back({-neighbor.offsetX, -neighbor.offsetY, -neighbor.offsetZ, neighbor.weight});
+    backwardNeighbors.push_back({-neighbor.offset_x, -neighbor.offset_y, -neighbor.offset_z, neighbor.weight});
   }
 
   for(usize z = 0; z < dz; ++z)
@@ -105,13 +105,13 @@ std::vector<float32> ReferenceChamfer(std::vector<float32> field, usize dx, usiz
         {
           continue;
         }
-        const bool updatePositive = current > -kW0;
-        const bool updateNegative = current < kW0;
+        const bool updatePositive = current > -k_W0;
+        const bool updateNegative = current < k_W0;
         for(const ReferenceChamferNeighbor& neighbor : forwardNeighbors)
         {
-          const int64 targetX = static_cast<int64>(x) + neighbor.offsetX;
-          const int64 targetY = static_cast<int64>(y) + neighbor.offsetY;
-          const int64 targetZ = static_cast<int64>(z) + neighbor.offsetZ;
+          const int64 targetX = static_cast<int64>(x) + neighbor.offset_x;
+          const int64 targetY = static_cast<int64>(y) + neighbor.offset_y;
+          const int64 targetZ = static_cast<int64>(z) + neighbor.offset_z;
           if(targetX < 0 || targetX >= static_cast<int64>(dx) || targetY < 0 || targetY >= static_cast<int64>(dy) || targetZ < 0 || targetZ >= static_cast<int64>(dz))
           {
             continue;
@@ -143,13 +143,13 @@ std::vector<float32> ReferenceChamfer(std::vector<float32> field, usize dx, usiz
         {
           continue;
         }
-        const bool updatePositive = current > -kW0;
-        const bool updateNegative = current < kW0;
+        const bool updatePositive = current > -k_W0;
+        const bool updateNegative = current < k_W0;
         for(const ReferenceChamferNeighbor& neighbor : backwardNeighbors)
         {
-          const int64 targetX = static_cast<int64>(x) + neighbor.offsetX;
-          const int64 targetY = static_cast<int64>(y) + neighbor.offsetY;
-          const int64 targetZ = static_cast<int64>(z) + neighbor.offsetZ;
+          const int64 targetX = static_cast<int64>(x) + neighbor.offset_x;
+          const int64 targetY = static_cast<int64>(y) + neighbor.offset_y;
+          const int64 targetZ = static_cast<int64>(z) + neighbor.offset_z;
           if(targetX < 0 || targetX >= static_cast<int64>(dx) || targetY < 0 || targetY >= static_cast<int64>(dy) || targetZ < 0 || targetZ >= static_cast<int64>(dz))
           {
             continue;
@@ -249,7 +249,7 @@ std::vector<float32> MakeRandomField(usize dx, usize dy, usize dz, float32 maxDi
     value = distribution(generator);
   }
 
-  const std::array<float32, 7> replacements = {+0.0f, -0.0f, kW0, -kW0, maxDist, -maxDist, 0.5f * kW0};
+  const std::array<float32, 7> replacements = {+0.0f, -0.0f, k_W0, -k_W0, maxDist, -maxDist, 0.5f * k_W0};
   usize replacementIndex = 0;
   for(usize index = 0; index < field.size(); index += 7)
   {
@@ -372,66 +372,66 @@ private:
 // distance to the seed. Immediate neighbors are the raw weights; multi-step voxels are the cheapest weighted path.
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: single seed == chamfer metric (3D)", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize D = 9;
-  constexpr float32 kMax = 100.0f;
-  std::vector<float32> field(D * D * D, kMax + 1.0f);
-  field[FlatIndex(4, 4, 4, D, D)] = 0.0f;
-  const std::vector<float32> out = RunChamfer(field, D, D, D, kMax);
+  constexpr usize k_D = 9;
+  constexpr float32 k_Max = 100.0f;
+  std::vector<float32> field(k_D * k_D * k_D, k_Max + 1.0f);
+  field[FlatIndex(4, 4, 4, k_D, k_D)] = 0.0f;
+  const std::vector<float32> out = RunChamfer(field, k_D, k_D, k_D, k_Max);
 
-  REQUIRE(out[FlatIndex(4, 4, 4, D, D)] == 0.0f);                             // seed
-  REQUIRE(out[FlatIndex(5, 4, 4, D, D)] == Approx(kW0).epsilon(1e-5));        // +x axis
-  REQUIRE(out[FlatIndex(3, 4, 4, D, D)] == Approx(kW0).epsilon(1e-5));        // -x axis
-  REQUIRE(out[FlatIndex(4, 5, 4, D, D)] == Approx(kW0).epsilon(1e-5));        // +y axis
-  REQUIRE(out[FlatIndex(4, 4, 5, D, D)] == Approx(kW0).epsilon(1e-5));        // +z axis
-  REQUIRE(out[FlatIndex(5, 5, 4, D, D)] == Approx(kW1).epsilon(1e-5));        // xy face diagonal
-  REQUIRE(out[FlatIndex(3, 5, 4, D, D)] == Approx(kW1).epsilon(1e-5));        // mixed-direction face diagonal
-  REQUIRE(out[FlatIndex(5, 5, 5, D, D)] == Approx(kW2).epsilon(1e-5));        // xyz cube diagonal
-  REQUIRE(out[FlatIndex(6, 4, 4, D, D)] == Approx(2.0f * kW0).epsilon(1e-5)); // two +x axis steps
-  REQUIRE(out[FlatIndex(2, 4, 4, D, D)] == Approx(2.0f * kW0).epsilon(1e-5)); // two -x axis steps
+  REQUIRE(out[FlatIndex(4, 4, 4, k_D, k_D)] == 0.0f);                              // seed
+  REQUIRE(out[FlatIndex(5, 4, 4, k_D, k_D)] == Approx(k_W0).epsilon(1e-5));        // +x axis
+  REQUIRE(out[FlatIndex(3, 4, 4, k_D, k_D)] == Approx(k_W0).epsilon(1e-5));        // -x axis
+  REQUIRE(out[FlatIndex(4, 5, 4, k_D, k_D)] == Approx(k_W0).epsilon(1e-5));        // +y axis
+  REQUIRE(out[FlatIndex(4, 4, 5, k_D, k_D)] == Approx(k_W0).epsilon(1e-5));        // +z axis
+  REQUIRE(out[FlatIndex(5, 5, 4, k_D, k_D)] == Approx(k_W1).epsilon(1e-5));        // xy face diagonal
+  REQUIRE(out[FlatIndex(3, 5, 4, k_D, k_D)] == Approx(k_W1).epsilon(1e-5));        // mixed-direction face diagonal
+  REQUIRE(out[FlatIndex(5, 5, 5, k_D, k_D)] == Approx(k_W2).epsilon(1e-5));        // xyz cube diagonal
+  REQUIRE(out[FlatIndex(6, 4, 4, k_D, k_D)] == Approx(2.0f * k_W0).epsilon(1e-5)); // two +x axis steps
+  REQUIRE(out[FlatIndex(2, 4, 4, k_D, k_D)] == Approx(2.0f * k_W0).epsilon(1e-5)); // two -x axis steps
 }
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: single seed == chamfer metric (2D)", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize D = 9;
-  constexpr float32 kMax = 100.0f;
-  std::vector<float32> field(D * D, kMax + 1.0f);
-  field[FlatIndex(4, 4, 0, D, D)] = 0.0f;
-  const std::vector<float32> out = RunChamfer(field, D, D, 1, kMax);
+  constexpr usize k_D = 9;
+  constexpr float32 k_Max = 100.0f;
+  std::vector<float32> field(k_D * k_D, k_Max + 1.0f);
+  field[FlatIndex(4, 4, 0, k_D, k_D)] = 0.0f;
+  const std::vector<float32> out = RunChamfer(field, k_D, k_D, 1, k_Max);
 
-  REQUIRE(out[FlatIndex(4, 4, 0, D, D)] == 0.0f);
-  REQUIRE(out[FlatIndex(5, 4, 0, D, D)] == Approx(kW0).epsilon(1e-5));
-  REQUIRE(out[FlatIndex(4, 3, 0, D, D)] == Approx(kW0).epsilon(1e-5));
-  REQUIRE(out[FlatIndex(5, 5, 0, D, D)] == Approx(kW1).epsilon(1e-5));
-  REQUIRE(out[FlatIndex(3, 3, 0, D, D)] == Approx(kW1).epsilon(1e-5));
-  REQUIRE(out[FlatIndex(6, 4, 0, D, D)] == Approx(2.0f * kW0).epsilon(1e-5));
+  REQUIRE(out[FlatIndex(4, 4, 0, k_D, k_D)] == 0.0f);
+  REQUIRE(out[FlatIndex(5, 4, 0, k_D, k_D)] == Approx(k_W0).epsilon(1e-5));
+  REQUIRE(out[FlatIndex(4, 3, 0, k_D, k_D)] == Approx(k_W0).epsilon(1e-5));
+  REQUIRE(out[FlatIndex(5, 5, 0, k_D, k_D)] == Approx(k_W1).epsilon(1e-5));
+  REQUIRE(out[FlatIndex(3, 3, 0, k_D, k_D)] == Approx(k_W1).epsilon(1e-5));
+  REQUIRE(out[FlatIndex(6, 4, 0, k_D, k_D)] == Approx(2.0f * k_W0).epsilon(1e-5));
 }
 
 // A signed step with a zero band at x==C: after the chamfer, the value steps by w0 per voxel away from the band, with
 // the correct sign (positive on the +x side, negative on the -x side).
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: signed plane band", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize DX = 9;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
-  constexpr usize C = 4;
-  constexpr float32 kMax = 100.0f;
-  std::vector<float32> field(DX * DY * DZ);
-  for(usize y = 0; y < DY; ++y)
+  constexpr usize k_Dx = 9;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
+  constexpr usize k_C = 4;
+  constexpr float32 k_Max = 100.0f;
+  std::vector<float32> field(k_Dx * k_Dy * k_Dz);
+  for(usize y = 0; y < k_Dy; ++y)
   {
-    for(usize x = 0; x < DX; ++x)
+    for(usize x = 0; x < k_Dx; ++x)
     {
-      field[FlatIndex(x, y, 0, DX, DY)] = (x < C) ? -(kMax + 1.0f) : (x > C) ? (kMax + 1.0f) : 0.0f;
+      field[FlatIndex(x, y, 0, k_Dx, k_Dy)] = (x < k_C) ? -(k_Max + 1.0f) : (x > k_C) ? (k_Max + 1.0f) : 0.0f;
     }
   }
-  const std::vector<float32> out = RunChamfer(field, DX, DY, DZ, kMax);
-  for(usize y = 0; y < DY; ++y)
+  const std::vector<float32> out = RunChamfer(field, k_Dx, k_Dy, k_Dz, k_Max);
+  for(usize y = 0; y < k_Dy; ++y)
   {
     INFO("y=" << y);
-    REQUIRE(out[FlatIndex(C, y, 0, DX, DY)] == 0.0f);
-    REQUIRE(out[FlatIndex(C + 1, y, 0, DX, DY)] == Approx(kW0).epsilon(1e-5));
-    REQUIRE(out[FlatIndex(C + 2, y, 0, DX, DY)] == Approx(2.0f * kW0).epsilon(1e-5));
-    REQUIRE(out[FlatIndex(C - 1, y, 0, DX, DY)] == Approx(-kW0).epsilon(1e-5));
-    REQUIRE(out[FlatIndex(C - 2, y, 0, DX, DY)] == Approx(-2.0f * kW0).epsilon(1e-5));
+    REQUIRE(out[FlatIndex(k_C, y, 0, k_Dx, k_Dy)] == 0.0f);
+    REQUIRE(out[FlatIndex(k_C + 1, y, 0, k_Dx, k_Dy)] == Approx(k_W0).epsilon(1e-5));
+    REQUIRE(out[FlatIndex(k_C + 2, y, 0, k_Dx, k_Dy)] == Approx(2.0f * k_W0).epsilon(1e-5));
+    REQUIRE(out[FlatIndex(k_C - 1, y, 0, k_Dx, k_Dy)] == Approx(-k_W0).epsilon(1e-5));
+    REQUIRE(out[FlatIndex(k_C - 2, y, 0, k_Dx, k_Dy)] == Approx(-2.0f * k_W0).epsilon(1e-5));
   }
 }
 
@@ -439,31 +439,31 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: signed plane band", "[N
 // distance exceeds maxDist retains a magnitude >= maxDist (the propagation front stops there).
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: maxDist freeze", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize DX = 12;
-  constexpr usize DY = 3;
-  constexpr usize DZ = 1;
-  constexpr float32 kMax = 2.0f;
-  std::vector<float32> field(DX * DY * DZ, kMax + 1.0f);
-  for(usize y = 0; y < DY; ++y)
+  constexpr usize k_Dx = 12;
+  constexpr usize k_Dy = 3;
+  constexpr usize k_Dz = 1;
+  constexpr float32 k_Max = 2.0f;
+  std::vector<float32> field(k_Dx * k_Dy * k_Dz, k_Max + 1.0f);
+  for(usize y = 0; y < k_Dy; ++y)
   {
-    field[FlatIndex(0, y, 0, DX, DY)] = 0.0f; // seed band at x==0
+    field[FlatIndex(0, y, 0, k_Dx, k_Dy)] = 0.0f; // seed band at x==0
   }
-  const std::vector<float32> out = RunChamfer(field, DX, DY, DZ, kMax);
-  for(usize y = 0; y < DY; ++y)
+  const std::vector<float32> out = RunChamfer(field, k_Dx, k_Dy, k_Dz, k_Max);
+  for(usize y = 0; y < k_Dy; ++y)
   {
-    REQUIRE(out[FlatIndex(1, y, 0, DX, DY)] == Approx(kW0).epsilon(1e-5)); // within maxDist
-    REQUIRE(out[FlatIndex(11, y, 0, DX, DY)] >= kMax);                     // far: frozen at/above maxDist
+    REQUIRE(out[FlatIndex(1, y, 0, k_Dx, k_Dy)] == Approx(k_W0).epsilon(1e-5)); // within maxDist
+    REQUIRE(out[FlatIndex(11, y, 0, k_Dx, k_Dy)] >= k_Max);                     // far: frozen at/above maxDist
   }
 }
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: deterministic", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize D = 10;
-  std::vector<float32> field(D * D * D, 51.0f);
-  field[FlatIndex(5, 5, 5, D, D)] = 0.0f;
-  field[FlatIndex(2, 7, 3, D, D)] = -0.0f;
-  const std::vector<float32> a = RunChamfer(field, D, D, D, 50.0f);
-  const std::vector<float32> b = RunChamfer(field, D, D, D, 50.0f);
+  constexpr usize k_D = 10;
+  std::vector<float32> field(k_D * k_D * k_D, 51.0f);
+  field[FlatIndex(5, 5, 5, k_D, k_D)] = 0.0f;
+  field[FlatIndex(2, 7, 3, k_D, k_D)] = -0.0f;
+  const std::vector<float32> a = RunChamfer(field, k_D, k_D, k_D, 50.0f);
+  const std::vector<float32> b = RunChamfer(field, k_D, k_D, k_D, 50.0f);
   REQUIRE(a.size() == b.size());
   for(usize i = 0; i < a.size(); ++i)
   {
@@ -493,39 +493,39 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: fused output negation i
 // metric (n * w0), validating the forward/backward streaming bookkeeping.
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: tall-volume streaming", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize DX = 7;
-  constexpr usize DY = 6;
-  constexpr usize DZ = 40;
-  constexpr float32 kMax = 200.0f;
-  std::vector<float32> field(DX * DY * DZ, kMax + 1.0f);
-  field[FlatIndex(3, 3, 20, DX, DY)] = 0.0f;
-  const std::vector<float32> out = RunChamfer(field, DX, DY, DZ, kMax);
-  for(usize z = 0; z < DZ; ++z)
+  constexpr usize k_Dx = 7;
+  constexpr usize k_Dy = 6;
+  constexpr usize k_Dz = 40;
+  constexpr float32 k_Max = 200.0f;
+  std::vector<float32> field(k_Dx * k_Dy * k_Dz, k_Max + 1.0f);
+  field[FlatIndex(3, 3, 20, k_Dx, k_Dy)] = 0.0f;
+  const std::vector<float32> out = RunChamfer(field, k_Dx, k_Dy, k_Dz, k_Max);
+  for(usize z = 0; z < k_Dz; ++z)
   {
     const usize dist = (z > 20) ? (z - 20) : (20 - z);
     INFO("z=" << z);
-    REQUIRE(out[FlatIndex(3, 3, z, DX, DY)] == Approx(static_cast<float32>(dist) * kW0).epsilon(1e-5));
+    REQUIRE(out[FlatIndex(3, 3, z, k_Dx, k_Dy)] == Approx(static_cast<float32>(dist) * k_W0).epsilon(1e-5));
   }
 }
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 512;
-  constexpr usize dimY = 512;
-  constexpr usize dimZ = 128;
-  constexpr usize sliceValues = dimX * dimY;
-  constexpr usize valueCount = sliceValues * dimZ;
+  constexpr usize k_DimX = 512;
+  constexpr usize k_DimY = 512;
+  constexpr usize k_DimZ = 128;
+  constexpr usize k_SliceValues = k_DimX * k_DimY;
+  constexpr usize k_ValueCount = k_SliceValues * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{dimX, dimY, dimZ};
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateFastChamferResidentWorkingMemoryBytes(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
-  REQUIRE(requiredResult.value() == valueCount * sizeof(float32));
+  REQUIRE(requiredResult.value() == k_ValueCount * sizeof(float32));
   const auto overflowResult = ImageProcessing::detail::CalculateFastChamferResidentWorkingMemoryBytes(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseFastChamferResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFastChamferResidentState(SizeVec3{dimX, dimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFastChamferResidentState(SizeVec3{k_DimX, k_DimY, 1}));
 
   auto& manager = CacheMemoryBudgetManager::instance();
   const uint64 previousBudget = manager.budgetBytes();
@@ -578,18 +578,18 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: 2D planner bounds row b
   REQUIRE(overwide.coreRows == 1);
   REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
 
-  constexpr usize kSmallLimit = 4500;
-  const auto forcedTiled = ImageProcessing::detail::BuildChamfer2DBufferPlan(100, 8, kSmallLimit);
+  constexpr usize k_SmallLimit = 4500;
+  const auto forcedTiled = ImageProcessing::detail::BuildChamfer2DBufferPlan(100, 8, k_SmallLimit);
   REQUIRE(forcedTiled.valid);
   REQUIRE(forcedTiled.coreCols < 100);
   REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= kSmallLimit);
+  REQUIRE(forcedTiled.residentBytes <= k_SmallLimit);
 
-  constexpr usize kOneColumnTileLimit = ImageProcessing::detail::k_Chamfer2DFixedStateBytes + ImageProcessing::detail::k_Chamfer2DMaxTileRecords * sizeof(float32);
-  const auto oneColumnTiles = ImageProcessing::detail::BuildChamfer2DBufferPlan(9, 7, kOneColumnTileLimit);
+  constexpr usize k_OneColumnTileLimit = ImageProcessing::detail::k_Chamfer2DFixedStateBytes + ImageProcessing::detail::k_Chamfer2DMaxTileRecords * sizeof(float32);
+  const auto oneColumnTiles = ImageProcessing::detail::BuildChamfer2DBufferPlan(9, 7, k_OneColumnTileLimit);
   REQUIRE(oneColumnTiles.valid);
   REQUIRE(oneColumnTiles.coreCols == 1);
-  REQUIRE(oneColumnTiles.residentBytes == kOneColumnTileLimit);
+  REQUIRE(oneColumnTiles.residentBytes == k_OneColumnTileLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildChamfer2DBufferPlan(1, 1);
   REQUIRE(oneCell.valid);
@@ -630,8 +630,8 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: row-group wavefront is 
           {
             for(const bool useBandField : {true, false})
             {
-              const char* family = useBandField ? "band" : "random";
-              CAPTURE(rowGroupRows, negate, maxDist, family);
+              const char* familyPtr = useBandField ? "band" : "random";
+              CAPTURE(rowGroupRows, negate, maxDist, familyPtr);
               const std::vector<float32> field = useBandField ? MakeBandField(dx, dy, dz, maxDist, 0xBADC0DEu) : MakeRandomField(dx, dy, dz, maxDist, 0xC0FFEEu);
               const std::vector<float32> expected = ReferenceChamfer(field, dx, dy, dz, maxDist, negate);
               const std::vector<float32> actual = RunChamferEngine(field, dx, dy, dz, maxDist, negate, rowGroupRows);
@@ -646,13 +646,13 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: row-group wavefront is 
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: in-core resident path performs no bulk transfers", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize dimX = 17;
-  constexpr usize dimY = 13;
-  constexpr usize dimZ = 11;
-  constexpr float32 kMaxDist = 50.0f;
-  const std::vector<float32> field = MakeRandomField(dimX, dimY, dimZ, kMaxDist, 0x13579BDFu);
-  const std::vector<float32> expected = ReferenceChamfer(field, dimX, dimY, dimZ, kMaxDist, false);
-  TransferCountingDataStore<float32> store(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
+  constexpr usize k_DimX = 17;
+  constexpr usize k_DimY = 13;
+  constexpr usize k_DimZ = 11;
+  constexpr float32 k_MaxDist = 50.0f;
+  const std::vector<float32> field = MakeRandomField(k_DimX, k_DimY, k_DimZ, k_MaxDist, 0x13579BDFu);
+  const std::vector<float32> expected = ReferenceChamfer(field, k_DimX, k_DimY, k_DimZ, k_MaxDist, false);
+  TransferCountingDataStore<float32> store(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
   for(usize index = 0; index < field.size(); ++index)
   {
     store.setValue(index, field[index]);
@@ -660,7 +660,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: in-core resident path p
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> result = ApplyFastChamferDistance(store, SizeVec3{dimX, dimY, dimZ}, kMaxDist, shouldCancel, messageHandler);
+  const Result<> result = ApplyFastChamferDistance(store, SizeVec3{k_DimX, k_DimY, k_DimZ}, k_MaxDist, shouldCancel, messageHandler);
   REQUIRE(result.valid());
   REQUIRE(store.readValues() == 0);
   REQUIRE(store.writtenValues() == 0);
@@ -669,19 +669,19 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: in-core resident path p
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: pre-cancelled run leaves the store untouched", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  constexpr usize dimX = 9;
-  constexpr usize dimY = 8;
-  constexpr usize dimZ = 7;
-  constexpr float32 kPoison = 77.0f;
-  TransferCountingDataStore<float32> store(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, kPoison);
+  constexpr usize k_DimX = 9;
+  constexpr usize k_DimY = 8;
+  constexpr usize k_DimZ = 7;
+  constexpr float32 k_Poison = 77.0f;
+  TransferCountingDataStore<float32> store(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ApplyFastChamferDistance(store, SizeVec3{dimX, dimY, dimZ}, 50.0f, shouldCancel, messageHandler);
+  const Result<> result = ApplyFastChamferDistance(store, SizeVec3{k_DimX, k_DimY, k_DimZ}, 50.0f, shouldCancel, messageHandler);
   REQUIRE(result.valid());
   for(const float32 value : store)
   {
-    REQUIRE(value == kPoison);
+    REQUIRE(value == k_Poison);
   }
   REQUIRE(store.readValues() == 0);
   REQUIRE(store.writtenValues() == 0);
@@ -702,28 +702,28 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: bounded 3-D route match
     }
   }
 
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 40;
-  constexpr float32 kMaxDist = 50.0f;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  const std::vector<float32> field = MakeRandomField(dimX, dimY, dimZ, kMaxDist, 0x2468ACE0u);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 40;
+  constexpr float32 k_MaxDist = 50.0f;
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const std::vector<float32> field = MakeRandomField(k_DimX, k_DimY, k_DimZ, k_MaxDist, 0x2468ACE0u);
   const ScopedBudget budget(4096);
 
   for(const bool negate : {false, true})
   {
     CAPTURE(negate);
-    OocReportingDataStore<float32> store(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
+    OocReportingDataStore<float32> store(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
     for(usize index = 0; index < field.size(); ++index)
     {
       store.setValue(index, field[index]);
     }
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
-    FastChamferDistance engine(store, dims, kMaxDist, shouldCancel, messageHandler, ImageProcessing::detail::k_Chamfer2DResidentLimit, negate);
+    FastChamferDistance engine(store, dims, k_MaxDist, shouldCancel, messageHandler, ImageProcessing::detail::k_Chamfer2DResidentLimit, negate);
     const Result<> result = engine();
     REQUIRE(result.valid());
-    RequireBitIdentical(ReadStoreValues(store), ReferenceChamfer(field, dimX, dimY, dimZ, kMaxDist, negate));
+    RequireBitIdentical(ReadStoreValues(store), ReferenceChamfer(field, k_DimX, k_DimY, k_DimZ, k_MaxDist, negate));
     REQUIRE(store.readCount() == 3);
     REQUIRE(store.writeCount() == 3);
     REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
@@ -732,28 +732,28 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: bounded 3-D route match
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: complete-grant route copies the volume once and matches", "[NXImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 40;
-  constexpr float32 kMaxDist = 50.0f;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  const std::vector<float32> field = MakeRandomField(dimX, dimY, dimZ, kMaxDist, 0x2468ACE0u);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 40;
+  constexpr float32 k_MaxDist = 50.0f;
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const std::vector<float32> field = MakeRandomField(k_DimX, k_DimY, k_DimZ, k_MaxDist, 0x2468ACE0u);
   const ScopedBudget budget(1024ULL * 1024ULL * 1024ULL);
 
   for(const bool negate : {false, true})
   {
     CAPTURE(negate);
-    OocReportingDataStore<float32> store(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0f);
+    OocReportingDataStore<float32> store(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
     for(usize index = 0; index < field.size(); ++index)
     {
       store.setValue(index, field[index]);
     }
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
-    FastChamferDistance engine(store, dims, kMaxDist, shouldCancel, messageHandler, ImageProcessing::detail::k_Chamfer2DResidentLimit, negate);
+    FastChamferDistance engine(store, dims, k_MaxDist, shouldCancel, messageHandler, ImageProcessing::detail::k_Chamfer2DResidentLimit, negate);
     const Result<> result = engine();
     REQUIRE(result.valid());
-    RequireBitIdentical(ReadStoreValues(store), ReferenceChamfer(field, dimX, dimY, dimZ, kMaxDist, negate));
+    RequireBitIdentical(ReadStoreValues(store), ReferenceChamfer(field, k_DimX, k_DimY, k_DimZ, k_MaxDist, negate));
     REQUIRE(store.readCount() == 1);
     REQUIRE(store.writeCount() == 1);
     REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);

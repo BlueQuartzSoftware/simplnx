@@ -18,7 +18,7 @@ namespace nx::core
 {
 namespace
 {
-using OrderingUnderlyingT = std::underlying_type_t<GeneratedFileListParameter::Ordering>;
+using OrderingUnderlyingTType = std::underlying_type_t<GeneratedFileListParameter::Ordering>;
 
 constexpr StringLiteral k_StartIndex = "start_index";
 constexpr StringLiteral k_EndIndex = "end_index";
@@ -76,55 +76,56 @@ nlohmann::json GeneratedFileListParameter::toJsonImpl(const std::any& value) con
 //-----------------------------------------------------------------------------
 Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'GeneratedFileListParameter' Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'GeneratedFileListParameter' Error: ";
 
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", k_Prefix.view(), name()));
   }
 
   std::vector<const char*> keys = {k_StartIndex.c_str(), k_EndIndex.c_str(), k_PaddingDigits.c_str(), k_Ordering.c_str(), k_IncrementIndex.c_str()};
-  for(const char* key : keys)
+  for(const char* keyPtr : keys)
   {
-    if(!json.contains(key))
+    if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
-    if(!json[key].is_number_integer())
+    if(!json[keyPtr].is_number_integer())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", k_Prefix.view(), keyPtr));
     }
   }
 
   keys = {k_InputPath.c_str(), k_FilePrefix.c_str(), k_FileSuffix.c_str(), k_FileExtension.c_str()};
-  for(const char* key : keys)
+  for(const char* keyPtr : keys)
   {
-    if(!json.contains(key))
+    if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
-    if(!json[key].is_string())
+    if(!json[keyPtr].is_string())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), keyPtr));
     }
   }
 
-  auto ordering_check = json[k_Ordering].get<OrderingUnderlyingT>();
-  if(ordering_check != to_underlying(Ordering::LowToHigh) && ordering_check != to_underlying(Ordering::HighToLow))
+  auto orderingCheck = json[k_Ordering].get<OrderingUnderlyingTType>();
+  if(orderingCheck != to_underlying(Ordering::LowToHigh) && orderingCheck != to_underlying(Ordering::HighToLow))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(),
-                                                                                                           k_Ordering.view(), to_underlying(Ordering::LowToHigh), to_underlying(Ordering::HighToLow)));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
+                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_Ordering.view(), to_underlying(Ordering::LowToHigh),
+                                                 to_underlying(Ordering::HighToLow)));
   }
 
   if(!json[k_PaddingDigits].is_number_unsigned())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Unsigned, fmt::format("{}JSON value for key '{}' is not an unsigned int", prefix.view(), k_PaddingDigits.view()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Unsigned, fmt::format("{}JSON value for key '{}' is not an unsigned int", k_Prefix.view(), k_PaddingDigits.view()));
   }
 
   ValueType value;
 
   value.paddingDigits = json[k_PaddingDigits].get<int32>();
-  value.ordering = static_cast<Ordering>(json[k_Ordering].get<OrderingUnderlyingT>());
+  value.ordering = static_cast<Ordering>(json[k_Ordering].get<OrderingUnderlyingTType>());
   value.incrementIndex = json[k_IncrementIndex].get<int32>();
   value.inputPath = json[k_InputPath].get<std::string>();
   value.filePrefix = json[k_FilePrefix].get<std::string>();

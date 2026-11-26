@@ -27,22 +27,22 @@ constexpr usize k_DimZ = 200;
 constexpr usize k_TotalVoxels = k_DimX * k_DimY * k_DimZ;
 const std::string k_GeomName = "ImageGeom";
 
-void BuildOctantFeatureIds(DataStructure& ds)
+void BuildOctantFeatureIds(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
 
-  auto* imageGeom = ImageGeom::Create(ds, k_GeomName);
-  imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({k_GeomName, Constants::k_CellData, Constants::k_FeatureIds});
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
-  auto* featureIds = DataArray<int32>::Create(ds, Constants::k_FeatureIds, store, cellAM->getId());
-  auto& fidsRef = featureIds->getDataStoreRef();
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, store, cellAmPtr->getId());
+  auto& fidsRef = featureIdsPtr->getDataStoreRef();
   const usize sliceSize = k_DimY * k_DimX;
   std::vector<int32> sliceBuffer(sliceSize);
   for(usize iz = 0; iz < k_DimZ; iz++)
@@ -107,12 +107,12 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_FindBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry);
-  imageGeom->setDimensions({250, 250, 250});
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry);
+  imageGeomPtr->setDimensions({250, 250, 250});
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
 
-  const DataPath k_WrongGeometryPath({Constants::k_ImageGeometry});
+  const DataPath kWrongGeometryPath({Constants::k_ImageGeometry});
 
   // Configure the filter arguments.
   ComputeBoundaryCellsFilter filter;
@@ -121,7 +121,7 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "
   // test mismatching geometry & featureId dimensions
   args.insertOrAssign(ComputeBoundaryCellsFilter::k_IgnoreFeatureZero_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeBoundaryCellsFilter::k_IncludeVolumeBoundary_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ComputeBoundaryCellsFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_WrongGeometryPath));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_GeometryPath_Key, std::make_any<DataPath>(kWrongGeometryPath));
   args.insertOrAssign(ComputeBoundaryCellsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(ComputeBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
 

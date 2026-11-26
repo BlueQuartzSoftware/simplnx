@@ -56,8 +56,8 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-  using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+  using TriStoreType = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
+  using VertsStoreType = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
 private:
   DataStructure& m_DataStructure;

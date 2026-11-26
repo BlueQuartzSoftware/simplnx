@@ -26,9 +26,9 @@ using namespace nx::core::Constants;
 
 namespace
 {
-const std::string k_ScanName_435 = "Section_435";
-const std::string k_ScanName_436 = "Section_436";
-const std::string k_ScanName_437 = "Section_437";
+const std::string k_ScanName435 = "Section_435";
+const std::string k_ScanName436 = "Section_436";
+const std::string k_ScanName437 = "Section_437";
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[OrientationAnalysis][ReadH5EspritDataFilter]")
@@ -46,7 +46,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName_435}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName435}};
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
@@ -128,7 +128,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
   OEMEbsdScanSelectionParameter::ValueType scanSelections = {
-      .inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName_435, k_ScanName_436, k_ScanName_437}};
+      .inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName435, k_ScanName436, k_ScanName437}};
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
@@ -211,7 +211,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName_435}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = h5TestFile, .stackingOrder = ebsdlib::RefFrameZDir::LowtoHigh, .scanNames = {k_ScanName435}};
 
   SECTION("Invalid Z Spacing")
   {
@@ -256,7 +256,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: SIMPL Backwards Compatib
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -269,20 +269,20 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: SIMPL Backwards Compatib
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadH5EspritDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadH5EspritDataFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<float32>(ReadH5EspritDataFilter::k_ZSpacing_Key) == 2.5f);
       CHECK(args.value<bool>(ReadH5EspritDataFilter::k_DegreesToRadians_Key) == true);
       CHECK(args.value<bool>(ReadH5EspritDataFilter::k_ReadPatternData_Key) == true);

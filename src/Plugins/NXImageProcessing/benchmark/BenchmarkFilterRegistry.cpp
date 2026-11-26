@@ -288,18 +288,18 @@ Result<DataPath> PrepareAdaptiveHistogramInput(DataStructure& dataStructure, con
   }
 
   const DataPath grayPath = rgbPath.replaceName(fmt::format("GrayScale_{}", rgbPath.getTargetName()));
-  const auto* grayArray = dataStructure.getDataAs<IDataArray>(grayPath);
-  if(grayArray == nullptr)
+  const auto* grayArrayPtr = dataStructure.getDataAs<IDataArray>(grayPath);
+  if(grayArrayPtr == nullptr)
   {
     return MakeErrorResult<DataPath>(k_InputPreparationFailed,
                                      fmt::format("AdaptiveHistogramEqualization benchmark grayscale conversion did not create the expected uint8 scalar array at '{}'.", grayPath.toString()));
   }
-  if(grayArray->getDataType() != DataType::uint8 || grayArray->getNumberOfComponents() != 1 || grayArray->getNumberOfTuples() != rgbTupleCount || grayArray->getDataFormat() != rgbFormat)
+  if(grayArrayPtr->getDataType() != DataType::uint8 || grayArrayPtr->getNumberOfComponents() != 1 || grayArrayPtr->getNumberOfTuples() != rgbTupleCount || grayArrayPtr->getDataFormat() != rgbFormat)
   {
     return MakeErrorResult<DataPath>(k_InputPreparationFailed, fmt::format("AdaptiveHistogramEqualization benchmark grayscale array '{}' must be uint8 scalar data with {} tuples in store format "
                                                                            "'{}', but has type '{}', {} component(s), {} tuples, and format '{}'.",
-                                                                           grayPath.toString(), rgbTupleCount, rgbFormat, DataTypeToString(grayArray->getDataType()),
-                                                                           grayArray->getNumberOfComponents(), grayArray->getNumberOfTuples(), grayArray->getDataFormat()));
+                                                                           grayPath.toString(), rgbTupleCount, rgbFormat, DataTypeToString(grayArrayPtr->getDataType()),
+                                                                           grayArrayPtr->getNumberOfComponents(), grayArrayPtr->getNumberOfTuples(), grayArrayPtr->getDataFormat()));
   }
   if(!dataStructure.removeData(rgbPath))
   {

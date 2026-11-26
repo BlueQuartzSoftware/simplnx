@@ -60,22 +60,22 @@ Result<> IdentifyDuplicateVertices::operator()()
 
   auto& duplicatesMask = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->DuplicatesMaskPath)->getDataStoreRef();
   duplicatesMask.fill(0);
-  using VertT = INodeGeometry0D::SharedVertexList::value_type;
+  using VertTType = INodeGeometry0D::SharedVertexList::value_type;
   for(usize i = 1; i < sortedVerticesList.ordering.size(); i++)
   {
     const IGeometry::MeshIndexType prevIndex = sortedVerticesList.ordering[i - 1] * 3;
     const IGeometry::MeshIndexType currentIndex = sortedVerticesList.ordering[i] * 3;
-    if(std::numeric_limits<VertT>::epsilon() < std::fabs(verts[prevIndex + offset[0]] - verts[currentIndex + offset[0]]))
+    if(std::numeric_limits<VertTType>::epsilon() < std::fabs(verts[prevIndex + offset[0]] - verts[currentIndex + offset[0]]))
     {
       // value on first axis is different; proceed to next iteration
       continue;
     }
-    if(std::numeric_limits<VertT>::epsilon() < std::fabs(verts[prevIndex + offset[1]] - verts[currentIndex + offset[1]]))
+    if(std::numeric_limits<VertTType>::epsilon() < std::fabs(verts[prevIndex + offset[1]] - verts[currentIndex + offset[1]]))
     {
       // value on second axis is different; proceed to next iteration
       continue;
     }
-    if(std::numeric_limits<VertT>::epsilon() < std::fabs(verts[prevIndex + offset[2]] - verts[currentIndex + offset[2]]))
+    if(std::numeric_limits<VertTType>::epsilon() < std::fabs(verts[prevIndex + offset[2]] - verts[currentIndex + offset[2]]))
     {
       // value on third axis is different; proceed to next iteration
       continue;

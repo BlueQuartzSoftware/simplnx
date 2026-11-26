@@ -75,7 +75,7 @@ public:
   ComputeKMeansTemplate(ComputeKMeansDirect* filter, const IDataArray* inputIDataArray, IDataArray* meansIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray,
                         usize numClusters, Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
-  , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStoreT>())
+  , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStoreTType>())
   , m_Means(meansIDataArray->template getIDataStoreRefAs<AbstractDataStore<float64>>())
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)
@@ -174,9 +174,9 @@ public:
   }
 
 private:
-  using AbstractDataStoreT = AbstractDataStore<T>;
+  using AbstractDataStoreTType = AbstractDataStore<T>;
   ComputeKMeansDirect* m_Filter;
-  const AbstractDataStoreT& m_InputArray;
+  const AbstractDataStoreTType& m_InputArray;
   AbstractDataStore<float64>& m_Means;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   usize m_NumClusters;
@@ -311,7 +311,7 @@ Result<> ComputeKMeansDirect::operator()()
     return MakeErrorResult(-54061, fmt::format("Number of Clusters ({}) for array '{}' must be greater than zero.", m_InputValues->InitClusters, m_InputValues->ClusteringArrayPath.toString()));
   }
 
-  auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
 
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   if(m_InputValues->UseMask)
@@ -326,7 +326,7 @@ Result<> ComputeKMeansDirect::operator()()
   }
   else
   {
-    maskCompare = std::make_unique<AllTrueMaskCompare>(clusteringArray->getNumberOfTuples());
+    maskCompare = std::make_unique<AllTrueMaskCompare>(clusteringArrayPtr->getNumberOfTuples());
   }
 
   if(maskCompare->countTrueValues() == 0)
@@ -334,7 +334,7 @@ Result<> ComputeKMeansDirect::operator()()
     return MakeErrorResult(-54063, "Compute K Means cannot initialize clusters because the mask contains no selected tuples.");
   }
 
-  RunTemplateClass<ComputeKMeansTemplate, types::NoBooleanType>(clusteringArray->getDataType(), this, clusteringArray, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeansArrayPath),
+  RunTemplateClass<ComputeKMeansTemplate, types::NoBooleanType>(clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeansArrayPath),
                                                                 maskCompare, m_InputValues->InitClusters, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(),
                                                                 m_InputValues->DistanceMetric, m_InputValues->Seed);
 

@@ -283,7 +283,7 @@ public:
     {
       if(dimZ == 1)
       {
-        return RunOutOfCore2D(dimX, dimY);
+        return runOutOfCore2D(dimX, dimY);
       }
 
       if(detail::ShouldUseFastChamferResidentState(m_Dims))
@@ -320,7 +320,7 @@ public:
           }
         }
       }
-      return RunOutOfCore3D(dimX, dimY, dimZ);
+      return runOutOfCore3D(dimX, dimY, dimZ);
     }
 
     usize slice = 0;
@@ -335,14 +335,14 @@ public:
           -8671, fmt::format("Fast chamfer distance store size ({}) does not match the expected image size ({}) for dimensions {} x {} x {}.", m_Store.getSize(), volume, dimX, dimY, dimZ));
     }
 
-    if(auto* resident = dynamic_cast<DataStore<float32>*>(&m_Store); resident != nullptr)
+    if(auto* residentPtr = dynamic_cast<DataStore<float32>*>(&m_Store); residentPtr != nullptr)
     {
-      float32* values = resident->createSpan().data();
-      if(!PropagateForwardWavefront(values, dimX, dimY, dimZ, dimZ))
+      float32* valuesPtr = residentPtr->createSpan().data();
+      if(!propagateForwardWavefront(valuesPtr, dimX, dimY, dimZ, dimZ))
       {
         return {};
       }
-      if(!PropagateBackwardWavefront(values, dimX, dimY, 0, dimZ, m_NegateOutput))
+      if(!propagateBackwardWavefront(valuesPtr, dimX, dimY, 0, dimZ, m_NegateOutput))
       {
         return {};
       }
@@ -357,11 +357,11 @@ public:
       {
         return result;
       }
-      if(!PropagateForwardWavefront(residentValues.data(), dimX, dimY, dimZ, dimZ))
+      if(!propagateForwardWavefront(residentValues.data(), dimX, dimY, dimZ, dimZ))
       {
         return {};
       }
-      if(!PropagateBackwardWavefront(residentValues.data(), dimX, dimY, 0, dimZ, m_NegateOutput))
+      if(!propagateBackwardWavefront(residentValues.data(), dimX, dimY, 0, dimZ, m_NegateOutput))
       {
         return {};
       }
@@ -398,7 +398,7 @@ private:
     return {reinterpret_cast<const std::byte*>(values.data()), values.size() * sizeof(float32)};
   }
 
-  void MaybeNegateValues(nonstd::span<float32> values) const
+  void maybeNegateValues(nonstd::span<float32> values) const
   {
     if(!m_NegateOutput)
     {
@@ -434,7 +434,7 @@ private:
     }
   }
 
-  Result<> ReadScratchRecords(const ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<float32> values, std::string_view context)
+  Result<> readScratchRecords(const ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<float32> values, std::string_view context)
   {
     if(m_ShouldCancel)
     {
@@ -458,7 +458,7 @@ private:
     return {};
   }
 
-  Result<> WriteScratchRecords(ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<const float32> values, std::string_view context)
+  Result<> writeScratchRecords(ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<const float32> values, std::string_view context)
   {
     if(m_ShouldCancel)
     {
@@ -478,7 +478,7 @@ private:
     return {};
   }
 
-  Result<> ReadPrimaryValues(usize valueOffset, nonstd::span<float32> values, std::string_view context)
+  Result<> readPrimaryValues(usize valueOffset, nonstd::span<float32> values, std::string_view context)
   {
     if(m_ShouldCancel)
     {
@@ -498,7 +498,7 @@ private:
     return {};
   }
 
-  Result<> WritePrimaryValues(usize valueOffset, nonstd::span<const float32> values, std::string_view context)
+  Result<> writePrimaryValues(usize valueOffset, nonstd::span<const float32> values, std::string_view context)
   {
     if(m_ShouldCancel)
     {
@@ -518,17 +518,17 @@ private:
     return {};
   }
 
-  void Propagate2DForward(float32* block, usize nx, usize sourceRows, usize loadedRows) const
+  void propagate2DForward(float32* block, usize nx, usize sourceRows, usize loadedRows) const
   {
     const float32 w0 = detail::k_ChamferWeights[0];
     const float32 w1 = detail::k_ChamferWeights[1];
     for(usize row = 0; row < sourceRows; ++row)
     {
-      float32* current = block + row * nx;
-      float32* next = row + 1 < loadedRows ? current + nx : nullptr;
+      float32* currentPtr = block + row * nx;
+      float32* nextPtr = row + 1 < loadedRows ? currentPtr + nx : nullptr;
       for(usize x = 0; x < nx; ++x)
       {
-        const float32 value = current[x];
+        const float32 value = currentPtr[x];
         if(value >= m_MaxDist || value <= -m_MaxDist)
         {
           continue;
@@ -537,62 +537,62 @@ private:
         const bool doNeg = value < w0;
         if(x + 1 < nx)
         {
-          PushChamfer(current[x + 1], value, w0, doPos, doNeg);
+          PushChamfer(currentPtr[x + 1], value, w0, doPos, doNeg);
         }
-        if(next != nullptr)
+        if(nextPtr != nullptr)
         {
           if(x > 0)
           {
-            PushChamfer(next[x - 1], value, w1, doPos, doNeg);
+            PushChamfer(nextPtr[x - 1], value, w1, doPos, doNeg);
           }
-          PushChamfer(next[x], value, w0, doPos, doNeg);
+          PushChamfer(nextPtr[x], value, w0, doPos, doNeg);
           if(x + 1 < nx)
           {
-            PushChamfer(next[x + 1], value, w1, doPos, doNeg);
+            PushChamfer(nextPtr[x + 1], value, w1, doPos, doNeg);
           }
         }
       }
     }
   }
 
-  void Propagate2DBackward(float32* block, usize nx, usize firstSourceRow, usize loadedRows) const
+  void propagate2DBackward(float32* block, usize nx, usize firstSourceRow, usize loadedRows) const
   {
     const float32 w0 = detail::k_ChamferWeights[0];
     const float32 w1 = detail::k_ChamferWeights[1];
     for(usize row = loadedRows; row-- > firstSourceRow;)
     {
-      float32* current = block + row * nx;
-      float32* previous = row > 0 ? current - nx : nullptr;
+      float32* currentPtr = block + row * nx;
+      float32* previousPtr = row > 0 ? currentPtr - nx : nullptr;
       for(usize x = nx; x-- > 0;)
       {
-        const float32 value = current[x];
+        const float32 value = currentPtr[x];
         if(value >= m_MaxDist || value <= -m_MaxDist)
         {
           continue;
         }
         const bool doPos = value > -w0;
         const bool doNeg = value < w0;
-        if(previous != nullptr)
+        if(previousPtr != nullptr)
         {
           if(x > 0)
           {
-            PushChamfer(previous[x - 1], value, w1, doPos, doNeg);
+            PushChamfer(previousPtr[x - 1], value, w1, doPos, doNeg);
           }
-          PushChamfer(previous[x], value, w0, doPos, doNeg);
+          PushChamfer(previousPtr[x], value, w0, doPos, doNeg);
           if(x + 1 < nx)
           {
-            PushChamfer(previous[x + 1], value, w1, doPos, doNeg);
+            PushChamfer(previousPtr[x + 1], value, w1, doPos, doNeg);
           }
         }
         if(x > 0)
         {
-          PushChamfer(current[x - 1], value, w0, doPos, doNeg);
+          PushChamfer(currentPtr[x - 1], value, w0, doPos, doNeg);
         }
       }
     }
   }
 
-  Result<> RunFullWidth2D(ITemporaryRecordStore& scratch, usize nx, usize ny, usize coreRows)
+  Result<> runFullWidth2D(ITemporaryRecordStore& scratch, usize nx, usize ny, usize coreRows)
   {
     const usize capacityRows = std::min(ny, coreRows + 1);
     usize capacityValues = 0;
@@ -616,7 +616,7 @@ private:
       const usize loadedRows = sourceRows + static_cast<usize>(rowBegin + sourceRows < ny);
       if(firstBlock)
       {
-        if(Result<> result = ReadPrimaryValues(rowBegin * nx, nonstd::span<float32>(block.data(), loadedRows * nx), "2D forward input block"); result.invalid())
+        if(Result<> result = readPrimaryValues(rowBegin * nx, nonstd::span<float32>(block.data(), loadedRows * nx), "2D forward input block"); result.invalid())
         {
           return result;
         }
@@ -626,14 +626,14 @@ private:
         const usize rowsToRead = loadedRows - 1;
         if(rowsToRead > 0)
         {
-          if(Result<> result = ReadPrimaryValues((rowBegin + 1) * nx, nonstd::span<float32>(block.data() + nx, rowsToRead * nx), "2D forward input block"); result.invalid())
+          if(Result<> result = readPrimaryValues((rowBegin + 1) * nx, nonstd::span<float32>(block.data() + nx, rowsToRead * nx), "2D forward input block"); result.invalid())
           {
             return result;
           }
         }
       }
-      Propagate2DForward(block.data(), nx, sourceRows, loadedRows);
-      if(Result<> result = WriteScratchRecords(scratch, rowBegin, sourceRows, nonstd::span<const float32>(block.data(), sourceRows * nx), "2D forward output block"); result.invalid())
+      propagate2DForward(block.data(), nx, sourceRows, loadedRows);
+      if(Result<> result = writeScratchRecords(scratch, rowBegin, sourceRows, nonstd::span<const float32>(block.data(), sourceRows * nx), "2D forward output block"); result.invalid())
       {
         return result;
       }
@@ -661,7 +661,7 @@ private:
       const usize loadedRows = sourceRows + static_cast<usize>(hasHalo);
       if(firstBlock)
       {
-        if(Result<> result = ReadScratchRecords(scratch, loadBegin, loadedRows, nonstd::span<float32>(block.data(), loadedRows * nx), "2D backward input block"); result.invalid())
+        if(Result<> result = readScratchRecords(scratch, loadBegin, loadedRows, nonstd::span<float32>(block.data(), loadedRows * nx), "2D backward input block"); result.invalid())
         {
           return result;
         }
@@ -672,16 +672,16 @@ private:
         const usize rowsToRead = loadedRows - 1;
         if(rowsToRead > 0)
         {
-          if(Result<> result = ReadScratchRecords(scratch, loadBegin, rowsToRead, nonstd::span<float32>(block.data(), rowsToRead * nx), "2D backward input block"); result.invalid())
+          if(Result<> result = readScratchRecords(scratch, loadBegin, rowsToRead, nonstd::span<float32>(block.data(), rowsToRead * nx), "2D backward input block"); result.invalid())
           {
             return result;
           }
         }
       }
-      Propagate2DBackward(block.data(), nx, static_cast<usize>(hasHalo), loadedRows);
+      propagate2DBackward(block.data(), nx, static_cast<usize>(hasHalo), loadedRows);
       const usize sourceOffset = static_cast<usize>(hasHalo) * nx;
-      MaybeNegateValues(nonstd::span<float32>(block.data() + sourceOffset, sourceRows * nx));
-      if(Result<> result = WritePrimaryValues(sourceBegin * nx, nonstd::span<const float32>(block.data() + sourceOffset, sourceRows * nx), "2D backward output block"); result.invalid())
+      maybeNegateValues(nonstd::span<float32>(block.data() + sourceOffset, sourceRows * nx));
+      if(Result<> result = writePrimaryValues(sourceBegin * nx, nonstd::span<const float32>(block.data() + sourceOffset, sourceRows * nx), "2D backward output block"); result.invalid())
       {
         return result;
       }
@@ -692,7 +692,7 @@ private:
     return {};
   }
 
-  Result<> ProcessTiled2DPass(ITemporaryRecordStore& scratch, usize nx, usize ny, usize coreCols, usize tileCount, bool forward)
+  Result<> processTiled2DPass(ITemporaryRecordStore& scratch, usize nx, usize ny, usize coreCols, usize tileCount, bool forward)
   {
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     const std::string progressLabel = forward ? "Fast Chamfer: Forward Tiles" : "Fast Chamfer: Backward Tiles";
@@ -730,7 +730,7 @@ private:
           return MakeErrorResult(-8672, "Fast chamfer distance 2D tile working set exceeded its fixed five-record bound.");
         }
         nonstd::span<float32> values(tileValues[usedRecords].data(), coreCols);
-        if(Result<> result = ReadScratchRecords(scratch, recordIndex, 1, values, "2D tile working set"); result.invalid())
+        if(Result<> result = readScratchRecords(scratch, recordIndex, 1, values, "2D tile working set"); result.invalid())
         {
           return result;
         }
@@ -832,13 +832,13 @@ private:
 
       const usize xBegin = tile * coreCols;
       const usize validColumns = std::min(coreCols, nx - xBegin);
-      float32* sourceValues = tileValues[0].data();
+      float32* sourceValuesPtr = tileValues[0].data();
       if(forward)
       {
         for(usize localX = 0; localX < validColumns; ++localX)
         {
           const usize x = xBegin + localX;
-          const float32 value = sourceValues[localX];
+          const float32 value = sourceValuesPtr[localX];
           if(value >= m_MaxDist || value <= -m_MaxDist)
           {
             continue;
@@ -871,7 +871,7 @@ private:
         for(usize localX = validColumns; localX-- > 0;)
         {
           const usize x = xBegin + localX;
-          const float32 value = sourceValues[localX];
+          const float32 value = sourceValuesPtr[localX];
           if(value >= m_MaxDist || value <= -m_MaxDist)
           {
             continue;
@@ -907,7 +907,7 @@ private:
           continue;
         }
         const nonstd::span<const float32> values(tileValues[index].data(), coreCols);
-        if(Result<> result = WriteScratchRecords(scratch, recordIndices[index], 1, values, forward ? "2D forward tile" : "2D backward tile"); result.invalid())
+        if(Result<> result = writeScratchRecords(scratch, recordIndices[index], 1, values, forward ? "2D forward tile" : "2D backward tile"); result.invalid())
         {
           return result;
         }
@@ -952,7 +952,7 @@ private:
     return {};
   }
 
-  Result<> RunTiled2D(ITemporaryRecordStore& scratch, usize nx, usize ny, usize coreCols, usize tileCount)
+  Result<> runTiled2D(ITemporaryRecordStore& scratch, usize nx, usize ny, usize coreCols, usize tileCount)
   {
     {
       std::vector<float32> record(coreCols, 0.0f);
@@ -967,12 +967,12 @@ private:
           const usize xBegin = tile * coreCols;
           const usize validColumns = std::min(coreCols, nx - xBegin);
           std::fill(record.begin(), record.end(), 0.0f);
-          if(Result<> result = ReadPrimaryValues(row * nx + xBegin, nonstd::span<float32>(record.data(), validColumns), "2D tiled scratch initialization"); result.invalid())
+          if(Result<> result = readPrimaryValues(row * nx + xBegin, nonstd::span<float32>(record.data(), validColumns), "2D tiled scratch initialization"); result.invalid())
           {
             return result;
           }
           const uint64 recordIndex = static_cast<uint64>(row) * static_cast<uint64>(tileCount) + static_cast<uint64>(tile);
-          if(Result<> result = WriteScratchRecords(scratch, recordIndex, 1, nonstd::span<const float32>(record.data(), coreCols), "2D tiled scratch initialization"); result.invalid())
+          if(Result<> result = writeScratchRecords(scratch, recordIndex, 1, nonstd::span<const float32>(record.data(), coreCols), "2D tiled scratch initialization"); result.invalid())
           {
             return result;
           }
@@ -980,11 +980,11 @@ private:
       }
     }
 
-    if(Result<> result = ProcessTiled2DPass(scratch, nx, ny, coreCols, tileCount, true); result.invalid())
+    if(Result<> result = processTiled2DPass(scratch, nx, ny, coreCols, tileCount, true); result.invalid())
     {
       return result;
     }
-    if(Result<> result = ProcessTiled2DPass(scratch, nx, ny, coreCols, tileCount, false); result.invalid())
+    if(Result<> result = processTiled2DPass(scratch, nx, ny, coreCols, tileCount, false); result.invalid())
     {
       return result;
     }
@@ -1000,14 +1000,14 @@ private:
             return {};
           }
           const uint64 recordIndex = static_cast<uint64>(row) * static_cast<uint64>(tileCount) + static_cast<uint64>(tile);
-          if(Result<> result = ReadScratchRecords(scratch, recordIndex, 1, nonstd::span<float32>(record.data(), coreCols), "2D tiled final output"); result.invalid())
+          if(Result<> result = readScratchRecords(scratch, recordIndex, 1, nonstd::span<float32>(record.data(), coreCols), "2D tiled final output"); result.invalid())
           {
             return result;
           }
           const usize xBegin = tile * coreCols;
           const usize validColumns = std::min(coreCols, nx - xBegin);
-          MaybeNegateValues(nonstd::span<float32>(record.data(), validColumns));
-          if(Result<> result = WritePrimaryValues(row * nx + xBegin, nonstd::span<const float32>(record.data(), validColumns), "2D tiled final output"); result.invalid())
+          maybeNegateValues(nonstd::span<float32>(record.data(), validColumns));
+          if(Result<> result = writePrimaryValues(row * nx + xBegin, nonstd::span<const float32>(record.data(), validColumns), "2D tiled final output"); result.invalid())
           {
             return result;
           }
@@ -1017,7 +1017,7 @@ private:
     return {};
   }
 
-  Result<> RunOutOfCore2D(usize nx, usize ny)
+  Result<> runOutOfCore2D(usize nx, usize ny)
   {
     const detail::Chamfer2DBufferPlan plan = detail::BuildChamfer2DBufferPlan(nx, ny, m_ResidentLimit2D);
     if(plan.overflow)
@@ -1059,9 +1059,9 @@ private:
     {
       if(plan.coreCols == nx)
       {
-        return RunFullWidth2D(*scratch, nx, ny, plan.coreRows);
+        return runFullWidth2D(*scratch, nx, ny, plan.coreRows);
       }
-      return RunTiled2D(*scratch, nx, ny, plan.coreCols, tileCount);
+      return runTiled2D(*scratch, nx, ny, plan.coreCols, tileCount);
     } catch(const std::bad_alloc& exception)
     {
       return MakeErrorResult(-8672, fmt::format("Fast chamfer distance could not allocate its bounded 2D working set: {}", exception.what()));
@@ -1308,7 +1308,7 @@ private:
    * Levels with several groups run under the parallel data algorithm. Levels with one group run on the calling thread,
    * so a thin volume with one plane or one row group performs a plain serial scan.
    */
-  bool PropagateForwardWavefront(float32* block, usize nx, usize ny, usize sourcePlanes, usize loadedPlanes, ThrottledMessageHandler* sharedProgress = nullptr)
+  bool propagateForwardWavefront(float32* block, usize nx, usize ny, usize sourcePlanes, usize loadedPlanes, ThrottledMessageHandler* sharedProgress = nullptr)
   {
     if(sourcePlanes == 0 || nx == 0 || ny == 0)
     {
@@ -1344,16 +1344,16 @@ private:
         const usize group = level - 3 * plane;
         const usize rowBegin = group * groupRows;
         const usize rowEnd = rowBegin + std::min(groupRows, ny - rowBegin);
-        float32* currentPlane = block + plane * slice;
-        float32* nextPlane = plane + 1 < loadedPlanes ? currentPlane + slice : nullptr;
+        float32* currentPlanePtr = block + plane * slice;
+        float32* nextPlanePtr = plane + 1 < loadedPlanes ? currentPlanePtr + slice : nullptr;
         for(usize y = rowBegin; y < rowEnd; ++y)
         {
-          float32* cur = currentPlane + y * nx;
-          float32* curNext = y + 1 < ny ? cur + nx : nullptr;
-          float32* nextPrev = nextPlane != nullptr && y > 0 ? nextPlane + (y - 1) * nx : nullptr;
-          float32* nextSame = nextPlane != nullptr ? nextPlane + y * nx : nullptr;
-          float32* nextNext = nextPlane != nullptr && y + 1 < ny ? nextPlane + (y + 1) * nx : nullptr;
-          FastChamferDistance::ProcessRowForward(cur, curNext, nextPrev, nextSame, nextNext, nx, maxDist);
+          float32* curPtr = currentPlanePtr + y * nx;
+          float32* curNextPtr = y + 1 < ny ? curPtr + nx : nullptr;
+          float32* nextPrevPtr = nextPlanePtr != nullptr && y > 0 ? nextPlanePtr + (y - 1) * nx : nullptr;
+          float32* nextSamePtr = nextPlanePtr != nullptr ? nextPlanePtr + y * nx : nullptr;
+          float32* nextNextPtr = nextPlanePtr != nullptr && y + 1 < ny ? nextPlanePtr + (y + 1) * nx : nullptr;
+          FastChamferDistance::ProcessRowForward(curPtr, curNextPtr, nextPrevPtr, nextSamePtr, nextNextPtr, nx, maxDist);
         }
       };
       if(groupsInLevel == 0)
@@ -1393,7 +1393,7 @@ private:
    *
    * Level scheduling matches the forward kernel: multi-group levels run in parallel, single-group levels run inline.
    */
-  bool PropagateBackwardWavefront(float32* block, usize nx, usize ny, usize firstSourcePlane, usize loadedPlanes, bool negateSourcePlanes, ThrottledMessageHandler* sharedProgress = nullptr)
+  bool propagateBackwardWavefront(float32* block, usize nx, usize ny, usize firstSourcePlane, usize loadedPlanes, bool negateSourcePlanes, ThrottledMessageHandler* sharedProgress = nullptr)
   {
     if(firstSourcePlane >= loadedPlanes || nx == 0 || ny == 0)
     {
@@ -1431,25 +1431,25 @@ private:
         const usize group = groupCount - 1 - reversedGroup;
         const usize rowBegin = group * groupRows;
         const usize rowEnd = rowBegin + std::min(groupRows, ny - rowBegin);
-        float32* currentPlane = block + plane * slice;
-        float32* previousPlane = plane > 0 ? currentPlane - slice : nullptr;
+        float32* currentPlanePtr = block + plane * slice;
+        float32* previousPlanePtr = plane > 0 ? currentPlanePtr - slice : nullptr;
         for(usize y = rowEnd; y-- > rowBegin;)
         {
-          float32* cur = currentPlane + y * nx;
-          float32* curPrev = y > 0 ? cur - nx : nullptr;
-          float32* prevPrev = previousPlane != nullptr && y > 0 ? previousPlane + (y - 1) * nx : nullptr;
-          float32* prevSame = previousPlane != nullptr ? previousPlane + y * nx : nullptr;
-          float32* prevNext = previousPlane != nullptr && y + 1 < ny ? previousPlane + (y + 1) * nx : nullptr;
-          FastChamferDistance::ProcessRowBackward(cur, curPrev, prevPrev, prevSame, prevNext, nx, maxDist);
+          float32* curPtr = currentPlanePtr + y * nx;
+          float32* curPrevPtr = y > 0 ? curPtr - nx : nullptr;
+          float32* prevPrevPtr = previousPlanePtr != nullptr && y > 0 ? previousPlanePtr + (y - 1) * nx : nullptr;
+          float32* prevSamePtr = previousPlanePtr != nullptr ? previousPlanePtr + y * nx : nullptr;
+          float32* prevNextPtr = previousPlanePtr != nullptr && y + 1 < ny ? previousPlanePtr + (y + 1) * nx : nullptr;
+          FastChamferDistance::ProcessRowBackward(curPtr, curPrevPtr, prevPrevPtr, prevSamePtr, prevNextPtr, nx, maxDist);
         }
         if(negateSourcePlanes)
         {
           for(usize y = rowBegin; y < rowEnd; ++y)
           {
-            float32* row = currentPlane + y * nx;
+            float32* rowPtr = currentPlanePtr + y * nx;
             for(usize x = 0; x < nx; ++x)
             {
-              row[x] = -row[x];
+              rowPtr[x] = -rowPtr[x];
             }
           }
         }
@@ -1477,7 +1477,7 @@ private:
     return true;
   }
 
-  Result<> RunOutOfCore3D(usize nx, usize ny, usize nz)
+  Result<> runOutOfCore3D(usize nx, usize ny, usize nz)
   {
     if(nx > static_cast<usize>(std::numeric_limits<int64>::max()) || ny > static_cast<usize>(std::numeric_limits<int64>::max()) || nz > static_cast<usize>(std::numeric_limits<int64>::max()))
     {
@@ -1496,11 +1496,11 @@ private:
                              fmt::format("Fast chamfer distance store size ({}) does not match the expected image size ({}) for dimensions {} x {} x {}.", m_Store.getSize(), volume, nx, ny, nz));
     }
 
-    constexpr usize kMaxCorePlanes = 16;
+    constexpr usize k_MaxCorePlanes = 16;
     const usize availableBytes = detail::k_Chamfer2DResidentLimit - detail::k_Chamfer2DFixedStateBytes;
     const usize planesFit = planeBytes == 0 ? 0 : availableBytes / planeBytes;
     usize corePlanes = planesFit > 1 ? planesFit - 1 : 1;
-    corePlanes = std::min({corePlanes, kMaxCorePlanes, nz});
+    corePlanes = std::min({corePlanes, k_MaxCorePlanes, nz});
     const usize capacityPlanes = corePlanes + static_cast<usize>(corePlanes < nz);
     usize capacityValues = 0;
     if(!detail::ChamferCheckedMultiply(capacityPlanes, slice, capacityValues))
@@ -1536,7 +1536,7 @@ private:
         const usize loadedPlanes = sourcePlanes + static_cast<usize>(planeBegin + sourcePlanes < nz);
         if(firstBlock)
         {
-          if(Result<> result = ReadPrimaryValues(planeBegin * slice, nonstd::span<float32>(block.data(), loadedPlanes * slice), "3D forward input block"); result.invalid())
+          if(Result<> result = readPrimaryValues(planeBegin * slice, nonstd::span<float32>(block.data(), loadedPlanes * slice), "3D forward input block"); result.invalid())
           {
             return result;
           }
@@ -1546,17 +1546,17 @@ private:
           const usize planesToRead = loadedPlanes - 1;
           if(planesToRead > 0)
           {
-            if(Result<> result = ReadPrimaryValues((planeBegin + 1) * slice, nonstd::span<float32>(block.data() + slice, planesToRead * slice), "3D forward input block"); result.invalid())
+            if(Result<> result = readPrimaryValues((planeBegin + 1) * slice, nonstd::span<float32>(block.data() + slice, planesToRead * slice), "3D forward input block"); result.invalid())
             {
               return result;
             }
           }
         }
-        if(!PropagateForwardWavefront(block.data(), nx, ny, sourcePlanes, loadedPlanes, &progressThrottle))
+        if(!propagateForwardWavefront(block.data(), nx, ny, sourcePlanes, loadedPlanes, &progressThrottle))
         {
           return {};
         }
-        if(Result<> result = WriteScratchRecords(*scratch, planeBegin, sourcePlanes, nonstd::span<const float32>(block.data(), sourcePlanes * slice), "3D forward output block"); result.invalid())
+        if(Result<> result = writeScratchRecords(*scratch, planeBegin, sourcePlanes, nonstd::span<const float32>(block.data(), sourcePlanes * slice), "3D forward output block"); result.invalid())
         {
           return result;
         }
@@ -1583,7 +1583,7 @@ private:
         const usize loadedPlanes = sourcePlanes + static_cast<usize>(hasHalo);
         if(firstBlock)
         {
-          if(Result<> result = ReadScratchRecords(*scratch, loadBegin, loadedPlanes, nonstd::span<float32>(block.data(), loadedPlanes * slice), "3D backward input block"); result.invalid())
+          if(Result<> result = readScratchRecords(*scratch, loadBegin, loadedPlanes, nonstd::span<float32>(block.data(), loadedPlanes * slice), "3D backward input block"); result.invalid())
           {
             return result;
           }
@@ -1594,18 +1594,18 @@ private:
           const usize planesToRead = loadedPlanes - 1;
           if(planesToRead > 0)
           {
-            if(Result<> result = ReadScratchRecords(*scratch, loadBegin, planesToRead, nonstd::span<float32>(block.data(), planesToRead * slice), "3D backward input block"); result.invalid())
+            if(Result<> result = readScratchRecords(*scratch, loadBegin, planesToRead, nonstd::span<float32>(block.data(), planesToRead * slice), "3D backward input block"); result.invalid())
             {
               return result;
             }
           }
         }
         const usize sourceOffset = static_cast<usize>(hasHalo) * slice;
-        if(!PropagateBackwardWavefront(block.data(), nx, ny, static_cast<usize>(hasHalo), loadedPlanes, m_NegateOutput, &progressThrottle))
+        if(!propagateBackwardWavefront(block.data(), nx, ny, static_cast<usize>(hasHalo), loadedPlanes, m_NegateOutput, &progressThrottle))
         {
           return {};
         }
-        if(Result<> result = WritePrimaryValues(sourceBegin * slice, nonstd::span<const float32>(block.data() + sourceOffset, sourcePlanes * slice), "3D backward output block"); result.invalid())
+        if(Result<> result = writePrimaryValues(sourceBegin * slice, nonstd::span<const float32>(block.data() + sourceOffset, sourcePlanes * slice), "3D backward output block"); result.invalid())
         {
           return result;
         }

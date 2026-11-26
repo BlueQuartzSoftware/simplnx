@@ -43,17 +43,17 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {1, k_BenchmarkDimY, k_BenchmarkDimX};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({k_BenchmarkDimX, k_BenchmarkDimY, 1});
-  REQUIRE(imageGeom->setOrigin({k_BenchmarkOriginX, k_BenchmarkOriginY, 5.0F}).valid());
-  REQUIRE(imageGeom->setSpacing({k_BenchmarkSpacingX, k_BenchmarkSpacingY, 2.0F}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({k_BenchmarkDimX, k_BenchmarkDimY, 1});
+  REQUIRE(imageGeomPtr->setOrigin({k_BenchmarkOriginX, k_BenchmarkOriginY, 5.0F}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({k_BenchmarkSpacingX, k_BenchmarkSpacingY, 2.0F}).valid());
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1});
-  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellData->getId());
-  REQUIRE(featureIds != nullptr);
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
 
   auto rowBuffer = std::make_unique<int32[]>(k_BenchmarkDimX);
   for(usize y = 0; y < k_BenchmarkDimY; y++)
@@ -93,15 +93,15 @@ void RequireEdgeCoordinates(const EdgeGeom& edgeGeom, usize edgeIndex, const std
 void VerifyOutput(const DataStructure& dataStructure, const DataPath& exemplarDataPath, const DataPath& computedDataPath)
 {
   // The filter must create the output edge geometry.
-  const auto* computedEdgeGeom = dataStructure.getDataAs<EdgeGeom>(computedDataPath);
-  REQUIRE(computedEdgeGeom != nullptr);
+  const auto* computedEdgeGeomPtr = dataStructure.getDataAs<EdgeGeom>(computedDataPath);
+  REQUIRE(computedEdgeGeomPtr != nullptr);
 
   // const DataPath exemplarDataPath({"Feature Boundaries Max Z"});
   // Compare geometry metadata and arrays.
   {
-    const auto* exemplarGeom = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
-    REQUIRE(exemplarGeom != nullptr);
-    UnitTest::CompareIGeometry(exemplarGeom, computedEdgeGeom);
+    const auto* exemplarGeomPtr = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
+    REQUIRE(exemplarGeomPtr != nullptr);
+    UnitTest::CompareIGeometry(exemplarGeomPtr, computedEdgeGeomPtr);
   }
 
   // Compare Shared Vertex List

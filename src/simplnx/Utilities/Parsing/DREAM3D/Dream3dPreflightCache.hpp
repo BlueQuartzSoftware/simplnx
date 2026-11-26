@@ -157,7 +157,7 @@ public:
 
 private:
   Dream3dPreflightCache() = default;
-  using CacheKey = std::pair<std::string, bool>;
+  using CacheKeyType = std::pair<std::string, bool>;
 
   /**
    * @brief Gets one handout through the shared cache mechanics.
@@ -198,7 +198,7 @@ private:
    * The method copies the master under m_Mutex, then isolates stores after it
    * releases the table lock. Both fast and post-read recheck paths use it.
    */
-  Result<std::optional<NeutralMetadataHandout>> tryServeFromCache(const CacheKey& key, uint64 fileSize, const std::filesystem::file_time_type& mtime, const std::filesystem::path& filePath);
+  Result<std::optional<NeutralMetadataHandout>> tryServeFromCache(const CacheKeyType& key, uint64 fileSize, const std::filesystem::file_time_type& mtime, const std::filesystem::path& filePath);
 
   /**
    * @struct Entry
@@ -225,7 +225,7 @@ private:
    */
   std::mutex m_ReadMutex;
   mutable std::mutex m_Mutex;
-  std::map<CacheKey, Entry> m_Entries;
+  std::map<CacheKeyType, Entry> m_Entries;
   uint64 m_Tick = 0;
   std::atomic<uint64> m_Hits{0};
   std::atomic<uint64> m_Misses{0};

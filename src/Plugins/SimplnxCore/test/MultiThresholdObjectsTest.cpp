@@ -153,26 +153,26 @@ DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure;
   // The one-dimensional geometry supplies 20 tuples for predictable thresholds.
-  ImageGeom* image = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  ImageGeom* imagePtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
   std::vector<usize> dims = {20, 1, 1};
-  image->setDimensions(dims);
+  imagePtr->setDimensions(dims);
 
   ShapeType tDims = {20};
   ShapeType cDims = {1};
   ShapeType cDimsMulti = {3};
   float fnum = 0.0f;
   int inum = 0;
-  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellData, tDims, image->getId());
-  Float32Array* data = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_TestArrayFloatName, tDims, cDims, am->getId());
-  Int32Array* data1 = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, am->getId());
-  Int32Array* multiComponentData = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, am->getId());
+  AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_CellData, tDims, imagePtr->getId());
+  Float32Array* dataPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_TestArrayFloatName, tDims, cDims, amPtr->getId());
+  Int32Array* data1Ptr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, amPtr->getId());
+  Int32Array* multiComponentDataPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, amPtr->getId());
 
-  Float32Array* invalid1 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingComponentsArrayPath.getTargetName(), tDims, cDimsMulti, am->getId());
-  invalid1->fill(1.0);
-  Float32Array* invalid2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
-  invalid2->fill(2.0);
+  Float32Array* invalid1Ptr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingComponentsArrayPath.getTargetName(), tDims, cDimsMulti, amPtr->getId());
+  invalid1Ptr->fill(1.0);
+  Float32Array* invalid2Ptr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
+  invalid2Ptr->fill(2.0);
 
-  usize numComponents = multiComponentData->getNumberOfComponents();
+  usize numComponents = multiComponentDataPtr->getNumberOfComponents();
   int32 sign = 1;
 
   // The scalar arrays increase with the tuple index. The three-component array
@@ -180,11 +180,11 @@ DataStructure CreateTestDataStructure()
   for(usize i = 0; i < 20; i++)
   {
     fnum += 0.01f;
-    (*data)[i] = fnum;
-    (*data1)[i] = inum;
-    multiComponentData->setComponent(i, 0, i * -sign);
-    multiComponentData->setComponent(i, 1, i * sign);
-    multiComponentData->setComponent(i, 2, i * -sign);
+    (*dataPtr)[i] = fnum;
+    (*data1Ptr)[i] = inum;
+    multiComponentDataPtr->setComponent(i, 0, i * -sign);
+    multiComponentDataPtr->setComponent(i, 1, i * sign);
+    multiComponentDataPtr->setComponent(i, 2, i * -sign);
     sign *= -1;
     ++inum;
   }
@@ -255,20 +255,20 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-    REQUIRE(thresholdArray != nullptr);
-    REQUIRE(thresholdArray->getStoreType() == IDataStore::StoreType::InMemory);
+    auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+    REQUIRE(thresholdArrayPtr != nullptr);
+    REQUIRE(thresholdArrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
 
     // A 0.1 threshold rejects indices 0 through 9 and selects indices 10 through 19.
     for(usize i = 0; i < 20; i++)
     {
       if(i < 10)
       {
-        REQUIRE((*thresholdArray)[i] == false);
+        REQUIRE((*thresholdArrayPtr)[i] == false);
       }
       else
       {
-        REQUIRE((*thresholdArray)[i] == true);
+        REQUIRE((*thresholdArrayPtr)[i] == true);
       }
     }
   }
@@ -293,19 +293,19 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-    REQUIRE(thresholdArray != nullptr);
+    auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+    REQUIRE(thresholdArrayPtr != nullptr);
 
     // A 0.1 threshold rejects indices 0 through 9 and selects indices 10 through 19.
     for(usize i = 0; i < 20; i++)
     {
       if(i <= 15)
       {
-        REQUIRE((*thresholdArray)[i] == false);
+        REQUIRE((*thresholdArrayPtr)[i] == false);
       }
       else
       {
-        REQUIRE((*thresholdArray)[i] == true);
+        REQUIRE((*thresholdArrayPtr)[i] == true);
       }
     }
   }
@@ -536,16 +536,16 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Direct and Scanline honor cancell
     DataStructure dataStructure = CreateTestDataStructure();
     const DataPath outputPath = k_ImageCellDataName.createChildPath("Cancelled Direct Mask");
     const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_ImageCellDataName);
-    auto* output = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, outputPath.getTargetName(), cellData.getShape(), ShapeType{1}, cellData.getId());
-    REQUIRE(output != nullptr);
-    output->fill(true);
+    auto* outputPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, outputPath.getTargetName(), cellData.getShape(), ShapeType{1}, cellData.getId());
+    REQUIRE(outputPtr != nullptr);
+    outputPtr->fill(true);
     auto values = makeValues(k_TestArrayIntPath, outputPath);
     std::atomic_bool shouldCancel = true;
     auto multiThresholdObjectsDirectResult = MultiThresholdObjectsDirect(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
     SIMPLNX_RESULT_REQUIRE_VALID(multiThresholdObjectsDirectResult);
-    for(usize i = 0; i < output->getNumberOfTuples(); ++i)
+    for(usize i = 0; i < outputPtr->getNumberOfTuples(); ++i)
     {
-      REQUIRE(output->getValue(i));
+      REQUIRE(outputPtr->getValue(i));
     }
   }
 
@@ -557,18 +557,18 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Direct and Scanline honor cancell
     const DataPath outputPath = k_ImageCellDataName.createChildPath("Cancelled Scanline Mask");
     std::atomic_bool shouldCancel = false;
     auto inputStore = std::make_shared<MultiThresholdCancelAfterReadStore<int32>>(cellData.getShape(), ShapeType{1}, int32{1}, shouldCancel);
-    auto* input = Int32Array::Create(dataStructure, inputPath.getTargetName(), inputStore, cellData.getId());
-    auto* output = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, outputPath.getTargetName(), cellData.getShape(), ShapeType{1}, cellData.getId());
-    REQUIRE(input != nullptr);
-    REQUIRE(output != nullptr);
-    output->fill(true);
+    auto* inputPtr = Int32Array::Create(dataStructure, inputPath.getTargetName(), inputStore, cellData.getId());
+    auto* outputPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, outputPath.getTargetName(), cellData.getShape(), ShapeType{1}, cellData.getId());
+    REQUIRE(inputPtr != nullptr);
+    REQUIRE(outputPtr != nullptr);
+    outputPtr->fill(true);
     auto values = makeValues(inputPath, outputPath);
     auto multiThresholdObjectsScanlineResult = MultiThresholdObjectsScanline(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
     SIMPLNX_RESULT_REQUIRE_VALID(multiThresholdObjectsScanlineResult);
     REQUIRE(shouldCancel);
-    for(usize i = 0; i < output->getNumberOfTuples(); ++i)
+    for(usize i = 0; i < outputPtr->getNumberOfTuples(); ++i)
     {
-      REQUIRE(output->getValue(i));
+      REQUIRE(outputPtr->getValue(i));
     }
   }
 }
@@ -608,19 +608,19 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  auto* thresholdArray = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArray != nullptr);
+  auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
 
   // A 0.1 threshold rejects indices 0 through 9 and selects indices 10 through 19.
   for(usize i = 0; i < 20; i++)
   {
     if(i <= 15)
     {
-      REQUIRE((*thresholdArray)[i] == falseValue);
+      REQUIRE((*thresholdArrayPtr)[i] == falseValue);
     }
     else
     {
-      REQUIRE((*thresholdArray)[i] == trueValue);
+      REQUIRE((*thresholdArrayPtr)[i] == trueValue);
     }
   }
 }
@@ -793,7 +793,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custo
  * @param thresholdArrayPath Threshold mask path.
  */
 template <typename T>
-static void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
+static void CheckMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
 {
   auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<T>>(thresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
@@ -845,7 +845,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<int8>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<int8>(dataStructure, k_ThresholdArrayPath);
   }
 
   SECTION("Int16 Threshold")
@@ -868,7 +868,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<int16>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<int16>(dataStructure, k_ThresholdArrayPath);
   }
 
   SECTION("Int32 Threshold")
@@ -891,7 +891,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<int32>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<int32>(dataStructure, k_ThresholdArrayPath);
   }
 
   SECTION("Int64 Threshold")
@@ -914,7 +914,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<int64>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<int64>(dataStructure, k_ThresholdArrayPath);
   }
 
   // Verify each supported unsigned integer output type.
@@ -938,7 +938,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<uint8>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<uint8>(dataStructure, k_ThresholdArrayPath);
   }
 
   SECTION("UInt16 Threshold")
@@ -961,7 +961,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<uint16>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<uint16>(dataStructure, k_ThresholdArrayPath);
   }
 
   SECTION("UInt32 Threshold")
@@ -984,7 +984,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<uint32>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<uint32>(dataStructure, k_ThresholdArrayPath);
   }
 
   SECTION("UInt64 Threshold")
@@ -1007,7 +1007,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<uint64>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<uint64>(dataStructure, k_ThresholdArrayPath);
   }
 
   // Verify each supported floating-point output type.
@@ -1031,7 +1031,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<float32>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<float32>(dataStructure, k_ThresholdArrayPath);
   }
 
   SECTION("Float64 Threshold")
@@ -1054,7 +1054,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    checkMaskValues<float64>(dataStructure, k_ThresholdArrayPath);
+    CheckMaskValues<float64>(dataStructure, k_ThresholdArrayPath);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1087,16 +1087,16 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent"
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArray != nullptr);
+  auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
 
-  usize numTuples = thresholdArray->getNumberOfTuples();
+  usize numTuples = thresholdArrayPtr->getNumberOfTuples();
 
   // The threshold selects positive Y components at even tuple indices, except index 0.
-  REQUIRE_FALSE((*thresholdArray)[0]);
+  REQUIRE_FALSE((*thresholdArrayPtr)[0]);
   for(usize i = 1; i < numTuples; i++)
   {
-    bool value = (*thresholdArray)[i];
+    bool value = (*thresholdArrayPtr)[i];
     if(i % 2 == 0)
     {
       REQUIRE(value);
@@ -1114,7 +1114,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1127,20 +1127,20 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(MultiThresholdObjectsFilter::k_CreatedDataName_Key) == "TestName");
     }
   }

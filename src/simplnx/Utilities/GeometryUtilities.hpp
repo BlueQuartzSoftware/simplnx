@@ -170,29 +170,29 @@ requires std::is_base_of<INodeGeometry1D, GeometryType>::value
   usize numYBins = 100;
   usize numZBins = 100;
 
-  using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using SharedVertListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
-  SharedVertList& vertices = geom.getVertices()->getDataStoreRef();
+  SharedVertListType& vertices = geom.getVertices()->getDataStoreRef();
 
-  INodeGeometry1D::MeshIndexArrayType* cells = nullptr;
+  INodeGeometry1D::MeshIndexArrayType* cellsPtr = nullptr;
   if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
-    cells = geom.getPolyhedra();
+    cellsPtr = geom.getPolyhedra();
   }
   else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
-    cells = geom.getFaces();
+    cellsPtr = geom.getFaces();
   }
   else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
-    cells = geom.getEdges();
+    cellsPtr = geom.getEdges();
   }
 
-  if(nullptr == cells)
+  if(nullptr == cellsPtr)
   {
     return MakeErrorResult(-56800, "EliminateDuplicateNodes Error: Geometry Type was not 1D, 2D or 3D? Did you pass in a vertex geometry?");
   }
-  AbstractDataStore<INodeGeometry1D::MeshIndexArrayType::value_type>& cellsRef = cells->getDataStoreRef();
+  AbstractDataStore<INodeGeometry1D::MeshIndexArrayType::value_type>& cellsRef = cellsPtr->getDataStoreRef();
 
   IGeometry::MeshIndexType nNodesAll = geom.getNumberOfVertices();
   size_t nNodes = 0;

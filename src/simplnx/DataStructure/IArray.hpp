@@ -122,13 +122,13 @@ public:
    */
   static std::set<std::string> StringListFromArrayType(const std::set<ArrayType>& arrayTypes)
   {
-    static const std::map<ArrayType, std::string> k_TypeToStringMap = {
+    static const std::map<ArrayType, std::string> kTypeToStringMap = {
         {ArrayType::StringArray, "StringArray"}, {ArrayType::DataArray, "DataArray"}, {ArrayType::NeighborListArray, "NeighborListArray"}, {ArrayType::Any, "Any"}};
 
     std::set<std::string> stringValues;
     for(auto arrayType : arrayTypes)
     {
-      stringValues.insert(k_TypeToStringMap.at(arrayType));
+      stringValues.insert(kTypeToStringMap.at(arrayType));
     }
     return stringValues;
   }

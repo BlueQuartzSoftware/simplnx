@@ -79,16 +79,16 @@ struct XzCrossSectionScratch
    * @param initialLargestCrossSections Provides the output values before work.
    */
   XzCrossSectionScratch(usize numFeatures, const std::vector<float32>& initialLargestCrossSections)
-  : featureCounts(numFeatures, 0.0f)
-  , largestCrossSections(initialLargestCrossSections)
+  : feature_counts(numFeatures, 0.0f)
+  , largest_cross_sections(initialLargestCrossSections)
   {
   }
 
-  std::vector<float32> featureCounts;
-  std::vector<float32> largestCrossSections;
+  std::vector<float32> feature_counts;
+  std::vector<float32> largest_cross_sections;
 };
 
-using XzCrossSectionThreadScratch = tbb::combinable<XzCrossSectionScratch>;
+using XzCrossSectionThreadScratchType = tbb::combinable<XzCrossSectionScratch>;
 
 /**
  * @class ComputeXzCrossSectionsImpl
@@ -111,7 +111,7 @@ public:
    * @param threadScratch Provides one scratch instance per worker.
    * @param shouldCancel Stops later rows when true.
    */
-  ComputeXzCrossSectionsImpl(const int32* featureIds, usize xCells, usize zCells, usize sliceSize, usize numFeatures, float32 areaScalar, XzCrossSectionThreadScratch& threadScratch,
+  ComputeXzCrossSectionsImpl(const int32* featureIds, usize xCells, usize zCells, usize sliceSize, usize numFeatures, float32 areaScalar, XzCrossSectionThreadScratchType& threadScratch,
                              const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_XCells(xCells)
@@ -139,17 +139,17 @@ public:
       {
         return;
       }
-      std::fill(scratch.featureCounts.begin(), scratch.featureCounts.end(), 0.0f);
+      std::fill(scratch.feature_counts.begin(), scratch.feature_counts.end(), 0.0f);
 
       for(usize zIndex = 0; zIndex < m_ZCells; zIndex++)
       {
-        const int32* rowFeatureIds = m_FeatureIds + (zIndex * m_SliceSize) + (yIndex * m_XCells);
+        const int32* rowFeatureIdsPtr = m_FeatureIds + (zIndex * m_SliceSize) + (yIndex * m_XCells);
         for(usize xIndex = 0; xIndex < m_XCells; xIndex++)
         {
-          scratch.featureCounts[static_cast<usize>(rowFeatureIds[xIndex])]++;
+          scratch.feature_counts[static_cast<usize>(rowFeatureIdsPtr[xIndex])]++;
         }
       }
-      UpdateLargestCrossSections(scratch.featureCounts.data(), m_NumFeatures, m_AreaScalar, scratch.largestCrossSections.data());
+      UpdateLargestCrossSections(scratch.feature_counts.data(), m_NumFeatures, m_AreaScalar, scratch.largest_cross_sections.data());
     }
   }
 
@@ -160,7 +160,7 @@ private:
   usize m_SliceSize = 0;
   usize m_NumFeatures = 0;
   float32 m_AreaScalar = 0.0f;
-  XzCrossSectionThreadScratch& m_ThreadScratch;
+  XzCrossSectionThreadScratchType& m_ThreadScratch;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -239,12 +239,12 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
 
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", numPlanes));
 
-  const auto* inMemoryFeatureIds = dynamic_cast<const Int32DataStore*>(&featureIdsStore);
-  auto* inMemoryLargestCrossSections = dynamic_cast<Float32DataStore*>(&largestCrossSectStore);
-  if(inMemoryFeatureIds != nullptr && inMemoryLargestCrossSections != nullptr)
+  const auto* inMemoryFeatureIdsPtr = dynamic_cast<const Int32DataStore*>(&featureIdsStore);
+  auto* inMemoryLargestCrossSectionsPtr = dynamic_cast<Float32DataStore*>(&largestCrossSectStore);
+  if(inMemoryFeatureIdsPtr != nullptr && inMemoryLargestCrossSectionsPtr != nullptr)
   {
-    const int32* featureIdsData = inMemoryFeatureIds->data();
-    float32* largestCrossSectionsData = inMemoryLargestCrossSections->data();
+    const int32* featureIdsDataPtr = inMemoryFeatureIdsPtr->data();
+    float32* largestCrossSectionsDataPtr = inMemoryLargestCrossSectionsPtr->data();
     const usize sliceSize = xCells * yCells;
 
     if(m_InputValues->Plane == 0)
@@ -257,12 +257,12 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
         }
         std::fill(featureCounts.begin(), featureCounts.end(), 0.0f);
 
-        const int32* planeFeatureIds = featureIdsData + (zIndex * sliceSize);
+        const int32* planeFeatureIdsPtr = featureIdsDataPtr + (zIndex * sliceSize);
         for(usize planeIndex = 0; planeIndex < sliceSize; planeIndex++)
         {
-          featureCounts[static_cast<usize>(planeFeatureIds[planeIndex])]++;
+          featureCounts[static_cast<usize>(planeFeatureIdsPtr[planeIndex])]++;
         }
-        UpdateLargestCrossSections(featureCounts.data(), numFeatures, areaScalar, largestCrossSectionsData);
+        UpdateLargestCrossSections(featureCounts.data(), numFeatures, areaScalar, largestCrossSectionsDataPtr);
       }
       return {};
     }
@@ -271,11 +271,11 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
     {
       // Workers use only the stable in-memory backing pointer and thread-local
       // feature vectors; output remains untouched until the serial reduction.
-      const std::vector<float32> initialLargestCrossSections(largestCrossSectionsData, largestCrossSectionsData + numFeatures);
-      XzCrossSectionThreadScratch threadScratch([numFeatures, &initialLargestCrossSections] { return XzCrossSectionScratch(numFeatures, initialLargestCrossSections); });
+      const std::vector<float32> initialLargestCrossSections(largestCrossSectionsDataPtr, largestCrossSectionsDataPtr + numFeatures);
+      XzCrossSectionThreadScratchType threadScratch([numFeatures, &initialLargestCrossSections] { return XzCrossSectionScratch(numFeatures, initialLargestCrossSections); });
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, yCells);
-      parallelAlgorithm.execute(ComputeXzCrossSectionsImpl(featureIdsData, xCells, zCells, sliceSize, numFeatures, areaScalar, threadScratch, m_ShouldCancel));
+      parallelAlgorithm.execute(ComputeXzCrossSectionsImpl(featureIdsDataPtr, xCells, zCells, sliceSize, numFeatures, areaScalar, threadScratch, m_ShouldCancel));
       if(m_ShouldCancel)
       {
         return {};
@@ -283,7 +283,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
       threadScratch.combine_each([&](const XzCrossSectionScratch& scratch) {
         for(usize featureId = 1; featureId < numFeatures; featureId++)
         {
-          largestCrossSectionsData[featureId] = std::max(scratch.largestCrossSections[featureId], largestCrossSectionsData[featureId]);
+          largestCrossSectionsDataPtr[featureId] = std::max(scratch.largest_cross_sections[featureId], largestCrossSectionsDataPtr[featureId]);
         }
       });
       return {};
@@ -313,20 +313,20 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
 
         for(usize zIndex = 0; zIndex < zCells; zIndex++)
         {
-          const int32* rowFeatureIds = featureIdsData + (zIndex * sliceSize) + xBlockStart;
+          const int32* rowFeatureIdsPtr = featureIdsDataPtr + (zIndex * sliceSize) + xBlockStart;
           for(usize yIndex = 0; yIndex < yCells; yIndex++)
           {
             for(usize localX = 0; localX < activeXPlanes; localX++)
             {
-              planeFeatureCounts[localX][static_cast<usize>(rowFeatureIds[localX])]++;
+              planeFeatureCounts[localX][static_cast<usize>(rowFeatureIdsPtr[localX])]++;
             }
-            rowFeatureIds += xCells;
+            rowFeatureIdsPtr += xCells;
           }
         }
 
         for(usize localX = 0; localX < activeXPlanes; localX++)
         {
-          UpdateLargestCrossSections(featureCounts.data() + (localX * numFeatures), numFeatures, areaScalar, largestCrossSectionsData);
+          UpdateLargestCrossSections(featureCounts.data() + (localX * numFeatures), numFeatures, areaScalar, largestCrossSectionsDataPtr);
         }
       }
       return {};

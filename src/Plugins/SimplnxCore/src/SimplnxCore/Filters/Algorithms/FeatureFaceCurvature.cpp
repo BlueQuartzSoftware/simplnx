@@ -15,8 +15,8 @@
 
 using namespace nx::core;
 
-using FaceIds_t = std::vector<int64_t>;
-using SharedFeatureFaces_t = std::map<int32_t, FaceIds_t>;
+using FaceIdsTType = std::vector<int64_t>;
+using SharedFeatureFacesTType = std::map<int32_t, FaceIdsTType>;
 
 namespace
 {
@@ -26,10 +26,10 @@ void CleanupCreatedIncidence(DataStructure& dataStructure, TriangleGeom& geometr
   if(!childExisted)
   {
     // A failed producer can leave this new child after clearing its association.
-    const auto* child = dataStructure.getData(geometryPath.createChildPath(TriangleGeom::k_EltsContainingVert));
-    if(child != nullptr)
+    const auto* childPtr = dataStructure.getData(geometryPath.createChildPath(TriangleGeom::k_EltsContainingVert));
+    if(childPtr != nullptr)
     {
-      const auto createdId = child->getId();
+      const auto createdId = childPtr->getId();
       if(!dataStructure.removeData(createdId))
       {
         throw std::runtime_error(fmt::format("Cannot remove temporary support object {} from geometry '{}'.", createdId, geometryPath.toString()));
@@ -62,14 +62,14 @@ const std::atomic_bool& FeatureFaceCurvature::getCancel()
 // -----------------------------------------------------------------------------
 void FeatureFaceCurvature::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementCount(counter);
 }
 
 // -----------------------------------------------------------------------------
 void FeatureFaceCurvature::sendThreadSafeStatusMessage(const std::string& message)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_MessageHandler.sendInfoMessage(message);
 }
 
@@ -119,11 +119,11 @@ Result<> FeatureFaceCurvature::operator()()
     faceSizes[surfaceMeshFeatureFaceIds[t]]++;
   }
 
-  SharedFeatureFaces_t sharedFeatureFaces;
+  SharedFeatureFacesTType sharedFeatureFaces;
   // Allocate all the vectors that we need
   for(size_t iter = 0; iter < faceSizes.size(); ++iter)
   {
-    FaceIds_t v;
+    FaceIdsTType v;
     v.reserve(faceSizes[iter]);
     sharedFeatureFaces[static_cast<int32>(iter)] = v;
   }
@@ -152,7 +152,7 @@ Result<> FeatureFaceCurvature::operator()()
 
   for(auto& sharedFeatureFace : sharedFeatureFaces)
   {
-    FaceIds_t& triangleIds = sharedFeatureFace.second;
+    FaceIdsTType& triangleIds = sharedFeatureFace.second;
     if(triangleIds.empty())
     {
       continue;

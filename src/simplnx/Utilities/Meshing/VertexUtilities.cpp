@@ -25,31 +25,31 @@ namespace nx::core::MeshingUtilities::detail
 {
 namespace
 {
-thread_local usize g_TransferFailureCountdown = 0;
-thread_local bool g_TransferFailureArmed = false;
-thread_local bool g_TransferFailureConsumed = false;
+thread_local usize GTransferFailureCountdown = 0;
+thread_local bool GTransferFailureArmed = false;
+thread_local bool GTransferFailureConsumed = false;
 } // namespace
 void SetTransferEnrichmentFailureCountdown(usize allocationsBeforeFailure)
 {
-  g_TransferFailureCountdown = allocationsBeforeFailure;
-  g_TransferFailureArmed = true;
-  g_TransferFailureConsumed = false;
+  GTransferFailureCountdown = allocationsBeforeFailure;
+  GTransferFailureArmed = true;
+  GTransferFailureConsumed = false;
 }
 bool TransferEnrichmentFailureConsumed()
 {
-  return g_TransferFailureConsumed;
+  return GTransferFailureConsumed;
 }
 void ResetTransferEnrichmentFailure()
 {
-  g_TransferFailureArmed = false;
-  g_TransferFailureConsumed = false;
+  GTransferFailureArmed = false;
+  GTransferFailureConsumed = false;
 }
 void CheckTransferEnrichmentAllocation()
 {
-  if(g_TransferFailureArmed && g_TransferFailureCountdown-- == 0)
+  if(GTransferFailureArmed && GTransferFailureCountdown-- == 0)
   {
-    g_TransferFailureArmed = false;
-    g_TransferFailureConsumed = true;
+    GTransferFailureArmed = false;
+    GTransferFailureConsumed = true;
     throw std::bad_alloc{};
   }
 }
@@ -58,12 +58,12 @@ void CheckTransferEnrichmentAllocation()
 
 namespace
 {
-Result<> readCoordinatePage(const Float32AbstractDataStore& vertices, usize first, nonstd::span<float32> page)
+Result<> ReadCoordinatePage(const Float32AbstractDataStore& vertices, usize first, nonstd::span<float32> page)
 {
   return vertices.copyIntoBuffer(first * 3, page);
 }
 
-Result<> readCoordinatePage(const ITemporaryRecordStore& vertices, usize first, nonstd::span<float32> page)
+Result<> ReadCoordinatePage(const ITemporaryRecordStore& vertices, usize first, nonstd::span<float32> page)
 {
   const std::atomic_bool active{false};
   const usize count = page.size() / 3;
@@ -81,11 +81,12 @@ Result<> readCoordinatePage(const ITemporaryRecordStore& vertices, usize first, 
 }
 
 template <typename Store>
-Result<> gatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order, nonstd::span<float32> gathered,
+Result<> GatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order, nonstd::span<float32> gathered,
                                nonstd::span<float32> page)
 {
-  constexpr usize maximum = std::numeric_limits<usize>::max();
-  if(vertexCount > maximum / 3 || indexes.size() > maximum / 3 || order.size() < indexes.size() || gathered.size() < indexes.size() * 3 || page.size() % 3 != 0 || (!indexes.empty() && page.empty()))
+  constexpr usize k_Maximum = std::numeric_limits<usize>::max();
+  if(vertexCount > k_Maximum / 3 || indexes.size() > k_Maximum / 3 || order.size() < indexes.size() || gathered.size() < indexes.size() * 3 || page.size() % 3 != 0 ||
+     (!indexes.empty() && page.empty()))
   {
     return MakeErrorResult(-65902, "Vertex-coordinate gather received invalid buffer sizes. Supply one order entry and three coordinates per vertex, and a whole-XYZ read page.");
   }
@@ -104,7 +105,7 @@ Result<> gatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
   const auto requests = order.first(indexes.size());
   std::ranges::sort(requests, [&indexes](usize left, usize right) { return indexes[left] < indexes[right]; });
   const usize capacity = page.size() / 3;
-  usize loadedPage = maximum;
+  usize loadedPage = k_Maximum;
   Result<> result;
   for(usize request = 0; request < indexes.size(); ++request)
   {
@@ -114,7 +115,7 @@ Result<> gatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
     if(first != loadedPage)
     {
       const usize count = std::min(capacity, vertexCount - first);
-      auto readResult = readCoordinatePage(vertices, first, page.first(count * 3));
+      auto readResult = ReadCoordinatePage(vertices, first, page.first(count * 3));
       if(readResult.invalid())
       {
         auto failure = MeshingUtilities::detail::PreserveTransferFailure(result, std::move(readResult));
@@ -187,7 +188,7 @@ Result<> MeshingUtilities::detail::GatherVertexCoordinates(const Float32Abstract
   {
     return MakeErrorResult(-65900, "Vertex-coordinate gather requires three-component XYZ tuples.");
   }
-  return gatherCoordinatePages(vertices, vertices.getNumberOfTuples(), indexes, order, gathered, page);
+  return GatherCoordinatePages(vertices, vertices.getNumberOfTuples(), indexes, order, gathered, page);
 }
 
 Result<> MeshingUtilities::detail::GatherVertexCoordinates(const ITemporaryRecordStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
@@ -197,7 +198,7 @@ Result<> MeshingUtilities::detail::GatherVertexCoordinates(const ITemporaryRecor
   {
     return MakeErrorResult(-65905, "Temporary vertex-coordinate gather requires addressable XYZ records and a page no larger than the provider batch limit.");
   }
-  return gatherCoordinatePages(vertices, static_cast<usize>(vertices.recordCount()), indexes, order, gathered, page);
+  return GatherCoordinatePages(vertices, static_cast<usize>(vertices.recordCount()), indexes, order, gathered, page);
 }
 
 MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const nx::core::INodeGeometry0D& geom, const std::atomic_bool& shouldCancel)
@@ -228,7 +229,7 @@ std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlong
 
 bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
 {
-  using VertT = INodeGeometry0D::SharedVertexList::value_type;
+  using VertTType = INodeGeometry0D::SharedVertexList::value_type;
 
   // Leverage ordering assumptions to speed up duplicate checks
   std::array<IGeometry::MeshIndexType, 3> offset{};
@@ -253,17 +254,17 @@ bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::s
   {
     const IGeometry::MeshIndexType prevIndex = sortedVertices.ordering[i - 1] * 3;
     const IGeometry::MeshIndexType currentIndex = sortedVertices.ordering[i] * 3;
-    if(std::numeric_limits<VertT>::epsilon() < std::fabs(verts[prevIndex + offset[0]] - verts[currentIndex + offset[0]]))
+    if(std::numeric_limits<VertTType>::epsilon() < std::fabs(verts[prevIndex + offset[0]] - verts[currentIndex + offset[0]]))
     {
       // value on first axis is different; proceed to next iteration
       continue;
     }
-    if(std::numeric_limits<VertT>::epsilon() < std::fabs(verts[prevIndex + offset[1]] - verts[currentIndex + offset[1]]))
+    if(std::numeric_limits<VertTType>::epsilon() < std::fabs(verts[prevIndex + offset[1]] - verts[currentIndex + offset[1]]))
     {
       // value on second axis is different; proceed to next iteration
       continue;
     }
-    if(std::numeric_limits<VertT>::epsilon() < std::fabs(verts[prevIndex + offset[2]] - verts[currentIndex + offset[2]]))
+    if(std::numeric_limits<VertTType>::epsilon() < std::fabs(verts[prevIndex + offset[2]] - verts[currentIndex + offset[2]]))
     {
       // value on third axis is different; proceed to next iteration
       continue;

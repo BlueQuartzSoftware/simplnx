@@ -56,7 +56,7 @@ namespace
  * @param data The data to extract from
  * @return Shared pointer to the extracted data
  */
-std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeighbors::UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data)
+std::shared_ptr<Float64DataStore> ExtractPatchData(int64_t triId, FindNRingNeighbors::UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data)
 {
   ShapeType cDims = {3ULL};
 
@@ -135,7 +135,7 @@ CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCu
 CalculateTriangleGroupCurvatures::~CalculateTriangleGroupCurvatures() = default;
 
 // -----------------------------------------------------------------------------
-static void subtractVector3d(Float64AbstractDataStore& data, double* v)
+static void SubtractVector3d(Float64AbstractDataStore& data, double* v)
 {
   size_t count = data.getNumberOfTuples();
   for(size_t i = 0; i < count; ++i)
@@ -150,15 +150,15 @@ static void subtractVector3d(Float64AbstractDataStore& data, double* v)
 // -----------------------------------------------------------------------------
 void CalculateTriangleGroupCurvatures::markOutputsInvalid(int64 triId) const
 {
-  for(Float64Array* output : {m_PrincipleCurvature1, m_PrincipleCurvature2, m_PrincipleDirection1, m_PrincipleDirection2, m_GaussianCurvature, m_MeanCurvature, m_WeingartenMatrix})
+  for(Float64Array* outputPtr : {m_PrincipleCurvature1, m_PrincipleCurvature2, m_PrincipleDirection1, m_PrincipleDirection2, m_GaussianCurvature, m_MeanCurvature, m_WeingartenMatrix})
   {
-    if(output == nullptr)
+    if(outputPtr == nullptr)
     {
       continue;
     }
-    for(usize component = 0; component < output->getNumberOfComponents(); ++component)
+    for(usize component = 0; component < outputPtr->getNumberOfComponents(); ++component)
     {
-      output->setComponent(triId, component, std::numeric_limits<float64>::quiet_NaN());
+      outputPtr->setComponent(triId, component, std::numeric_limits<float64>::quiet_NaN());
     }
   }
 }
@@ -228,7 +228,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
     }
 
     size_t beforeSize = triPatch.size();
-    std::shared_ptr<Float64DataStore> patchNormals = extractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
+    std::shared_ptr<Float64DataStore> patchNormals = ExtractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
     // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchNormals)
     {
@@ -239,11 +239,11 @@ void CalculateTriangleGroupCurvatures::operator()() const
     // If something got removed, redo this part again.
     if(triPatch.size() != beforeSize)
     {
-      patchNormals = extractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
+      patchNormals = ExtractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
     }
 
     beforeSize = triPatch.size();
-    std::shared_ptr<Float64DataStore> patchCentroids = extractPatchData(triId, triPatch, m_SurfaceMeshTriangleCentroids->getDataStoreRef());
+    std::shared_ptr<Float64DataStore> patchCentroids = ExtractPatchData(triId, triPatch, m_SurfaceMeshTriangleCentroids->getDataStoreRef());
     // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchCentroids)
     {
@@ -255,13 +255,13 @@ void CalculateTriangleGroupCurvatures::operator()() const
     if(triPatch.size() != beforeSize)
     {
       beforeSize = triPatch.size();
-      patchNormals = extractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
-      patchCentroids = extractPatchData(triId, triPatch, m_SurfaceMeshTriangleCentroids->getDataStoreRef());
+      patchNormals = ExtractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
+      patchCentroids = ExtractPatchData(triId, triPatch, m_SurfaceMeshTriangleCentroids->getDataStoreRef());
     }
 
     // Translate the patch to the 0,0,0 origin
     double sub[3] = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
-    subtractVector3d(*patchCentroids, sub);
+    SubtractVector3d(*patchCentroids, sub);
 
     nx::core::Matrix3X1d np = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
 
@@ -304,15 +304,15 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
     {
       // Solve the Least Squares fit
-      static const uint32_t NO_NORMALS = 3;
-      static const uint32_t USE_NORMALS = 7;
-      uint32_t cols = NO_NORMALS;
+      static constexpr uint32_t k_NoNormals = 3;
+      static constexpr uint32_t k_UseNormals = 7;
+      uint32_t cols = k_NoNormals;
       if(m_UseNormalsForCurveFitting)
       {
-        cols = USE_NORMALS;
+        cols = k_UseNormals;
       }
       size_t rows = patchCentroids->getNumberOfTuples();
-      Eigen::MatrixXd A(rows, cols);
+      Eigen::MatrixXd a(rows, cols);
       Eigen::VectorXd b(rows);
       double x = 0.0;
       double y = 0.0;
@@ -323,15 +323,15 @@ void CalculateTriangleGroupCurvatures::operator()() const
         y = patchCentroids->getComponentValue(m, 1);
         z = patchCentroids->getComponentValue(m, 2);
 
-        A(m) = 0.5 * x * x;            // 1/2 x^2
-        A(m + rows) = x * y;           // x*y
-        A(m + rows * 2) = 0.5 * y * y; // 1/2 y^2
+        a(m) = 0.5 * x * x;            // 1/2 x^2
+        a(m + rows) = x * y;           // x*y
+        a(m + rows * 2) = 0.5 * y * y; // 1/2 y^2
         if(m_UseNormalsForCurveFitting)
         {
-          A(m + rows * 3) = x * x * x;
-          A(m + rows * 4) = x * x * y;
-          A(m + rows * 5) = x * y * y;
-          A(m + rows * 6) = y * y * y;
+          a(m + rows * 3) = x * x * x;
+          a(m + rows * 4) = x * x * y;
+          a(m + rows * 5) = x * y * y;
+          a(m + rows * 6) = y * y * y;
         }
         b[m] = z; // The Z Values
       }
@@ -340,16 +340,16 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
       if(!m_UseNormalsForCurveFitting)
       {
-        using Vector3d = Eigen::Matrix<double, NO_NORMALS, 1>;
-        Vector3d sln1 = A.colPivHouseholderQr().solve(b);
+        using Vector3dType = Eigen::Matrix<double, k_NoNormals, 1>;
+        Vector3dType sln1 = a.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C constants we can solve the Eigen value/vector problem
         // to get the principal curvatures and principal directions.
         M << sln1(0), sln1(1), sln1(1), sln1(2);
       }
       else
       {
-        using Vector7d = Eigen::Matrix<double, USE_NORMALS, 1>;
-        Vector7d sln1 = A.colPivHouseholderQr().solve(b);
+        using Vector7dType = Eigen::Matrix<double, k_UseNormals, 1>;
+        Vector7dType sln1 = a.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C, D, E, F & G constants we can solve the Eigen value/vector problem
         // to get the principal curvatures and principal directions.
         M << sln1(0), sln1(1), sln1(1), sln1(2);
@@ -388,18 +388,18 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
       if(computeDirection)
       {
-        Eigen::Matrix3d e_rot_T;
-        e_rot_T.row(0) = Eigen::Vector3d(up[0], vp[0], np[0]);
-        e_rot_T.row(1) = Eigen::Vector3d(up[1], vp[1], np[1]);
-        e_rot_T.row(2) = Eigen::Vector3d(up[2], vp[2], np[2]);
+        Eigen::Matrix3d eRotT;
+        eRotT.row(0) = Eigen::Vector3d(up[0], vp[0], np[0]);
+        eRotT.row(1) = Eigen::Vector3d(up[1], vp[1], np[1]);
+        eRotT.row(2) = Eigen::Vector3d(up[2], vp[2], np[2]);
 
         // Rotate our principal directions back into the original coordinate system
         Eigen::Vector3d dir1(eVectors.col(0)(0), eVectors.col(0)(1), 0.0);
-        dir1 = e_rot_T * dir1;
+        dir1 = eRotT * dir1;
         std::copy(dir1.data(), dir1.data() + 3, m_PrincipleDirection1->begin() + (triId * 3));
 
         Eigen::Vector3d dir2(eVectors.col(1)(0), eVectors.col(1)(1), 0.0);
-        dir2 = e_rot_T * dir2;
+        dir2 = eRotT * dir2;
         std::copy(dir2.data(), dir2.data() + 3, m_PrincipleDirection2->begin() + (triId * 3));
       }
     }

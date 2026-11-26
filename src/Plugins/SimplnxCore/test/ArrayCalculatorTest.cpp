@@ -52,7 +52,7 @@ const DataPath k_SignArrayPath = k_AttributeMatrixPath.createChildPath(k_SignArr
 const DataPath k_NumericArrayPath({k_NumericMatrix, k_CalculatedArray});
 const DataPath k_AttributeArrayPath({k_AttributeMatrix, k_CalculatedArray});
 
-const std::string k_Pi_Str = StringUtilities::number(numbers::pi);
+const std::string k_PiStr = StringUtilities::number(numbers::pi);
 
 template <typename T>
 class ArrayCalculatorFailOnLaterReadStore : public DataStore<T>
@@ -81,62 +81,62 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-DataStructure createDataStructure()
+DataStructure CreateDataStructure()
 {
   DataStructure dataStructure;
-  AttributeMatrix* am1 = AttributeMatrix::Create(dataStructure, k_AttributeMatrix, {10ULL});
-  const auto am1Id = am1->getId();
-  AttributeMatrix* am2 = AttributeMatrix::Create(dataStructure, k_NumericMatrix, {1ULL});
-  Float32Array* array1 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_InputArray1, {10}, {1}, am1Id);
-  array1->fill(-12);
-  UInt32Array* array2 = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_InputArray2, {10}, {1}, am1Id);
-  array2->fill(10);
-  UInt32Array* sArray = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_SpacedArray, {10}, {1}, am1Id);
-  sArray->fill(2);
+  AttributeMatrix* am1Ptr = AttributeMatrix::Create(dataStructure, k_AttributeMatrix, {10ULL});
+  const auto am1Id = am1Ptr->getId();
+  AttributeMatrix* am2Ptr = AttributeMatrix::Create(dataStructure, k_NumericMatrix, {1ULL});
+  Float32Array* array1Ptr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_InputArray1, {10}, {1}, am1Id);
+  array1Ptr->fill(-12);
+  UInt32Array* array2Ptr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_InputArray2, {10}, {1}, am1Id);
+  array2Ptr->fill(10);
+  UInt32Array* sArrayPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_SpacedArray, {10}, {1}, am1Id);
+  sArrayPtr->fill(2);
 
-  UInt32Array* mcArray1 = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_MultiComponentArray1, std::vector<size_t>(1, 10), std::vector<size_t>(1, 3), am1Id);
+  UInt32Array* mcArray1Ptr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_MultiComponentArray1, std::vector<size_t>(1, 10), std::vector<size_t>(1, 3), am1Id);
   int num = 0;
-  for(int i = 0; i < mcArray1->getNumberOfTuples() * mcArray1->getNumberOfComponents(); i++)
+  for(int i = 0; i < mcArray1Ptr->getNumberOfTuples() * mcArray1Ptr->getNumberOfComponents(); i++)
   {
-    (*mcArray1)[i] = num;
+    (*mcArray1Ptr)[i] = num;
     num++;
   }
 
-  UInt32Array* mcArray2 = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_MultiComponentArray2, std::vector<size_t>(1, 10), std::vector<size_t>(1, 3), am1Id);
+  UInt32Array* mcArray2Ptr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_MultiComponentArray2, std::vector<size_t>(1, 10), std::vector<size_t>(1, 3), am1Id);
   num = 0;
-  for(int i = 0; i < mcArray2->getNumberOfTuples() * mcArray2->getNumberOfComponents(); i++)
+  for(int i = 0; i < mcArray2Ptr->getNumberOfTuples() * mcArray2Ptr->getNumberOfComponents(); i++)
   {
-    (*mcArray2)[i] = num;
+    (*mcArray2Ptr)[i] = num;
     num++;
   }
 
-  auto numberArray = mcArray2->deepCopy(k_NumberArrayPath);
-  auto signArray = mcArray1->deepCopy(k_SignArrayPath);
+  auto numberArray = mcArray2Ptr->deepCopy(k_NumberArrayPath);
+  auto signArray = mcArray1Ptr->deepCopy(k_SignArrayPath);
 
   return dataStructure;
 }
 
 DataStructure CreateComponentShapeDataStructure()
 {
-  DataStructure ds;
-  auto* am = AttributeMatrix::Create(ds, k_AttributeMatrix, {1});
-  REQUIRE(am != nullptr);
-  auto* arrayA = Float64Array::CreateWithStore<Float64DataStore>(ds, "A", {1}, {3}, am->getId());
-  auto* arrayB = Float64Array::CreateWithStore<Float64DataStore>(ds, "B", {1}, {3}, am->getId());
-  REQUIRE(arrayA != nullptr);
-  REQUIRE(arrayB != nullptr);
-  (*arrayA)[0] = 1;
-  (*arrayA)[1] = 2;
-  (*arrayA)[2] = 4;
-  (*arrayB)[0] = 10;
-  (*arrayB)[1] = 20;
-  (*arrayB)[2] = 40;
-  return ds;
+  DataStructure dataStructure;
+  auto* amPtr = AttributeMatrix::Create(dataStructure, k_AttributeMatrix, {1});
+  REQUIRE(amPtr != nullptr);
+  auto* arrayAPtr = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "A", {1}, {3}, amPtr->getId());
+  auto* arrayBPtr = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "B", {1}, {3}, amPtr->getId());
+  REQUIRE(arrayAPtr != nullptr);
+  REQUIRE(arrayBPtr != nullptr);
+  (*arrayAPtr)[0] = 1;
+  (*arrayAPtr)[1] = 2;
+  (*arrayAPtr)[2] = 4;
+  (*arrayBPtr)[0] = 10;
+  (*arrayBPtr)[1] = 20;
+  (*arrayBPtr)[2] = 40;
+  return dataStructure;
 }
 } // namespace
 
 // -----------------------------------------------------------------------------
-static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units,
+static IFilter::ExecuteResult CreateAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units,
                                                                     DataStructure& dataStructure, ArrayCalculatorFilter& filter)
 {
   Arguments args;
@@ -151,13 +151,13 @@ static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::s
 }
 
 // -----------------------------------------------------------------------------
-static void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition,
+static void RunTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition,
                     const int* expectedNumberOfTuples = nullptr, const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
 {
   std::cout << "  Testing equation: ==>" << equation << "<==" << '\n';
 
   ArrayCalculatorFilter filter;
-  DataStructure dataStructure = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -212,25 +212,25 @@ static void runTest(const std::string& equation, const DataPath& targetArrayPath
 static void MultiComponentArrayCalculatorTest()
 {
   ArrayCalculatorFilter filter;
-  DataStructure dataStructure = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
 
   SECTION("Multi-Component All Components")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("MultiComponent Array1 + MultiComponent Array2", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter("MultiComponent Array1 + MultiComponent Array2", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* mcArray1 = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
-    UInt32Array* mcArray2 = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
+    UInt32Array* mcArray1Ptr = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
+    UInt32Array* mcArray2Ptr = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == mcArray1->getNumberOfTuples());
-    REQUIRE(arrayPtr->getNumberOfComponents() == mcArray1->getNumberOfComponents());
+    REQUIRE(arrayPtr->getNumberOfTuples() == mcArray1Ptr->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfComponents() == mcArray1Ptr->getNumberOfComponents());
     for(int t = 0; t < arrayPtr->getNumberOfTuples(); t++)
     {
       for(int c = 0; c < arrayPtr->getNumberOfComponents(); c++)
       {
         int index = arrayPtr->getNumberOfComponents() * t + c;
-        REQUIRE(arrayPtr->at(index) == mcArray1->at(index) + mcArray2->at(index));
+        REQUIRE(arrayPtr->at(index) == mcArray1Ptr->at(index) + mcArray2Ptr->at(index));
       }
     }
   }
@@ -238,91 +238,91 @@ static void MultiComponentArrayCalculatorTest()
   SECTION("Multi-Component Single Component")
   {
     IFilter::ExecuteResult results =
-        createAndExecuteArrayCalculatorFilter("MultiComponent Array1[1] + MultiComponent Array2[0]", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+        CreateAndExecuteArrayCalculatorFilter("MultiComponent Array1[1] + MultiComponent Array2[0]", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* mcArray1 = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
-    UInt32Array* mcArray2 = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
+    UInt32Array* mcArray1Ptr = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
+    UInt32Array* mcArray2Ptr = dataStructure.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == mcArray1->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfTuples() == mcArray1Ptr->getNumberOfTuples());
     REQUIRE(arrayPtr->getNumberOfComponents() == 1);
     for(int t = 0; t < arrayPtr->getNumberOfTuples(); t++)
     {
-      int index1 = mcArray1->getNumberOfComponents() * t + 1;
-      int index2 = mcArray2->getNumberOfComponents() * t + 0;
+      int index1 = mcArray1Ptr->getNumberOfComponents() * t + 1;
+      int index2 = mcArray2Ptr->getNumberOfComponents() * t + 0;
       int arrayIndex = arrayPtr->getNumberOfComponents() * t + 0;
-      REQUIRE(arrayPtr->at(arrayIndex) == mcArray1->at(index1) + mcArray2->at(index2));
+      REQUIRE(arrayPtr->at(arrayIndex) == mcArray1Ptr->at(index1) + mcArray2Ptr->at(index2));
     }
   }
 
   SECTION("Multi-Component With Scalar")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + 2", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter("\"4\" + 2", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
+    UInt32Array* nArrayPtr = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArrayPtr = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == nArray->getNumberOfTuples());
-    REQUIRE(arrayPtr->getNumberOfComponents() == nArray->getNumberOfComponents());
+    REQUIRE(arrayPtr->getNumberOfTuples() == nArrayPtr->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfComponents() == nArrayPtr->getNumberOfComponents());
     for(int t = 0; t < arrayPtr->getNumberOfTuples(); t++)
     {
       for(int c = 0; c < arrayPtr->getNumberOfComponents(); c++)
       {
-        int index = nArray->getNumberOfComponents() * t + c;
-        REQUIRE(arrayPtr->at(index) == nArray->at(index) + 2);
+        int index = nArrayPtr->getNumberOfComponents() * t + c;
+        REQUIRE(arrayPtr->at(index) == nArrayPtr->at(index) + 2);
       }
     }
   }
 
   SECTION("Multi-Component All Components Number/Sign Array Names")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4" + "*")", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter(R"("4" + "*")", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
+    UInt32Array* nArrayPtr = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArrayPtr = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == nArray->getNumberOfTuples());
-    REQUIRE(arrayPtr->getNumberOfComponents() == nArray->getNumberOfComponents());
+    REQUIRE(arrayPtr->getNumberOfTuples() == nArrayPtr->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfComponents() == nArrayPtr->getNumberOfComponents());
     for(int t = 0; t < arrayPtr->getNumberOfTuples(); t++)
     {
       for(int c = 0; c < arrayPtr->getNumberOfComponents(); c++)
       {
-        int index = nArray->getNumberOfComponents() * t + c;
-        REQUIRE(arrayPtr->at(index) == nArray->at(index) + sArray->at(index));
+        int index = nArrayPtr->getNumberOfComponents() * t + c;
+        REQUIRE(arrayPtr->at(index) == nArrayPtr->at(index) + sArrayPtr->at(index));
       }
     }
   }
 
   SECTION("Multi-Component Single Components Number/Sign Array Names")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4"[0] + "*"[1])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter(R"("4"[0] + "*"[1])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
+    UInt32Array* nArrayPtr = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArrayPtr = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == nArray->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfTuples() == nArrayPtr->getNumberOfTuples());
     REQUIRE(arrayPtr->getNumberOfComponents() == 1);
     for(int t = 0; t < arrayPtr->getNumberOfTuples(); t++)
     {
-      int nIndex = nArray->getNumberOfComponents() * t + 0;
-      int sIndex = sArray->getNumberOfComponents() * t + 1;
-      REQUIRE(arrayPtr->at(t) == nArray->at(nIndex) + sArray->at(sIndex));
+      int nIndex = nArrayPtr->getNumberOfComponents() * t + 0;
+      int sIndex = sArrayPtr->getNumberOfComponents() * t + 1;
+      REQUIRE(arrayPtr->at(t) == nArrayPtr->at(nIndex) + sArrayPtr->at(sIndex));
     }
   }
 
   SECTION("Multi-Component Inconsistent indexing error")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4" + "*"[1])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter(R"("4" + "*"[1])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
+    UInt32Array* nArrayPtr = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArrayPtr = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_INVALID(results.result);
     REQUIRE(results.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::InconsistentCompDims));
@@ -330,10 +330,10 @@ static void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Out of bounds error")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4"[0] + "*"[3])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter(R"("4"[0] + "*"[3])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
+    UInt32Array* nArrayPtr = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArrayPtr = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_INVALID(results.result);
     REQUIRE(results.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::ComponentOutOfRange));
@@ -347,506 +347,506 @@ static void SingleComponentArrayCalculatorTest1()
 {
   SECTION("Empty Tests")
   {
-    runTest("", k_NumericArrayPath, FilterParameter::Constants::k_Validate_Empty_Value, CalculatorWarningCode::None);
-    runTest("          ", k_NumericArrayPath, FilterParameter::Constants::k_Validate_Empty_Value, CalculatorWarningCode::None);
+    RunTest("", k_NumericArrayPath, FilterParameter::Constants::k_Validate_Empty_Value, CalculatorWarningCode::None);
+    RunTest("          ", k_NumericArrayPath, FilterParameter::Constants::k_Validate_Empty_Value, CalculatorWarningCode::None);
   }
 
   SECTION("Single Value Tests")
   {
     int numTuple = 1;
     double value = -3;
-    runTest("-3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("-3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     numTuple = 1;
     value = 14;
-    runTest("14", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("14", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     numTuple = 1;
     value = 0.345;
-    runTest(".345", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest(".345", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Mismatched Parentheses Tests")
   {
     int numTuple = 1;
     double value = 12;
-    runTest("(3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
-    runTest("(3*4", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::MismatchedParentheses), CalculatorWarningCode::None);
-    runTest("3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::MismatchedParentheses), CalculatorWarningCode::None);
+    RunTest("(3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("(3*4", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::MismatchedParentheses), CalculatorWarningCode::None);
+    RunTest("3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::MismatchedParentheses), CalculatorWarningCode::None);
   }
 
   SECTION("Nested Unary Operator Test")
   {
     int numTuple = 1;
     float64 value = sin(pow(fabs(cos(fabs(static_cast<float64>(3)) / 4) + 7), 2));
-    runTest("sin( abs( cos( abs(3)/4) + 7)^2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("sin( abs( cos( abs(3)/4) + 7)^2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     // term1 = (12.5 * (3.14 + 2.718)) / (7 - (8 * (9 + 4)))
     float64 term1 = (12.5 * (3.14 + 2.718)) / (7.0 - (8.0 * (9.0 + 4.0)));
 
     // term2_1 = sin(pi / (4 * (2 + 6)))
-    float64 term2_1 = std::sin(3.141592653589793 / (4.0 * (2.0 + 6.0)));
+    float64 term21 = std::sin(3.141592653589793 / (4.0 * (2.0 + 6.0)));
 
     // term2_2 = pow(base, 1/expArg) where
     //    base   = 5^(1+2)
     //    expArg = 10/((3^2)+1)
     float64 base = std::pow(5.0, 1.0 + 2.0);
     float64 expArg = 10.0 / ((std::pow(3.0, 2.0) + 1.0));
-    float64 term2_2 = std::pow(base, 1.0 / expArg);
+    float64 term22 = std::pow(base, 1.0 / expArg);
 
-    float64 term2 = std::max(term2_1, term2_2);
+    float64 term2 = std::max(term21, term22);
 
     // term3 = abs(-((15+3) - (20/(5+5))))
     float64 term3 = std::abs(-((15.0 + 3.0) - (20.0 / (5.0 + 5.0))));
 
     value = std::min(term1, term2) + term3;
 
-    runTest("min(((12.5*(3.14+2.718))/(7-(8*(9+4)))),max(sin(3.141592653589793/(4*(2+6))),root((5^(1+2)),(10/((3^2)+1)))))+abs(-((15+3)-(20/(5+5))))", k_NumericArrayPath,
+    RunTest("min(((12.5*(3.14+2.718))/(7-(8*(9+4)))),max(sin(3.141592653589793/(4*(2+6))),root((5^(1+2)),(10/((3^2)+1)))))+abs(-((15+3)-(20/(5+5))))", k_NumericArrayPath,
             static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
   }
 
   SECTION("Single Array Tests (Force Incorrect Tuple Counts)")
   {
-    runTest("-InputArray1", k_NumericArrayPath, -268, CalculatorWarningCode::None);
-    runTest(k_InputArray2, k_NumericArrayPath, -268, CalculatorWarningCode::None);
+    RunTest("-InputArray1", k_NumericArrayPath, -268, CalculatorWarningCode::None);
+    RunTest(k_InputArray2, k_NumericArrayPath, -268, CalculatorWarningCode::None);
 
     int numTuple = 10;
     double value = 18;
-    runTest("12 + 6", k_AttributeArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("12 + 6", k_AttributeArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Unrecognized Item Tests")
   {
-    runTest("-foo", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::UnrecognizedItem), CalculatorWarningCode::None);
-    runTest("InputArray3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::UnrecognizedItem), CalculatorWarningCode::None);
-    runTest("sin(InputArray 2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::UnrecognizedItem), CalculatorWarningCode::None);
+    RunTest("-foo", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::UnrecognizedItem), CalculatorWarningCode::None);
+    RunTest("InputArray3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::UnrecognizedItem), CalculatorWarningCode::None);
+    RunTest("sin(InputArray 2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::UnrecognizedItem), CalculatorWarningCode::None);
   }
 
   // Operator Tests
 
   SECTION("Addition Operator")
   {
-    runTest("+", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
-    runTest("3 +", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
-    runTest("+ 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("+", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("3 +", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
+    RunTest("+ 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 18;
-    runTest("12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -6;
-    runTest("-12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
-    runTest("6 + -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("-12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("6 + -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Subtraction Operator")
   {
-    runTest("-89.2 -", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
+    RunTest("-89.2 -", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 43;
-    runTest("97 - 54", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("97 - 54", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -34;
-    runTest("-32 - 2", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("-32 - 2", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 19;
-    runTest("7 - -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("7 - -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Multiplication Operator")
   {
-    runTest("*", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
-    runTest("3 *", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
-    runTest("* 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("*", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("3 *", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
+    RunTest("* 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 72;
-    runTest("12 * 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("12 * 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     value = -72;
-    runTest("-12 * 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
-    runTest("6 * -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("-12 * 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("6 * -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
   }
 
   SECTION("Division Operator")
   {
-    runTest("/", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
-    runTest("3 /", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
-    runTest("/ 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("/", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("3 /", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
+    RunTest("/ 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 2;
-    runTest("12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -2;
-    runTest("-12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("-12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -0.5;
-    runTest("6 / -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("6 / -12", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Pow Operator")
   {
-    runTest("^", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
-    runTest("3 ^", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
-    runTest("^ 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("^", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
+    RunTest("3 ^", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
+    RunTest("^ 12.5", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoLeftValue), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 125;
-    runTest("5 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("5 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -8;
-    runTest("-2 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("-2 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 0.25;
-    runTest("2 ^ -2", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("2 ^ -2", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Abs Operator")
   {
-    runTest("abs", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("abs(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("abs)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("abs()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("abs", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("abs(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("abs)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("abs()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 2;
-    runTest("abs(2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("abs(2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 4.3;
-    runTest("abs(-4.3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("abs(-4.3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 6.7;
-    runTest("abs(abs(6.7))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("abs(abs(6.7))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Sin Operator")
   {
-    runTest("sin", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("sin(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("sin)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("sin()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("sin", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("sin(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("sin)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("sin()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 1;
-    runTest("sin(90)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("sin(90)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 0;
-    runTest("sin(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("sin(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 0.5;
-    runTest("sin(" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("sin(" + k_PiStr + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = 1;
-    runTest("sin(" + k_Pi_Str + "/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("sin(" + k_PiStr + "/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("Cos Operator")
   {
-    runTest("cos", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("cos(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("cos)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("cos()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("cos", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("cos(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("cos)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("cos()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 0;
-    runTest("cos(90)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("cos(90)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = -1;
-    runTest("cos(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("cos(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 0.5;
-    runTest("cos(" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("cos(" + k_PiStr + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = -0.5;
-    runTest("cos(2*" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value,
+    RunTest("cos(2*" + k_PiStr + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value,
             CalculatorParameter::Radians);
   }
 
   SECTION("Tan Operator")
   {
-    runTest("tan", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("tan(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("tan)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("tan()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("tan", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("tan(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("tan)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("tan()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 1;
-    runTest("tan(45)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("tan(45)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = sqrt(3);
-    runTest("tan(60)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("tan(60)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 1;
-    runTest("tan(" + k_Pi_Str + "/4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value,
+    RunTest("tan(" + k_PiStr + "/4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value,
             CalculatorParameter::Radians);
 
     value = -sqrt(static_cast<double>(1) / static_cast<double>(3));
-    runTest("tan(5*" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value,
+    RunTest("tan(5*" + k_PiStr + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value,
             CalculatorParameter::Radians);
   }
 
   SECTION("ASin Operator")
   {
-    runTest("asin", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("asin(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("asin)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("asin()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("asin", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("asin(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("asin)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("asin()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 30;
-    runTest("asin(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("asin(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 45;
-    runTest("asin(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("asin(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = numbers::pi / 3;
-    runTest("asin(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("asin(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = numbers::pi / 2;
-    runTest("asin(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("asin(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("ACos Operator")
   {
-    runTest("acos", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("acos(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("acos)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("acos()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("acos", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("acos(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("acos)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("acos()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 60;
-    runTest("acos(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("acos(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 45;
-    runTest("acos(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("acos(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = numbers::pi / 6;
-    runTest("acos(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("acos(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = 0;
-    runTest("acos(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("acos(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("ATan Operator")
   {
-    runTest("atan", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("atan(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("atan)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("atan()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("atan", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("atan(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("atan)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("atan()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = -45;
-    runTest("atan(-1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("atan(-1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = -60;
-    runTest("atan(-sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
+    RunTest("atan(-sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = numbers::pi / 6;
-    runTest("atan(1/sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("atan(1/sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = numbers::pi / 3;
-    runTest("atan(sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    RunTest("atan(sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("Sqrt Operator")
   {
-    runTest("sqrt", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("sqrt(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("sqrt)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("sqrt()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
-    runTest("sqrt(1, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("sqrt", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("sqrt(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("sqrt)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("sqrt()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("sqrt(1, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 3;
-    runTest("sqrt(9)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("sqrt(9)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("sqrt(4*4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("sqrt(4*4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     value = 3;
-    runTest("sqrt(3^2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("sqrt(3^2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Root Operator")
   {
-    runTest("root", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("root(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("root)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("root()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("root(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("root(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("root", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("root(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("root)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("root()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("root(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("root(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 3;
-    runTest("root(9, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("root(9, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("root(4*4, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("root(4*4, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     value = 4;
-    runTest("root(4*4+0, 1*2+0)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("root(4*4+0, 1*2+0)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     value = 4;
-    runTest("root(64, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("root(64, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Log10 Operator")
   {
-    runTest("log10", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("log10(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("log10)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("log10()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
-    runTest("log10(1, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
-    runTest("log10(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("log10", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("log10(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("log10)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("log10()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("log10(1, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("log10(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = log10(10);
-    runTest("log10(10)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("log10(10)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = log10(40);
-    runTest("log10(40)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("log10(40)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Log Operator")
   {
-    runTest("log", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("log(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("log)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("log()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("log(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("log(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("log", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("log(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("log)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("log()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("log(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("log(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = log(5) / log(2);
-    runTest("log(2, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("log(2, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 2;
-    runTest("log(10, 100)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("log(10, 100)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Exp Operator")
   {
-    runTest("exp", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("exp(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("exp)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("exp()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
-    runTest("exp(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
-    runTest("exp(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("exp", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("exp(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("exp)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("exp()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("exp(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("exp(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 2.7182818284590452354; // M_E
-    runTest("exp(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("exp(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 1;
-    runTest("exp(0)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("exp(0)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Ln Operator")
   {
-    runTest("ln", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("ln(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("ln)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("ln()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
-    runTest("ln(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
-    runTest("ln(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("ln", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("ln(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("ln)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("ln()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("ln(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("ln(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = log(1);
-    runTest("ln(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("ln(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = log(7);
-    runTest("ln(7)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("ln(7)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Floor Operator")
   {
-    runTest("floor", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("floor(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("floor)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("floor()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
-    runTest("floor(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
-    runTest("floor(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("floor", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("floor(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("floor)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("floor()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("floor(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("floor(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 12;
-    runTest("floor(12.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("floor(12.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -83;
-    runTest("floor(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("floor(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Ceil Operator")
   {
-    runTest("ceil", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("ceil(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("ceil)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("ceil()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
-    runTest("ceil(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
-    runTest("ceil(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("ceil", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("ceil(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("ceil)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("ceil()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("ceil(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
+    RunTest("ceil(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::TooManyArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 1;
-    runTest("ceil(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("ceil(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -82;
-    runTest("ceil(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("ceil(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Negative Operator")
   {
-    runTest("-", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
+    RunTest("-", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
 
-    runTest("-(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::MismatchedParentheses), CalculatorWarningCode::None);
-    runTest("-)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
-    runTest("-()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
-    runTest("-(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoPrecedingUnaryOperator), CalculatorWarningCode::None);
-    runTest("-(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoPrecedingUnaryOperator), CalculatorWarningCode::None);
+    RunTest("-(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::MismatchedParentheses), CalculatorWarningCode::None);
+    RunTest("-)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoRightValue), CalculatorWarningCode::None);
+    RunTest("-()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("-(1, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoPrecedingUnaryOperator), CalculatorWarningCode::None);
+    RunTest("-(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoPrecedingUnaryOperator), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = -9;
-    runTest("- 9", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("- 9", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -0.4564;
-    runTest("-(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("-(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = 1;
-    runTest("-(3-4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
+    RunTest("-(3-4)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::AmbiguousNameWarning, &numTuple, &value);
   }
 
   SECTION("Min Operator")
   {
-    runTest("min", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("min(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("min)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("min()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("min(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("min(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("min", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("min(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("min)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("min()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("min(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("min(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 2;
-    runTest("min(2,6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("min(2,6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -93;
-    runTest("min(-82,-93)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("min(-82,-93)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 
   SECTION("Max Operator")
   {
-    runTest("max", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("max(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
-    runTest("max)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
-    runTest("max()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("max(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
-    runTest("max(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
+    RunTest("max", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("max(", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoClosingParen), CalculatorWarningCode::None);
+    RunTest("max)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::OperatorNoOpeningParen), CalculatorWarningCode::None);
+    RunTest("max()", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("max(1)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NotEnoughArguments), CalculatorWarningCode::None);
+    RunTest("max(,)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::NoNumericArguments), CalculatorWarningCode::None);
 
     int numTuple = 1;
     double value = 6;
-    runTest("max(2,6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("max(2,6)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
 
     value = -82;
-    runTest("max(-82,-93)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
+    RunTest("max(-82,-93)", k_NumericArrayPath, static_cast<int32>(CalculatorErrorCode::Success), CalculatorWarningCode::None, &numTuple, &value);
   }
 }
 
@@ -854,68 +854,68 @@ static void SingleComponentArrayCalculatorTest1()
 static void SingleComponentArrayCalculatorTest2()
 {
   ArrayCalculatorFilter filter;
-  DataStructure dataStructure = createDataStructure();
+  DataStructure dataStructure = CreateDataStructure();
 
   // Single Array Tests
   SECTION("Single Array Negative Operator")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("-InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter("-InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    Float32Array* inputArray1 = dataStructure.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
+    Float32Array* inputArray1Ptr = dataStructure.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == inputArray1->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfTuples() == inputArray1Ptr->getNumberOfTuples());
     for(int i = 0; i < arrayPtr->getNumberOfTuples(); i++)
     {
-      REQUIRE(arrayPtr->at(i) == inputArray1->at(i) * -1);
+      REQUIRE(arrayPtr->at(i) == inputArray1Ptr->at(i) * -1);
     }
   }
 
   SECTION("Single Array No Operator")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(k_InputArray2, k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter(k_InputArray2, k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    UInt32Array* inputArray2 = dataStructure.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
+    UInt32Array* inputArray2Ptr = dataStructure.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == inputArray2->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfTuples() == inputArray2Ptr->getNumberOfTuples());
     for(int i = 0; i < arrayPtr->getNumberOfTuples(); i++)
     {
-      REQUIRE(arrayPtr->at(i) == inputArray2->at(i));
+      REQUIRE(arrayPtr->at(i) == inputArray2Ptr->at(i));
     }
   }
 
   // Multiple Array Tests
   SECTION("Multiple Array Addition")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("Spaced Array + InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter("Spaced Array + InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    Float32Array* inputArray1 = dataStructure.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
-    UInt32Array* spacedArray = dataStructure.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_SpacedArray}));
+    Float32Array* inputArray1Ptr = dataStructure.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
+    UInt32Array* spacedArrayPtr = dataStructure.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_SpacedArray}));
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == spacedArray->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfTuples() == spacedArrayPtr->getNumberOfTuples());
     for(int i = 0; i < arrayPtr->getNumberOfTuples(); i++)
     {
-      REQUIRE(arrayPtr->at(i) == inputArray1->at(i) + spacedArray->at(i));
+      REQUIRE(arrayPtr->at(i) == inputArray1Ptr->at(i) + spacedArrayPtr->at(i));
     }
   }
   SECTION("Multiple Array Multiple Operators")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("sqrt((InputArray1^2)+(InputArray2^2))", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = CreateAndExecuteArrayCalculatorFilter("sqrt((InputArray1^2)+(InputArray2^2))", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
-    Float32Array* inputArray1 = dataStructure.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
-    UInt32Array* inputArray2 = dataStructure.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
+    Float32Array* inputArray1Ptr = dataStructure.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
+    UInt32Array* inputArray2Ptr = dataStructure.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
     Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     SIMPLNX_RESULT_REQUIRE_VALID(results.result);
-    REQUIRE(arrayPtr->getNumberOfTuples() == inputArray2->getNumberOfTuples());
+    REQUIRE(arrayPtr->getNumberOfTuples() == inputArray2Ptr->getNumberOfTuples());
     for(int i = 0; i < arrayPtr->getNumberOfTuples(); i++)
     {
-      double value = pow(inputArray1->at(i), 2) + pow(inputArray2->at(i), 2);
+      double value = pow(inputArray1Ptr->at(i), 2) + pow(inputArray2Ptr->at(i), 2);
       value = sqrt(value);
       REQUIRE(arrayPtr->at(i) == value);
     }
@@ -937,18 +937,18 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Filter Execution")
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tokenizer")
 {
-  using TT = nx::core::TokenType;
+  using TtType = nx::core::TokenType;
 
   SECTION("Simple arithmetic")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("3 + 4.5");
     REQUIRE(tokens.size() == 3);
-    REQUIRE(tokens[0].type == TT::Number);
+    REQUIRE(tokens[0].type == TtType::Number);
     REQUIRE(tokens[0].text == "3");
     REQUIRE(tokens[0].position == 0);
-    REQUIRE(tokens[1].type == TT::Plus);
+    REQUIRE(tokens[1].type == TtType::Plus);
     REQUIRE(tokens[1].position == 2);
-    REQUIRE(tokens[2].type == TT::Number);
+    REQUIRE(tokens[2].type == TtType::Number);
     REQUIRE(tokens[2].text == "4.5");
     REQUIRE(tokens[2].position == 4);
   }
@@ -957,12 +957,12 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tokenizer")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("Spaced Array + 1");
     REQUIRE(tokens.size() == 4);
-    REQUIRE(tokens[0].type == TT::Identifier);
+    REQUIRE(tokens[0].type == TtType::Identifier);
     REQUIRE(tokens[0].text == "Spaced");
-    REQUIRE(tokens[1].type == TT::Identifier);
+    REQUIRE(tokens[1].type == TtType::Identifier);
     REQUIRE(tokens[1].text == "Array");
-    REQUIRE(tokens[2].type == TT::Plus);
-    REQUIRE(tokens[3].type == TT::Number);
+    REQUIRE(tokens[2].type == TtType::Plus);
+    REQUIRE(tokens[3].type == TtType::Number);
     REQUIRE(tokens[3].text == "1");
   }
 
@@ -970,44 +970,44 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tokenizer")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("\"CellData/Confidence Index\" + 1");
     REQUIRE(tokens.size() == 3);
-    REQUIRE(tokens[0].type == TT::QuotedString);
+    REQUIRE(tokens[0].type == TtType::QuotedString);
     REQUIRE(tokens[0].text == "CellData/Confidence Index");
-    REQUIRE(tokens[1].type == TT::Plus);
-    REQUIRE(tokens[2].type == TT::Number);
+    REQUIRE(tokens[1].type == TtType::Plus);
+    REQUIRE(tokens[2].type == TtType::Number);
   }
 
   SECTION("Brackets and comma")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("Array[3, 2]");
     REQUIRE(tokens.size() == 6);
-    REQUIRE(tokens[0].type == TT::Identifier);
+    REQUIRE(tokens[0].type == TtType::Identifier);
     REQUIRE(tokens[0].text == "Array");
-    REQUIRE(tokens[1].type == TT::LBracket);
-    REQUIRE(tokens[2].type == TT::Number);
+    REQUIRE(tokens[1].type == TtType::LBracket);
+    REQUIRE(tokens[2].type == TtType::Number);
     REQUIRE(tokens[2].text == "3");
-    REQUIRE(tokens[3].type == TT::Comma);
-    REQUIRE(tokens[4].type == TT::Number);
+    REQUIRE(tokens[3].type == TtType::Comma);
+    REQUIRE(tokens[4].type == TtType::Number);
     REQUIRE(tokens[4].text == "2");
-    REQUIRE(tokens[5].type == TT::RBracket);
+    REQUIRE(tokens[5].type == TtType::RBracket);
   }
 
   SECTION("All operator tokens")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("+ - * / ^ %");
     REQUIRE(tokens.size() == 6);
-    REQUIRE(tokens[0].type == TT::Plus);
-    REQUIRE(tokens[1].type == TT::Minus);
-    REQUIRE(tokens[2].type == TT::Star);
-    REQUIRE(tokens[3].type == TT::Slash);
-    REQUIRE(tokens[4].type == TT::Caret);
-    REQUIRE(tokens[5].type == TT::Percent);
+    REQUIRE(tokens[0].type == TtType::Plus);
+    REQUIRE(tokens[1].type == TtType::Minus);
+    REQUIRE(tokens[2].type == TtType::Star);
+    REQUIRE(tokens[3].type == TtType::Slash);
+    REQUIRE(tokens[4].type == TtType::Caret);
+    REQUIRE(tokens[5].type == TtType::Percent);
   }
 
   SECTION("Decimal starting with dot")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize(".345");
     REQUIRE(tokens.size() == 1);
-    REQUIRE(tokens[0].type == TT::Number);
+    REQUIRE(tokens[0].type == TtType::Number);
     REQUIRE(tokens[0].text == ".345");
   }
 
@@ -1015,23 +1015,23 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tokenizer")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("sin(pi / 2)");
     REQUIRE(tokens.size() == 6);
-    REQUIRE(tokens[0].type == TT::Identifier);
+    REQUIRE(tokens[0].type == TtType::Identifier);
     REQUIRE(tokens[0].text == "sin");
-    REQUIRE(tokens[1].type == TT::LParen);
-    REQUIRE(tokens[2].type == TT::Identifier);
+    REQUIRE(tokens[1].type == TtType::LParen);
+    REQUIRE(tokens[2].type == TtType::Identifier);
     REQUIRE(tokens[2].text == "pi");
-    REQUIRE(tokens[3].type == TT::Slash);
-    REQUIRE(tokens[4].type == TT::Number);
+    REQUIRE(tokens[3].type == TtType::Slash);
+    REQUIRE(tokens[4].type == TtType::Number);
     REQUIRE(tokens[4].text == "2");
-    REQUIRE(tokens[5].type == TT::RParen);
+    REQUIRE(tokens[5].type == TtType::RParen);
   }
 
   SECTION("Negative number tokenizes as minus + number")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("-3.14");
     REQUIRE(tokens.size() == 2);
-    REQUIRE(tokens[0].type == TT::Minus);
-    REQUIRE(tokens[1].type == TT::Number);
+    REQUIRE(tokens[0].type == TtType::Minus);
+    REQUIRE(tokens[1].type == TtType::Number);
     REQUIRE(tokens[1].text == "3.14");
   }
 
@@ -1045,8 +1045,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tokenizer")
   {
     auto tokens = nx::core::ArrayCalculatorParser::tokenize("(3+4)");
     REQUIRE(tokens.size() == 5);
-    REQUIRE(tokens[0].type == TT::LParen);
-    REQUIRE(tokens[4].type == TT::RParen);
+    REQUIRE(tokens[0].type == TtType::LParen);
+    REQUIRE(tokens[4].type == TtType::RParen);
   }
 }
 
@@ -1061,18 +1061,18 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
   // "Group1/SharedName" (UInt32, 10 tuples, filled with 5)
   // "Group2/SharedName" (UInt32, 10 tuples, filled with 7)
   // "Group1/UniqueName" (UInt32, 10 tuples, filled with 3)
-  DataStructure ds;
-  AttributeMatrix* group1 = AttributeMatrix::Create(ds, "Group1", {10ULL});
-  auto group1Id = group1->getId();
-  AttributeMatrix* group2 = AttributeMatrix::Create(ds, "Group2", {10ULL});
-  auto group2Id = group2->getId();
+  DataStructure dataStructure;
+  AttributeMatrix* group1Ptr = AttributeMatrix::Create(dataStructure, "Group1", {10ULL});
+  auto group1Id = group1Ptr->getId();
+  AttributeMatrix* group2Ptr = AttributeMatrix::Create(dataStructure, "Group2", {10ULL});
+  auto group2Id = group2Ptr->getId();
 
-  UInt32Array* shared1 = UInt32Array::CreateWithStore<UInt32DataStore>(ds, "SharedName", {10}, {1}, group1Id);
-  shared1->fill(5);
-  UInt32Array* shared2 = UInt32Array::CreateWithStore<UInt32DataStore>(ds, "SharedName", {10}, {1}, group2Id);
-  shared2->fill(7);
-  UInt32Array* unique1 = UInt32Array::CreateWithStore<UInt32DataStore>(ds, "UniqueName", {10}, {1}, group1Id);
-  unique1->fill(3);
+  UInt32Array* shared1Ptr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "SharedName", {10}, {1}, group1Id);
+  shared1Ptr->fill(5);
+  UInt32Array* shared2Ptr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "SharedName", {10}, {1}, group2Id);
+  shared2Ptr->fill(7);
+  UInt32Array* unique1Ptr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "UniqueName", {10}, {1}, group1Id);
+  unique1Ptr->fill(3);
 
   ArrayCalculatorFilter filter;
 
@@ -1084,11 +1084,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
                                                                               .m_SelectedGroup = DataPath{}, .m_Equation = "UniqueName + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(outputPath);
     REQUIRE(outputArray.getNumberOfTuples() == 10);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
@@ -1104,7 +1104,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
                                                                               .m_SelectedGroup = DataPath{}, .m_Equation = "SharedName + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::AmbiguousArrayName));
   }
@@ -1117,11 +1117,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
                                                                               .m_SelectedGroup = DataPath({"Group1"}), .m_Equation = "SharedName + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(outputPath);
     REQUIRE(outputArray.getNumberOfTuples() == 10);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
@@ -1137,11 +1137,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
                                                                               .m_SelectedGroup = DataPath{}, .m_Equation = "\"Group2/SharedName\" + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(outputPath);
     REQUIRE(outputArray.getNumberOfTuples() == 10);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
@@ -1149,7 +1149,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -1158,7 +1158,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   ArrayCalculatorFilter filter;
 
   SECTION("pi resolves to std::numbers::pi")
@@ -1168,11 +1168,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
                                                                               .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "pi", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
       REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), std::numbers::pi, 0.0001));
@@ -1186,11 +1186,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
                                                                               .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "e", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
       REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), std::numbers::e, 0.0001));
@@ -1204,18 +1204,18 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
                                                                               .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "2 * pi", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
       REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 2.0 * std::numbers::pi, 0.0001));
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -1224,7 +1224,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   ArrayCalculatorFilter filter;
 
   SECTION("Scalar modulo: 10 % 3 = 1")
@@ -1234,11 +1234,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
                                                                               .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "10 % 3", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
       REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 1.0, 0.01));
@@ -1252,11 +1252,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
                                                                               .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "InputArray2 % 3", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     REQUIRE(outputArray.getNumberOfTuples() == 10);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
@@ -1264,7 +1264,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -1273,7 +1273,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tuple Component Indexing")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   ArrayCalculatorFilter filter;
 
   SECTION("MultiComponent Array1[2, 1] produces scalar value 7")
@@ -1286,11 +1286,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tuple Component Indexing")
                             CalculatorParameter::ValueType{.m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "\"MultiComponent Array1\"[2, 1]", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     // Scalar result broadcast to all tuples in the AttributeMatrix (10 tuples)
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
@@ -1306,12 +1306,12 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tuple Component Indexing")
                             CalculatorParameter::ValueType{.m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "\"MultiComponent Array1\"[100, 0]", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::TupleOutOfRange));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -1320,7 +1320,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tuple Component Indexing")
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   ArrayCalculatorFilter filter;
 
   SECTION("(MultiComponent Array1 + MultiComponent Array2)[0] extracts component 0 of the sum")
@@ -1334,11 +1334,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
                             .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = R"(("MultiComponent Array1" + "MultiComponent Array2")[0])", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     REQUIRE(outputArray.getNumberOfTuples() == 10);
     REQUIRE(outputArray.getNumberOfComponents() == 1);
     for(usize t = 0; t < 10; t++)
@@ -1349,7 +1349,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -1358,7 +1358,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Multi-word Array Names")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   ArrayCalculatorFilter filter;
 
   SECTION("Spaced Array + 1 = 3")
@@ -1369,11 +1369,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Multi-word Array Names")
                                                                               .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "Spaced Array + 1", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     REQUIRE(outputArray.getNumberOfTuples() == 10);
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
     {
@@ -1381,13 +1381,13 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Multi-word Array Names")
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Extraction")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   ArrayCalculatorFilter filter;
 
   // MultiComponent Array1 has 10 tuples, 3 components, values 0,1,2,3,...,29
@@ -1401,11 +1401,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Ex
                             .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = R"(("MultiComponent Array1" + "MultiComponent Array2")[2, 1])", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
     // Scalar result broadcast to AM shape (10 tuples)
     double expected = 2.0 * (2 * 3 + 1); // tuple 2, comp 1, doubled = 14
     for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
@@ -1422,12 +1422,12 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Ex
                             .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = R"(("MultiComponent Array1" + "MultiComponent Array2")[100, 0])", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
-    auto result = filter.execute(ds, args);
+    auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::TupleOutOfRange));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Preflight rejects missing binary function operands", "[SimplnxCore][ArrayCalculatorFilter]")
@@ -1435,7 +1435,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Preflight rejects missing binary 
   UnitTest::LoadPlugins();
   const std::string equation = GENERATE("root(1,)", "root(,1)", "log(1,)", "log(,1)", "min(1,)", "min(,1)", "max(1,)", "max(,1)");
   CAPTURE(equation);
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataStructure = ::CreateDataStructure();
   ArrayCalculatorFilter filter;
   Arguments args;
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
@@ -1443,14 +1443,14 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Preflight rejects missing binary 
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
 
-  REQUIRE_FALSE(ds.containsData(k_AttributeArrayPath));
+  REQUIRE_FALSE(dataStructure.containsData(k_AttributeArrayPath));
   IFilter::PreflightResult preflightResult;
-  REQUIRE_NOTHROW(preflightResult = filter.preflight(ds, args));
+  REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InvalidEquation));
-  REQUIRE_FALSE(ds.containsData(k_AttributeArrayPath));
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE_FALSE(dataStructure.containsData(k_AttributeArrayPath));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape mismatch after extraction", "[SimplnxCore][ArrayCalculatorFilter][ComponentShapeRegression]")
@@ -1458,7 +1458,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape mismatch after ex
   UnitTest::LoadPlugins();
   const std::string equation = GENERATE("A + (B)[0]", "(B)[0] + A");
   CAPTURE(equation);
-  DataStructure ds = CreateComponentShapeDataStructure();
+  DataStructure dataStructure = CreateComponentShapeDataStructure();
   ArrayCalculatorFilter filter;
   Arguments args;
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
@@ -1468,18 +1468,18 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape mismatch after ex
 
   // Component extraction leaves an array with one component, not a broadcast scalar.
   // Its component count differs from A's three components in either operand order.
-  const auto result = filter.preflight(ds, args);
+  const auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   REQUIRE(result.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InconsistentCompDims));
-  REQUIRE_FALSE(ds.containsData(k_AttributeArrayPath));
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE_FALSE(dataStructure.containsData(k_AttributeArrayPath));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape and scalar broadcast controls", "[SimplnxCore][ArrayCalculatorFilter][ComponentShapeRegression]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateComponentShapeDataStructure();
+  DataStructure dataStructure = CreateComponentShapeDataStructure();
   ArrayCalculatorFilter filter;
   std::string equation;
   std::vector<float64> expected;
@@ -1505,17 +1505,17 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape and scalar broadc
     expected = {6, 7, 9};
   }
 
-  const auto result = createAndExecuteArrayCalculatorFilter(equation, k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+  const auto result = CreateAndExecuteArrayCalculatorFilter(equation, k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
-  const auto& output = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+  const auto& output = dataStructure.getDataRefAs<Float64Array>(k_AttributeArrayPath);
   REQUIRE(output.getNumberOfTuples() == 1);
   REQUIRE(output.getNumberOfComponents() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
   {
     REQUIRE(output[i] == expected[i]);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and failure propagation", "[SimplnxCore][ArrayCalculatorFilter]")
@@ -1532,16 +1532,16 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and f
     const auto [equation, expectedOffset] =
         GENERATE(std::make_pair("Input + Input[1, 1]", uint32{6}), std::make_pair("Input[1, 1] + Input", uint32{6}), std::make_pair("Input + (Input + Input)[1, 1]", uint32{12}));
     CAPTURE(equation);
-    DataStructure ds;
-    auto* matrix = AttributeMatrix::Create(ds, matrixPath.getTargetName(), ShapeType{k_TupleCount});
-    REQUIRE(matrix != nullptr);
-    auto* source = Int32Array::CreateWithStore<DataStore<int32>>(ds, sourcePath.getTargetName(), matrix->getShape(), ShapeType{k_ComponentCount}, matrix->getId());
-    REQUIRE(source != nullptr);
+    DataStructure dataStructure;
+    auto* matrixPtr = AttributeMatrix::Create(dataStructure, matrixPath.getTargetName(), ShapeType{k_TupleCount});
+    REQUIRE(matrixPtr != nullptr);
+    auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), matrixPtr->getShape(), ShapeType{k_ComponentCount}, matrixPtr->getId());
+    REQUIRE(sourcePtr != nullptr);
     for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
     {
       for(usize compIdx = 0; compIdx < k_ComponentCount; compIdx++)
       {
-        (*source)[tupleIdx * k_ComponentCount + compIdx] = static_cast<int32>(tupleIdx * 5 + compIdx);
+        (*sourcePtr)[tupleIdx * k_ComponentCount + compIdx] = static_cast<int32>(tupleIdx * 5 + compIdx);
       }
     }
 
@@ -1552,10 +1552,10 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and f
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::uint32));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
 
-    const auto executeResult = filter.execute(ds, args);
+    const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(outputPath));
-    const auto& output = ds.getDataRefAs<UInt32Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<UInt32Array>(outputPath);
     REQUIRE(output.getNumberOfTuples() == k_TupleCount);
     REQUIRE(output.getNumberOfComponents() == k_ComponentCount);
     for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
@@ -1566,21 +1566,21 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and f
         REQUIRE(output[tupleIdx * k_ComponentCount + compIdx] == expected);
       }
     }
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("later source page failure stops before the tail write")
   {
     constexpr int32 k_ReadError = -91901;
-    DataStructure ds;
-    auto* matrix = AttributeMatrix::Create(ds, matrixPath.getTargetName(), ShapeType{k_TupleCount});
-    REQUIRE(matrix != nullptr);
+    DataStructure dataStructure;
+    auto* matrixPtr = AttributeMatrix::Create(dataStructure, matrixPath.getTargetName(), ShapeType{k_TupleCount});
+    REQUIRE(matrixPtr != nullptr);
     auto sourceStore = std::make_shared<ArrayCalculatorFailOnLaterReadStore<int32>>(ShapeType{k_TupleCount}, ShapeType{k_ComponentCount}, int32{0}, k_ReadError, 2);
-    auto* source = Int32Array::Create(ds, sourcePath.getTargetName(), sourceStore, matrix->getId());
-    REQUIRE(source != nullptr);
-    for(usize valueIdx = 0; valueIdx < source->getSize(); valueIdx++)
+    auto* sourcePtr = Int32Array::Create(dataStructure, sourcePath.getTargetName(), sourceStore, matrixPtr->getId());
+    REQUIRE(sourcePtr != nullptr);
+    for(usize valueIdx = 0; valueIdx < sourcePtr->getSize(); valueIdx++)
     {
-      (*source)[valueIdx] = static_cast<int32>(valueIdx);
+      (*sourcePtr)[valueIdx] = static_cast<int32>(valueIdx);
     }
 
     ArrayCalculatorFilter filter;
@@ -1590,11 +1590,11 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Bulk multi-page calculation and f
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::uint32));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
 
-    const auto executeResult = filter.execute(ds, args);
+    const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
     REQUIRE(std::any_of(executeResult.result.errors().cbegin(), executeResult.result.errors().cend(), [](const Error& error) { return error.code == k_ReadError; }));
-    REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(outputPath));
-    const auto& output = ds.getDataRefAs<UInt32Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<UInt32Array>(outputPath);
     REQUIRE(output[0] == 1U);
     REQUIRE(output[output.getSize() - 1] == 0U);
   }
@@ -1604,7 +1604,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1617,23 +1617,23 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ArrayCalculatorFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ArrayCalculatorFilter>::uuid);
 
       // Note: Complex SIMPL parameter conversions may produce warnings
       // pipelineFilter->getComments() may not be empty for filters with custom converters
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         // Complex type (NumericTypeParameterConverter) - verified by successful pipeline loading
@@ -1645,19 +1645,19 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[SimplnxCore][ArrayCalculatorFilter]")
 {
-  DataStructure ds;
-  auto* matrix = AttributeMatrix::Create(ds, k_AttributeMatrix, {2});
-  REQUIRE(matrix != nullptr);
-  auto* first = Float64Array::CreateWithStore<Float64DataStore>(ds, "MC1", {2}, {3}, matrix->getId());
-  auto* second = Float64Array::CreateWithStore<Float64DataStore>(ds, "MC2", {2}, {3}, matrix->getId());
-  REQUIRE(first != nullptr);
-  REQUIRE(second != nullptr);
+  DataStructure dataStructure;
+  auto* matrixPtr = AttributeMatrix::Create(dataStructure, k_AttributeMatrix, {2});
+  REQUIRE(matrixPtr != nullptr);
+  auto* firstPtr = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "MC1", {2}, {3}, matrixPtr->getId());
+  auto* secondPtr = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "MC2", {2}, {3}, matrixPtr->getId());
+  REQUIRE(firstPtr != nullptr);
+  REQUIRE(secondPtr != nullptr);
   const std::vector<float64> firstValues = {1, -8, 3, 9, 5, 2};
   const std::vector<float64> secondValues = {4, 6, 2, 7, -3, 10};
   for(usize i = 0; i < firstValues.size(); i++)
   {
-    (*first)[i] = firstValues[i];
-    (*second)[i] = secondValues[i];
+    (*firstPtr)[i] = firstValues[i];
+    (*secondPtr)[i] = secondValues[i];
   }
 
   std::string equation;
@@ -1712,16 +1712,16 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[Simp
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   const DataPath outputPath({"Result"});
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   if(expectInvalid)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InconsistentCompDims));
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
     return;
   }
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  DataStructure preview = ds;
+  DataStructure preview = dataStructure;
   auto actions = preflight.outputActions.value();
   const auto applied = actions.applyAll(preview, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
@@ -1729,10 +1729,10 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[Simp
   const auto& planned = preview.getDataRefAs<Float64Array>(outputPath);
   REQUIRE(planned.getTupleShape() == ShapeType{expected.size()});
   REQUIRE(planned.getComponentShape() == ShapeType{1});
-  const auto executed = filter.execute(ds, args);
+  const auto executed = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executed.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
-  const auto& output = ds.getDataRefAs<Float64Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPath);
   REQUIRE(output.getTupleShape() == planned.getTupleShape());
   REQUIRE(output.getComponentShape() == planned.getComponentShape());
   for(usize i = 0; i < expected.size(); i++)
@@ -1740,5 +1740,5 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[Simp
     REQUIRE(output[i] == expected[i]);
   }
   UnitTest::CheckArraysInheritTupleDims(preview);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

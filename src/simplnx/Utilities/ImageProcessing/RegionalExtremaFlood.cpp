@@ -13,9 +13,9 @@ template <bool Maxima>
 Result<> RegionalExtremaFlood<T>::runImpl()
 {
   const int64 nX = static_cast<int64>(m_Dims[0]);
-  const int64 nY = static_cast<int64>(m_Dims[1]);
-  const int64 nZ = static_cast<int64>(m_Dims[2]);
-  const usize vol = static_cast<usize>(nX * nY * nZ);
+  const int64 ny = static_cast<int64>(m_Dims[1]);
+  const int64 nz = static_cast<int64>(m_Dims[2]);
+  const usize vol = static_cast<usize>(nX * ny * nz);
   if(vol == 0)
   {
     return {};
@@ -41,17 +41,17 @@ Result<> RegionalExtremaFlood<T>::runImpl()
   std::copy(input.get(), input.get() + vol, work.get());
 
   const std::vector<detail::ReconOffset> offsets = detail::MakeReconstructionOffsets(m_FullyConnected).all;
-  auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   std::vector<usize> stack;
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       for(int64 x = 0; x < nX; ++x)
       {
@@ -84,8 +84,8 @@ Result<> RegionalExtremaFlood<T>::runImpl()
         {
           const usize idx = stack.back();
           stack.pop_back();
-          const int64 iz = static_cast<int64>(idx) / (nX * nY);
-          const int64 rem = static_cast<int64>(idx) - iz * (nX * nY);
+          const int64 iz = static_cast<int64>(idx) / (nX * ny);
+          const int64 rem = static_cast<int64>(idx) - iz * (nX * ny);
           const int64 iy = rem / nX;
           const int64 ix = rem - iy * nX;
           for(const detail::ReconOffset& o : offsets)

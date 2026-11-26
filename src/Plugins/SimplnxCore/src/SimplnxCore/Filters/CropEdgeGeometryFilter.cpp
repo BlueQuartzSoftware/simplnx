@@ -35,17 +35,17 @@ void CreateCroppedArrayActions(const AttributeMatrix& source, const DataPath& de
   for(const auto& [identifier, object] : source)
   {
     const auto path = destination.createChildPath(object->getName());
-    if(const auto* array = dynamic_cast<const IDataArray*>(object.get()); array != nullptr)
+    if(const auto* arrayPtr = dynamic_cast<const IDataArray*>(object.get()); arrayPtr != nullptr)
     {
-      actions.appendAction(std::make_unique<CreateArrayAction>(array->getDataType(), ShapeType{1}, array->getIDataStoreRef().getComponentShape(), path));
+      actions.appendAction(std::make_unique<CreateArrayAction>(arrayPtr->getDataType(), ShapeType{1}, arrayPtr->getIDataStoreRef().getComponentShape(), path));
     }
     else if(dynamic_cast<const StringArray*>(object.get()) != nullptr)
     {
       actions.appendAction(std::make_unique<CreateStringArrayAction>(ShapeType{1}, path));
     }
-    else if(const auto* neighbors = dynamic_cast<const INeighborList*>(object.get()); neighbors != nullptr)
+    else if(const auto* neighborsPtr = dynamic_cast<const INeighborList*>(object.get()); neighborsPtr != nullptr)
     {
-      actions.appendAction(std::make_unique<CreateNeighborListAction>(neighbors->getDataType(), ShapeType{1}, path));
+      actions.appendAction(std::make_unique<CreateNeighborListAction>(neighborsPtr->getDataType(), ShapeType{1}, path));
     }
   }
 }
@@ -277,8 +277,8 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   // The cleared Feature AM keeps its source shape until optional renumbering.
   if(clearFeatureAttributeMatrix)
   {
-    const auto* srcFeatureData = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
-    if(srcFeatureData == nullptr || !srcEdgeGeom.contains(srcFeatureData))
+    const auto* srcFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(srcFeatureDataPtr == nullptr || !srcEdgeGeom.contains(srcFeatureDataPtr))
     {
       return {.outputActions = MakeErrorResult<OutputActions>(
                   -67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'. Select an Attribute Matrix that is a "
@@ -286,7 +286,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
                                       featureAmPath.toString(), srcEdgeGeomPath.toString())),
               .outputValues = preflightUpdatedValues};
     }
-    if(srcEdgeGeom.getEdgeAttributeMatrix() == srcFeatureData || srcEdgeGeom.getVertexAttributeMatrix() == srcFeatureData)
+    if(srcEdgeGeom.getEdgeAttributeMatrix() == srcFeatureDataPtr || srcEdgeGeom.getVertexAttributeMatrix() == srcFeatureDataPtr)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(
                   -67412, fmt::format("The Feature Attribute Matrix '{}' is the Edge or Vertex Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn "
@@ -325,13 +325,13 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
                 .outputValues = preflightUpdatedValues};
       }
     }
-    const auto featureAmPaths = srcFeatureData->getDataPaths();
+    const auto featureAmPaths = srcFeatureDataPtr->getDataPaths();
     ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
     const DataPath destFeatureAmPath = destEdgeGeomPath.createChildPath(featureAmPath.getTargetName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, srcFeatureData->getShape()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, srcFeatureDataPtr->getShape()));
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *srcFeatureData)
+    for(const auto& [identifier, object] : *srcFeatureDataPtr)
     {
       clearedList += "\n" + featureAmPath.createChildPath(object->getName()).toString();
     }

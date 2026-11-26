@@ -108,11 +108,11 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
     return {};
   }
 
-  auto* inputArrayF32 = m_DataStructure.getDataAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
-  auto* inputArrayF64 = (inputArrayF32 != nullptr) ? nullptr : m_DataStructure.getDataAs<Float64Array>(m_InputValues->InputOrientationArrayPath);
+  auto* inputArrayF32Ptr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
+  auto* inputArrayF64Ptr = (inputArrayF32Ptr != nullptr) ? nullptr : m_DataStructure.getDataAs<Float64Array>(m_InputValues->InputOrientationArrayPath);
 
-  const usize numTuples = (inputArrayF32 != nullptr) ? inputArrayF32->getNumberOfTuples() : inputArrayF64->getNumberOfTuples();
-  const usize inNumComps = (inputArrayF32 != nullptr) ? inputArrayF32->getNumberOfComponents() : inputArrayF64->getNumberOfComponents();
+  const usize numTuples = (inputArrayF32Ptr != nullptr) ? inputArrayF32Ptr->getNumberOfTuples() : inputArrayF64Ptr->getNumberOfTuples();
+  const usize inNumComps = (inputArrayF32Ptr != nullptr) ? inputArrayF32Ptr->getNumberOfComponents() : inputArrayF64Ptr->getNumberOfComponents();
 
   auto* cellPhasesArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   auto* crystalStructuresArrayPtr = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -138,7 +138,7 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
   auto quatBuffer = std::make_unique<float32[]>(k_ChunkSize * 4);
   auto outVertBuffer = std::make_unique<float32[]>(k_ChunkSize * 3);
   std::unique_ptr<float64[]> f64Buffer;
-  if(inputArrayF64 != nullptr)
+  if(inputArrayF64Ptr != nullptr)
   {
     f64Buffer = std::make_unique<float64[]>(k_ChunkSize * inNumComps);
   }
@@ -161,16 +161,16 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
     const usize chunkTuples = std::min(k_ChunkSize, numTuples - tupleIdx);
     const usize inElemCount = chunkTuples * inNumComps;
 
-    if(inputArrayF32 != nullptr)
+    if(inputArrayF32Ptr != nullptr)
     {
-      if(Result<> ioResult = inputArrayF32->getDataStoreRef().copyIntoBuffer(tupleIdx * inNumComps, nonstd::span<float32>(inBuffer.get(), inElemCount)); ioResult.invalid())
+      if(Result<> ioResult = inputArrayF32Ptr->getDataStoreRef().copyIntoBuffer(tupleIdx * inNumComps, nonstd::span<float32>(inBuffer.get(), inElemCount)); ioResult.invalid())
       {
         return ConvertResult(std::move(ioResult));
       }
     }
     else
     {
-      if(Result<> ioResult = inputArrayF64->getDataStoreRef().copyIntoBuffer(tupleIdx * inNumComps, nonstd::span<float64>(f64Buffer.get(), inElemCount)); ioResult.invalid())
+      if(Result<> ioResult = inputArrayF64Ptr->getDataStoreRef().copyIntoBuffer(tupleIdx * inNumComps, nonstd::span<float64>(f64Buffer.get(), inElemCount)); ioResult.invalid())
       {
         return ConvertResult(std::move(ioResult));
       }

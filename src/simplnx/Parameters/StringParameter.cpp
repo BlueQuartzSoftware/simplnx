@@ -48,10 +48,10 @@ nlohmann::json StringParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> StringParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'StringParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'StringParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
   }
   auto string = json.get<ValueType>();
   return {{string}};
@@ -82,7 +82,7 @@ namespace SIMPLConversion
 {
 namespace
 {
-std::optional<int32> float32MidpointPrecision(float64 value)
+std::optional<int32> Float32MidpointPrecision(float64 value)
 {
   if(!std::isfinite(value) || value == 0.0)
   {
@@ -123,7 +123,7 @@ Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToSt
     if constexpr(std::is_same_v<T, float64>)
     {
       // Shortest Float64 text can move a Float32 rounding tie to either side of the midpoint.
-      if(const auto precision = float32MidpointPrecision(value); precision.has_value())
+      if(const auto precision = Float32MidpointPrecision(value); precision.has_value())
       {
         return {fmt::format("{:.{}f}", value, *precision)};
       }

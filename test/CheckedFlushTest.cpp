@@ -83,12 +83,12 @@ public:
    */
   void flush() const override
   {
-    ++FlushCalls;
+    ++flush_calls;
     ThrowFlushFailure(Failure);
   }
 
   FlushFailure Failure = FlushFailure::None;
-  mutable usize FlushCalls = 0;
+  mutable usize flush_calls = 0;
 };
 
 /**
@@ -117,7 +117,7 @@ public:
    */
   void flush() const override
   {
-    ++LegacyCalls;
+    ++legacy_calls;
   }
 
   /**
@@ -126,13 +126,13 @@ public:
    */
   [[nodiscard]] Result<> flushChecked() const override
   {
-    ++CheckedCalls;
-    return FlushResult;
+    ++checked_calls;
+    return flush_result;
   }
 
-  Result<> FlushResult;
-  mutable usize CheckedCalls = 0;
-  mutable usize LegacyCalls = 0;
+  Result<> flush_result;
+  mutable usize checked_calls = 0;
+  mutable usize legacy_calls = 0;
 };
 
 /**
@@ -162,12 +162,12 @@ public:
    */
   [[nodiscard]] Result<> flushChecked() const override
   {
-    ++CheckedCalls;
-    return FlushResult;
+    ++checked_calls;
+    return flush_result;
   }
 
-  Result<> FlushResult;
-  mutable usize CheckedCalls = 0;
+  Result<> flush_result;
+  mutable usize checked_calls = 0;
 };
 
 /**
@@ -198,12 +198,12 @@ public:
    */
   void flush() const override
   {
-    ++FlushCalls;
+    ++flush_calls;
     ThrowFlushFailure(Failure);
   }
 
   FlushFailure Failure = FlushFailure::None;
-  mutable usize FlushCalls = 0;
+  mutable usize flush_calls = 0;
 };
 
 /**
@@ -235,14 +235,14 @@ public:
    */
   [[nodiscard]] Result<> flushChecked() const override
   {
-    ++CheckedCalls;
+    ++checked_calls;
     ThrowFlushFailure(Failure);
-    return FlushResult;
+    return flush_result;
   }
 
   FlushFailure Failure = FlushFailure::None;
-  Result<> FlushResult;
-  mutable usize CheckedCalls = 0;
+  Result<> flush_result;
+  mutable usize checked_calls = 0;
 };
 } // namespace
 
@@ -293,7 +293,7 @@ TEST_CASE("CheckedFlush adapts legacy numeric exceptions", "[simplnx][CheckedFlu
     const AbstractDataStore<int32>& abstractStore = store;
     Result<> result;
     REQUIRE_NOTHROW(result = abstractStore.flushChecked());
-    CHECK(store.FlushCalls == 1);
+    CHECK(store.flush_calls == 1);
     CHECK(result.warnings().empty());
     if(expectedCode == 0)
     {
@@ -322,7 +322,7 @@ TEST_CASE("CheckedFlush adapts legacy object exceptions", "[simplnx][CheckedFlus
     const DataObject& abstractObject = *object;
     Result<> result;
     REQUIRE_NOTHROW(result = abstractObject.flushChecked());
-    CHECK(object->FlushCalls == 1);
+    CHECK(object->flush_calls == 1);
     CHECK(result.warnings().empty());
     if(expectedCode == 0)
     {
@@ -362,14 +362,14 @@ TEST_CASE("CheckedFlush forwards numeric and list diagnostics once", "[simplnx][
     }
     reportedResult.warnings().push_back({19001, "backing.h5:/values: first storage warning"});
     reportedResult.warnings().push_back({19002, "backing.h5:/values: second storage warning"});
-    numericStore->FlushResult = reportedResult;
-    listStore->FlushResult = reportedResult;
+    numericStore->flush_result = reportedResult;
+    listStore->flush_result = reportedResult;
 
     const DataObject& object = useList ? static_cast<const DataObject&>(*listPtr) : static_cast<const DataObject&>(*arrayPtr);
     const auto result = object.flushChecked();
-    CHECK(numericStore->CheckedCalls == (useList ? 0 : 1));
-    CHECK(listStore->CheckedCalls == (useList ? 1 : 0));
-    CHECK(numericStore->LegacyCalls == 0);
+    CHECK(numericStore->checked_calls == (useList ? 0 : 1));
+    CHECK(listStore->checked_calls == (useList ? 1 : 0));
+    CHECK(numericStore->legacy_calls == 0);
     CHECK(result.invalid() == hasErrors);
     REQUIRE(result.warnings().size() == 2);
     CHECK(result.warnings()[0].code == 19001);
@@ -397,14 +397,14 @@ TEST_CASE("CheckedFlush stops at the first failed object and keeps all of its pa
   REQUIRE(firstParentPtr != nullptr);
   REQUIRE(secondParentPtr != nullptr);
   auto warningStore = std::make_shared<ReportingFlushStore>();
-  warningStore->FlushResult = MakeWarningVoidResult(19100, "earlier warning");
+  warningStore->flush_result = MakeWarningVoidResult(19100, "earlier warning");
   const auto* warningArrayPtr = DataArray<int32>::Create(dataStructure, "Earlier", warningStore);
   REQUIRE(warningArrayPtr != nullptr);
   auto firstStore = std::make_shared<ReportingFlushStore>();
-  firstStore->FlushResult = MakeErrorResult(-19101, "backing.h5:/first: primary failure");
-  firstStore->FlushResult.errors().push_back({-272, "backing.h5:/first: memory allocation failed during cleanup"});
-  firstStore->FlushResult.warnings().push_back({19101, "first warning"});
-  firstStore->FlushResult.warnings().push_back({19102, "second warning"});
+  firstStore->flush_result = MakeErrorResult(-19101, "backing.h5:/first: primary failure");
+  firstStore->flush_result.errors().push_back({-272, "backing.h5:/first: memory allocation failed during cleanup"});
+  firstStore->flush_result.warnings().push_back({19101, "first warning"});
+  firstStore->flush_result.warnings().push_back({19102, "second warning"});
   const auto* firstArrayPtr = DataArray<int32>::Create(dataStructure, "Values", firstStore, firstParentPtr->getId());
   REQUIRE(firstArrayPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(firstArrayPtr->getId(), secondParentPtr->getId()));
@@ -412,8 +412,8 @@ TEST_CASE("CheckedFlush stops at the first failed object and keeps all of its pa
   REQUIRE(warningArrayPtr->getId() < firstArrayPtr->getId());
 
   auto laterStore = std::make_shared<ReportingFlushStore>();
-  laterStore->FlushResult = MakeErrorResult(-19103, "backing.h5:/later: later failure");
-  laterStore->FlushResult.warnings().push_back({19103, "later warning"});
+  laterStore->flush_result = MakeErrorResult(-19103, "backing.h5:/later: later failure");
+  laterStore->flush_result.warnings().push_back({19103, "later warning"});
   const auto* laterArrayPtr = DataArray<int32>::Create(dataStructure, "ALater", laterStore);
   REQUIRE(laterArrayPtr != nullptr);
   REQUIRE(firstArrayPtr->getId() < laterArrayPtr->getId());
@@ -421,13 +421,13 @@ TEST_CASE("CheckedFlush stops at the first failed object and keeps all of its pa
   const DataStructure& constStructure = dataStructure;
   const auto result = constStructure.flushChecked();
   REQUIRE(result.invalid());
-  CHECK(warningStore->CheckedCalls == 1);
-  CHECK(firstStore->CheckedCalls == 1);
+  CHECK(warningStore->checked_calls == 1);
+  CHECK(firstStore->checked_calls == 1);
   // The first failure ends the traversal; later objects keep their unflushed state.
-  CHECK(laterStore->CheckedCalls == 0);
-  CHECK(warningStore->LegacyCalls == 0);
-  CHECK(firstStore->LegacyCalls == 0);
-  CHECK(laterStore->LegacyCalls == 0);
+  CHECK(laterStore->checked_calls == 0);
+  CHECK(warningStore->legacy_calls == 0);
+  CHECK(firstStore->legacy_calls == 0);
+  CHECK(laterStore->legacy_calls == 0);
   REQUIRE(result.errors().size() == 2);
   CHECK(result.errors()[0].code == -19101);
   CHECK(result.errors()[1].code == -272);
@@ -468,8 +468,8 @@ TEST_CASE("CheckedFlush forwarders preserve invalid results with no errors", "[s
     emptyFailure.warnings().push_back({19501, "backing.h5:/values: retained warning"});
     REQUIRE(emptyFailure.invalid());
     REQUIRE(emptyFailure.errors().empty());
-    numericStore->FlushResult = emptyFailure;
-    listStore->FlushResult = emptyFailure;
+    numericStore->flush_result = emptyFailure;
+    listStore->flush_result = emptyFailure;
 
     const DataObject& object = useList ? static_cast<const DataObject&>(*listPtr) : static_cast<const DataObject&>(*arrayPtr);
     const auto result = object.flushChecked();
@@ -480,9 +480,9 @@ TEST_CASE("CheckedFlush forwarders preserve invalid results with no errors", "[s
     REQUIRE(result.warnings().size() == 1);
     CHECK(result.warnings()[0].code == 19501);
     CHECK(result.warnings()[0].message.find("backing.h5:/values: retained warning") != std::string::npos);
-    CHECK(numericStore->CheckedCalls == (useList ? 0 : 1));
-    CHECK(listStore->CheckedCalls == (useList ? 1 : 0));
-    CHECK(numericStore->LegacyCalls == 0);
+    CHECK(numericStore->checked_calls == (useList ? 0 : 1));
+    CHECK(listStore->checked_calls == (useList ? 1 : 0));
+    CHECK(numericStore->legacy_calls == 0);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
@@ -491,13 +491,13 @@ TEST_CASE("CheckedFlush traversal preserves invalid custom objects with no error
 {
   DataStructure dataStructure;
   auto object = std::make_shared<ThrowingCheckedFlushGroup>(dataStructure, "EmptyFailure");
-  object->FlushResult.m_Expected = nonstd::make_unexpected(ErrorCollection{});
-  object->FlushResult.warnings().push_back({19601, "empty failure warning"});
-  REQUIRE(object->FlushResult.invalid());
-  REQUIRE(object->FlushResult.errors().empty());
+  object->flush_result.m_Expected = nonstd::make_unexpected(ErrorCollection{});
+  object->flush_result.warnings().push_back({19601, "empty failure warning"});
+  REQUIRE(object->flush_result.invalid());
+  REQUIRE(object->flush_result.errors().empty());
   REQUIRE(dataStructure.insert(object, DataPath{}));
   auto laterStore = std::make_shared<ReportingFlushStore>();
-  laterStore->FlushResult = MakeWarningVoidResult(19602, "later warning");
+  laterStore->flush_result = MakeWarningVoidResult(19602, "later warning");
   const auto* laterArrayPtr = DataArray<int32>::Create(dataStructure, "Later", laterStore);
   REQUIRE(laterArrayPtr != nullptr);
   REQUIRE(object->getId() < laterArrayPtr->getId());
@@ -511,8 +511,8 @@ TEST_CASE("CheckedFlush traversal preserves invalid custom objects with no error
   REQUIRE(result.warnings().size() == 1);
   CHECK(result.warnings()[0].code == 19601);
   CHECK(result.warnings()[0].message.find("empty failure warning") != std::string::npos);
-  CHECK(object->CheckedCalls == 1);
-  CHECK(laterStore->CheckedCalls == 0);
+  CHECK(object->checked_calls == 1);
+  CHECK(laterStore->checked_calls == 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -520,13 +520,13 @@ TEST_CASE("CheckedFlush calls a shared store once for each distinct object", "[s
 {
   DataStructure dataStructure;
   auto store = std::make_shared<ReportingFlushStore>();
-  store->FlushResult = MakeWarningVoidResult(19201, "shared backing warning");
+  store->flush_result = MakeWarningVoidResult(19201, "shared backing warning");
   REQUIRE(DataArray<int32>::Create(dataStructure, "First", store) != nullptr);
   REQUIRE(DataArray<int32>::Create(dataStructure, "Second", store) != nullptr);
   const auto result = std::as_const(dataStructure).flushChecked();
   REQUIRE(result.valid());
-  CHECK(store->CheckedCalls == 2);
-  CHECK(store->LegacyCalls == 0);
+  CHECK(store->checked_calls == 2);
+  CHECK(store->legacy_calls == 0);
   REQUIRE(result.warnings().size() == 2);
   CHECK(result.warnings()[0].code == 19201);
   CHECK(result.warnings()[1].code == 19201);
@@ -543,16 +543,16 @@ TEST_CASE("CheckedFlush stops at the first failed object before custom checked e
   {
     DataStructure dataStructure;
     auto firstStore = std::make_shared<ReportingFlushStore>();
-    firstStore->FlushResult = MakeErrorResult(-19301, "first ordinary failure");
-    firstStore->FlushResult.warnings().push_back({19301, "first warning"});
+    firstStore->flush_result = MakeErrorResult(-19301, "first ordinary failure");
+    firstStore->flush_result.warnings().push_back({19301, "first warning"});
     const auto* firstArrayPtr = DataArray<int32>::Create(dataStructure, "First", firstStore);
     REQUIRE(firstArrayPtr != nullptr);
     auto throwingObject = std::make_shared<ThrowingCheckedFlushGroup>(dataStructure, "ThrowingObject");
     REQUIRE(dataStructure.insert(throwingObject, DataPath{}));
     throwingObject->Failure = failure;
     auto laterStore = std::make_shared<ReportingFlushStore>();
-    laterStore->FlushResult = MakeErrorResult(-19302, "later ordinary failure");
-    laterStore->FlushResult.warnings().push_back({19302, "later warning"});
+    laterStore->flush_result = MakeErrorResult(-19302, "later ordinary failure");
+    laterStore->flush_result.warnings().push_back({19302, "later warning"});
     const auto* laterArrayPtr = DataArray<int32>::Create(dataStructure, "Later", laterStore);
     REQUIRE(laterArrayPtr != nullptr);
     REQUIRE(firstArrayPtr->getId() < throwingObject->getId());
@@ -561,9 +561,9 @@ TEST_CASE("CheckedFlush stops at the first failed object before custom checked e
     Result<> result;
     REQUIRE_NOTHROW(result = std::as_const(dataStructure).flushChecked());
     REQUIRE(result.invalid());
-    CHECK(firstStore->CheckedCalls == 1);
-    CHECK(throwingObject->CheckedCalls == 0);
-    CHECK(laterStore->CheckedCalls == 0);
+    CHECK(firstStore->checked_calls == 1);
+    CHECK(throwingObject->checked_calls == 0);
+    CHECK(laterStore->checked_calls == 0);
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -19301);
     CHECK(result.errors()[0].message.find("first ordinary failure") != std::string::npos);
@@ -572,12 +572,12 @@ TEST_CASE("CheckedFlush stops at the first failed object before custom checked e
     CHECK(result.warnings()[0].message.find("first warning") != std::string::npos);
 
     // With the ordinary failure repaired, the next flush stops at the throwing object instead.
-    firstStore->FlushResult = MakeWarningVoidResult(19303, "repaired warning");
+    firstStore->flush_result = MakeWarningVoidResult(19303, "repaired warning");
     REQUIRE_NOTHROW(result = std::as_const(dataStructure).flushChecked());
     REQUIRE(result.invalid());
-    CHECK(firstStore->CheckedCalls == 2);
-    CHECK(throwingObject->CheckedCalls == 1);
-    CHECK(laterStore->CheckedCalls == 0);
+    CHECK(firstStore->checked_calls == 2);
+    CHECK(throwingObject->checked_calls == 1);
+    CHECK(laterStore->checked_calls == 0);
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == expectedCode);
     CHECK(result.errors()[0].message.find(detail) != std::string::npos);
@@ -669,9 +669,9 @@ TEST_CASE("CheckedFlush preserves legacy void failure behavior", "[simplnx][Chec
     case FlushFailure::None:
       FAIL("The legacy failure test requires an exception.");
     }
-    CHECK(firstStore->FlushCalls == 1);
-    CHECK(laterStore->LegacyCalls == 0);
-    CHECK(laterStore->CheckedCalls == 0);
+    CHECK(firstStore->flush_calls == 1);
+    CHECK(laterStore->legacy_calls == 0);
+    CHECK(laterStore->checked_calls == 0);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
@@ -680,14 +680,14 @@ TEST_CASE("CheckedFlush leaves legacy success separate from checked overrides", 
 {
   DataStructure dataStructure;
   auto numericStore = std::make_shared<ReportingFlushStore>();
-  numericStore->FlushResult = MakeErrorResult(-19401, "checked numeric failure");
+  numericStore->flush_result = MakeErrorResult(-19401, "checked numeric failure");
   auto listStore = std::make_shared<ReportingFlushListStore>();
-  listStore->FlushResult = MakeErrorResult(-19402, "checked list failure");
+  listStore->flush_result = MakeErrorResult(-19402, "checked list failure");
   REQUIRE(DataArray<int32>::Create(dataStructure, "Values", numericStore) != nullptr);
   REQUIRE(NeighborList<int32>::Create(dataStructure, "Neighbors", listStore) != nullptr);
   REQUIRE_NOTHROW(std::as_const(dataStructure).flush());
-  CHECK(numericStore->LegacyCalls == 1);
-  CHECK(numericStore->CheckedCalls == 0);
-  CHECK(listStore->CheckedCalls == 0);
+  CHECK(numericStore->legacy_calls == 1);
+  CHECK(numericStore->checked_calls == 0);
+  CHECK(listStore->checked_calls == 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

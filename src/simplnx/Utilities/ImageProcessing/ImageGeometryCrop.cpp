@@ -31,8 +31,8 @@ const std::string k_TempGeometryName = ".cropped_image_geometry";
 
 FloatVec3 GetCurrentVolumeDataContainerResolutions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
 {
-  const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  return image == nullptr ? FloatVec3{0, 0, 0} : image->getSpacing();
+  const auto* imagePtr = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
+  return imagePtr == nullptr ? FloatVec3{0, 0, 0} : imagePtr->getSpacing();
 }
 } // namespace
 
@@ -270,12 +270,12 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
   // Add the source matrix to ignorePaths because these arrays have explicit create actions.
   {
     // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellData = srcImageGeomPtr->getCellData();
-    if(selectedCellData == nullptr)
+    const AttributeMatrix* selectedCellDataPtr = srcImageGeomPtr->getCellData();
+    if(selectedCellDataPtr == nullptr)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString())), .outputValues = preflightUpdatedValues};
     }
-    std::string cellDataName = selectedCellData->getName();
+    std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(
@@ -283,7 +283,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
 
     // Create one destination array for each source Cell Attribute Matrix array.
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-    for(const auto& [identifier, object] : *selectedCellData)
+    for(const auto& [identifier, object] : *selectedCellDataPtr)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
@@ -299,7 +299,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
   // The cleared Feature AM keeps its source shape until optional renumbering.
   if(options.clearFeatureAttributeMatrix)
   {
-    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
+    const auto* srcCellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
     auto featureAmResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, srcImagePath, cellFeatureAmPath, -50563, "Feature Attribute Matrix");
     if(featureAmResult.invalid())
     {
@@ -321,10 +321,10 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     }
     ignorePaths.push_back(cellFeatureAmPath);
     const DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, srcCellFeatureData->getShape()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, srcCellFeatureDataPtr->getShape()));
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *srcCellFeatureData)
+    for(const auto& [identifier, object] : *srcCellFeatureDataPtr)
     {
       clearedList += "\n" + cellFeatureAmPath.createChildPath(object->getName()).toString();
     }

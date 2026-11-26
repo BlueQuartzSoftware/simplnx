@@ -285,17 +285,17 @@ private:
 
 struct FakeExternalSortControl
 {
-  bool failCreate = false;
-  bool failAppend = false;
-  bool failFinish = false;
-  bool failRead = false;
-  bool shortRead = false;
-  bool failTransposeCreate = false;
-  bool failTransposeRead = false;
-  bool failTransposeWrite = false;
-  bool wrongRecordCount = false;
-  usize createCount = 0;
-  usize maxAppendRecords = 0;
+  bool fail_create = false;
+  bool fail_append = false;
+  bool fail_finish = false;
+  bool fail_read = false;
+  bool short_read = false;
+  bool fail_transpose_create = false;
+  bool fail_transpose_read = false;
+  bool fail_transpose_write = false;
+  bool wrong_record_count = false;
+  usize create_count = 0;
+  usize max_append_records = 0;
 };
 
 class FakeExternalSort : public IExternalSort
@@ -313,7 +313,7 @@ public:
     {
       return MakeErrorResult(-9910, "Fake external sort append cancelled");
     }
-    if(m_Control->failAppend)
+    if(m_Control->fail_append)
     {
       return MakeErrorResult(-9911, "Injected external sort append failure");
     }
@@ -321,11 +321,11 @@ public:
     {
       return MakeErrorResult(-9912, "Fake external sort received an invalid append batch");
     }
-    m_Control->maxAppendRecords = std::max(m_Control->maxAppendRecords, static_cast<usize>(recordCount));
+    m_Control->max_append_records = std::max(m_Control->max_append_records, static_cast<usize>(recordCount));
     for(uint64 recordIndex = 0; recordIndex < recordCount; ++recordIndex)
     {
-      const std::byte* recordStart = records.data() + recordIndex * m_Config.recordSize;
-      m_Records.emplace_back(recordStart, recordStart + m_Config.recordSize);
+      const std::byte* recordStartPtr = records.data() + recordIndex * m_Config.recordSize;
+      m_Records.emplace_back(recordStartPtr, recordStartPtr + m_Config.recordSize);
     }
     if(progressCallback)
     {
@@ -340,7 +340,7 @@ public:
     {
       return MakeErrorResult(-9913, "Fake external sort finish cancelled");
     }
-    if(m_Control->failFinish)
+    if(m_Control->fail_finish)
     {
       return MakeErrorResult(-9914, "Injected external sort finish failure");
     }
@@ -361,7 +361,7 @@ public:
     {
       return MakeErrorResult<uint64>(-9915, "Fake external sort read cancelled");
     }
-    if(m_Control->failRead)
+    if(m_Control->fail_read)
     {
       return MakeErrorResult<uint64>(-9916, "Injected external sort read failure");
     }
@@ -369,7 +369,7 @@ public:
     {
       return MakeErrorResult<uint64>(-9917, "Fake external sort received an invalid read");
     }
-    if(m_Control->shortRead)
+    if(m_Control->short_read)
     {
       return {0};
     }
@@ -383,7 +383,7 @@ public:
 
   uint64 recordCount() const override
   {
-    return m_Records.size() + (m_Control->wrongRecordCount ? 1 : 0);
+    return m_Records.size() + (m_Control->wrong_record_count ? 1 : 0);
   }
 
 private:
@@ -397,25 +397,25 @@ projection_detail::AxisProjection2DServices<int32> MakeFakeProjectionServices(co
 {
   projection_detail::AxisProjection2DServices<int32> services;
   services.createExternalSort = [control](const ExternalSortConfig& config) -> Result<std::unique_ptr<IExternalSort>> {
-    if(control->failCreate)
+    if(control->fail_create)
     {
       return MakeErrorResult<std::unique_ptr<IExternalSort>>(-9920, "Injected external sort creation failure");
     }
-    ++control->createCount;
+    ++control->create_count;
     std::unique_ptr<IExternalSort> sorter = std::make_unique<FakeExternalSort>(config, control);
     return {std::move(sorter)};
   };
   services.createTransposeStore = [control, &transposeStore](usize valueCount, usize) -> Result<std::unique_ptr<projection_detail::AxisProjectionWorkStore<int32>>> {
-    if(control->failTransposeCreate)
+    if(control->fail_transpose_create)
     {
       return MakeErrorResult<std::unique_ptr<projection_detail::AxisProjectionWorkStore<int32>>>(-9921, "Injected transpose-store creation failure");
     }
     transposeStore = std::make_shared<ProjectionTransferStore<int32>>(ShapeType{valueCount}, int32{}, false);
-    if(control->failTransposeRead)
+    if(control->fail_transpose_read)
     {
       transposeStore->failRead(1, -9922);
     }
-    if(control->failTransposeWrite)
+    if(control->fail_transpose_write)
     {
       transposeStore->failWrite(1, -9923);
     }
@@ -635,26 +635,26 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: Max/Mean/Median on non-cubic
 TEST_CASE("NXImageProcessing::AxisProjectionEngine: projection preflight defers full-overwrite output initialization", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const auto buildInput = [](DataStructure& dataStructure) {
-    auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
-    REQUIRE(imageGeom != nullptr);
-    imageGeom->setDimensions({k_X, k_Y, k_Z});
-    auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{k_Z, k_Y, k_X}, imageGeom->getId());
-    REQUIRE(cellData != nullptr);
-    imageGeom->setCellData(*cellData);
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+    REQUIRE(imageGeomPtr != nullptr);
+    imageGeomPtr->setDimensions({k_X, k_Y, k_Z});
+    auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{k_Z, k_Y, k_X}, imageGeomPtr->getId());
+    REQUIRE(cellDataPtr != nullptr);
+    imageGeomPtr->setCellData(*cellDataPtr);
     auto store = std::make_shared<DataStore<uint8>>(ShapeType{k_Z, k_Y, k_X}, ShapeType{1}, uint8{0});
-    auto* input = DataArray<uint8>::Create(dataStructure, "Input", store, cellData->getId());
-    REQUIRE(input != nullptr);
+    auto* inputPtr = DataArray<uint8>::Create(dataStructure, "Input", store, cellDataPtr->getId());
+    REQUIRE(inputPtr != nullptr);
     return DataPath({"Image Geometry", "CellData", "Input"});
   };
 
   const auto requireOutputAction = [](const Result<OutputActions>& preflightResult, const DataPath& outputPath) -> const CreateArrayAction& {
     REQUIRE(preflightResult.valid());
     REQUIRE(preflightResult.value().actions.size() == 2);
-    const auto* action = dynamic_cast<const CreateArrayAction*>(preflightResult.value().actions[1].get());
-    REQUIRE(action != nullptr);
-    REQUIRE(action->path() == outputPath);
-    REQUIRE(action->initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
-    return *action;
+    const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.value().actions[1].get());
+    REQUIRE(actionPtr != nullptr);
+    REQUIRE(actionPtr->path() == outputPath);
+    REQUIRE(actionPtr->initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
+    return *actionPtr;
   };
 
   SECTION("SameAsInput creates a new geometry")
@@ -668,8 +668,8 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: projection preflight defers 
 
     const Result<> applyResult = preflightResult.value().applyAll(dataStructure, IDataAction::Mode::Execute);
     REQUIRE(applyResult.valid());
-    const auto* output = dataStructure.getDataAs<DataArray<uint8>>(outputPath);
-    REQUIRE(output != nullptr);
+    const auto* outputPtr = dataStructure.getDataAs<DataArray<uint8>>(outputPath);
+    REQUIRE(outputPtr != nullptr);
   }
 
   SECTION("AlwaysFloat64 creates the temporary in-place geometry")
@@ -683,8 +683,8 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: projection preflight defers 
 
     const Result<> applyResult = preflightResult.value().applyAll(dataStructure, IDataAction::Mode::Execute);
     REQUIRE(applyResult.valid());
-    const auto* output = dataStructure.getDataAs<DataArray<float64>>(DataPath({"Image Geometry", "CellData", "Float Output"}));
-    REQUIRE(output != nullptr);
+    const auto* outputPtr = dataStructure.getDataAs<DataArray<float64>>(DataPath({"Image Geometry", "CellData", "Float Output"}));
+    REQUIRE(outputPtr != nullptr);
   }
 }
 
@@ -974,7 +974,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded cancella
 {
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 7;
-  const SizeVec3 k_Dims{k_DimX, k_DimY, 1};
+  const SizeVec3 kDims{k_DimX, k_DimY, 1};
   constexpr usize k_OutputValues = k_DimX;
   constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + k_DimX * (sizeof(MeanReduce::State<float64>) + sizeof(float64)) + 2 * k_DimX * sizeof(int32);
 
@@ -986,7 +986,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded cancella
   inputStore.resetTransferCounts();
   constexpr float64 k_Poison = -12345.0;
   ProjectionTransferStore<float64> outputStore(ShapeType{k_OutputValues}, k_Poison);
-  const auto shapeResult = projection_detail::ValidateAxisProjection(inputStore, outputStore, k_Dims, 1);
+  const auto shapeResult = projection_detail::ValidateAxisProjection(inputStore, outputStore, kDims, 1);
   REQUIRE(shapeResult.valid());
 
   SECTION("pre-cancel preserves poison")
@@ -1018,10 +1018,10 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded cancella
   SECTION("fitting Median cancel after row-tile read preserves poison")
   {
     const usize workerCount = projection_detail::AxisProjectionMedianWorkerCount(k_DimX);
-    const usize k_MedianTarget = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * k_DimY * sizeof(int32) + k_DimX * (k_DimY * sizeof(int32) + sizeof(float64));
+    const usize kMedianTarget = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * k_DimY * sizeof(int32) + k_DimX * (k_DimY * sizeof(int32) + sizeof(float64));
     std::atomic_bool shouldCancel{false};
     inputStore.cancelAfterRead(1, shouldCancel);
-    const Result<> result = projection_detail::ApplyAxisProjection2D(inputStore, outputStore, shapeResult.value(), 1, MedianReduce{}, shouldCancel, k_MedianTarget);
+    const Result<> result = projection_detail::ApplyAxisProjection2D(inputStore, outputStore, shapeResult.value(), 1, MedianReduce{}, shouldCancel, kMedianTarget);
     REQUIRE(result.valid());
     REQUIRE(shouldCancel);
     REQUIRE(outputStore.writtenValues() == 0);
@@ -1070,15 +1070,15 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: fitting Median bounded true-
   SECTION("even Y pencils in column tiles with a short tail")
   {
     const usize workerCount = projection_detail::AxisProjectionMedianWorkerCount(7);
-    const usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * 4 * sizeof(int32) + 2 * (4 * sizeof(int32) + sizeof(int32));
-    RequireBoundedMedianMatchesResident(SizeVec3{7, 4, 1}, 1, k_Target, projection_detail::AxisProjection2DRoute::MedianYTiles);
+    const usize kTarget = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * 4 * sizeof(int32) + 2 * (4 * sizeof(int32) + sizeof(int32));
+    RequireBoundedMedianMatchesResident(SizeVec3{7, 4, 1}, 1, kTarget, projection_detail::AxisProjection2DRoute::MedianYTiles);
   }
 
   SECTION("odd Y pencils in column tiles with a short tail")
   {
     const usize workerCount = projection_detail::AxisProjectionMedianWorkerCount(7);
-    const usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * 5 * sizeof(int32) + 2 * (5 * sizeof(int32) + sizeof(int32));
-    RequireBoundedMedianMatchesResident(SizeVec3{7, 5, 1}, 1, k_Target, projection_detail::AxisProjection2DRoute::MedianYTiles);
+    const usize kTarget = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * 5 * sizeof(int32) + 2 * (5 * sizeof(int32) + sizeof(int32));
+    RequireBoundedMedianMatchesResident(SizeVec3{7, 5, 1}, 1, kTarget, projection_detail::AxisProjection2DRoute::MedianYTiles);
   }
 
   SECTION("singleton Z chunks")
@@ -1100,8 +1100,8 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median long X and Y
     RequireBoundedMedianMatchesResident(SizeVec3{17, 3, 1}, 0, k_Target, projection_detail::AxisProjection2DRoute::MedianXExternal, &services);
     const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(SizeVec3{17, 3, 1}, 0, k_Target);
     REQUIRE(plan.valid());
-    REQUIRE(control->createCount == 3);
-    REQUIRE(control->maxAppendRecords <= plan.value().sortBatchValues);
+    REQUIRE(control->create_count == 3);
+    REQUIRE(control->max_append_records <= plan.value().sortBatchValues);
     REQUIRE(transposeStore == nullptr);
   }
 
@@ -1113,8 +1113,8 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median long X and Y
     RequireBoundedMedianMatchesResident(SizeVec3{5, 17, 1}, 1, k_Target, projection_detail::AxisProjection2DRoute::MedianYExternal, &services);
     const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(SizeVec3{5, 17, 1}, 1, k_Target);
     REQUIRE(plan.valid());
-    REQUIRE(control->createCount == 5);
-    REQUIRE(control->maxAppendRecords <= plan.value().sortBatchValues);
+    REQUIRE(control->create_count == 5);
+    REQUIRE(control->max_append_records <= plan.value().sortBatchValues);
     REQUIRE(transposeStore != nullptr);
     REQUIRE(transposeStore->getSize() == 5 * 17);
     for(usize x = 0; x < 5; ++x)
@@ -1145,7 +1145,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("sort creation failure")
   {
-    control->failCreate = true;
+    control->fail_create = true;
     const Result<> result = RunExternalMedianWithServices(0, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8746);
@@ -1153,7 +1153,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("append failure")
   {
-    control->failAppend = true;
+    control->fail_append = true;
     const Result<> result = RunExternalMedianWithServices(0, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8747);
@@ -1161,7 +1161,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("finish failure")
   {
-    control->failFinish = true;
+    control->fail_finish = true;
     const Result<> result = RunExternalMedianWithServices(0, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8748);
@@ -1169,7 +1169,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("read failure")
   {
-    control->failRead = true;
+    control->fail_read = true;
     const Result<> result = RunExternalMedianWithServices(0, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8749);
@@ -1177,7 +1177,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("short read")
   {
-    control->shortRead = true;
+    control->short_read = true;
     const Result<> result = RunExternalMedianWithServices(0, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8749);
@@ -1185,7 +1185,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("record-count mismatch")
   {
-    control->wrongRecordCount = true;
+    control->wrong_record_count = true;
     const Result<> result = RunExternalMedianWithServices(0, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8749);
@@ -1193,7 +1193,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("transpose creation failure")
   {
-    control->failTransposeCreate = true;
+    control->fail_transpose_create = true;
     const Result<> result = RunExternalMedianWithServices(1, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8750);
@@ -1201,7 +1201,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("transpose write failure")
   {
-    control->failTransposeWrite = true;
+    control->fail_transpose_write = true;
     const Result<> result = RunExternalMedianWithServices(1, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -9923);
@@ -1209,7 +1209,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("transpose read failure")
   {
-    control->failTransposeRead = true;
+    control->fail_transpose_read = true;
     const Result<> result = RunExternalMedianWithServices(1, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -9922);
@@ -1237,7 +1237,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external record comparator i
 
 TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median cancellation preserves output", "[NXImageProcessing][AxisProjectionEngine]")
 {
-  const SizeVec3 k_Dims{17, 3, 1};
+  const SizeVec3 kDims{17, 3, 1};
   constexpr usize k_OutputValues = 3;
   constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 60;
   ProjectionTransferStore<int32> inputStore(ShapeType{1, 3, 17}, int32{});
@@ -1249,7 +1249,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median cancellation
   inputStore.resetTransferCounts();
   std::atomic_bool shouldCancel{false};
   inputStore.cancelAfterRead(1, shouldCancel);
-  const auto shape = projection_detail::ValidateAxisProjection(inputStore, outputStore, k_Dims, 0);
+  const auto shape = projection_detail::ValidateAxisProjection(inputStore, outputStore, kDims, 0);
   REQUIRE(shape.valid());
   auto control = std::make_shared<FakeExternalSortControl>();
   std::shared_ptr<ProjectionTransferStore<int32>> transposeStore;
@@ -1322,11 +1322,11 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: endpoint-aware fitting Media
   }
   inputStore.resetTransferCounts();
   const usize workerCount = projection_detail::AxisProjectionMedianWorkerCount(k_DimX);
-  const usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * k_DimY * sizeof(int32) + 2 * (k_DimY * sizeof(int32) + sizeof(int32));
+  const usize kTarget = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * k_DimY * sizeof(int32) + 2 * (k_DimY * sizeof(int32) + sizeof(int32));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  REQUIRE(ApplyAxisProjection(inputStore, outputStore, dims, 1, MedianReduce{}, shouldCancel, messageHandler, k_Target).valid());
-  const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(dims, 1, k_Target);
+  REQUIRE(ApplyAxisProjection(inputStore, outputStore, dims, 1, MedianReduce{}, shouldCancel, messageHandler, kTarget).valid());
+  const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(dims, 1, kTarget);
   REQUIRE(plan.valid());
   REQUIRE(inputStore.maxReadValues() <= plan.value().inputValues);
   REQUIRE(inputStore.maxReadValues() < k_DimX * k_DimY);

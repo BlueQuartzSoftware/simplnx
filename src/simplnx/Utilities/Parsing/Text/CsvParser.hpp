@@ -39,7 +39,7 @@ constexpr size_t k_BufferSize = 1024;
  */
 class DelimiterType : public std::ctype<char>
 {
-  std::ctype<char>::mask my_table[std::ctype<char>::table_size] = {};
+  std::ctype<char>::mask m_MyTable[std::ctype<char>::table_size] = {};
 
 public:
   /**
@@ -49,10 +49,10 @@ public:
    * @pre delimiter has a nonnegative unsigned-character index.
    */
   explicit DelimiterType(char delimiter, size_t refs = 0)
-  : std::ctype<char>(&my_table[0], false, refs)
+  : std::ctype<char>(&m_MyTable[0], false, refs)
   {
-    std::copy_n(std::ctype<char>::classic_table(), table_size, my_table);
-    my_table[static_cast<std::ctype<char>::mask>(delimiter)] = (std::ctype<char>::mask)space;
+    std::copy_n(std::ctype<char>::classic_table(), table_size, m_MyTable);
+    m_MyTable[static_cast<std::ctype<char>::mask>(delimiter)] = (std::ctype<char>::mask)space;
   }
 };
 
@@ -123,13 +123,13 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
   in.imbue(std::locale(std::locale(), new nx::core::CsvParser::DelimiterType(delimiter)));
 
   std::array<char, k_BufferSize> buf = {};
-  char* buffer = buf.data();
+  char* bufferPtr = buf.data();
 
   // Discard each bounded header line. ReadLine discards any suffix beyond its buffer.
   for(int i = 0; i < skipHeaderLines; i++)
   {
     buf.fill(0x00);
-    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize);
+    err = nx::core::CsvParser::ReadLine(in, bufferPtr, k_BufferSize);
     if(err < 0)
     {
       return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
@@ -256,13 +256,13 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
   in.imbue(std::locale(std::locale(), new nx::core::CsvParser::DelimiterType(delimiter)));
 
   std::array<char, k_BufferSize> buf = {};
-  char* buffer = buf.data();
+  char* bufferPtr = buf.data();
 
   // Discard each bounded header line. ReadLine discards any suffix beyond its buffer.
   for(int i = 0; i < skipHeaderLines; i++)
   {
     buf.fill(0x00);
-    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize);
+    err = nx::core::CsvParser::ReadLine(in, bufferPtr, k_BufferSize);
     if(err < 0)
     {
       return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));

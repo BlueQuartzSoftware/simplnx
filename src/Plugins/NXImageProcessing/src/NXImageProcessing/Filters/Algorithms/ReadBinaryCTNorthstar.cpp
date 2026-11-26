@@ -31,20 +31,20 @@ namespace
 bool SeekToOffset(FILE* file, uint64 offset)
 {
 #if defined(_MSC_VER)
-  using FileOffset = int64;
+  using FileOffsetType = int64;
 #else
-  using FileOffset = off_t;
+  using FileOffsetType = off_t;
 #endif
 
-  if(offset > static_cast<uint64>(std::numeric_limits<FileOffset>::max()))
+  if(offset > static_cast<uint64>(std::numeric_limits<FileOffsetType>::max()))
   {
     return false;
   }
 
 #if defined(_MSC_VER)
-  return ::_fseeki64(file, static_cast<FileOffset>(offset), SEEK_SET) == 0;
+  return ::_fseeki64(file, static_cast<FileOffsetType>(offset), SEEK_SET) == 0;
 #else
-  return ::fseeko(file, static_cast<FileOffset>(offset), SEEK_SET) == 0;
+  return ::fseeko(file, static_cast<FileOffsetType>(offset), SEEK_SET) == 0;
 #endif
 }
 
@@ -121,13 +121,13 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
                                                  fileSize, allocatedBytes));
     }
 
-    FILE* f = fopen(dataFilePath.string().c_str(), "rb");
-    if(nullptr == f)
+    FILE* fPtr = fopen(dataFilePath.string().c_str(), "rb");
+    if(nullptr == fPtr)
     {
       return MakeErrorResult(-38706, fmt::format("Error opening binary input file: {}.", dataFilePath.string()));
     }
 
-    auto fileGuard = MakeScopeGuard([f]() noexcept { fclose(f); });
+    auto fileGuard = MakeScopeGuard([fPtr]() noexcept { fclose(fPtr); });
 
     usize fileZSlice = 0;
 
@@ -158,14 +158,14 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
         const uint64 fpOffset = ((static_cast<uint64>(inputValues->OriginalGeometryDims[1]) * inputValues->OriginalGeometryDims[0] * fileZSlice) +
                                  (static_cast<uint64>(inputValues->OriginalGeometryDims[0]) * y) + static_cast<uint64>(inputValues->StartVoxelCoord[0])) *
                                 sizeof(float32);
-        if(!SeekToOffset(f, fpOffset))
+        if(!SeekToOffset(fPtr, fpOffset))
         {
           return MakeErrorResult(-38707, fmt::format("Could not seek to position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
         }
 
         usize index = (inputValues->ImportedGeometryDims[0] * inputValues->ImportedGeometryDims[1] * (z - inputValues->StartVoxelCoord[2])) +
                       (inputValues->ImportedGeometryDims[0] * (y - inputValues->StartVoxelCoord[1])) + (0);
-        if(fread(buffer.data(), sizeof(float32), deltaX, f) != deltaX)
+        if(fread(buffer.data(), sizeof(float32), deltaX, fPtr) != deltaX)
         {
           return MakeErrorResult(-38708, fmt::format("Error reading file at position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
         }

@@ -89,9 +89,9 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
     return {.outputActions = MakeErrorResult<OutputActions>(-11001, ss)};
   }
 
-  const auto* vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
+  const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
 
-  usize numVertices = vertexGeom->getNumberOfVertices();
+  usize numVertices = vertexGeomPtr->getNumberOfVertices();
   auto action = std::make_unique<CreateVertexGeometryAction>(hullVertexGeomPath, numVertices, INodeGeometry0D::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName);
 
   OutputActions actions;
@@ -115,13 +115,13 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_GridResolutionKey = "GridResolution";
 constexpr StringLiteral k_NumberOfEmptyNeighborsKey = "NumberOfEmptyNeighbors";
 constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
 constexpr StringLiteral k_HullDataContainerNameKey = "HullDataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ApproximatePointCloudHullFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -130,10 +130,10 @@ Result<Arguments> ApproximatePointCloudHullFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_GridResolutionKey, k_GridResolution_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfEmptyNeighborsKey, k_MinEmptyNeighbors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_VertexDataContainerNameKey, k_VertexGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_HullDataContainerNameKey, k_HullVertexGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_GridResolutionKey, k_GridResolution_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfEmptyNeighborsKey, k_MinEmptyNeighbors_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_VertexDataContainerNameKey, k_VertexGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_HullDataContainerNameKey, k_HullVertexGeomPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

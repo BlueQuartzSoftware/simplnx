@@ -192,20 +192,20 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   // Create arrays and check number of tuples match their respective face or vertex attribute matrix
   std::vector<DataPath> copiedArrays;
   copiedArrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
-  for(const auto& data_array : copyVertexPaths)
+  for(const auto& dataArray : copyVertexPaths)
   {
-    copiedArrays.push_back(data_array);
-    const auto* targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
-    if(targetDataArray == nullptr)
+    copiedArrays.push_back(dataArray);
+    const auto* targetDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataArray);
+    if(targetDataArrayPtr == nullptr)
     {
-      std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
+      std::string ss = fmt::format("Could not find DataArray at path '{}'", dataArray.toString());
       return {.outputActions = MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
     }
 
-    DataType type = targetDataArray->getDataType();
-    DataPath copyPath = internalVertexDataPath.createChildPath(data_array.getTargetName());
-    auto numTuples = targetDataArray->getNumberOfTuples();
-    auto components = targetDataArray->getNumberOfComponents();
+    DataType type = targetDataArrayPtr->getDataType();
+    DataPath copyPath = internalVertexDataPath.createChildPath(dataArray.getTargetName());
+    auto numTuples = targetDataArrayPtr->getNumberOfTuples();
+    auto components = targetDataArrayPtr->getNumberOfComponents();
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
     actions.appendAction(std::move(action));
   }
@@ -217,20 +217,20 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 
   copiedArrays.clear();
   copiedArrays.push_back(triangleGeom.getFaces()->getDataPaths().front());
-  for(const auto& data_array : copyTrianglePaths)
+  for(const auto& dataArray : copyTrianglePaths)
   {
-    copiedArrays.push_back(data_array);
-    const auto* targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
-    if(targetDataArray == nullptr)
+    copiedArrays.push_back(dataArray);
+    const auto* targetDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataArray);
+    if(targetDataArrayPtr == nullptr)
     {
-      std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
+      std::string ss = fmt::format("Could not find DataArray at path '{}'", dataArray.toString());
       return {.outputActions = MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
     }
 
-    DataType type = targetDataArray->getDataType();
-    DataPath copyPath = internalFaceDataPath.createChildPath(data_array.getTargetName());
-    auto numTuples = targetDataArray->getNumberOfTuples();
-    auto components = targetDataArray->getNumberOfComponents();
+    DataType type = targetDataArrayPtr->getDataType();
+    DataPath copyPath = internalFaceDataPath.createChildPath(dataArray.getTargetName());
+    auto numTuples = targetDataArrayPtr->getNumberOfTuples();
+    auto components = targetDataArrayPtr->getNumberOfComponents();
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
     actions.appendAction(std::move(action));
   }
@@ -263,12 +263,12 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
 constexpr StringLiteral k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
 constexpr StringLiteral k_InternalTrianglesNameKey = "InternalTrianglesName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -278,9 +278,9 @@ Result<Arguments> ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJs
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_InternalTrianglesNameKey, k_CreatedTriangleGeometryPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_InternalTrianglesNameKey, k_CreatedTriangleGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -52,8 +52,8 @@ namespace
  */
 std::shared_ptr<const nx::core::IDataStoreFormatResolver>& DefaultFormatResolverRef()
 {
-  static std::shared_ptr<const nx::core::IDataStoreFormatResolver> s_Default = std::make_shared<nx::core::InMemoryFormatResolver>();
-  return s_Default;
+  static std::shared_ptr<const nx::core::IDataStoreFormatResolver> sDefault = std::make_shared<nx::core::InMemoryFormatResolver>();
+  return sDefault;
 }
 } // namespace
 namespace nx::core
@@ -73,14 +73,14 @@ struct DataStructure::ImportPublicationTestState
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
   ImportPublicationTestControl::Fault Fault = ImportPublicationTestControl::Fault::None;
-  bool Consumed = false;
-  bool RefuseCleanup = false;
-  bool CleanupConsumed = false;
-  std::shared_ptr<DataObject> RetainedOwner;
-  std::vector<ImportPublicationRecord> RetainedRecords;
+  bool consumed = false;
+  bool refuse_cleanup = false;
+  bool cleanup_consumed = false;
+  std::shared_ptr<DataObject> retained_owner;
+  std::vector<ImportPublicationRecord> retained_records;
   DataStructure* Destination = nullptr;
-  DataObject::IdType SavedNextId = 0;
-  DataObject::IdType ReservedNextId = 0;
+  DataObject::IdType saved_next_id = 0;
+  DataObject::IdType reserved_next_id = 0;
 #endif
 };
 
@@ -194,12 +194,12 @@ std::optional<DataObject::IdType> DataStructure::getId(const DataPath& path) con
   {
     return {0};
   }
-  const DataObject* dataObject = getData(path);
-  if(nullptr == dataObject)
+  const DataObject* dataObjectPtr = getData(path);
+  if(nullptr == dataObjectPtr)
   {
     return std::nullopt;
   }
-  return dataObject->getId();
+  return dataObjectPtr->getId();
 }
 
 LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
@@ -207,17 +207,17 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   try
   {
     std::vector<DataObject::IdType> pathIds;
-    const DataObject* data = m_RootGroup[path[0]];
-    const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
-    pathIds.push_back(data->getId());
+    const DataObject* dataPtr = m_RootGroup[path[0]];
+    const BaseGroup* parentPtr = dynamic_cast<const BaseGroup*>(dataPtr);
+    pathIds.push_back(dataPtr->getId());
 
     for(usize i = 1; i < path.getLength(); i++)
     {
       const std::string& name = path[i];
-      data = (*parent)[name];
-      pathIds.push_back(data->getId());
+      dataPtr = (*parentPtr)[name];
+      pathIds.push_back(dataPtr->getId());
 
-      parent = dynamic_cast<const BaseGroup*>(data);
+      parentPtr = dynamic_cast<const BaseGroup*>(dataPtr);
     }
 
     return LinkedPath(this, pathIds);
@@ -245,32 +245,32 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
   {
     std::vector<DataObject::IdType> pathIds;
     std::string name = path[0];
-    const DataObject* data = m_RootGroup[name];
-    if(data == nullptr)
+    const DataObject* dataPtr = m_RootGroup[name];
+    if(dataPtr == nullptr)
     {
-      data = nx::core::DataGroup::Create(*this, name);
-      createdIds.push_back(data->getId());
+      dataPtr = nx::core::DataGroup::Create(*this, name);
+      createdIds.push_back(dataPtr->getId());
     }
-    const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
-    pathIds.push_back(data->getId());
+    const BaseGroup* parentPtr = dynamic_cast<const BaseGroup*>(dataPtr);
+    pathIds.push_back(dataPtr->getId());
 
     for(usize i = 1; i < path.getLength(); i++)
     {
-      if(parent == nullptr)
+      if(parentPtr == nullptr)
       {
         return nx::core::MakeErrorResult<LinkedPath>(-3, fmt::format("Target parent object '{}' in path '{}' is not derived from BaseGroup.", name, path.toString()));
       }
 
       name = path[i];
-      data = (*parent)[name];
-      if(data == nullptr)
+      dataPtr = (*parentPtr)[name];
+      if(dataPtr == nullptr)
       {
-        data = DataGroup::Create(*this, name, pathIds.back());
-        createdIds.push_back(data->getId());
+        dataPtr = DataGroup::Create(*this, name, pathIds.back());
+        createdIds.push_back(dataPtr->getId());
       }
-      pathIds.push_back(data->getId());
+      pathIds.push_back(dataPtr->getId());
 
-      parent = dynamic_cast<const BaseGroup*>(data);
+      parentPtr = dynamic_cast<const BaseGroup*>(dataPtr);
     }
 
     return {LinkedPath(this, pathIds)};
@@ -287,12 +287,12 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
 
 std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType identifier) const
 {
-  const auto* dataObject = getData(identifier);
-  if(dataObject == nullptr)
+  const auto* dataObjectPtr = getData(identifier);
+  if(dataObjectPtr == nullptr)
   {
     return {};
   }
-  return dataObject->getDataPaths();
+  return dataObjectPtr->getDataPaths();
 }
 
 std::vector<DataPath> DataStructure::getAllDataPaths() const
@@ -354,47 +354,47 @@ DataObject* DataStructure::getData(const DataPath& path)
   {
     return nullptr;
   }
-  DataObject* targetObject = m_RootGroup[path[0]];
+  DataObject* targetObjectPtr = m_RootGroup[path[0]];
   for(usize index = 1; index < path.getLength(); index++)
   {
-    if(targetObject == nullptr)
+    if(targetObjectPtr == nullptr)
     {
       return nullptr;
     }
-    if(!targetObject->isGroup())
+    if(!targetObjectPtr->isGroup())
     {
       return nullptr;
     }
-    auto* groupObject = dynamic_cast<BaseGroup*>(targetObject);
-    DataObject* childObject = (*groupObject)[path[index]];
-    if(childObject == nullptr)
+    auto* groupObjectPtr = dynamic_cast<BaseGroup*>(targetObjectPtr);
+    DataObject* childObjectPtr = (*groupObjectPtr)[path[index]];
+    if(childObjectPtr == nullptr)
     {
       return nullptr;
     }
-    targetObject = childObject;
+    targetObjectPtr = childObjectPtr;
   }
 
-  return targetObject;
+  return targetObjectPtr;
 }
 
 DataObject& DataStructure::getDataRef(const DataPath& path)
 {
-  DataObject* object = getData(path);
-  if(object == nullptr)
+  DataObject* objectPtr = getData(path);
+  if(objectPtr == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path '{}' does not exist", path.toString()));
   }
-  return *object;
+  return *objectPtr;
 }
 
 DataObject& DataStructure::getDataRef(DataObject::IdType identifier)
 {
-  DataObject* object = getData(identifier);
-  if(object == nullptr)
+  DataObject* objectPtr = getData(identifier);
+  if(objectPtr == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", identifier));
   }
-  return *object;
+  return *objectPtr;
 }
 
 DataObject* DataStructure::getData(const LinkedPath& path)
@@ -433,47 +433,47 @@ const DataObject* DataStructure::getData(const DataPath& path) const
   {
     return nullptr;
   }
-  const DataObject* targetObject = m_RootGroup[path[0]];
+  const DataObject* targetObjectPtr = m_RootGroup[path[0]];
   for(usize index = 1; index < path.getLength(); index++)
   {
-    if(targetObject == nullptr)
+    if(targetObjectPtr == nullptr)
     {
       return nullptr;
     }
-    if(!targetObject->isGroup())
+    if(!targetObjectPtr->isGroup())
     {
       return nullptr;
     }
-    const auto* groupObject = dynamic_cast<const BaseGroup*>(targetObject);
-    const DataObject* childObject = (*groupObject)[path[index]];
-    if(childObject == nullptr)
+    const auto* groupObjectPtr = dynamic_cast<const BaseGroup*>(targetObjectPtr);
+    const DataObject* childObjectPtr = (*groupObjectPtr)[path[index]];
+    if(childObjectPtr == nullptr)
     {
       return nullptr;
     }
-    targetObject = childObject;
+    targetObjectPtr = childObjectPtr;
   }
 
-  return targetObject;
+  return targetObjectPtr;
 }
 
 const DataObject& DataStructure::getDataRef(const DataPath& path) const
 {
-  const DataObject* object = getData(path);
-  if(object == nullptr)
+  const DataObject* objectPtr = getData(path);
+  if(objectPtr == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path '{}' does not exist", path.toString()));
   }
-  return *object;
+  return *objectPtr;
 }
 
 const DataObject& DataStructure::getDataRef(DataObject::IdType identifier) const
 {
-  const DataObject* object = getData(identifier);
-  if(object == nullptr)
+  const DataObject* objectPtr = getData(identifier);
+  if(objectPtr == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", identifier));
   }
-  return *object;
+  return *objectPtr;
 }
 
 const DataObject* DataStructure::getData(const LinkedPath& path) const
@@ -501,28 +501,28 @@ std::shared_ptr<const DataObject> DataStructure::getSharedData(DataObject::IdTyp
 
 std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path)
 {
-  auto* dataObject = getData(path);
-  if(dataObject == nullptr)
+  auto* dataObjectPtr = getData(path);
+  if(dataObjectPtr == nullptr)
   {
     return nullptr;
   }
-  return m_DataObjects.at(dataObject->getId()).lock();
+  return m_DataObjects.at(dataObjectPtr->getId()).lock();
 }
 
 std::shared_ptr<const DataObject> DataStructure::getSharedData(const DataPath& path) const
 {
-  const auto* dataObject = getData(path);
-  if(dataObject == nullptr)
+  const auto* dataObjectPtr = getData(path);
+  if(dataObjectPtr == nullptr)
   {
     return nullptr;
   }
-  return m_DataObjects.at(dataObject->getId()).lock();
+  return m_DataObjects.at(dataObjectPtr->getId()).lock();
 }
 
 bool DataStructure::removeData(DataObject::IdType identifier)
 {
-  DataObject* data = getData(identifier);
-  return removeData(data);
+  DataObject* dataPtr = getData(identifier);
+  return removeData(dataPtr);
 }
 
 void DataStructure::setData(DataObject::IdType identifier, const std::shared_ptr<DataObject>& dataObject)
@@ -548,8 +548,8 @@ bool DataStructure::removeData(const std::optional<DataObject::IdType>& identifi
 
 bool DataStructure::removeData(const DataPath& path)
 {
-  DataObject* data = getData(path);
-  return removeData(data);
+  DataObject* dataPtr = getData(path);
+  return removeData(dataPtr);
 }
 
 bool DataStructure::removeData(DataObject* data)
@@ -567,8 +567,8 @@ bool DataStructure::removeData(DataObject* data)
   }
   for(DataObject::IdType parentId : parentIds)
   {
-    auto* parent = getDataAs<BaseGroup>(parentId);
-    if(!parent->remove(data))
+    auto* parentPtr = getDataAs<BaseGroup>(parentId);
+    if(!parentPtr->remove(data))
     {
       return false;
     }
@@ -642,12 +642,12 @@ bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataOb
 {
   if(parent.has_value() && containsData(*parent))
   {
-    auto* parentContainer = dynamic_cast<BaseGroup*>(getData(*parent));
-    if(parentContainer == nullptr)
+    auto* parentContainerPtr = dynamic_cast<BaseGroup*>(getData(*parent));
+    if(parentContainerPtr == nullptr)
     {
       return false;
     }
-    if(!parentContainer->insert(dataObject))
+    if(!parentContainerPtr->insert(dataObject))
     {
       return false;
     }
@@ -708,8 +708,8 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
     return insertIntoRoot(dataObject);
   }
 
-  auto* parentGroup = getDataAs<BaseGroup>(dataPath);
-  return insertIntoParent(dataObject, parentGroup);
+  auto* parentGroupPtr = getDataAs<BaseGroup>(dataPath);
+  return insertIntoParent(dataObject, parentGroupPtr);
 }
 
 DataStructure::ImportPublicationCheckpoint::ImportPublicationCheckpoint(const DataStructure& destination) noexcept
@@ -779,7 +779,7 @@ std::set<DataObject::IdType> DataStructure::getOccupiedObjectIds() const
 Result<> DataStructure::prepareImportPublicationRecords(DataStructure& prepared, const std::vector<DataPath>& paths, const fs::path& sourceFile, std::vector<ImportPublicationRecord>& records,
                                                         DataObject::IdType& reservedNextId)
 {
-  constexpr auto maximumId = std::numeric_limits<DataObject::IdType>::max();
+  constexpr auto k_MaximumId = std::numeric_limits<DataObject::IdType>::max();
   records.reserve(paths.size());
   std::map<DataPath, std::shared_ptr<BaseGroup>> publicationGroups;
   std::set<DataPath> selectedPaths;
@@ -809,7 +809,7 @@ Result<> DataStructure::prepareImportPublicationRecords(DataStructure& prepared,
     record.Owner = makeImportPublicationCopy(*object);
     record.Id = object->getId();
     record.Path = path;
-    if(record.Owner == nullptr || record.Id == 0 || record.Id == maximumId || !occupiedIds->insert(record.Id).second)
+    if(record.Owner == nullptr || record.Id == 0 || record.Id == k_MaximumId || !occupiedIds->insert(record.Id).second)
     {
       return MakeErrorResult(-6213, fmt::format("Cannot publish '{}' from '{}': identifier {} or its prepared owner is invalid.", path.toString(), sourceFile.string(), record.Id));
     }
@@ -854,9 +854,9 @@ bool DataStructure::rollbackImportPublication(std::vector<ImportPublicationRecor
       continue;
     }
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-    if(allowRefusal && testState != nullptr && testState->RefuseCleanup && index == 2 && record.Stage != ImportInsertionStage::None)
+    if(allowRefusal && testState != nullptr && testState->refuse_cleanup && index == 2 && record.Stage != ImportInsertionStage::None)
     {
-      testState->CleanupConsumed = true;
+      testState->cleanup_consumed = true;
       record.Cleanup = ImportCleanupStatus::Refused;
       complete = false;
       continue;
@@ -895,7 +895,7 @@ bool DataStructure::rollbackImportPublication(std::vector<ImportPublicationRecor
   return complete;
 }
 
-void DataStructure::appendImportCleanupDiagnostics(Result<>& result, const std::vector<ImportPublicationRecord>& records, const fs::path& sourceFile)
+void DataStructure::AppendImportCleanupDiagnostics(Result<>& result, const std::vector<ImportPublicationRecord>& records, const fs::path& sourceFile)
 {
   for(const auto& record : records)
   {
@@ -920,9 +920,9 @@ void DataStructure::retainImportFailure([[maybe_unused]] ImportPublicationTestSt
   if(testState != nullptr)
   {
     testState->Destination = this;
-    testState->SavedNextId = savedNextId;
-    testState->ReservedNextId = reservedNextId;
-    testState->RetainedRecords = std::move(records);
+    testState->saved_next_id = savedNextId;
+    testState->reserved_next_id = reservedNextId;
+    testState->retained_records = std::move(records);
   }
 #endif
 }
@@ -970,7 +970,7 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
     if(testState != nullptr && testState->Fault == PublicationFaultType::BeforePublication)
     {
-      testState->Consumed = true;
+      testState->consumed = true;
       testState->Fault = PublicationFaultType::None;
       throw std::runtime_error("injected import failure before publication");
     }
@@ -982,7 +982,7 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
       if(testState != nullptr && insertionIndex == 1)
       {
-        testState->RetainedOwner = records[insertionIndex].Owner;
+        testState->retained_owner = records[insertionIndex].Owner;
         if(testState->Fault == PublicationFaultType::AfterHierarchy)
         {
           failAfter = ImportInsertionStage::Hierarchy;
@@ -993,7 +993,7 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
         }
         else if(testState->Fault == PublicationFaultType::ReturnFalse)
         {
-          testState->Consumed = true;
+          testState->consumed = true;
           testState->Fault = PublicationFaultType::None;
           rejectBeforeInsert = true;
         }
@@ -1008,7 +1008,7 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
       {
         const bool allocation = testState->Fault == PublicationFaultType::AllocationAfterSecond;
         testState->Fault = PublicationFaultType::None;
-        testState->Consumed = true;
+        testState->consumed = true;
         if(allocation)
         {
           throw std::bad_alloc();
@@ -1029,7 +1029,7 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
        ((testState->Fault == PublicationFaultType::AfterHierarchy && records[insertionIndex].Stage == ImportInsertionStage::Hierarchy) ||
         (testState->Fault == PublicationFaultType::BeforeTracking && records[insertionIndex].Stage == ImportInsertionStage::Parent)))
     {
-      testState->Consumed = true;
+      testState->consumed = true;
       testState->Fault = PublicationFaultType::None;
     }
 #endif
@@ -1037,14 +1037,14 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
     const auto& failed = records[std::min(insertionIndex, records.size() - 1)];
     importResult = MergeResults(std::move(importResult),
                                 MakeErrorResult(-6214, fmt::format("Cannot publish '{}' (identifier {}) from '{}': {}", failed.Path.toString(), failed.Id, sourceFile.string(), error.what())));
-    appendImportCleanupDiagnostics(importResult, records, sourceFile);
+    AppendImportCleanupDiagnostics(importResult, records, sourceFile);
     retainImportFailure(testState, records, savedNextId, reservedNextId);
     return importResult;
   } catch(...)
   {
     rollbackImportPublication(records, savedNextId, reservedNextId, testState, true);
     importResult = MergeResults(std::move(importResult), MakeErrorResult(-6214, fmt::format("Cannot publish selected objects from '{}': an unknown insertion failure occurred.", sourceFile.string())));
-    appendImportCleanupDiagnostics(importResult, records, sourceFile);
+    AppendImportCleanupDiagnostics(importResult, records, sourceFile);
     retainImportFailure(testState, records, savedNextId, reservedNextId);
     return importResult;
   }
@@ -1059,22 +1059,22 @@ void DataStructure::ImportPublicationTestControl::setFault(Fault fault, bool ref
 {
   m_State = std::make_unique<ImportPublicationTestState>();
   m_State->Fault = fault;
-  m_State->RefuseCleanup = refuseCleanup;
+  m_State->refuse_cleanup = refuseCleanup;
 }
 
 bool DataStructure::ImportPublicationTestControl::publicationFaultConsumed() const
 {
-  return m_State != nullptr && m_State->Consumed;
+  return m_State != nullptr && m_State->consumed;
 }
 
 bool DataStructure::ImportPublicationTestControl::cleanupFaultConsumed() const
 {
-  return m_State != nullptr && m_State->CleanupConsumed;
+  return m_State != nullptr && m_State->cleanup_consumed;
 }
 
 std::shared_ptr<DataObject> DataStructure::ImportPublicationTestControl::retainedOwner() const
 {
-  return m_State == nullptr ? nullptr : m_State->RetainedOwner;
+  return m_State == nullptr ? nullptr : m_State->retained_owner;
 }
 
 Result<> DataStructure::ImportPublicationTestControl::publish(DataStructure& destination, DataStructure& prepared, const std::vector<DataPath>& paths, const fs::path& sourceFile,
@@ -1089,7 +1089,7 @@ Result<> DataStructure::ImportPublicationTestControl::cleanup(DataStructure& des
   {
     return MakeErrorResult(-6215, "The selected import has no retained rollback records for this destination.");
   }
-  if(!destination.rollbackImportPublication(m_State->RetainedRecords, m_State->SavedNextId, m_State->ReservedNextId, m_State.get(), false))
+  if(!destination.rollbackImportPublication(m_State->retained_records, m_State->saved_next_id, m_State->reserved_next_id, m_State.get(), false))
   {
     return MakeErrorResult(-6215, "The selected import still has an exact-object cleanup conflict.");
   }
@@ -1259,13 +1259,13 @@ void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObjec
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)
 {
   auto& target = m_DataObjects[targetId];
-  auto* newParent = dynamic_cast<BaseGroup*>(getData(newParentId));
-  if(newParent == nullptr)
+  auto* newParentPtr = dynamic_cast<BaseGroup*>(getData(newParentId));
+  if(newParentPtr == nullptr)
   {
     return false;
   }
 
-  if(!newParent->insert(target))
+  if(!newParentPtr->insert(target))
   {
     return false;
   }
@@ -1277,7 +1277,7 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
 bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType parentId)
 {
   const auto& target = m_DataObjects[targetId];
-  auto* const parent = dynamic_cast<BaseGroup*>(getData(parentId));
+  auto* const parentPtr = dynamic_cast<BaseGroup*>(getData(parentId));
   const auto targetPtr = target.lock();
   if(targetPtr == nullptr)
   {
@@ -1287,7 +1287,7 @@ bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType
   {
     return removeTopLevel(targetPtr.get());
   }
-  return parent->remove(targetPtr.get());
+  return parentPtr->remove(targetPtr.get());
 }
 
 DataStructure::SignalType& DataStructure::getSignal()
@@ -1357,9 +1357,9 @@ nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const 
   usize tupleCount = std::numeric_limits<usize>::max();
   for(const auto& dataPath : dataPaths)
   {
-    const auto* dataObject = getData(dataPath);
+    const auto* dataObjectPtr = getData(dataPath);
 
-    const DataObject::Type dataObjectType = dataObject->getDataObjectType();
+    const DataObject::Type dataObjectType = dataObjectPtr->getDataObjectType();
     size_t numTuples = 0;
     if(dataObjectType == DataObject::Type::NeighborList || dataObjectType == DataObject::Type::StringArray || dataObjectType == DataObject::Type::DataArray)
     {
@@ -1372,7 +1372,7 @@ nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const 
       return {nonstd::make_unexpected(message.str())};
     }
 
-    auto parentPaths = dataObject->getDataPaths();
+    auto parentPaths = dataObjectPtr->getDataPaths();
     for(const auto& path : parentPaths)
     {
       message << "DataPath: " << path.toString() << "    | Tuple Count: " << numTuples << "\n";

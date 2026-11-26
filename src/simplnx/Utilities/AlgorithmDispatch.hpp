@@ -41,14 +41,14 @@ inline bool IsOutOfCore(const IDataArray& array)
  */
 inline bool IsOutOfCore(const IArray& array)
 {
-  if(const auto* dataArray = dynamic_cast<const IDataArray*>(&array); dataArray != nullptr)
+  if(const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(&array); dataArrayPtr != nullptr)
   {
-    return IsOutOfCore(*dataArray);
+    return IsOutOfCore(*dataArrayPtr);
   }
-  if(const auto* neighborList = dynamic_cast<const INeighborList*>(&array); neighborList != nullptr)
+  if(const auto* neighborListPtr = dynamic_cast<const INeighborList*>(&array); neighborListPtr != nullptr)
   {
-    const auto* listStore = neighborList->getIListStore();
-    return listStore != nullptr && listStore->isOutOfCore();
+    const auto* listStorePtr = neighborListPtr->getIListStore();
+    return listStorePtr != nullptr && listStorePtr->isOutOfCore();
   }
   return false;
 }
@@ -98,9 +98,9 @@ private:
  */
 inline bool AnyOutOfCore(std::initializer_list<const IDataArray*> arrays)
 {
-  for(const auto* array : arrays)
+  for(const auto* arrayPtr : arrays)
   {
-    if(array != nullptr && IsOutOfCore(*array))
+    if(arrayPtr != nullptr && IsOutOfCore(*arrayPtr))
     {
       return true;
     }
@@ -115,9 +115,9 @@ inline bool AnyOutOfCore(std::initializer_list<const IDataArray*> arrays)
  */
 inline bool AnyOutOfCore(const AlgorithmArrayTargets& targets)
 {
-  for(const auto* array : targets.arrays())
+  for(const auto* arrayPtr : targets.arrays())
   {
-    if(array != nullptr && IsOutOfCore(*array))
+    if(arrayPtr != nullptr && IsOutOfCore(*arrayPtr))
     {
       return true;
     }

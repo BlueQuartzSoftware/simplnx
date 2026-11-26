@@ -32,12 +32,12 @@ namespace
 {
 struct ScriptedReplacement
 {
-  std::vector<std::error_code> Results;
-  std::vector<std::chrono::milliseconds::rep> WaitsMs;
-  usize Calls = 0;
+  std::vector<std::error_code> results;
+  std::vector<std::chrono::milliseconds::rep> waits_ms;
+  usize calls = 0;
 };
 
-void writeFile(const fs::path& path, const std::string& contents)
+void WriteFile(const fs::path& path, const std::string& contents)
 {
   std::ofstream output(path, std::ios::binary);
   REQUIRE(output.is_open());
@@ -46,7 +46,7 @@ void writeFile(const fs::path& path, const std::string& contents)
   REQUIRE_FALSE(output.fail());
 }
 
-std::string readFile(const fs::path& path)
+std::string ReadFile(const fs::path& path)
 {
   std::ifstream input(path, std::ios::binary);
   REQUIRE(input.is_open());
@@ -121,62 +121,62 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
                                                [&scripted](const fs::path& replacement, const fs::path& destination) {
                                                  REQUIRE((replacement == "replacement"));
                                                  REQUIRE((destination == "destination"));
-                                                 return scripted.Results.at(scripted.Calls++);
+                                                 return scripted.results.at(scripted.calls++);
                                                },
                                            .IsTransient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::permission_denied; },
-                                           .Wait = [&scripted](std::chrono::milliseconds wait) { scripted.WaitsMs.push_back(wait.count()); }};
+                                           .Wait = [&scripted](std::chrono::milliseconds wait) { scripted.waits_ms.push_back(wait.count()); }};
 
   const std::error_code transient = std::make_error_code(std::errc::permission_denied);
   const std::error_code permanent = std::make_error_code(std::errc::no_such_file_or_directory);
 
   SECTION("Success needs no wait")
   {
-    scripted.Results = {std::error_code{}};
+    scripted.results = {std::error_code{}};
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE_FALSE(outcome.Error);
     CHECK((outcome.Attempts == 1));
     CHECK((outcome.Waited.count() == 0));
-    CHECK((scripted.Calls == 1));
-    CHECK(scripted.WaitsMs.empty());
+    CHECK((scripted.calls == 1));
+    CHECK(scripted.waits_ms.empty());
   }
 
   SECTION("Transient errors clear after three waits")
   {
-    scripted.Results = {transient, transient, transient, std::error_code{}};
+    scripted.results = {transient, transient, transient, std::error_code{}};
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE_FALSE(outcome.Error);
     CHECK((outcome.Attempts == 4));
     CHECK((outcome.Waited.count() == 7));
-    CHECK((scripted.Calls == 4));
+    CHECK((scripted.calls == 4));
     const std::vector<std::chrono::milliseconds::rep> expectedWaitsMs{1, 2, 4};
-    CHECK((scripted.WaitsMs == expectedWaitsMs));
+    CHECK((scripted.waits_ms == expectedWaitsMs));
   }
 
   SECTION("Permanent error ends the operation")
   {
-    scripted.Results = {permanent};
+    scripted.results = {permanent};
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE((outcome.Error == permanent));
     CHECK((outcome.Attempts == 1));
     CHECK((outcome.Waited.count() == 0));
-    CHECK((scripted.Calls == 1));
-    CHECK(scripted.WaitsMs.empty());
+    CHECK((scripted.calls == 1));
+    CHECK(scripted.waits_ms.empty());
   }
 
   SECTION("A transient error persists after the last wait")
   {
-    scripted.Results.assign(38, transient);
+    scripted.results.assign(38, transient);
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE((outcome.Error == transient));
     CHECK(outcome.RetriesExhausted);
     CHECK((outcome.Attempts == 38));
     CHECK((outcome.Waited.count() == 2000));
-    CHECK((scripted.Calls == 38));
+    CHECK((scripted.calls == 38));
     // The first six waits use 63 ms. Thirty 64 ms waits leave 17 ms.
     std::vector<std::chrono::milliseconds::rep> expectedWaitsMs{1, 2, 4, 8, 16, 32};
     expectedWaitsMs.insert(expectedWaitsMs.end(), 30, 64);
     expectedWaitsMs.push_back(17);
-    CHECK((scripted.WaitsMs == expectedWaitsMs));
+    CHECK((scripted.waits_ms == expectedWaitsMs));
   }
 }
 
@@ -264,14 +264,14 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   });
   const fs::path destination = directory / u8"destination-\u03a9.txt";
   const fs::path replacement = directory / "replacement.txt";
-  writeFile(destination, "old");
+  WriteFile(destination, "old");
 
   SECTION("A complete replacement becomes the destination")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const auto outcome = InstallReplacementFile(replacement, destination);
     REQUIRE_FALSE(outcome.Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
@@ -281,12 +281,12 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     REQUIRE(outcome.Error);
     CHECK((outcome.Attempts == 1));
     CHECK((outcome.Waited.count() == 0));
-    CHECK((readFile(destination) == "old"));
+    CHECK((ReadFile(destination) == "old"));
   }
 
   SECTION("A flush failure prevents both renames and preserves both files")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps(FileReplacementDurability::WriteThrough);
     const auto flushError = std::make_error_code(std::errc::io_error);
     steps.Flush = [&](const fs::path& path) {
@@ -304,13 +304,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK_FALSE(outcome.RenameAttempted);
     CHECK((outcome.Attempts == 1));
     CHECK_FALSE(outcome.RetriesExhausted);
-    CHECK((readFile(destination) == "old"));
-    CHECK((readFile(replacement) == "new"));
+    CHECK((ReadFile(destination) == "old"));
+    CHECK((ReadFile(replacement) == "new"));
   }
 
   SECTION("Transient flush failures share the rename wait budget")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const bool exhausted = GENERATE(false, true);
     auto steps = detail::PlatformFileReplacementSteps();
     const auto rename = steps.Rename;
@@ -349,8 +349,8 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       CHECK((outcome.Attempts == flushCalls));
       CHECK((renameCalls == 0));
       CHECK((successfulFlushes == 0));
-      CHECK((readFile(destination) == "old"));
-      CHECK((readFile(replacement) == "new"));
+      CHECK((ReadFile(destination) == "old"));
+      CHECK((ReadFile(replacement) == "new"));
       CHECK_THAT(DescribeFileReplacementSystemError(outcome), Catch::Matchers::Contains("tried " + std::to_string(flushCalls) + " times over " + std::to_string(waited.count()) + " ms"));
     }
     else
@@ -361,14 +361,14 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       CHECK((renameCalls == 2));
       CHECK((outcome.Attempts == 3));
       CHECK((outcome.Waited == std::chrono::milliseconds{3}));
-      CHECK((readFile(destination) == "new"));
+      CHECK((ReadFile(destination) == "new"));
       CHECK_FALSE(fs::exists(replacement));
     }
   }
 
   SECTION("A transient flush failure clears before the first rename")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps();
     const auto rename = steps.Rename;
     usize flushCalls = 0;
@@ -386,13 +386,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK(outcome.RenameAttempted);
     CHECK((flushCalls == 2));
     CHECK((renameCalls == 1));
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
   SECTION("A successful flush precedes every rename attempt")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps();
     const auto rename = steps.Rename;
     bool flushed = false;
@@ -415,35 +415,35 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     steps.Wait = [](std::chrono::milliseconds) {};
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
     REQUIRE_FALSE(outcome.Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
   SECTION("An absent destination receives the new file")
   {
     REQUIRE(fs::remove(destination));
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const auto outcome = InstallReplacementFile(replacement, destination);
     REQUIRE_FALSE(outcome.Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
   SECTION("A relative destination resolves from the working directory")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const auto relativeDestination = fs::relative(destination);
     REQUIRE(relativeDestination.is_relative());
     const auto outcome = InstallReplacementFile(replacement, relativeDestination);
     REQUIRE_FALSE(outcome.Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
 #ifdef _WIN32
   SECTION("A full-sharing indexer handle follows the volume rename capability")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const bool supportsPosixRename = UnitTest::VolumeSupportsPosixRename(directory);
     {
       const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -453,27 +453,27 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       if(supportsPosixRename)
       {
         REQUIRE_FALSE(outcome.Error);
-        CHECK((readFile(destination) == "new"));
+        CHECK((ReadFile(destination) == "new"));
         CHECK_FALSE(fs::exists(replacement));
       }
       else
       {
         REQUIRE(outcome.Error);
-        CHECK((readFile(destination) == "old"));
-        CHECK((readFile(replacement) == "new"));
+        CHECK((ReadFile(destination) == "old"));
+        CHECK((ReadFile(replacement) == "new"));
       }
     }
     if(!supportsPosixRename)
     {
       REQUIRE_FALSE(InstallReplacementFile(replacement, destination).Error);
-      CHECK((readFile(destination) == "new"));
+      CHECK((ReadFile(destination) == "new"));
       CHECK_FALSE(fs::exists(replacement));
     }
   }
 
   SECTION("A forced conventional fallback preserves held files and succeeds after release")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps();
     steps.Rename = [](const fs::path& from, const fs::path& to) {
       return detail::RenameWithFallback(
@@ -489,17 +489,17 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
       REQUIRE(outcome.Error);
       CHECK(outcome.RetriesExhausted);
-      CHECK((readFile(destination) == "old"));
-      CHECK((readFile(replacement) == "new"));
+      CHECK((ReadFile(destination) == "old"));
+      CHECK((ReadFile(replacement) == "new"));
     }
     REQUIRE_FALSE(detail::InstallReplacementFile(replacement, destination, steps).Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
   SECTION("A handle without delete sharing is released during a wait")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([&held]() noexcept {
@@ -520,13 +520,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
     REQUIRE_FALSE(outcome.Error);
     CHECK((outcome.Attempts >= 2));
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 
   SECTION("A persistent handle without delete sharing leaves both files intact")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
@@ -538,13 +538,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION || outcome.Error.value() == ERROR_ACCESS_DENIED));
     CHECK((outcome.Waited == detail::k_FileReplacementTotalWaitLimitMs));
     CHECK(outcome.RetriesExhausted);
-    CHECK((readFile(destination) == "old"));
-    CHECK((readFile(replacement) == "new"));
+    CHECK((ReadFile(destination) == "old"));
+    CHECK((ReadFile(replacement) == "new"));
   }
 
   SECTION("A read-only destination fails after one attempt")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const DWORD originalAttributes = GetFileAttributesW(destination.c_str());
     REQUIRE((originalAttributes != INVALID_FILE_ATTRIBUTES));
     const auto restoreAttributes = MakeScopeGuard([&destination, originalAttributes]() noexcept { SetFileAttributesW(destination.c_str(), originalAttributes); });
@@ -557,13 +557,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK((outcome.Error.value() == ERROR_ACCESS_DENIED));
     CHECK((outcome.Attempts == 1));
     CHECK_FALSE(outcome.RetriesExhausted);
-    CHECK((readFile(destination) == "old"));
-    CHECK((readFile(replacement) == "new"));
+    CHECK((ReadFile(destination) == "old"));
+    CHECK((ReadFile(replacement) == "new"));
   }
 
   SECTION("A replacement handle without delete sharing leaves both files intact")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const HANDLE held = CreateFileW(replacement.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
@@ -574,16 +574,16 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     CHECK((outcome.Error.category() == std::system_category()));
     CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION));
     CHECK(outcome.RetriesExhausted);
-    CHECK((readFile(destination) == "old"));
-    CHECK((readFile(replacement) == "new"));
+    CHECK((ReadFile(destination) == "old"));
+    CHECK((ReadFile(replacement) == "new"));
   }
 
   SECTION("Write-through replacement installs the new file")
   {
-    writeFile(replacement, "new");
+    WriteFile(replacement, "new");
     const auto outcome = InstallReplacementFile(replacement, destination, FileReplacementDurability::WriteThrough);
     REQUIRE_FALSE(outcome.Error);
-    CHECK((readFile(destination) == "new"));
+    CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
 #endif

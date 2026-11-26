@@ -35,7 +35,7 @@ template <class T>
 class CountingDataStore : public DataStore<T>
 {
 public:
-  using TransferRange = std::pair<usize, usize>;
+  using TransferRangeType = std::pair<usize, usize>;
   using DataStore<T>::DataStore;
 
   Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
@@ -80,12 +80,12 @@ public:
     return m_MaxWriteValues;
   }
 
-  [[nodiscard]] const std::vector<TransferRange>& readRanges() const noexcept
+  [[nodiscard]] const std::vector<TransferRangeType>& readRanges() const noexcept
   {
     return m_ReadRanges;
   }
 
-  [[nodiscard]] const std::vector<TransferRange>& writeRanges() const noexcept
+  [[nodiscard]] const std::vector<TransferRangeType>& writeRanges() const noexcept
   {
     return m_WriteRanges;
   }
@@ -93,11 +93,11 @@ public:
 private:
   mutable usize m_ReadCount = 0;
   mutable usize m_ReadValues = 0;
-  mutable std::vector<TransferRange> m_ReadRanges;
+  mutable std::vector<TransferRangeType> m_ReadRanges;
   usize m_WriteCount = 0;
   usize m_WrittenValues = 0;
   usize m_MaxWriteValues = 0;
-  std::vector<TransferRange> m_WriteRanges;
+  std::vector<TransferRangeType> m_WriteRanges;
 };
 
 template <class T>
@@ -191,8 +191,8 @@ private:
 template <class T>
 std::vector<float32> ReferenceIsoContour(const std::vector<T>& field, usize dimX, usize dimY, usize dimZ, float64 levelSet, float64 farValue, FloatVec3 spacing)
 {
-  using RealT = ImageProcessing::detail::IsoRealType<T>;
-  const RealT level = static_cast<RealT>(levelSet);
+  using RealTType = ImageProcessing::detail::IsoRealType<T>;
+  const RealTType level = static_cast<RealTType>(levelSet);
   const float32 positiveFar = static_cast<float32>(farValue);
   const float32 negativeFar = -positiveFar;
   const std::array<double, 3> physicalSpacing = {static_cast<double>(spacing[0]), static_cast<double>(spacing[1]), static_cast<double>(spacing[2])};
@@ -205,7 +205,7 @@ std::vector<float32> ReferenceIsoContour(const std::vector<T>& field, usize dimX
     const usize clampedZ = static_cast<usize>(std::clamp(z, int64{0}, maxZ));
     return FlatIndex(clampedX, clampedY, clampedZ, dimX, dimY);
   };
-  const auto sampleReal = [&](int64 x, int64 y, int64 z) -> RealT { return static_cast<RealT>(field[sampleIndex(x, y, z)]); };
+  const auto sampleReal = [&](int64 x, int64 y, int64 z) -> RealTType { return static_cast<RealTType>(field[sampleIndex(x, y, z)]); };
   const auto sampleFloat = [&](int64 x, int64 y, int64 z) -> float32 { return static_cast<float32>(field[sampleIndex(x, y, z)]); };
 
   std::vector<float32> output(field.size());
@@ -218,23 +218,23 @@ std::vector<float32> ReferenceIsoContour(const std::vector<T>& field, usize dimX
       for(usize xIndex = 0; xIndex < dimX; ++xIndex)
       {
         const int64 x = static_cast<int64>(xIndex);
-        const RealT center = sampleReal(x, y, z);
+        const RealTType center = sampleReal(x, y, z);
         float32 best = center > level ? positiveFar : (center < level ? negativeFar : 0.0f);
 
         const auto evaluateEdge = [&](int64 edgeX, int64 edgeY, int64 edgeZ, int32 axis, bool targetIsFirst) {
           const int64 neighborX = edgeX + (axis == 0 ? 1 : 0);
           const int64 neighborY = edgeY + (axis == 1 ? 1 : 0);
           const int64 neighborZ = edgeZ + (axis == 2 ? 1 : 0);
-          const RealT val0 = sampleReal(edgeX, edgeY, edgeZ) - level;
-          const RealT val1 = sampleReal(neighborX, neighborY, neighborZ) - level;
-          const bool sign = val0 > RealT{0};
-          if(sign == (val1 > RealT{0}))
+          const RealTType val0 = sampleReal(edgeX, edgeY, edgeZ) - level;
+          const RealTType val1 = sampleReal(neighborX, neighborY, neighborZ) - level;
+          const bool sign = val0 > RealTType{0};
+          if(sign == (val1 > RealTType{0}))
           {
             return;
           }
 
-          std::array<RealT, 3> gradient0{};
-          std::array<RealT, 3> gradient1{};
+          std::array<RealTType, 3> gradient0{};
+          std::array<RealTType, 3> gradient1{};
           for(int32 gradientAxis = 0; gradientAxis < 3; ++gradientAxis)
           {
             const int64 gradientX = gradientAxis == 0 ? 1 : 0;
@@ -243,30 +243,30 @@ std::vector<float32> ReferenceIsoContour(const std::vector<T>& field, usize dimX
             gradient0[gradientAxis] = sampleReal(edgeX + gradientX, edgeY + gradientY, edgeZ + gradientZ) - sampleReal(edgeX - gradientX, edgeY - gradientY, edgeZ - gradientZ);
             const float32 positive = sampleFloat(neighborX + gradientX, neighborY + gradientY, neighborZ + gradientZ);
             const float32 negative = sampleFloat(neighborX - gradientX, neighborY - gradientY, neighborZ - gradientZ);
-            gradient1[gradientAxis] = static_cast<RealT>(positive - negative);
+            gradient1[gradientAxis] = static_cast<RealTType>(positive - negative);
           }
 
-          const RealT difference = sign ? val0 - val1 : val1 - val0;
-          if(difference < std::numeric_limits<RealT>::min())
+          const RealTType difference = sign ? val0 - val1 : val1 - val0;
+          if(difference < std::numeric_limits<RealTType>::min())
           {
             return;
           }
-          std::array<RealT, 3> gradient{};
-          RealT norm = RealT{0};
+          std::array<RealTType, 3> gradient{};
+          RealTType norm = RealTType{0};
           for(int32 gradientAxis = 0; gradientAxis < 3; ++gradientAxis)
           {
-            gradient[gradientAxis] = (gradient0[gradientAxis] * RealT{0.5} + gradient1[gradientAxis] * RealT{0.5}) / (RealT{2} * physicalSpacing[static_cast<usize>(gradientAxis)]);
+            gradient[gradientAxis] = (gradient0[gradientAxis] * RealTType{0.5} + gradient1[gradientAxis] * RealTType{0.5}) / (RealTType{2} * physicalSpacing[static_cast<usize>(gradientAxis)]);
             norm += gradient[gradientAxis] * gradient[gradientAxis];
           }
           norm = std::sqrt(norm);
-          if(norm < std::numeric_limits<RealT>::min())
+          if(norm < std::numeric_limits<RealTType>::min())
           {
             return;
           }
 
           const usize edgeAxis = static_cast<usize>(axis);
-          const RealT scale = std::abs(gradient[edgeAxis]) * physicalSpacing[edgeAxis] / norm / difference;
-          const RealT candidate = (targetIsFirst ? val0 : val1) * scale;
+          const RealTType scale = std::abs(gradient[edgeAxis]) * physicalSpacing[edgeAxis] / norm / difference;
+          const RealTType candidate = (targetIsFirst ? val0 : val1) * scale;
           if(std::abs(static_cast<double>(candidate)) < std::abs(static_cast<double>(best)))
           {
             best = static_cast<float32>(candidate);
@@ -396,16 +396,16 @@ std::vector<float32> RunDirect(const std::vector<T>& field, const SizeVec3& dims
 
 struct IsoContourCountingResult
 {
-  using TransferRange = std::pair<usize, usize>;
+  using TransferRangeType = std::pair<usize, usize>;
 
   std::vector<float32> output;
-  usize readCount = 0;
-  usize readValues = 0;
-  usize writeCount = 0;
-  usize writtenValues = 0;
-  usize maxWriteValues = 0;
-  std::vector<TransferRange> readRanges;
-  std::vector<TransferRange> writeRanges;
+  usize read_count = 0;
+  usize read_values = 0;
+  usize write_count = 0;
+  usize written_values = 0;
+  usize max_write_values = 0;
+  std::vector<TransferRangeType> read_ranges;
+  std::vector<TransferRangeType> write_ranges;
 };
 
 template <class T>
@@ -456,7 +456,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route ma
   using T = TestType;
   constexpr float64 k_LevelSet = 10.0;
   constexpr float64 k_FarValue = 100.0;
-  const FloatVec3 k_UnitSpacing{1.0f, 1.0f, 1.0f};
+  const FloatVec3 kUnitSpacing{1.0f, 1.0f, 1.0f};
   const std::array<SizeVec3, 10> dimensions = {SizeVec3{1, 1, 1}, SizeVec3{1, 1, 7}, SizeVec3{7, 1, 1},    SizeVec3{1, 5, 1},  SizeVec3{2, 2, 2},
                                                SizeVec3{3, 3, 3}, SizeVec3{7, 6, 5}, SizeVec3{17, 13, 11}, SizeVec3{33, 9, 7}, SizeVec3{5, 40, 6}};
   constexpr std::array<IsoFieldMode, 4> k_Modes = {IsoFieldMode::Dense, IsoFieldMode::Band, IsoFieldMode::Flat, IsoFieldMode::Level};
@@ -470,8 +470,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route ma
       {
         CAPTURE(mode);
         const std::vector<T> field = MakeIsoField<T>(dims[0], dims[1], dims[2], uint32{0x15C00001u} + static_cast<uint32>(dimensionsIndex), mode);
-        const std::vector<float32> expected = ReferenceIsoContour(field, dims[0], dims[1], dims[2], k_LevelSet, k_FarValue, k_UnitSpacing);
-        const std::vector<float32> actual = RunDirect(field, dims, k_LevelSet, k_FarValue, k_UnitSpacing);
+        const std::vector<float32> expected = ReferenceIsoContour(field, dims[0], dims[1], dims[2], k_LevelSet, k_FarValue, kUnitSpacing);
+        const std::vector<float32> actual = RunDirect(field, dims, k_LevelSet, k_FarValue, kUnitSpacing);
         RequireBitIdentical(actual, expected);
       }
     }
@@ -479,11 +479,11 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route ma
 
   if constexpr(std::is_same_v<T, uint8> || std::is_same_v<T, float64>)
   {
-    const SizeVec3 k_Dims{7, 6, 5};
-    const FloatVec3 k_Spacing{0.5f, 2.0f, 1.25f};
-    const std::vector<T> field = MakeIsoField<T>(k_Dims[0], k_Dims[1], k_Dims[2], uint32{0x15C0A115u}, IsoFieldMode::Dense);
-    const std::vector<float32> expected = ReferenceIsoContour(field, k_Dims[0], k_Dims[1], k_Dims[2], k_LevelSet, k_FarValue, k_Spacing);
-    const std::vector<float32> actual = RunDirect(field, k_Dims, k_LevelSet, k_FarValue, k_Spacing);
+    const SizeVec3 kDims{7, 6, 5};
+    const FloatVec3 kSpacing{0.5f, 2.0f, 1.25f};
+    const std::vector<T> field = MakeIsoField<T>(kDims[0], kDims[1], kDims[2], uint32{0x15C0A115u}, IsoFieldMode::Dense);
+    const std::vector<float32> expected = ReferenceIsoContour(field, kDims[0], kDims[1], kDims[2], k_LevelSet, k_FarValue, kSpacing);
+    const std::vector<float32> actual = RunDirect(field, kDims, k_LevelSet, k_FarValue, kSpacing);
     RequireBitIdentical(actual, expected);
   }
 }
@@ -494,7 +494,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route matc
   using T = TestType;
   constexpr float64 k_LevelSet = 10.0;
   constexpr float64 k_FarValue = 100.0;
-  const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
+  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
   const std::array<SizeVec3, 5> dimensions = {SizeVec3{7, 6, 5}, SizeVec3{17, 13, 11}, SizeVec3{5, 40, 6}, SizeVec3{9, 8, 2}, SizeVec3{9, 8, 3}};
   constexpr std::array<IsoFieldMode, 2> k_Modes = {IsoFieldMode::Dense, IsoFieldMode::Band};
 
@@ -517,29 +517,29 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route matc
     for(const IsoFieldMode mode : k_Modes)
     {
       const std::vector<T> field = MakeIsoField<T>(dims[0], dims[1], dims[2], uint32{0x15C05A81u} + static_cast<uint32>(dimensionsIndex), mode);
-      const std::vector<float32> expected = ReferenceIsoContour(field, dims[0], dims[1], dims[2], k_LevelSet, k_FarValue, k_Spacing);
+      const std::vector<float32> expected = ReferenceIsoContour(field, dims[0], dims[1], dims[2], k_LevelSet, k_FarValue, kSpacing);
       for(const auto& [budgetBytes, expectedCorePlanes] : budgets)
       {
         DYNAMIC_SECTION(dims[0] << "x" << dims[1] << "x" << dims[2] << " mode " << static_cast<int32>(mode) << " core " << expectedCorePlanes)
         {
           const auto plan = ImageProcessing::detail::PlanIsoContourSlab<T>(dims, budgetBytes / 4);
           REQUIRE(plan.corePlanes == expectedCorePlanes);
-          const IsoContourCountingResult result = RunSlabCounting(field, dims, budgetBytes, k_LevelSet, k_FarValue, k_Spacing);
+          const IsoContourCountingResult result = RunSlabCounting(field, dims, budgetBytes, k_LevelSet, k_FarValue, kSpacing);
           RequireBitIdentical(result.output, expected);
-          REQUIRE(result.readValues == dims[2] * sliceValues);
+          REQUIRE(result.read_values == dims[2] * sliceValues);
           const usize numberOfSlabs = (dims[2] + expectedCorePlanes - 1) / expectedCorePlanes;
-          std::vector<IsoContourCountingResult::TransferRange> expectedWriteRanges;
+          std::vector<IsoContourCountingResult::TransferRangeType> expectedWriteRanges;
           for(usize z0 = 0; z0 < dims[2]; z0 += expectedCorePlanes)
           {
             expectedWriteRanges.emplace_back(z0 * sliceValues, std::min(expectedCorePlanes, dims[2] - z0) * sliceValues);
           }
-          REQUIRE(result.readCount <= 2 * numberOfSlabs);
-          REQUIRE(result.writeCount == numberOfSlabs);
-          REQUIRE(result.writeRanges == expectedWriteRanges);
-          REQUIRE(result.maxWriteValues == plan.corePlanes * sliceValues);
+          REQUIRE(result.read_count <= 2 * numberOfSlabs);
+          REQUIRE(result.write_count == numberOfSlabs);
+          REQUIRE(result.write_ranges == expectedWriteRanges);
+          REQUIRE(result.max_write_values == plan.corePlanes * sliceValues);
           if(plan.corePlanes == dims[2])
           {
-            REQUIRE(result.readCount == 1);
+            REQUIRE(result.read_count == 1);
           }
         }
       }
@@ -556,49 +556,49 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
   const int axis = GENERATE(0, 1, 2);
   const bool aniso = GENERATE(false, true);
   const FloatVec3 spacing = aniso ? FloatVec3{2.0f, 1.5f, 3.0f} : FloatVec3{1.0f, 1.0f, 1.0f};
-  constexpr float64 kLevel = 2.5;
-  constexpr float32 kFar = 10.0f;
+  constexpr float64 k_Level = 2.5;
+  constexpr float32 k_Far = 10.0f;
   CAPTURE(axis, aniso);
 
-  constexpr usize DX = 6;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 4;
-  std::vector<T> field(DX * DY * DZ, T{0});
-  for(usize z = 0; z < DZ; ++z)
+  constexpr usize k_Dx = 6;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 4;
+  std::vector<T> field(k_Dx * k_Dy * k_Dz, T{0});
+  for(usize z = 0; z < k_Dz; ++z)
   {
-    for(usize y = 0; y < DY; ++y)
+    for(usize y = 0; y < k_Dy; ++y)
     {
-      for(usize x = 0; x < DX; ++x)
+      for(usize x = 0; x < k_Dx; ++x)
       {
         const usize coord = (axis == 0) ? x : (axis == 1) ? y : z;
-        field[FlatIndex(x, y, z, DX, DY)] = static_cast<T>(coord);
+        field[FlatIndex(x, y, z, k_Dx, k_Dy)] = static_cast<T>(coord);
       }
     }
   }
 
-  const std::vector<float32> out = RunEngine<T>(field, DX, DY, DZ, kLevel, kFar, spacing);
+  const std::vector<float32> out = RunEngine<T>(field, k_Dx, k_Dy, k_Dz, k_Level, k_Far, spacing);
   const float32 sp = spacing[static_cast<usize>(axis)];
 
-  for(usize z = 0; z < DZ; ++z)
+  for(usize z = 0; z < k_Dz; ++z)
   {
-    for(usize y = 0; y < DY; ++y)
+    for(usize y = 0; y < k_Dy; ++y)
     {
-      for(usize x = 0; x < DX; ++x)
+      for(usize x = 0; x < k_Dx; ++x)
       {
         const int64 coord = static_cast<int64>((axis == 0) ? x : (axis == 1) ? y : z);
-        const float32 got = out[FlatIndex(x, y, z, DX, DY)];
+        const float32 got = out[FlatIndex(x, y, z, k_Dx, k_Dy)];
         INFO("axis " << axis << " coord " << coord << " aniso " << aniso);
         if(coord == 2 || coord == 3)
         {
-          REQUIRE(got == Approx(static_cast<float32>((static_cast<float64>(coord) - kLevel)) * sp).epsilon(1e-5));
+          REQUIRE(got == Approx(static_cast<float32>((static_cast<float64>(coord) - k_Level)) * sp).epsilon(1e-5));
         }
         else if(coord < 2)
         {
-          REQUIRE(got == -kFar);
+          REQUIRE(got == -k_Far);
         }
         else
         {
-          REQUIRE(got == kFar);
+          REQUIRE(got == k_Far);
         }
       }
     }
@@ -609,17 +609,17 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
 // Each voxel receives the applicable signed far value. A voxel on the level set receives zero.
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  constexpr usize DX = 5;
-  constexpr usize DY = 4;
-  constexpr usize DZ = 3;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 4;
+  constexpr usize k_Dz = 3;
   const float64 levelSet = GENERATE(0.0, 3.0, -1.0);
   const float64 farValue = GENERATE(10.0, 4.0);
   CAPTURE(levelSet, farValue);
 
   SECTION("all above -> +far")
   {
-    std::vector<int32> field(DX * DY * DZ, static_cast<int32>(levelSet) + 5);
-    const std::vector<float32> out = RunEngine<int32>(field, DX, DY, DZ, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
+    std::vector<int32> field(k_Dx * k_Dy * k_Dz, static_cast<int32>(levelSet) + 5);
+    const std::vector<float32> out = RunEngine<int32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
     for(float32 v : out)
     {
       REQUIRE(v == static_cast<float32>(farValue));
@@ -627,8 +627,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "
   }
   SECTION("all below -> -far")
   {
-    std::vector<int32> field(DX * DY * DZ, static_cast<int32>(levelSet) - 5);
-    const std::vector<float32> out = RunEngine<int32>(field, DX, DY, DZ, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
+    std::vector<int32> field(k_Dx * k_Dy * k_Dz, static_cast<int32>(levelSet) - 5);
+    const std::vector<float32> out = RunEngine<int32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
     for(float32 v : out)
     {
       REQUIRE(v == -static_cast<float32>(farValue));
@@ -636,8 +636,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "
   }
   SECTION("exactly on level set -> 0")
   {
-    std::vector<float32> field(DX * DY * DZ, static_cast<float32>(levelSet));
-    const std::vector<float32> out = RunEngine<float32>(field, DX, DY, DZ, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
+    std::vector<float32> field(k_Dx * k_Dy * k_Dz, static_cast<float32>(levelSet));
+    const std::vector<float32> out = RunEngine<float32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
     for(float32 v : out)
     {
       REQUIRE(v == 0.0f);
@@ -648,43 +648,43 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "
 // Radial field: interior of the contour is negative, exterior positive, and all outputs are finite.
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: radial sign + finiteness", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  constexpr usize D = 15;
+  constexpr usize k_D = 15;
   const float64 c = 7.0;
   const float64 radius = 4.0;
-  std::vector<float32> field(D * D * D);
-  for(usize z = 0; z < D; ++z)
+  std::vector<float32> field(k_D * k_D * k_D);
+  for(usize z = 0; z < k_D; ++z)
   {
-    for(usize y = 0; y < D; ++y)
+    for(usize y = 0; y < k_D; ++y)
     {
-      for(usize x = 0; x < D; ++x)
+      for(usize x = 0; x < k_D; ++x)
       {
         const float64 dxc = x - c;
         const float64 dyc = y - c;
         const float64 dzc = z - c;
-        field[FlatIndex(x, y, z, D, D)] = static_cast<float32>(std::sqrt(dxc * dxc + dyc * dyc + dzc * dzc));
+        field[FlatIndex(x, y, z, k_D, k_D)] = static_cast<float32>(std::sqrt(dxc * dxc + dyc * dyc + dzc * dzc));
       }
     }
   }
-  const std::vector<float32> out = RunEngine<float32>(field, D, D, D, radius, 100.0, FloatVec3{1.0f, 1.0f, 1.0f});
+  const std::vector<float32> out = RunEngine<float32>(field, k_D, k_D, k_D, radius, 100.0, FloatVec3{1.0f, 1.0f, 1.0f});
   for(float32 v : out)
   {
     REQUIRE(std::isfinite(v));
   }
-  REQUIRE(out[FlatIndex(7, 7, 7, D, D)] < 0.0f); // center: deep interior
-  REQUIRE(out[FlatIndex(0, 0, 0, D, D)] > 0.0f); // corner: far exterior
+  REQUIRE(out[FlatIndex(7, 7, 7, k_D, k_D)] < 0.0f); // center: deep interior
+  REQUIRE(out[FlatIndex(0, 0, 0, k_D, k_D)] > 0.0f); // corner: far exterior
 }
 
 // Determinism: the same input yields byte-identical output on repeated runs.
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: deterministic", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  constexpr usize D = 12;
-  std::vector<int16> field(D * D * D);
+  constexpr usize k_D = 12;
+  std::vector<int16> field(k_D * k_D * k_D);
   for(usize i = 0; i < field.size(); ++i)
   {
     field[i] = static_cast<int16>((i * 7 + 3) % 11);
   }
-  const std::vector<float32> a = RunEngine<int16>(field, D, D, D, 5.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f});
-  const std::vector<float32> b = RunEngine<int16>(field, D, D, D, 5.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f});
+  const std::vector<float32> a = RunEngine<int16>(field, k_D, k_D, k_D, 5.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f});
+  const std::vector<float32> b = RunEngine<int16>(field, k_D, k_D, k_D, 5.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f});
   REQUIRE(a.size() == b.size());
   for(usize i = 0; i < a.size(); ++i)
   {
@@ -696,31 +696,31 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: deterministic", "[NXImag
 // The output must reproduce the analytic Z-ramp result.
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-ramp", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  constexpr usize DX = 9;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 40;
-  constexpr float32 kFar = 50.0f;
-  std::vector<int32> field(DX * DY * DZ);
-  for(usize z = 0; z < DZ; ++z)
+  constexpr usize k_Dx = 9;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 40;
+  constexpr float32 k_Far = 50.0f;
+  std::vector<int32> field(k_Dx * k_Dy * k_Dz);
+  for(usize z = 0; z < k_Dz; ++z)
   {
-    for(usize y = 0; y < DY; ++y)
+    for(usize y = 0; y < k_Dy; ++y)
     {
-      for(usize x = 0; x < DX; ++x)
+      for(usize x = 0; x < k_Dx; ++x)
       {
-        field[FlatIndex(x, y, z, DX, DY)] = static_cast<int32>(z);
+        field[FlatIndex(x, y, z, k_Dx, k_Dy)] = static_cast<int32>(z);
       }
     }
   }
-  constexpr uint64 k_PlaneInputBytes = DX * DY * sizeof(int32);
-  constexpr uint64 k_PlaneOutputBytes = DX * DY * sizeof(float32);
+  constexpr uint64 k_PlaneInputBytes = k_Dx * k_Dy * sizeof(int32);
+  constexpr uint64 k_PlaneOutputBytes = k_Dx * k_Dy * sizeof(float32);
   constexpr uint64 k_BudgetBytes = 4 * (5 * k_PlaneInputBytes + k_PlaneOutputBytes - 1);
-  const IsoContourCountingResult result = RunSlabCounting(field, SizeVec3{DX, DY, DZ}, k_BudgetBytes, 2.5, kFar, FloatVec3{1.0f, 1.0f, 1.0f});
+  const IsoContourCountingResult result = RunSlabCounting(field, SizeVec3{k_Dx, k_Dy, k_Dz}, k_BudgetBytes, 2.5, k_Far, FloatVec3{1.0f, 1.0f, 1.0f});
   const std::vector<float32>& out = result.output;
-  REQUIRE(result.readValues == field.size());
-  REQUIRE(result.readCount <= 2 * DZ);
-  for(usize z = 0; z < DZ; ++z)
+  REQUIRE(result.read_values == field.size());
+  REQUIRE(result.read_count <= 2 * k_Dz);
+  for(usize z = 0; z < k_Dz; ++z)
   {
-    const float32 got = out[FlatIndex(4, 4, z, DX, DY)];
+    const float32 got = out[FlatIndex(4, 4, z, k_Dx, k_Dy)];
     INFO("z " << z);
     if(z == 2 || z == 3)
     {
@@ -728,11 +728,11 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-
     }
     else if(z < 2)
     {
-      REQUIRE(got == -kFar);
+      REQUIRE(got == -k_Far);
     }
     else
     {
-      REQUIRE(got == kFar);
+      REQUIRE(got == k_Far);
     }
   }
 }
@@ -762,16 +762,16 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: validates stores and can
 
   SECTION("pre-cancel preserves output")
   {
-    constexpr float32 kPoison = -12345.0f;
+    constexpr float32 k_Poison = -12345.0f;
     DataStore<uint8> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, uint8{1});
-    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, kPoison);
+    DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_Poison);
     shouldCancel = true;
     IsoContourDistance<uint8> engine(inputStore, outputStore, SizeVec3{4, 4, 4}, 0.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.valid());
     for(const float32 value : outputStore)
     {
-      REQUIRE(value == kPoison);
+      REQUIRE(value == k_Poison);
     }
   }
 }
@@ -779,21 +779,21 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: validates stores and can
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab plan derives the plane count from the grant", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 k_LargeDims{512, 512, 128};
+  const SizeVec3 kLargeDims{512, 512, 128};
 
-  const auto uint8Partial = ImageProcessing::detail::PlanIsoContourSlab<uint8>(k_LargeDims, 128 * k_MiB);
+  const auto uint8Partial = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kLargeDims, 128 * k_MiB);
   REQUIRE(uint8Partial.corePlanes == 101);
   REQUIRE(uint8Partial.inputPlanes == 105);
   REQUIRE(uint8Partial.inputBytes == 105 * 256 * 1024);
   REQUIRE(uint8Partial.outputBytes == 101 * k_MiB);
 
-  const auto uint8Complete = ImageProcessing::detail::PlanIsoContourSlab<uint8>(k_LargeDims, 160 * k_MiB);
+  const auto uint8Complete = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kLargeDims, 160 * k_MiB);
   REQUIRE(uint8Complete.corePlanes == 128);
   REQUIRE(uint8Complete.inputPlanes == 128);
   REQUIRE(uint8Complete.inputBytes == 32 * k_MiB);
   REQUIRE(uint8Complete.outputBytes == 128 * k_MiB);
 
-  const auto float64Partial = ImageProcessing::detail::PlanIsoContourSlab<float64>(k_LargeDims, 128 * k_MiB);
+  const auto float64Partial = ImageProcessing::detail::PlanIsoContourSlab<float64>(kLargeDims, 128 * k_MiB);
   REQUIRE(float64Partial.corePlanes == 40);
   REQUIRE(float64Partial.inputPlanes == 44);
   REQUIRE(float64Partial.inputBytes == 44 * 2 * k_MiB);
@@ -805,29 +805,29 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab plan derives the pl
   REQUIRE(float64Thin.inputBytes == 16 * k_MiB);
   REQUIRE(float64Thin.outputBytes == 4 * k_MiB);
 
-  const SizeVec3 k_ThreePlaneDims{9, 8, 3};
+  const SizeVec3 kThreePlaneDims{9, 8, 3};
   constexpr uint64 k_ThreePlaneUsefulBytes = 3 * 9 * 8 * (sizeof(uint8) + sizeof(float32));
-  const auto uint8Thin = ImageProcessing::detail::PlanIsoContourSlab<uint8>(k_ThreePlaneDims, k_ThreePlaneUsefulBytes - 1);
+  const auto uint8Thin = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kThreePlaneDims, k_ThreePlaneUsefulBytes - 1);
   REQUIRE(uint8Thin.corePlanes <= 2);
   REQUIRE(uint8Thin.inputPlanes == 3);
 
-  const SizeVec3 k_SmallDims{5, 6, 7};
-  const auto smallPartial = ImageProcessing::detail::PlanIsoContourSlab<uint8>(k_SmallDims, 512);
+  const SizeVec3 kSmallDims{5, 6, 7};
+  const auto smallPartial = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kSmallDims, 512);
   REQUIRE(smallPartial.corePlanes == 2);
   REQUIRE(smallPartial.inputPlanes == 6);
   REQUIRE(smallPartial.inputBytes == 180);
   REQUIRE(smallPartial.outputBytes == 240);
 
-  const auto smallComplete = ImageProcessing::detail::PlanIsoContourSlab<uint8>(k_SmallDims, 2048);
+  const auto smallComplete = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kSmallDims, 2048);
   REQUIRE(smallComplete.corePlanes == 7);
   REQUIRE(smallComplete.inputPlanes == 7);
   REQUIRE(smallComplete.inputBytes == 210);
   REQUIRE(smallComplete.outputBytes == 840);
 
-  auto uint8Useful = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(k_LargeDims);
+  auto uint8Useful = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(kLargeDims);
   SIMPLNX_RESULT_REQUIRE_VALID(uint8Useful);
   REQUIRE(uint8Useful.value() == 160 * k_MiB);
-  auto float64Useful = ImageProcessing::detail::IsoContourSlabUsefulBytes<float64>(k_LargeDims);
+  auto float64Useful = ImageProcessing::detail::IsoContourSlabUsefulBytes<float64>(kLargeDims);
   SIMPLNX_RESULT_REQUIRE_VALID(float64Useful);
   REQUIRE(float64Useful.value() == 384 * k_MiB);
   auto overflow = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
@@ -841,8 +841,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab plan derives the pl
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows the grant", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 k_Dims{512, 512, 128};
-  auto usefulResult = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(k_Dims);
+  const SizeVec3 kDims{512, 512, 128};
+  auto usefulResult = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(kDims);
   SIMPLNX_RESULT_REQUIRE_VALID(usefulResult);
   const usize usefulBytes = usefulResult.value();
 
@@ -851,7 +851,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows
     {
       auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
       REQUIRE(reservation.sizeBytes() == 128 * k_MiB);
-      const auto plan = ImageProcessing::detail::PlanIsoContourSlab<uint8>(k_Dims, reservation.sizeBytes());
+      const auto plan = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kDims, reservation.sizeBytes());
       REQUIRE(plan.corePlanes == 101);
       REQUIRE(plan.inputPlanes == 105);
     }
@@ -864,7 +864,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows
     {
       auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
       REQUIRE(reservation.sizeBytes() == 160 * k_MiB);
-      const auto plan = ImageProcessing::detail::PlanIsoContourSlab<uint8>(k_Dims, reservation.sizeBytes());
+      const auto plan = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kDims, reservation.sizeBytes());
       REQUIRE(plan.corePlanes == 128);
       REQUIRE(plan.inputPlanes == 128);
     }
@@ -875,45 +875,45 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route transfers follow the plan", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
-  const SizeVec3 k_Dims{5, 6, 7};
-  const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
-  const std::vector<uint8> field = MakeIsoField<uint8>(k_Dims[0], k_Dims[1], k_Dims[2], uint32{0x15C071A9u}, IsoFieldMode::Dense);
-  const std::vector<float32> expected = ReferenceIsoContour(field, k_Dims[0], k_Dims[1], k_Dims[2], 10.0, 100.0, k_Spacing);
+  const SizeVec3 kDims{5, 6, 7};
+  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C071A9u}, IsoFieldMode::Dense);
+  const std::vector<float32> expected = ReferenceIsoContour(field, kDims[0], kDims[1], kDims[2], 10.0, 100.0, kSpacing);
 
-  const IsoContourCountingResult partial = RunSlabCounting(field, k_Dims, 2048, 10.0, 100.0, k_Spacing);
+  const IsoContourCountingResult partial = RunSlabCounting(field, kDims, 2048, 10.0, 100.0, kSpacing);
   RequireBitIdentical(partial.output, expected);
-  const std::vector<IsoContourCountingResult::TransferRange> expectedPartialReads = {{0, 120}, {120, 60}, {180, 30}};
-  const std::vector<IsoContourCountingResult::TransferRange> expectedPartialWrites = {{0, 60}, {60, 60}, {120, 60}, {180, 30}};
-  REQUIRE(partial.readRanges == expectedPartialReads);
-  REQUIRE(partial.writeRanges == expectedPartialWrites);
-  REQUIRE(partial.writeCount == 4);
-  REQUIRE(partial.readValues == 210);
-  REQUIRE(partial.maxWriteValues == 60);
+  const std::vector<IsoContourCountingResult::TransferRangeType> expectedPartialReads = {{0, 120}, {120, 60}, {180, 30}};
+  const std::vector<IsoContourCountingResult::TransferRangeType> expectedPartialWrites = {{0, 60}, {60, 60}, {120, 60}, {180, 30}};
+  REQUIRE(partial.read_ranges == expectedPartialReads);
+  REQUIRE(partial.write_ranges == expectedPartialWrites);
+  REQUIRE(partial.write_count == 4);
+  REQUIRE(partial.read_values == 210);
+  REQUIRE(partial.max_write_values == 60);
 
-  const IsoContourCountingResult complete = RunSlabCounting(field, k_Dims, 8192, 10.0, 100.0, k_Spacing);
+  const IsoContourCountingResult complete = RunSlabCounting(field, kDims, 8192, 10.0, 100.0, kSpacing);
   RequireBitIdentical(complete.output, expected);
-  REQUIRE(complete.readCount == 1);
-  REQUIRE(complete.writeCount == 1);
+  REQUIRE(complete.read_count == 1);
+  REQUIRE(complete.write_count == 1);
 }
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route reads each input plane once", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
-  const SizeVec3 k_Dims{5, 6, 7};
-  const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
-  const std::vector<uint8> field = MakeIsoField<uint8>(k_Dims[0], k_Dims[1], k_Dims[2], uint32{0x15C091A9u}, IsoFieldMode::Dense);
-  const IsoContourCountingResult result = RunSlabCounting(field, k_Dims, 2048, 10.0, 100.0, k_Spacing);
-  REQUIRE(result.readValues == 7 * 30);
-  REQUIRE(result.writtenValues == 7 * 30);
+  const SizeVec3 kDims{5, 6, 7};
+  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C091A9u}, IsoFieldMode::Dense);
+  const IsoContourCountingResult result = RunSlabCounting(field, kDims, 2048, 10.0, 100.0, kSpacing);
+  REQUIRE(result.read_values == 7 * 30);
+  REQUIRE(result.written_values == 7 * 30);
 }
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route performs no bulk transfers", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  const SizeVec3 k_Dims{17, 13, 11};
-  const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
-  const std::vector<uint8> field = MakeIsoField<uint8>(k_Dims[0], k_Dims[1], k_Dims[2], uint32{0x15C0D17Eu}, IsoFieldMode::Dense);
-  const std::vector<float32> expected = ReferenceIsoContour(field, k_Dims[0], k_Dims[1], k_Dims[2], 10.0, 100.0, k_Spacing);
-  CountingDataStore<uint8> inputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, uint8{0});
-  CountingDataStore<float32> outputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, -999.0f);
+  const SizeVec3 kDims{17, 13, 11};
+  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C0D17Eu}, IsoFieldMode::Dense);
+  const std::vector<float32> expected = ReferenceIsoContour(field, kDims[0], kDims[1], kDims[2], 10.0, 100.0, kSpacing);
+  CountingDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{0});
+  CountingDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, -999.0f);
   for(usize index = 0; index < field.size(); ++index)
   {
     inputStore.setValue(index, field[index]);
@@ -921,7 +921,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route performs no
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  IsoContourDistance<uint8> engine(inputStore, outputStore, k_Dims, 10.0, 100.0, k_Spacing, shouldCancel, messageHandler);
+  IsoContourDistance<uint8> engine(inputStore, outputStore, kDims, 10.0, 100.0, kSpacing, shouldCancel, messageHandler);
   const Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
   std::vector<float32> actual(field.size());
@@ -937,11 +937,11 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route performs no
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: an OOC store overrides the forced in-core path", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   ScopedBudget budget(2048);
-  const SizeVec3 k_Dims{5, 6, 7};
-  const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
-  const std::vector<uint8> field = MakeIsoField<uint8>(k_Dims[0], k_Dims[1], k_Dims[2], uint32{0x15C0F04Cu}, IsoFieldMode::Dense);
-  OocReportingDataStore<uint8> inputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, uint8{0});
-  OocReportingDataStore<float32> outputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, -999.0f);
+  const SizeVec3 kDims{5, 6, 7};
+  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C0F04Cu}, IsoFieldMode::Dense);
+  OocReportingDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{0});
+  OocReportingDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, -999.0f);
   for(usize index = 0; index < field.size(); ++index)
   {
     inputStore.setValue(index, field[index]);
@@ -950,7 +950,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: an OOC store overrides t
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   ForceInCoreAlgorithmGuard forceInCore;
-  IsoContourDistance<uint8> engine(inputStore, outputStore, k_Dims, 10.0, 100.0, k_Spacing, shouldCancel, messageHandler);
+  IsoContourDistance<uint8> engine(inputStore, outputStore, kDims, 10.0, 100.0, kSpacing, shouldCancel, messageHandler);
   const AlgorithmPathExecutionCounts countsBefore = GetAlgorithmPathExecutionCounts();
   const Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
@@ -965,22 +965,22 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: an OOC store overrides t
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves the output untouched", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
-  const SizeVec3 k_Dims{9, 8, 7};
+  const SizeVec3 kDims{9, 8, 7};
   constexpr float32 k_Poison = -999.0f;
-  const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
-  const std::vector<uint8> field = MakeIsoField<uint8>(k_Dims[0], k_Dims[1], k_Dims[2], uint32{0x15C0CA11u}, IsoFieldMode::Dense);
+  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C0CA11u}, IsoFieldMode::Dense);
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
 
   SECTION("direct route")
   {
-    CountingDataStore<uint8> inputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, uint8{0});
-    CountingDataStore<float32> outputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, k_Poison);
+    CountingDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{0});
+    CountingDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, k_Poison);
     for(usize index = 0; index < field.size(); ++index)
     {
       inputStore.setValue(index, field[index]);
     }
-    IsoContourDistance<uint8> engine(inputStore, outputStore, k_Dims, 10.0, 100.0, k_Spacing, shouldCancel, messageHandler);
+    IsoContourDistance<uint8> engine(inputStore, outputStore, kDims, 10.0, 100.0, kSpacing, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.valid());
     REQUIRE(inputStore.readCount() == 0);
@@ -994,13 +994,13 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves
   SECTION("slab route")
   {
     ScopedBudget budget(8192);
-    OocReportingDataStore<uint8> inputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, uint8{0});
-    OocReportingDataStore<float32> outputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, k_Poison);
+    OocReportingDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{0});
+    OocReportingDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, k_Poison);
     for(usize index = 0; index < field.size(); ++index)
     {
       inputStore.setValue(index, field[index]);
     }
-    IsoContourDistance<uint8> engine(inputStore, outputStore, k_Dims, 10.0, 100.0, k_Spacing, shouldCancel, messageHandler);
+    IsoContourDistance<uint8> engine(inputStore, outputStore, kDims, 10.0, 100.0, kSpacing, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.valid());
     REQUIRE(inputStore.readCount() == 0);
@@ -1016,17 +1016,17 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and transfer failures release the reservation", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   ScopedBudget budget(2048);
-  const SizeVec3 k_Dims{5, 6, 7};
+  const SizeVec3 kDims{5, 6, 7};
   constexpr float32 k_Poison = -999.0f;
-  const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
+  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
   SECTION("cancellation after the first read prevents output writes")
   {
-    CancelOnReadDataStore<uint8> inputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, uint8{1}, shouldCancel);
-    OocReportingDataStore<float32> outputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, k_Poison);
-    IsoContourDistance<uint8> engine(inputStore, outputStore, k_Dims, 10.0, 100.0, k_Spacing, shouldCancel, messageHandler);
+    CancelOnReadDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{1}, shouldCancel);
+    OocReportingDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, k_Poison);
+    IsoContourDistance<uint8> engine(inputStore, outputStore, kDims, 10.0, 100.0, kSpacing, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.valid());
     REQUIRE(inputStore.readCount() == 1);
@@ -1036,9 +1036,9 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and tr
 
   SECTION("read failure is returned")
   {
-    FailingReadDataStore<uint8> inputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, uint8{1});
-    OocReportingDataStore<float32> outputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, k_Poison);
-    IsoContourDistance<uint8> engine(inputStore, outputStore, k_Dims, 10.0, 100.0, k_Spacing, shouldCancel, messageHandler);
+    FailingReadDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{1});
+    OocReportingDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, k_Poison);
+    IsoContourDistance<uint8> engine(inputStore, outputStore, kDims, 10.0, 100.0, kSpacing, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == FailingReadDataStore<uint8>::k_ErrorCode);
@@ -1048,9 +1048,9 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and tr
 
   SECTION("write failure is returned")
   {
-    OocReportingDataStore<uint8> inputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, uint8{1});
-    FailingWriteDataStore<float32> outputStore(ShapeType{k_Dims[2], k_Dims[1], k_Dims[0]}, ShapeType{1}, k_Poison);
-    IsoContourDistance<uint8> engine(inputStore, outputStore, k_Dims, 10.0, 100.0, k_Spacing, shouldCancel, messageHandler);
+    OocReportingDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{1});
+    FailingWriteDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, k_Poison);
+    IsoContourDistance<uint8> engine(inputStore, outputStore, kDims, 10.0, 100.0, kSpacing, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == FailingWriteDataStore<float32>::k_ErrorCode);
@@ -1082,12 +1082,12 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: 2D planner bounds row bl
   REQUIRE(overwide.coreRows == 1);
   REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
 
-  constexpr usize kSmallLimit = 4995;
-  const auto forcedTiled = ImageProcessing::detail::BuildIsoContour2DBufferPlan(100, 8, sizeof(uint8), kSmallLimit);
+  constexpr usize k_SmallLimit = 4995;
+  const auto forcedTiled = ImageProcessing::detail::BuildIsoContour2DBufferPlan(100, 8, sizeof(uint8), k_SmallLimit);
   REQUIRE(forcedTiled.valid);
   REQUIRE(forcedTiled.coreCols < 100);
   REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= kSmallLimit);
+  REQUIRE(forcedTiled.residentBytes <= k_SmallLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildIsoContour2DBufferPlan(1, 1, sizeof(uint64));
   REQUIRE(oneCell.valid);

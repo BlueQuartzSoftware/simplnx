@@ -31,8 +31,8 @@ using namespace nx::core;
 
 namespace
 {
-const fs::path exemplarFilePath = fs::path(fmt::format("{}/LosAlamosFFTExemplar.txt", unit_test::k_TestFilesDir));
-const fs::path writtenFilePath = fs::path(fmt::format("{}/LosAlamosFFT.txt", unit_test::k_BinaryTestOutputDir));
+const fs::path k_ExemplarFilePath = fs::path(fmt::format("{}/LosAlamosFFTExemplar.txt", unit_test::k_TestFilesDir));
+const fs::path k_WrittenFilePath = fs::path(fmt::format("{}/LosAlamosFFT.txt", unit_test::k_BinaryTestOutputDir));
 
 constexpr usize k_BenchmarkDim = 200;
 constexpr usize k_BenchmarkSliceTuples = k_BenchmarkDim * k_BenchmarkDim;
@@ -101,7 +101,7 @@ std::string ExpectedRecord(usize tupleIndex)
   return fmt::format("{} {} {} {} {} {} {} {}", eulerValues[0], eulerValues[1], eulerValues[2], x + 1, y + 1, z + 1, ExpectedFeatureId(tupleIndex), ExpectedPhase(tupleIndex));
 }
 
-std::vector<char> readIn(const fs::path& filePath)
+std::vector<char> ReadIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -124,10 +124,10 @@ std::vector<char> readIn(const fs::path& filePath)
 
 void CompareResults() // compare hash of both file strings
 {
-  REQUIRE(fs::exists(writtenFilePath));
-  REQUIRE(fs::exists(exemplarFilePath));
-  const std::vector<char> exemplar = readIn(exemplarFilePath);
-  const std::vector<char> data = readIn(writtenFilePath);
+  REQUIRE(fs::exists(k_WrittenFilePath));
+  REQUIRE(fs::exists(k_ExemplarFilePath));
+  const std::vector<char> exemplar = ReadIn(k_ExemplarFilePath);
+  const std::vector<char> data = ReadIn(k_WrittenFilePath);
   for(size_t i = 0; i < 1024; i++)
   {
     if(exemplar[i] != data[i])
@@ -160,7 +160,7 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Valid Filter Execution", "[Simp
     WriteLosAlamosFFTFilter filter;
     Arguments args;
 
-    args.insertOrAssign(WriteLosAlamosFFTFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(writtenFilePath));
+    args.insertOrAssign(WriteLosAlamosFFTFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_WrittenFilePath));
 
     args.insertOrAssign(WriteLosAlamosFFTFilter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100})));
     args.insertOrAssign(WriteLosAlamosFFTFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
@@ -183,7 +183,7 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: SIMPL Backwards Compatibility",
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -196,22 +196,22 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: SIMPL Backwards Compatibility",
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteLosAlamosFFTFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteLosAlamosFFTFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteLosAlamosFFTFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<DataPath>(WriteLosAlamosFFTFilter::k_ImageGeomPath) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(WriteLosAlamosFFTFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

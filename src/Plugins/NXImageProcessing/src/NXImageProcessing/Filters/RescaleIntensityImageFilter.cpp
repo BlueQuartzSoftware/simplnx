@@ -20,8 +20,8 @@ namespace
 {
 struct RescaleIntensityOperation
 {
-  float64 outputMinimum = 0.0;
-  float64 outputMaximum = 255.0;
+  float64 output_minimum = 0.0;
+  float64 output_maximum = 255.0;
 
   template <class T>
   Result<ImageProcessing::ArrayStatistics<T>> computeStatistics(const AbstractDataStore<T>& inputStore, const std::atomic_bool& shouldCancel) const
@@ -50,8 +50,8 @@ struct RescaleIntensityOperation
   {
     const double inMin = static_cast<double>(stats.min);
     const double inMax = static_cast<double>(stats.max);
-    const double outMin = outputMinimum;
-    const double outMax = outputMaximum;
+    const double outMin = output_minimum;
+    const double outMax = output_maximum;
     double scale = 0.0;
     if(inMin != inMax)
     {
@@ -143,19 +143,19 @@ Result<> RescaleIntensityImageFilter::executeImpl(DataStructure& dataStructure, 
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const RescaleIntensityOperation operation{.outputMinimum = outputMinimum, .outputMaximum = outputMaximum};
+  const RescaleIntensityOperation operation{.output_minimum = outputMinimum, .output_maximum = outputMaximum};
   return ImageProcessing::ExecuteTwoPassImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_OutputMinimumKey = "OutputMinimum";
 constexpr StringLiteral k_OutputMaximumKey = "OutputMaximum";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RescaleIntensityImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -165,11 +165,11 @@ Result<Arguments> RescaleIntensityImageFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   // Output Type parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutputMinimumKey, k_OutputMinimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutputMaximumKey, k_OutputMaximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMinimumKey, k_OutputMinimum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMaximumKey, k_OutputMaximum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

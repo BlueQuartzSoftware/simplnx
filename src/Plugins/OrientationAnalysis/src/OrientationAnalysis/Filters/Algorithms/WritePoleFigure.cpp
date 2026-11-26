@@ -59,7 +59,7 @@ public:
     if(m_Config->discrete)
     {
       int halfDim = m_Config->imageDim / 2;
-      double* intensity = m_Intensity->getPointer(0);
+      double* intensityPtr = m_Intensity->getPointer(0);
       usize numCoords = m_XYZCoords->getNumberOfTuples();
       float32* xyzPtr = m_XYZCoords->getPointer(0);
       for(usize i = 0; i < numCoords; i++)
@@ -79,7 +79,7 @@ public:
 
         usize index = (yCoord * m_Config->imageDim) + xCoord;
 
-        intensity[index]++;
+        intensityPtr[index]++;
       }
     }
     else
@@ -102,14 +102,14 @@ private:
 
 // -----------------------------------------------------------------------------
 template <typename Ops>
-std::vector<ebsdlib::UInt8ArrayType::Pointer> makePoleFigures(ebsdlib::PoleFigureConfiguration_t& config)
+std::vector<ebsdlib::UInt8ArrayType::Pointer> MakePoleFigures(ebsdlib::PoleFigureConfiguration_t& config)
 {
   Ops ops;
   return ops.generatePoleFigure(config);
 }
 
 template <typename OpsType>
-std::vector<ebsdlib::DoubleArrayType::Pointer> createIntensityPoleFigures(ebsdlib::PoleFigureConfiguration_t& config, bool normalizeToMRD)
+std::vector<ebsdlib::DoubleArrayType::Pointer> CreateIntensityPoleFigures(ebsdlib::PoleFigureConfiguration_t& config, bool normalizeToMRD)
 {
   OpsType ops;
   std::string label0 = std::string("<001>");
@@ -160,7 +160,7 @@ std::vector<ebsdlib::DoubleArrayType::Pointer> createIntensityPoleFigures(ebsdli
 }
 
 template <typename T>
-typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src, const ebsdlib::PoleFigureConfiguration_t& config)
+typename EbsdDataArray<T>::Pointer FlipAndMirrorPoleFigure(EbsdDataArray<T>* src, const ebsdlib::PoleFigureConfiguration_t& config)
 {
   typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, src->getComponentDimensions(), src->getName(), true);
   // Reverse row order while preserving each row's X order.
@@ -326,37 +326,37 @@ Result<> WritePoleFigure::operator()()
       switch(crystalStructures[phase])
       {
       case ebsdlib::CrystalStructure::Cubic_High:
-        intensityImages = createIntensityPoleFigures<ebsdlib::CubicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::CubicOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Cubic_Low:
-        intensityImages = createIntensityPoleFigures<ebsdlib::CubicLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::CubicLowOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Hexagonal_High:
-        intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::HexagonalOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Hexagonal_Low:
-        intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Trigonal_High:
-        intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TrigonalOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Trigonal_Low:
-        intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Tetragonal_High:
-        intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TetragonalOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Tetragonal_Low:
-        intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::OrthoRhombic:
-        intensityImages = createIntensityPoleFigures<ebsdlib::OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Monoclinic:
-        intensityImages = createIntensityPoleFigures<ebsdlib::MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
         break;
       case ebsdlib::CrystalStructure::Triclinic:
-        intensityImages = createIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
         break;
       default:
         m_MessageHandler.sendWarningMessage(
@@ -400,7 +400,7 @@ Result<> WritePoleFigure::operator()()
         std::vector<size_t> compDims = {1ULL};
         for(auto& intensityImage : intensityImages)
         {
-          intensityImage = flipAndMirrorPoleFigure<double>(intensityImage.get(), config);
+          intensityImage = FlipAndMirrorPoleFigure<double>(intensityImage.get(), config);
         }
 
         // Each intensity image uses one destination transfer.

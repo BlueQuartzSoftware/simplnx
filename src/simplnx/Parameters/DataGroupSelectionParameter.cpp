@@ -44,18 +44,18 @@ nlohmann::json DataGroupSelectionParameter::toJsonImpl(const std::any& value) co
 
 Result<std::any> DataGroupSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'DataGroupSelectionParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'DataGroupSelectionParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
   }
 
   auto valueString = json.get<std::string>();
   auto path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", prefix, valueString, name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", k_Prefix, valueString, name()));
   }
   return {{std::move(*path)}};
 }
@@ -96,33 +96,33 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
 
-  const DataObject* dataObject = dataStructure.getData(value);
-  if(dataObject == nullptr)
+  const DataObject* dataObjectPtr = dataStructure.getData(value);
+  if(dataObjectPtr == nullptr)
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto* const baseGroupObj = dataStructure.getDataAs<BaseGroup>(value);
-  if(baseGroupObj == nullptr)
+  const auto* const baseGroupObjPtr = dataStructure.getDataAs<BaseGroup>(value);
+  if(baseGroupObjPtr == nullptr)
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, value.toString()));
   }
 
   // Look for the actual group type that the user selected in the allowed set
-  if(m_AllowedTypes.contains(baseGroupObj->getGroupType()))
+  if(m_AllowedTypes.contains(baseGroupObjPtr->getGroupType()))
   {
     return {};
   }
 
   return MakeErrorResult(FilterParameter::Constants::k_Validate_AllowedType_Error, fmt::format("{}Group at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(),
-                                                                                               dataObject->getTypeName(), BaseGroup::StringListFromGroupType(m_AllowedTypes)));
+                                                                                               dataObjectPtr->getTypeName(), BaseGroup::StringListFromGroupType(m_AllowedTypes)));
 }
 
 Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
 namespace SIMPLConversion

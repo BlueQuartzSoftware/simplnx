@@ -344,7 +344,7 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_GeometryTypeKey = "GeometryType";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
@@ -381,7 +381,7 @@ constexpr StringLiteral k_TetCellAttributeMatrixNameKey = "TetCellAttributeMatri
 constexpr StringLiteral k_HexCellAttributeMatrixNameKey = "HexCellAttributeMatrixName";
 constexpr StringLiteral k_TreatWarningsAsErrorsKey = "TreatWarningsAsErrors";
 constexpr StringLiteral k_ArrayHandlingKey = "ArrayHandling";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -391,7 +391,7 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
 
   // This section is done this way so that we can get access to the geometry
   // type and convert other parameters based on the geometry type
-  auto result = SIMPLConversion::ChoiceFilterParameterConverter::convert(json[SIMPL::k_GeometryTypeKey]);
+  auto result = SIMPLConversion::ChoiceFilterParameterConverter::convert(json[simpl::k_GeometryTypeKey]);
   if(result.valid())
   {
     auto geometryType = static_cast<IGeometry::Type>(result.value());
@@ -399,59 +399,59 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
     {
     case IGeometry::Type::Vertex: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName0Key, k_VertexAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedVertexListArrayPath0Key, k_VertexListPath_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName0Key, k_VertexAttributeMatrixName_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath0Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Edge: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName1Key, k_VertexAttributeMatrixName_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName1Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_EdgeAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedVertexListArrayPath1Key, k_VertexListPath_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath1Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Triangle: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName2Key, k_VertexAttributeMatrixName_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName2Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixName0Key, k_FaceAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedVertexListArrayPath2Key, k_VertexListPath_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixName0Key, k_FaceAttributeMatrixName_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath2Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Quad: {
 
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName3Key, k_VertexAttributeMatrixName_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName3Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixName1Key, k_FaceAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedVertexListArrayPath3Key, k_VertexListPath_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixName1Key, k_FaceAttributeMatrixName_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath3Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Tetrahedral: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName4Key, k_VertexAttributeMatrixName_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName4Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_TetCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedVertexListArrayPath4Key, k_VertexListPath_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_TetCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath4Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Hexahedral: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName5Key, k_VertexAttributeMatrixName_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName5Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_HexCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedVertexListArrayPath5Key, k_VertexListPath_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_HexCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath5Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Image: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_ImageCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_ImageCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
       break;
     }
     case IGeometry::Type::RectGrid: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_RectGridCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_RectGridCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
       break;
     }
     default: {
@@ -469,30 +469,30 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
   // Continue converting all the other parameters...
 
   // Length Unit parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_TreatWarningsAsErrorsKey, k_WarningsAsErrors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ArrayHandlingKey, k_ArrayHandling_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<uint64>>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key);
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_TreatWarningsAsErrorsKey, k_WarningsAsErrors_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ArrayHandlingKey, k_ArrayHandling_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<uint64>>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
   if(spacingResult.invalid())
   {
     // 6.5 key for spacing was named resolution
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
   }
   else
   {
     results.push_back(std::move(spacingResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_XBoundsArrayPathKey, k_XBoundsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_YBoundsArrayPathKey, k_YBoundsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ZBoundsArrayPathKey, k_ZBoundsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedEdgeListArrayPathKey, k_EdgeListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedTriListArrayPathKey, k_TriangleListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedQuadListArrayPathKey, k_QuadrilateralListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedTetListArrayPathKey, k_TetrahedralListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedHexListArrayPathKey, k_HexahedralListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_GeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_EdgeAttributeMatrixNameKey, k_EdgeAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_XBoundsArrayPathKey, k_XBoundsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_YBoundsArrayPathKey, k_YBoundsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ZBoundsArrayPathKey, k_ZBoundsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedEdgeListArrayPathKey, k_EdgeListPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedTriListArrayPathKey, k_TriangleListPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedQuadListArrayPathKey, k_QuadrilateralListPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedTetListArrayPathKey, k_TetrahedralListPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedHexListArrayPathKey, k_HexahedralListPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_GeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixNameKey, k_EdgeAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -120,15 +120,15 @@ void EvaluateDirectNode(const IArrayThreshold& node, const DataStructure& dataSt
     return;
   }
   output.assign(tupleCount, falseValue);
-  if(const auto* threshold = dynamic_cast<const ArrayThreshold*>(&node); threshold != nullptr)
+  if(const auto* thresholdPtr = dynamic_cast<const ArrayThreshold*>(&node); thresholdPtr != nullptr)
   {
-    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(threshold->getArrayPath());
-    ExecuteDataFunction(DirectComparisonEvaluator<MaskT>{}, inputArray.getDataType(), *threshold, inputArray, output, trueValue, falseValue, shouldCancel);
+    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(thresholdPtr->getArrayPath());
+    ExecuteDataFunction(DirectComparisonEvaluator<MaskT>{}, inputArray.getDataType(), *thresholdPtr, inputArray, output, trueValue, falseValue, shouldCancel);
   }
-  else if(const auto* thresholdSet = dynamic_cast<const ArrayThresholdSet*>(&node); thresholdSet != nullptr)
+  else if(const auto* thresholdSetPtr = dynamic_cast<const ArrayThresholdSet*>(&node); thresholdSetPtr != nullptr)
   {
     bool hasChild = false;
-    for(const auto& child : thresholdSet->getArrayThresholds())
+    for(const auto& child : thresholdSetPtr->getArrayThresholds())
     {
       if(shouldCancel)
       {

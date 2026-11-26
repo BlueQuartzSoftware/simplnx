@@ -117,8 +117,8 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* faceLabels = dataStructure.getDataAs<IDataArray>(pFaceLabelsArrayPath);
-  if(faceLabels == nullptr)
+  const auto* faceLabelsPtr = dataStructure.getDataAs<IDataArray>(pFaceLabelsArrayPath);
+  if(faceLabelsPtr == nullptr)
   {
     return MakePreflightErrorResult(-94730, "Input Face Labels Array must be valid.");
   }
@@ -127,20 +127,20 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
   if(pBoundariesArrayTypeChoice == 0ULL)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::boolean, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
+        std::make_unique<CreateArrayAction>(DataType::boolean, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   else if(pBoundariesArrayTypeChoice == 1ULL)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
+        std::make_unique<CreateArrayAction>(DataType::uint8, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   if(pFindCoherence)
   {
-    auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsPtr->getTupleShape(), std::vector<usize>{1ULL},
+                                                                 pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -176,7 +176,7 @@ Result<> ComputeTwinBoundariesFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_FindCoherenceKey = "FindCoherence";
 constexpr StringLiteral k_AxisToleranceKey = "AxisTolerance";
@@ -188,7 +188,7 @@ constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLa
 constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPathKey = "SurfaceMeshFaceNormalsArrayPath";
 constexpr StringLiteral k_SurfaceMeshTwinBoundaryArrayNameKey = "SurfaceMeshTwinBoundaryArrayName";
 constexpr StringLiteral k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey = "SurfaceMeshTwinBoundaryIncoherenceArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeTwinBoundariesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -198,26 +198,26 @@ Result<Arguments> ComputeTwinBoundariesFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   // Algorithm Modifiers
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindCoherenceKey, k_FindCoherence_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<Float32Parameter::ValueType>>(args, json, SIMPL::k_AxisToleranceKey, k_AxisTolerance_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<Float32Parameter::ValueType>>(args, json, SIMPL::k_AngleToleranceKey, k_AngleTolerance_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindCoherenceKey, k_FindCoherence_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<Float32Parameter::ValueType>>(args, json, simpl::k_AxisToleranceKey, k_AxisTolerance_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<Float32Parameter::ValueType>>(args, json, simpl::k_AngleToleranceKey, k_AngleTolerance_Key));
 
   // Input Face Data
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_FaceLabelsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FaceLabelsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceNormalsArrayPathKey, k_FaceNormalsArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceNormalsArrayPathKey, k_FaceNormalsArrayPath_Key));
 
   // Input Feature Data
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
 
   // Input Ensemble Data
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
 
   // Output Face Data
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryArrayNameKey, k_TwinBoundariesName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTwinBoundaryArrayNameKey, k_TwinBoundariesName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey,
                                                                                                                    k_TwinBoundariesIncoherenceName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

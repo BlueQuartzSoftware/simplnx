@@ -36,10 +36,10 @@ Result<> FillBadData::operator()()
   {
     append(m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellPhasesArrayPath));
   }
-  const auto* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->inputImageGeometry);
-  if(imageGeom != nullptr && imageGeom->getCellData() != nullptr)
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->inputImageGeometry);
+  if(imageGeomPtr != nullptr && imageGeomPtr->getCellData() != nullptr)
   {
-    for(const auto& [name, object] : *imageGeom->getCellData())
+    for(const auto& [name, object] : *imageGeomPtr->getCellData())
     {
       append(dynamic_cast<const IDataArray*>(object.get()));
     }

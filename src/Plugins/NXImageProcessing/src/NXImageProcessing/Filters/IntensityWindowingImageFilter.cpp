@@ -18,18 +18,18 @@ namespace
 {
 struct IntensityWindowingOperation
 {
-  float64 windowMinimum = 0.0;
-  float64 windowMaximum = 255.0;
-  float64 outputMinimum = 0.0;
-  float64 outputMaximum = 255.0;
+  float64 window_minimum = 0.0;
+  float64 window_maximum = 255.0;
+  float64 output_minimum = 0.0;
+  float64 output_maximum = 255.0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
-    const float64 wMin = windowMinimum;
-    const float64 wMax = windowMaximum;
-    const float64 oMin = outputMinimum;
-    const float64 oMax = outputMaximum;
+    const float64 wMin = window_minimum;
+    const float64 wMax = window_maximum;
+    const float64 oMin = output_minimum;
+    const float64 oMax = output_maximum;
     const float64 scale = (oMax - oMin) / (wMax - wMin);
     return [wMin, wMax, oMin, oMax, scale](T value) -> U {
       // Output bounds are Float64 and can exceed a narrow output type; saturate-cast to U to avoid UB.
@@ -120,13 +120,13 @@ Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const IntensityWindowingOperation operation{.windowMinimum = windowMinimum, .windowMaximum = windowMaximum, .outputMinimum = outputMinimum, .outputMaximum = outputMaximum};
+  const IntensityWindowingOperation operation{.window_minimum = windowMinimum, .window_maximum = windowMaximum, .output_minimum = outputMinimum, .output_maximum = outputMaximum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_WindowMinimumKey = "WindowMinimum";
 constexpr StringLiteral k_WindowMaximumKey = "WindowMaximum";
@@ -134,7 +134,7 @@ constexpr StringLiteral k_OutputMinimumKey = "OutputMinimum";
 constexpr StringLiteral k_OutputMaximumKey = "OutputMaximum";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> IntensityWindowingImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -143,13 +143,13 @@ Result<Arguments> IntensityWindowingImageFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_WindowMinimumKey, k_WindowMinimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_WindowMaximumKey, k_WindowMaximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutputMinimumKey, k_OutputMinimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutputMaximumKey, k_OutputMaximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_WindowMinimumKey, k_WindowMinimum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_WindowMaximumKey, k_WindowMaximum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMinimumKey, k_OutputMinimum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMaximumKey, k_OutputMaximum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

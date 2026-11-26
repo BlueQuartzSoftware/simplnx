@@ -44,8 +44,8 @@ void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const Da
   auto calculateSummation = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateSummation_Key);
   auto calculateNumUniqueValuesValue = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateUniqueValues_Key);
 
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
-  DataType dataType = inputArray->getDataType();
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
+  DataType dataType = inputArrayPtr->getDataType();
 
   {
     auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_BoundsHasDataName_Key);

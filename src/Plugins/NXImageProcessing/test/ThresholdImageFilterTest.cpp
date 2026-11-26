@@ -36,21 +36,21 @@ IFilter::MessageHandler MakeConsoleMessageHandler(std::string label)
 // Fills via bulk copyFromBuffer in bounded chunks so it is fast both in-core and out-of-core (a
 // per-element setValue loop makes millions of individual OOC writes and appears to hang). Allocates
 // only a fixed chunk buffer, never one proportional to the array size.
-DataPath BuildRampImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
+DataPath BuildRampImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const usize total = ref.getSize();
   std::cout << "  [build] filling " << dimX << "x" << dimY << "x" << dimZ << " ramp (" << total << " values) via bulk I/O..." << '\n';
@@ -80,9 +80,9 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   std::cout << "\n[TEST] ThresholdImageFilter: Small Correctness (in-memory)" << '\n';
 
-  constexpr usize kDim = 10;
-  DataStructure ds;
-  const DataPath inputPath = BuildRampImage(ds, kDim, kDim, kDim);
+  constexpr usize k_Dim = 10;
+  DataStructure dataStructure;
+  const DataPath inputPath = BuildRampImage(dataStructure, k_Dim, k_Dim, k_Dim);
 
   const float64 lower = 100.0;
   const float64 upper = 500.0;
@@ -97,14 +97,14 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
   args.insertOrAssign(ThresholdImageFilter::k_Upper_Key, std::make_any<float64>(upper));
   args.insertOrAssign(ThresholdImageFilter::k_OutsideValue_Key, std::make_any<float64>(outside));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args, nullptr, MakeConsoleMessageHandler("threshold"));
+  auto executeResult = filter.execute(dataStructure, args, nullptr, MakeConsoleMessageHandler("threshold"));
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(outputPath));
-  auto& outStore = ds.getDataRefAs<Float32Array>(outputPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
+  auto& outStore = dataStructure.getDataRefAs<Float32Array>(outputPath).getDataStoreRef();
   std::cout << "  [verify] checking " << outStore.getSize() << " output values..." << '\n';
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
@@ -112,7 +112,7 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
     const float32 expected = (v < static_cast<float32>(lower) || v > static_cast<float32>(upper)) ? static_cast<float32>(outside) : v;
     REQUIRE(outStore.getValue(i) == expected);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -132,8 +132,8 @@ void RunThresholdItkGolden(const std::string& inputFile, const std::function<voi
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -142,17 +142,17 @@ void RunThresholdItkGolden(const std::string& inputFile, const std::function<voi
   args.insertOrAssign(ThresholdImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setParams(args);
   ThresholdImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // (A) DURABLE golden: md5-validity-first (plan Sec.4).
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("ThresholdImageFilter md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

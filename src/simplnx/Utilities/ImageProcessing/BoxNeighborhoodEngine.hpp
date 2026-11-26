@@ -528,13 +528,13 @@ Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDa
   messageHandler.sendInfoMessage("Applying neighborhood filter");
   ThrottledMessageHandler progressThrottle(messageHandler);
 
-  const auto* inMemoryInputStore = dynamic_cast<const DataStore<T>*>(&inputStore);
-  auto* inMemoryOutputStore = dynamic_cast<DataStore<T>*>(&outputStore);
+  const auto* inMemoryInputStorePtr = dynamic_cast<const DataStore<T>*>(&inputStore);
+  auto* inMemoryOutputStorePtr = dynamic_cast<DataStore<T>*>(&outputStore);
   const bool usesOutOfCoreStore = inputStore.getStoreType() == IDataStore::StoreType::OutOfCore || outputStore.getStoreType() == IDataStore::StoreType::OutOfCore;
-  if(inMemoryInputStore != nullptr && inMemoryOutputStore != nullptr && !usesOutOfCoreStore)
+  if(inMemoryInputStorePtr != nullptr && inMemoryOutputStorePtr != nullptr && !usesOutOfCoreStore)
   {
-    const nonstd::span<const T> inputValues = inMemoryInputStore->createSpan();
-    nonstd::span<T> outputValues = inMemoryOutputStore->createSpan();
+    const nonstd::span<const T> inputValues = inMemoryInputStorePtr->createSpan();
+    nonstd::span<T> outputValues = inMemoryOutputStorePtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, volumeValues);
     progressThrottle.reset(volumeValues, "Computing resident neighborhoods");

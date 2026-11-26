@@ -59,12 +59,12 @@ public:
    */
   IDataStore& getIDataStoreRef()
   {
-    IDataStore* store = getIDataStore();
-    if(store == nullptr)
+    IDataStore* storePtr = getIDataStore();
+    if(storePtr == nullptr)
     {
       throw std::runtime_error("IDataArray: Null IDataStore");
     }
-    return *store;
+    return *storePtr;
   }
 
   /**
@@ -73,12 +73,12 @@ public:
    */
   const IDataStore& getIDataStoreRef() const
   {
-    const IDataStore* store = getIDataStore();
-    if(store == nullptr)
+    const IDataStore* storePtr = getIDataStore();
+    if(storePtr == nullptr)
     {
       throw std::runtime_error("IDataArray: Null IDataStore");
     }
-    return *store;
+    return *storePtr;
   }
 
   /**

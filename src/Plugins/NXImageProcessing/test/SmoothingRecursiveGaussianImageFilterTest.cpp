@@ -23,7 +23,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using SmoothFilter = SmoothingRecursiveGaussianImageFilter;
+using SmoothFilterType = SmoothingRecursiveGaussianImageFilter;
 // NOTE: the tests below use analytic oracles and ITK's committed baseline image. No live ITK filter runs here.
 
 // A centrally-symmetric radial blob (for the symmetry-preservation check).
@@ -65,25 +65,25 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
   return f;
 }
 
-void RunSmooth(IFilter& filter, DataStructure& ds, const DataPath& inputPath, const std::vector<float64>& sigma, bool normalize, const std::string& outputName = "Output")
+void RunSmooth(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const std::vector<float64>& sigma, bool normalize, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(sigma));
-  args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
-  auto preflightResult = filter.preflight(ds, args);
+  args.insertOrAssign(SmoothFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(SmoothFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(SmoothFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(sigma));
+  args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
 template <class T>
-std::vector<T> ReadArray(const DataStructure& ds, const DataPath& path)
+std::vector<T> ReadArray(const DataStructure& dataStructure, const DataPath& path)
 {
-  const auto& store = ds.getDataRefAs<DataArray<T>>(path).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<T>>(path).getDataStoreRef();
   std::vector<T> out(store.getSize());
   for(usize i = 0; i < out.size(); ++i)
   {
@@ -105,11 +105,11 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: co
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 12;
   const std::vector<T> field(d * d * d, static_cast<T>(20));
-  DataStructure ds;
-  const DataPath input = rt::BuildImageFromPattern<T>(ds, d, d, d, field);
-  SmoothFilter filter;
-  RunSmooth(filter, ds, input, {2.0, 2.0, 2.0}, false);
-  const std::vector<T> out = ReadArray<T>(ds, DataPath({"Image Geometry", "CellData", "Output"}));
+  DataStructure dataStructure;
+  const DataPath input = rt::BuildImageFromPattern<T>(dataStructure, d, d, d, field);
+  SmoothFilterType filter;
+  RunSmooth(filter, dataStructure, input, {2.0, 2.0, 2.0}, false);
+  const std::vector<T> out = ReadArray<T>(dataStructure, DataPath({"Image Geometry", "CellData", "Output"}));
   for(T v : out)
   {
     REQUIRE(std::abs(static_cast<double>(v) - 20.0) <= 1.0);
@@ -125,11 +125,11 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: symmetric b
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 13; // odd so there is a true center voxel
   const std::vector<float64> field = MakeRadial<float64>(d, d, d);
-  DataStructure ds;
-  const DataPath input = rt::BuildImageFromPattern<float64>(ds, d, d, d, field);
-  SmoothFilter filter;
-  RunSmooth(filter, ds, input, {2.0, 2.0, 2.0}, false);
-  const std::vector<float64> out = ReadArray<float64>(ds, DataPath({"Image Geometry", "CellData", "Output"}));
+  DataStructure dataStructure;
+  const DataPath input = rt::BuildImageFromPattern<float64>(dataStructure, d, d, d, field);
+  SmoothFilterType filter;
+  RunSmooth(filter, dataStructure, input, {2.0, 2.0, 2.0}, false);
+  const std::vector<float64> out = ReadArray<float64>(dataStructure, DataPath({"Image Geometry", "CellData", "Output"}));
 
   auto at = [&](usize x, usize y, usize z) { return out[(z * d + y) * d + x]; };
   const usize c = d / 2;
@@ -155,34 +155,34 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
 
   SECTION("unsigned input rejected")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<uint16> field(8 * 8 * 8, uint16{3});
-    const DataPath inputPath = rt::BuildImageFromPattern<uint16>(ds, 8, 8, 8, field);
-    SmoothFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<uint16>(dataStructure, 8, 8, 8, field);
+    SmoothFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
-    args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
-    args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    args.insertOrAssign(SmoothFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(SmoothFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(SmoothFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
+    args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
   SECTION("too-few-pixels rejected")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(3 * 8 * 8, int16{1}); // X = 3 < 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 3, 8, 8, field);
-    SmoothFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 3, 8, 8, field);
+    SmoothFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
-    args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
-    args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    args.insertOrAssign(SmoothFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(SmoothFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(SmoothFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
+    args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
@@ -191,65 +191,65 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
   // arm, while Z == 1 is accepted as a 2D image. All other params here are valid so the dims check is the only failure.
   SECTION("3D image with Z==2 rejected (too few Z pixels)")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 2, int16{1}); // Z == 2 (> 1, so not 2D) and < 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 2, field);
-    SmoothFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 2, field);
+    SmoothFilterType filter;
     Arguments args;
-    args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
-    args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    args.insertOrAssign(SmoothFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(SmoothFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(SmoothFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
+    args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("3D image with Z==3 rejected (too few Z pixels)")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 3, int16{1}); // Z == 3 (> 1, so not 2D) and < 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 3, field);
-    SmoothFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 3, field);
+    SmoothFilterType filter;
     Arguments args;
-    args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
-    args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    args.insertOrAssign(SmoothFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(SmoothFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(SmoothFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
+    args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("Z==1 accepted as a 2D image")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 1, int16{1}); // Z == 1 -> treated as 2D, so Z is not required to be >= 4
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 1, field);
-    SmoothFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 1, field);
+    SmoothFilterType filter;
     Arguments args;
-    args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
-    args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    args.insertOrAssign(SmoothFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(SmoothFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(SmoothFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
+    args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
   SECTION("non-positive sigma rejected")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims + signed type; only sigma is invalid
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 8, field);
-    SmoothFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 8, 8, 8, field);
+    SmoothFilterType filter;
     const DataPath geomPath = inputPath.getParent().getParent();
     Arguments args;
-    args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{0.0, 1.0, 1.0}));
-    args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
+    args.insertOrAssign(SmoothFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(SmoothFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(SmoothFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{0.0, 1.0, 1.0}));
+    args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
   }
@@ -270,11 +270,11 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJs
   const Result<Arguments> result = SmoothingRecursiveGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(SmoothFilter::k_Sigma_Key) == std::vector<float64>{2.0, 3.0, 4.0});
-  REQUIRE(args.value<bool>(SmoothFilter::k_NormalizeAcrossScale_Key) == true);
-  REQUIRE(args.value<DataPath>(SmoothFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
-  REQUIRE(args.value<DataPath>(SmoothFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
-  REQUIRE(args.value<std::string>(SmoothFilter::k_OutputImageArrayName_Key) == "SmoothOut");
+  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(SmoothFilterType::k_Sigma_Key) == std::vector<float64>{2.0, 3.0, 4.0});
+  REQUIRE(args.value<bool>(SmoothFilterType::k_NormalizeAcrossScale_Key) == true);
+  REQUIRE(args.value<DataPath>(SmoothFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
+  REQUIRE(args.value<DataPath>(SmoothFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
+  REQUIRE(args.value<std::string>(SmoothFilterType::k_OutputImageArrayName_Key) == "SmoothOut");
 }
 
 // -----------------------------------------------------------------------------
@@ -291,11 +291,11 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic
   std::vector<float64> field(d * d * d, 0.0);
   const usize c = d / 2;
   field[(c * d + c) * d + c] = 1.0; // central impulse
-  DataStructure ds;
-  const DataPath input = rt::BuildImageFromPattern<float64>(ds, d, d, d, field);
-  SmoothFilter filter;
-  RunSmooth(filter, ds, input, {3.0, 1.0, 1.0}, false); // strong blur along X, weak along Y/Z
-  const std::vector<float64> out = ReadArray<float64>(ds, DataPath({"Image Geometry", "CellData", "Output"}));
+  DataStructure dataStructure;
+  const DataPath input = rt::BuildImageFromPattern<float64>(dataStructure, d, d, d, field);
+  SmoothFilterType filter;
+  RunSmooth(filter, dataStructure, input, {3.0, 1.0, 1.0}, false); // strong blur along X, weak along Y/Z
+  const std::vector<float64> out = ReadArray<float64>(dataStructure, DataPath({"Image Geometry", "CellData", "Output"}));
   auto at = [&](usize x, usize y, usize z) { return out[(z * d + y) * d + x]; };
   REQUIRE(at(c + 2, c, c) > at(c, c + 2, c));                       // larger sigma_x -> more spread along X than Y
   REQUIRE(at(c, c + 2, c) == Approx(at(c, c, c + 2)).margin(1e-6)); // sigma_y == sigma_z
@@ -314,13 +314,13 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic
   std::vector<float64> field(d * d * d, 0.0);
   const usize c = d / 2;
   field[(c * d + c) * d + c] = 1.0;
-  DataStructure ds;
-  const DataPath input = rt::BuildImageFromPattern<float64>(ds, d, d, d, field);
+  DataStructure dataStructure;
+  const DataPath input = rt::BuildImageFromPattern<float64>(dataStructure, d, d, d, field);
   // Use coarser spacing on the X axis.
-  REQUIRE(ds.getDataRefAs<ImageGeom>(input.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
-  SmoothFilter filter;
-  RunSmooth(filter, ds, input, {2.0, 2.0, 2.0}, false); // isotropic physical sigma -> sigmad_x=1 < sigmad_y=sigmad_z=2
-  const std::vector<float64> out = ReadArray<float64>(ds, DataPath({"Image Geometry", "CellData", "Output"}));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(input.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
+  SmoothFilterType filter;
+  RunSmooth(filter, dataStructure, input, {2.0, 2.0, 2.0}, false); // isotropic physical sigma -> sigmad_x=1 < sigmad_y=sigmad_z=2
+  const std::vector<float64> out = ReadArray<float64>(dataStructure, DataPath({"Image Geometry", "CellData", "Output"}));
   auto at = [&](usize x, usize y, usize z) { return out[(z * d + y) * d + x]; };
   REQUIRE(at(c + 2, c, c) < at(c, c + 2, c));                       // coarser X spacing -> smaller sigmad_x -> less spread along X
   REQUIRE(at(c, c + 2, c) == Approx(at(c, c, c + 2)).margin(1e-6)); // Y and Z share spacing + sigma
@@ -338,11 +338,11 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: 2D smoothin
   SECTION("constant preserved")
   {
     const std::vector<float64> field(d * d * 1, 20.0);
-    DataStructure ds;
-    const DataPath input = rt::BuildImageFromPattern<float64>(ds, d, d, 1, field);
-    SmoothFilter filter;
-    RunSmooth(filter, ds, input, {2.0, 2.0, 2.0}, false);
-    const std::vector<float64> out = ReadArray<float64>(ds, DataPath({"Image Geometry", "CellData", "Output"}));
+    DataStructure dataStructure;
+    const DataPath input = rt::BuildImageFromPattern<float64>(dataStructure, d, d, 1, field);
+    SmoothFilterType filter;
+    RunSmooth(filter, dataStructure, input, {2.0, 2.0, 2.0}, false);
+    const std::vector<float64> out = ReadArray<float64>(dataStructure, DataPath({"Image Geometry", "CellData", "Output"}));
     for(float64 v : out)
     {
       REQUIRE(v == Approx(20.0).margin(1e-4));
@@ -351,11 +351,11 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: 2D smoothin
   SECTION("symmetric blob stays symmetric")
   {
     const std::vector<float64> field = MakeRadial<float64>(d, d, 1);
-    DataStructure ds;
-    const DataPath input = rt::BuildImageFromPattern<float64>(ds, d, d, 1, field);
-    SmoothFilter filter;
-    RunSmooth(filter, ds, input, {2.0, 2.0, 2.0}, false);
-    const std::vector<float64> out = ReadArray<float64>(ds, DataPath({"Image Geometry", "CellData", "Output"}));
+    DataStructure dataStructure;
+    const DataPath input = rt::BuildImageFromPattern<float64>(dataStructure, d, d, 1, field);
+    SmoothFilterType filter;
+    RunSmooth(filter, dataStructure, input, {2.0, 2.0, 2.0}, false);
+    const std::vector<float64> out = ReadArray<float64>(dataStructure, DataPath({"Image Geometry", "CellData", "Output"}));
     auto at = [&](usize x, usize y) { return out[y * d + x]; };
     for(usize y = 0; y < d; ++y)
     {
@@ -380,11 +380,11 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: NormalizeAc
   const std::vector<float64> field = MakeRadial<float64>(d, d, d);
   DataStructure dsOff;
   const DataPath inOff = rt::BuildImageFromPattern<float64>(dsOff, d, d, d, field);
-  SmoothFilter fOff;
+  SmoothFilterType fOff;
   RunSmooth(fOff, dsOff, inOff, {2.0, 2.0, 2.0}, false);
   DataStructure dsOn;
   const DataPath inOn = rt::BuildImageFromPattern<float64>(dsOn, d, d, d, field);
-  SmoothFilter fOn;
+  SmoothFilterType fOn;
   RunSmooth(fOn, dsOn, inOn, {2.0, 2.0, 2.0}, true);
   const std::vector<float64> a = ReadArray<float64>(dsOff, DataPath({"Image Geometry", "CellData", "Output"}));
   const std::vector<float64> b = ReadArray<float64>(dsOn, DataPath({"Image Geometry", "CellData", "Output"}));
@@ -409,7 +409,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
   {
     const ForceInCoreAlgorithmGuard guard;
     ResetAlgorithmPathExecutionCounts();
-    SmoothFilter filter;
+    SmoothFilterType filter;
     RunSmooth(filter, directDs, directInput, sigma, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     REQUIRE(counts.InCoreOnInMemoryStore == 1);
@@ -422,7 +422,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
   {
     const ForceOocAlgorithmGuard guard(true);
     ResetAlgorithmPathExecutionCounts();
-    SmoothFilter filter;
+    SmoothFilterType filter;
     RunSmooth(filter, fusedDs, fusedInput, sigma, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
     REQUIRE(counts.OutOfCoreOnInMemoryStore == 1);
@@ -451,8 +451,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
 
   // NOTE: bind every side-effecting Result to a named local before SIMPLNX_RESULT_REQUIRE_VALID (that macro double-
   // evaluates its argument; inlining a ds-mutating read/execute would run it twice and the second would fail).
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Float.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Float.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -460,18 +460,18 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
   args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   SmoothingRecursiveGaussianImageFilter filter;
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: compare to ITK's committed baseline at the ITK test's tolerance 0.0001.
   const DataPath bGeom({"Baseline Geometry"});
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const Result<> readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath("BasicFilters_SmoothingRecursiveGaussianImageFilter_default.nrrd"), bGeom, "CellData", "Baseline");
+  const Result<> readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath("BasicFilters_SmoothingRecursiveGaussianImageFilter_default.nrrd"), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
-  const Result<> compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.0001);
+  const Result<> compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

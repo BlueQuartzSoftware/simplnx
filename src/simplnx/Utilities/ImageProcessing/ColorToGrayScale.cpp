@@ -353,18 +353,18 @@ public:
     const usize numComponents = m_InputColorData.getNumberOfComponents();
     const usize totalPoints = m_InputColorData.getNumberOfTuples();
 
-    const auto* contiguousInputStore = dynamic_cast<const UInt8DataStore*>(&m_InputColorData);
-    auto* contiguousOutputStore = dynamic_cast<UInt8DataStore*>(&m_OutputGrayData);
-    if(contiguousInputStore != nullptr && contiguousOutputStore != nullptr)
+    const auto* contiguousInputStorePtr = dynamic_cast<const UInt8DataStore*>(&m_InputColorData);
+    auto* contiguousOutputStorePtr = dynamic_cast<UInt8DataStore*>(&m_OutputGrayData);
+    if(contiguousInputStorePtr != nullptr && contiguousOutputStorePtr != nullptr)
     {
-      const uint8* inputData = contiguousInputStore->data();
-      uint8* outputData = contiguousOutputStore->data();
+      const uint8* inputDataPtr = contiguousInputStorePtr->data();
+      uint8* outputDataPtr = contiguousOutputStorePtr->data();
       switch(m_ConversionType)
       {
       case ConvertColorToGrayScale::ConversionType::Luminosity:
         if(numComponents >= 3)
         {
-          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Luminosity>(inputData, outputData, m_ColorWeights, numComponents, m_ColorChannel),
+          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Luminosity>(inputDataPtr, outputDataPtr, m_ColorWeights, numComponents, m_ColorChannel),
                                          totalPoints);
           return {};
         }
@@ -372,15 +372,15 @@ public:
       case ConvertColorToGrayScale::ConversionType::Average:
         if(numComponents >= 3)
         {
-          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Average>(inputData, outputData, {0.3333F, 0.3333F, 0.3333F}, numComponents, m_ColorChannel),
-                                         totalPoints);
+          ParallelWrapper::RunContiguous(
+              ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Average>(inputDataPtr, outputDataPtr, {0.3333F, 0.3333F, 0.3333F}, numComponents, m_ColorChannel), totalPoints);
           return {};
         }
         break;
       case ConvertColorToGrayScale::ConversionType::Lightness:
         if(numComponents >= 3)
         {
-          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Lightness>(inputData, outputData, m_ColorWeights, numComponents, m_ColorChannel),
+          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::Lightness>(inputDataPtr, outputDataPtr, m_ColorWeights, numComponents, m_ColorChannel),
                                          totalPoints);
           return {};
         }
@@ -388,7 +388,7 @@ public:
       case ConvertColorToGrayScale::ConversionType::SingleChannel:
         if(totalPoints > 0 && numComponents * (totalPoints - 1) + m_ColorChannel < m_InputColorData.getSize())
         {
-          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::SingleChannel>(inputData, outputData, m_ColorWeights, numComponents, m_ColorChannel),
+          ParallelWrapper::RunContiguous(ContiguousConversionImpl<ConvertColorToGrayScale::ConversionType::SingleChannel>(inputDataPtr, outputDataPtr, m_ColorWeights, numComponents, m_ColorChannel),
                                          totalPoints);
           return {};
         }
@@ -534,10 +534,10 @@ private:
     switch(m_ConversionType)
     {
     case ConvertColorToGrayScale::ConversionType::Luminosity:
-      convertLuminosity(inputBuffer, outputBuffer, tupleCount, numComponents, m_ColorWeights);
+      ConvertLuminosity(inputBuffer, outputBuffer, tupleCount, numComponents, m_ColorWeights);
       break;
     case ConvertColorToGrayScale::ConversionType::Average:
-      convertLuminosity(inputBuffer, outputBuffer, tupleCount, numComponents, {0.3333F, 0.3333F, 0.3333F});
+      ConvertLuminosity(inputBuffer, outputBuffer, tupleCount, numComponents, {0.3333F, 0.3333F, 0.3333F});
       break;
     case ConvertColorToGrayScale::ConversionType::Lightness:
       for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
@@ -564,7 +564,7 @@ private:
    * @param numComponents Specifies input components per tuple.
    * @param colorWeights Specifies RGB weights.
    */
-  static void convertLuminosity(const uint8* inputBuffer, uint8* outputBuffer, usize tupleCount, usize numComponents, const FloatVec3& colorWeights)
+  static void ConvertLuminosity(const uint8* inputBuffer, uint8* outputBuffer, usize tupleCount, usize numComponents, const FloatVec3& colorWeights)
   {
     for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
     {

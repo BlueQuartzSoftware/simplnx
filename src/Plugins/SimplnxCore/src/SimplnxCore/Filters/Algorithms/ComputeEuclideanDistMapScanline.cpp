@@ -29,7 +29,7 @@ constexpr usize k_MapCount = 3;
  * @tparam T Specifies the distance element type.
  */
 template <typename T>
-using DistanceStoreArray = std::array<AbstractDataStore<T>*, k_MapCount>;
+using DistanceStoreArrayType = std::array<AbstractDataStore<T>*, k_MapCount>;
 
 /**
  * @brief Collects enabled distance-map stores.
@@ -39,9 +39,9 @@ using DistanceStoreArray = std::array<AbstractDataStore<T>*, k_MapCount>;
  * @return Store pointers indexed by ComputeEuclideanDistMap::MapType.
  */
 template <typename T>
-DistanceStoreArray<T> GetDistanceStores(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues& inputValues)
+DistanceStoreArrayType<T> GetDistanceStores(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues& inputValues)
 {
-  DistanceStoreArray<T> stores = {nullptr, nullptr, nullptr};
+  DistanceStoreArrayType<T> stores = {nullptr, nullptr, nullptr};
   if(inputValues.DoBoundaries)
   {
     stores[static_cast<usize>(ComputeEuclideanDistMap::MapType::FeatureBoundary)] = dataStructure.getDataRefAs<DataArray<T>>(inputValues.GBDistancesArrayPath).getDataStore();
@@ -88,7 +88,7 @@ void AddUniqueNeighbor(std::array<int32, 6>& coordination, usize& coordinationCo
  * Three Feature ID slices bound resident source memory. Completed seed slices remain after cancellation.
  */
 template <typename T>
-Result<> InitializeSeeds(const Int32AbstractDataStore& featureIds, const DistanceStoreArray<T>& distanceStores, const SizeVec3& dims, const std::atomic_bool& shouldCancel, bool& hasBlockedCells)
+Result<> InitializeSeeds(const Int32AbstractDataStore& featureIds, const DistanceStoreArrayType<T>& distanceStores, const SizeVec3& dims, const std::atomic_bool& shouldCancel, bool& hasBlockedCells)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -841,7 +841,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
   const usize sliceSize = dims[0] * dims[1];
   const usize totalVoxels = sliceSize * dims[2];
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath).getDataStoreRef();
-  DistanceStoreArray<T> distanceStores = GetDistanceStores<T>(dataStructure, inputValues);
+  DistanceStoreArrayType<T> distanceStores = GetDistanceStores<T>(dataStructure, inputValues);
 
   bool hasBlockedCells = false;
   Result<> operationResult = InitializeSeeds(featureIds, distanceStores, dims, shouldCancel, hasBlockedCells);
@@ -856,8 +856,8 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
 
   for(usize mapIndex = 0; mapIndex < k_MapCount; mapIndex++)
   {
-    auto* distanceStore = distanceStores[mapIndex];
-    if(distanceStore == nullptr)
+    auto* distanceStorePtr = distanceStores[mapIndex];
+    if(distanceStorePtr == nullptr)
     {
       continue;
     }
@@ -873,7 +873,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
     {
       if(hasBlockedCells)
       {
-        operationResult = PropagateAroundBlockedCells(*distanceStore, nullptr, featureIds, dims, shouldCancel);
+        operationResult = PropagateAroundBlockedCells(*distanceStorePtr, nullptr, featureIds, dims, shouldCancel);
         if(operationResult.invalid())
         {
           return operationResult;
@@ -881,7 +881,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
       }
       else
       {
-        operationResult = TransformDistanceWithoutObstacles(*distanceStore, dims, shouldCancel);
+        operationResult = TransformDistanceWithoutObstacles(*distanceStorePtr, dims, shouldCancel);
         if(operationResult.invalid())
         {
           return operationResult;
@@ -896,7 +896,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
     {
       const DataPath scratchPath = inputValues.FeatureIdsArrayPath.getParent().createChildPath("__ComputeEuclideanDistMapNearestSeedScratch");
       auto nearestSeeds = DataStoreUtilities::CreateDataStore<int64>(dataStructure, scratchPath, featureIds.getTupleShape(), {1});
-      operationResult = InitializeNearestSeeds(*distanceStore, *nearestSeeds, totalVoxels, sliceSize, shouldCancel);
+      operationResult = InitializeNearestSeeds(*distanceStorePtr, *nearestSeeds, totalVoxels, sliceSize, shouldCancel);
       if(operationResult.invalid())
       {
         return operationResult;
@@ -908,7 +908,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
 
       if(hasBlockedCells)
       {
-        operationResult = PropagateAroundBlockedCells(*distanceStore, nearestSeeds.get(), featureIds, dims, shouldCancel);
+        operationResult = PropagateAroundBlockedCells(*distanceStorePtr, nearestSeeds.get(), featureIds, dims, shouldCancel);
         if(operationResult.invalid())
         {
           return operationResult;
@@ -916,7 +916,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
       }
       else
       {
-        operationResult = TransformLabeledDistanceWithoutObstacles(*distanceStore, *nearestSeeds, dims, shouldCancel);
+        operationResult = TransformLabeledDistanceWithoutObstacles(*distanceStorePtr, *nearestSeeds, dims, shouldCancel);
         if(operationResult.invalid())
         {
           return operationResult;
@@ -927,7 +927,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
         return {};
       }
 
-      operationResult = ConvertToEuclideanDistances(*distanceStore, *nearestSeeds, dims, imageGeom.getSpacing(), shouldCancel);
+      operationResult = ConvertToEuclideanDistances(*distanceStorePtr, *nearestSeeds, dims, imageGeom.getSpacing(), shouldCancel);
       if(operationResult.invalid())
       {
         return operationResult;

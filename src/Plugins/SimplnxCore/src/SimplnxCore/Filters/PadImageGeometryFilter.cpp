@@ -263,12 +263,12 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   // not need to manually copy these arrays to the destination image geometry
   {
     // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellData = srcImageGeom.getCellData();
-    if(selectedCellData == nullptr)
+    const AttributeMatrix* selectedCellDataPtr = srcImageGeom.getCellData();
+    if(selectedCellDataPtr == nullptr)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
-    std::string cellDataName = selectedCellData->getName();
+    std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, destGeomDims.toContainer<CreateImageGeometryAction::DimensionType>(),
@@ -278,7 +278,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
     // in the destination image geometry's attribute matrix
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-    for(const auto& [identifier, object] : *selectedCellData)
+    for(const auto& [identifier, object] : *selectedCellDataPtr)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
@@ -388,7 +388,7 @@ Result<> PadImageGeometryFilter::executeImpl(DataStructure& dataStructure, const
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_AttributeMatrixPathKey = "AttributeMatrixPath";
 constexpr StringLiteral k_DefaultFillValueKey = "DefaultFillValue";
@@ -396,7 +396,7 @@ constexpr StringLiteral k_UpdateOriginKey = "UpdateOrigin";
 constexpr StringLiteral k_XMinMaxKey = "XMinMax";
 constexpr StringLiteral k_YMinMaxKey = "YMinMax";
 constexpr StringLiteral k_ZMinMaxKey = "ZMinMax";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -407,13 +407,13 @@ Result<Arguments> PadImageGeometryFilter::FromSIMPLJson(const nlohmann::json& js
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixPathKey, k_AttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_DefaultFillValueKey, k_DefaultFillValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UpdateOriginKey, k_UpdateOrigin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_XMinMaxKey, k_XMinMax_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_YMinMaxKey, k_YMinMax_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_ZMinMaxKey, k_ZMinMax_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixPathKey, k_AttributeMatrixPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_DefaultFillValueKey, k_DefaultFillValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_UpdateOriginKey, k_UpdateOrigin_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, simpl::k_XMinMaxKey, k_XMinMax_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, simpl::k_YMinMaxKey, k_YMinMax_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, simpl::k_ZMinMaxKey, k_ZMinMax_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

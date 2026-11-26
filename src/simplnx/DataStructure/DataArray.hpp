@@ -127,15 +127,15 @@ public:
     }
 
     auto warnings = std::move(storeResult.warnings());
-    auto* data = Create(dataStructure, name, std::move(storeResult.value()), parentId);
-    if(data == nullptr)
+    auto* dataPtr = Create(dataStructure, name, std::move(storeResult.value()), parentId);
+    if(dataPtr == nullptr)
     {
       auto result = MakeErrorResult<DataArray*>(k_PlannedInsertionError, fmt::format("Cannot insert planned numeric array at path '{}'.", pathResult.value().toString()));
       result.warnings() = std::move(warnings);
       return result;
     }
 
-    Result<DataArray*> result{data};
+    Result<DataArray*> result{dataPtr};
     result.warnings() = std::move(warnings);
     return result;
   }
@@ -237,15 +237,15 @@ public:
     }
 
     auto warnings = std::move(storeResult.warnings());
-    auto* data = Import(dataStructure, name, importId, std::move(storeResult.value()), parentId);
-    if(data == nullptr)
+    auto* dataPtr = Import(dataStructure, name, importId, std::move(storeResult.value()), parentId);
+    if(dataPtr == nullptr)
     {
       auto result = MakeErrorResult<DataArray*>(k_PlannedInsertionError, fmt::format("Cannot insert planned imported numeric array at path '{}'.", pathResult.value().toString()));
       result.warnings() = std::move(warnings);
       return result;
     }
 
-    Result<DataArray*> result{data};
+    Result<DataArray*> result{dataPtr};
     result.warnings() = std::move(warnings);
     return result;
   }
@@ -891,19 +891,19 @@ private:
         return {DataPath({name})};
       }
 
-      auto* parent = dataStructure.getData(*parentId);
-      if(parent == nullptr)
+      auto* parentPtr = dataStructure.getData(*parentId);
+      if(parentPtr == nullptr)
       {
         return MakeErrorResult<DataPath>(k_PlannedPathError, fmt::format("Cannot plan numeric array '{}': parent object ID {} does not exist.", name, *parentId));
       }
-      const auto parentPaths = parent->getDataPaths();
+      const auto parentPaths = parentPtr->getDataPaths();
       if(parentPaths.empty())
       {
         return MakeErrorResult<DataPath>(k_PlannedPathError, fmt::format("Cannot plan numeric array '{}': parent object ID {} has no path.", name, *parentId));
       }
 
       DataPath path = parentPaths.front().createChildPath(name);
-      if(dataStructure.getData(path.getParent()) != parent)
+      if(dataStructure.getData(path.getParent()) != parentPtr)
       {
         return MakeErrorResult<DataPath>(k_PlannedPathError, fmt::format("Cannot plan numeric array at path '{}': the path does not identify parent object ID {}.", path.toString(), *parentId));
       }

@@ -11,17 +11,17 @@
 TEST_CASE("Filter List Instantiation")
 {
   UnitTest::LoadPlugins();
-  auto* filterList = nx::core::Application::Instance()->getFilterList();
-  REQUIRE(filterList != nullptr);
+  auto* filterListPtr = nx::core::Application::Instance()->getFilterList();
+  REQUIRE(filterListPtr != nullptr);
 
-  const auto& handles = filterList->getFilterHandles();
+  const auto& handles = filterListPtr->getFilterHandles();
   REQUIRE(!handles.empty());
 
   nx::core::DataStructure dataStructure;
 
   for(const auto& handle : handles)
   {
-    auto filter = filterList->createFilter(handle);
+    auto filter = filterListPtr->createFilter(handle);
     REQUIRE(filter != nullptr);
 
     UNSCOPED_INFO(fmt::format("Filter List Instantiation::{} Instantiation. [simplnx][{}]", filter->className(), filter->name()));

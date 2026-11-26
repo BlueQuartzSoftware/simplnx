@@ -50,32 +50,32 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
 
 struct ReadNiftiHeaderCache
 {
-  std::string inputFile;
-  fs::file_time_type timeStamp;
+  std::string input_file;
+  fs::file_time_type time_stamp;
   nx::core::nifti::NiftiMetadata metadata;
-  bool useAffineIfPresent{true};
+  bool use_affine_if_present{true};
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ReadNiftiHeaderCache> s_HeaderCache;
-std::mutex s_HeaderCacheMutex;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ReadNiftiHeaderCache> SHeaderCache;
+std::mutex SHeaderCacheMutex;
 } // namespace
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
 ReadNIfTIFileFilter::ReadNIfTIFileFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-  s_HeaderCache[m_InstanceId] = {};
+  std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ReadNIfTIFileFilter::~ReadNIfTIFileFilter() noexcept
 {
-  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-  s_HeaderCache.erase(m_InstanceId);
+  std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -188,9 +188,9 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   nifti::NiftiMetadata md;
   bool cacheValid = false;
   {
-    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-    auto& cache = s_HeaderCache[m_InstanceId];
-    if(cache.inputFile == pInputFilePath.string() && cache.timeStamp == currentTimeStamp && cache.useAffineIfPresent == pUseAffineIfPresent)
+    std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+    auto& cache = SHeaderCache[m_InstanceId];
+    if(cache.input_file == pInputFilePath.string() && cache.time_stamp == currentTimeStamp && cache.use_affine_if_present == pUseAffineIfPresent)
     {
       md = cache.metadata;
       cacheValid = true;
@@ -206,11 +206,11 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     }
     md = std::move(metadataResult).value();
 
-    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-    auto& cache = s_HeaderCache[m_InstanceId];
-    cache.inputFile = pInputFilePath.string();
-    cache.timeStamp = currentTimeStamp;
-    cache.useAffineIfPresent = pUseAffineIfPresent;
+    std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+    auto& cache = SHeaderCache[m_InstanceId];
+    cache.input_file = pInputFilePath.string();
+    cache.time_stamp = currentTimeStamp;
+    cache.use_affine_if_present = pUseAffineIfPresent;
     cache.metadata = md;
   }
 

@@ -186,8 +186,8 @@ usize ImageGeom::getNumberOfCells() const
 
 Result<> ImageGeom::findElementSizes(bool recalculate)
 {
-  auto* voxelSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
-  if(voxelSizes != nullptr && !recalculate)
+  auto* voxelSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  if(voxelSizesPtr != nullptr && !recalculate)
   {
     return {};
   }
@@ -195,22 +195,22 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   // The product retains supplied empty-axis thickness for one- and two-dimensional grids.
   const float32 singleVoxelSize = m_Spacing[0] * m_Spacing[1] * m_Spacing[2];
 
-  if(voxelSizes == nullptr)
+  if(voxelSizesPtr == nullptr)
   {
     // The resolver selects a disk-backed store for a large grid when a compatible
     // OOC manager is registered.
     std::vector<DataPath> geomPaths = getDataPaths();
     DataPath voxelSizesPath = geomPaths.empty() ? DataPath({getName(), k_VoxelSizes}) : geomPaths.front().createChildPath(k_VoxelSizes);
     auto dataStore = DataStoreUtilities::CreateDataStore<float32>(*getDataStructure(), voxelSizesPath, std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1});
-    voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
-    if(voxelSizes == nullptr)
+    voxelSizesPtr = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(voxelSizesPtr == nullptr)
     {
       m_ElementSizesId.reset();
       return MakeErrorResult(-1532, "ImageGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
-    m_ElementSizesId = voxelSizes->getId();
+    m_ElementSizesId = voxelSizesPtr->getId();
   }
-  voxelSizes->fill(singleVoxelSize);
+  voxelSizesPtr->fill(singleVoxelSize);
 
   return {};
 }

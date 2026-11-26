@@ -53,15 +53,15 @@ float32 FindGatheredTriangleVolume(const float32* a, const float32* b, const flo
 
 void AccumulateGatheredTriangleVolume(const float32* coordinates, const int32* ids, usize idComponents, std::vector<float32>& volumes)
 {
-  const float32* a = coordinates;
-  const float32* b = coordinates + 3;
-  const float32* c = coordinates + 6;
+  const float32* aPtr = coordinates;
+  const float32* bPtr = coordinates + 3;
+  const float32* cPtr = coordinates + 6;
   const int32 first = ids[0];
   if(idComponents == 1)
   {
     if(first >= 0)
     {
-      volumes[first] += FindGatheredTriangleVolume(a, c, b);
+      volumes[first] += FindGatheredTriangleVolume(aPtr, cPtr, bPtr);
     }
     return;
   }
@@ -70,16 +70,16 @@ void AccumulateGatheredTriangleVolume(const float32* coordinates, const int32* i
   const bool secondInRange = second >= 0 && static_cast<usize>(second) < volumes.size();
   if(first < 0 && secondInRange)
   {
-    volumes[second] += FindGatheredTriangleVolume(a, c, b);
+    volumes[second] += FindGatheredTriangleVolume(aPtr, cPtr, bPtr);
   }
   else if(second < 0 && firstInRange)
   {
-    volumes[first] += FindGatheredTriangleVolume(a, b, c);
+    volumes[first] += FindGatheredTriangleVolume(aPtr, bPtr, cPtr);
   }
   else if(firstInRange && secondInRange)
   {
-    volumes[first] += FindGatheredTriangleVolume(a, b, c);
-    volumes[second] += FindGatheredTriangleVolume(a, c, b);
+    volumes[first] += FindGatheredTriangleVolume(aPtr, bPtr, cPtr);
+    volumes[second] += FindGatheredTriangleVolume(aPtr, cPtr, bPtr);
   }
 }
 
@@ -369,10 +369,10 @@ void CleanupCreatedSupport(DataStructure& dataStructure, TriangleGeom& geometry,
       continue;
     }
     // A failed producer can leave a new child after it clears the association.
-    const auto* child = dataStructure.getData(supportPaths[index]);
-    if(child != nullptr && entryIds[index] != child->getId())
+    const auto* childPtr = dataStructure.getData(supportPaths[index]);
+    if(childPtr != nullptr && entryIds[index] != childPtr->getId())
     {
-      const auto createdId = child->getId();
+      const auto createdId = childPtr->getId();
       if(!dataStructure.removeData(createdId))
       {
         throw std::runtime_error(fmt::format("Cannot remove temporary support object {} from geometry '{}'.", createdId, geometryPath.toString()));
@@ -392,8 +392,8 @@ void CleanupCreatedSupport(DataStructure& dataStructure, TriangleGeom& geometry,
 class ReverseWindingImpl
 {
 public:
-  using TriStore = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
-  ReverseWindingImpl(TriStore& triangles, const Int32AbstractDataStore& idsStore, const std::vector<usize>& reversalTargets, const std::atomic_bool& shouldCancel)
+  using TriStoreType = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
+  ReverseWindingImpl(TriStoreType& triangles, const Int32AbstractDataStore& idsStore, const std::vector<usize>& reversalTargets, const std::atomic_bool& shouldCancel)
   : m_Triangles(triangles)
   , m_IdsStore(idsStore)
   , m_ReversalTargets(reversalTargets)
@@ -468,7 +468,7 @@ public:
   }
 
 private:
-  TriStore& m_Triangles;
+  TriStoreType& m_Triangles;
   const Int32AbstractDataStore& m_IdsStore;
   const std::vector<usize>& m_ReversalTargets;
   const std::atomic_bool& m_ShouldCancel;

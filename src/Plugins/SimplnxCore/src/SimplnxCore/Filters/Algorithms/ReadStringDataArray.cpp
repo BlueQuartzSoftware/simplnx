@@ -16,10 +16,10 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32_t k_RBR_FILE_NOT_OPEN = -1000;
-constexpr int32_t k_RBR_READ_EOF = -1030;
-constexpr int32_t k_RBR_READ_ERROR = 1040;
-constexpr int32_t k_RBR_FILE_NOT_EXIST = 1050;
+constexpr int32_t k_RbrFileNotOpen = -1000;
+constexpr int32_t k_RbrReadEof = -1030;
+constexpr int32_t k_RbrReadError = 1040;
+constexpr int32_t k_RbrFileNotExist = 1050;
 
 constexpr size_t k_BufferSize = 10000;
 
@@ -62,13 +62,13 @@ Result<> ReadStringDataArray::operator()()
 
   if(!std::filesystem::exists(m_InputValues->inputFileValue))
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", m_InputValues->inputFileValue.string()));
+    return MakeErrorResult(k_RbrFileNotExist, fmt::format("Input file does not exist: {}", m_InputValues->inputFileValue.string()));
   }
 
   std::ifstream in(m_InputValues->inputFileValue.c_str(), std::ios_base::in | std::ios_base::binary);
   if(!in.is_open())
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", m_InputValues->inputFileValue.string()));
+    return MakeErrorResult(k_RbrFileNotOpen, fmt::format("Could not open file for reading: {}", m_InputValues->inputFileValue.string()));
   }
 
   in.imbue(std::locale(std::locale(), new nx::core::CsvParser::DelimiterType(delimiter)));
@@ -81,7 +81,7 @@ Result<> ReadStringDataArray::operator()()
     std::getline(in, headerLine);
     if(in.fail())
     {
-      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", m_InputValues->inputFileValue.string()));
+      return MakeErrorResult(k_RbrReadError, fmt::format("Could not read data from file while skipping header lines: {}", m_InputValues->inputFileValue.string()));
     }
   }
 

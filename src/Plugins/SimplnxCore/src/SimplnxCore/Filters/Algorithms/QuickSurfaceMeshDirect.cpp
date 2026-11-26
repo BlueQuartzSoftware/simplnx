@@ -35,8 +35,8 @@ namespace
 constexpr float64 k_RangeMin = 0.0;
 constexpr float64 k_RangeMax = 1.0;
 constexpr std::mt19937_64::result_type k_Seed = 3412341234123412;
-std::mt19937_64 generator(k_Seed);
-std::uniform_real_distribution<> distribution(k_RangeMin, k_RangeMax);
+std::mt19937_64 Generator(k_Seed);
+std::uniform_real_distribution<> Distribution(k_RangeMin, k_RangeMax);
 
 /**
  * @brief Writes one dual-grid vertex position.
@@ -82,7 +82,7 @@ bool SkipWallFace(ChoicesParameter::ValueType mode, const Int32AbstractDataStore
 void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3,
                            QuickSurfaceMeshDirect::MeshIndexType v4, QuickSurfaceMeshDirect::MeshIndexType v5, QuickSurfaceMeshDirect::MeshIndexType v6)
 {
-  auto val = static_cast<float32>(distribution(generator));
+  auto val = static_cast<float32>(Distribution(Generator));
 
   if(val < 0.25f)
   {
@@ -119,7 +119,7 @@ void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMeshD
 void FlipProblemVoxelCase2(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3,
                            QuickSurfaceMeshDirect::MeshIndexType v4)
 {
-  auto val = static_cast<float32>(distribution(generator));
+  auto val = static_cast<float32>(Distribution(Generator));
 
   if(val < 0.125f)
   {
@@ -167,7 +167,7 @@ void FlipProblemVoxelCase2(Int32AbstractDataStore& featureIds, QuickSurfaceMeshD
  */
 void FlipProblemVoxelCase3(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3)
 {
-  auto val = static_cast<float32>(distribution(generator));
+  auto val = static_cast<float32>(Distribution(Generator));
 
   if(val < 0.5f)
   {
@@ -187,7 +187,7 @@ QuickSurfaceMeshDirect::QuickSurfaceMeshDirect(DataStructure& dataStructure, con
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
-  generator.seed(k_Seed);
+  Generator.seed(k_Seed);
 }
 
 Result<> QuickSurfaceMeshDirect::operator()()
@@ -319,10 +319,10 @@ void QuickSurfaceMeshDirect::correctProblemVoxels()
 {
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Correcting Problem Voxels");
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
+  auto* gridPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
-  SizeVec3 udims = grid->getDimensions();
+  SizeVec3 udims = gridPtr->getDimensions();
 
   MeshIndexType xP = udims[0];
   MeshIndexType yP = udims[1];
@@ -528,10 +528,10 @@ void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& no
 {
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Determining active Nodes");
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
+  auto* gridPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
   Int32AbstractDataStore& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
-  SizeVec3 udims = grid->getDimensions();
+  SizeVec3 udims = gridPtr->getDimensions();
 
   MeshIndexType xP = udims[0];
   MeshIndexType yP = udims[1];
@@ -882,9 +882,9 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
     }
   }
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
+  auto* gridPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
 
-  SizeVec3 udims = grid->getDimensions();
+  SizeVec3 udims = gridPtr->getDimensions();
 
   MeshIndexType xP = udims[0];
   MeshIndexType yP = udims[1];
@@ -903,25 +903,25 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
   MeshIndexType nodeId3 = 0;
   MeshIndexType nodeId4 = 0;
 
-  auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
 
   ShapeType tDims = {nodeCount};
-  Result<> resizeResult = triangleGeom->resizeVertexList(nodeCount);
+  Result<> resizeResult = triangleGeomPtr->resizeVertexList(nodeCount);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  resizeResult = triangleGeom->resizeFaceList(triangleCount);
+  resizeResult = triangleGeomPtr->resizeFaceList(triangleCount);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  resizeResult = triangleGeom->getFaceAttributeMatrix()->resizeTuples({triangleCount});
+  resizeResult = triangleGeomPtr->getFaceAttributeMatrix()->resizeTuples({triangleCount});
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  resizeResult = triangleGeom->getVertexAttributeMatrix()->resizeTuples(tDims);
+  resizeResult = triangleGeomPtr->getVertexAttributeMatrix()->resizeTuples(tDims);
   if(resizeResult.invalid())
   {
     return resizeResult;
@@ -936,8 +936,8 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
     return resizeResult;
   }
 
-  VertexStore& vertex = triangleGeom->getVertices()->getDataStoreRef();
-  TriStore& triangle = triangleGeom->getFaces()->getDataStoreRef();
+  VertexStore& vertex = triangleGeomPtr->getVertices()->getDataStoreRef();
+  TriStore& triangle = triangleGeomPtr->getFaces()->getDataStoreRef();
 
   ownerLists.resize(nodeCount);
 
@@ -976,16 +976,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(i == 0 && !SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
         {
           nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
@@ -1025,16 +1025,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(j == 0 && !SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
         {
           nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
@@ -1074,16 +1074,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(k == 0 && !SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
         {
           nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i, j, k, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
@@ -1123,16 +1123,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(i == (xP - 1) && !SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
         {
           nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
@@ -1172,16 +1172,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(i < xP - 1 && featureIds[point] != featureIds[neigh1])
         {
           nodeId1 = (k * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
@@ -1238,16 +1238,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(j == (yP - 1) && !SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
         {
           nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
@@ -1287,16 +1287,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(j < yP - 1 && featureIds[point] != featureIds[neigh2])
         {
           nodeId1 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = (k * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
@@ -1352,16 +1352,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(k == (zP - 1) && !SkipWallFace(m_InputValues->BoundingBoxSkinMode, featureIds, point))
         {
           nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i, j, k + 1, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId3];
@@ -1401,16 +1401,16 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
         if(k < zP - 1 && featureIds[point] != featureIds[neigh3])
         {
           nodeId1 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId1] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j, k + 1, vertex, (m_NodeIds[nodeId1] * 3));
 
           nodeId2 = ((k + 1) * (xP + 1) * (yP + 1)) + (j * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j, k + 1, vertex, (m_NodeIds[nodeId2] * 3));
+          ::GetGridCoordinates(gridPtr, i, j, k + 1, vertex, (m_NodeIds[nodeId2] * 3));
 
           nodeId3 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + (i + 1);
-          ::GetGridCoordinates(grid, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
+          ::GetGridCoordinates(gridPtr, i + 1, j + 1, k + 1, vertex, (m_NodeIds[nodeId3] * 3));
 
           nodeId4 = ((k + 1) * (xP + 1) * (yP + 1)) + ((j + 1) * (xP + 1)) + i;
-          ::GetGridCoordinates(grid, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
+          ::GetGridCoordinates(gridPtr, i, j + 1, k + 1, vertex, (m_NodeIds[nodeId4] * 3));
 
           triangle[triangleIndex * 3 + 0] = m_NodeIds[nodeId1];
           triangle[triangleIndex * 3 + 1] = m_NodeIds[nodeId2];
@@ -1469,7 +1469,7 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
 
   // Node type caps the distinct-owner count at four. The exterior owner (-1)
   // adds ten to the classification.
-  Int8AbstractDataStore& m_NodeTypes = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
+  Int8AbstractDataStore& mNodeTypes = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
 
   for(usize i = 0; i < nodeCount; i++)
   {
@@ -1481,14 +1481,14 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
 
     auto& ownerList = ownerLists[i];
 
-    m_NodeTypes[i] = static_cast<int8>(ownerList.size());
-    if(m_NodeTypes[i] > 4)
+    mNodeTypes[i] = static_cast<int8>(ownerList.size());
+    if(mNodeTypes[i] > 4)
     {
-      m_NodeTypes[i] = 4;
+      mNodeTypes[i] = 4;
     }
     if(ownerList.find(-1) != ownerList.end())
     {
-      m_NodeTypes[i] += 10;
+      mNodeTypes[i] += 10;
     }
   }
   return {};

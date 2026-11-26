@@ -37,10 +37,10 @@ const DataPath k_Int64ArrayPath = DataPath({k_EdgeGeometry}).createChildPath(Con
 DataStructure CreateDataStructure()
 {
   DataStructure dataStructure;
-  EdgeGeom* edgeGeom = EdgeGeom::Create(dataStructure, k_EdgeGeometry);
+  EdgeGeom* edgeGeomPtr = EdgeGeom::Create(dataStructure, k_EdgeGeometry);
 
-  Float32Array* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, k_VerticesName, {4}, {3}, edgeGeom->getId());
-  auto& verticesRef = vertices->getDataStoreRef();
+  Float32Array* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_VerticesName, {4}, {3}, edgeGeomPtr->getId());
+  auto& verticesRef = verticesPtr->getDataStoreRef();
   verticesRef[0] = 0;
   verticesRef[1] = 0;
   verticesRef[2] = 0;
@@ -53,10 +53,10 @@ DataStructure CreateDataStructure()
   verticesRef[9] = 2;
   verticesRef[10] = -1;
   verticesRef[11] = 0;
-  edgeGeom->setVertices(*vertices);
+  edgeGeomPtr->setVertices(*verticesPtr);
 
-  IGeometry::SharedEdgeList* edges = UnitTest::CreateTestDataArray<uint64>(dataStructure, k_EdgesName, {4}, {2}, edgeGeom->getId());
-  auto& edgesRef = edges->getDataStoreRef();
+  IGeometry::SharedEdgeList* edgesPtr = UnitTest::CreateTestDataArray<uint64>(dataStructure, k_EdgesName, {4}, {2}, edgeGeomPtr->getId());
+  auto& edgesRef = edgesPtr->getDataStoreRef();
   edgesRef[0] = 0;
   edgesRef[1] = 1;
   edgesRef[2] = 1;
@@ -65,30 +65,30 @@ DataStructure CreateDataStructure()
   edgesRef[5] = 3;
   edgesRef[6] = 3;
   edgesRef[7] = 0;
-  edgeGeom->setEdgeList(*edges);
+  edgeGeomPtr->setEdgeList(*edgesPtr);
 
-  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_VertexData, {4}, edgeGeom->getId());
-  edgeGeom->setVertexAttributeMatrix(*vertexDataPtr);
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_VertexData, {4}, edgeGeomPtr->getId());
+  edgeGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
 
-  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Edge_Data, {4}, edgeGeom->getId());
-  edgeGeom->setEdgeAttributeMatrix(*edgeDataPtr);
+  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Edge_Data, {4}, edgeGeomPtr->getId());
+  edgeGeomPtr->setEdgeAttributeMatrix(*edgeDataPtr);
 
-  UInt32Array* uint32Array = UnitTest::CreateTestDataArray<uint32>(dataStructure, "UInt32Array", {4}, {1}, vertexDataPtr->getId());
-  auto& uint32ArrayRef = uint32Array->getDataStoreRef();
+  UInt32Array* uint32ArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "UInt32Array", {4}, {1}, vertexDataPtr->getId());
+  auto& uint32ArrayRef = uint32ArrayPtr->getDataStoreRef();
   uint32ArrayRef[0] = 8;
   uint32ArrayRef[1] = 3;
   uint32ArrayRef[2] = 893;
   uint32ArrayRef[3] = 327;
 
-  Int32Array* int32Array = UnitTest::CreateTestDataArray<int32>(dataStructure, "Int32Array", {4}, {1}, edgeDataPtr->getId());
-  auto& int32ArrayRef = int32Array->getDataStoreRef();
+  Int32Array* int32ArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Int32Array", {4}, {1}, edgeDataPtr->getId());
+  auto& int32ArrayRef = int32ArrayPtr->getDataStoreRef();
   int32ArrayRef[0] = 12;
   int32ArrayRef[1] = 56;
   int32ArrayRef[2] = 2;
   int32ArrayRef[3] = 91;
 
-  Int64Array* int64Array = UnitTest::CreateTestDataArray<int64>(dataStructure, "Int64Array", {4}, {1}, edgeDataPtr->getId());
-  auto& int64ArrayRef = int64Array->getDataStoreRef();
+  Int64Array* int64ArrayPtr = UnitTest::CreateTestDataArray<int64>(dataStructure, "Int64Array", {4}, {1}, edgeDataPtr->getId());
+  auto& int64ArrayRef = int64ArrayPtr->getDataStoreRef();
   int64ArrayRef[0] = 24;
   int64ArrayRef[1] = 124;
   int64ArrayRef[2] = 352;
@@ -100,42 +100,44 @@ DataStructure CreateDataStructure()
 DataStructure CreateSharedOutsideVertexData(bool cropCase = false)
 {
   DataStructure dataStructure;
-  auto* geom = EdgeGeom::Create(dataStructure, k_EdgeGeometry);
-  REQUIRE(geom != nullptr);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, k_EdgeGeometry);
+  REQUIRE(geomPtr != nullptr);
   const DataPath geomPath({k_EdgeGeometry});
-  auto* vertices = Float32Array::Create(dataStructure, k_VerticesName, DataStoreUtilities::CreateDataStore<float32>(dataStructure, geomPath.createChildPath(k_VerticesName), {3}, {3}), geom->getId());
-  REQUIRE(vertices != nullptr);
+  auto* verticesPtr =
+      Float32Array::Create(dataStructure, k_VerticesName, DataStoreUtilities::CreateDataStore<float32>(dataStructure, geomPath.createChildPath(k_VerticesName), {3}, {3}), geomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
   const std::vector<float32> coordinates{0, 0, 0, 0.5F, 1, -1, 2, 4, 6};
   for(usize i = 0; i < coordinates.size(); ++i)
   {
-    (*vertices)[i] = coordinates[i];
+    (*verticesPtr)[i] = coordinates[i];
   }
-  geom->setVertices(*vertices);
-  auto* edges = UInt64Array::Create(dataStructure, k_EdgesName, DataStoreUtilities::CreateDataStore<uint64>(dataStructure, geomPath.createChildPath(k_EdgesName), {2}, {2}), geom->getId());
-  REQUIRE(edges != nullptr);
+  geomPtr->setVertices(*verticesPtr);
+  auto* edgesPtr = UInt64Array::Create(dataStructure, k_EdgesName, DataStoreUtilities::CreateDataStore<uint64>(dataStructure, geomPath.createChildPath(k_EdgesName), {2}, {2}), geomPtr->getId());
+  REQUIRE(edgesPtr != nullptr);
   const std::vector<uint64> connectivity = cropCase ? std::vector<uint64>{0, 2, 0, 1} : std::vector<uint64>{0, 2, 1, 2};
   for(usize i = 0; i < connectivity.size(); ++i)
   {
-    (*edges)[i] = connectivity[i];
+    (*edgesPtr)[i] = connectivity[i];
   }
-  geom->setEdgeList(*edges);
-  auto* vertexData = AttributeMatrix::Create(dataStructure, Constants::k_VertexData, {3}, geom->getId());
-  auto* edgeData = AttributeMatrix::Create(dataStructure, Constants::k_Edge_Data, {2}, geom->getId());
-  REQUIRE(vertexData != nullptr);
-  REQUIRE(edgeData != nullptr);
-  geom->setVertexAttributeMatrix(*vertexData);
-  geom->setEdgeAttributeMatrix(*edgeData);
-  auto* vertexValues = Int32Array::Create(
-      dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_VertexData).createChildPath("Values"), {3}, {1}), vertexData->getId());
-  auto* edgeValues = Int32Array::Create(
-      dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_Edge_Data).createChildPath("Values"), {2}, {1}), edgeData->getId());
-  REQUIRE(vertexValues != nullptr);
-  REQUIRE(edgeValues != nullptr);
-  (*vertexValues)[0] = 7;
-  (*vertexValues)[1] = 11;
-  (*vertexValues)[2] = 13;
-  (*edgeValues)[0] = 21;
-  (*edgeValues)[1] = 34;
+  geomPtr->setEdgeList(*edgesPtr);
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_VertexData, {3}, geomPtr->getId());
+  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Edge_Data, {2}, geomPtr->getId());
+  REQUIRE(vertexDataPtr != nullptr);
+  REQUIRE(edgeDataPtr != nullptr);
+  geomPtr->setVertexAttributeMatrix(*vertexDataPtr);
+  geomPtr->setEdgeAttributeMatrix(*edgeDataPtr);
+  auto* vertexValuesPtr =
+      Int32Array::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_VertexData).createChildPath("Values"), {3}, {1}),
+                         vertexDataPtr->getId());
+  auto* edgeValuesPtr = Int32Array::Create(
+      dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_Edge_Data).createChildPath("Values"), {2}, {1}), edgeDataPtr->getId());
+  REQUIRE(vertexValuesPtr != nullptr);
+  REQUIRE(edgeValuesPtr != nullptr);
+  (*vertexValuesPtr)[0] = 7;
+  (*vertexValuesPtr)[1] = 11;
+  (*vertexValuesPtr)[2] = 13;
+  (*edgeValuesPtr)[0] = 21;
+  (*edgeValuesPtr)[1] = 34;
   return dataStructure;
 }
 
@@ -163,54 +165,54 @@ DataStructure CreateFeatureCropFixture()
 {
   DataStructure dataStructure;
   dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
-  auto* edgeGeom = EdgeGeom::Create(dataStructure, "Edge");
-  REQUIRE(edgeGeom != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {5}, {3}, edgeGeom->getId());
-  REQUIRE(vertices != nullptr);
-  vertices->fill(0);
+  auto* edgeGeomPtr = EdgeGeom::Create(dataStructure, "Edge");
+  REQUIRE(edgeGeomPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {5}, {3}, edgeGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  verticesPtr->fill(0);
   for(usize i = 0; i < 5; ++i)
   {
-    (*vertices)[3 * i] = static_cast<float32>(i);
+    (*verticesPtr)[3 * i] = static_cast<float32>(i);
   }
-  edgeGeom->setVertices(*vertices);
-  auto* edges = UnitTest::CreateTestDataArray<uint64>(dataStructure, "Edges", {4}, {2}, edgeGeom->getId());
-  REQUIRE(edges != nullptr);
+  edgeGeomPtr->setVertices(*verticesPtr);
+  auto* edgesPtr = UnitTest::CreateTestDataArray<uint64>(dataStructure, "Edges", {4}, {2}, edgeGeomPtr->getId());
+  REQUIRE(edgesPtr != nullptr);
   for(usize i = 0; i < 4; ++i)
   {
-    (*edges)[2 * i] = i;
-    (*edges)[2 * i + 1] = i + 1;
+    (*edgesPtr)[2 * i] = i;
+    (*edgesPtr)[2 * i + 1] = i + 1;
   }
-  edgeGeom->setEdgeList(*edges);
-  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{5}, edgeGeom->getId());
-  REQUIRE(vertexData != nullptr);
-  edgeGeom->setVertexAttributeMatrix(*vertexData);
-  auto* edgeData = AttributeMatrix::Create(dataStructure, "Edge Data", ShapeType{4}, edgeGeom->getId());
-  REQUIRE(edgeData != nullptr);
-  edgeGeom->setEdgeAttributeMatrix(*edgeData);
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {4}, {1}, edgeData->getId());
-  REQUIRE(featureIds != nullptr);
+  edgeGeomPtr->setEdgeList(*edgesPtr);
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{5}, edgeGeomPtr->getId());
+  REQUIRE(vertexDataPtr != nullptr);
+  edgeGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
+  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, "Edge Data", ShapeType{4}, edgeGeomPtr->getId());
+  REQUIRE(edgeDataPtr != nullptr);
+  edgeGeomPtr->setEdgeAttributeMatrix(*edgeDataPtr);
+  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {4}, {1}, edgeDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
   for(usize i = 0; i < 4; ++i)
   {
-    (*featureIds)[i] = static_cast<int32>(i + 1);
+    (*featureIdsPtr)[i] = static_cast<int32>(i + 1);
   }
 
-  auto* featureData = AttributeMatrix::Create(dataStructure, "Edge Feature Data", ShapeType{5}, edgeGeom->getId());
-  REQUIRE(featureData != nullptr);
-  auto* numElements = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureData->getId());
-  REQUIRE(numElements != nullptr);
-  numElements->fill(1);
-  (*numElements)[0] = 0;
-  auto* neighbors = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{5}, featureData->getId());
-  REQUIRE(neighbors != nullptr);
-  neighbors->setLists({{}, {2}, {1, 3}, {2, 4}, {3}});
-  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{5}, {"Background", "One", "Two", "Three", "Four"}, featureData->getId()) != nullptr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Edge Feature Data", ShapeType{5}, edgeGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
+  auto* numElementsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureDataPtr->getId());
+  REQUIRE(numElementsPtr != nullptr);
+  numElementsPtr->fill(1);
+  (*numElementsPtr)[0] = 0;
+  auto* neighborsPtr = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{5}, featureDataPtr->getId());
+  REQUIRE(neighborsPtr != nullptr);
+  neighborsPtr->setLists({{}, {2}, {1, 3}, {2, 4}, {3}});
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{5}, {"Background", "One", "Two", "Three", "Four"}, featureDataPtr->getId()) != nullptr);
 
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, "Edge Ensemble Data", ShapeType{2}, edgeGeom->getId());
-  REQUIRE(ensembleData != nullptr);
-  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleData->getId());
-  REQUIRE(crystalStructures != nullptr);
-  (*crystalStructures)[0] = 999;
-  (*crystalStructures)[1] = 1;
+  auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, "Edge Ensemble Data", ShapeType{2}, edgeGeomPtr->getId());
+  REQUIRE(ensembleDataPtr != nullptr);
+  auto* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleDataPtr->getId());
+  REQUIRE(crystalStructuresPtr != nullptr);
+  (*crystalStructuresPtr)[0] = 999;
+  (*crystalStructuresPtr)[1] = 1;
   return dataStructure;
 }
 
@@ -283,8 +285,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Filter Error", "[SimplnxCore][C
   args.insert(CropEdgeGeometryFilter::k_EdgeFeatureIdsPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insert(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
-  const std::vector<float32> k_MinCoords{0.5, 0.5, -0.5};
-  const std::vector<float32> k_MaxCoords{1.5, 2, 0.5};
+  const std::vector<float32> kMinCoords{0.5, 0.5, -0.5};
+  const std::vector<float32> kMaxCoords{1.5, 2, 0.5};
 
   SECTION("X")
   {
@@ -305,8 +307,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Filter Error", "[SimplnxCore][C
     args.insert(CropEdgeGeometryFilter::k_CropZDim_Key, std::make_any<bool>(true));
   }
 
-  args.insert(CropEdgeGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float32>>(k_MinCoords));
-  args.insert(CropEdgeGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float32>>(k_MaxCoords));
+  args.insert(CropEdgeGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float32>>(kMinCoords));
+  args.insert(CropEdgeGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float32>>(kMaxCoords));
   args.insert(CropEdgeGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insert(CropEdgeGeometryFilter::k_BoundaryIntersectionBehavior_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(CropEdgeGeometry::BoundaryIntersectionBehavior::FilterError)));
   args.insert(CropEdgeGeometryFilter::k_SelectedEdgeGeometryPath_Key, std::make_any<DataPath>(DataPath({k_EdgeGeometry})));
@@ -338,14 +340,14 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Ignore Edges", "[SimplnxCore][C
   args.insert(CropEdgeGeometryFilter::k_EdgeFeatureIdsPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insert(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
-  const std::vector<float32> k_MinCoords{-0.5, -0.5, -0.5};
-  const std::vector<float32> k_MaxCoords{1.5, 2.5, 0.5};
+  const std::vector<float32> kMinCoords{-0.5, -0.5, -0.5};
+  const std::vector<float32> kMaxCoords{1.5, 2.5, 0.5};
 
   args.insert(CropEdgeGeometryFilter::k_CropXDim_Key, std::make_any<bool>(true));
   args.insert(CropEdgeGeometryFilter::k_CropYDim_Key, std::make_any<bool>(true));
   args.insert(CropEdgeGeometryFilter::k_CropZDim_Key, std::make_any<bool>(false));
-  args.insert(CropEdgeGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float32>>(k_MinCoords));
-  args.insert(CropEdgeGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float32>>(k_MaxCoords));
+  args.insert(CropEdgeGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float32>>(kMinCoords));
+  args.insert(CropEdgeGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float32>>(kMaxCoords));
   args.insert(CropEdgeGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insert(CropEdgeGeometryFilter::k_BoundaryIntersectionBehavior_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(CropEdgeGeometry::BoundaryIntersectionBehavior::IgnoreEdge)));
   args.insert(CropEdgeGeometryFilter::k_SelectedEdgeGeometryPath_Key, std::make_any<DataPath>(DataPath({k_EdgeGeometry})));
@@ -406,14 +408,14 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Interpolate Outside Vertices", 
   args.insert(CropEdgeGeometryFilter::k_EdgeFeatureIdsPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insert(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
-  const std::vector<float32> k_MinCoords{-0.5, -0.5, -0.5};
-  const std::vector<float32> k_MaxCoords{1.5, 2.5, 0.5};
+  const std::vector<float32> kMinCoords{-0.5, -0.5, -0.5};
+  const std::vector<float32> kMaxCoords{1.5, 2.5, 0.5};
 
   args.insert(CropEdgeGeometryFilter::k_CropXDim_Key, std::make_any<bool>(true));
   args.insert(CropEdgeGeometryFilter::k_CropYDim_Key, std::make_any<bool>(true));
   args.insert(CropEdgeGeometryFilter::k_CropZDim_Key, std::make_any<bool>(false));
-  args.insert(CropEdgeGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float32>>(k_MinCoords));
-  args.insert(CropEdgeGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float32>>(k_MaxCoords));
+  args.insert(CropEdgeGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float32>>(kMinCoords));
+  args.insert(CropEdgeGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float32>>(kMaxCoords));
   args.insert(CropEdgeGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insert(CropEdgeGeometryFilter::k_BoundaryIntersectionBehavior_Key,
               std::make_any<ChoicesParameter::ValueType>(to_underlying(CropEdgeGeometry::BoundaryIntersectionBehavior::InterpolateOutsideVertex)));
@@ -698,11 +700,11 @@ TEST_CASE("SimplnxCore::CropEdgeGeometry: String and NeighborList data are cropp
   const DataPath inputPath({k_EdgeGeometry});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(inputPath));
   auto& geom = dataStructure.getDataRefAs<EdgeGeom>(inputPath);
-  auto* strings = StringArray::CreateWithValues(dataStructure, "Strings", {3}, {"a", "b", "o"}, geom.getVertexAttributeMatrixRef().getId());
-  auto* neighbors = NeighborList<int32>::Create(dataStructure, "Neighbors", {2}, geom.getEdgeAttributeMatrixRef().getId());
-  REQUIRE(strings != nullptr);
-  REQUIRE(neighbors != nullptr);
-  neighbors->setLists({{1}, {2, 3}});
+  auto* stringsPtr = StringArray::CreateWithValues(dataStructure, "Strings", {3}, {"a", "b", "o"}, geom.getVertexAttributeMatrixRef().getId());
+  auto* neighborsPtr = NeighborList<int32>::Create(dataStructure, "Neighbors", {2}, geom.getEdgeAttributeMatrixRef().getId());
+  REQUIRE(stringsPtr != nullptr);
+  REQUIRE(neighborsPtr != nullptr);
+  neighborsPtr->setLists({{1}, {2, 3}});
   auto args = SharedOutsideVertexArguments(cropCase);
   CropEdgeGeometryFilter filter;
   IFilter::PreflightResult preflightResult;
@@ -730,7 +732,7 @@ TEST_CASE("SimplnxCore::CropEdgeGeometry: String and NeighborList data are cropp
     REQUIRE(outputNeighbors.getList(i) == expectedNeighbors[i]);
   }
   // Output lists are independent copies of the input lists.
-  neighbors->updateListEntry(1, 0, 99);
+  neighborsPtr->updateListEntry(1, 0, 99);
   REQUIRE(outputNeighbors.getList(expectedNeighbors.size() - 1) == expectedNeighbors.back());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -738,10 +740,10 @@ TEST_CASE("SimplnxCore::CropEdgeGeometry: String and NeighborList data are cropp
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON preflight", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   CropEdgeGeometryFilter filter;
   const bool renumber = GENERATE(false, true);
-  auto result = filter.preflight(ds, MakeFeatureCropArgs(true, renumber));
+  auto result = filter.preflight(dataStructure, MakeFeatureCropArgs(true, renumber));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   REQUIRE(result.outputActions.warnings().size() == 1);
   CHECK(result.outputActions.warnings().front().code == -4041);
@@ -760,9 +762,9 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON preflight", "[SimplnxCo
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF preflight", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   CropEdgeGeometryFilter filter;
-  auto result = filter.preflight(ds, MakeFeatureCropArgs(false, false));
+  auto result = filter.preflight(dataStructure, MakeFeatureCropArgs(false, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   REQUIRE(result.outputActions.warnings().size() == 1);
   CHECK(result.outputActions.warnings().front().code == -4041);
@@ -777,12 +779,12 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF preflight", "[SimplnxC
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF ignores stored renumber", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   CropEdgeGeometryFilter filter;
   Arguments args = MakeFeatureCropArgs(false, true);
   args.insertOrAssign(CropEdgeGeometryFilter::k_EdgeFeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"Edge", "Edge Data", "DoesNotExist"})));
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"DoesNotExist"})));
-  auto result = filter.preflight(ds, args);
+  auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   REQUIRE(result.outputActions.warnings().size() == 1);
   CHECK(result.outputActions.warnings().front().code == -4041);
@@ -792,16 +794,16 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF ignores stored renumbe
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: StrictFeatureIds preflight", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM][StrictFeatureIds]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
-  const auto* edgeGeom = ds.getDataAs<EdgeGeom>(DataPath({"Edge"}));
-  REQUIRE(edgeGeom != nullptr);
-  const auto* edgeData = edgeGeom->getEdgeAttributeMatrix();
-  REQUIRE(edgeData != nullptr);
-  auto* otherData = AttributeMatrix::Create(ds, "Other Edge Data", edgeData->getShape(), edgeGeom->getId());
-  REQUIRE(otherData != nullptr);
-  auto* misplacedIds = UnitTest::CreateTestDataArray<int32>(ds, "MisplacedFeatureIds", otherData->getShape(), {1}, otherData->getId());
-  REQUIRE(misplacedIds != nullptr);
-  misplacedIds->fill(1);
+  DataStructure dataStructure = CreateFeatureCropFixture();
+  const auto* edgeGeomPtr = dataStructure.getDataAs<EdgeGeom>(DataPath({"Edge"}));
+  REQUIRE(edgeGeomPtr != nullptr);
+  const auto* edgeDataPtr = edgeGeomPtr->getEdgeAttributeMatrix();
+  REQUIRE(edgeDataPtr != nullptr);
+  auto* otherDataPtr = AttributeMatrix::Create(dataStructure, "Other Edge Data", edgeDataPtr->getShape(), edgeGeomPtr->getId());
+  REQUIRE(otherDataPtr != nullptr);
+  auto* misplacedIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "MisplacedFeatureIds", otherDataPtr->getShape(), {1}, otherDataPtr->getId());
+  REQUIRE(misplacedIdsPtr != nullptr);
+  misplacedIdsPtr->fill(1);
 
   CropEdgeGeometryFilter filter;
   Arguments args = MakeFeatureCropArgs(true, true);
@@ -809,7 +811,7 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: StrictFeatureIds preflight", "[S
 
   SECTION("Renumber ON rejects Feature Ids in another Attribute Matrix")
   {
-    auto result = filter.preflight(ds, args);
+    auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
     CHECK(result.outputActions.errors().front().code == -67413);
@@ -820,65 +822,65 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: StrictFeatureIds preflight", "[S
   SECTION("Renumber OFF accepts Feature Ids in another Attribute Matrix")
   {
     args.insertOrAssign(CropEdgeGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
-    auto result = filter.preflight(ds, args);
+    auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   }
   SECTION("Renumber ON accepts Feature Ids in the Edge Attribute Matrix")
   {
     args.insertOrAssign(CropEdgeGeometryFilter::k_EdgeFeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"Edge", "Edge Data", "FeatureIds"})));
-    auto result = filter.preflight(ds, args);
+    auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON Feature AM errors", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   // An Attribute Matrix that is not a child of "Edge".
-  REQUIRE(AttributeMatrix::Create(ds, "Elsewhere", std::vector<usize>{5}) != nullptr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Elsewhere", std::vector<usize>{5}) != nullptr);
   CropEdgeGeometryFilter filter;
 
   Arguments args = MakeFeatureCropArgs(true, false);
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Elsewhere"})));
-  auto notChild = filter.preflight(ds, args);
+  auto notChild = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
   REQUIRE(notChild.outputActions.errors().size() == 1);
   CHECK(notChild.outputActions.errors().front().code == -67411);
   CHECK(notChild.outputActions.errors().front().message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
 
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Edge", "Edge Data"})));
-  auto isEdgeAm = filter.preflight(ds, args);
+  auto isEdgeAm = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(isEdgeAm.outputActions);
   REQUIRE(isEdgeAm.outputActions.errors().size() == 1);
   CHECK(isEdgeAm.outputActions.errors().front().code == -67412);
 
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Edge", "Vertex Data"})));
-  auto isVertexAm = filter.preflight(ds, args);
+  auto isVertexAm = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(isVertexAm.outputActions);
   REQUIRE(isVertexAm.outputActions.errors().size() == 1);
   CHECK(isVertexAm.outputActions.errors().front().code == -67412);
 
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Edge", "Missing"})));
-  auto missing = filter.preflight(ds, args);
+  auto missing = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(missing.outputActions);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON, renumber OFF execute", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   CropEdgeGeometryFilter filter;
-  auto result = filter.execute(ds, MakeFeatureCropArgs(true, false));
+  auto result = filter.execute(dataStructure, MakeFeatureCropArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"})));
-  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"})));
+  const auto& am = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"}));
   CHECK(am.getShape() == std::vector<usize>{5});
   CHECK(am.getSize() == 0);
   // The kept edges retain Feature Ids 3 and 4, including the clipped edge.
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"})));
-  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {3, 4};
   for(usize i = 0; i < expectedIds.size(); ++i)
@@ -886,75 +888,75 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON, renumber OFF execute",
     CHECK(ids[i] == expectedIds[i]);
   }
   // The Ensemble AM is copied unchanged.
-  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
   // The source geometry is untouched (debugging route).
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"})));
-  CHECK(ds.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"})).getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"})));
+  CHECK(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"})).getSize() == 3);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON, renumber ON execute", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   CropEdgeGeometryFilter filter;
-  auto result = filter.execute(ds, MakeFeatureCropArgs(true, true));
+  auto result = filter.execute(dataStructure, MakeFeatureCropArgs(true, true));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"})));
-  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"})));
+  const auto& am = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"}));
   CHECK(am.getShape() == std::vector<usize>{3}); // features 3 and 4 remain, plus row 0
   CHECK(am.getSize() == 0);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"})));
-  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {1, 2};
   for(usize i = 0; i < expectedIds.size(); ++i)
   {
     CHECK(ids[i] == expectedIds[i]);
   }
-  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF execute copies Feature AM unchanged", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   CropEdgeGeometryFilter filter;
   const bool renumber = GENERATE(false, true);
   CAPTURE(renumber);
-  auto result = filter.execute(ds, MakeFeatureCropArgs(false, renumber));
+  auto result = filter.execute(dataStructure, MakeFeatureCropArgs(false, renumber));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Feature Data", "NumElements"})));
-  const auto& numElements = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Feature Data", "NumElements"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Feature Data", "NumElements"})));
+  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Feature Data", "NumElements"}));
   REQUIRE(numElements.getNumberOfTuples() == 5);
   const std::array<int32, 5> expectedNumElements = {0, 1, 1, 1, 1};
   for(usize i = 0; i < expectedNumElements.size(); ++i)
   {
     CHECK(numElements[i] == expectedNumElements[i]);
   }
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"})));
-  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"})));
+  const auto& am = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Cropped", "Edge Feature Data"}));
   CHECK(am.getShape() == std::vector<usize>{5});
   CHECK(am.getSize() == 3);
-  REQUIRE_NOTHROW(ds.getDataRefAs<NeighborList<int32>>(DataPath({"Cropped", "Edge Feature Data", "NeighborList"})));
-  const auto& neighbors = ds.getDataRefAs<NeighborList<int32>>(DataPath({"Cropped", "Edge Feature Data", "NeighborList"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Cropped", "Edge Feature Data", "NeighborList"})));
+  const auto& neighbors = dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Cropped", "Edge Feature Data", "NeighborList"}));
   const std::vector<std::vector<int32>> expectedNeighbors = {{}, {2}, {1, 3}, {2, 4}, {3}};
   REQUIRE(neighbors.getNumberOfTuples() == expectedNeighbors.size());
   for(usize i = 0; i < expectedNeighbors.size(); ++i)
   {
     CHECK(neighbors.getList(static_cast<int32>(i)) == expectedNeighbors[i]);
   }
-  REQUIRE_NOTHROW(ds.getDataRefAs<StringArray>(DataPath({"Cropped", "Edge Feature Data", "Names"})));
-  const auto& names = ds.getDataRefAs<StringArray>(DataPath({"Cropped", "Edge Feature Data", "Names"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(DataPath({"Cropped", "Edge Feature Data", "Names"})));
+  const auto& names = dataStructure.getDataRefAs<StringArray>(DataPath({"Cropped", "Edge Feature Data", "Names"}));
   const std::array<std::string, 5> expectedNames = {"Background", "One", "Two", "Three", "Four"};
   REQUIRE(names.getNumberOfTuples() == expectedNames.size());
   for(usize i = 0; i < expectedNames.size(); ++i)
@@ -962,64 +964,64 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF execute copies Feature
     CHECK(names[i] == expectedNames[i]);
   }
   // The stored renumber=true is ignored.
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"})));
-  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {3, 4};
   for(usize i = 0; i < expectedIds.size(); ++i)
   {
     CHECK(ids[i] == expectedIds[i]);
   }
-  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Cropped", "Edge Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON in place", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds = CreateFeatureCropFixture();
+  DataStructure dataStructure = CreateFeatureCropFixture();
   CropEdgeGeometryFilter filter;
   Arguments args = MakeFeatureCropArgs(true, true);
   args.insertOrAssign(CropEdgeGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"})));
-  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"})));
+  const auto& am = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"}));
   CHECK(am.getSize() == 0);
   CHECK(am.getShape() == std::vector<usize>{3});
-  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(DataPath({"Edge"})));
-  const auto& edgeGeom = ds.getDataRefAs<EdgeGeom>(DataPath({"Edge"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(DataPath({"Edge"})));
+  const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(DataPath({"Edge"}));
   CHECK(edgeGeom.getNumberOfEdges() == 2);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Edge", "Edge Data", "FeatureIds"})));
-  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Edge", "Edge Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Edge", "Edge Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Edge", "Edge Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {1, 2};
   for(usize i = 0; i < expectedIds.size(); ++i)
   {
     CHECK(ids[i] == expectedIds[i]);
   }
-  CHECK(ds.getData(DataPath({"Cropped"})) == nullptr);
-  CHECK(ds.getData(DataPath({".Edge"})) == nullptr);
-  CHECK(ds.getData(DataPath({".cropped_edge_geometry"})) == nullptr);
-  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Edge", "Edge Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Edge", "Edge Ensemble Data", "CrystalStructures"}));
+  CHECK(dataStructure.getData(DataPath({"Cropped"})) == nullptr);
+  CHECK(dataStructure.getData(DataPath({".Edge"})) == nullptr);
+  CHECK(dataStructure.getData(DataPath({".cropped_edge_geometry"})) == nullptr);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Edge", "Edge Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Edge", "Edge Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON Feature Id tuple count", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
   auto ds = CreateFeatureCropFixture();
-  auto* geom = ds.getDataAs<EdgeGeom>(DataPath({"Edge"}));
-  REQUIRE(geom != nullptr);
-  auto resizeResult = geom->getEdgeAttributeMatrixRef().resizeTuples({3});
+  auto* geomPtr = ds.getDataAs<EdgeGeom>(DataPath({"Edge"}));
+  REQUIRE(geomPtr != nullptr);
+  auto resizeResult = geomPtr->getEdgeAttributeMatrixRef().resizeTuples({3});
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   CropEdgeGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(true, true));
@@ -1033,14 +1035,14 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON accepts shared parent p
 {
   UnitTest::LoadPlugins();
   auto ds = CreateFeatureCropFixture();
-  auto* aliases = DataGroup::Create(ds, "Aliases");
-  REQUIRE(aliases != nullptr);
-  const auto* geom = ds.getDataAs<EdgeGeom>(DataPath({"Edge"}));
-  REQUIRE(geom != nullptr);
-  const auto* featureAm = ds.getDataAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"}));
-  REQUIRE(featureAm != nullptr);
-  REQUIRE(ds.setAdditionalParent(geom->getEdgeAttributeMatrix()->getId(), aliases->getId()));
-  REQUIRE(ds.setAdditionalParent(featureAm->getId(), aliases->getId()));
+  auto* aliasesPtr = DataGroup::Create(ds, "Aliases");
+  REQUIRE(aliasesPtr != nullptr);
+  const auto* geomPtr = ds.getDataAs<EdgeGeom>(DataPath({"Edge"}));
+  REQUIRE(geomPtr != nullptr);
+  const auto* featureAmPtr = ds.getDataAs<AttributeMatrix>(DataPath({"Edge", "Edge Feature Data"}));
+  REQUIRE(featureAmPtr != nullptr);
+  REQUIRE(ds.setAdditionalParent(geomPtr->getEdgeAttributeMatrix()->getId(), aliasesPtr->getId()));
+  REQUIRE(ds.setAdditionalParent(featureAmPtr->getId(), aliasesPtr->getId()));
   auto args = MakeFeatureCropArgs(true, true);
   args.insertOrAssign(CropEdgeGeometryFilter::k_EdgeFeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"Aliases", "Edge Data", "FeatureIds"})));
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Aliases", "Edge Feature Data"})));
@@ -1078,30 +1080,30 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON keeps Feature Ids with 
 {
   UnitTest::LoadPlugins();
   auto ds = CreateFeatureCropFixture();
-  auto* geom = ds.getDataAs<EdgeGeom>(DataPath({"Edge"}));
-  REQUIRE(geom != nullptr);
+  auto* geomPtr = ds.getDataAs<EdgeGeom>(DataPath({"Edge"}));
+  REQUIRE(geomPtr != nullptr);
   const std::array<float32, 15> coordinates = {0, 4, 6, -1, 0, 0, 3, 0, 0, 3, 1, 0, 0, 0, 0};
   const std::array<uint64, 8> connectivity = {0, 1, 0, 4, 2, 4, 3, 4};
   for(usize i = 0; i < coordinates.size(); ++i)
   {
-    geom->getVerticesRef()[i] = coordinates[i];
+    geomPtr->getVerticesRef()[i] = coordinates[i];
   }
   for(usize i = 0; i < connectivity.size(); ++i)
   {
-    geom->getEdgesRef()[i] = connectivity[i];
+    geomPtr->getEdgesRef()[i] = connectivity[i];
   }
   const bool renumber = GENERATE(false, true);
   CropEdgeGeometryFilter filter;
   auto result = filter.execute(ds, MakeFeatureCropArgs(true, renumber));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* cropped = ds.getDataAs<EdgeGeom>(DataPath({"Cropped"}));
-  REQUIRE(cropped != nullptr);
-  CHECK(cropped->getNumberOfVertices() == 4);
-  CHECK(cropped->getNumberOfEdges() == 2);
-  CHECK(cropped->getVerticesRef()[6] == Approx(2.1F));
-  CHECK(cropped->getVerticesRef()[7] == Approx(0));
-  CHECK(cropped->getVerticesRef()[9] == Approx(2.1F));
-  CHECK(cropped->getVerticesRef()[10] == Approx(0.7F));
+  const auto* croppedPtr = ds.getDataAs<EdgeGeom>(DataPath({"Cropped"}));
+  REQUIRE(croppedPtr != nullptr);
+  CHECK(croppedPtr->getNumberOfVertices() == 4);
+  CHECK(croppedPtr->getNumberOfEdges() == 2);
+  CHECK(croppedPtr->getVerticesRef()[6] == Approx(2.1F));
+  CHECK(croppedPtr->getVerticesRef()[7] == Approx(0));
+  CHECK(croppedPtr->getVerticesRef()[9] == Approx(2.1F));
+  CHECK(croppedPtr->getVerticesRef()[10] == Approx(0.7F));
   REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"})));
   const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Cropped", "Edge Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
@@ -1157,10 +1159,10 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Feature AM nested alias regressi
   const DataPath sourcePath({"Edge"});
   const DataPath outputPath({"Cropped"});
   const auto featurePath = sourcePath.createChildPath("Edge Feature Data");
-  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
-  REQUIRE(features != nullptr);
-  const auto featureId = features->getId();
-  const auto shape = features->getShape();
+  const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(featuresPtr != nullptr);
+  const auto featureId = featuresPtr->getId();
+  const auto shape = featuresPtr->getShape();
   const auto countsPath = featurePath.createChildPath("NumElements");
   const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
   std::vector<int32> originalCounts(counts.getSize());
@@ -1168,15 +1170,15 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Feature AM nested alias regressi
   {
     originalCounts[i] = counts[i];
   }
-  auto* nested = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
-  REQUIRE(nested != nullptr);
-  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nested->getId());
-  REQUIRE(keep != nullptr);
-  (*keep)[0] = 123;
-  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
-  auto* outside = DataGroup::Create(ds, "Outside");
-  REQUIRE(outside != nullptr);
-  REQUIRE(ds.setAdditionalParent(nested->getId(), outside->getId()));
+  auto* nestedPtr = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
+  REQUIRE(nestedPtr != nullptr);
+  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
+  REQUIRE(keepPtr != nullptr);
+  (*keepPtr)[0] = 123;
+  REQUIRE(ds.setAdditionalParent(featureId, nestedPtr->getId()));
+  auto* outsidePtr = DataGroup::Create(ds, "Outside");
+  REQUIRE(outsidePtr != nullptr);
+  REQUIRE(ds.setAdditionalParent(nestedPtr->getId(), outsidePtr->getId()));
   const auto parents = ds.getData(featurePath)->getParentIds();
   auto args = MakeFeatureCropArgs(clear, renumber);
   if(selectNested)
@@ -1190,12 +1192,12 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Feature AM nested alias regressi
   const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Edge Feature Data");
   for(const auto& action : preflight.outputActions.value().actions)
   {
-    const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get());
-    if(copy != nullptr && copy->path() == sourcePath.createChildPath("Misc"))
+    const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
+    if(copyPtr != nullptr && copyPtr->path() == sourcePath.createChildPath("Misc"))
     {
       foundNestedCopy = true;
       bool declaresFeature = false;
-      for(const auto& created : copy->getAllCreatedPaths())
+      for(const auto& created : copyPtr->getAllCreatedPaths())
       {
         if(created.rebase(nestedOutputPath, DataPath{}).has_value())
         {
@@ -1208,9 +1210,9 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Feature AM nested alias regressi
   REQUIRE(foundNestedCopy);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* outputFeatures = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Edge Feature Data"));
-  REQUIRE(outputFeatures != nullptr);
-  CHECK(outputFeatures->getSize() == (clear ? 0 : 3));
+  const auto* outputFeaturesPtr = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Edge Feature Data"));
+  REQUIRE(outputFeaturesPtr != nullptr);
+  CHECK(outputFeaturesPtr->getSize() == (clear ? 0 : 3));
   CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
   CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
   CHECK(ds.getData(featurePath)->getId() == featureId);
@@ -1234,10 +1236,10 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Reject nonnumeric Feature Ids", 
   const bool strings = GENERATE(true, false);
   auto ds = CreateFeatureCropFixture();
   const auto idsPath = DataPath({"Edge", "Edge Data", "FeatureIds"});
-  const auto* original = ds.getDataAs<Int32Array>(idsPath);
-  REQUIRE(original != nullptr);
-  const auto shape = original->getTupleShape();
-  const auto tuples = original->getNumberOfTuples();
+  const auto* originalPtr = ds.getDataAs<Int32Array>(idsPath);
+  REQUIRE(originalPtr != nullptr);
+  const auto shape = originalPtr->getTupleShape();
+  const auto tuples = originalPtr->getNumberOfTuples();
   const auto parentId = ds.getData(idsPath.getParent())->getId();
   REQUIRE(ds.removeData(idsPath));
   if(strings)
@@ -1264,15 +1266,15 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Reject another geometry element 
   UnitTest::LoadPlugins();
   auto ds = CreateFeatureCropFixture();
   const auto featurePath = DataPath({"Edge", "Edge Feature Data"});
-  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
-  REQUIRE(features != nullptr);
-  auto* other = VertexGeom::Create(ds, "OtherGeometry");
-  REQUIRE(other != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {features->getNumberOfTuples()}, {3}, other->getId());
-  REQUIRE(vertices != nullptr);
-  other->setVertices(*vertices);
-  REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
-  other->setVertexAttributeMatrix(*features);
+  const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(featuresPtr != nullptr);
+  auto* otherPtr = VertexGeom::Create(ds, "OtherGeometry");
+  REQUIRE(otherPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  otherPtr->setVertices(*verticesPtr);
+  REQUIRE(ds.setAdditionalParent(featuresPtr->getId(), otherPtr->getId()));
+  otherPtr->setVertexAttributeMatrix(*featuresPtr);
   CropEdgeGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -1280,6 +1282,6 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Reject another geometry element 
   CHECK(result.outputActions.errors()[0].code == -67460);
   CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
-  CHECK(other->getVertexAttributeMatrix() == features);
-  CHECK(features->getSize() > 0);
+  CHECK(otherPtr->getVertexAttributeMatrix() == featuresPtr);
+  CHECK(featuresPtr->getSize() > 0);
 }

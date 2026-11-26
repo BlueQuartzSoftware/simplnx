@@ -32,9 +32,9 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
   T zVal;
 
   Eigen::Quaternion<T> misq;
-  Eigen::Quaternion<T> sym_q;
-  Eigen::Quaternion<T> s1_misq;
-  Eigen::Quaternion<T> s2_misq;
+  Eigen::Quaternion<T> symQ;
+  Eigen::Quaternion<T> s1Misq;
+  Eigen::Quaternion<T> s2Misq;
 
   const int32 nsym = orientationOps[laueClass]->getNumSymOps();
   const Eigen::Quaternion<T> q2 = quat2.conjugate();
@@ -43,18 +43,18 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
   for(int32 j = 0; j < nsym; j++)
   {
     ebsdlib::Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
-    sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
+    symQ = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
-    s1_misq = misq * sym_q;
+    s1Misq = misq * symQ;
 
     for(int32 k = 0; k < nsym; k++)
     {
       ebsdlib::Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
-      sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
-      sym_q = sym_q.conjugate();
-      s2_misq = sym_q * s1_misq;
+      symQ = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
+      symQ = symQ.conjugate();
+      s2Misq = symQ * s1Misq;
 
-      ebsdlib::Quaternion<T> quat(s2_misq.coeffs());
+      ebsdlib::Quaternion<T> quat(s2Misq.coeffs());
       ebsdlib::AxisAngleDType ax = quat.toAxisAngle();
 
       xVal = ax[0];
@@ -88,10 +88,10 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
   T minIncoherence = 180.0;
 
   Eigen::Quaternion<T> misq;
-  Eigen::Quaternion<T> j_sym_q;
-  Eigen::Quaternion<T> sym_q;
-  Eigen::Quaternion<T> s1_misq;
-  Eigen::Quaternion<T> s2_misq;
+  Eigen::Quaternion<T> jSymQ;
+  Eigen::Quaternion<T> symQ;
+  Eigen::Quaternion<T> s1Misq;
+  Eigen::Quaternion<T> s2Misq;
 
   const int32 nsym = orientationOps[laueClass]->getNumSymOps();
   const Eigen::Quaternion<T> q2 = quat2.conjugate();
@@ -101,18 +101,18 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
   for(int32 j = 0; j < nsym; j++)
   {
     ebsdlib::Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
-    j_sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
+    jSymQ = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
-    s1_misq = misq * j_sym_q;
+    s1Misq = misq * jSymQ;
 
     for(int32 k = 0; k < nsym; k++)
     {
       ebsdlib::Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
-      sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
-      sym_q = sym_q.conjugate();
-      s2_misq = sym_q * s1_misq;
+      symQ = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
+      symQ = symQ.conjugate();
+      s2Misq = symQ * s1Misq;
 
-      ebsdlib::Quaternion<T> quat(s2_misq.coeffs());
+      ebsdlib::Quaternion<T> quat(s2Misq.coeffs());
       ebsdlib::AxisAngleDType ax = quat.toAxisAngle();
 
       xVal = ax[0];
@@ -126,9 +126,9 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
       if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
       {
         const Eigen::Vector3d axVec{xVal, yVal, zVal};
-        const Eigen::Vector3d s_xstl_norm = j_sym_q.conjugate()._transformVector(xstl_norm);
+        const Eigen::Vector3d sXstlNorm = jSymQ.conjugate()._transformVector(xstl_norm);
 
-        T incoherence = 180.0 * std::acos(GeometryMath::CosThetaBetweenVectors(axVec, s_xstl_norm)) / nx::core::Constants::k_PiD;
+        T incoherence = 180.0 * std::acos(GeometryMath::CosThetaBetweenVectors(axVec, sXstlNorm)) / nx::core::Constants::k_PiD;
         if(incoherence > 90.0)
         {
           incoherence = 180.0 - incoherence;
@@ -158,7 +158,7 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
  */
 class CalculateTwinBoundaryWithIncoherenceImpl
 {
-  using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
+  using Matrix3x3Type = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
 
 public:
   CalculateTwinBoundaryWithIncoherenceImpl(ComputeTwinBoundaries* algorithm, float32 angtol, float32 axistol, const std::vector<int32>& faceLabels, const std::vector<float64>& faceNormals,
@@ -205,9 +205,9 @@ public:
           const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]);
           const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);
 
-          const Matrix3x3 orientationMatrix = q1.matrix().transpose();
+          const Matrix3x3Type orientationMatrix = q1.matrix().transpose();
           const Eigen::Vector3d normals{m_FaceNormals[3 * i], m_FaceNormals[3 * i + 1], m_FaceNormals[3 * i + 2]};
-          const Eigen::Vector3d xstl_norm = normals.transpose() * orientationMatrix;
+          const Eigen::Vector3d xstlNorm = normals.transpose() * orientationMatrix;
 
           if(normals.hasNaN())
           {
@@ -215,7 +215,7 @@ public:
             continue;
           }
 
-          std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstl_norm, q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol);
+          std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstlNorm, q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol);
 
           if(minIncoherence.has_value())
           {
@@ -348,7 +348,7 @@ const std::atomic_bool& ComputeTwinBoundaries::getCancel()
 
 void ComputeTwinBoundaries::sendThreadSafeProgressMessage(usize counter)
 {
-  const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  const std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }
 

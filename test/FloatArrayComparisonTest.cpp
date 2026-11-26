@@ -41,8 +41,8 @@ public:
   RecordingFloatStore& operator=(RecordingFloatStore&&) = default;
 
   mutable std::vector<std::pair<usize, usize>> reads;
-  usize failingReadCall = 0;
-  bool warnOnRead = false;
+  usize failing_read_call = 0;
+  bool warn_on_read = false;
 
   /**
    * @brief Records each range before reading values or returning the selected error.
@@ -53,8 +53,8 @@ public:
   Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
   {
     reads.emplace_back(startIndex, buffer.size());
-    auto result = reads.size() == failingReadCall ? MakeErrorResult(k_InjectedReadError, "Injected floating-array read error") : DataStore<T>::copyIntoBuffer(startIndex, buffer);
-    if(warnOnRead)
+    auto result = reads.size() == failing_read_call ? MakeErrorResult(k_InjectedReadError, "Injected floating-array read error") : DataStore<T>::copyIntoBuffer(startIndex, buffer);
+    if(warn_on_read)
     {
       result.warnings().push_back({k_InjectedReadWarning, "Injected floating-array read warning"});
     }
@@ -96,13 +96,13 @@ void CheckPreservedValues(const RecordingFloatStore<T>& store, const std::vector
 template <typename T>
 struct FloatComparisonFixture
 {
-  DataStructure dataStructure;
-  std::vector<T> exemplaryValues;
-  std::vector<T> computedValues;
-  std::shared_ptr<RecordingFloatStore<T>> exemplaryStore;
-  std::shared_ptr<RecordingFloatStore<T>> computedStore;
-  DataArray<T>* exemplaryArray = nullptr;
-  DataArray<T>* computedArray = nullptr;
+  DataStructure data_structure;
+  std::vector<T> exemplary_values;
+  std::vector<T> computed_values;
+  std::shared_ptr<RecordingFloatStore<T>> exemplary_store;
+  std::shared_ptr<RecordingFloatStore<T>> computed_store;
+  DataArray<T>* exemplary_array = nullptr;
+  DataArray<T>* computed_array = nullptr;
 
   /**
    * @brief Creates and initializes both resident arrays before a test can enable read failures.
@@ -115,32 +115,32 @@ struct FloatComparisonFixture
    */
   FloatComparisonFixture(std::vector<T> exemplary, std::vector<T> computed, ShapeType exemplaryTuples = {}, const ShapeType& exemplaryComponents = {1}, ShapeType computedTuples = {},
                          const ShapeType& computedComponents = {1})
-  : exemplaryValues(std::move(exemplary))
-  , computedValues(std::move(computed))
+  : exemplary_values(std::move(exemplary))
+  , computed_values(std::move(computed))
   {
     if(exemplaryTuples.empty())
     {
-      exemplaryTuples = {exemplaryValues.size()};
+      exemplaryTuples = {exemplary_values.size()};
     }
     if(computedTuples.empty())
     {
-      computedTuples = {computedValues.size()};
+      computedTuples = {computed_values.size()};
     }
-    exemplaryStore = std::make_shared<RecordingFloatStore<T>>(exemplaryTuples, exemplaryComponents, T{});
-    computedStore = std::make_shared<RecordingFloatStore<T>>(computedTuples, computedComponents, T{});
-    REQUIRE(exemplaryStore->getSize() == exemplaryValues.size());
-    REQUIRE(computedStore->getSize() == computedValues.size());
-    exemplaryArray = DataArray<T>::Create(dataStructure, k_ExemplarPath.getTargetName(), exemplaryStore);
-    computedArray = DataArray<T>::Create(dataStructure, k_ComputedPath.getTargetName(), computedStore);
-    REQUIRE(exemplaryArray != nullptr);
-    REQUIRE(computedArray != nullptr);
-    auto exemplaryWriteResult = exemplaryStore->copyFromBuffer(0, nonstd::span<const T>(exemplaryValues.data(), exemplaryValues.size()));
+    exemplary_store = std::make_shared<RecordingFloatStore<T>>(exemplaryTuples, exemplaryComponents, T{});
+    computed_store = std::make_shared<RecordingFloatStore<T>>(computedTuples, computedComponents, T{});
+    REQUIRE(exemplary_store->getSize() == exemplary_values.size());
+    REQUIRE(computed_store->getSize() == computed_values.size());
+    exemplary_array = DataArray<T>::Create(data_structure, k_ExemplarPath.getTargetName(), exemplary_store);
+    computed_array = DataArray<T>::Create(data_structure, k_ComputedPath.getTargetName(), computed_store);
+    REQUIRE(exemplary_array != nullptr);
+    REQUIRE(computed_array != nullptr);
+    auto exemplaryWriteResult = exemplary_store->copyFromBuffer(0, nonstd::span<const T>(exemplary_values.data(), exemplary_values.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(exemplaryWriteResult);
-    auto computedWriteResult = computedStore->copyFromBuffer(0, nonstd::span<const T>(computedValues.data(), computedValues.size()));
+    auto computedWriteResult = computed_store->copyFromBuffer(0, nonstd::span<const T>(computed_values.data(), computed_values.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(computedWriteResult);
     requireUnchanged();
-    REQUIRE(exemplaryStore->reads.empty());
-    REQUIRE(computedStore->reads.empty());
+    REQUIRE(exemplary_store->reads.empty());
+    REQUIRE(computed_store->reads.empty());
   }
 
   ~FloatComparisonFixture() = default;
@@ -157,7 +157,7 @@ struct FloatComparisonFixture
    */
   Result<UnitTest::FloatArrayComparisonDetail::FloatArrayComparison<T>> evaluate(T epsilon, bool checkNans)
   {
-    auto result = UnitTest::FloatArrayComparisonDetail::EvaluateFloatArraysWithNans(*exemplaryArray, *computedArray, epsilon, checkNans);
+    auto result = UnitTest::FloatArrayComparisonDetail::EvaluateFloatArraysWithNans(*exemplary_array, *computed_array, epsilon, checkNans);
     requireUnchanged();
     return result;
   }
@@ -167,9 +167,9 @@ struct FloatComparisonFixture
    */
   void requireUnchanged() const
   {
-    CheckPreservedValues(*exemplaryStore, exemplaryValues);
-    CheckPreservedValues(*computedStore, computedValues);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    CheckPreservedValues(*exemplary_store, exemplary_values);
+    CheckPreservedValues(*computed_store, computed_values);
+    UnitTest::CheckArraysInheritTupleDims(data_structure);
   }
 };
 } // namespace
@@ -184,7 +184,7 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: equal values and publi
   CHECK(result.value().maximumDifference == TestType{0});
   CHECK(result.value().maximumDifferenceIndex == 0);
   CHECK_FALSE(result.value().firstNanMismatchIndex.has_value());
-  UnitTest::CompareFloatArraysWithNans<TestType>(fixture.dataStructure, k_ExemplarPath, k_ComputedPath);
+  UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
   fixture.requireUnchanged();
 }
 
@@ -221,7 +221,7 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: NaN positions and full
   CHECK(result.value().maximumDifferenceIndex == (finiteMismatch ? 4 : 0));
   if(!checkNans && !finiteMismatch)
   {
-    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.dataStructure, k_ExemplarPath, k_ComputedPath, TestType{0.5}, false);
+    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath, TestType{0.5}, false);
     fixture.requireUnchanged();
   }
 }
@@ -265,7 +265,7 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: infinity pairs", "[Uni
   CHECK_FALSE(result.value().firstNanMismatchIndex.has_value());
   if(pairIndex < 2)
   {
-    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.dataStructure, k_ExemplarPath, k_ComputedPath);
+    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
     fixture.requireUnchanged();
   }
 }
@@ -284,15 +284,15 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: bounded tail and read 
   }
   CAPTURE(reverseInputs, failingSide);
   FloatComparisonFixture<TestType> fixture(exemplary, computed);
-  fixture.exemplaryStore->failingReadCall = failingSide == 1 ? 2 : 0;
-  fixture.computedStore->failingReadCall = failingSide == 2 ? 2 : 0;
-  fixture.exemplaryStore->warnOnRead = true;
-  fixture.computedStore->warnOnRead = true;
+  fixture.exemplary_store->failing_read_call = failingSide == 1 ? 2 : 0;
+  fixture.computed_store->failing_read_call = failingSide == 2 ? 2 : 0;
+  fixture.exemplary_store->warn_on_read = true;
+  fixture.computed_store->warn_on_read = true;
   auto result = fixture.evaluate(TestType{0.5}, true);
   const std::vector<std::pair<usize, usize>> fullReads = {{0, 40000}, {40000, 1}};
   const std::vector<std::pair<usize, usize>> firstRead = {{0, 40000}};
-  CHECK(fixture.exemplaryStore->reads == fullReads);
-  CHECK(fixture.computedStore->reads == (failingSide == 1 ? firstRead : fullReads));
+  CHECK(fixture.exemplary_store->reads == fullReads);
+  CHECK(fixture.computed_store->reads == (failingSide == 1 ? firstRead : fullReads));
   REQUIRE(result.warnings().size() == (failingSide == 1 ? 3 : 4));
   for(const auto& warning : result.warnings())
   {
@@ -330,8 +330,8 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: shape counts before re
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -90051);
     CHECK(result.errors()[0].message == fmt::format("Floating-array comparison requires equal tuple counts: exemplar {}, computed {}.", exemplaryCount, computedCount));
-    CHECK(fixture.exemplaryStore->reads.empty());
-    CHECK(fixture.computedStore->reads.empty());
+    CHECK(fixture.exemplary_store->reads.empty());
+    CHECK(fixture.computed_store->reads.empty());
   }
   SECTION("Fewer or more computed components")
   {
@@ -342,8 +342,8 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: shape counts before re
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -90052);
     CHECK(result.errors()[0].message == fmt::format("Floating-array comparison requires equal component counts: exemplar 2, computed {}.", computedComponents));
-    CHECK(fixture.exemplaryStore->reads.empty());
-    CHECK(fixture.computedStore->reads.empty());
+    CHECK(fixture.exemplary_store->reads.empty());
+    CHECK(fixture.computed_store->reads.empty());
   }
   SECTION("Different shape vectors with equal tuple and component counts")
   {
@@ -353,9 +353,9 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: shape counts before re
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     CHECK(result.value().matches);
     const std::vector<std::pair<usize, usize>> reads = {{0, 8}};
-    CHECK(fixture.exemplaryStore->reads == reads);
-    CHECK(fixture.computedStore->reads == reads);
-    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.dataStructure, k_ExemplarPath, k_ComputedPath);
+    CHECK(fixture.exemplary_store->reads == reads);
+    CHECK(fixture.computed_store->reads == reads);
+    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
     fixture.requireUnchanged();
   }
 }
@@ -375,7 +375,7 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: empty arrays and unusu
   CHECK(result.value().maximumDifferenceIndex == 0);
   if(emptyArrays)
   {
-    CHECK(fixture.exemplaryStore->reads.empty());
-    CHECK(fixture.computedStore->reads.empty());
+    CHECK(fixture.exemplary_store->reads.empty());
+    CHECK(fixture.computed_store->reads.empty());
   }
 }

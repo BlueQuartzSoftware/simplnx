@@ -287,21 +287,21 @@ struct CurvatureFlowFn
     double first[3] = {0.0, 0.0, 0.0};
     double sec[3] = {0.0, 0.0, 0.0};
     double cross[3][3] = {};
-    static constexpr int64 e[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    static constexpr int64 k_E[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     const double f0 = get(0, 0, 0); // invariant across i -- read once, not effDim times per voxel
     double magSqr = 0.0;
     for(uint32 i = 0; i < effDim; ++i)
     {
-      const double fp = get(e[i][0], e[i][1], e[i][2]);
-      const double fm = get(-e[i][0], -e[i][1], -e[i][2]);
+      const double fp = get(k_E[i][0], k_E[i][1], k_E[i][2]);
+      const double fm = get(-k_E[i][0], -k_E[i][1], -k_E[i][2]);
       first[i] = 0.5 * (fp - fm) * sc[i];
       sec[i] = (fp - 2.0 * f0 + fm) * sc[i] * sc[i];
       for(uint32 j = i + 1; j < effDim; ++j)
       {
-        const double a = get(-e[i][0] - e[j][0], -e[i][1] - e[j][1], -e[i][2] - e[j][2]);
-        const double b = get(-e[i][0] + e[j][0], -e[i][1] + e[j][1], -e[i][2] + e[j][2]);
-        const double c = get(e[i][0] - e[j][0], e[i][1] - e[j][1], e[i][2] - e[j][2]);
-        const double d = get(e[i][0] + e[j][0], e[i][1] + e[j][1], e[i][2] + e[j][2]);
+        const double a = get(-k_E[i][0] - k_E[j][0], -k_E[i][1] - k_E[j][1], -k_E[i][2] - k_E[j][2]);
+        const double b = get(-k_E[i][0] + k_E[j][0], -k_E[i][1] + k_E[j][1], -k_E[i][2] + k_E[j][2]);
+        const double c = get(k_E[i][0] - k_E[j][0], k_E[i][1] - k_E[j][1], k_E[i][2] - k_E[j][2]);
+        const double d = get(k_E[i][0] + k_E[j][0], k_E[i][1] + k_E[j][1], k_E[i][2] + k_E[j][2]);
         cross[i][j] = 0.25 * (a - b - c + d) * sc[i] * sc[j];
       }
       magSqr += first[i] * first[i];
@@ -623,7 +623,7 @@ struct GradientAnisoFn
   template <class GetFn>
   double computeUpdate(const GetFn& get, const std::array<double, 3>& sc, uint32 effDim) const
   {
-    static constexpr int64 e[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    static constexpr int64 k_E[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     const double f0 = get(0, 0, 0); // invariant across i -- read once, not effDim times per voxel
     // Centralized derivative per axis (computed once, reused below as the "dx[j]" term for j != i -- matching
     // ITK's own single pre-pass over ImageDimension before the per-i conductance loop).
@@ -632,8 +632,8 @@ struct GradientAnisoFn
     double dx[3] = {0.0, 0.0, 0.0};
     for(uint32 i = 0; i < effDim; ++i)
     {
-      facePlus[i] = get(e[i][0], e[i][1], e[i][2]);
-      faceMinus[i] = get(-e[i][0], -e[i][1], -e[i][2]);
+      facePlus[i] = get(k_E[i][0], k_E[i][1], k_E[i][2]);
+      faceMinus[i] = get(-k_E[i][0], -k_E[i][1], -k_E[i][2]);
       dx[i] = 0.5 * (facePlus[i] - faceMinus[i]) * sc[i];
     }
 
@@ -643,10 +643,10 @@ struct GradientAnisoFn
     {
       for(uint32 j = i + 1; j < effDim; ++j)
       {
-        const double plusPlus = get(e[i][0] + e[j][0], e[i][1] + e[j][1], e[i][2] + e[j][2]);
-        const double plusMinus = get(e[i][0] - e[j][0], e[i][1] - e[j][1], e[i][2] - e[j][2]);
-        const double minusPlus = get(-e[i][0] + e[j][0], -e[i][1] + e[j][1], -e[i][2] + e[j][2]);
-        const double minusMinus = get(-e[i][0] - e[j][0], -e[i][1] - e[j][1], -e[i][2] - e[j][2]);
+        const double plusPlus = get(k_E[i][0] + k_E[j][0], k_E[i][1] + k_E[j][1], k_E[i][2] + k_E[j][2]);
+        const double plusMinus = get(k_E[i][0] - k_E[j][0], k_E[i][1] - k_E[j][1], k_E[i][2] - k_E[j][2]);
+        const double minusPlus = get(-k_E[i][0] + k_E[j][0], -k_E[i][1] + k_E[j][1], -k_E[i][2] + k_E[j][2]);
+        const double minusMinus = get(-k_E[i][0] - k_E[j][0], -k_E[i][1] - k_E[j][1], -k_E[i][2] - k_E[j][2]);
         dxAug[i][j] = 0.5 * (plusPlus - plusMinus) * sc[j];
         dxDim[i][j] = 0.5 * (minusPlus - minusMinus) * sc[j];
         dxAug[j][i] = 0.5 * (plusPlus - minusPlus) * sc[i];
@@ -672,14 +672,14 @@ struct GradientAnisoFn
         accumD += 0.25 * (dx[j] + dxDim[i][j]) * (dx[j] + dxDim[i][j]);
       }
 
-      double Cx = 0.0;
-      double Cxd = 0.0;
+      double cx = 0.0;
+      double cxd = 0.0;
       if(m_K != 0.0)
       {
-        Cx = std::exp((dxForward * dxForward + accum) / m_K);
-        Cxd = std::exp((dxBackward * dxBackward + accumD) / m_K);
+        cx = std::exp((dxForward * dxForward + accum) / m_K);
+        cxd = std::exp((dxBackward * dxBackward + accumD) / m_K);
       }
-      delta += dxForward * Cx - dxBackward * Cxd;
+      delta += dxForward * cx - dxBackward * cxd;
     }
     return delta;
   }
@@ -765,7 +765,7 @@ struct CurvatureAnisoFn
     // grad_mag/grad_mag_d against an exact-zero local gradient so the (dxForward[i]/gradMag) division below never
     // divides by zero.
     constexpr double k_MinNorm = 1.0e-10;
-    static constexpr int64 e[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    static constexpr int64 k_E[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     const auto f0 = get(0, 0, 0); // GetFn's own return type (== the engine's Real) -- invariant across i, read once
 
     // First pass (matches ITK's own single pre-pass over ImageDimension before the per-i conductance loop):
@@ -784,8 +784,8 @@ struct CurvatureAnisoFn
     double dx[3] = {0.0, 0.0, 0.0};
     for(uint32 i = 0; i < effDim; ++i)
     {
-      facePlus[i] = get(e[i][0], e[i][1], e[i][2]);
-      faceMinus[i] = get(-e[i][0], -e[i][1], -e[i][2]);
+      facePlus[i] = get(k_E[i][0], k_E[i][1], k_E[i][2]);
+      faceMinus[i] = get(-k_E[i][0], -k_E[i][1], -k_E[i][2]);
       dxForward[i] = static_cast<double>(facePlus[i] - f0) * sc[i];
       dxBackward[i] = static_cast<double>(f0 - faceMinus[i]) * sc[i];
       dx[i] = 0.5 * static_cast<double>(facePlus[i] - faceMinus[i]) * sc[i];
@@ -797,10 +797,10 @@ struct CurvatureAnisoFn
     {
       for(uint32 j = i + 1; j < effDim; ++j)
       {
-        const SampleType plusPlus = get(e[i][0] + e[j][0], e[i][1] + e[j][1], e[i][2] + e[j][2]);
-        const SampleType plusMinus = get(e[i][0] - e[j][0], e[i][1] - e[j][1], e[i][2] - e[j][2]);
-        const SampleType minusPlus = get(-e[i][0] + e[j][0], -e[i][1] + e[j][1], -e[i][2] + e[j][2]);
-        const SampleType minusMinus = get(-e[i][0] - e[j][0], -e[i][1] - e[j][1], -e[i][2] - e[j][2]);
+        const SampleType plusPlus = get(k_E[i][0] + k_E[j][0], k_E[i][1] + k_E[j][1], k_E[i][2] + k_E[j][2]);
+        const SampleType plusMinus = get(k_E[i][0] - k_E[j][0], k_E[i][1] - k_E[j][1], k_E[i][2] - k_E[j][2]);
+        const SampleType minusPlus = get(-k_E[i][0] + k_E[j][0], -k_E[i][1] + k_E[j][1], -k_E[i][2] + k_E[j][2]);
+        const SampleType minusMinus = get(-k_E[i][0] - k_E[j][0], -k_E[i][1] - k_E[j][1], -k_E[i][2] - k_E[j][2]);
         dxAug[i][j] = 0.5 * static_cast<double>(plusPlus - plusMinus) * sc[j];
         dxDim[i][j] = 0.5 * static_cast<double>(minusPlus - minusMinus) * sc[j];
         dxAug[j][i] = 0.5 * static_cast<double>(plusPlus - minusPlus) * sc[i];
@@ -828,17 +828,17 @@ struct CurvatureAnisoFn
       const double gradMag = std::sqrt(k_MinNorm + gradMagSq);
       const double gradMagD = std::sqrt(k_MinNorm + gradMagSqD);
 
-      double Cx = 0.0;
-      double Cxd = 0.0;
+      double cx = 0.0;
+      double cxd = 0.0;
       if(m_K != 0.0)
       {
-        Cx = std::exp(gradMagSq / m_K);
-        Cxd = std::exp(gradMagSqD / m_K);
+        cx = std::exp(gradMagSq / m_K);
+        cxd = std::exp(gradMagSqD / m_K);
       }
       // First-order normalized finite-difference conductance products, then the second-order
       // conductance-modified curvature accumulated into `speed`.
-      const double dxForwardCn = (dxForward[i] / gradMag) * Cx;
-      const double dxBackwardCn = (dxBackward[i] / gradMagD) * Cxd;
+      const double dxForwardCn = (dxForward[i] / gradMag) * cx;
+      const double dxBackwardCn = (dxBackward[i] / gradMagD) * cxd;
       speed += dxForwardCn - dxBackwardCn;
     }
 
@@ -905,9 +905,9 @@ Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3& dim
   }
 
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  const usize slice = static_cast<usize>(nX) * static_cast<usize>(nY);
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  const usize slice = static_cast<usize>(nX) * static_cast<usize>(ny);
   auto clampi = [](int64 v, int64 hi) { return v < 0 ? int64{0} : (v > hi ? hi : v); };
 
   // 3-plane rolling window (radius 1, fixed -- CalculateAverageGradientMagnitudeSquared's derivative operator is
@@ -915,7 +915,7 @@ Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3& dim
   std::array<std::vector<Real>, 3> win = {std::vector<Real>(slice), std::vector<Real>(slice), std::vector<Real>(slice)};
   std::array<int64, 3> windowZ = {std::numeric_limits<int64>::min(), std::numeric_limits<int64>::min(), std::numeric_limits<int64>::min()};
   auto loadPlane = [&](usize slot, int64 zWanted) -> Result<> {
-    const int64 zc = clampi(zWanted, nZ - 1);
+    const int64 zc = clampi(zWanted, nz - 1);
     for(usize sourceSlot = 0; sourceSlot < windowZ.size(); ++sourceSlot)
     {
       if(sourceSlot != slot && windowZ[sourceSlot] == zc)
@@ -942,7 +942,7 @@ Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3& dim
 
   double sum = 0.0;
   usize counter = 0;
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {
@@ -951,10 +951,10 @@ Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3& dim
     const std::vector<Real>& planeMinus = win[0];
     const std::vector<Real>& planeCenter = win[1];
     const std::vector<Real>& planePlus = win[2];
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
-      const int64 yp = clampi(y + 1, nY - 1);
-      const int64 ym = clampi(y - 1, nY - 1);
+      const int64 yp = clampi(y + 1, ny - 1);
+      const int64 ym = clampi(y - 1, ny - 1);
       for(int64 x = 0; x < nX; ++x)
       {
         const int64 xp = clampi(x + 1, nX - 1);
@@ -981,7 +981,7 @@ Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3& dim
         ++counter;
       }
     }
-    if(z + 1 < nZ)
+    if(z + 1 < nz)
     {
       std::swap(win[0], win[1]);
       std::swap(win[1], win[2]);
@@ -1004,16 +1004,16 @@ Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const Input
                                                               const std::atomic_bool& shouldCancel)
 {
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  const usize slice = static_cast<usize>(nX) * static_cast<usize>(nY);
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  const usize slice = static_cast<usize>(nX) * static_cast<usize>(ny);
   auto clampi = [](int64 value, int64 high) { return value < 0 ? int64{0} : (value > high ? high : value); };
 
   std::array<std::vector<Real>, 3> win = {std::vector<Real>(slice), std::vector<Real>(slice), std::vector<Real>(slice)};
   std::array<int64, 3> windowZ = {std::numeric_limits<int64>::min(), std::numeric_limits<int64>::min(), std::numeric_limits<int64>::min()};
   std::vector<T> inputPlane(slice);
   auto loadPlane = [&](usize slot, int64 zWanted) -> Result<> {
-    const int64 zc = clampi(zWanted, nZ - 1);
+    const int64 zc = clampi(zWanted, nz - 1);
     for(usize sourceSlot = 0; sourceSlot < windowZ.size(); ++sourceSlot)
     {
       if(sourceSlot != slot && windowZ[sourceSlot] == zc)
@@ -1048,7 +1048,7 @@ Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const Input
 
   double sum = 0.0;
   usize counter = 0;
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {
@@ -1057,10 +1057,10 @@ Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const Input
     const std::vector<Real>& planeMinus = win[0];
     const std::vector<Real>& planeCenter = win[1];
     const std::vector<Real>& planePlus = win[2];
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
-      const int64 yp = clampi(y + 1, nY - 1);
-      const int64 ym = clampi(y - 1, nY - 1);
+      const int64 yp = clampi(y + 1, ny - 1);
+      const int64 ym = clampi(y - 1, ny - 1);
       for(int64 x = 0; x < nX; ++x)
       {
         const int64 xp = clampi(x + 1, nX - 1);
@@ -1080,7 +1080,7 @@ Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const Input
         ++counter;
       }
     }
-    if(z + 1 < nZ)
+    if(z + 1 < nz)
     {
       std::swap(win[0], win[1]);
       std::swap(win[1], win[2]);
@@ -1399,8 +1399,8 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
     }
   }
 
-  WorkingStoreT* currentStore = &firstStore;
-  WorkingStoreT* nextStore = &secondStore;
+  WorkingStoreT* currentStorePtr = &firstStore;
+  WorkingStoreT* nextStorePtr = &secondStore;
   {
     std::vector<Real> inputBlock(inputCapacity);
     std::vector<Real> outputBlock(outputCapacity);
@@ -1412,7 +1412,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
       }
       if constexpr(F::k_NeedsGlobalGradient)
       {
-        if(Result<> result = UpdateGlobalConductance2DBounded(fn, *currentStore, nx, ny, sc, plan, nonstd::span<Real>(inputBlock.data(), inputBlock.size()), iter, shouldCancel); result.invalid())
+        if(Result<> result = UpdateGlobalConductance2DBounded(fn, *currentStorePtr, nx, ny, sc, plan, nonstd::span<Real>(inputBlock.data(), inputBlock.size()), iter, shouldCancel); result.invalid())
         {
           return result;
         }
@@ -1437,7 +1437,8 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           const usize loadedWidth = loadXEnd - loadXBegin;
           const usize coreWidth = xEnd - xBegin;
           const usize coreRows = yEnd - yBegin;
-          if(Result<> result = ReadFiniteDifference2DRegion(*currentStore, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size())); result.invalid())
+          if(Result<> result = ReadFiniteDifference2DRegion(*currentStorePtr, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size()));
+             result.invalid())
           {
             return result;
           }
@@ -1471,7 +1472,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
             calculateRows(Range{0, coreRows});
           }
           const usize valueCount = coreRows * coreWidth;
-          if(Result<> result = WriteFiniteDifference2DRegion(*nextStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(outputBlock.data(), valueCount)); result.invalid())
+          if(Result<> result = WriteFiniteDifference2DRegion(*nextStorePtr, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(outputBlock.data(), valueCount)); result.invalid())
           {
             return result;
           }
@@ -1479,7 +1480,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           progressThrottle.updatePercent(completedValues);
         }
       }
-      std::swap(currentStore, nextStore);
+      std::swap(currentStorePtr, nextStorePtr);
       if(!shouldCancel)
       {
         throttleProgress(progressThrottle, iter, numberOfIterations);
@@ -1501,7 +1502,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
         }
         const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
         const usize valueCount = (yEnd - yBegin) * (xEnd - xBegin);
-        if(Result<> result = ReadFiniteDifference2DRegion(*currentStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<Real>(workingBlock.data(), workingBlock.size())); result.invalid())
+        if(Result<> result = ReadFiniteDifference2DRegion(*currentStorePtr, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<Real>(workingBlock.data(), workingBlock.size())); result.invalid())
         {
           return result;
         }
@@ -1528,8 +1529,8 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
   messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
 
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
   const usize slice = dims[0] * dims[1];
   const int64 radius = fn.radius();
   auto clampi = [](int64 value, int64 high) { return value < 0 ? int64{0} : (value > high ? high : value); };
@@ -1537,7 +1538,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
   if(numberOfIterations == 0)
   {
     std::vector<T> inputPlane(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -1568,7 +1569,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
     {
       std::vector<T> inputPlane(slice);
       std::vector<Real> workingPlane(slice);
-      for(int64 z = 0; z < nZ; ++z)
+      for(int64 z = 0; z < nz; ++z)
       {
         if(shouldCancel)
         {
@@ -1595,13 +1596,13 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
   std::vector<Real> nextPlane(slice);
   std::vector<T> finalOutputPlane(slice);
   std::vector<T> inputCastPlane(slice);
-  WorkingStoreT* currentStore = &firstStore;
-  WorkingStoreT* nextStore = &secondStore;
+  WorkingStoreT* currentStorePtr = &firstStore;
+  WorkingStoreT* nextStorePtr = &secondStore;
 
   auto processIteration = [&](auto&& loadPlane, WorkingStoreT* destinationStore, bool finalIteration) -> Result<> {
     std::vector<int64> windowZ(windowPlanes, std::numeric_limits<int64>::min());
     auto loadWindowPlane = [&](usize slot, int64 zWanted) -> Result<> {
-      const int64 z = clampi(zWanted, nZ - 1);
+      const int64 z = clampi(zWanted, nz - 1);
       for(usize sourceSlot = 0; sourceSlot < windowZ.size(); ++sourceSlot)
       {
         if(sourceSlot != slot && windowZ[sourceSlot] == z)
@@ -1625,7 +1626,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         return result;
       }
     }
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -1636,7 +1637,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         for(usize row = rowRange.min(); row < rowRange.max(); ++row)
         {
           const int64 y = static_cast<int64>(row);
-          const bool rowIsInterior = static_cast<usize>(radius) <= row && static_cast<usize>(radius) < static_cast<usize>(nY - y);
+          const bool rowIsInterior = static_cast<usize>(radius) <= row && static_cast<usize>(radius) < static_cast<usize>(ny - y);
           auto calculateValue = [&](int64 x, bool useDirectNeighbors) {
             const usize index = static_cast<usize>(y) * static_cast<usize>(nX) + static_cast<usize>(x);
             if(useDirectNeighbors)
@@ -1653,7 +1654,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
             {
               auto get = [&](int64 dx, int64 dy, int64 dz) -> Real {
                 const std::vector<Real>& plane = window[static_cast<usize>(dz + radius)];
-                const int64 sampleY = clampi(y + dy, nY - 1);
+                const int64 sampleY = clampi(y + dy, ny - 1);
                 const int64 sampleX = clampi(x + dx, nX - 1);
                 return plane[static_cast<usize>(sampleY * nX + sampleX)];
               };
@@ -1685,7 +1686,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         }
       };
       ParallelDataAlgorithm algorithm;
-      algorithm.setRange(0, static_cast<usize>(nY));
+      algorithm.setRange(0, static_cast<usize>(ny));
       algorithm.execute(calculateRows);
       if(finalIteration)
       {
@@ -1703,7 +1704,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         return result;
       }
       progressThrottle.updateCount(static_cast<usize>(z + 1));
-      if(z + 1 < nZ)
+      if(z + 1 < nz)
       {
         for(usize slot = 0; slot + 1 < windowPlanes; ++slot)
         {
@@ -1730,14 +1731,14 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       const bool initializedConductance = iter == 0 && !fn.gradientMagnitudeFixed;
       if(!initializedConductance)
       {
-        if(Result<> result = detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, 3, iter, shouldCancel); result.invalid())
+        if(Result<> result = detail::UpdateGlobalConductance<F, Real>(fn, *currentStorePtr, dims, sc, 3, iter, shouldCancel); result.invalid())
         {
           return result;
         }
       }
     }
 
-    progressThrottle.reset(static_cast<usize>(nZ), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
+    progressThrottle.reset(static_cast<usize>(nz), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
     const bool finalIteration = iter + 1 == numberOfIterations;
     if constexpr(!F::k_NeedsGlobalGradient)
     {
@@ -1745,7 +1746,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       {
         std::optional<int64> loadedInputZ;
         auto loadInputPlane = [&](std::vector<Real>& destination, int64 wantedZ) -> Result<> {
-          const int64 z = clampi(wantedZ, nZ - 1);
+          const int64 z = clampi(wantedZ, nz - 1);
           if(!loadedInputZ.has_value() || *loadedInputZ != z)
           {
             if(Result<> result = inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(inputCastPlane.data(), slice)); result.invalid())
@@ -1772,8 +1773,8 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
           }
           return {};
         }
-        currentStore = &firstStore;
-        nextStore = &secondStore;
+        currentStorePtr = &firstStore;
+        nextStorePtr = &secondStore;
         if(!shouldCancel)
         {
           throttleProgress(progressThrottle, iter, numberOfIterations);
@@ -1783,10 +1784,10 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
     }
 
     auto loadWorkingPlane = [&](std::vector<Real>& destination, int64 wantedZ) -> Result<> {
-      const int64 z = clampi(wantedZ, nZ - 1);
-      return currentStore->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(destination.data(), slice));
+      const int64 z = clampi(wantedZ, nz - 1);
+      return currentStorePtr->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(destination.data(), slice));
     };
-    if(Result<> result = processIteration(loadWorkingPlane, nextStore, finalIteration); result.invalid())
+    if(Result<> result = processIteration(loadWorkingPlane, nextStorePtr, finalIteration); result.invalid())
     {
       return result;
     }
@@ -1798,7 +1799,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       }
       return {};
     }
-    std::swap(currentStore, nextStore);
+    std::swap(currentStorePtr, nextStorePtr);
     if(!shouldCancel)
     {
       throttleProgress(progressThrottle, iter, numberOfIterations);
@@ -1904,7 +1905,7 @@ template <class T, class F>
 Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, FloatVec3 spacing, F fn, float64 timeStep, uint32 numberOfIterations,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_FiniteDifference2DResidentLimit)
 {
-  using Real = std::conditional_t<F::k_NativePrecision, T, float64>;
+  using RealType = std::conditional_t<F::k_NativePrecision, T, float64>;
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
     return {};
@@ -1946,7 +1947,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   const bool hasOutOfCoreEndpoint = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || outStore.getStoreType() == IDataStore::StoreType::OutOfCore;
   if(hasOutOfCoreEndpoint && detail::ShouldUseFiniteDifferenceResidentState(dims, numberOfIterations))
   {
-    auto allocationResult = detail::ReserveFiniteDifferenceResidentWorkingMemory<T, Real>(dims);
+    auto allocationResult = detail::ReserveFiniteDifferenceResidentWorkingMemory<T, RealType>(dims);
     if(allocationResult.invalid())
     {
       return ConvertInvalidResult<void>(std::move(allocationResult));
@@ -1979,9 +1980,9 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     }
   }
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  const uint32 effDim = (nZ > 1) ? 3u : 2u;
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  const uint32 effDim = (nz > 1) ? 3u : 2u;
   const int64 r = fn.radius();
   if(r < 0 || r > (std::numeric_limits<int64>::max() - 1) / 2)
   {
@@ -1992,30 +1993,30 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   // guard is added; the degenerate input is the caller's responsibility, as in ITK.
   const std::array<double, 3> sc = {1.0 / static_cast<double>(spacing[0]), 1.0 / static_cast<double>(spacing[1]), 1.0 / static_cast<double>(spacing[2])};
   auto clampi = [](int64 v, int64 hi) { return v < 0 ? int64{0} : (v > hi ? hi : v); };
-  const std::vector<usize> shape{static_cast<usize>(nZ), static_cast<usize>(nY), static_cast<usize>(nX)};
+  const std::vector<usize> shape{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)};
 
   if(hasOutOfCoreEndpoint)
   {
-    return ApplyFiniteDifferenceOocRaw<T, F, Real>(inStore, outStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D);
+    return ApplyFiniteDifferenceOocRaw<T, F, RealType>(inStore, outStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D);
   }
 
   // Resident/fallback stores: accum (Real) = cast<Real>(in), streamed plane by plane -- ITK's IntermediateType
   // cast-IN (a no-op whenever Real==T, i.e. F::k_NativePrecision).
   const auto workingDataFormat = detail::SelectFiniteDifferenceWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), outStore.getStoreType(), outStore.getDataFormat());
-  auto accumPtr = DataStoreUtilities::CreateDataStoreWithFormat<Real>(workingDataFormat, shape, std::vector<usize>{1});
-  AbstractDataStore<Real>& accum = *accumPtr;
+  auto accumPtr = DataStoreUtilities::CreateDataStoreWithFormat<RealType>(workingDataFormat, shape, std::vector<usize>{1});
+  AbstractDataStore<RealType>& accum = *accumPtr;
 
   ThrottledMessageHandler progressThrottle(messageHandler);
   messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
   // Resident/fallback update buffer: a second full-volume Real store (ITK's UpdateBufferType == the IntermediateType
   // image, or T itself for the native-precision functor).
-  auto updatePtr = DataStoreUtilities::CreateDataStoreWithFormat<Real>(workingDataFormat, shape, std::vector<usize>{1});
-  AbstractDataStore<Real>& updateStore = *updatePtr;
+  auto updatePtr = DataStoreUtilities::CreateDataStoreWithFormat<RealType>(workingDataFormat, shape, std::vector<usize>{1});
+  AbstractDataStore<RealType>& updateStore = *updatePtr;
 
   {
     std::vector<T> planeIn(slice);
-    std::vector<Real> planeOut(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    std::vector<RealType> planeOut(slice);
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -2027,23 +2028,23 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       }
       for(usize i = 0; i < slice; ++i)
       {
-        planeOut[i] = static_cast<Real>(planeIn[i]);
+        planeOut[i] = static_cast<RealType>(planeIn[i]);
       }
-      if(Result<> rr = accum.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(planeOut.data(), slice)); rr.invalid())
+      if(Result<> rr = accum.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const RealType>(planeOut.data(), slice)); rr.invalid())
       {
         return rr;
       }
     }
   }
 
-  auto* inMemoryAccumStore = dynamic_cast<DataStore<Real>*>(&accum);
-  auto* inMemoryUpdateStore = dynamic_cast<DataStore<Real>*>(&updateStore);
-  auto* inMemoryOutputStore = dynamic_cast<DataStore<T>*>(&outStore);
-  if(inMemoryAccumStore != nullptr && inMemoryUpdateStore != nullptr && inMemoryOutputStore != nullptr)
+  auto* inMemoryAccumStorePtr = dynamic_cast<DataStore<RealType>*>(&accum);
+  auto* inMemoryUpdateStorePtr = dynamic_cast<DataStore<RealType>*>(&updateStore);
+  auto* inMemoryOutputStorePtr = dynamic_cast<DataStore<T>*>(&outStore);
+  if(inMemoryAccumStorePtr != nullptr && inMemoryUpdateStorePtr != nullptr && inMemoryOutputStorePtr != nullptr)
   {
-    nonstd::span<Real> accumValues = inMemoryAccumStore->createSpan();
-    nonstd::span<Real> updateValues = inMemoryUpdateStore->createSpan();
-    nonstd::span<T> outputValues = inMemoryOutputStore->createSpan();
+    nonstd::span<RealType> accumValues = inMemoryAccumStorePtr->createSpan();
+    nonstd::span<RealType> updateValues = inMemoryUpdateStorePtr->createSpan();
+    nonstd::span<T> outputValues = inMemoryOutputStorePtr->createSpan();
 
     std::mutex progressMutex;
     const auto sendThreadSafeProgress = [&](usize completed) {
@@ -2058,7 +2059,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       }
       if constexpr(F::k_NeedsGlobalGradient)
       {
-        if(Result<> result = detail::UpdateGlobalConductance<F, Real>(fn, accum, dims, sc, effDim, iter, shouldCancel); result.invalid())
+        if(Result<> result = detail::UpdateGlobalConductance<F, RealType>(fn, accum, dims, sc, effDim, iter, shouldCancel); result.invalid())
         {
           return result;
         }
@@ -2088,22 +2089,22 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
           {
             const int64 centerIndex = static_cast<int64>(tuple);
             const int64 signedSlice = static_cast<int64>(slice);
-            auto get = [&](int64 dx, int64 dy, int64 dz) -> Real {
+            auto get = [&](int64 dx, int64 dy, int64 dz) -> RealType {
               const int64 neighborIndex = centerIndex + dz * signedSlice + dy * nX + dx;
               return accumValues[static_cast<usize>(neighborIndex)];
             };
-            updateValues[tuple] = static_cast<Real>(fn.computeUpdate(get, sc, effDim));
+            updateValues[tuple] = static_cast<RealType>(fn.computeUpdate(get, sc, effDim));
           }
           else
           {
-            auto get = [&](int64 dx, int64 dy, int64 dz) -> Real {
+            auto get = [&](int64 dx, int64 dy, int64 dz) -> RealType {
               const int64 neighborX = clampi(x + dx, nX - 1);
-              const int64 neighborY = clampi(y + dy, nY - 1);
-              const int64 neighborZ = clampi(z + dz, nZ - 1);
+              const int64 neighborY = clampi(y + dy, ny - 1);
+              const int64 neighborZ = clampi(z + dz, nz - 1);
               const usize neighborIndex = (static_cast<usize>(neighborZ) * dims[1] + static_cast<usize>(neighborY)) * dims[0] + static_cast<usize>(neighborX);
               return accumValues[neighborIndex];
             };
-            updateValues[tuple] = static_cast<Real>(fn.computeUpdate(get, sc, effDim));
+            updateValues[tuple] = static_cast<RealType>(fn.computeUpdate(get, sc, effDim));
           }
         }
         if(range.max() > range.min())
@@ -2134,8 +2135,8 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
               sendThreadSafeProgress(4096);
             }
           }
-          const Real delta = static_cast<Real>(static_cast<double>(updateValues[tuple]) * timeStep);
-          accumValues[tuple] = static_cast<Real>(accumValues[tuple] + delta);
+          const RealType delta = static_cast<RealType>(static_cast<double>(updateValues[tuple]) * timeStep);
+          accumValues[tuple] = static_cast<RealType>(accumValues[tuple] + delta);
         }
         if(range.max() > range.min())
         {
@@ -2175,14 +2176,14 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   // output plane: every value reads only the frozen current store and writes only the next store, preserving Jacobi
   // semantics while eliminating the materialized-update write/read and the second current read/write pass.
   const usize windowPlanes = static_cast<usize>(2 * r + 1);
-  std::vector<std::vector<Real>> win(windowPlanes, std::vector<Real>(slice));
-  std::vector<Real> nextPlane(slice);
-  AbstractDataStore<Real>* currentStore = &accum;
-  AbstractDataStore<Real>* nextStore = &updateStore;
+  std::vector<std::vector<RealType>> win(windowPlanes, std::vector<RealType>(slice));
+  std::vector<RealType> nextPlane(slice);
+  AbstractDataStore<RealType>* currentStorePtr = &accum;
+  AbstractDataStore<RealType>* nextStorePtr = &updateStore;
 
-  auto loadPlane = [&](std::vector<Real>& dst, int64 zWanted) -> Result<> {
-    const int64 zc = clampi(zWanted, nZ - 1);
-    return currentStore->copyIntoBuffer(static_cast<usize>(zc) * slice, nonstd::span<Real>(dst.data(), slice));
+  auto loadPlane = [&](std::vector<RealType>& dst, int64 zWanted) -> Result<> {
+    const int64 zc = clampi(zWanted, nz - 1);
+    return currentStorePtr->copyIntoBuffer(static_cast<usize>(zc) * slice, nonstd::span<RealType>(dst.data(), slice));
   };
 
   for(uint32 iter = 0; iter < numberOfIterations; ++iter)
@@ -2195,7 +2196,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     // (aniso) global reduction hook -- no-op unless F::k_NeedsGlobalGradient (Task 4 specializes this).
     if constexpr(F::k_NeedsGlobalGradient)
     {
-      if(Result<> rr = detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, effDim, iter, shouldCancel); rr.invalid())
+      if(Result<> rr = detail::UpdateGlobalConductance<F, RealType>(fn, *currentStorePtr, dims, sc, effDim, iter, shouldCancel); rr.invalid())
       {
         return rr;
       }
@@ -2210,8 +2211,8 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         return rr;
       }
     }
-    progressThrottle.reset(static_cast<usize>(nZ), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
-    for(int64 z = 0; z < nZ; ++z)
+    progressThrottle.reset(static_cast<usize>(nz), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -2245,31 +2246,31 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
             // neighbors and need bit-exact parity (CurvatureAnisoFn) must perform their own raw-difference-then-widen
             // in computeUpdate; functors whose Real is always float64 (every other functor) see no behavior change
             // (Real==double makes this accessor identical to the old always-double version).
-            auto get = [&](int64 dxo, int64 dyo, int64 dzo) -> Real {
-              const std::vector<Real>& pl = win[static_cast<usize>(dzo + r)];
-              const int64 yy = clampi(y + dyo, nY - 1);
+            auto get = [&](int64 dxo, int64 dyo, int64 dzo) -> RealType {
+              const std::vector<RealType>& pl = win[static_cast<usize>(dzo + r)];
+              const int64 yy = clampi(y + dyo, ny - 1);
               const int64 xx = clampi(x + dxo, nX - 1);
               return pl[static_cast<usize>(yy * nX + xx)];
             };
             const usize index = static_cast<usize>(y) * static_cast<usize>(nX) + static_cast<usize>(x);
             // Preserve the former two-phase rounding exactly: narrow computeUpdate to Real, narrow update*timeStep
             // to Real, then add center+delta in Real before assigning the next-store value.
-            const Real updateValue = static_cast<Real>(fn.computeUpdate(get, sc, effDim));
-            const Real delta = static_cast<Real>(static_cast<double>(updateValue) * timeStep);
-            nextPlane[index] = static_cast<Real>(get(0, 0, 0) + delta);
+            const RealType updateValue = static_cast<RealType>(fn.computeUpdate(get, sc, effDim));
+            const RealType delta = static_cast<RealType>(static_cast<double>(updateValue) * timeStep);
+            nextPlane[index] = static_cast<RealType>(get(0, 0, 0) + delta);
           }
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
-      parallelAlgorithm.setRange(0, static_cast<usize>(nY));
+      parallelAlgorithm.setRange(0, static_cast<usize>(ny));
       parallelAlgorithm.execute(calculateChangeRows);
-      if(Result<> rr = nextStore->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(nextPlane.data(), slice)); rr.invalid())
+      if(Result<> rr = nextStorePtr->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const RealType>(nextPlane.data(), slice)); rr.invalid())
       {
         return rr;
       }
       progressThrottle.updateCount(static_cast<usize>(z + 1));
       // advance the rolling window by one z (drop the oldest plane, load clamp(z+1+r))
-      if(z + 1 < nZ)
+      if(z + 1 < nz)
       {
         for(usize k = 0; k + 1 < windowPlanes; ++k)
         {
@@ -2281,7 +2282,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         }
       }
     }
-    std::swap(currentStore, nextStore);
+    std::swap(currentStorePtr, nextStorePtr);
     if(!shouldCancel)
     {
       throttleProgress(progressThrottle, iter, numberOfIterations);
@@ -2290,15 +2291,15 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
 
   // 3) outStore = cast<T>(currentStore), streamed -- the ONE-TIME final narrowing (a no-op cast when Real==T).
   {
-    std::vector<Real> planeIn(slice);
+    std::vector<RealType> planeIn(slice);
     std::vector<T> planeOut(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
         return {};
       }
-      if(Result<> rr = currentStore->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(planeIn.data(), slice)); rr.invalid())
+      if(Result<> rr = currentStorePtr->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<RealType>(planeIn.data(), slice)); rr.invalid())
       {
         return rr;
       }

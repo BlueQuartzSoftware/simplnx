@@ -53,25 +53,25 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
     tupleShape = std::move(tupleShapeResult.value());
   }
 
-  StringArray* data = nullptr;
+  StringArray* dataPtr = nullptr;
   if(useEmptyDataStore)
   {
     // Metadata-only import replaces its temporary empty store before access.
     // This avoids allocating strings that finalization loads later.
-    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::vector<std::string>{}, parentId);
-    if(data != nullptr)
+    dataPtr = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::vector<std::string>{}, parentId);
+    if(dataPtr != nullptr)
     {
       auto emptyStore = std::make_shared<EmptyStringStore>(tupleShape);
-      data->setStore(emptyStore);
+      dataPtr->setStore(emptyStore);
     }
   }
   else
   {
     std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
-    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
+    dataPtr = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
   }
 
-  if(data == nullptr)
+  if(dataPtr == nullptr)
   {
     return MakeErrorResult(-404, fmt::format("Error importing DataArray with name '{}' that is a child of group '{}'", dataArrayName, parentGroup.getName()));
   }
@@ -110,16 +110,16 @@ Result<> StringArrayIO::finishImportingData(DataStructure& dataStructure, const 
     return MakeErrorResult(-151200, fmt::format("Imported DataStructure Object at path '{}' does not exist.", dataPath.toString()));
   }
 
-  auto* stringArray = dataStructure.getDataAs<data_type>(dataPath);
-  if(stringArray == nullptr)
+  auto* stringArrayPtr = dataStructure.getDataAs<data_type>(dataPath);
+  if(stringArrayPtr == nullptr)
   {
     return MakeErrorResult(-151201, fmt::format("Imported DataStructure Object at path '{}' is not of the expected type.", dataPath.toString()));
   }
 
   auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
   std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
-  auto stringStore = std::make_shared<StringStore>(std::move(strings), stringArray->getTupleShape());
-  stringArray->setStore(stringStore);
+  auto stringStore = std::make_shared<StringStore>(std::move(strings), stringArrayPtr->getTupleShape());
+  stringArrayPtr->setStore(stringStore);
   return {};
 }
 

@@ -109,12 +109,12 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   if(useConditionalValue)
   {
     // Validate that the Conditional Array is of the correct type
-    const auto* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
+    const auto* dataObjectPtr = dataStructure.getDataAs<IDataArray>(pConditionalPath);
 
-    if(dataObject->getDataType() != nx::core::DataType::boolean && dataObject->getDataType() != nx::core::DataType::uint8 && dataObject->getDataType() != nx::core::DataType::int8)
+    if(dataObjectPtr->getDataType() != nx::core::DataType::boolean && dataObjectPtr->getDataType() != nx::core::DataType::uint8 && dataObjectPtr->getDataType() != nx::core::DataType::int8)
     {
       return MakePreflightErrorResult(::k_IncorrectInputArrayType,
-                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObject->getTypeName()));
+                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObjectPtr->getTypeName()));
     }
   }
 
@@ -157,14 +157,14 @@ Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_RemoveValueKey = "RemoveValue";
 constexpr StringLiteral k_ReplaceValueKey = "ReplaceValue";
 constexpr StringLiteral k_SelectedArrayKey = "SelectedArray";
 constexpr StringLiteral k_ConditionalArrayPathKey = "ConditionalArrayPath";
 constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -173,17 +173,17 @@ Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  if(json.contains(SIMPL::k_RemoveValueKey))
+  if(json.contains(simpl::k_RemoveValueKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_RemoveValueKey, k_RemoveValue_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayKey, k_SelectedArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_RemoveValueKey, k_RemoveValue_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayKey, k_SelectedArrayPath_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_ReplaceValueKey, k_ReplaceValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_ReplaceValueKey, k_ReplaceValue_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

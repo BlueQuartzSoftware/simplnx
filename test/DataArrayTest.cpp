@@ -60,16 +60,16 @@ TEST_CASE("DataArrayUtilities::ValidateFeatureIds checks every component", "[sim
   CAPTURE(components, lastId, ignoreNegativeValues, useFeatureArray);
 
   DataStructure dataStructure;
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "Features", ShapeType{2});
-  REQUIRE(featureAM != nullptr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Features", ShapeType{2});
+  REQUIRE(featureAmPtr != nullptr);
   const DataPath featureArrayPath({"Features", "Values"});
   auto featureStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureArrayPath, ShapeType{2}, ShapeType{1});
-  REQUIRE(Int32Array::Create(dataStructure, "Values", featureStore, featureAM->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Values", featureStore, featureAmPtr->getId()) != nullptr);
 
   const DataPath idsPath({"FeatureIds"});
   auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, ShapeType{2}, ShapeType{components});
-  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", idsStore);
-  REQUIRE(featureIds != nullptr);
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", idsStore);
+  REQUIRE(featureIdsPtr != nullptr);
   std::vector<int32> ids(2 * components, 0);
   ids.back() = lastId;
   const auto copyResult = idsStore->copyFromBuffer(0, nonstd::span<const int32>(ids.data(), ids.size()));
@@ -78,7 +78,7 @@ TEST_CASE("DataArrayUtilities::ValidateFeatureIds checks every component", "[sim
   // Two feature tuples have valid indices 0 and 1. Index 2 is outside the array;
   // -1 is valid only when negative labels are explicitly ignored.
   const auto sourcePath = useFeatureArray ? featureArrayPath : DataPath({"Features"});
-  const auto result = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, sourcePath, *featureIds, ignoreNegativeValues, {});
+  const auto result = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, sourcePath, *featureIdsPtr, ignoreNegativeValues, {});
   if(lastId == 2 || (lastId == -1 && !ignoreNegativeValues))
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -100,9 +100,9 @@ TEST_CASE("DataArrayUtilities::ValidateFeatureIds accepts empty arrays", "[simpl
   DataStructure dataStructure;
   REQUIRE(AttributeMatrix::Create(dataStructure, "Features", ShapeType{0}) != nullptr);
   auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"FeatureIds"}), ShapeType{0}, ShapeType{components});
-  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", store);
-  REQUIRE(featureIds != nullptr);
-  const auto result = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, DataPath({"Features"}), *featureIds, false, {});
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", store);
+  REQUIRE(featureIdsPtr != nullptr);
+  const auto result = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, DataPath({"Features"}), *featureIdsPtr, false, {});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -363,12 +363,12 @@ namespace
 template <typename Store>
 void CheckStoreCopyContract()
 {
-  constexpr bool acceptsFormat = requires(const Store& store, const std::string& format) { store.deepCopy(format); };
-  constexpr bool acceptsNoFormat = requires(const Store& store) { store.deepCopy(); };
-  static_assert(acceptsFormat);
-  static_assert(!acceptsNoFormat);
-  CHECK(acceptsFormat);
-  CHECK_FALSE(acceptsNoFormat);
+  constexpr bool k_AcceptsFormat = requires(const Store& store, const std::string& format) { store.deepCopy(format); };
+  constexpr bool k_AcceptsNoFormat = requires(const Store& store) { store.deepCopy(); };
+  static_assert(k_AcceptsFormat);
+  static_assert(!k_AcceptsNoFormat);
+  CHECK(k_AcceptsFormat);
+  CHECK_FALSE(k_AcceptsNoFormat);
 }
 
 constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
@@ -443,8 +443,8 @@ TEST_CASE("DataArrayCreation")
   nx::core::DataStructure dataStructure;
 
   using DataStoreType = nx::core::DataStore<int32_t>;
-  DataStoreType data_array = DataStoreType(nx::core::ShapeType{0}, nx::core::ShapeType{2}, 0);
-  size_t numTuples = data_array.getNumberOfTuples();
+  DataStoreType dataArray = DataStoreType(nx::core::ShapeType{0}, nx::core::ShapeType{2}, 0);
+  size_t numTuples = dataArray.getNumberOfTuples();
   REQUIRE(numTuples == 0);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -639,27 +639,27 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
 {
   UnitTest::LoadPlugins();
 
-  const std::string k_DataArrayName("DataArray");
-  const DataPath k_DataPath({k_DataArrayName});
-  const usize k_NumTuples = 5;
-  const usize k_NumComponents = 3;
+  const std::string kDataArrayName("DataArray");
+  const DataPath kDataPath({kDataArrayName});
+  const usize kNumTuples = 5;
+  const usize kNumComponents = 3;
 
   DataStructure dataStructure;
-  ShapeType tupleShape{k_NumTuples};
-  ShapeType componentShape{k_NumComponents};
-  Result<> result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, tupleShape, componentShape, k_DataPath, IDataAction::Mode::Execute);
+  ShapeType tupleShape{kNumTuples};
+  ShapeType componentShape{kNumComponents};
+  Result<> result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, tupleShape, componentShape, kDataPath, IDataAction::Mode::Execute);
   REQUIRE(result.valid() == true);
 
-  auto& dataArray = dataStructure.getDataRefAs<DataArray<int32>>(k_DataPath);
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<int32>>(kDataPath);
 
-  for(usize i = 0; i < k_NumTuples; i++)
+  for(usize i = 0; i < kNumTuples; i++)
   {
     dataArray.initializeTuple(i, static_cast<int32>(i));
   }
 
-  for(usize tupleIndex = 0; tupleIndex < k_NumTuples; tupleIndex++)
+  for(usize tupleIndex = 0; tupleIndex < kNumTuples; tupleIndex++)
   {
-    for(usize componentIndex = 0; componentIndex < k_NumComponents; componentIndex++)
+    for(usize componentIndex = 0; componentIndex < kNumComponents; componentIndex++)
     {
       uint64 index = tupleIndex * 3 + componentIndex;
       REQUIRE(dataArray[index] == static_cast<int32>(tupleIndex));
@@ -1077,28 +1077,28 @@ TEST_CASE("DataStore::writeExtent rejects unsupported rank instead of silently s
 TEST_CASE("AttributeMatrix::resizeTuples reports the failing child", "[AttributeMatrix]")
 {
   DataStructure dataStructure;
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "AM", ShapeType{4});
-  REQUIRE(attributeMatrix != nullptr);
-  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "first", ShapeType{4}, ShapeType{1}, attributeMatrix->getId()) != nullptr);
-  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "second", ShapeType{4}, ShapeType{1}, attributeMatrix->getId()) != nullptr);
+  auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "AM", ShapeType{4});
+  REQUIRE(attributeMatrixPtr != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "first", ShapeType{4}, ShapeType{1}, attributeMatrixPtr->getId()) != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "second", ShapeType{4}, ShapeType{1}, attributeMatrixPtr->getId()) != nullptr);
 
-  const auto children = attributeMatrix->findAllChildrenOfType<IArray>();
+  const auto children = attributeMatrixPtr->findAllChildrenOfType<IArray>();
   REQUIRE(children.size() == 2);
   auto childIterator = children.begin();
-  auto* good = dynamic_cast<DataArray<int32>*>(childIterator->get());
-  REQUIRE(good != nullptr);
+  auto* goodPtr = dynamic_cast<DataArray<int32>*>(childIterator->get());
+  REQUIRE(goodPtr != nullptr);
   ++childIterator;
-  auto* bad = dynamic_cast<DataArray<int32>*>(childIterator->get());
-  REQUIRE(bad != nullptr);
-  auto badSetStoreResult = bad->setDataStore(std::make_shared<FailingResizeDataStore>(ShapeType{4}, ShapeType{1}, 0));
+  auto* badPtr = dynamic_cast<DataArray<int32>*>(childIterator->get());
+  REQUIRE(badPtr != nullptr);
+  auto badSetStoreResult = badPtr->setDataStore(std::make_shared<FailingResizeDataStore>(ShapeType{4}, ShapeType{1}, 0));
   SIMPLNX_RESULT_REQUIRE_VALID(badSetStoreResult);
-  const std::string badName = bad->getName();
+  const std::string badName = badPtr->getName();
 
-  Result<> result = attributeMatrix->resizeTuples(ShapeType{8});
+  Result<> result = attributeMatrixPtr->resizeTuples(ShapeType{8});
 
   REQUIRE(result.invalid());
   REQUIRE(result.errors()[0].message.find(badName) != std::string::npos);
-  REQUIRE(good->getNumberOfTuples() == 8);
+  REQUIRE(goodPtr->getNumberOfTuples() == 8);
 }
 
 TEST_CASE("Copy DataStore", "DataArray")
@@ -1124,302 +1124,302 @@ TEST_CASE("Copy DataStore", "DataArray")
 template <typename T>
 static void TestDataArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
-  constexpr usize index1 = 5;
-  constexpr usize index2 = 6;
-  constexpr usize index3 = 7;
-  constexpr usize index4 = 8;
-  constexpr usize index5 = 9;
-  constexpr usize index6 = 10;
+  constexpr usize k_Index1 = 5;
+  constexpr usize k_Index2 = 6;
+  constexpr usize k_Index3 = 7;
+  constexpr usize k_Index4 = 8;
+  constexpr usize k_Index5 = 9;
+  constexpr usize k_Index6 = 10;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* dataArray = UnitTest::CreateTestDataArray<T>(datastructure, arrayName, tupleShape, compShape);
-  constexpr T minVal = std::numeric_limits<T>::min();
-  constexpr T maxVal = std::numeric_limits<T>::max();
-  dataArray->setValue(index2, minVal);
-  dataArray->setValue(index3, maxVal);
-  const std::string minStr = dataArray->toString(index2, 0);
-  const std::string maxStr = dataArray->toString(index3, 0);
+  auto* dataArrayPtr = UnitTest::CreateTestDataArray<T>(datastructure, arrayName, tupleShape, compShape);
+  constexpr T k_MinVal = std::numeric_limits<T>::min();
+  constexpr T k_MaxVal = std::numeric_limits<T>::max();
+  dataArrayPtr->setValue(k_Index2, k_MinVal);
+  dataArrayPtr->setValue(k_Index3, k_MaxVal);
+  const std::string minStr = dataArrayPtr->toString(k_Index2, 0);
+  const std::string maxStr = dataArrayPtr->toString(k_Index3, 0);
   // std::cout << "DataArray<T>\n\tmin = " << minStr << "\n\tmax = " << maxStr << "\n";
   REQUIRE(minStr == minCompareStr);
   REQUIRE(maxStr == maxCompareStr);
-  REQUIRE(dataArray->setValueFromString(index5, 0, minStr));
-  REQUIRE(dataArray->setValueFromString(index6, 0, maxStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index5, 0, minStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index6, 0, maxStr));
   // std::cout << "DataArray<T>\n\tmin : " << dataArray->getValue(index5) << " == " << minVal << "\n\tmax : " << dataArray->getValue(index6) << " == " << maxVal << "\n";
-  REQUIRE(dataArray->getValue(index5) == minVal);
-  REQUIRE(dataArray->getValue(index6) == maxVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index5) == k_MinVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index6) == k_MaxVal);
 }
 
 template <>
 void TestDataArrayToFromString<float32>(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
-  constexpr usize index1 = 5;
-  constexpr usize index2 = 6;
-  constexpr usize index3 = 7;
-  constexpr usize index4 = 8;
-  constexpr usize index5 = 9;
-  constexpr usize index6 = 10;
-  constexpr usize index7 = 11;
-  constexpr usize index8 = 12;
-  constexpr usize index9 = 13;
-  constexpr usize index10 = 14;
+  constexpr usize k_Index1 = 5;
+  constexpr usize k_Index2 = 6;
+  constexpr usize k_Index3 = 7;
+  constexpr usize k_Index4 = 8;
+  constexpr usize k_Index5 = 9;
+  constexpr usize k_Index6 = 10;
+  constexpr usize k_Index7 = 11;
+  constexpr usize k_Index8 = 12;
+  constexpr usize k_Index9 = 13;
+  constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* dataArray = UnitTest::CreateTestDataArray<float32>(datastructure, arrayName, tupleShape, compShape);
-  constexpr float32 lowestVal = std::numeric_limits<float32>::lowest();
-  constexpr float32 minVal = std::numeric_limits<float32>::min();
-  constexpr float32 maxVal = std::numeric_limits<float32>::max();
-  constexpr float32 infVal = std::numeric_limits<float32>::infinity();
+  auto* dataArrayPtr = UnitTest::CreateTestDataArray<float32>(datastructure, arrayName, tupleShape, compShape);
+  constexpr float32 k_LowestVal = std::numeric_limits<float32>::lowest();
+  constexpr float32 k_MinVal = std::numeric_limits<float32>::min();
+  constexpr float32 k_MaxVal = std::numeric_limits<float32>::max();
+  constexpr float32 k_InfVal = std::numeric_limits<float32>::infinity();
   const float32 nanVal = std::nanf("1");
-  dataArray->setValue(index1, lowestVal);
-  dataArray->setValue(index2, minVal);
-  dataArray->setValue(index3, maxVal);
-  dataArray->setValue(index4, infVal);
-  dataArray->setValue(index5, nanVal);
-  const std::string lowestStr = dataArray->toString(index1, 0);
-  const std::string minStr = dataArray->toString(index2, 0);
-  const std::string maxStr = dataArray->toString(index3, 0);
-  const std::string infStr = dataArray->toString(index4, 0);
-  const std::string nanStr = dataArray->toString(index5, 0);
+  dataArrayPtr->setValue(k_Index1, k_LowestVal);
+  dataArrayPtr->setValue(k_Index2, k_MinVal);
+  dataArrayPtr->setValue(k_Index3, k_MaxVal);
+  dataArrayPtr->setValue(k_Index4, k_InfVal);
+  dataArrayPtr->setValue(k_Index5, nanVal);
+  const std::string lowestStr = dataArrayPtr->toString(k_Index1, 0);
+  const std::string minStr = dataArrayPtr->toString(k_Index2, 0);
+  const std::string maxStr = dataArrayPtr->toString(k_Index3, 0);
+  const std::string infStr = dataArrayPtr->toString(k_Index4, 0);
+  const std::string nanStr = dataArrayPtr->toString(k_Index5, 0);
   // std::cout << "DataArray<float32>\n\tlowest = " << lowestStr << "\n\tmin = " << minStr << "\n\tmax = " << maxStr << "\n\tinf = " << infStr << "\n\tnan = " << nanStr << "\n";
   REQUIRE(lowestStr == "-3.4028235e+38");
   REQUIRE(minStr == minCompareStr);
   REQUIRE(maxStr == maxCompareStr);
   REQUIRE(infStr == "inf");
   REQUIRE(nanStr == "nan");
-  REQUIRE(dataArray->toString(index2, 0, "{:.8g}") == "1.1754944e-38");
-  REQUIRE(dataArray->toString(index3, 0, "{:.6f}") == "340282346638528859811704183484516925440.000000");
-  REQUIRE(dataArray->toString(index2, 0, "{:.4e}") == "1.1755e-38");
-  REQUIRE(dataArray->setValueFromString(index6, 0, lowestStr));
-  REQUIRE(dataArray->setValueFromString(index7, 0, minStr));
-  REQUIRE(dataArray->setValueFromString(index8, 0, maxStr));
-  REQUIRE(dataArray->setValueFromString(index9, 0, infStr));
-  REQUIRE(dataArray->setValueFromString(index10, 0, nanStr));
+  REQUIRE(dataArrayPtr->toString(k_Index2, 0, "{:.8g}") == "1.1754944e-38");
+  REQUIRE(dataArrayPtr->toString(k_Index3, 0, "{:.6f}") == "340282346638528859811704183484516925440.000000");
+  REQUIRE(dataArrayPtr->toString(k_Index2, 0, "{:.4e}") == "1.1755e-38");
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index6, 0, lowestStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index7, 0, minStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index8, 0, maxStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index9, 0, infStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index10, 0, nanStr));
   // std::cout << "DataArray<float32>\n\tlowest : " << dataArray->getValue(index6) << " == " << lowestVal << "\n\tmin : " << dataArray->getValue(index7) << " == " << minVal
   //<< "\n\tmax : " << dataArray->getValue(index8) << " == " << maxVal << "\n\tinf : " << dataArray->getValue(index9) << " == " << infVal << "\n\tnan : " << dataArray->getValue(index10)
   //<< " == " << nanVal << "\n";
-  REQUIRE(dataArray->getValue(index6) == lowestVal);
-  REQUIRE(dataArray->getValue(index7) == minVal);
-  REQUIRE(dataArray->getValue(index8) == maxVal);
-  REQUIRE(dataArray->getValue(index9) == infVal);
-  REQUIRE(std::isnan(dataArray->getValue(index10)));
+  REQUIRE(dataArrayPtr->getValue(k_Index6) == k_LowestVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index7) == k_MinVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index8) == k_MaxVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index9) == k_InfVal);
+  REQUIRE(std::isnan(dataArrayPtr->getValue(k_Index10)));
 }
 template <>
 void TestDataArrayToFromString<float64>(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
-  constexpr usize index1 = 5;
-  constexpr usize index2 = 6;
-  constexpr usize index3 = 7;
-  constexpr usize index4 = 8;
-  constexpr usize index5 = 9;
-  constexpr usize index6 = 10;
-  constexpr usize index7 = 11;
-  constexpr usize index8 = 12;
-  constexpr usize index9 = 13;
-  constexpr usize index10 = 14;
+  constexpr usize k_Index1 = 5;
+  constexpr usize k_Index2 = 6;
+  constexpr usize k_Index3 = 7;
+  constexpr usize k_Index4 = 8;
+  constexpr usize k_Index5 = 9;
+  constexpr usize k_Index6 = 10;
+  constexpr usize k_Index7 = 11;
+  constexpr usize k_Index8 = 12;
+  constexpr usize k_Index9 = 13;
+  constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* dataArray = UnitTest::CreateTestDataArray<float64>(datastructure, arrayName, tupleShape, compShape);
-  constexpr float64 lowestVal = std::numeric_limits<float64>::lowest();
-  constexpr float64 minVal = std::numeric_limits<float64>::min();
-  constexpr float64 maxVal = std::numeric_limits<float64>::max();
-  constexpr float64 infVal = std::numeric_limits<float64>::infinity();
+  auto* dataArrayPtr = UnitTest::CreateTestDataArray<float64>(datastructure, arrayName, tupleShape, compShape);
+  constexpr float64 k_LowestVal = std::numeric_limits<float64>::lowest();
+  constexpr float64 k_MinVal = std::numeric_limits<float64>::min();
+  constexpr float64 k_MaxVal = std::numeric_limits<float64>::max();
+  constexpr float64 k_InfVal = std::numeric_limits<float64>::infinity();
   const float64 nanVal = std::nan("1");
-  dataArray->setValue(index1, lowestVal);
-  dataArray->setValue(index2, minVal);
-  dataArray->setValue(index3, maxVal);
-  dataArray->setValue(index4, infVal);
-  dataArray->setValue(index5, nanVal);
-  const std::string lowestStr = dataArray->toString(index1, 0);
-  const std::string minStr = dataArray->toString(index2, 0);
-  const std::string maxStr = dataArray->toString(index3, 0);
-  const std::string infStr = dataArray->toString(index4, 0);
-  const std::string nanStr = dataArray->toString(index5, 0);
+  dataArrayPtr->setValue(k_Index1, k_LowestVal);
+  dataArrayPtr->setValue(k_Index2, k_MinVal);
+  dataArrayPtr->setValue(k_Index3, k_MaxVal);
+  dataArrayPtr->setValue(k_Index4, k_InfVal);
+  dataArrayPtr->setValue(k_Index5, nanVal);
+  const std::string lowestStr = dataArrayPtr->toString(k_Index1, 0);
+  const std::string minStr = dataArrayPtr->toString(k_Index2, 0);
+  const std::string maxStr = dataArrayPtr->toString(k_Index3, 0);
+  const std::string infStr = dataArrayPtr->toString(k_Index4, 0);
+  const std::string nanStr = dataArrayPtr->toString(k_Index5, 0);
   // std::cout << "DataArray<float64>\n\tlowest = " << lowestStr << "\n\tmin = " << minStr << "\n\tmax = " << maxStr << "\n\tinf = " << infStr << "\n\tnan = " << nanStr << "\n";
   REQUIRE(lowestStr == "-1.7976931348623157e+308");
   REQUIRE(minStr == minCompareStr);
   REQUIRE(maxStr == maxCompareStr);
   REQUIRE(infStr == "inf");
   REQUIRE(nanStr == "nan");
-  REQUIRE(dataArray->toString(index2, 0, "{:.8g}") == "2.2250739e-308");
-  REQUIRE(dataArray->toString(index2, 0, "{:.6f}") == "0.000000");
-  REQUIRE(dataArray->toString(index2, 0, "{:.4e}") == "2.2251e-308");
-  REQUIRE(dataArray->setValueFromString(index6, 0, lowestStr));
-  REQUIRE(dataArray->setValueFromString(index7, 0, minStr));
-  REQUIRE(dataArray->setValueFromString(index8, 0, maxStr));
-  REQUIRE(dataArray->setValueFromString(index9, 0, infStr));
-  REQUIRE(dataArray->setValueFromString(index10, 0, nanStr));
+  REQUIRE(dataArrayPtr->toString(k_Index2, 0, "{:.8g}") == "2.2250739e-308");
+  REQUIRE(dataArrayPtr->toString(k_Index2, 0, "{:.6f}") == "0.000000");
+  REQUIRE(dataArrayPtr->toString(k_Index2, 0, "{:.4e}") == "2.2251e-308");
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index6, 0, lowestStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index7, 0, minStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index8, 0, maxStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index9, 0, infStr));
+  REQUIRE(dataArrayPtr->setValueFromString(k_Index10, 0, nanStr));
   // std::cout << "DataArray<float64>\n\tlowest : " << dataArray->getValue(index6) << " == " << lowestVal << "\n\tmin : " << dataArray->getValue(index7) << " == " << minVal
   //<< "\n\tmax : " << dataArray->getValue(index8) << " == " << maxVal << "\n\tinf : " << dataArray->getValue(index9) << " == " << infVal << "\n\tnan : " << dataArray->getValue(index10)
   //<< " == " << nanVal << "\n";
-  REQUIRE(dataArray->getValue(index6) == lowestVal);
-  REQUIRE(dataArray->getValue(index7) == minVal);
-  REQUIRE(dataArray->getValue(index8) == maxVal);
-  REQUIRE(dataArray->getValue(index9) == infVal);
-  REQUIRE(std::isnan(dataArray->getValue(index10)));
+  REQUIRE(dataArrayPtr->getValue(k_Index6) == k_LowestVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index7) == k_MinVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index8) == k_MaxVal);
+  REQUIRE(dataArrayPtr->getValue(k_Index9) == k_InfVal);
+  REQUIRE(std::isnan(dataArrayPtr->getValue(k_Index10)));
 }
 
 template <typename T>
 static void TestNeighborListArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
-  constexpr usize index1 = 5;
-  constexpr usize index2 = 6;
-  constexpr usize index3 = 7;
-  constexpr usize index4 = 8;
-  constexpr usize index5 = 9;
-  constexpr usize index6 = 10;
+  constexpr usize k_Index1 = 5;
+  constexpr usize k_Index2 = 6;
+  constexpr usize k_Index3 = 7;
+  constexpr usize k_Index4 = 8;
+  constexpr usize k_Index5 = 9;
+  constexpr usize k_Index6 = 10;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* neighborListArray = UnitTest::CreateTestNeighborList<T>(datastructure, arrayName, 10, {});
-  constexpr T minVal = std::numeric_limits<T>::min();
-  constexpr T maxVal = std::numeric_limits<T>::max();
-  neighborListArray->addEntry(index2, minVal);
-  neighborListArray->addEntry(index3, maxVal);
-  neighborListArray->addEntry(index5, 0);
-  neighborListArray->addEntry(index6, 0);
-  const std::string minStr = neighborListArray->toString(index2, 0);
-  const std::string maxStr = neighborListArray->toString(index3, 0);
+  auto* neighborListArrayPtr = UnitTest::CreateTestNeighborList<T>(datastructure, arrayName, 10, {});
+  constexpr T k_MinVal = std::numeric_limits<T>::min();
+  constexpr T k_MaxVal = std::numeric_limits<T>::max();
+  neighborListArrayPtr->addEntry(k_Index2, k_MinVal);
+  neighborListArrayPtr->addEntry(k_Index3, k_MaxVal);
+  neighborListArrayPtr->addEntry(k_Index5, 0);
+  neighborListArrayPtr->addEntry(k_Index6, 0);
+  const std::string minStr = neighborListArrayPtr->toString(k_Index2, 0);
+  const std::string maxStr = neighborListArrayPtr->toString(k_Index3, 0);
   // std::cout << "NeighborListArray<T>\n\tmin = " << minStr << "\n\tmax = " << maxStr << "\n";
   REQUIRE(minStr == minCompareStr);
   REQUIRE(maxStr == maxCompareStr);
-  REQUIRE(neighborListArray->setValueFromString(index5, 0, minStr));
-  REQUIRE(neighborListArray->setValueFromString(index6, 0, maxStr));
+  REQUIRE(neighborListArrayPtr->setValueFromString(k_Index5, 0, minStr));
+  REQUIRE(neighborListArrayPtr->setValueFromString(k_Index6, 0, maxStr));
   bool ok = false;
   // std::cout << "NeighborListArray<T>\n\tmin : " << neighborListArray->getValue(index5, 0, ok) << " == " << minVal << "\n\tmax : " << neighborListArray->getValue(index6, 0, ok) << " == " << maxVal
   //<< "\n";
-  REQUIRE(neighborListArray->getValue(index5, 0, ok) == minVal);
+  REQUIRE(neighborListArrayPtr->getValue(k_Index5, 0, ok) == k_MinVal);
   REQUIRE(ok);
-  REQUIRE(neighborListArray->getValue(index6, 0, ok) == maxVal);
+  REQUIRE(neighborListArrayPtr->getValue(k_Index6, 0, ok) == k_MaxVal);
   REQUIRE(ok);
 }
 
 template <>
 void TestNeighborListArrayToFromString<float32>(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
-  constexpr usize index1 = 5;
-  constexpr usize index2 = 6;
-  constexpr usize index3 = 7;
-  constexpr usize index4 = 8;
-  constexpr usize index5 = 9;
-  constexpr usize index6 = 10;
-  constexpr usize index7 = 11;
-  constexpr usize index8 = 12;
-  constexpr usize index9 = 13;
-  constexpr usize index10 = 14;
+  constexpr usize k_Index1 = 5;
+  constexpr usize k_Index2 = 6;
+  constexpr usize k_Index3 = 7;
+  constexpr usize k_Index4 = 8;
+  constexpr usize k_Index5 = 9;
+  constexpr usize k_Index6 = 10;
+  constexpr usize k_Index7 = 11;
+  constexpr usize k_Index8 = 12;
+  constexpr usize k_Index9 = 13;
+  constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* neighborListFloat32 = UnitTest::CreateTestNeighborList<float32>(datastructure, arrayName, 10, {});
-  constexpr float32 lowestVal = std::numeric_limits<float32>::lowest();
-  constexpr float32 minVal = std::numeric_limits<float32>::min();
-  constexpr float32 maxVal = std::numeric_limits<float32>::max();
-  constexpr float32 infVal = std::numeric_limits<float32>::infinity();
+  auto* neighborListFloat32Ptr = UnitTest::CreateTestNeighborList<float32>(datastructure, arrayName, 10, {});
+  constexpr float32 k_LowestVal = std::numeric_limits<float32>::lowest();
+  constexpr float32 k_MinVal = std::numeric_limits<float32>::min();
+  constexpr float32 k_MaxVal = std::numeric_limits<float32>::max();
+  constexpr float32 k_InfVal = std::numeric_limits<float32>::infinity();
   const float32 nanVal = std::nanf("1");
-  neighborListFloat32->addEntry(index1, lowestVal);
-  neighborListFloat32->addEntry(index2, minVal);
-  neighborListFloat32->addEntry(index3, maxVal);
-  neighborListFloat32->addEntry(index4, infVal);
-  neighborListFloat32->addEntry(index5, nanVal);
-  neighborListFloat32->addEntry(index6, 0);
-  neighborListFloat32->addEntry(index7, 0);
-  neighborListFloat32->addEntry(index8, 0);
-  neighborListFloat32->addEntry(index9, 0);
-  neighborListFloat32->addEntry(index10, 0);
-  const std::string lowestStr = neighborListFloat32->toString(index1, 0);
-  const std::string minStr = neighborListFloat32->toString(index2, 0);
-  const std::string maxStr = neighborListFloat32->toString(index3, 0);
-  const std::string infStr = neighborListFloat32->toString(index4, 0);
-  const std::string nanStr = neighborListFloat32->toString(index5, 0);
+  neighborListFloat32Ptr->addEntry(k_Index1, k_LowestVal);
+  neighborListFloat32Ptr->addEntry(k_Index2, k_MinVal);
+  neighborListFloat32Ptr->addEntry(k_Index3, k_MaxVal);
+  neighborListFloat32Ptr->addEntry(k_Index4, k_InfVal);
+  neighborListFloat32Ptr->addEntry(k_Index5, nanVal);
+  neighborListFloat32Ptr->addEntry(k_Index6, 0);
+  neighborListFloat32Ptr->addEntry(k_Index7, 0);
+  neighborListFloat32Ptr->addEntry(k_Index8, 0);
+  neighborListFloat32Ptr->addEntry(k_Index9, 0);
+  neighborListFloat32Ptr->addEntry(k_Index10, 0);
+  const std::string lowestStr = neighborListFloat32Ptr->toString(k_Index1, 0);
+  const std::string minStr = neighborListFloat32Ptr->toString(k_Index2, 0);
+  const std::string maxStr = neighborListFloat32Ptr->toString(k_Index3, 0);
+  const std::string infStr = neighborListFloat32Ptr->toString(k_Index4, 0);
+  const std::string nanStr = neighborListFloat32Ptr->toString(k_Index5, 0);
   // std::cout << "NeighborListArray<float32>\n\tlowest = " << lowestStr << "\n\tmin = " << minStr << "\n\tmax = " << maxStr << "\n\tinf = " << infStr << "\n\tnan = " << nanStr << "\n";
   REQUIRE(lowestStr == "-3.4028235e+38");
   REQUIRE(minStr == minCompareStr);
   REQUIRE(maxStr == maxCompareStr);
   REQUIRE(infStr == "inf");
   REQUIRE(nanStr == "nan");
-  REQUIRE(neighborListFloat32->toString(index2, 0, "{:.8g}") == "1.1754944e-38");
-  REQUIRE(neighborListFloat32->toString(index3, 0, "{:.6f}") == "340282346638528859811704183484516925440.000000");
-  REQUIRE(neighborListFloat32->toString(index2, 0, "{:.4e}") == "1.1755e-38");
-  REQUIRE(neighborListFloat32->setValueFromString(index6, 0, lowestStr));
-  REQUIRE(neighborListFloat32->setValueFromString(index7, 0, minStr));
-  REQUIRE(neighborListFloat32->setValueFromString(index8, 0, maxStr));
-  REQUIRE(neighborListFloat32->setValueFromString(index9, 0, infStr));
-  REQUIRE(neighborListFloat32->setValueFromString(index10, 0, nanStr));
+  REQUIRE(neighborListFloat32Ptr->toString(k_Index2, 0, "{:.8g}") == "1.1754944e-38");
+  REQUIRE(neighborListFloat32Ptr->toString(k_Index3, 0, "{:.6f}") == "340282346638528859811704183484516925440.000000");
+  REQUIRE(neighborListFloat32Ptr->toString(k_Index2, 0, "{:.4e}") == "1.1755e-38");
+  REQUIRE(neighborListFloat32Ptr->setValueFromString(k_Index6, 0, lowestStr));
+  REQUIRE(neighborListFloat32Ptr->setValueFromString(k_Index7, 0, minStr));
+  REQUIRE(neighborListFloat32Ptr->setValueFromString(k_Index8, 0, maxStr));
+  REQUIRE(neighborListFloat32Ptr->setValueFromString(k_Index9, 0, infStr));
+  REQUIRE(neighborListFloat32Ptr->setValueFromString(k_Index10, 0, nanStr));
   // std::cout << "NeighborListArray<float32>\n\tlowest : " << neighborListFloat32->getValue(index6) << " == " << lowestVal << "\n\tmin : " << neighborListFloat32->getValue(index7) << " == " << minVal
   //<< "\n\tmax : " << neighborListFloat32->getValue(index8) << " == " << maxVal << "\n\tinf : " << neighborListFloat32->getValue(index9) << " == " << infVal << "\n\tnan : " <<
   // neighborListFloat32->getValue(index10) << " == " << nanVal << "\n";
   bool ok = false;
-  REQUIRE(neighborListFloat32->getValue(index6, 0, ok) == lowestVal);
+  REQUIRE(neighborListFloat32Ptr->getValue(k_Index6, 0, ok) == k_LowestVal);
   REQUIRE(ok);
-  REQUIRE(neighborListFloat32->getValue(index7, 0, ok) == minVal);
+  REQUIRE(neighborListFloat32Ptr->getValue(k_Index7, 0, ok) == k_MinVal);
   REQUIRE(ok);
-  REQUIRE(neighborListFloat32->getValue(index8, 0, ok) == maxVal);
+  REQUIRE(neighborListFloat32Ptr->getValue(k_Index8, 0, ok) == k_MaxVal);
   REQUIRE(ok);
-  REQUIRE(neighborListFloat32->getValue(index9, 0, ok) == infVal);
+  REQUIRE(neighborListFloat32Ptr->getValue(k_Index9, 0, ok) == k_InfVal);
   REQUIRE(ok);
-  REQUIRE(std::isnan(neighborListFloat32->getValue(index10, 0, ok)));
+  REQUIRE(std::isnan(neighborListFloat32Ptr->getValue(k_Index10, 0, ok)));
   REQUIRE(ok);
 }
 template <>
 void TestNeighborListArrayToFromString<float64>(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
-  constexpr usize index1 = 5;
-  constexpr usize index2 = 6;
-  constexpr usize index3 = 7;
-  constexpr usize index4 = 8;
-  constexpr usize index5 = 9;
-  constexpr usize index6 = 10;
-  constexpr usize index7 = 11;
-  constexpr usize index8 = 12;
-  constexpr usize index9 = 13;
-  constexpr usize index10 = 14;
+  constexpr usize k_Index1 = 5;
+  constexpr usize k_Index2 = 6;
+  constexpr usize k_Index3 = 7;
+  constexpr usize k_Index4 = 8;
+  constexpr usize k_Index5 = 9;
+  constexpr usize k_Index6 = 10;
+  constexpr usize k_Index7 = 11;
+  constexpr usize k_Index8 = 12;
+  constexpr usize k_Index9 = 13;
+  constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* neighborListFloat64 = UnitTest::CreateTestNeighborList<float64>(datastructure, arrayName, 10, {});
-  constexpr float64 lowestVal = std::numeric_limits<float64>::lowest();
-  constexpr float64 minVal = std::numeric_limits<float64>::min();
-  constexpr float64 maxVal = std::numeric_limits<float64>::max();
-  constexpr float64 infVal = std::numeric_limits<float64>::infinity();
+  auto* neighborListFloat64Ptr = UnitTest::CreateTestNeighborList<float64>(datastructure, arrayName, 10, {});
+  constexpr float64 k_LowestVal = std::numeric_limits<float64>::lowest();
+  constexpr float64 k_MinVal = std::numeric_limits<float64>::min();
+  constexpr float64 k_MaxVal = std::numeric_limits<float64>::max();
+  constexpr float64 k_InfVal = std::numeric_limits<float64>::infinity();
   const float64 nanVal = std::nan("1");
-  neighborListFloat64->addEntry(index1, lowestVal);
-  neighborListFloat64->addEntry(index2, minVal);
-  neighborListFloat64->addEntry(index3, maxVal);
-  neighborListFloat64->addEntry(index4, infVal);
-  neighborListFloat64->addEntry(index5, nanVal);
-  neighborListFloat64->addEntry(index6, 0);
-  neighborListFloat64->addEntry(index7, 0);
-  neighborListFloat64->addEntry(index8, 0);
-  neighborListFloat64->addEntry(index9, 0);
-  neighborListFloat64->addEntry(index10, 0);
-  const std::string lowestStr = neighborListFloat64->toString(index1, 0);
-  const std::string minStr = neighborListFloat64->toString(index2, 0);
-  const std::string maxStr = neighborListFloat64->toString(index3, 0);
-  const std::string infStr = neighborListFloat64->toString(index4, 0);
-  const std::string nanStr = neighborListFloat64->toString(index5, 0);
+  neighborListFloat64Ptr->addEntry(k_Index1, k_LowestVal);
+  neighborListFloat64Ptr->addEntry(k_Index2, k_MinVal);
+  neighborListFloat64Ptr->addEntry(k_Index3, k_MaxVal);
+  neighborListFloat64Ptr->addEntry(k_Index4, k_InfVal);
+  neighborListFloat64Ptr->addEntry(k_Index5, nanVal);
+  neighborListFloat64Ptr->addEntry(k_Index6, 0);
+  neighborListFloat64Ptr->addEntry(k_Index7, 0);
+  neighborListFloat64Ptr->addEntry(k_Index8, 0);
+  neighborListFloat64Ptr->addEntry(k_Index9, 0);
+  neighborListFloat64Ptr->addEntry(k_Index10, 0);
+  const std::string lowestStr = neighborListFloat64Ptr->toString(k_Index1, 0);
+  const std::string minStr = neighborListFloat64Ptr->toString(k_Index2, 0);
+  const std::string maxStr = neighborListFloat64Ptr->toString(k_Index3, 0);
+  const std::string infStr = neighborListFloat64Ptr->toString(k_Index4, 0);
+  const std::string nanStr = neighborListFloat64Ptr->toString(k_Index5, 0);
   // std::cout << "NeighborListArray<float64>\n\tlowest = " << lowestStr << "\n\tmin = " << minStr << "\n\tmax = " << maxStr << "\n\tinf = " << infStr << "\n\tnan = " << nanStr << "\n";
   REQUIRE(lowestStr == "-1.7976931348623157e+308");
   REQUIRE(minStr == minCompareStr);
   REQUIRE(maxStr == maxCompareStr);
   REQUIRE(infStr == "inf");
   REQUIRE(nanStr == "nan");
-  REQUIRE(neighborListFloat64->toString(index2, 0, "{:.8g}") == "2.2250739e-308");
-  REQUIRE(neighborListFloat64->toString(index2, 0, "{:.6f}") == "0.000000");
-  REQUIRE(neighborListFloat64->toString(index2, 0, "{:.4e}") == "2.2251e-308");
-  REQUIRE(neighborListFloat64->setValueFromString(index6, 0, lowestStr));
-  REQUIRE(neighborListFloat64->setValueFromString(index7, 0, minStr));
-  REQUIRE(neighborListFloat64->setValueFromString(index8, 0, maxStr));
-  REQUIRE(neighborListFloat64->setValueFromString(index9, 0, infStr));
-  REQUIRE(neighborListFloat64->setValueFromString(index10, 0, nanStr));
+  REQUIRE(neighborListFloat64Ptr->toString(k_Index2, 0, "{:.8g}") == "2.2250739e-308");
+  REQUIRE(neighborListFloat64Ptr->toString(k_Index2, 0, "{:.6f}") == "0.000000");
+  REQUIRE(neighborListFloat64Ptr->toString(k_Index2, 0, "{:.4e}") == "2.2251e-308");
+  REQUIRE(neighborListFloat64Ptr->setValueFromString(k_Index6, 0, lowestStr));
+  REQUIRE(neighborListFloat64Ptr->setValueFromString(k_Index7, 0, minStr));
+  REQUIRE(neighborListFloat64Ptr->setValueFromString(k_Index8, 0, maxStr));
+  REQUIRE(neighborListFloat64Ptr->setValueFromString(k_Index9, 0, infStr));
+  REQUIRE(neighborListFloat64Ptr->setValueFromString(k_Index10, 0, nanStr));
   // std::cout << "NeighborListArray<float64>\n\tlowest : " << neighborListFloat64->getValue(index6) << " == " << lowestVal << "\n\tmin : " << neighborListFloat64->getValue(index7) << " == " << minVal
   //<< "\n\tmax : " << neighborListFloat64->getValue(index8) << " == " << maxVal << "\n\tinf : " << neighborListFloat64->getValue(index9) << " == " << infVal << "\n\tnan : " <<
   // neighborListFloat64->getValue(index10) << " == " << nanVal << "\n";
   bool ok = false;
-  REQUIRE(neighborListFloat64->getValue(index6, 0, ok) == lowestVal);
+  REQUIRE(neighborListFloat64Ptr->getValue(k_Index6, 0, ok) == k_LowestVal);
   REQUIRE(ok);
-  REQUIRE(neighborListFloat64->getValue(index7, 0, ok) == minVal);
+  REQUIRE(neighborListFloat64Ptr->getValue(k_Index7, 0, ok) == k_MinVal);
   REQUIRE(ok);
-  REQUIRE(neighborListFloat64->getValue(index8, 0, ok) == maxVal);
+  REQUIRE(neighborListFloat64Ptr->getValue(k_Index8, 0, ok) == k_MaxVal);
   REQUIRE(ok);
-  REQUIRE(neighborListFloat64->getValue(index9, 0, ok) == infVal);
+  REQUIRE(neighborListFloat64Ptr->getValue(k_Index9, 0, ok) == k_InfVal);
   REQUIRE(ok);
-  REQUIRE(std::isnan(neighborListFloat64->getValue(index10, 0, ok)));
+  REQUIRE(std::isnan(neighborListFloat64Ptr->getValue(k_Index10, 0, ok)));
   REQUIRE(ok);
 }
 
@@ -1515,27 +1515,27 @@ TEST_CASE("IArray ToFromString")
 
   SECTION("StringArray")
   {
-    constexpr usize index1 = 5;
-    constexpr usize index2 = 6;
-    constexpr usize index3 = 7;
-    constexpr usize index4 = 8;
-    constexpr usize index5 = 9;
-    constexpr usize index6 = 10;
+    constexpr usize k_Index1 = 5;
+    constexpr usize k_Index2 = 6;
+    constexpr usize k_Index3 = 7;
+    constexpr usize k_Index4 = 8;
+    constexpr usize k_Index5 = 9;
+    constexpr usize k_Index6 = 10;
     const ShapeType tupleShape = {5, 4, 3};
     std::vector<std::string> values(60, "This is a string");
-    StringArray* stringArray = StringArray::CreateWithValues(datastructure, "StringArray", tupleShape, values, {});
-    REQUIRE(stringArray->setValueFromString(index1, 0, "AllLetters"));
-    REQUIRE(stringArray->setValueFromString(index2, 0, "MixedLetters&Numbers"));
-    REQUIRE(stringArray->setValueFromString(index3, 0, "234523"));
-    REQUIRE(stringArray->setValueFromString(index4, 0, "45.78"));
-    REQUIRE(stringArray->setValueFromString(index5, 0, "inf"));
-    REQUIRE(stringArray->setValueFromString(index6, 0, "nan"));
-    REQUIRE(stringArray->toString(index1, 0) == "AllLetters");
-    REQUIRE(stringArray->toString(index2, 0) == "MixedLetters&Numbers");
-    REQUIRE(stringArray->toString(index3, 0) == "234523");
-    REQUIRE(stringArray->toString(index4, 0) == "45.78");
-    REQUIRE(stringArray->toString(index5, 0) == "inf");
-    REQUIRE(stringArray->toString(index6, 0) == "nan");
+    StringArray* stringArrayPtr = StringArray::CreateWithValues(datastructure, "StringArray", tupleShape, values, {});
+    REQUIRE(stringArrayPtr->setValueFromString(k_Index1, 0, "AllLetters"));
+    REQUIRE(stringArrayPtr->setValueFromString(k_Index2, 0, "MixedLetters&Numbers"));
+    REQUIRE(stringArrayPtr->setValueFromString(k_Index3, 0, "234523"));
+    REQUIRE(stringArrayPtr->setValueFromString(k_Index4, 0, "45.78"));
+    REQUIRE(stringArrayPtr->setValueFromString(k_Index5, 0, "inf"));
+    REQUIRE(stringArrayPtr->setValueFromString(k_Index6, 0, "nan"));
+    REQUIRE(stringArrayPtr->toString(k_Index1, 0) == "AllLetters");
+    REQUIRE(stringArrayPtr->toString(k_Index2, 0) == "MixedLetters&Numbers");
+    REQUIRE(stringArrayPtr->toString(k_Index3, 0) == "234523");
+    REQUIRE(stringArrayPtr->toString(k_Index4, 0) == "45.78");
+    REQUIRE(stringArrayPtr->toString(k_Index5, 0) == "inf");
+    REQUIRE(stringArrayPtr->toString(k_Index6, 0) == "nan");
   }
 }
 
@@ -1553,10 +1553,10 @@ TEMPLATE_TEST_CASE("Numeric and list stores require an explicit copy destination
 
 TEMPLATE_TEST_CASE("String stores require an explicit copy destination format", "[simplnx][DataStore][DeepCopy][StoreCopyContract]", AbstractStringStore, StringStore, EmptyStringStore)
 {
-  constexpr bool acceptsFormat = requires(const TestType& store, const std::string& format) { store.deepCopy(format); };
-  constexpr bool acceptsNoFormat = requires(const TestType& store) { store.deepCopy(); };
-  CHECK(acceptsFormat);
-  CHECK_FALSE(acceptsNoFormat);
+  constexpr bool k_AcceptsFormat = requires(const TestType& store, const std::string& format) { store.deepCopy(format); };
+  constexpr bool k_AcceptsNoFormat = requires(const TestType& store) { store.deepCopy(); };
+  CHECK(k_AcceptsFormat);
+  CHECK_FALSE(k_AcceptsNoFormat);
 }
 
 namespace
@@ -1567,11 +1567,11 @@ namespace
  */
 struct StoreCopyProbe
 {
-  std::vector<usize> readSizes;
-  std::vector<usize> writeSizes;
-  usize failReadCall = 0;
-  usize failWriteCall = 0;
-  usize destroyedDestinations = 0;
+  std::vector<usize> read_sizes;
+  std::vector<usize> write_sizes;
+  usize fail_read_call = 0;
+  usize fail_write_call = 0;
+  usize destroyed_destinations = 0;
 };
 
 /**
@@ -1604,7 +1604,7 @@ public:
   {
     if(m_Destination)
     {
-      ++m_Probe->destroyedDestinations;
+      ++m_Probe->destroyed_destinations;
     }
   }
 
@@ -1626,8 +1626,8 @@ public:
    */
   Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
   {
-    m_Probe->readSizes.push_back(buffer.size());
-    if(m_Probe->readSizes.size() == m_Probe->failReadCall)
+    m_Probe->read_sizes.push_back(buffer.size());
+    if(m_Probe->read_sizes.size() == m_Probe->fail_read_call)
     {
       return MakeErrorResult(-9871, "injected late source read failure");
     }
@@ -1642,8 +1642,8 @@ public:
    */
   Result<> copyFromBuffer(usize startIndex, nonstd::span<const int32> buffer) override
   {
-    m_Probe->writeSizes.push_back(buffer.size());
-    if(m_Probe->writeSizes.size() == m_Probe->failWriteCall)
+    m_Probe->write_sizes.push_back(buffer.size());
+    if(m_Probe->write_sizes.size() == m_Probe->fail_write_call)
     {
       return MakeErrorResult(-9872, "injected late destination write failure");
     }
@@ -1782,9 +1782,9 @@ class CopyPathResolver : public IDataStoreFormatResolver
 public:
   mutable std::vector<DataPath> paths;
   mutable std::vector<uint64> bytes;
-  std::string selectedFormat;
-  std::string failureMessage;
-  bool throwBadAllocation = false;
+  std::string selected_format;
+  std::string failure_message;
+  bool throw_bad_allocation = false;
 
   /**
    * @brief Records destination context without reading source values.
@@ -1800,15 +1800,15 @@ public:
   {
     paths.push_back(path);
     bytes.push_back(sizeBytes);
-    if(throwBadAllocation)
+    if(throw_bad_allocation)
     {
       throw std::bad_alloc();
     }
-    if(!failureMessage.empty())
+    if(!failure_message.empty())
     {
-      throw std::runtime_error(failureMessage);
+      throw std::runtime_error(failure_message);
     }
-    return selectedFormat;
+    return selected_format;
   }
 };
 } // namespace
@@ -1820,19 +1820,19 @@ TEMPLATE_TEST_CASE("Numeric store copies honor explicit memory and preserve inde
   {
     DataStore<TestType> source(ShapeType{2, 3}, ShapeType{2}, TestType{1});
     auto destinationBase = source.deepCopy(format);
-    auto* destination = dynamic_cast<AbstractDataStore<TestType>*>(destinationBase.get());
-    REQUIRE(destination != nullptr);
-    REQUIRE(destination->getStoreType() == IDataStore::StoreType::InMemory);
-    REQUIRE(destination->getTupleShape() == ShapeType{2, 3});
-    REQUIRE(destination->getComponentShape() == ShapeType{2});
+    auto* destinationPtr = dynamic_cast<AbstractDataStore<TestType>*>(destinationBase.get());
+    REQUIRE(destinationPtr != nullptr);
+    REQUIRE(destinationPtr->getStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE(destinationPtr->getTupleShape() == ShapeType{2, 3});
+    REQUIRE(destinationPtr->getComponentShape() == ShapeType{2});
     for(usize index = 0; index < 12; ++index)
     {
-      REQUIRE(destination->getValue(index) == TestType{1});
+      REQUIRE(destinationPtr->getValue(index) == TestType{1});
     }
-    destination->setValue(0, TestType{0});
+    destinationPtr->setValue(0, TestType{0});
     REQUIRE(source.getValue(0) == TestType{1});
     source.setValue(1, TestType{0});
-    REQUIRE(destination->getValue(1) == TestType{1});
+    REQUIRE(destinationPtr->getValue(1) == TestType{1});
 
     auto placeholderResult = EmptyDataStore<TestType>::Create({2, 3}, {2}, "");
     SIMPLNX_RESULT_REQUIRE_VALID(placeholderResult);
@@ -1887,31 +1887,31 @@ TEST_CASE("Numeric store transfer bounds and late failures retain ownership", "[
   SECTION("complete transfer includes a final partial page")
   {
     auto base = source.deepCopy(format);
-    auto* copy = dynamic_cast<AbstractDataStore<int32>*>(base.get());
-    REQUIRE(copy != nullptr);
-    REQUIRE(copy->getValue(0) == 19);
-    REQUIRE(copy->getValue(2 * k_PageValues + 6) == 23);
-    REQUIRE(probe->readSizes == std::vector<usize>{k_PageValues, k_PageValues, 7});
-    REQUIRE(probe->writeSizes == probe->readSizes);
-    copy->setValue(0, 3);
+    auto* copyPtr = dynamic_cast<AbstractDataStore<int32>*>(base.get());
+    REQUIRE(copyPtr != nullptr);
+    REQUIRE(copyPtr->getValue(0) == 19);
+    REQUIRE(copyPtr->getValue(2 * k_PageValues + 6) == 23);
+    REQUIRE(probe->read_sizes == std::vector<usize>{k_PageValues, k_PageValues, 7});
+    REQUIRE(probe->write_sizes == probe->read_sizes);
+    copyPtr->setValue(0, 3);
     REQUIRE(source.getValue(0) == 19);
     base.reset();
-    REQUIRE(probe->destroyedDestinations == 1);
+    REQUIRE(probe->destroyed_destinations == 1);
   }
   SECTION("late read failure preserves every diagnostic and destroys the destination")
   {
-    probe->failReadCall = 2;
+    probe->fail_read_call = 2;
     REQUIRE_THROWS_WITH(source.deepCopy(format), Catch::Contains(format) && Catch::Contains("-9871") && Catch::Contains("injected late source read failure"));
-    REQUIRE(probe->writeSizes.size() == 1);
-    REQUIRE(probe->destroyedDestinations == 1);
+    REQUIRE(probe->write_sizes.size() == 1);
+    REQUIRE(probe->destroyed_destinations == 1);
     REQUIRE(source.getValue(0) == 19);
   }
   SECTION("late write failure preserves every diagnostic and destroys the destination")
   {
-    probe->failWriteCall = 2;
+    probe->fail_write_call = 2;
     REQUIRE_THROWS_WITH(source.deepCopy(format), Catch::Contains(format) && Catch::Contains("-9872") && Catch::Contains("injected late destination write failure"));
-    REQUIRE(probe->readSizes.size() == 2);
-    REQUIRE(probe->destroyedDestinations == 1);
+    REQUIRE(probe->read_sizes.size() == 2);
+    REQUIRE(probe->destroyed_destinations == 1);
     REQUIRE(source.getValue(2 * k_PageValues + 6) == 23);
   }
 }
@@ -1950,21 +1950,21 @@ TEST_CASE("Store-copy factories cannot return incompatible stores or hide failur
     REQUIRE_THROWS_WITH(source.deepCopy(format), Catch::Contains(format));
   }
   REQUIRE(source.getValue(0) == 17);
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  resolver->selectedFormat = format;
-  ds.setFormatResolver(resolver);
-  auto* array = DataArray<int32>::Create(ds, "FailureSource", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{2}, 17));
-  REQUIRE(array != nullptr);
+  resolver->selected_format = format;
+  dataStructure.setFormatResolver(resolver);
+  auto* arrayPtr = DataArray<int32>::Create(dataStructure, "FailureSource", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{2}, 17));
+  REQUIRE(arrayPtr != nullptr);
   if(failure == 4)
   {
-    REQUIRE_THROWS_AS(array->deepCopy(DataPath({"FailureCopy"})), std::bad_alloc);
+    REQUIRE_THROWS_AS(arrayPtr->deepCopy(DataPath({"FailureCopy"})), std::bad_alloc);
   }
   else
   {
-    REQUIRE(array->deepCopy(DataPath({"FailureCopy"})) == nullptr);
+    REQUIRE(arrayPtr->deepCopy(DataPath({"FailureCopy"})) == nullptr);
   }
-  REQUIRE_FALSE(ds.containsData(DataPath({"FailureCopy"})));
+  REQUIRE_FALSE(dataStructure.containsData(DataPath({"FailureCopy"})));
 }
 
 TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected factory", "[simplnx][DataArray][StorageFormatPlan]")
@@ -2006,21 +2006,21 @@ TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected fa
   auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  resolver->selectedFormat = format;
-  ds.setFormatResolver(resolver);
-  DataStructObserver observer(ds);
+  resolver->selected_format = format;
+  dataStructure.setFormatResolver(resolver);
+  DataStructObserver observer(dataStructure);
   const DataPath outputPath({"RejectedOutput"});
   const usize initialAddCount = observer.getDataAddedCount();
 
   if(failure == 5)
   {
-    REQUIRE_THROWS_AS(ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format), std::bad_alloc);
+    REQUIRE_THROWS_AS(ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format), std::bad_alloc);
   }
   else
   {
-    auto result = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format);
+    auto result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format);
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
     REQUIRE(result.errors().front().code == -265);
@@ -2032,7 +2032,7 @@ TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected fa
     }
   }
 
-  REQUIRE_FALSE(ds.containsData(outputPath));
+  REQUIRE_FALSE(dataStructure.containsData(outputPath));
   REQUIRE(observer.getDataAddedCount() == initialAddCount);
   REQUIRE(*selectedFactoryCalls == 1);
   REQUIRE(*fallbackMemoryFactoryCalls == 0);
@@ -2042,16 +2042,16 @@ TEST_CASE("StorageFormatPlan: planned arrays resolve root parent and first paren
 {
   SECTION("root create")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath expectedPath({"RootValues"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, "");
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, "");
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value() == ds.getDataAs<DataArray<int32>>(expectedPath));
+    REQUIRE(result.value() == dataStructure.getDataAs<DataArray<int32>>(expectedPath));
     REQUIRE(resolver->paths == std::vector<DataPath>{expectedPath});
     REQUIRE(resolver->bytes == std::vector<uint64>{6 * sizeof(int32)});
     REQUIRE(observer.getDataAddedCount() == 1);
@@ -2059,36 +2059,36 @@ TEST_CASE("StorageFormatPlan: planned arrays resolve root parent and first paren
 
   SECTION("explicit memory bypasses destination policy")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    resolver->failureMessage = "explicit planned creation must not resolve policy";
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    resolver->failure_message = "explicit planned creation must not resolve policy";
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath expectedPath({"ExplicitMemory"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, Preferences::k_InMemoryFormat.str());
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, expectedPath.getTargetName(), ShapeType{2}, ShapeType{3}, Preferences::k_InMemoryFormat.str());
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value() == ds.getDataAs<DataArray<int32>>(expectedPath));
+    REQUIRE(result.value() == dataStructure.getDataAs<DataArray<int32>>(expectedPath));
     REQUIRE(resolver->paths.empty());
     REQUIRE(observer.getDataAddedCount() == 1);
   }
 
   SECTION("parented import preserves the supplied identifier")
   {
-    DataStructure ds;
-    auto* parent = DataGroup::Create(ds, "Parent");
-    REQUIRE(parent != nullptr);
+    DataStructure dataStructure;
+    auto* parentPtr = DataGroup::Create(dataStructure, "Parent");
+    REQUIRE(parentPtr != nullptr);
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath expectedPath({"Parent", "ImportedValues"});
     constexpr DataObject::IdType k_ImportId = 701;
 
-    auto result = DataArray<int32>::ImportPlanned(ds, expectedPath.getTargetName(), k_ImportId, ShapeType{4}, ShapeType{1}, "", parent->getId());
+    auto result = DataArray<int32>::ImportPlanned(dataStructure, expectedPath.getTargetName(), k_ImportId, ShapeType{4}, ShapeType{1}, "", parentPtr->getId());
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value() == ds.getDataAs<DataArray<int32>>(expectedPath));
+    REQUIRE(result.value() == dataStructure.getDataAs<DataArray<int32>>(expectedPath));
     REQUIRE(result.value()->getId() == k_ImportId);
     REQUIRE(resolver->paths == std::vector<DataPath>{expectedPath});
     REQUIRE(resolver->bytes == std::vector<uint64>{4 * sizeof(int32)});
@@ -2097,20 +2097,20 @@ TEST_CASE("StorageFormatPlan: planned arrays resolve root parent and first paren
 
   SECTION("multiply parented object uses its first path")
   {
-    DataStructure ds;
-    auto* firstParent = DataGroup::Create(ds, "First");
-    auto* secondParent = DataGroup::Create(ds, "Second");
-    REQUIRE(firstParent != nullptr);
-    REQUIRE(secondParent != nullptr);
-    auto* sharedParent = DataGroup::Create(ds, "Shared", firstParent->getId());
-    REQUIRE(sharedParent != nullptr);
-    REQUIRE(ds.setAdditionalParent(sharedParent->getId(), secondParent->getId()));
-    const DataPath expectedPath = sharedParent->getDataPaths().front().createChildPath("ChildValues");
+    DataStructure dataStructure;
+    auto* firstParentPtr = DataGroup::Create(dataStructure, "First");
+    auto* secondParentPtr = DataGroup::Create(dataStructure, "Second");
+    REQUIRE(firstParentPtr != nullptr);
+    REQUIRE(secondParentPtr != nullptr);
+    auto* sharedParentPtr = DataGroup::Create(dataStructure, "Shared", firstParentPtr->getId());
+    REQUIRE(sharedParentPtr != nullptr);
+    REQUIRE(dataStructure.setAdditionalParent(sharedParentPtr->getId(), secondParentPtr->getId()));
+    const DataPath expectedPath = sharedParentPtr->getDataPaths().front().createChildPath("ChildValues");
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
 
-    auto result = DataArray<int32>::CreatePlanned(ds, expectedPath.getTargetName(), ShapeType{5}, ShapeType{1}, "", sharedParent->getId());
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, expectedPath.getTargetName(), ShapeType{5}, ShapeType{1}, "", sharedParentPtr->getId());
 
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(resolver->paths == std::vector<DataPath>{expectedPath});
@@ -2123,31 +2123,31 @@ TEST_CASE("StorageFormatPlan: planned array failures publish no object or notifi
 {
   SECTION("missing parent fails before policy resolution")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
 
-    auto result = DataArray<int32>::CreatePlanned(ds, "RejectedMissingParent", ShapeType{2}, ShapeType{1}, "", DataObject::IdType{99999});
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, "RejectedMissingParent", ShapeType{2}, ShapeType{1}, "", DataObject::IdType{99999});
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
     REQUIRE(result.errors().front().code == -10610);
     REQUIRE(resolver->paths.empty());
-    REQUIRE_FALSE(ds.containsData(DataPath({"RejectedMissingParent"})));
+    REQUIRE_FALSE(dataStructure.containsData(DataPath({"RejectedMissingParent"})));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 
   SECTION("resolver failure retains path and cause")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    resolver->failureMessage = "injected planned-array resolver failure -9881";
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    resolver->failure_message = "injected planned-array resolver failure -9881";
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath rejectedPath({"RejectedResolution"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "");
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "");
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
@@ -2155,43 +2155,43 @@ TEST_CASE("StorageFormatPlan: planned array failures publish no object or notifi
     REQUIRE(result.errors().front().message.find(rejectedPath.toString()) != std::string::npos);
     REQUIRE(result.errors().front().message.find("-9881") != std::string::npos);
     REQUIRE(resolver->paths == std::vector<DataPath>{rejectedPath});
-    REQUIRE_FALSE(ds.containsData(rejectedPath));
+    REQUIRE_FALSE(dataStructure.containsData(rejectedPath));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 
   SECTION("resolver allocation failure propagates")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    resolver->throwBadAllocation = true;
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    resolver->throw_bad_allocation = true;
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath rejectedPath({"RejectedAllocation"});
 
-    REQUIRE_THROWS_AS(DataArray<int32>::CreatePlanned(ds, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, ""), std::bad_alloc);
+    REQUIRE_THROWS_AS(DataArray<int32>::CreatePlanned(dataStructure, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, ""), std::bad_alloc);
     REQUIRE(resolver->paths == std::vector<DataPath>{rejectedPath});
-    REQUIRE_FALSE(ds.containsData(rejectedPath));
+    REQUIRE_FALSE(dataStructure.containsData(rejectedPath));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 
   SECTION("insertion failure occurs after one successful plan")
   {
-    DataStructure ds;
-    auto* nonGroupParent = DataArray<int32>::Create(ds, "NonGroupParent", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0));
-    REQUIRE(nonGroupParent != nullptr);
+    DataStructure dataStructure;
+    auto* nonGroupParentPtr = DataArray<int32>::Create(dataStructure, "NonGroupParent", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0));
+    REQUIRE(nonGroupParentPtr != nullptr);
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
-    DataStructObserver observer(ds);
+    dataStructure.setFormatResolver(resolver);
+    DataStructObserver observer(dataStructure);
     const DataPath rejectedPath({"NonGroupParent", "RejectedChild"});
 
-    auto result = DataArray<int32>::CreatePlanned(ds, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "", nonGroupParent->getId());
+    auto result = DataArray<int32>::CreatePlanned(dataStructure, rejectedPath.getTargetName(), ShapeType{2}, ShapeType{1}, "", nonGroupParentPtr->getId());
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
     REQUIRE(result.errors().front().code == -10612);
     REQUIRE(result.errors().front().message.find(rejectedPath.toString()) != std::string::npos);
     REQUIRE(resolver->paths == std::vector<DataPath>{rejectedPath});
-    REQUIRE_FALSE(ds.containsData(rejectedPath));
+    REQUIRE_FALSE(dataStructure.containsData(rejectedPath));
     REQUIRE(observer.getDataAddedCount() == 0);
   }
 }
@@ -2203,44 +2203,44 @@ TEST_CASE("StorageFormatPlan: planned factories reject invalid names before poli
   const bool importing = GENERATE(false, true);
   CAPTURE(invalidName, parented, importing);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   std::optional<DataObject::IdType> parentId;
   if(parented)
   {
-    auto* parent = DataGroup::Create(ds, "Parent");
-    REQUIRE(parent != nullptr);
-    parentId = parent->getId();
+    auto* parentPtr = DataGroup::Create(dataStructure, "Parent");
+    REQUIRE(parentPtr != nullptr);
+    parentId = parentPtr->getId();
   }
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
-  DataStructObserver observer(ds);
-  const usize initialObjectCount = ds.getAllDataObjectIds().size();
+  dataStructure.setFormatResolver(resolver);
+  DataStructObserver observer(dataStructure);
+  const usize initialObjectCount = dataStructure.getAllDataObjectIds().size();
   constexpr DataObject::IdType k_ImportId = 901;
 
-  Result<DataArray<int32>*> result = importing ? DataArray<int32>::ImportPlanned(ds, invalidName, k_ImportId, ShapeType{2}, ShapeType{1}, "", parentId) :
-                                                 DataArray<int32>::CreatePlanned(ds, invalidName, ShapeType{2}, ShapeType{1}, "", parentId);
+  Result<DataArray<int32>*> result = importing ? DataArray<int32>::ImportPlanned(dataStructure, invalidName, k_ImportId, ShapeType{2}, ShapeType{1}, "", parentId) :
+                                                 DataArray<int32>::CreatePlanned(dataStructure, invalidName, ShapeType{2}, ShapeType{1}, "", parentId);
 
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   REQUIRE(result.errors().front().code == -10610);
   REQUIRE(result.errors().front().message.find(invalidName) != std::string::npos);
   REQUIRE(resolver->paths.empty());
-  REQUIRE(ds.getAllDataObjectIds().size() == initialObjectCount);
-  REQUIRE(ds.getData(k_ImportId) == nullptr);
+  REQUIRE(dataStructure.getAllDataObjectIds().size() == initialObjectCount);
+  REQUIRE(dataStructure.getData(k_ImportId) == nullptr);
   REQUIRE(observer.getDataAddedCount() == 0);
 }
 
 TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension shapes", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   const DataPath emptyTuplePath({"EmptyTuples"});
   const DataPath emptyComponentPath({"EmptyComponents"});
   const DataPath scalarPath({"Scalar"});
   const DataPath zeroDimensionPath({"ZeroDimension"});
 
-  auto emptyTupleResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(ds, emptyTuplePath, ShapeType{}, ShapeType{3}, "");
+  auto emptyTupleResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(dataStructure, emptyTuplePath, ShapeType{}, ShapeType{3}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(emptyTupleResult);
   REQUIRE(emptyTupleResult.value()->getTupleShape().empty());
   REQUIRE(emptyTupleResult.value()->getComponentShape() == ShapeType{3});
@@ -2248,7 +2248,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(emptyTupleResult.value()->getNumberOfComponents() == 3);
   REQUIRE(emptyTupleResult.value()->getSize() == 3);
 
-  auto emptyComponentResult = DataArray<uint64>::CreatePlanned(ds, emptyComponentPath.getTargetName(), ShapeType{3}, ShapeType{}, "");
+  auto emptyComponentResult = DataArray<uint64>::CreatePlanned(dataStructure, emptyComponentPath.getTargetName(), ShapeType{3}, ShapeType{}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(emptyComponentResult);
   REQUIRE(emptyComponentResult.value()->getTupleShape() == ShapeType{3});
   REQUIRE(emptyComponentResult.value()->getComponentShape().empty());
@@ -2256,7 +2256,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(emptyComponentResult.value()->getNumberOfComponents() == 1);
   REQUIRE(emptyComponentResult.value()->getSize() == 3);
 
-  auto scalarResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(ds, scalarPath, ShapeType{}, ShapeType{}, "");
+  auto scalarResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(dataStructure, scalarPath, ShapeType{}, ShapeType{}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(scalarResult);
   REQUIRE(scalarResult.value()->getTupleShape().empty());
   REQUIRE(scalarResult.value()->getComponentShape().empty());
@@ -2264,7 +2264,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(scalarResult.value()->getNumberOfComponents() == 1);
   REQUIRE(scalarResult.value()->getSize() == 1);
 
-  auto zeroDimensionResult = DataArray<uint64>::CreatePlanned(ds, zeroDimensionPath.getTargetName(), ShapeType{3, 0}, ShapeType{2}, "");
+  auto zeroDimensionResult = DataArray<uint64>::CreatePlanned(dataStructure, zeroDimensionPath.getTargetName(), ShapeType{3, 0}, ShapeType{2}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(zeroDimensionResult);
   REQUIRE(zeroDimensionResult.value()->getTupleShape() == ShapeType{3, 0});
   REQUIRE(zeroDimensionResult.value()->getComponentShape() == ShapeType{2});
@@ -2276,11 +2276,11 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(uint64), 3 * sizeof(uint64), sizeof(uint64), 0});
 
   const usize maximum = std::numeric_limits<usize>::max();
-  auto overflowResult = DataStoreUtilities::CreatePlannedDataStore<uint8>(ds, DataPath({"Overflow"}), ShapeType{}, ShapeType{maximum, 2}, "");
+  auto overflowResult = DataStoreUtilities::CreatePlannedDataStore<uint8>(dataStructure, DataPath({"Overflow"}), ShapeType{}, ShapeType{maximum, 2}, "");
   REQUIRE(overflowResult.invalid());
   REQUIRE_FALSE(overflowResult.errors().empty());
   REQUIRE(overflowResult.errors().front().code == -10614);
-  auto arrayOverflowResult = DataArray<uint8>::CreatePlanned(ds, "ArrayOverflow", ShapeType{}, ShapeType{maximum, 2}, "");
+  auto arrayOverflowResult = DataArray<uint8>::CreatePlanned(dataStructure, "ArrayOverflow", ShapeType{}, ShapeType{maximum, 2}, "");
   REQUIRE(arrayOverflowResult.invalid());
   REQUIRE_FALSE(arrayOverflowResult.errors().empty());
   REQUIRE(arrayOverflowResult.errors().front().code == -10611);
@@ -2289,12 +2289,12 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
 
 TEST_CASE("StorageFormatPlan: value stores retain populated scalar shape semantics", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   const DataPath valuePath({"ScalarValues"});
 
-  auto store = DataStoreUtilities::CreateDataStore<uint64>(ds, valuePath, ShapeType{3}, ShapeType{});
+  auto store = DataStoreUtilities::CreateDataStore<uint64>(dataStructure, valuePath, ShapeType{3}, ShapeType{});
 
   REQUIRE(store != nullptr);
   REQUIRE(store->getNumberOfTuples() == 3);
@@ -2306,28 +2306,28 @@ TEST_CASE("StorageFormatPlan: value stores retain populated scalar shape semanti
 
 TEST_CASE("StorageFormatPlan: scalar-shape metadata copy retains identity-product semantics", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   auto placeholderResult = EmptyDataStore<uint64>::Create(ShapeType{3}, ShapeType{}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(placeholderResult);
   std::shared_ptr<AbstractDataStore<uint64>> placeholder(std::move(placeholderResult.value()));
-  auto* source = DataArray<uint64>::Create(ds, "MetadataSource", std::move(placeholder));
-  REQUIRE(source != nullptr);
+  auto* sourcePtr = DataArray<uint64>::Create(dataStructure, "MetadataSource", std::move(placeholder));
+  REQUIRE(sourcePtr != nullptr);
   const DataPath copyPath({"MetadataCopy"});
 
-  auto copiedObject = source->deepCopy(copyPath);
+  auto copiedObject = sourcePtr->deepCopy(copyPath);
 
   REQUIRE(copiedObject != nullptr);
   REQUIRE(resolver->paths == std::vector<DataPath>{copyPath});
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(uint64)});
-  const auto* copiedArray = ds.getDataAs<DataArray<uint64>>(copyPath);
-  REQUIRE(copiedArray != nullptr);
-  REQUIRE(copiedArray->getTupleShape() == ShapeType{3});
-  REQUIRE(copiedArray->getComponentShape().empty());
-  REQUIRE(copiedArray->getNumberOfTuples() == 3);
-  REQUIRE(copiedArray->getNumberOfComponents() == 1);
-  REQUIRE(copiedArray->getSize() == 3);
+  const auto* copiedArrayPtr = dataStructure.getDataAs<DataArray<uint64>>(copyPath);
+  REQUIRE(copiedArrayPtr != nullptr);
+  REQUIRE(copiedArrayPtr->getTupleShape() == ShapeType{3});
+  REQUIRE(copiedArrayPtr->getComponentShape().empty());
+  REQUIRE(copiedArrayPtr->getNumberOfTuples() == 3);
+  REQUIRE(copiedArrayPtr->getNumberOfComponents() == 1);
+  REQUIRE(copiedArrayPtr->getSize() == 3);
 }
 
 TEST_CASE("StorageFormatPlan: ArrayCreation preflight records plans without value factories", "[simplnx][DataArray][StorageFormatPlan]")
@@ -2352,18 +2352,18 @@ TEST_CASE("StorageFormatPlan: ArrayCreation preflight records plans without valu
   auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath memoryPath({"MemoryPlan"});
   const DataPath oocPath({"OocPlan"});
-  auto memoryResult = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, memoryPath, IDataAction::Mode::Preflight, Preferences::k_InMemoryFormat.str());
+  auto memoryResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, memoryPath, IDataAction::Mode::Preflight, Preferences::k_InMemoryFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(memoryResult);
-  auto oocResult = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{3}, ShapeType{2}, oocPath, IDataAction::Mode::Preflight, format);
+  auto oocResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, oocPath, IDataAction::Mode::Preflight, format);
   SIMPLNX_RESULT_REQUIRE_VALID(oocResult);
 
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<int32>>(memoryPath));
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<int32>>(oocPath));
-  const auto& memoryArray = ds.getDataRefAs<DataArray<int32>>(memoryPath);
-  const auto& oocArray = ds.getDataRefAs<DataArray<int32>>(oocPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(memoryPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(oocPath));
+  const auto& memoryArray = dataStructure.getDataRefAs<DataArray<int32>>(memoryPath);
+  const auto& oocArray = dataStructure.getDataRefAs<DataArray<int32>>(oocPath);
   REQUIRE(memoryArray.getStoreType() == IDataStore::StoreType::Empty);
   REQUIRE(memoryArray.getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(oocArray.getStoreType() == IDataStore::StoreType::Empty);
@@ -2405,13 +2405,13 @@ TEST_CASE("StorageFormatPlan: value helper preserves nullable factory failures",
   auto managerRegistrationResult = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  resolver->selectedFormat = format;
-  ds.setFormatResolver(resolver);
+  resolver->selected_format = format;
+  dataStructure.setFormatResolver(resolver);
   const DataPath path({"RejectedValueStore"});
 
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, ShapeType{2}, ShapeType{1});
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, ShapeType{2}, ShapeType{1});
 
   REQUIRE(store == nullptr);
   REQUIRE(*selectedFactoryCalls == 1);
@@ -2434,13 +2434,13 @@ TEST_CASE("StorageFormatPlan: canonical memory factory identity is accepted", "[
   auto restoreMemoryManager = MakeScopeGuard([memoryEntry, savedMemoryManager]() noexcept { memoryEntry->second = savedMemoryManager; });
   memoryEntry->second = memoryManager;
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath actionPath({"CanonicalActionMemory"});
   const DataPath helperPath({"CanonicalHelperMemory"});
 
-  auto actionResult = ArrayCreationUtilities::CreateArray<int32>(ds, ShapeType{2}, ShapeType{1}, actionPath, IDataAction::Mode::Execute, Preferences::k_InMemoryFormat.str());
+  auto actionResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{2}, ShapeType{1}, actionPath, IDataAction::Mode::Execute, Preferences::k_InMemoryFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
-  auto helperStore = DataStoreUtilities::CreateDataStore<int32>(ds, helperPath, ShapeType{2}, ShapeType{1});
+  auto helperStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, helperPath, ShapeType{2}, ShapeType{1});
 
   REQUIRE(helperStore != nullptr);
   REQUIRE(helperStore->getStoreType() == IDataStore::StoreType::InMemory);
@@ -2450,40 +2450,40 @@ TEST_CASE("StorageFormatPlan: canonical memory factory identity is accepted", "[
 
 TEST_CASE("StorageFormatPlan: null and prepared stores preserve array state", "[simplnx][DataArray][StorageFormatPlan]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  resolver->failureMessage = "prepared stores must not resolve policy";
-  ds.setFormatResolver(resolver);
-  DataStructObserver observer(ds);
+  resolver->failure_message = "prepared stores must not resolve policy";
+  dataStructure.setFormatResolver(resolver);
+  DataStructObserver observer(dataStructure);
 
-  REQUIRE(DataArray<int32>::Create(ds, "NullCreate", nullptr) == nullptr);
-  REQUIRE(DataArray<int32>::Import(ds, "NullImport", 801, nullptr) == nullptr);
-  REQUIRE_FALSE(ds.containsData(DataPath({"NullCreate"})));
-  REQUIRE_FALSE(ds.containsData(DataPath({"NullImport"})));
+  REQUIRE(DataArray<int32>::Create(dataStructure, "NullCreate", nullptr) == nullptr);
+  REQUIRE(DataArray<int32>::Import(dataStructure, "NullImport", 801, nullptr) == nullptr);
+  REQUIRE_FALSE(dataStructure.containsData(DataPath({"NullCreate"})));
+  REQUIRE_FALSE(dataStructure.containsData(DataPath({"NullImport"})));
   REQUIRE(observer.getDataAddedCount() == 0);
 
   auto createStore = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 7);
-  auto* created = DataArray<int32>::Create(ds, "PreparedCreate", createStore);
-  REQUIRE(created != nullptr);
-  REQUIRE(created->getIDataStore() == createStore.get());
+  auto* createdPtr = DataArray<int32>::Create(dataStructure, "PreparedCreate", createStore);
+  REQUIRE(createdPtr != nullptr);
+  REQUIRE(createdPtr->getIDataStore() == createStore.get());
 
   auto importStore = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 8);
-  auto* imported = DataArray<int32>::Import(ds, "PreparedImport", 802, importStore);
-  REQUIRE(imported != nullptr);
-  REQUIRE(imported->getId() == 802);
-  REQUIRE(imported->getIDataStore() == importStore.get());
+  auto* importedPtr = DataArray<int32>::Import(dataStructure, "PreparedImport", 802, importStore);
+  REQUIRE(importedPtr != nullptr);
+  REQUIRE(importedPtr->getId() == 802);
+  REQUIRE(importedPtr->getIDataStore() == importStore.get());
 
-  const auto* original = created->getIDataStore();
-  auto nullSetterResult = created->setDataStore(nullptr);
+  const auto* originalPtr = createdPtr->getIDataStore();
+  auto nullSetterResult = createdPtr->setDataStore(nullptr);
   REQUIRE(nullSetterResult.invalid());
   REQUIRE_FALSE(nullSetterResult.errors().empty());
   REQUIRE(nullSetterResult.errors().front().code == -10613);
-  REQUIRE(created->getIDataStore() == original);
+  REQUIRE(createdPtr->getIDataStore() == originalPtr);
 
   auto replacement = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 9);
-  auto replacementResult = created->setDataStore(replacement);
+  auto replacementResult = createdPtr->setDataStore(replacement);
   SIMPLNX_RESULT_REQUIRE_VALID(replacementResult);
-  REQUIRE(created->getIDataStore() == replacement.get());
+  REQUIRE(createdPtr->getIDataStore() == replacement.get());
   REQUIRE(resolver->paths.empty());
   REQUIRE(observer.getDataAddedCount() == 2);
 }
@@ -2494,7 +2494,7 @@ TEST_CASE("Store copies preserve empty shapes and reject overflow before allocat
   ProbedCopyStore noTuples({0, 7}, {3}, probe);
   auto emptyCopy = noTuples.deepCopy("");
   REQUIRE(emptyCopy->getTupleShape() == ShapeType{0, 7});
-  REQUIRE(probe->readSizes.empty());
+  REQUIRE(probe->read_sizes.empty());
   REQUIRE_THROWS_AS(CalculateStoreCopyBytes({std::numeric_limits<usize>::max(), 2}, {1}, 1), std::runtime_error);
   REQUIRE_THROWS_AS(CalculateStoreCopyBytes({std::numeric_limits<usize>::max()}, {2}, 1), std::runtime_error);
   REQUIRE_THROWS_AS(CalculateStoreCopyBytes({std::numeric_limits<usize>::max()}, {1}, 2), std::runtime_error);
@@ -2536,37 +2536,37 @@ TEST_CASE("List and string store copies own independent values and preserve plac
 
 TEST_CASE("Array and NeighborList copies pass resolved memory formats and destination paths", "[simplnx][DataStore][DeepCopy]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   auto resolver = std::make_shared<CopyPathResolver>();
-  ds.setFormatResolver(resolver);
+  dataStructure.setFormatResolver(resolver);
   auto store = std::make_shared<RecordingCopyStore>(ShapeType{3}, ShapeType{2}, 7);
-  auto* array = DataArray<int32>::Create(ds, "Numeric", store);
-  REQUIRE(array != nullptr);
-  REQUIRE(array->deepCopy(DataPath({"NumericCopy"})) != nullptr);
+  auto* arrayPtr = DataArray<int32>::Create(dataStructure, "Numeric", store);
+  REQUIRE(arrayPtr != nullptr);
+  REQUIRE(arrayPtr->deepCopy(DataPath({"NumericCopy"})) != nullptr);
   REQUIRE(store->formats == std::vector<std::string>{""});
   REQUIRE(resolver->paths.back() == DataPath({"NumericCopy"}));
   REQUIRE(resolver->bytes.back() == 6 * sizeof(int32));
 
-  auto* firstParent = DataGroup::Create(ds, "First");
-  auto* secondParent = DataGroup::Create(ds, "Second");
-  REQUIRE(firstParent != nullptr);
-  REQUIRE(secondParent != nullptr);
+  auto* firstParentPtr = DataGroup::Create(dataStructure, "First");
+  auto* secondParentPtr = DataGroup::Create(dataStructure, "Second");
+  REQUIRE(firstParentPtr != nullptr);
+  REQUIRE(secondParentPtr != nullptr);
   auto listStore = std::make_shared<RecordingCopyListStore>(ShapeType{3});
   listStore->setList(0, std::vector<int32>{2, 4, 6});
-  auto* source = NeighborList<int32>::Create(ds, "Source", listStore);
-  auto* destination = NeighborList<int32>::Create(ds, "Destination", ShapeType{3}, secondParent->getId());
-  REQUIRE(source != nullptr);
-  REQUIRE(destination != nullptr);
-  REQUIRE(ds.setAdditionalParent(destination->getId(), firstParent->getId()));
-  const auto expectedPath = destination->getDataPaths().front();
-  *destination = *source;
+  auto* sourcePtr = NeighborList<int32>::Create(dataStructure, "Source", listStore);
+  auto* destinationPtr = NeighborList<int32>::Create(dataStructure, "Destination", ShapeType{3}, secondParentPtr->getId());
+  REQUIRE(sourcePtr != nullptr);
+  REQUIRE(destinationPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(destinationPtr->getId(), firstParentPtr->getId()));
+  const auto expectedPath = destinationPtr->getDataPaths().front();
+  *destinationPtr = *sourcePtr;
   REQUIRE(listStore->formats == std::vector<std::string>{""});
   REQUIRE(resolver->paths.back() == expectedPath);
   REQUIRE(resolver->bytes.back() == 3 * sizeof(int32));
-  REQUIRE(source->deepCopy(DataPath({"ListCopy"})) != nullptr);
+  REQUIRE(sourcePtr->deepCopy(DataPath({"ListCopy"})) != nullptr);
   REQUIRE(listStore->formats == std::vector<std::string>{"", ""});
   REQUIRE(resolver->paths.back() == DataPath({"ListCopy"}));
-  REQUIRE(source->eraseTuples({1}) == 0);
+  REQUIRE(sourcePtr->eraseTuples({1}) == 0);
   REQUIRE(listStore->formats == std::vector<std::string>{"", "", ""});
   REQUIRE(resolver->paths.back() == DataPath({"Source"}));
 }
@@ -2594,22 +2594,22 @@ public:
 
 TEST_CASE("NeighborList missing destination paths preserve the original store", "[simplnx][DataStore][DeepCopy]")
 {
-  DataStructure ds;
-  auto* source = NeighborList<int32>::Create(ds, "Source", ShapeType{3});
-  REQUIRE(source != nullptr);
-  source->setList(0, std::make_shared<std::vector<int32>>(std::initializer_list<int32>{7, 9}));
-  NeighborList<int32> orphan(*source);
-  DetachedCopyList detached(*source);
-  for(auto* destination : std::vector<NeighborList<int32>*>{&orphan, &detached})
+  DataStructure dataStructure;
+  auto* sourcePtr = NeighborList<int32>::Create(dataStructure, "Source", ShapeType{3});
+  REQUIRE(sourcePtr != nullptr);
+  sourcePtr->setList(0, std::make_shared<std::vector<int32>>(std::initializer_list<int32>{7, 9}));
+  NeighborList<int32> orphan(*sourcePtr);
+  DetachedCopyList detached(*sourcePtr);
+  for(auto* destinationPtr : std::vector<NeighborList<int32>*>{&orphan, &detached})
   {
-    const auto originalStore = destination->getStore();
-    REQUIRE_THROWS_WITH(*destination = *source, Catch::Contains("Source") && Catch::Contains("destination array path"));
-    REQUIRE(destination->getStore() == originalStore);
-    REQUIRE(destination->eraseTuples({1}) == NeighborList<int32>::k_MissingCopyDestinationError);
-    REQUIRE(destination->getStore() == originalStore);
-    REQUIRE(destination->getNumberOfTuples() == 3);
-    REQUIRE(destination->getStore()->getList(0) == std::vector<int32>{7, 9});
-    REQUIRE(destination->eraseTuples({}) == 0);
+    const auto originalStore = destinationPtr->getStore();
+    REQUIRE_THROWS_WITH(*destinationPtr = *sourcePtr, Catch::Contains("Source") && Catch::Contains("destination array path"));
+    REQUIRE(destinationPtr->getStore() == originalStore);
+    REQUIRE(destinationPtr->eraseTuples({1}) == NeighborList<int32>::k_MissingCopyDestinationError);
+    REQUIRE(destinationPtr->getStore() == originalStore);
+    REQUIRE(destinationPtr->getNumberOfTuples() == 3);
+    REQUIRE(destinationPtr->getStore()->getList(0) == std::vector<int32>{7, 9});
+    REQUIRE(destinationPtr->eraseTuples({}) == 0);
   }
 }
 
@@ -2620,33 +2620,33 @@ TEST_CASE("Large metadata array copies resolve exact logical bytes without alloc
   {
     const ShapeType tupleShape{static_cast<usize>(k_LogicalBytes / sizeof(int32))};
     const ShapeType componentShape{1};
-    DataStructure ds;
+    DataStructure dataStructure;
     auto resolver = std::make_shared<CopyPathResolver>();
-    ds.setFormatResolver(resolver);
+    dataStructure.setFormatResolver(resolver);
     auto sourceStoreResult = EmptyDataStore<int32>::Create(tupleShape, componentShape, "");
     SIMPLNX_RESULT_REQUIRE_VALID(sourceStoreResult);
     std::shared_ptr<EmptyDataStore<int32>> sourceStore(std::move(sourceStoreResult.value()));
-    auto* source = DataArray<int32>::Create(ds, "LargeMetadata", sourceStore);
-    REQUIRE(source != nullptr);
+    auto* sourcePtr = DataArray<int32>::Create(dataStructure, "LargeMetadata", sourceStore);
+    REQUIRE(sourcePtr != nullptr);
     REQUIRE(sourceStore->getDataFormat().empty());
-    REQUIRE(source->getIDataStore() == sourceStore.get());
+    REQUIRE(sourcePtr->getIDataStore() == sourceStore.get());
     const DataPath destinationPath({"LargeMetadataCopy"});
-    auto copy = source->deepCopy(destinationPath);
+    auto copy = sourcePtr->deepCopy(destinationPath);
     REQUIRE(copy != nullptr);
     REQUIRE(resolver->paths == std::vector<DataPath>{destinationPath});
     REQUIRE(resolver->bytes == std::vector<uint64>{k_LogicalBytes});
-    auto* copiedArray = dynamic_cast<DataArray<int32>*>(copy.get());
-    REQUIRE(copiedArray != nullptr);
-    REQUIRE(copiedArray->getIDataStore() != source->getIDataStore());
-    REQUIRE(dynamic_cast<EmptyDataStore<int32>*>(copiedArray->getIDataStore()) != nullptr);
-    REQUIRE(copiedArray->getIDataStore()->getStoreType() == IDataStore::StoreType::Empty);
-    REQUIRE(copiedArray->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory);
-    REQUIRE(copiedArray->getIDataStore()->getDataFormat().empty());
-    REQUIRE(copiedArray->getTupleShape() == tupleShape);
-    REQUIRE(copiedArray->getComponentShape() == componentShape);
-    REQUIRE_THROWS_AS(copiedArray->getDataStoreRef().getValue(0), std::runtime_error);
+    auto* copiedArrayPtr = dynamic_cast<DataArray<int32>*>(copy.get());
+    REQUIRE(copiedArrayPtr != nullptr);
+    REQUIRE(copiedArrayPtr->getIDataStore() != sourcePtr->getIDataStore());
+    REQUIRE(dynamic_cast<EmptyDataStore<int32>*>(copiedArrayPtr->getIDataStore()) != nullptr);
+    REQUIRE(copiedArrayPtr->getIDataStore()->getStoreType() == IDataStore::StoreType::Empty);
+    REQUIRE(copiedArrayPtr->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE(copiedArrayPtr->getIDataStore()->getDataFormat().empty());
+    REQUIRE(copiedArrayPtr->getTupleShape() == tupleShape);
+    REQUIRE(copiedArrayPtr->getComponentShape() == componentShape);
+    REQUIRE_THROWS_AS(copiedArrayPtr->getDataStoreRef().getValue(0), std::runtime_error);
     REQUIRE(sourceStore->getDataFormat().empty());
-    REQUIRE(source->getIDataStore() == sourceStore.get());
+    REQUIRE(sourcePtr->getIDataStore() == sourceStore.get());
   }
   else
   {
@@ -2777,14 +2777,14 @@ TEST_CASE("Numeric placeholders retain initialization through copy and move", "[
     {
       copy = source->deepCopy("");
     }
-    const auto* typedCopy = dynamic_cast<const EmptyDataStore<int32>*>(copy.get());
-    REQUIRE(typedCopy != nullptr);
-    CHECK(typedCopy->getStoreType() == IDataStore::StoreType::Empty);
-    CHECK(typedCopy->getPlannedStoreType() == IDataStore::StoreType::InMemory);
-    CHECK(typedCopy->getTupleShape() == ShapeType{8});
-    CHECK(typedCopy->getComponentShape() == ShapeType{2});
-    CHECK(typedCopy->getInitValue() == initial);
-    CHECK(typedCopy->getDataFormat().empty());
+    const auto* typedCopyPtr = dynamic_cast<const EmptyDataStore<int32>*>(copy.get());
+    REQUIRE(typedCopyPtr != nullptr);
+    CHECK(typedCopyPtr->getStoreType() == IDataStore::StoreType::Empty);
+    CHECK(typedCopyPtr->getPlannedStoreType() == IDataStore::StoreType::InMemory);
+    CHECK(typedCopyPtr->getTupleShape() == ShapeType{8});
+    CHECK(typedCopyPtr->getComponentShape() == ShapeType{2});
+    CHECK(typedCopyPtr->getInitValue() == initial);
+    CHECK(typedCopyPtr->getDataFormat().empty());
   }
 }
 
@@ -2855,22 +2855,22 @@ TEST_CASE("DataArrayUtilities CopyData overlap", "[DataArrayUtilities][L05]")
   {
     store = std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{components}, 0);
   }
-  auto* values = Int32Array::Create(dataStructure, "Values", store);
-  REQUIRE(values != nullptr);
-  for(usize i = 0; i < values->getSize(); ++i)
+  auto* valuesPtr = Int32Array::Create(dataStructure, "Values", store);
+  REQUIRE(valuesPtr != nullptr);
+  for(usize i = 0; i < valuesPtr->getSize(); ++i)
   {
-    (*values)[i] = static_cast<int32>(i);
+    (*valuesPtr)[i] = static_cast<int32>(i);
   }
-  auto* sourceValues = sharedStore ? Int32Array::Create(dataStructure, "Alias", store) : values;
-  REQUIRE(sourceValues != nullptr);
-  auto result = CopyFromArray::CopyData(*sourceValues, *values, destination, source, count);
+  auto* sourceValuesPtr = sharedStore ? Int32Array::Create(dataStructure, "Alias", store) : valuesPtr;
+  REQUIRE(sourceValuesPtr != nullptr);
+  auto result = CopyFromArray::CopyData(*sourceValuesPtr, *valuesPtr, destination, source, count);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  for(usize i = 0; i < values->getSize(); ++i)
+  for(usize i = 0; i < valuesPtr->getSize(); ++i)
   {
     const bool copied = i >= destination * components && i < (destination + count) * components;
     const int32 expected = static_cast<int32>(copied ? i - destination * components + source * components : i);
     CAPTURE(i);
-    REQUIRE((*values)[i] == expected);
+    REQUIRE((*valuesPtr)[i] == expected);
   }
 }
 
@@ -2878,13 +2878,13 @@ TEST_CASE("DataArrayUtilities CopyData string overlap", "[DataArrayUtilities][L0
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
-  auto* values = StringArray::CreateWithValues(dataStructure, "Values", {6}, {"a", "b", "c", "d", "e", "f"});
-  REQUIRE(values != nullptr);
-  auto result = CopyFromArray::CopyData(*values, *values, 2, 1, 3);
+  auto* valuesPtr = StringArray::CreateWithValues(dataStructure, "Values", {6}, {"a", "b", "c", "d", "e", "f"});
+  REQUIRE(valuesPtr != nullptr);
+  auto result = CopyFromArray::CopyData(*valuesPtr, *valuesPtr, 2, 1, 3);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const std::vector<std::string> expected = {"a", "b", "b", "c", "d", "f"};
   for(usize i = 0; i < expected.size(); ++i)
   {
-    CHECK((*values)[i] == expected[i]);
+    CHECK((*valuesPtr)[i] == expected[i]);
   }
 }

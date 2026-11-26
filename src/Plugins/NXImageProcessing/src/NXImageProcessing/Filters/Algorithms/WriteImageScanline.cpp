@@ -49,9 +49,9 @@ void ApplyImageFlip(std::vector<uint8>& buffer, usize width, usize height, usize
     // Reverse row order (mirror top-to-bottom).
     for(usize y = 0; y < height / 2; ++y)
     {
-      uint8* rowTop = buffer.data() + y * rowBytes;
-      uint8* rowBot = buffer.data() + (height - 1 - y) * rowBytes;
-      std::swap_ranges(rowTop, rowTop + rowBytes, rowBot);
+      uint8* rowTopPtr = buffer.data() + y * rowBytes;
+      uint8* rowBotPtr = buffer.data() + (height - 1 - y) * rowBytes;
+      std::swap_ranges(rowTopPtr, rowTopPtr + rowBytes, rowBotPtr);
     }
   }
   else if(flip == ImageFlipTransform::FlipAboutYAxis)
@@ -59,12 +59,12 @@ void ApplyImageFlip(std::vector<uint8>& buffer, usize width, usize height, usize
     // Reverse pixel order within each row (mirror left-to-right).
     for(usize y = 0; y < height; ++y)
     {
-      uint8* row = buffer.data() + y * rowBytes;
+      uint8* rowPtr = buffer.data() + y * rowBytes;
       for(usize x = 0; x < width / 2; ++x)
       {
-        uint8* pixL = row + x * pixelStrideBytes;
-        uint8* pixR = row + (width - 1 - x) * pixelStrideBytes;
-        std::swap_ranges(pixL, pixL + pixelStrideBytes, pixR);
+        uint8* pixLPtr = rowPtr + x * pixelStrideBytes;
+        uint8* pixRPtr = rowPtr + (width - 1 - x) * pixelStrideBytes;
+        std::swap_ranges(pixLPtr, pixLPtr + pixelStrideBytes, pixRPtr);
       }
     }
   }

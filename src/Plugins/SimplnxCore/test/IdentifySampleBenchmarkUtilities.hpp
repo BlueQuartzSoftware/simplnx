@@ -70,13 +70,13 @@ inline uint64 ParsePositiveDecimal(std::string_view text, std::string_view name)
  */
 inline uint64 ReadPositiveEnvironment(const char* name, uint64 fallback)
 {
-  const char* raw = std::getenv(name);
-  if(raw == nullptr)
+  const char* rawPtr = std::getenv(name);
+  if(rawPtr == nullptr)
   {
     return fallback;
   }
   usize length = 0;
-  while(length <= 20 && raw[length] != '\0')
+  while(length <= 20 && rawPtr[length] != '\0')
   {
     length++;
   }
@@ -84,7 +84,7 @@ inline uint64 ReadPositiveEnvironment(const char* name, uint64 fallback)
   {
     throw std::invalid_argument(std::string(name) + " exceeds twenty decimal digits");
   }
-  return ParsePositiveDecimal(std::string_view(raw, length), name);
+  return ParsePositiveDecimal(std::string_view(rawPtr, length), name);
 }
 
 inline int64 UtcMilliseconds()
@@ -186,18 +186,18 @@ template <class T>
 DataStructure CreateBenchmarkFixture()
 {
   DataStructure data;
-  auto* image = ImageGeom::Create(data, IdentifySampleBatchTest::k_ImagePath.getTargetName());
-  REQUIRE(image != nullptr);
-  image->setDimensions({k_Dimension, k_Dimension, k_Dimension});
-  REQUIRE(image->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cells = AttributeMatrix::Create(data, "CellData", {k_Dimension, k_Dimension, k_Dimension}, image->getId());
-  REQUIRE(cells != nullptr);
-  image->setCellData(*cells);
-  auto store = DataStoreUtilities::CreateDataStore<T>(data, IdentifySampleBatchTest::k_MaskPath, cells->getShape(), ShapeType{1});
+  auto* imagePtr = ImageGeom::Create(data, IdentifySampleBatchTest::k_ImagePath.getTargetName());
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({k_Dimension, k_Dimension, k_Dimension});
+  REQUIRE(imagePtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* cellsPtr = AttributeMatrix::Create(data, "CellData", {k_Dimension, k_Dimension, k_Dimension}, imagePtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imagePtr->setCellData(*cellsPtr);
+  auto store = DataStoreUtilities::CreateDataStore<T>(data, IdentifySampleBatchTest::k_MaskPath, cellsPtr->getShape(), ShapeType{1});
   REQUIRE(store != nullptr);
-  auto* mask = DataArray<T>::Create(data, "Mask", store, cells->getId());
-  REQUIRE(mask != nullptr);
+  auto* maskPtr = DataArray<T>::Create(data, "Mask", store, cellsPtr->getId());
+  REQUIRE(maskPtr != nullptr);
   auto xy = std::make_unique<T[]>(k_XyValues);
   for(usize z = 0; z < k_Dimension; z++)
   {
@@ -526,28 +526,28 @@ private:
 template <class T>
 void RequireFullWidthYzBatchObservations(const LogicalCounters& counts)
 {
-  constexpr uint64 expectedBatches = k_Dimension / 8;
-  constexpr uint64 expectedExtraBytes = 7 * k_XyValues * sizeof(T);
+  constexpr uint64 k_ExpectedBatches = k_Dimension / 8;
+  constexpr uint64 k_ExpectedExtraBytes = 7 * k_XyValues * sizeof(T);
   static_assert(k_Dimension % 8 == 0);
   REQUIRE_FALSE(counts.invalidExtraAccounting);
   REQUIRE(counts.extraLiveBytes == 0);
   REQUIRE(counts.extraRetainedBytes == 0);
-  REQUIRE(counts.extraAllocationCount == expectedBatches);
-  REQUIRE(counts.extraReleaseCount == expectedBatches);
-  REQUIRE(counts.extraRequestCount == expectedBatches);
-  REQUIRE(counts.extraGrantCount == expectedBatches);
-  REQUIRE(counts.extraRetainCount == expectedBatches);
-  REQUIRE(counts.extraReservationReleaseCount == expectedBatches);
-  REQUIRE(counts.extraAllocatedBytes == expectedBatches * expectedExtraBytes);
-  REQUIRE(counts.extraPeakBytes == expectedExtraBytes);
-  REQUIRE(counts.extraRequestedBytes == expectedBatches * expectedExtraBytes);
-  REQUIRE(counts.extraRequestedMaxBytes == expectedExtraBytes);
-  REQUIRE(counts.extraGrantedBytes == expectedBatches * expectedExtraBytes);
-  REQUIRE(counts.extraGrantedMaxBytes == expectedExtraBytes);
-  REQUIRE(counts.extraRetainedMaxBytes == expectedExtraBytes);
+  REQUIRE(counts.extraAllocationCount == k_ExpectedBatches);
+  REQUIRE(counts.extraReleaseCount == k_ExpectedBatches);
+  REQUIRE(counts.extraRequestCount == k_ExpectedBatches);
+  REQUIRE(counts.extraGrantCount == k_ExpectedBatches);
+  REQUIRE(counts.extraRetainCount == k_ExpectedBatches);
+  REQUIRE(counts.extraReservationReleaseCount == k_ExpectedBatches);
+  REQUIRE(counts.extraAllocatedBytes == k_ExpectedBatches * k_ExpectedExtraBytes);
+  REQUIRE(counts.extraPeakBytes == k_ExpectedExtraBytes);
+  REQUIRE(counts.extraRequestedBytes == k_ExpectedBatches * k_ExpectedExtraBytes);
+  REQUIRE(counts.extraRequestedMaxBytes == k_ExpectedExtraBytes);
+  REQUIRE(counts.extraGrantedBytes == k_ExpectedBatches * k_ExpectedExtraBytes);
+  REQUIRE(counts.extraGrantedMaxBytes == k_ExpectedExtraBytes);
+  REQUIRE(counts.extraRetainedMaxBytes == k_ExpectedExtraBytes);
   REQUIRE(counts.extraPeakBytes <= counts.extraRetainedMaxBytes);
   REQUIRE(counts.extraRetainedMaxBytes <= counts.extraGrantedMaxBytes);
-  REQUIRE(counts.batchCount == expectedBatches);
+  REQUIRE(counts.batchCount == k_ExpectedBatches);
   REQUIRE(counts.batchPlanes == k_Dimension);
   REQUIRE(counts.minimumBatchWidth == 8);
   REQUIRE(counts.maximumBatchWidth == 8);

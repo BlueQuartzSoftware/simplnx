@@ -20,13 +20,13 @@ constexpr int32 k_ClassTypeErrorCode = -3246;
 
 Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IDataAction::Mode mode)
 {
-  DataObject* targetObject = dataStructure.getData(path);
-  if(targetObject == nullptr)
+  DataObject* targetObjectPtr = dataStructure.getData(path);
+  if(targetObjectPtr == nullptr)
   {
     return MakeErrorResult(k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataObject '{}' which does not exist.", path.getTargetName()));
   }
 
-  dataStructure.removeData(targetObject->getId());
+  dataStructure.removeData(targetObjectPtr->getId());
 
   return {};
 }

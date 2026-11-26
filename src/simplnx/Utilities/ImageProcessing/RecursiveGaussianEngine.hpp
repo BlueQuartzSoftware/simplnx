@@ -165,22 +165,22 @@ struct RecursiveGaussianCoefficients
 inline void ComputeNCoefficients(double sigmad, double A1, double B1, double W1, double L1, double A2, double B2, double W2, double L2, double& N0, double& N1, double& N2, double& N3, double& SN,
                                  double& DN, double& EN)
 {
-  const double Sin1 = std::sin(W1 / sigmad);
-  const double Sin2 = std::sin(W2 / sigmad);
-  const double Cos1 = std::cos(W1 / sigmad);
-  const double Cos2 = std::cos(W2 / sigmad);
-  const double Exp1 = std::exp(L1 / sigmad);
-  const double Exp2 = std::exp(L2 / sigmad);
+  const double sin1 = std::sin(W1 / sigmad);
+  const double sin2 = std::sin(W2 / sigmad);
+  const double cos1 = std::cos(W1 / sigmad);
+  const double cos2 = std::cos(W2 / sigmad);
+  const double exp1 = std::exp(L1 / sigmad);
+  const double exp2 = std::exp(L2 / sigmad);
 
   N0 = A1 + A2;
-  N1 = Exp2 * (B2 * Sin2 - (A2 + 2 * A1) * Cos2);
-  N1 += Exp1 * (B1 * Sin1 - (A1 + 2 * A2) * Cos1);
-  N2 = (A1 + A2) * Cos2 * Cos1;
-  N2 -= B1 * Cos2 * Sin1 + B2 * Cos1 * Sin2;
-  N2 *= 2 * Exp1 * Exp2;
-  N2 += A2 * Exp1 * Exp1 + A1 * Exp2 * Exp2;
-  N3 = Exp2 * Exp1 * Exp1 * (B2 * Sin2 - A2 * Cos2);
-  N3 += Exp1 * Exp2 * Exp2 * (B1 * Sin1 - A1 * Cos1);
+  N1 = exp2 * (B2 * sin2 - (A2 + 2 * A1) * cos2);
+  N1 += exp1 * (B1 * sin1 - (A1 + 2 * A2) * cos1);
+  N2 = (A1 + A2) * cos2 * cos1;
+  N2 -= B1 * cos2 * sin1 + B2 * cos1 * sin2;
+  N2 *= 2 * exp1 * exp2;
+  N2 += A2 * exp1 * exp1 + A1 * exp2 * exp2;
+  N3 = exp2 * exp1 * exp1 * (B2 * sin2 - A2 * cos2);
+  N3 += exp1 * exp2 * exp2 * (B1 * sin1 - A1 * cos1);
 
   SN = N0 + N1 + N2 + N3;
   DN = N1 + 2 * N2 + 3 * N3;
@@ -190,17 +190,17 @@ inline void ComputeNCoefficients(double sigmad, double A1, double B1, double W1,
 // Port of RecursiveGaussianImageFilter::ComputeDCoefficients (writes d1..d4 into c).
 inline void ComputeDCoefficients(double sigmad, double W1, double L1, double W2, double L2, RecursiveGaussianCoefficients& c, double& SD, double& DD, double& ED)
 {
-  const double Cos1 = std::cos(W1 / sigmad);
-  const double Cos2 = std::cos(W2 / sigmad);
-  const double Exp1 = std::exp(L1 / sigmad);
-  const double Exp2 = std::exp(L2 / sigmad);
+  const double cos1 = std::cos(W1 / sigmad);
+  const double cos2 = std::cos(W2 / sigmad);
+  const double exp1 = std::exp(L1 / sigmad);
+  const double exp2 = std::exp(L2 / sigmad);
 
-  c.d4 = Exp1 * Exp1 * Exp2 * Exp2;
-  c.d3 = -2 * Cos1 * Exp1 * Exp2 * Exp2;
-  c.d3 += -2 * Cos2 * Exp2 * Exp1 * Exp1;
-  c.d2 = 4 * Cos2 * Cos1 * Exp1 * Exp2;
-  c.d2 += Exp1 * Exp1 + Exp2 * Exp2;
-  c.d1 = -2 * (Exp2 * Cos2 + Exp1 * Cos1);
+  c.d4 = exp1 * exp1 * exp2 * exp2;
+  c.d3 = -2 * cos1 * exp1 * exp2 * exp2;
+  c.d3 += -2 * cos2 * exp2 * exp1 * exp1;
+  c.d2 = 4 * cos2 * cos1 * exp1 * exp2;
+  c.d2 += exp1 * exp1 + exp2 * exp2;
+  c.d1 = -2 * (exp2 * cos2 + exp1 * cos1);
 
   SD = 1.0 + c.d1 + c.d2 + c.d3 + c.d4;
   DD = c.d1 + 2 * c.d2 + 3 * c.d3 + 4 * c.d4;
@@ -225,19 +225,19 @@ inline void ComputeRemainingCoefficients(bool symmetric, RecursiveGaussianCoeffi
     c.m4 = c.d4 * c.n0;
   }
 
-  const double SN = c.n0 + c.n1 + c.n2 + c.n3;
-  const double SM = c.m1 + c.m2 + c.m3 + c.m4;
-  const double SD = 1.0 + c.d1 + c.d2 + c.d3 + c.d4;
+  const double sn = c.n0 + c.n1 + c.n2 + c.n3;
+  const double sm = c.m1 + c.m2 + c.m3 + c.m4;
+  const double sd = 1.0 + c.d1 + c.d2 + c.d3 + c.d4;
 
-  c.bn1 = c.d1 * SN / SD;
-  c.bn2 = c.d2 * SN / SD;
-  c.bn3 = c.d3 * SN / SD;
-  c.bn4 = c.d4 * SN / SD;
+  c.bn1 = c.d1 * sn / sd;
+  c.bn2 = c.d2 * sn / sd;
+  c.bn3 = c.d3 * sn / sd;
+  c.bn4 = c.d4 * sn / sd;
 
-  c.bm1 = c.d1 * SM / SD;
-  c.bm2 = c.d2 * SM / SD;
-  c.bm3 = c.d3 * SM / SD;
-  c.bm4 = c.d4 * SM / SD;
+  c.bm1 = c.d1 * sm / sd;
+  c.bm2 = c.d2 * sm / sd;
+  c.bm3 = c.d3 * sm / sd;
+  c.bm4 = c.d4 * sm / sd;
 }
 
 // Port of RecursiveGaussianImageFilter::SetUp. sigma and spacing are physical; order in {0,1,2}.
@@ -255,39 +255,39 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
   const double sigmad = sigma / spacing;
   double acrossScaleNormalization = 1.0;
 
-  double A1[3];
-  double B1[3];
-  double A2[3];
-  double B2[3];
-  const double W1 = 0.6681;
-  const double L1 = -1.3932;
-  const double W2 = 2.0787;
-  const double L2 = -1.3732;
-  A1[0] = 1.3530;
-  B1[0] = 1.8151;
-  A2[0] = -0.3531;
-  B2[0] = 0.0902;
-  A1[1] = -0.6724;
-  B1[1] = -3.4327;
-  A2[1] = 0.6724;
-  B2[1] = 0.6100;
-  A1[2] = -1.3563;
-  B1[2] = 5.2318;
-  A2[2] = 0.3446;
-  B2[2] = -2.2355;
+  double a1[3];
+  double b1[3];
+  double a2[3];
+  double b2[3];
+  const double w1 = 0.6681;
+  const double l1 = -1.3932;
+  const double w2 = 2.0787;
+  const double l2 = -1.3732;
+  a1[0] = 1.3530;
+  b1[0] = 1.8151;
+  a2[0] = -0.3531;
+  b2[0] = 0.0902;
+  a1[1] = -0.6724;
+  b1[1] = -3.4327;
+  a2[1] = 0.6724;
+  b2[1] = 0.6100;
+  a1[2] = -1.3563;
+  b1[2] = 5.2318;
+  a2[2] = 0.3446;
+  b2[2] = -2.2355;
 
-  double SD = 0.0;
-  double DD = 0.0;
-  double ED = 0.0;
-  ComputeDCoefficients(sigmad, W1, L1, W2, L2, c, SD, DD, ED);
-  double SN = 0.0;
-  double DN = 0.0;
-  double EN = 0.0;
+  double sd = 0.0;
+  double dd = 0.0;
+  double ed = 0.0;
+  ComputeDCoefficients(sigmad, w1, l1, w2, l2, c, sd, dd, ed);
+  double sn = 0.0;
+  double dn = 0.0;
+  double en = 0.0;
 
   if(order == 0)
   {
-    ComputeNCoefficients(sigmad, A1[0], B1[0], W1, L1, A2[0], B2[0], W2, L2, c.n0, c.n1, c.n2, c.n3, SN, DN, EN);
-    const double alpha0 = 2 * SN / SD - c.n0;
+    ComputeNCoefficients(sigmad, a1[0], b1[0], w1, l1, a2[0], b2[0], w2, l2, c.n0, c.n1, c.n2, c.n3, sn, dn, en);
+    const double alpha0 = 2 * sn / sd - c.n0;
     c.n0 *= acrossScaleNormalization / alpha0;
     c.n1 *= acrossScaleNormalization / alpha0;
     c.n2 *= acrossScaleNormalization / alpha0;
@@ -300,8 +300,8 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
     {
       acrossScaleNormalization = sigma;
     }
-    ComputeNCoefficients(sigmad, A1[1], B1[1], W1, L1, A2[1], B2[1], W2, L2, c.n0, c.n1, c.n2, c.n3, SN, DN, EN);
-    double alpha1 = 2 * (SN * DD - DN * SD) / (SD * SD);
+    ComputeNCoefficients(sigmad, a1[1], b1[1], w1, l1, a2[1], b2[1], w2, l2, c.n0, c.n1, c.n2, c.n3, sn, dn, en);
+    double alpha1 = 2 * (sn * dd - dn * sd) / (sd * sd);
     alpha1 *= direction;
     c.n0 *= acrossScaleNormalization / alpha1;
     c.n1 *= acrossScaleNormalization / alpha1;
@@ -315,34 +315,34 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
     {
       acrossScaleNormalization = sigma * sigma;
     }
-    double N0_0 = 0.0;
-    double N1_0 = 0.0;
-    double N2_0 = 0.0;
-    double N3_0 = 0.0;
-    double N0_2 = 0.0;
-    double N1_2 = 0.0;
-    double N2_2 = 0.0;
-    double N3_2 = 0.0;
-    double SN0 = 0.0;
-    double DN0 = 0.0;
-    double EN0 = 0.0;
-    double SN2 = 0.0;
-    double DN2 = 0.0;
-    double EN2 = 0.0;
-    ComputeNCoefficients(sigmad, A1[0], B1[0], W1, L1, A2[0], B2[0], W2, L2, N0_0, N1_0, N2_0, N3_0, SN0, DN0, EN0);
-    ComputeNCoefficients(sigmad, A1[2], B1[2], W1, L1, A2[2], B2[2], W2, L2, N0_2, N1_2, N2_2, N3_2, SN2, DN2, EN2);
+    double n00 = 0.0;
+    double n10 = 0.0;
+    double n20 = 0.0;
+    double n30 = 0.0;
+    double n02 = 0.0;
+    double n12 = 0.0;
+    double n22 = 0.0;
+    double n32 = 0.0;
+    double sn0 = 0.0;
+    double dn0 = 0.0;
+    double en0 = 0.0;
+    double sn2 = 0.0;
+    double dn2 = 0.0;
+    double en2 = 0.0;
+    ComputeNCoefficients(sigmad, a1[0], b1[0], w1, l1, a2[0], b2[0], w2, l2, n00, n10, n20, n30, sn0, dn0, en0);
+    ComputeNCoefficients(sigmad, a1[2], b1[2], w1, l1, a2[2], b2[2], w2, l2, n02, n12, n22, n32, sn2, dn2, en2);
 
-    const double beta = -(2 * SN2 - SD * N0_2) / (2 * SN0 - SD * N0_0);
-    c.n0 = N0_2 + beta * N0_0;
-    c.n1 = N1_2 + beta * N1_0;
-    c.n2 = N2_2 + beta * N2_0;
-    c.n3 = N3_2 + beta * N3_0;
-    SN = SN2 + beta * SN0;
-    DN = DN2 + beta * DN0;
-    EN = EN2 + beta * EN0;
+    const double beta = -(2 * sn2 - sd * n02) / (2 * sn0 - sd * n00);
+    c.n0 = n02 + beta * n00;
+    c.n1 = n12 + beta * n10;
+    c.n2 = n22 + beta * n20;
+    c.n3 = n32 + beta * n30;
+    sn = sn2 + beta * sn0;
+    dn = dn2 + beta * dn0;
+    en = en2 + beta * en0;
 
-    double alpha2 = EN * SD * SD - ED * SN * SD - 2 * DN * DD * SD + 2 * DD * DD * SN;
-    alpha2 /= SD * SD * SD;
+    double alpha2 = en * sd * sd - ed * sn * sd - 2 * dn * dd * sd + 2 * dd * dd * sn;
+    alpha2 /= sd * sd * sd;
     c.n0 *= acrossScaleNormalization / alpha2;
     c.n1 *= acrossScaleNormalization / alpha2;
     c.n2 *= acrossScaleNormalization / alpha2;
@@ -359,24 +359,24 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
 // preserves the recurrence and arithmetic order while removing that allocation and the final summation pass.
 inline void FilterDataArray(double* outs, const double* data, usize ln, const RecursiveGaussianCoefficients& c)
 {
-  double* scratch1 = outs;
+  double* scratch1Ptr = outs;
 
   // ---- Causal (forward) pass ----
   const double outV1 = data[0];
-  scratch1[0] = outV1 * c.n0 + outV1 * c.n1 + outV1 * c.n2 + outV1 * c.n3;
-  scratch1[1] = data[1] * c.n0 + outV1 * c.n1 + outV1 * c.n2 + outV1 * c.n3;
-  scratch1[2] = data[2] * c.n0 + data[1] * c.n1 + outV1 * c.n2 + outV1 * c.n3;
-  scratch1[3] = data[3] * c.n0 + data[2] * c.n1 + data[1] * c.n2 + outV1 * c.n3;
+  scratch1Ptr[0] = outV1 * c.n0 + outV1 * c.n1 + outV1 * c.n2 + outV1 * c.n3;
+  scratch1Ptr[1] = data[1] * c.n0 + outV1 * c.n1 + outV1 * c.n2 + outV1 * c.n3;
+  scratch1Ptr[2] = data[2] * c.n0 + data[1] * c.n1 + outV1 * c.n2 + outV1 * c.n3;
+  scratch1Ptr[3] = data[3] * c.n0 + data[2] * c.n1 + data[1] * c.n2 + outV1 * c.n3;
 
-  scratch1[0] -= outV1 * c.bn1 + outV1 * c.bn2 + outV1 * c.bn3 + outV1 * c.bn4;
-  scratch1[1] -= scratch1[0] * c.d1 + outV1 * c.bn2 + outV1 * c.bn3 + outV1 * c.bn4;
-  scratch1[2] -= scratch1[1] * c.d1 + scratch1[0] * c.d2 + outV1 * c.bn3 + outV1 * c.bn4;
-  scratch1[3] -= scratch1[2] * c.d1 + scratch1[1] * c.d2 + scratch1[0] * c.d3 + outV1 * c.bn4;
+  scratch1Ptr[0] -= outV1 * c.bn1 + outV1 * c.bn2 + outV1 * c.bn3 + outV1 * c.bn4;
+  scratch1Ptr[1] -= scratch1Ptr[0] * c.d1 + outV1 * c.bn2 + outV1 * c.bn3 + outV1 * c.bn4;
+  scratch1Ptr[2] -= scratch1Ptr[1] * c.d1 + scratch1Ptr[0] * c.d2 + outV1 * c.bn3 + outV1 * c.bn4;
+  scratch1Ptr[3] -= scratch1Ptr[2] * c.d1 + scratch1Ptr[1] * c.d2 + scratch1Ptr[0] * c.d3 + outV1 * c.bn4;
 
   for(usize i = 4; i < ln; ++i)
   {
-    scratch1[i] = data[i] * c.n0 + data[i - 1] * c.n1 + data[i - 2] * c.n2 + data[i - 3] * c.n3;
-    scratch1[i] -= scratch1[i - 1] * c.d1 + scratch1[i - 2] * c.d2 + scratch1[i - 3] * c.d3 + scratch1[i - 4] * c.d4;
+    scratch1Ptr[i] = data[i] * c.n0 + data[i - 1] * c.n1 + data[i - 2] * c.n2 + data[i - 3] * c.n3;
+    scratch1Ptr[i] -= scratch1Ptr[i - 1] * c.d1 + scratch1Ptr[i - 2] * c.d2 + scratch1Ptr[i - 3] * c.d3 + scratch1Ptr[i - 4] * c.d4;
   }
 
   // ---- Anti-causal (backward) pass ----
@@ -1549,52 +1549,52 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
                                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const RecursiveGaussianPassOptions& options = {})
 {
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  const usize slice = static_cast<usize>(nX) * static_cast<usize>(nY);
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  const usize slice = static_cast<usize>(nX) * static_cast<usize>(ny);
 
   const detail::RecursiveGaussianCoefficients coeffs = detail::ComputeRecursiveGaussianCoefficients(sigma, spacing, order, normalizeAcrossScale);
 
-  const int64 ln = (axis == 0) ? nX : ((axis == 1) ? nY : nZ);
+  const int64 ln = (axis == 0) ? nX : ((axis == 1) ? ny : nz);
   assert(ln >= 4); // the >= 4 contract is enforced by preflight ValidateSeparableImageDims; assert guards the engine boundary
 
   ThrottledMessageHandler progressThrottle(messageHandler);
   const std::string progressLabel = fmt::format("Recursive Gaussian: Filtering Axis {}", axis);
   messageHandler.sendInfoMessage(progressLabel);
-  progressThrottle.reset(axis == 2 ? static_cast<usize>(nY) : static_cast<usize>(nZ), progressLabel);
+  progressThrottle.reset(axis == 2 ? static_cast<usize>(ny) : static_cast<usize>(nz), progressLabel);
 
   std::mutex progressMutex;
   const auto sendThreadSafeProgress = [&](usize completed) {
     const std::lock_guard<std::mutex> guard(progressMutex);
     progressThrottle.incrementPercent(completed);
   };
-  const auto* inMemorySrc = detail::GetRecursiveGaussianDataStore<SrcT>(src);
-  auto* inMemoryDst = detail::GetRecursiveGaussianDataStore<float32>(dst);
-  if(options.useInMemoryFastPath && inMemorySrc != nullptr && inMemoryDst != nullptr && axis == 0)
+  const auto* inMemorySrcPtr = detail::GetRecursiveGaussianDataStore<SrcT>(src);
+  auto* inMemoryDstPtr = detail::GetRecursiveGaussianDataStore<float32>(dst);
+  if(options.useInMemoryFastPath && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr && axis == 0)
   {
     if(shouldCancel)
     {
       return {};
     }
-    const nonstd::span<const SrcT> srcValues = inMemorySrc->createSpan();
-    nonstd::span<float32> dstValues = inMemoryDst->createSpan();
-    progressThrottle.reset((static_cast<usize>(nY * nZ) + 3) / 4, progressLabel);
-    detail::FilterFourRecursiveGaussianXRows(srcValues, dstValues, static_cast<usize>(nX), static_cast<usize>(nY * nZ), coeffs, shouldCancel, sendThreadSafeProgress);
+    const nonstd::span<const SrcT> srcValues = inMemorySrcPtr->createSpan();
+    nonstd::span<float32> dstValues = inMemoryDstPtr->createSpan();
+    progressThrottle.reset((static_cast<usize>(ny * nz) + 3) / 4, progressLabel);
+    detail::FilterFourRecursiveGaussianXRows(srcValues, dstValues, static_cast<usize>(nX), static_cast<usize>(ny * nz), coeffs, shouldCancel, sendThreadSafeProgress);
     return {};
   }
-  if(options.useInMemoryFastPath && inMemorySrc != nullptr && inMemoryDst != nullptr && axis != 0)
+  if(options.useInMemoryFastPath && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr && axis != 0)
   {
     if(shouldCancel)
     {
       return {};
     }
 
-    const nonstd::span<const SrcT> srcValues = inMemorySrc->createSpan();
-    nonstd::span<float32> dstValues = inMemoryDst->createSpan();
+    const nonstd::span<const SrcT> srcValues = inMemorySrcPtr->createSpan();
+    nonstd::span<float32> dstValues = inMemoryDstPtr->createSpan();
     const usize lineLength = static_cast<usize>(ln);
     const usize linesPerPlane = axis == 1 ? static_cast<usize>(nX) : slice;
     const usize batchesPerPlane = (linesPerPlane + 3) / 4;
-    const usize planeCount = axis == 1 ? static_cast<usize>(nZ) : 1;
+    const usize planeCount = axis == 1 ? static_cast<usize>(nz) : 1;
     const usize stride = axis == 1 ? static_cast<usize>(nX) : slice;
 
     progressThrottle.reset(batchesPerPlane * planeCount, progressLabel);
@@ -1671,7 +1671,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
   // store -- so it is byte-exact and safe for BOTH in-core and OOC with no store-thread-safety concern (each
   // output line depends only on its own input line + read-only coeffs, so reordering lines changes nothing).
 
-  const usize outerTotal = axis == 2 ? static_cast<usize>(nY) : static_cast<usize>(nZ);
+  const usize outerTotal = axis == 2 ? static_cast<usize>(ny) : static_cast<usize>(nz);
   const usize reportStride = std::min<usize>(16, std::max<usize>(1, outerTotal / 100));
   usize lastReported = 0;
   const auto reportProgress = [&](usize completed) {
@@ -1690,7 +1690,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     // independent of the others.
     std::vector<SrcT> srcPlane(slice);
     std::vector<float32> dstPlane(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -1724,7 +1724,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
-      parallelAlgorithm.setRange(0, static_cast<usize>(nY));
+      parallelAlgorithm.setRange(0, static_cast<usize>(ny));
       parallelAlgorithm.execute(filterRows);
       if(Result<> r = dst.copyFromBuffer(planeOff, nonstd::span<const float32>(dstPlane.data(), slice)); r.invalid())
       {
@@ -1740,7 +1740,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     // Y pass: read a whole z-plane, gather each column (stride nX, count nY), write the plane back.
     std::vector<SrcT> srcPlane(slice);
     std::vector<float32> dstPlane(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(shouldCancel)
       {
@@ -1757,16 +1757,16 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
       auto filterColumns = [&](const Range& colRange) {
         static thread_local std::vector<double> data;
         static thread_local std::vector<double> outs;
-        data.resize(static_cast<usize>(nY));
-        outs.resize(static_cast<usize>(nY));
+        data.resize(static_cast<usize>(ny));
+        outs.resize(static_cast<usize>(ny));
         for(usize x = colRange.min(); x < colRange.max(); ++x)
         {
-          for(int64 j = 0; j < nY; ++j)
+          for(int64 j = 0; j < ny; ++j)
           {
             data[static_cast<usize>(j)] = static_cast<double>(srcPlane[static_cast<usize>(j) * static_cast<usize>(nX) + x]);
           }
-          detail::FilterDataArray(outs.data(), data.data(), static_cast<usize>(nY), coeffs);
-          for(int64 j = 0; j < nY; ++j)
+          detail::FilterDataArray(outs.data(), data.data(), static_cast<usize>(ny), coeffs);
+          for(int64 j = 0; j < ny; ++j)
           {
             dstPlane[static_cast<usize>(j) * static_cast<usize>(nX) + x] = static_cast<float32>(outs[static_cast<usize>(j)]);
           }
@@ -1978,20 +1978,20 @@ Result<> TransformTemporaryGaussianIntoStore(DstStoreT& destination, const Gauss
     {
       return result;
     }
-    float32* output = sourceBuffer.data();
+    float32* outputPtr = sourceBuffer.data();
     if(readDestination)
     {
       if(Result<> result = destination.copyIntoBuffer(start, nonstd::span<float32>(destinationBuffer.data(), count)); result.invalid())
       {
         return result;
       }
-      output = destinationBuffer.data();
+      outputPtr = destinationBuffer.data();
     }
-    if(!TransformRecursiveGaussianBatch(count, shouldCancel, [&](usize index) { output[index] = transform(output[index], sourceBuffer[index]); }))
+    if(!TransformRecursiveGaussianBatch(count, shouldCancel, [&](usize index) { outputPtr[index] = transform(outputPtr[index], sourceBuffer[index]); }))
     {
       return {};
     }
-    if(Result<> result = destination.copyFromBuffer(start, nonstd::span<const float32>(output, count)); result.invalid())
+    if(Result<> result = destination.copyFromBuffer(start, nonstd::span<const float32>(outputPtr, count)); result.invalid())
     {
       return result;
     }
@@ -2013,12 +2013,12 @@ inline Result<> SetSquaredOverSpacing(AbstractDataStore<float32>& dst, const Abs
   {
     return MakeErrorResult(-23604, fmt::format("Recursive Gaussian squared-derivative source contains {} values, but its destination contains {} values.", src.getSize(), total));
   }
-  const auto* inMemorySrc = dynamic_cast<const DataStore<float32>*>(&src);
-  auto* inMemoryDst = dynamic_cast<DataStore<float32>*>(&dst);
-  if(!options.forceBuffered && inMemorySrc != nullptr && inMemoryDst != nullptr)
+  const auto* inMemorySrcPtr = dynamic_cast<const DataStore<float32>*>(&src);
+  auto* inMemoryDstPtr = dynamic_cast<DataStore<float32>*>(&dst);
+  if(!options.forceBuffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
   {
-    const nonstd::span<const float32> srcValues = inMemorySrc->createSpan();
-    nonstd::span<float32> dstValues = inMemoryDst->createSpan();
+    const nonstd::span<const float32> srcValues = inMemorySrcPtr->createSpan();
+    nonstd::span<float32> dstValues = inMemoryDstPtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     parallelAlgorithm.execute([&](const Range& range) {
@@ -2080,12 +2080,12 @@ inline Result<> AccumulateSquaredOverSpacing(AbstractDataStore<float32>& acc, co
   {
     return MakeErrorResult(-23605, fmt::format("Recursive Gaussian derivative source contains {} values, but its accumulator contains {} values.", deriv.getSize(), total));
   }
-  auto* inMemoryAcc = dynamic_cast<DataStore<float32>*>(&acc);
-  const auto* inMemoryDeriv = dynamic_cast<const DataStore<float32>*>(&deriv);
-  if(!options.forceBuffered && inMemoryAcc != nullptr && inMemoryDeriv != nullptr)
+  auto* inMemoryAccPtr = dynamic_cast<DataStore<float32>*>(&acc);
+  const auto* inMemoryDerivPtr = dynamic_cast<const DataStore<float32>*>(&deriv);
+  if(!options.forceBuffered && inMemoryAccPtr != nullptr && inMemoryDerivPtr != nullptr)
   {
-    nonstd::span<float32> accValues = inMemoryAcc->createSpan();
-    const nonstd::span<const float32> derivValues = inMemoryDeriv->createSpan();
+    nonstd::span<float32> accValues = inMemoryAccPtr->createSpan();
+    const nonstd::span<const float32> derivValues = inMemoryDerivPtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     parallelAlgorithm.execute([&](const Range& range) {
@@ -2155,12 +2155,12 @@ inline Result<> SetScaledDerivative(AbstractDataStore<float32>& dst, const Abstr
   {
     return MakeErrorResult(-23606, fmt::format("Recursive Gaussian scaled-derivative source contains {} values, but its destination contains {} values.", src.getSize(), total));
   }
-  const auto* inMemorySrc = dynamic_cast<const DataStore<float32>*>(&src);
-  auto* inMemoryDst = dynamic_cast<DataStore<float32>*>(&dst);
-  if(!options.forceBuffered && inMemorySrc != nullptr && inMemoryDst != nullptr)
+  const auto* inMemorySrcPtr = dynamic_cast<const DataStore<float32>*>(&src);
+  auto* inMemoryDstPtr = dynamic_cast<DataStore<float32>*>(&dst);
+  if(!options.forceBuffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
   {
-    const nonstd::span<const float32> srcValues = inMemorySrc->createSpan();
-    nonstd::span<float32> dstValues = inMemoryDst->createSpan();
+    const nonstd::span<const float32> srcValues = inMemorySrcPtr->createSpan();
+    nonstd::span<float32> dstValues = inMemoryDstPtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     if(invSpacingSq == 1.0)
@@ -2230,12 +2230,12 @@ inline Result<> AccumulateScaledDerivative(AbstractDataStore<float32>& acc, cons
   {
     return MakeErrorResult(-23607, fmt::format("Recursive Gaussian scaled-derivative source contains {} values, but its accumulator contains {} values.", deriv.getSize(), total));
   }
-  auto* inMemoryAcc = dynamic_cast<DataStore<float32>*>(&acc);
-  const auto* inMemoryDeriv = dynamic_cast<const DataStore<float32>*>(&deriv);
-  if(!options.forceBuffered && inMemoryAcc != nullptr && inMemoryDeriv != nullptr)
+  auto* inMemoryAccPtr = dynamic_cast<DataStore<float32>*>(&acc);
+  const auto* inMemoryDerivPtr = dynamic_cast<const DataStore<float32>*>(&deriv);
+  if(!options.forceBuffered && inMemoryAccPtr != nullptr && inMemoryDerivPtr != nullptr)
   {
-    nonstd::span<float32> accValues = inMemoryAcc->createSpan();
-    const nonstd::span<const float32> derivValues = inMemoryDeriv->createSpan();
+    nonstd::span<float32> accValues = inMemoryAccPtr->createSpan();
+    const nonstd::span<const float32> derivValues = inMemoryDerivPtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     if(invSpacingSq == 1.0)
@@ -2355,9 +2355,9 @@ Result<> MaterializeGaussianTemporaryStore(DstStoreT& destination, const detail:
 inline Result<> SqrtStoreInPlace(AbstractDataStore<float32>& store, const std::atomic_bool& shouldCancel, const detail::PointwiseExecutionOptions& options = {})
 {
   const usize total = store.getSize();
-  if(auto* inMemoryStore = dynamic_cast<DataStore<float32>*>(&store); !options.forceBuffered && inMemoryStore != nullptr)
+  if(auto* inMemoryStorePtr = dynamic_cast<DataStore<float32>*>(&store); !options.forceBuffered && inMemoryStorePtr != nullptr)
   {
-    nonstd::span<float32> values = inMemoryStore->createSpan();
+    nonstd::span<float32> values = inMemoryStorePtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     parallelAlgorithm.execute([&](const Range& range) {
@@ -2413,12 +2413,12 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
   {
     return MakeErrorResult(-23608, fmt::format("Recursive Gaussian cast source contains {} values, but its destination contains {} values.", total, dst.getSize()));
   }
-  const auto* inMemorySrc = dynamic_cast<const DataStore<float32>*>(&src);
-  auto* inMemoryDst = dynamic_cast<DataStore<T>*>(&dst);
-  if(!options.forceBuffered && inMemorySrc != nullptr && inMemoryDst != nullptr)
+  const auto* inMemorySrcPtr = dynamic_cast<const DataStore<float32>*>(&src);
+  auto* inMemoryDstPtr = dynamic_cast<DataStore<T>*>(&dst);
+  if(!options.forceBuffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
   {
-    const nonstd::span<const float32> srcValues = inMemorySrc->createSpan();
-    nonstd::span<T> dstValues = inMemoryDst->createSpan();
+    const nonstd::span<const float32> srcValues = inMemorySrcPtr->createSpan();
+    nonstd::span<T> dstValues = inMemoryDstPtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     parallelAlgorithm.execute([&](const Range& range) {

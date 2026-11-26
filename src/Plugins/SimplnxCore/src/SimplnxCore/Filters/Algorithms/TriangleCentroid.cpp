@@ -76,16 +76,16 @@ const std::atomic_bool& TriangleCentroid::getCancel()
 Result<> TriangleCentroid::operator()()
 {
 
-  const TriangleGeom* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryDataPath);
-  const AttributeMatrix& faceAttributeMatrix = triangleGeom->getFaceAttributeMatrixRef();
+  const TriangleGeom* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryDataPath);
+  const AttributeMatrix& faceAttributeMatrix = triangleGeomPtr->getFaceAttributeMatrixRef();
 
   const DataPath pCentroidsPath = m_InputValues->TriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(m_InputValues->CentroidsArrayName);
   auto& centroidsStore = m_DataStructure.getDataAs<Float64Array>(pCentroidsPath)->getDataStoreRef();
 
   // Parallel algorithm to calculate the centroids
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(CalculateCentroidsImpl(triangleGeom, centroidsStore, m_ShouldCancel));
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeomPtr->getNumberOfFaces()));
+  dataAlg.execute(CalculateCentroidsImpl(triangleGeomPtr, centroidsStore, m_ShouldCancel));
 
   return {};
 }

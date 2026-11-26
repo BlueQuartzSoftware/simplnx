@@ -114,11 +114,11 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_WriteXdmfFileKey = "WriteXdmfFile";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -131,8 +131,8 @@ Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputFileKey, k_ExportFilePath));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteXdmfFileKey, k_WriteXdmf));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_ExportFilePath));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteXdmfFileKey, k_WriteXdmf));
   // Write time series parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));

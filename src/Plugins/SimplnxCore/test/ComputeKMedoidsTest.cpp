@@ -57,43 +57,43 @@ const DataPath k_ParityMedoidsPath = k_ParityFeaturePath.createChildPath("Medoid
  * @param metric Distance metric for the returned algorithm input.
  * @return Input values that reference the created arrays.
  */
-KMedoidsInputValues buildParityData(DataStructure& dataStructure, int32 maskKind, ClusterUtilities::DistanceMetric metric)
+KMedoidsInputValues BuildParityData(DataStructure& dataStructure, int32 maskKind, ClusterUtilities::DistanceMetric metric)
 {
   const ShapeType tupleShape = {8, 1, 1};
-  auto* imageGeom = ImageGeom::Create(dataStructure, "KMedoids Parity ImageGeom");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({8, 1, 1});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "KMedoids Parity ImageGeom");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({8, 1, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
   auto inputStore = std::make_shared<DataStore<float64>>(tupleShape, ShapeType{2}, std::optional<float64>{});
-  REQUIRE(Float64Array::Create(dataStructure, "Input", inputStore, cellData->getId()) != nullptr);
+  REQUIRE(Float64Array::Create(dataStructure, "Input", inputStore, cellDataPtr->getId()) != nullptr);
   const std::array<float64, 16> inputValues = {1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 8.0, 8.0, 8.0, 9.0, 9.0, 8.0, 9.0, 9.0};
   auto inputStoreWriteResult = inputStore->copyFromBuffer(0, nonstd::span<const float64>(inputValues.data(), inputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(inputStoreWriteResult);
   auto idStore = std::make_shared<DataStore<int32>>(tupleShape, ShapeType{1}, std::optional<int32>{});
-  REQUIRE(Int32Array::Create(dataStructure, "Ids", idStore, cellData->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Ids", idStore, cellDataPtr->getId()) != nullptr);
   idStore->fill(97);
   if(maskKind == 1)
   {
-    auto* mask = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", tupleShape, ShapeType{1}, cellData->getId());
-    REQUIRE(mask != nullptr);
+    auto* maskPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", tupleShape, ShapeType{1}, cellDataPtr->getId());
+    REQUIRE(maskPtr != nullptr);
     const std::array<bool, 8> maskValues = {true, true, false, true, true, true, false, true};
-    auto maskWriteResult = mask->getDataStoreRef().copyFromBuffer(0, nonstd::span<const bool>(maskValues.data(), maskValues.size()));
+    auto maskWriteResult = maskPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const bool>(maskValues.data(), maskValues.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
   }
   else if(maskKind == 2)
   {
     auto maskStore = std::make_shared<DataStore<uint8>>(tupleShape, ShapeType{1}, std::optional<uint8>{});
-    REQUIRE(UInt8Array::Create(dataStructure, "Mask", maskStore, cellData->getId()) != nullptr);
+    REQUIRE(UInt8Array::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId()) != nullptr);
     const std::array<uint8, 8> maskValues = {1, 1, 0, 1, 1, 1, 0, 1};
     auto maskStoreWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const uint8>(maskValues.data(), maskValues.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(maskStoreWriteResult);
   }
-  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeom->getId());
-  REQUIRE(featureData != nullptr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
   auto medoidStore = std::make_shared<DataStore<float64>>(ShapeType{3}, ShapeType{2}, std::optional<float64>{});
-  REQUIRE(Float64Array::Create(dataStructure, "Medoids", medoidStore, featureData->getId()) != nullptr);
+  REQUIRE(Float64Array::Create(dataStructure, "Medoids", medoidStore, featureDataPtr->getId()) != nullptr);
   medoidStore->fill(-1.0);
   return {.InitClusters = 2,
           .DistanceMetric = metric,
@@ -110,20 +110,20 @@ KMedoidsInputValues buildParityData(DataStructure& dataStructure, int32 maskKind
  * @param dataStructure Receives the empty geometry and arrays.
  * @return Input values that reference the created arrays.
  */
-KMedoidsInputValues buildEmptyData(DataStructure& dataStructure)
+KMedoidsInputValues BuildEmptyData(DataStructure& dataStructure)
 {
   const ShapeType tupleShape = {0, 1, 1};
-  auto* imageGeom = ImageGeom::Create(dataStructure, "KMedoids Parity ImageGeom");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({0, 1, 1});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
-  REQUIRE(Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "Input", tupleShape, ShapeType{2}, cellData->getId()) != nullptr);
-  REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Ids", tupleShape, ShapeType{1}, cellData->getId()) != nullptr);
-  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, imageGeom->getId());
-  REQUIRE(featureData != nullptr);
-  REQUIRE(Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "Medoids", ShapeType{2}, ShapeType{2}, featureData->getId()) != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "KMedoids Parity ImageGeom");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({0, 1, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+  REQUIRE(Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "Input", tupleShape, ShapeType{2}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Ids", tupleShape, ShapeType{1}, cellDataPtr->getId()) != nullptr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, imageGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
+  REQUIRE(Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "Medoids", ShapeType{2}, ShapeType{2}, featureDataPtr->getId()) != nullptr);
   return {.InitClusters = 1,
           .DistanceMetric = ClusterUtilities::Euclidean,
           .UseMask = false,
@@ -138,7 +138,7 @@ KMedoidsInputValues buildEmptyData(DataStructure& dataStructure)
 TEST_CASE("SimplnxCore::ComputeKMedoids: Scanline rejects zero tuples", "[SimplnxCore][ComputeKMedoids]")
 {
   DataStructure dataStructure;
-  auto inputValues = buildEmptyData(dataStructure);
+  auto inputValues = BuildEmptyData(dataStructure);
   const std::atomic_bool shouldCancel = false;
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -156,7 +156,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: cancellation leaves outputs unchanged",
     CAPTURE(scenario);
     {
       DataStructure dataStructure;
-      auto inputValues = buildParityData(dataStructure, 0, ClusterUtilities::Euclidean);
+      auto inputValues = BuildParityData(dataStructure, 0, ClusterUtilities::Euclidean);
       std::atomic_bool shouldCancel = true;
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ParityIdsPath));
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_ParityMedoidsPath));
@@ -200,7 +200,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: Direct and Scanline seeded metric parit
       {
         CAPTURE(scenario);
         DataStructure dataStructure;
-        auto values = buildParityData(dataStructure, maskKind, metric);
+        auto values = BuildParityData(dataStructure, maskKind, metric);
         UnitTest::AlgorithmTestScope scope(scenario);
         auto executeResult2 = scope.execute([&] { return ComputeKMedoids(dataStructure, {}, shouldCancel, &values)(); });
         SIMPLNX_RESULT_REQUIRE_VALID(executeResult2);
@@ -357,8 +357,8 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Rejects unrepresentable clusters 
   args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(3));
   const DataPath maskPath = k_CellPath.createChildPath("AllFalseMask");
   const auto& input = dataStructure.getDataRefAs<IDataArray>(k_CellPath.createChildPath("DAMAGE"));
-  auto* mask = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "AllFalseMask", input.getTupleShape(), ShapeType{1}, dataStructure.getDataRefAs<AttributeMatrix>(k_CellPath).getId());
-  REQUIRE(mask != nullptr);
+  auto* maskPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "AllFalseMask", input.getTupleShape(), ShapeType{1}, dataStructure.getDataRefAs<AttributeMatrix>(k_CellPath).getId());
+  REQUIRE(maskPtr != nullptr);
   args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeKMedoidsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -450,7 +450,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -463,22 +463,22 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: SIMPL Backwards Compatibility", "
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeKMedoidsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeKMedoidsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Successful pipeline loading verifies the AMPathBuilderFilterParameterConverter value.
       CHECK(args.value<uint64>(ComputeKMedoidsFilter::k_InitClusters_Key) == 5);
       CHECK(args.value<ChoicesParameter::ValueType>(ComputeKMedoidsFilter::k_DistanceMetric_Key) == 0);
@@ -496,16 +496,16 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: SIMPL Backwards Compatibility", "
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
-  REQUIRE(cellData != nullptr);
-  auto* input = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellData->getId());
-  (*input)[0] = 0.0F;
-  (*input)[1] = 1.0F;
-  auto* mask = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellData->getId());
-  (*mask)[0] = 1;
-  (*mask)[1] = 0;
-  (*mask)[2] = 1;
-  (*mask)[3] = 1;
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
+  REQUIRE(cellDataPtr != nullptr);
+  auto* inputPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellDataPtr->getId());
+  (*inputPtr)[0] = 0.0F;
+  (*inputPtr)[1] = 1.0F;
+  auto* maskPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellDataPtr->getId());
+  (*maskPtr)[0] = 1;
+  (*maskPtr)[1] = 0;
+  (*maskPtr)[2] = 1;
+  (*maskPtr)[3] = 1;
 
   ComputeKMedoidsFilter filter;
   auto args = filter.getDefaultArguments();
@@ -524,12 +524,12 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component",
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tuple counts", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
-  auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
-  REQUIRE(cellData != nullptr);
-  REQUIRE(maskData != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellData->getId()) != nullptr);
-  REQUIRE(BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskData->getId()) != nullptr);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
+  auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
+  REQUIRE(cellDataPtr != nullptr);
+  REQUIRE(maskDataPtr != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
 
@@ -565,12 +565,12 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tupl
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
-  auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
-  REQUIRE(cellData != nullptr);
-  REQUIRE(maskData != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellData->getId()) != nullptr);
-  REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{4}, {"1", "1", "1", "1"}, maskData->getId()) != nullptr);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
+  auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
+  REQUIRE(cellDataPtr != nullptr);
+  REQUIRE(maskDataPtr != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{4}, {"1", "1", "1", "1"}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
 

@@ -30,9 +30,9 @@ std::string RectGridGeomIO::getTypeName() const
 Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                   const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* geometry = RectGridGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
+  auto* geometryPtr = RectGridGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
 
-  Result<> result = IGridGeometryIO::ReadGridGeometryData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  Result<> result = IGridGeometryIO::ReadGridGeometryData(dataStructureReader, *geometryPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
     return result;
@@ -43,7 +43,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
   {
     auto value = unitsAttr.value();
-    geometry->setUnits(static_cast<IGeometry::LengthUnit>(value));
+    geometryPtr->setUnits(static_cast<IGeometry::LengthUnit>(value));
   }
 
   // Read the geometry dimensions.
@@ -54,20 +54,20 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   }
   const std::vector<size_t> volumeDimensions = std::move(volumeDimensionsResult.value());
 
-  geometry->setDimensions(volumeDimensions);
+  geometryPtr->setDimensions(volumeDimensions);
 
   // A bounds array may be stored outside this group. Resolve and validate its values after the full map is loaded.
-  geometry->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
-  geometry->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
-  geometry->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
+  geometryPtr->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
+  geometryPtr->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
+  geometryPtr->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
 
   return result;
 }
 
 Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
 {
-  auto* geom = dataStructure.getDataAs<RectGridGeom>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<RectGridGeom>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50590, fmt::format("Failed to finish importing RectGridGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
@@ -84,7 +84,7 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
     if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
     {
       auto value = unitsAttr.value();
-      geom->setUnits(static_cast<IGeometry::LengthUnit>(value));
+      geomPtr->setUnits(static_cast<IGeometry::LengthUnit>(value));
     }
 
     // Read the geometry dimensions.
@@ -95,7 +95,7 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
     }
     const std::vector<size_t> volumeDimensions = std::move(volumeDimensionsResult.value());
 
-    geom->setDimensions(volumeDimensions);
+    geomPtr->setDimensions(volumeDimensions);
   }
 
   return IGridGeometryIO::FinishImportingGridGeometryData(dataStructure, dataPath, dataStructureGroup);

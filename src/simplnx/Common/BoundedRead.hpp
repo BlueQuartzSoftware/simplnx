@@ -103,7 +103,7 @@ inline bool Add(uint64 first, uint64 second, uint64& result) noexcept
 inline std::string EscapeDiagnosticText(std::string_view value)
 {
   std::string text;
-  constexpr auto hex = std::to_array("0123456789ABCDEF");
+  constexpr auto k_Hex = std::to_array("0123456789ABCDEF");
   usize index = 0;
   while(index < value.size())
   {
@@ -141,7 +141,7 @@ inline std::string EscapeDiagnosticText(std::string_view value)
     usize consumed = count;
     if(!valid || first < 0x20 || first == 0x7F)
     {
-      escaped = {'\\', 'x', hex[first >> 4], hex[first & 0x0F]};
+      escaped = {'\\', 'x', k_Hex[first >> 4], k_Hex[first & 0x0F]};
       bytesPtr = escaped.data();
       count = escaped.size();
       consumed = 1;

@@ -152,12 +152,13 @@ protected:
     const usize destinationSliceTuples = cropDimX * cropDimY;
     const usize rowElements = cropDimX * numComps;
 
-    const auto* sourceStore = dynamic_cast<const DataStore<T>*>(&m_OldCellStore);
-    auto* destinationStore = dynamic_cast<DataStore<T>*>(&m_NewCellStore);
-    if(m_OldCellStore.getStoreType() == IDataStore::StoreType::InMemory && m_NewCellStore.getStoreType() == IDataStore::StoreType::InMemory && sourceStore != nullptr && destinationStore != nullptr)
+    const auto* sourceStorePtr = dynamic_cast<const DataStore<T>*>(&m_OldCellStore);
+    auto* destinationStorePtr = dynamic_cast<DataStore<T>*>(&m_NewCellStore);
+    if(m_OldCellStore.getStoreType() == IDataStore::StoreType::InMemory && m_NewCellStore.getStoreType() == IDataStore::StoreType::InMemory && sourceStorePtr != nullptr &&
+       destinationStorePtr != nullptr)
     {
-      const T* sourceData = sourceStore->data();
-      T* destinationData = destinationStore->data();
+      const T* sourceDataPtr = sourceStorePtr->data();
+      T* destinationDataPtr = destinationStorePtr->data();
       for(usize zIndex = zMinIndex; zIndex < zMaxIndex; ++zIndex)
       {
         for(usize yIndex = yMinIndex; yIndex < yMaxIndex; ++yIndex)
@@ -168,24 +169,24 @@ protected:
           }
           const usize sourceOffset = ((zIndex * sourceDimY + yIndex) * sourceDimX + xMinIndex) * numComps;
           const usize destinationOffset = ((zIndex - zMinIndex) * cropDimY + yIndex - yMinIndex) * rowElements;
-          std::copy_n(sourceData + sourceOffset, rowElements, destinationData + destinationOffset);
+          std::copy_n(sourceDataPtr + sourceOffset, rowElements, destinationDataPtr + destinationOffset);
         }
       }
       return;
     }
 
-    constexpr usize maxScratchValues = k_CropScratchBytes / sizeof(T);
-    const bool sourceSliceFits = sourceSliceTuples <= maxScratchValues / numComps;
-    const bool destinationSliceFits = destinationSliceTuples <= maxScratchValues / numComps;
+    constexpr usize k_MaxScratchValues = k_CropScratchBytes / sizeof(T);
+    const bool sourceSliceFits = sourceSliceTuples <= k_MaxScratchValues / numComps;
+    const bool destinationSliceFits = destinationSliceTuples <= k_MaxScratchValues / numComps;
     usize batchLimit = 0;
     if(sourceSliceFits && destinationSliceFits)
     {
       const usize sourceSliceValues = sourceSliceTuples * numComps;
       const usize destinationSliceValues = destinationSliceTuples * numComps;
-      if(sourceSliceValues <= maxScratchValues - destinationSliceValues)
+      if(sourceSliceValues <= k_MaxScratchValues - destinationSliceValues)
       {
         const usize combinedSliceValues = sourceSliceValues + destinationSliceValues;
-        batchLimit = (std::min)(k_ZSliceBatch, maxScratchValues / combinedSliceValues);
+        batchLimit = (std::min)(k_ZSliceBatch, k_MaxScratchValues / combinedSliceValues);
       }
     }
 
@@ -216,13 +217,13 @@ protected:
         // The slab route reduces HDF5 calls when both crop-owned buffers fit the cap.
         for(usize zOffset = 0; zOffset < batch; ++zOffset)
         {
-          const T* sourceSlice = sourceSlab.get() + zOffset * sourceSliceTuples * numComps;
-          T* destinationSlice = destinationSlab.get() + zOffset * destinationSliceTuples * numComps;
+          const T* sourceSlicePtr = sourceSlab.get() + zOffset * sourceSliceTuples * numComps;
+          T* destinationSlicePtr = destinationSlab.get() + zOffset * destinationSliceTuples * numComps;
           for(usize yOffset = 0; yOffset < cropDimY; ++yOffset)
           {
-            const T* sourceRow = sourceSlice + ((yMinIndex + yOffset) * sourceDimX + xMinIndex) * numComps;
-            T* destinationRow = destinationSlice + yOffset * rowElements;
-            std::memcpy(destinationRow, sourceRow, rowBytes);
+            const T* sourceRowPtr = sourceSlicePtr + ((yMinIndex + yOffset) * sourceDimX + xMinIndex) * numComps;
+            T* destinationRowPtr = destinationSlicePtr + yOffset * rowElements;
+            std::memcpy(destinationRowPtr, sourceRowPtr, rowBytes);
           }
         }
 
@@ -237,7 +238,7 @@ protected:
     }
 
     // Align segments to complete tuples when one tuple fits. Wider tuples must split at flat value offsets.
-    const usize segmentValues = numComps <= maxScratchValues ? (maxScratchValues / numComps) * numComps : maxScratchValues;
+    const usize segmentValues = numComps <= k_MaxScratchValues ? (k_MaxScratchValues / numComps) * numComps : k_MaxScratchValues;
     const usize bufferValues = (std::min)(rowElements, segmentValues);
     auto buffer = std::make_unique<T[]>(bufferValues);
     for(usize zIndex = zMinIndex; zIndex < zMaxIndex; ++zIndex)

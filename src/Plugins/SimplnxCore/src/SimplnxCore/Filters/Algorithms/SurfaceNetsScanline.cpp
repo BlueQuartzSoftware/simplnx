@@ -45,7 +45,7 @@ using LabelType = int32;
  * @param paddedXY Product of padded X and Y dimensions.
  * @return Flat padded-cell record index.
  */
-inline uint64 cellRecordIndex(int32 i, int32 j, int32 k, int32 paddedX, int32 paddedXY)
+inline uint64 CellRecordIndex(int32 i, int32 j, int32 k, int32 paddedX, int32 paddedXY)
 {
   return static_cast<uint64>(i) + static_cast<uint64>(j) * static_cast<uint64>(paddedX) + static_cast<uint64>(k) * static_cast<uint64>(paddedXY);
 }
@@ -66,8 +66,8 @@ bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelTyp
  */
 struct VertexData
 {
-  usize VertexId = 0;
-  std::array<float32, 3> Position;
+  usize vertex_id = 0;
+  std::array<float32, 3> position;
 };
 
 /**
@@ -76,7 +76,7 @@ struct VertexData
  * @param vert1 Second vector.
  * @param result Local output copy. The caller's array is unchanged.
  */
-void crossProduct(const std::array<float32, 3>& vert0, const std::array<float32, 3> vert1, std::array<float32, 3> result)
+void CrossProduct(const std::array<float32, 3>& vert0, const std::array<float32, 3> vert1, std::array<float32, 3> result)
 {
   result[0] = vert0[1] * vert1[2] - vert0[2] * vert1[1];
   result[1] = vert0[2] * vert1[0] - vert0[0] * vert1[2];
@@ -90,12 +90,12 @@ void crossProduct(const std::array<float32, 3>& vert0, const std::array<float32,
  * @param vert2 Third position.
  * @return Zero because crossProduct() receives its result by value.
  */
-float32 triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1, std::array<float32, 3>& vert2)
+float32 TriangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1, std::array<float32, 3>& vert2)
 {
   const std::array<float32, 3> v01 = {vert1[0] - vert0[0], vert1[1] - vert0[1], vert1[2] - vert0[2]};
   const std::array<float32, 3> v02 = {vert2[0] - vert0[0], vert2[1] - vert0[1], vert2[2] - vert0[2]};
   std::array<float32, 3> cross = {0.0f, 0.0f, 0.0f};
-  crossProduct(v01, v02, cross);
+  CrossProduct(v01, v02, cross);
   float32 const magCP = std::sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
   return 0.5f * magCP;
 }
@@ -109,7 +109,7 @@ float32 triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert
  * Both area results are zero because crossProduct() cannot update its caller.
  * Current call sites also supply zero positions. The first diagonal remains.
  */
-void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<usize, 6>& triangleVtxIDs)
+void GetQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<usize, 6>& triangleVtxIDs)
 {
   // Swap side vertices when label order indicates back-facing winding.
   if(!isQuadFrontFacing)
@@ -120,8 +120,8 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   }
 
   // Prefer the lower-area diagonal when positions distinguish the alternatives.
-  float32 const thisArea = triangleArea(vData[0].Position, vData[1].Position, vData[2].Position) + triangleArea(vData[0].Position, vData[2].Position, vData[3].Position);
-  float32 const alternateArea = triangleArea(vData[1].Position, vData[2].Position, vData[3].Position) + triangleArea(vData[1].Position, vData[3].Position, vData[0].Position);
+  float32 const thisArea = TriangleArea(vData[0].position, vData[1].position, vData[2].position) + TriangleArea(vData[0].position, vData[2].position, vData[3].position);
+  float32 const alternateArea = TriangleArea(vData[1].position, vData[2].position, vData[3].position) + TriangleArea(vData[1].position, vData[3].position, vData[0].position);
   if(alternateArea < thisArea)
   {
     VertexData const temp = vData[0];
@@ -132,12 +132,12 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   }
 
   // Emit two triangles as a fan from vertex zero.
-  triangleVtxIDs[0] = vData[0].VertexId;
-  triangleVtxIDs[1] = vData[1].VertexId;
-  triangleVtxIDs[2] = vData[2].VertexId;
-  triangleVtxIDs[3] = vData[0].VertexId;
-  triangleVtxIDs[4] = vData[2].VertexId;
-  triangleVtxIDs[5] = vData[3].VertexId;
+  triangleVtxIDs[0] = vData[0].vertex_id;
+  triangleVtxIDs[1] = vData[1].vertex_id;
+  triangleVtxIDs[2] = vData[2].vertex_id;
+  triangleVtxIDs[3] = vData[0].vertex_id;
+  triangleVtxIDs[4] = vData[2].vertex_id;
+  triangleVtxIDs[5] = vData[3].vertex_id;
 }
 
 /**
@@ -153,7 +153,7 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
  * @param dimZ ImageGeom Z dimension.
  * @return Flat ImageGeom index, or usize max outside the image.
  */
-inline usize edgeCellNxIndex(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, usize dimZ)
+inline usize EdgeCellNxIndex(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, usize dimZ)
 {
   const int32 nxX = ci - 1;
   const int32 nxY = cj - 1;
@@ -185,7 +185,7 @@ inline usize edgeCellNxIndex(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 
  * @param slice1Z ImageGeom Z index in slice1.
  * @return Feature ID, or the padding label at the exterior or on a buffer miss.
  */
-inline int32 cornerLabel(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, const std::vector<int32>& slice0, int32 slice0Z,
+inline int32 CornerLabel(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, const std::vector<int32>& slice0, int32 slice0Z,
                          const std::vector<int32>& slice1, int32 slice1Z)
 {
   // Exterior padded corners close the mesh at the volume boundary.
@@ -269,11 +269,11 @@ Result<> SurfaceNetsScanline::operator()()
   }
   const int32 paddedXY = paddedX * paddedY;
 
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
   const auto anyDispatchTargetOutOfCore = [&]() {
     const auto isOoc = [](const IDataArray* array) { return array != nullptr && IsOutOfCore(*array); };
-    if(isOoc(featureIdsArray) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath)) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath)))
+    if(isOoc(featureIdsArrayPtr) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath)) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath)))
     {
       return true;
     }
@@ -298,9 +298,9 @@ Result<> SurfaceNetsScanline::operator()()
         return true;
       }
     }
-    if(const auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath); triangleGeom != nullptr)
+    if(const auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath); triangleGeomPtr != nullptr)
     {
-      return isOoc(triangleGeom->getVertices()) || isOoc(triangleGeom->getFaces());
+      return isOoc(triangleGeomPtr->getVertices()) || isOoc(triangleGeomPtr->getFaces());
     }
     return false;
   };
@@ -368,8 +368,8 @@ Result<> SurfaceNetsScanline::operator()()
   }
 
   // Ping-pong pointers reuse the prior upper slice as the next lower slice.
-  std::vector<int32>* slice0 = &sliceBufA;
-  std::vector<int32>* slice1 = &sliceBufB;
+  std::vector<int32>* slice0Ptr = &sliceBufA;
+  std::vector<int32>* slice1Ptr = &sliceBufB;
   int32 slice0Z = -1;
   int32 slice1Z = -1;
 
@@ -391,7 +391,7 @@ Result<> SurfaceNetsScanline::operator()()
     {
       if(slice0Z != needZ0 && slice1Z != needZ0)
       {
-        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ0) * sliceSize, nonstd::span<int32>(slice0->data(), sliceSize));
+        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ0) * sliceSize, nonstd::span<int32>(slice0Ptr->data(), sliceSize));
         if(copyResult.invalid())
         {
           return copyResult;
@@ -403,7 +403,7 @@ Result<> SurfaceNetsScanline::operator()()
     {
       if(slice0Z != needZ1 && slice1Z != needZ1)
       {
-        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ1) * sliceSize, nonstd::span<int32>(slice1->data(), sliceSize));
+        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ1) * sliceSize, nonstd::span<int32>(slice1Ptr->data(), sliceSize));
         if(copyResult.invalid())
         {
           return copyResult;
@@ -427,14 +427,14 @@ Result<> SurfaceNetsScanline::operator()()
         //   [7] = (i,   j+1, k+1)   left-front-top
         std::array<int32, 8> cellLabels{};
 
-        cellLabels[0] = cornerLabel(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[1] = cornerLabel(i + 1, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[2] = cornerLabel(i + 1, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[3] = cornerLabel(i, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[4] = cornerLabel(i, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[5] = cornerLabel(i + 1, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[6] = cornerLabel(i + 1, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[7] = cornerLabel(i, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
+        cellLabels[0] = CornerLabel(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[1] = CornerLabel(i + 1, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[2] = CornerLabel(i + 1, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[3] = CornerLabel(i, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[4] = CornerLabel(i, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[5] = CornerLabel(i + 1, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[6] = CornerLabel(i + 1, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[7] = CornerLabel(i, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
 
         MMCellFlag flag;
         flag.clear();
@@ -452,7 +452,7 @@ Result<> SurfaceNetsScanline::operator()()
           record.VertexId = static_cast<uint64>(numVertices);
           ++numVertices;
         }
-        auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
+        auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
         if(writeResult.invalid())
         {
           return writeResult;
@@ -461,7 +461,7 @@ Result<> SurfaceNetsScanline::operator()()
     }
 
     // Reuse the upper slice and make the other buffer available for k+1.
-    std::swap(slice0, slice1);
+    std::swap(slice0Ptr, slice1Ptr);
     std::swap(slice0Z, slice1Z);
   }
 
@@ -538,7 +538,7 @@ Result<> SurfaceNetsScanline::operator()()
         {
           for(int32 cellI = 0; cellI < paddedX - 1; cellI++)
           {
-            const uint64 recordIndex = cellRecordIndex(cellI, cellJ, cellK, paddedX, paddedXY);
+            const uint64 recordIndex = CellRecordIndex(cellI, cellJ, cellK, paddedX, paddedXY);
             auto recordResult = m_SurfaceCellCache->read(recordIndex, m_ShouldCancel);
             if(recordResult.invalid())
             {
@@ -581,7 +581,7 @@ Result<> SurfaceNetsScanline::operator()()
               float32 nbrPosZ = 0.5f;
               if(nbrI >= 0 && nbrJ >= 0 && nbrK >= 0 && nbrI < paddedX && nbrJ < paddedY && nbrK < paddedZ)
               {
-                auto neighborResult = m_SurfaceCellCache->read(cellRecordIndex(nbrI, nbrJ, nbrK, paddedX, paddedXY), m_ShouldCancel);
+                auto neighborResult = m_SurfaceCellCache->read(CellRecordIndex(nbrI, nbrJ, nbrK, paddedX, paddedXY), m_ShouldCancel);
                 if(neighborResult.invalid())
                 {
                   return ConvertResult(std::move(neighborResult));
@@ -638,7 +638,7 @@ Result<> SurfaceNetsScanline::operator()()
     {
       return MakeErrorResult<SurfaceCellRecord>(-62055, "SurfaceNets encountered an invalid padded-cell neighbor.");
     }
-    return m_SurfaceCellCache->read(cellRecordIndex(i, j, k, paddedX, paddedXY), m_ShouldCancel);
+    return m_SurfaceCellCache->read(CellRecordIndex(i, j, k, paddedX, paddedXY), m_ShouldCancel);
   };
   const auto labelAt = [&](int32 i, int32 j, int32 k) -> Result<LabelType> {
     if(i <= 0 || j <= 0 || k <= 0 || i >= paddedX - 1 || j >= paddedY - 1 || k >= paddedZ - 1)
@@ -700,7 +700,7 @@ Result<> SurfaceNetsScanline::operator()()
             return ConvertResult(std::move(nodeTypeResult));
           }
           record.NodeType = nodeTypeResult.value();
-          auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
+          auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
           if(writeResult.invalid())
           {
             return writeResult;
@@ -740,7 +740,7 @@ Result<> SurfaceNetsScanline::operator()()
       }
       auto quadRecord = quadRecordResult.value();
       quadRecord.IsReferenced = true;
-      auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(cell[0], cell[1], cell[2], paddedX, paddedXY), quadRecord, m_ShouldCancel);
+      auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(cell[0], cell[1], cell[2], paddedX, paddedXY), quadRecord, m_ShouldCancel);
       if(writeResult.invalid())
       {
         return writeResult;
@@ -819,7 +819,7 @@ Result<> SurfaceNetsScanline::operator()()
           {
             record.VertexId = std::numeric_limits<uint64>::max();
           }
-          auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
+          auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
           if(writeResult.invalid())
           {
             return writeResult;
@@ -855,13 +855,13 @@ Result<> SurfaceNetsScanline::operator()()
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
   const Point3Df halfVoxelOffset(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
-  constexpr usize kOutputChunkSize = 4096;
+  constexpr usize k_OutputChunkSize = 4096;
   std::vector<float32> vertexBuffer;
   std::vector<int8> nodeBuffer;
   try
   {
-    vertexBuffer.reserve(kOutputChunkSize * 3);
-    nodeBuffer.reserve(kOutputChunkSize);
+    vertexBuffer.reserve(k_OutputChunkSize * 3);
+    nodeBuffer.reserve(k_OutputChunkSize);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-62054, "SurfaceNets failed to allocate its bounded vertex output buffers.");
@@ -918,7 +918,7 @@ Result<> SurfaceNetsScanline::operator()()
         vertexBuffer.push_back(voxelSize[1] * (static_cast<float32>(j) + record.LocalPosition[1]) + origin[1] - halfVoxelOffset[1]);
         vertexBuffer.push_back(voxelSize[2] * (static_cast<float32>(k) + record.LocalPosition[2]) + origin[2] - halfVoxelOffset[2]);
         nodeBuffer.push_back(record.NodeType);
-        if(nodeBuffer.size() == kOutputChunkSize)
+        if(nodeBuffer.size() == k_OutputChunkSize)
         {
           auto result = flushVertices();
           if(result.invalid())
@@ -991,9 +991,9 @@ Result<> SurfaceNetsScanline::operator()()
   std::vector<SurfaceNetsTransferData> transferBuffer;
   try
   {
-    faceBuffer.reserve(kOutputChunkSize * 3);
-    faceLabelBuffer.reserve(kOutputChunkSize * 2);
-    transferBuffer.reserve(kOutputChunkSize);
+    faceBuffer.reserve(k_OutputChunkSize * 3);
+    faceLabelBuffer.reserve(k_OutputChunkSize * 2);
+    transferBuffer.reserve(k_OutputChunkSize);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-62054, "SurfaceNets failed to allocate its bounded face output buffers.");
@@ -1066,15 +1066,15 @@ Result<> SurfaceNetsScanline::operator()()
       {
         return MakeErrorResult(-62056, "SurfaceNets edge quad is missing one of its required vertices.");
       }
-      vData[n] = {.VertexId = static_cast<usize>(quadRecord.value().VertexId), .Position = {0.0f, 0.0f, 0.0f}};
+      vData[n] = {.vertex_id = static_cast<usize>(quadRecord.value().VertexId), .position = {0.0f, 0.0f, 0.0f}};
     }
     const bool frontFacing = label0.value() < label1.value();
     LabelType firstLabel = label0.value() == MMSurfaceNet::Padding ? -1 : label0.value();
     LabelType secondLabel = label1.value() == MMSurfaceNet::Padding ? -1 : label1.value();
     std::array<usize, 6> triangleVertexIds{};
-    getQuadTriangleIDs(vData, frontFacing, triangleVertexIds);
-    const std::array<usize, 2> nxIndices = {edgeCellNxIndex(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, dimZ),
-                                            edgeCellNxIndex(i + otherLabelOffset[0], j + otherLabelOffset[1], k + otherLabelOffset[2], paddedX, paddedY, paddedZ, dimX, dimY, dimZ)};
+    GetQuadTriangleIDs(vData, frontFacing, triangleVertexIds);
+    const std::array<usize, 2> nxIndices = {EdgeCellNxIndex(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, dimZ),
+                                            EdgeCellNxIndex(i + otherLabelOffset[0], j + otherLabelOffset[1], k + otherLabelOffset[2], paddedX, paddedY, paddedZ, dimX, dimY, dimZ)};
     const auto appendTriangle = [&](usize offset) {
       faceBuffer.insert(faceBuffer.end(), triangleVertexIds.begin() + offset, triangleVertexIds.begin() + offset + 3);
       faceLabelBuffer.push_back(std::min(firstLabel, secondLabel));
@@ -1083,7 +1083,7 @@ Result<> SurfaceNetsScanline::operator()()
     };
     appendTriangle(0);
     appendTriangle(3);
-    if(transferBuffer.size() >= kOutputChunkSize)
+    if(transferBuffer.size() >= k_OutputChunkSize)
     {
       auto flushResult = flushFaces();
       if(flushResult.invalid())

@@ -18,11 +18,11 @@ FindNRingNeighbors::~FindNRingNeighbors() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& /*mesgHandler*/, const std::atomic_bool& shouldCancel)
 {
-  auto* triangleGeom = m_InputValues->TriangleGeomPtr;
+  auto* triangleGeomPtr = m_InputValues->TriangleGeomPtr;
   const auto& triangleId = m_InputValues->TriangleId;
 
-  auto* trianglesArray = triangleGeom->getFaces();
-  auto& triangles = trianglesArray->getDataStoreRef();
+  auto* trianglesArrayPtr = triangleGeomPtr->getFaces();
+  auto& triangles = trianglesArrayPtr->getDataStoreRef();
   int32_t err = 0;
 
   // Get the AbstractDataStore reference for the FaceLabels DataArray
@@ -32,12 +32,12 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& /*mesgHan
   m_NRingTriangles.clear();
 
   // Make sure we have the proper connectivity built
-  Result<> result = triangleGeom->findElementsContainingVert(false);
+  Result<> result = triangleGeomPtr->findElementsContainingVert(false);
   if(result.invalid())
   {
     return result;
   }
-  const INodeGeometry1D::ElementDynamicList* node2TrianglePtr = triangleGeom->getElementsContainingVert();
+  const INodeGeometry1D::ElementDynamicList* node2TrianglePtr = triangleGeomPtr->getElementsContainingVert();
 
   // Figure out these boolean values for a sanity check
   bool check0 = faceLabels[triangleId * 2] == m_InputValues->RegionId0 && faceLabels[triangleId * 2 + 1] == m_InputValues->RegionId1;
@@ -73,12 +73,12 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& /*mesgHan
       {
         // Get all the triangles for this Node id
         uint16_t tCount = node2TrianglePtr->getNumberOfElements(triangles[triangleIdx * 3 + i]);
-        IGeometry::MeshIndexType* data = node2TrianglePtr->getElementListPointer(triangles[triangleIdx * 3 + i]);
+        IGeometry::MeshIndexType* dataPtr = node2TrianglePtr->getElementListPointer(triangles[triangleIdx * 3 + i]);
 
         // Copy all the triangles into our "2Ring" set which will be the unique set of triangle ids
         for(uint16_t t = 0; t < tCount; ++t)
         {
-          IGeometry::MeshIndexType tid = data[t];
+          IGeometry::MeshIndexType tid = dataPtr[t];
           check0 = faceLabels[tid * 2] == m_InputValues->RegionId0 && faceLabels[tid * 2 + 1] == m_InputValues->RegionId1;
           check1 = faceLabels[tid * 2 + 1] == m_InputValues->RegionId0 && faceLabels[tid * 2] == m_InputValues->RegionId1;
 

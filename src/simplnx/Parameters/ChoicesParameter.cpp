@@ -56,10 +56,10 @@ nlohmann::json ChoicesParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
   }
   auto index = json.get<ValueType>();
   return {{index}};

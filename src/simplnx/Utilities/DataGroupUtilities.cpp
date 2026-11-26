@@ -46,9 +46,9 @@ void AppendCopiedChildPaths(const BaseGroup& source, const DataPath& destination
     }
     auto childPath = destination.createChildPath(child->getName());
     createdPaths.push_back(childPath);
-    if(const auto* group = dynamic_cast<const BaseGroup*>(child.get()); group != nullptr)
+    if(const auto* groupPtr = dynamic_cast<const BaseGroup*>(child.get()); groupPtr != nullptr)
     {
-      AppendCopiedChildPaths(*group, childPath, excludedId, createdPaths);
+      AppendCopiedChildPaths(*groupPtr, childPath, excludedId, createdPaths);
     }
   }
 }
@@ -62,9 +62,9 @@ void AppendCopyDataObjectAction(const DataStructure& dataStructure, OutputAction
     return;
   }
   std::vector<DataPath> createdPaths = {destination};
-  if(const auto* group = dataStructure.getDataAs<BaseGroup>(source); group != nullptr)
+  if(const auto* groupPtr = dataStructure.getDataAs<BaseGroup>(source); groupPtr != nullptr)
   {
-    AppendCopiedChildPaths(*group, destination, excludedId, createdPaths);
+    AppendCopiedChildPaths(*groupPtr, destination, excludedId, createdPaths);
     if(excludedId.has_value())
     {
       actions.appendAction(std::make_unique<CopyDataObjectExcludingAction>(source, destination, createdPaths, excludedPath));
@@ -101,13 +101,13 @@ FeatureRenumbering ComputeFeatureRenumbering(const std::vector<bool>& activeObje
 Result<> RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStore& cellFeatureIds,
                                size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, bool cellFeatureIdsRenumbered)
 {
-  const auto* featureLevelBaseGroup = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
+  const auto* featureLevelBaseGroupPtr = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
 
-  if(nullptr == featureLevelBaseGroup)
+  if(nullptr == featureLevelBaseGroupPtr)
   {
     return MakeErrorResult(k_MissingFeatureGroupError, fmt::format("Feature group '{}' does not exist or is not a group that can hold feature-level arrays.", featureDataGroupPath.toString()));
   }
-  const DataMap& featureDataMap = featureLevelBaseGroup->getDataMap();
+  const DataMap& featureDataMap = featureLevelBaseGroupPtr->getDataMap();
 
   // Only arrays with one tuple for each active flag contain feature-level data
   // that this operation can compact.
@@ -295,12 +295,12 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
     }
     else
     {
-      const auto* baseGroup = dataStructure.getDataAs<BaseGroup>(parentGroup);
-      if(baseGroup == nullptr)
+      const auto* baseGroupPtr = dataStructure.getDataAs<BaseGroup>(parentGroup);
+      if(baseGroupPtr == nullptr)
       {
         return {};
       }
-      childrenNames = baseGroup->getDataMap().getNames();
+      childrenNames = baseGroupPtr->getDataMap().getNames();
     }
 
     for(const auto& childName : childrenNames)
@@ -315,8 +315,8 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
           break;
         }
       }
-      const DataObject* dataObject = dataStructure.getData(childPath);
-      if(dataObject != nullptr && !ignore && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
+      const DataObject* dataObjectPtr = dataStructure.getData(childPath);
+      if(dataObjectPtr != nullptr && !ignore && (dataObjectType == DataObject::Type::DataObject || dataObjectPtr->getDataObjectType() == dataObjectType))
       {
         childDataObjects.push_back(childPath);
       }
@@ -331,10 +331,10 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parent)
 {
   std::vector<DataPath> childDataObjects;
-  const DataObject* dataObject1 = dataStructure.getData(parent);
-  if(dataObject1 == nullptr || dataObject1->getDataObjectType() == DataObject::Type::DataArray || dataObject1->getDataObjectType() == DataObject::Type::DynamicListArray ||
-     dataObject1->getDataObjectType() == DataObject::Type::NeighborList || dataObject1->getDataObjectType() == DataObject::Type::ScalarData ||
-     dataObject1->getDataObjectType() == DataObject::Type::StringArray)
+  const DataObject* dataObject1Ptr = dataStructure.getData(parent);
+  if(dataObject1Ptr == nullptr || dataObject1Ptr->getDataObjectType() == DataObject::Type::DataArray || dataObject1Ptr->getDataObjectType() == DataObject::Type::DynamicListArray ||
+     dataObject1Ptr->getDataObjectType() == DataObject::Type::NeighborList || dataObject1Ptr->getDataObjectType() == DataObject::Type::ScalarData ||
+     dataObject1Ptr->getDataObjectType() == DataObject::Type::StringArray)
   {
     return {};
   }
@@ -379,12 +379,12 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
     }
     else
     {
-      const auto* parent = dataStructure.getDataAs<BaseGroup>(parentGroup);
-      if(parent == nullptr)
+      const auto* parentPtr = dataStructure.getDataAs<BaseGroup>(parentGroup);
+      if(parentPtr == nullptr)
       {
         return {};
       }
-      childrenNames = parent->getDataMap().getNames();
+      childrenNames = parentPtr->getDataMap().getNames();
     }
 
     for(const auto& childName : childrenNames)
@@ -429,12 +429,12 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
     }
     else
     {
-      const auto* parent = dataStructure.getDataAs<BaseGroup>(parentGroup);
-      if(parent == nullptr)
+      const auto* parentPtr = dataStructure.getDataAs<BaseGroup>(parentGroup);
+      if(parentPtr == nullptr)
       {
         return {};
       }
-      childrenNames = parent->getDataMap().getNames();
+      childrenNames = parentPtr->getDataMap().getNames();
     }
 
     for(const auto& childName : childrenNames)
@@ -451,8 +451,8 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
       }
       if(!ignore)
       {
-        const DataObject* dataObject = dataStructure.getData(childPath);
-        if(dataObject != nullptr && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
+        const DataObject* dataObjectPtr = dataStructure.getData(childPath);
+        if(dataObjectPtr != nullptr && (dataObjectType == DataObject::Type::DataObject || dataObjectPtr->getDataObjectType() == dataObjectType))
         {
           childDataObjects.push_back(childPath);
         }
@@ -487,8 +487,8 @@ bool ContainsDataArrayName(const DataStructure& dataStructure, const DataPath& p
     for(const auto& childName : childrenNames)
     {
       DataPath childPath = parentGroup.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
-      if(dynamic_cast<const IDataArray*>(dataObject) != nullptr && childName == arrayName)
+      const DataObject* dataObjectPtr = dataStructure.getData(childPath);
+      if(dynamic_cast<const IDataArray*>(dataObjectPtr) != nullptr && childName == arrayName)
       {
         return true;
       }

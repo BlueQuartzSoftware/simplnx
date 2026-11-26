@@ -65,26 +65,26 @@ DataStructure CreateImageDataStructure(const SizeVec3& dimensions, const std::ve
                                        const FloatVec3& origin = {0.0F, 0.0F, 0.0F})
 {
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeometryPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions(dimensions);
-  REQUIRE(imageGeom->setSpacing(spacing).valid());
-  REQUIRE(imageGeom->setOrigin(origin).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions(dimensions);
+  REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+  REQUIRE(imageGeomPtr->setOrigin(origin).valid());
 
   const ShapeType cellShape = {dimensions[2], dimensions[1], dimensions[0]};
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), cellShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), cellShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_FeatureIdsPath, cellShape, {1});
-  auto* featureIdsArray = DataArray<T>::Create(dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
-  REQUIRE(featureIdsArray != nullptr);
-  REQUIRE(featureIds.size() == featureIdsArray->getNumberOfTuples());
-  std::copy(featureIds.cbegin(), featureIds.cend(), featureIdsArray->begin());
+  auto* featureIdsArrayPtr = DataArray<T>::Create(dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellDataPtr->getId());
+  REQUIRE(featureIdsArrayPtr != nullptr);
+  REQUIRE(featureIds.size() == featureIdsArrayPtr->getNumberOfTuples());
+  std::copy(featureIds.cbegin(), featureIds.cend(), featureIdsArrayPtr->begin());
 
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, k_EnsembleDataPath.getTargetName(), {phaseNames.size()}, imageGeom->getId());
-  REQUIRE(ensembleData != nullptr);
-  REQUIRE(StringArray::CreateWithValues(dataStructure, k_PhaseNamesPath.getTargetName(), {phaseNames.size()}, phaseNames, ensembleData->getId()) != nullptr);
+  auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, k_EnsembleDataPath.getTargetName(), {phaseNames.size()}, imageGeomPtr->getId());
+  REQUIRE(ensembleDataPtr != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, k_PhaseNamesPath.getTargetName(), {phaseNames.size()}, phaseNames, ensembleDataPtr->getId()) != nullptr);
 
   return dataStructure;
 }
@@ -93,35 +93,35 @@ template <class T>
 DataStructure CreateRectGridDataStructure(const SizeVec3& dimensions, const std::array<std::vector<float32>, 3>& bounds, const std::vector<T>& featureIds, const std::vector<std::string>& phaseNames)
 {
   DataStructure dataStructure;
-  auto* rectGrid = RectGridGeom::Create(dataStructure, k_GeometryPath.getTargetName());
-  REQUIRE(rectGrid != nullptr);
-  rectGrid->setDimensions(dimensions);
+  auto* rectGridPtr = RectGridGeom::Create(dataStructure, k_GeometryPath.getTargetName());
+  REQUIRE(rectGridPtr != nullptr);
+  rectGridPtr->setDimensions(dimensions);
 
   const std::array<std::string, 3> boundsNames = {"X Bounds", "Y Bounds", "Z Bounds"};
   std::array<Float32Array*, 3> boundsArrays = {};
   for(usize axis = 0; axis < bounds.size(); axis++)
   {
-    boundsArrays[axis] = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, boundsNames[axis], {bounds[axis].size()}, {1}, rectGrid->getId());
+    boundsArrays[axis] = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, boundsNames[axis], {bounds[axis].size()}, {1}, rectGridPtr->getId());
     REQUIRE(boundsArrays[axis] != nullptr);
     std::copy(bounds[axis].cbegin(), bounds[axis].cend(), boundsArrays[axis]->begin());
   }
-  const auto boundsResult = rectGrid->setBounds(boundsArrays[0], boundsArrays[1], boundsArrays[2]);
+  const auto boundsResult = rectGridPtr->setBounds(boundsArrays[0], boundsArrays[1], boundsArrays[2]);
   SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
 
   const ShapeType cellShape = {dimensions[2], dimensions[1], dimensions[0]};
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), cellShape, rectGrid->getId());
-  REQUIRE(cellData != nullptr);
-  rectGrid->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), cellShape, rectGridPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  rectGridPtr->setCellData(*cellDataPtr);
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_FeatureIdsPath, cellShape, {1});
-  auto* featureIdsArray = DataArray<T>::Create(dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
-  REQUIRE(featureIdsArray != nullptr);
-  REQUIRE(featureIds.size() == featureIdsArray->getNumberOfTuples());
-  std::copy(featureIds.cbegin(), featureIds.cend(), featureIdsArray->begin());
+  auto* featureIdsArrayPtr = DataArray<T>::Create(dataStructure, k_FeatureIdsPath.getTargetName(), featureIdsStore, cellDataPtr->getId());
+  REQUIRE(featureIdsArrayPtr != nullptr);
+  REQUIRE(featureIds.size() == featureIdsArrayPtr->getNumberOfTuples());
+  std::copy(featureIds.cbegin(), featureIds.cend(), featureIdsArrayPtr->begin());
 
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, k_EnsembleDataPath.getTargetName(), {phaseNames.size()}, rectGrid->getId());
-  REQUIRE(ensembleData != nullptr);
-  REQUIRE(StringArray::CreateWithValues(dataStructure, k_PhaseNamesPath.getTargetName(), {phaseNames.size()}, phaseNames, ensembleData->getId()) != nullptr);
+  auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, k_EnsembleDataPath.getTargetName(), {phaseNames.size()}, rectGridPtr->getId());
+  REQUIRE(ensembleDataPtr != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, k_PhaseNamesPath.getTargetName(), {phaseNames.size()}, phaseNames, ensembleDataPtr->getId()) != nullptr);
 
   return dataStructure;
 }
@@ -827,7 +827,7 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
   const std::vector<std::pair<std::string, fs::path>> fixtures = {
@@ -839,19 +839,19 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteOnScaleTableFileFilter>::uuid);
-      CHECK(pipelineFilter->getComments().empty());
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteOnScaleTableFileFilter>::uuid);
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteOnScaleTableFileFilter::k_OutputPath_Key) == fs::path("/test/path"));
       CHECK(args.value<std::string>(WriteOnScaleTableFileFilter::k_FilePrefix_Key) == "TestPrefix");
       CHECK(args.value<VectorInt32Parameter::ValueType>(WriteOnScaleTableFileFilter::k_NumKeypoints_Key) == VectorInt32Parameter::ValueType{3, 4, 5});

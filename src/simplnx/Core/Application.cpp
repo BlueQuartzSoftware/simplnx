@@ -34,7 +34,7 @@ namespace
  * @brief Locates the executable that hosts this process.
  * @return Executable path, or an error when the platform query fails.
  */
-Result<std::filesystem::path> findCurrentPath()
+Result<std::filesystem::path> FindCurrentPath()
 {
 #if defined(__linux__)
   std::vector<char> buffer(PATH_MAX + 1);
@@ -75,7 +75,7 @@ Result<std::filesystem::path> findCurrentPath()
 #endif
 }
 
-std::string getApplicationName(Application* app)
+std::string GetApplicationName(Application* app)
 {
   return "DREAM3DNX";
 }
@@ -111,7 +111,7 @@ Result<> Application::initialize()
     combinedResult = MergeResults(std::move(combinedResult), std::move(prefsResult));
   }
 
-  auto pathResult = findCurrentPath();
+  auto pathResult = FindCurrentPath();
   if(pathResult.invalid())
   {
     return MakeErrorResult(-5, fmt::format("Failed to determine executable path: {}", pathResult.errors()[0].message));
@@ -192,7 +192,7 @@ std::filesystem::path Application::getCurrentDir() const
 
 Result<> Application::loadPreferences()
 {
-  return loadPreferences(Preferences::DefaultFilePath(getApplicationName(this)));
+  return loadPreferences(Preferences::DefaultFilePath(GetApplicationName(this)));
 }
 
 Result<> Application::loadPreferences(const std::filesystem::path& filepath)
@@ -226,7 +226,7 @@ Result<> Application::savePreferences()
   {
     return MakeErrorResult(-2, "No preferences to save");
   }
-  std::string applicationName = getApplicationName(this);
+  std::string applicationName = GetApplicationName(this);
   const auto filepath = Preferences::DefaultFilePath(applicationName);
 
   auto result = m_Preferences->saveToFile(filepath);
@@ -239,11 +239,11 @@ Result<> Application::savePreferences()
 
 std::optional<Uuid> Application::getSimplnxUuid(const Uuid& simplUuid)
 {
-  for(usize index = 0; index < m_Simpl_Uuids.size(); index++)
+  for(usize index = 0; index < m_SimplUuids.size(); index++)
   {
-    if(m_Simpl_Uuids[index] == simplUuid)
+    if(m_SimplUuids[index] == simplUuid)
     {
-      return m_Simplnx_Uuids[index];
+      return m_SimplnxUuids[index];
     }
   }
 
@@ -253,9 +253,9 @@ std::optional<Uuid> Application::getSimplnxUuid(const Uuid& simplUuid)
 std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
 {
   std::vector<usize> indices;
-  for(usize index = 0; index < m_Simplnx_Uuids.size(); index++)
+  for(usize index = 0; index < m_SimplnxUuids.size(); index++)
   {
-    if(m_Simplnx_Uuids[index] == simplnxUuid)
+    if(m_SimplnxUuids[index] == simplnxUuid)
     {
       indices.push_back(index);
     }
@@ -264,7 +264,7 @@ std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
   uuidList.reserve(indices.size());
   for(const auto& index : indices)
   {
-    uuidList.push_back(m_Simpl_Uuids[index]);
+    uuidList.push_back(m_SimplUuids[index]);
   }
   return uuidList;
 }
@@ -332,11 +332,11 @@ std::unordered_set<AbstractPlugin*> Application::getPluginList() const
 const AbstractPlugin* Application::getPlugin(const Uuid& uuid) const
 {
   std::unordered_set<AbstractPlugin*> plugins = m_FilterList->getLoadedPlugins();
-  for(const auto* plugin : plugins)
+  for(const auto* pluginPtr : plugins)
   {
-    if(plugin->getId() == uuid)
+    if(pluginPtr->getId() == uuid)
     {
-      return plugin;
+      return pluginPtr;
     }
   }
   return nullptr;
@@ -376,39 +376,39 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
     return MakeErrorResult(-30, fmt::format("Failed to add plugin from '{}': {}", path.string(), addResult.errors().empty() ? "unknown error" : addResult.errors()[0].message));
   }
 
-  auto* plugin = pluginLoader->getPlugin();
-  if(plugin == nullptr)
+  auto* pluginPtr = pluginLoader->getPlugin();
+  if(pluginPtr == nullptr)
   {
     return MakeErrorResult(-31, fmt::format("Plugin loaded from '{}' but returned null", path.string()));
   }
 
   // Reject duplicate legacy UUIDs before appending the paired reverse mapping.
-  AbstractPlugin::SIMPLMapType simplToSimplnxUuids = plugin->getSimplToSimplnxMap();
+  AbstractPlugin::SIMPLMapType simplToSimplnxUuids = pluginPtr->getSimplToSimplnxMap();
   for(auto const& [simplUuid, simplData] : simplToSimplnxUuids)
   {
-    for(const auto& uuid : m_Simpl_Uuids)
+    for(const auto& uuid : m_SimplUuids)
     {
       if(uuid == simplUuid)
       {
-        return MakeErrorResult(-32, fmt::format("Duplicate UUIDs found in SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), plugin->getName()));
+        return MakeErrorResult(-32, fmt::format("Duplicate UUIDs found in SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), pluginPtr->getName()));
       }
     }
-    m_Simpl_Uuids.push_back(simplUuid);
-    m_Simplnx_Uuids.push_back(simplData.simplnxUuid);
+    m_SimplUuids.push_back(simplUuid);
+    m_SimplnxUuids.push_back(simplData.simplnxUuid);
   }
 
-  if(m_Simpl_Uuids.size() != m_Simplnx_Uuids.size())
+  if(m_SimplUuids.size() != m_SimplnxUuids.size())
   {
-    return MakeErrorResult(-33, fmt::format("UUID maps are not of the same size! SIMPL: {} Simplnx: {}", m_Simpl_Uuids.size(), m_Simplnx_Uuids.size()));
+    return MakeErrorResult(-33, fmt::format("UUID maps are not of the same size! SIMPL: {} Simplnx: {}", m_SimplUuids.size(), m_SimplnxUuids.size()));
   }
 
-  for(const auto& pluginIO : plugin->getDataIOManagers())
+  for(const auto& pluginIO : pluginPtr->getDataIOManagers())
   {
     auto addManagerResult = m_DataIOCollection->addIOManager(pluginIO);
     if(addManagerResult.invalid())
     {
-      return MakeErrorResult(
-          -34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", plugin->getName(), addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
+      return MakeErrorResult(-34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", pluginPtr->getName(),
+                                              addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
     }
   }
 

@@ -23,8 +23,8 @@ std::string DataGroupIO::getTypeName() const
 Result<> DataGroupIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* dataGroup = DataGroup::Import(structureReader.getDataStructure(), objectName, importId, parentId);
-  return BaseGroupIO::ReadBaseGroupData(structureReader, *dataGroup, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  auto* dataGroupPtr = DataGroup::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  return BaseGroupIO::ReadBaseGroupData(structureReader, *dataGroupPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
 Result<> DataGroupIO::writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable)

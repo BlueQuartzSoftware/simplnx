@@ -21,14 +21,14 @@ using namespace nx::core;
 
 namespace
 {
-using Frame = OrientationUtilities::Matrix3dR;
-using Point = Eigen::Vector3d;
-using Face = std::array<IGeometry::MeshIndexType, 3>;
+using FrameType = OrientationUtilities::Matrix3dR;
+using PointType = Eigen::Vector3d;
+using FaceType = std::array<IGeometry::MeshIndexType, 3>;
 
 struct ShapeMesh
 {
   ShapeMesh() = default;
-  ShapeMesh(std::vector<Point> meshVertices, std::vector<Face> meshFaces)
+  ShapeMesh(std::vector<PointType> meshVertices, std::vector<FaceType> meshFaces)
   : vertices(std::move(meshVertices))
   , faces(std::move(meshFaces))
   {
@@ -40,8 +40,8 @@ struct ShapeMesh
   ShapeMesh& operator=(const ShapeMesh&) = default;
   ShapeMesh& operator=(ShapeMesh&&) noexcept = default;
 
-  std::vector<Point> vertices;
-  std::vector<Face> faces;
+  std::vector<PointType> vertices;
+  std::vector<FaceType> faces;
 };
 
 ShapeMesh Frustum()
@@ -64,7 +64,7 @@ ShapeMesh Frustum()
   return mesh;
 }
 
-void AppendBox(ShapeMesh& mesh, const Point& minimum, const Point& maximum)
+void AppendBox(ShapeMesh& mesh, const PointType& minimum, const PointType& maximum)
 {
   const usize offset = mesh.vertices.size();
   mesh.vertices.insert(mesh.vertices.end(), {{minimum.x(), minimum.y(), minimum.z()},
@@ -75,7 +75,7 @@ void AppendBox(ShapeMesh& mesh, const Point& minimum, const Point& maximum)
                                              {maximum.x(), minimum.y(), maximum.z()},
                                              {maximum.x(), maximum.y(), maximum.z()},
                                              {minimum.x(), maximum.y(), maximum.z()}});
-  const std::array<Face, 12> faces = {{{0, 2, 1}, {0, 3, 2}, {4, 5, 6}, {4, 6, 7}, {0, 1, 5}, {0, 5, 4}, {1, 2, 6}, {1, 6, 5}, {2, 3, 7}, {2, 7, 6}, {3, 0, 4}, {3, 4, 7}}};
+  const std::array<FaceType, 12> faces = {{{0, 2, 1}, {0, 3, 2}, {4, 5, 6}, {4, 6, 7}, {0, 1, 5}, {0, 5, 4}, {1, 2, 6}, {1, 6, 5}, {2, 3, 7}, {2, 7, 6}, {3, 0, 4}, {3, 4, 7}}};
   for(auto face : faces)
   {
     for(auto& index : face)
@@ -86,46 +86,46 @@ void AppendBox(ShapeMesh& mesh, const Point& minimum, const Point& maximum)
   }
 }
 
-DataStructure MeshData(const ShapeMesh& mesh, const Point& centroid, const Frame& rotation = Frame::Identity())
+DataStructure MeshData(const ShapeMesh& mesh, const PointType& centroid, const FrameType& rotation = FrameType::Identity())
 {
   DataStructure data;
-  auto* geometry = TriangleGeom::Create(data, "Triangles");
-  REQUIRE(geometry != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(data, "Vertices", {mesh.vertices.size()}, {3}, geometry->getId());
-  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(data, "Faces", {mesh.faces.size()}, {3}, geometry->getId());
-  REQUIRE(vertices != nullptr);
-  REQUIRE(faces != nullptr);
-  geometry->setVertices(*vertices);
-  geometry->setFaceList(*faces);
+  auto* geometryPtr = TriangleGeom::Create(data, "Triangles");
+  REQUIRE(geometryPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(data, "Vertices", {mesh.vertices.size()}, {3}, geometryPtr->getId());
+  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(data, "Faces", {mesh.faces.size()}, {3}, geometryPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(facesPtr != nullptr);
+  geometryPtr->setVertices(*verticesPtr);
+  geometryPtr->setFaceList(*facesPtr);
   for(usize i = 0; i < mesh.vertices.size(); i++)
   {
-    const Point point = centroid + rotation * (mesh.vertices[i] - centroid);
+    const PointType point = centroid + rotation * (mesh.vertices[i] - centroid);
     for(usize axis = 0; axis < 3; axis++)
     {
-      (*vertices)[3 * i + axis] = static_cast<float32>(point[axis]);
+      (*verticesPtr)[3 * i + axis] = static_cast<float32>(point[axis]);
     }
   }
   for(usize i = 0; i < mesh.faces.size(); i++)
     for(usize axis = 0; axis < 3; axis++)
-      (*faces)[3 * i + axis] = mesh.faces[i][axis];
-  auto* faceData = AttributeMatrix::Create(data, "Face Data", {mesh.faces.size()}, geometry->getId());
-  auto* featureData = AttributeMatrix::Create(data, "Feature Data", {2}, geometry->getId());
-  REQUIRE(faceData != nullptr);
-  REQUIRE(featureData != nullptr);
-  geometry->setFaceAttributeMatrix(*faceData);
-  auto* labels = UnitTest::CreateTestDataArray<int32>(data, "Face Labels", {mesh.faces.size()}, {2}, faceData->getId());
-  auto* centers = UnitTest::CreateTestDataArray<float32>(data, "Centroids", {2}, {3}, featureData->getId());
-  REQUIRE(labels != nullptr);
-  REQUIRE(centers != nullptr);
-  centers->fill(0.0F);
+      (*facesPtr)[3 * i + axis] = mesh.faces[i][axis];
+  auto* faceDataPtr = AttributeMatrix::Create(data, "Face Data", {mesh.faces.size()}, geometryPtr->getId());
+  auto* featureDataPtr = AttributeMatrix::Create(data, "Feature Data", {2}, geometryPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  REQUIRE(featureDataPtr != nullptr);
+  geometryPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(data, "Face Labels", {mesh.faces.size()}, {2}, faceDataPtr->getId());
+  auto* centersPtr = UnitTest::CreateTestDataArray<float32>(data, "Centroids", {2}, {3}, featureDataPtr->getId());
+  REQUIRE(labelsPtr != nullptr);
+  REQUIRE(centersPtr != nullptr);
+  centersPtr->fill(0.0F);
   for(usize axis = 0; axis < 3; axis++)
   {
-    (*centers)[3 + axis] = static_cast<float32>(centroid[axis]);
+    (*centersPtr)[3 + axis] = static_cast<float32>(centroid[axis]);
   }
   for(usize i = 0; i < mesh.faces.size(); i++)
   {
-    (*labels)[2 * i] = -1;
-    (*labels)[2 * i + 1] = 1;
+    (*labelsPtr)[2 * i] = -1;
+    (*labelsPtr)[2 * i + 1] = 1;
   }
   return data;
 }
@@ -156,7 +156,7 @@ std::array<float32, 5> TetrahedronMeasurements(float64 degrees)
 {
   // #1802 issue-body fixture: volume=2*3*4/6=4, centroid=(0.5,0.75,1).
   const ShapeMesh mesh = {{{0, 0, 0}, {2, 0, 0}, {0, 3, 0}, {0, 0, 4}}, {{0, 2, 1}, {0, 1, 3}, {0, 3, 2}, {1, 2, 3}}};
-  const Frame rotation = Eigen::AngleAxisd(degrees * std::acos(-1.0) / 180.0, Point::UnitZ()).toRotationMatrix();
+  const FrameType rotation = Eigen::AngleAxisd(degrees * std::acos(-1.0) / 180.0, PointType::UnitZ()).toRotationMatrix();
   auto data = MeshData(mesh, {0.5, 0.75, 1}, rotation);
   ExecuteShapes(data);
   const auto& lengths = Output(data, "AxisLengths");
@@ -164,10 +164,10 @@ std::array<float32, 5> TetrahedronMeasurements(float64 degrees)
   return {lengths[3], lengths[4], lengths[5], ratios[2], ratios[3]};
 }
 
-void CheckOrderedAxes(const std::array<float64, 3>& euler, const Frame& expected)
+void CheckOrderedAxes(const std::array<float64, 3>& euler, const FrameType& expected)
 {
   const auto matrix = ebsdlib::EulerDType(euler[0], euler[1], euler[2]).toOrientationMatrix();
-  const Eigen::Map<const Frame> actual(matrix.data());
+  const Eigen::Map<const FrameType> actual(matrix.data());
   CHECK(actual.determinant() == Approx(1.0).margin(1.0e-6));
   for(usize row = 0; row < 3; row++)
   {
@@ -176,7 +176,7 @@ void CheckOrderedAxes(const std::array<float64, 3>& euler, const Frame& expected
   }
 }
 
-std::array<float64, 3> RayLengths(const DataStructure& data, const Frame& frame)
+std::array<float64, 3> RayLengths(const DataStructure& data, const FrameType& frame)
 {
   REQUIRE_NOTHROW(data.getDataRefAs<TriangleGeom>(DataPath({"Triangles"})));
   const auto& geometry = data.getDataRefAs<TriangleGeom>(DataPath({"Triangles"}));
@@ -211,8 +211,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Analytic frustum half
 {
   const usize rotationIndex = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(rotationIndex);
-  const std::array<Frame, 3> rotations = {Frame::Identity(), Eigen::AngleAxisd(std::acos(-1.0) / 6, Point::UnitZ()).toRotationMatrix(),
-                                          Eigen::AngleAxisd(0.8, Point{1, 2, 2}.normalized()).toRotationMatrix()};
+  const std::array<FrameType, 3> rotations = {FrameType::Identity(), Eigen::AngleAxisd(std::acos(-1.0) / 6, PointType::UnitZ()).toRotationMatrix(),
+                                              Eigen::AngleAxisd(0.8, PointType{1, 2, 2}.normalized()).toRotationMatrix()};
   const auto& rotation = rotations[rotationIndex];
   auto data = MeshData(Frustum(), {0, 0, 17.0 / 28.0}, rotation);
   ExecuteShapes(data);
@@ -241,7 +241,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Analytic frustum half
 
 TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Principal Euler frame preserves ordered axes", "[OrientationAnalysis][ComputeShapesTriangleGeom]")
 {
-  Frame frame;
+  FrameType frame;
   SECTION("Symmetric improper H frame")
   {
     // H=I-(2/3)*ones, H*H^T=I, determinant=-1.
@@ -266,8 +266,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Principal Euler frame
 TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Explicit axis signs preserve half-spans and ratios", "[OrientationAnalysis][ComputeShapesTriangleGeom]")
 {
   auto data = MeshData(Frustum(), {0, 0, 17.0 / 28.0});
-  const auto positive = RayLengths(data, Frame::Identity());
-  const auto negative = RayLengths(data, -Frame::Identity());
+  const auto positive = RayLengths(data, FrameType::Identity());
+  const auto negative = RayLengths(data, -FrameType::Identity());
   const std::array<float64, 3> expected = {135.0 / 28.0, 90.0 / 28.0, 0.5};
   for(usize axis = 0; axis < 3; axis++)
   {
@@ -289,10 +289,10 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
   SECTION("One side has no hit from an external centroid")
   {
     auto data = MeshData(Frustum(), {0, 0, -1});
-    const auto lengths = RayLengths(data, Frame::Identity());
+    const auto lengths = RayLengths(data, FrameType::Identity());
     // +Z hits at t=1 and 2; -Z has none. Half-span=(2+0)/2=1.
     CHECK(lengths[2] == Approx(1.0));
-    CHECK(RayLengths(data, -Frame::Identity())[2] == Approx(1.0));
+    CHECK(RayLengths(data, -FrameType::Identity())[2] == Approx(1.0));
   }
   SECTION("All axes miss the feature and produce the sentinel")
   {
@@ -300,11 +300,11 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
     for(const float64 x : {-10.0, 10.0})
       for(const float64 y : {-20.0, 20.0})
         for(const float64 z : {-30.0, 30.0})
-          AppendBox(mesh, Point{x - 1, y - 2, z - 3}, Point{x + 1, y + 2, z + 3});
+          AppendBox(mesh, PointType{x - 1, y - 2, z - 3}, PointType{x + 1, y + 2, z + 3});
     // Eight disjoint lobes have centroid zero and diagonal covariance
     // (100+1/3,400+4/3,900+3). All three coordinate rays miss every lobe.
-    auto data = MeshData(mesh, Point::Zero());
-    const auto lengths = RayLengths(data, Frame::Identity());
+    auto data = MeshData(mesh, PointType::Zero());
+    const auto lengths = RayLengths(data, FrameType::Identity());
     CHECK(lengths == std::array<float64, 3>{0, 0, 0});
     ExecuteShapes(data);
     const auto& output = Output(data, "AxisLengths");
@@ -323,8 +323,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
     AppendBox(mesh, {3, -2, -0.5}, {5, 2, 0.5});
     // The two lobes have centroid zero and diagonal covariance
     // (16+1/3,4/3,1/12). X has half-span 5; Y and Z have no hits.
-    auto data = MeshData(mesh, Point::Zero());
-    const auto lengths = RayLengths(data, Frame::Identity());
+    auto data = MeshData(mesh, PointType::Zero());
+    const auto lengths = RayLengths(data, FrameType::Identity());
     CHECK(lengths == std::array<float64, 3>{5, 0, 0});
     ExecuteShapes(data);
     const auto& output = Output(data, "AxisLengths");
@@ -342,38 +342,38 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
     AppendBox(mesh, {-5, -2, -1}, {-3, 2, 1});
     AppendBox(mesh, {1, -2, -1}, {2, 2, 1});
     AppendBox(mesh, {4, -2, -1}, {8, 2, 1});
-    auto data = MeshData(mesh, Point::Zero());
+    auto data = MeshData(mesh, PointType::Zero());
     // One feature with three disjoint lobes: X hits -5,-3,1,2,4,8.
     // Farthest distances are 5 and 8, half-span=13/2, including all gaps.
-    CHECK(RayLengths(data, Frame::Identity())[0] == Approx(6.5));
-    CHECK(RayLengths(data, -Frame::Identity())[0] == Approx(6.5));
+    CHECK(RayLengths(data, FrameType::Identity())[0] == Approx(6.5));
+    CHECK(RayLengths(data, -FrameType::Identity())[0] == Approx(6.5));
   }
 }
 
 TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Face Feature Centroids requires 3 components", "[OrientationAnalysis][ComputeShapesTriangleGeom][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* triangleGeom = TriangleGeom::Create(dataStructure, "Triangles");
-  REQUIRE(triangleGeom != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeom->getId());
-  triangleGeom->setVertices(*vertices);
-  triangleGeom->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
-  triangleGeom->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
-  triangleGeom->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
-  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeom->getId());
-  (*faces)[0] = 0;
-  (*faces)[1] = 1;
-  (*faces)[2] = 2;
-  triangleGeom->setFaceList(*faces);
-  auto* faceData = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeom->getId());
-  REQUIRE(faceData != nullptr);
-  triangleGeom->setFaceAttributeMatrix(*faceData);
-  auto* labels = UnitTest::CreateTestDataArray<int32>(dataStructure, "Face Labels", {1}, {2}, faceData->getId());
-  (*labels)[0] = 1;
-  (*labels)[1] = 0;
-  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, triangleGeom->getId());
-  REQUIRE(featureData != nullptr);
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {1}, featureData->getId());
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(triangleGeomPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeomPtr->getId());
+  triangleGeomPtr->setVertices(*verticesPtr);
+  triangleGeomPtr->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
+  triangleGeomPtr->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
+  triangleGeomPtr->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
+  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeomPtr->getId());
+  (*facesPtr)[0] = 0;
+  (*facesPtr)[1] = 1;
+  (*facesPtr)[2] = 2;
+  triangleGeomPtr->setFaceList(*facesPtr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeomPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Face Labels", {1}, {2}, faceDataPtr->getId());
+  (*labelsPtr)[0] = 1;
+  (*labelsPtr)[1] = 0;
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, triangleGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {1}, featureDataPtr->getId());
 
   ComputeShapesTriangleGeomFilter filter;
   auto args = filter.getDefaultArguments();

@@ -267,7 +267,7 @@ const IFilter::MessageHandler& AlignSections::getThreadSafeMessageHandler()
 
 void AlignSections::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }
 
@@ -296,8 +296,8 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
   bool usesOutOfCoreStore = false;
   for(const auto& cellArrayPath : selectedCellArrays)
   {
-    const auto* cellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
-    if(cellArray != nullptr && IsOutOfCore(*cellArray))
+    const auto* cellArrayPtr = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+    if(cellArrayPtr != nullptr && IsOutOfCore(*cellArrayPtr))
     {
       usesOutOfCoreStore = true;
       break;
@@ -335,15 +335,15 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
     }
 
     m_ThreadSafeMessageHandler.sendInfoMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
-    auto* cellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
-    if(cellArray == nullptr)
+    auto* cellArrayPtr = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+    if(cellArrayPtr == nullptr)
     {
       continue;
     }
 
     if(useOoc)
     {
-      auto transferResult = ExecuteDataFunction(AlignSectionsTransferDataOocFunctor{}, cellArray->getDataType(), *cellArray, this, udims, xShifts, yShifts);
+      auto transferResult = ExecuteDataFunction(AlignSectionsTransferDataOocFunctor{}, cellArrayPtr->getDataType(), *cellArrayPtr, this, udims, xShifts, yShifts);
       if(transferResult.invalid())
       {
         return transferResult;
@@ -351,7 +351,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
     }
     else
     {
-      ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray->getDataType(), taskRunner, this, udims, xShifts, yShifts, *cellArray);
+      ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArrayPtr->getDataType(), taskRunner, this, udims, xShifts, yShifts, *cellArrayPtr);
     }
   }
 

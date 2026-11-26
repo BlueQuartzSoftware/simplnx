@@ -265,15 +265,15 @@ void INodeGeometry3D::setPolyhedraAttributeMatrix(const AttributeMatrix& attribu
 INodeGeometry3D::SharedQuadList* INodeGeometry3D::createSharedQuadList(usize numQuads)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numQuads}, std::vector<usize>{4}, 0);
-  SharedQuadList* quads = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
-  return quads;
+  SharedQuadList* quadsPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
+  return quadsPtr;
 }
 
 INodeGeometry3D::SharedTriList* INodeGeometry3D::createSharedTriList(usize numTris)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numTris}, std::vector<usize>{3}, 0);
-  SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
-  return triangles;
+  SharedTriList* trianglesPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
+  return trianglesPtr;
 }
 
 void INodeGeometry3D::copyMembersInto(INodeGeometry3D& copy, const DataPath& copyPath)

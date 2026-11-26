@@ -17,19 +17,19 @@ namespace
 {
 constexpr usize k_ChunkValues = 65536;
 
-namespace EulerAngleConversionType
+namespace euler_angle_conversion_type
 {
-constexpr uint64 DegreesToRadians = 0;
-constexpr uint64 RadiansToDegrees = 1;
-} // namespace EulerAngleConversionType
+constexpr uint64 k_DegreesToRadians = 0;
+constexpr uint64 k_RadiansToDegrees = 1;
+} // namespace euler_angle_conversion_type
 
 float32 GetConversionFactor(uint64 conversionType)
 {
-  if(conversionType == EulerAngleConversionType::DegreesToRadians)
+  if(conversionType == euler_angle_conversion_type::k_DegreesToRadians)
   {
     return static_cast<float32>(numbers::pi / 180.0f);
   }
-  if(conversionType == EulerAngleConversionType::RadiansToDegrees)
+  if(conversionType == euler_angle_conversion_type::k_RadiansToDegrees)
   {
     return static_cast<float32>(180.0f / numbers::pi);
   }
@@ -143,16 +143,16 @@ public:
     }
 
     auto& anglesStore = m_Angles.getDataStoreRef();
-    auto* inMemoryStore = dynamic_cast<Float32DataStore*>(&anglesStore);
-    if(inMemoryStore == nullptr)
+    auto* inMemoryStorePtr = dynamic_cast<Float32DataStore*>(&anglesStore);
+    if(inMemoryStorePtr == nullptr)
     {
       return ConvertValuesInChunks(anglesStore, m_ConversionFactor, m_ShouldCancel);
     }
 
     // Disjoint worker ranges operate directly on the stable contiguous backing allocation.
     ParallelDataAlgorithm parallelAlgorithm;
-    parallelAlgorithm.setRange(0, inMemoryStore->getSize());
-    parallelAlgorithm.execute(ConvertContiguousValuesImpl(inMemoryStore->data(), m_ConversionFactor, m_ShouldCancel));
+    parallelAlgorithm.setRange(0, inMemoryStorePtr->getSize());
+    parallelAlgorithm.execute(ConvertContiguousValuesImpl(inMemoryStorePtr->data(), m_ConversionFactor, m_ShouldCancel));
     return {};
   }
 

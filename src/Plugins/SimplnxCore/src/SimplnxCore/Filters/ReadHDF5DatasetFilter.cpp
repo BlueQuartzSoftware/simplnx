@@ -114,7 +114,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
   }
 
-  const AttributeMatrix* parentAM = pSelectedAttributeMatrixValue.has_value() ? dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) : nullptr;
+  const AttributeMatrix* parentAmPtr = pSelectedAttributeMatrixValue.has_value() ? dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) : nullptr;
 
   int err = 0;
   auto h5FileReader = nx::core::HDF5::FileIO::ReadFile(inputFilePath);
@@ -154,7 +154,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     ShapeType cDims = std::move(componentDimensions.value());
 
     ShapeType tDims;
-    if(parentAM == nullptr)
+    if(parentAmPtr == nullptr)
     {
       std::string tDimsStr = datasetImportInfo.tupleDimensions;
       if(tDimsStr.empty())
@@ -172,7 +172,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
     else
     {
-      tDims = parentAM->getShape();
+      tDims = parentAmPtr->getShape();
     }
 
     auto tupleCount = ComputeDimensionProduct(tDims, fmt::format("Tuple for dataset '{}'", datasetPath));
@@ -252,12 +252,12 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_HDF5FilePathKey = "HDF5FilePath";
 constexpr StringLiteral k_ImportInfoArrayKey = "Dataset Import Info Array";
 constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadHDF5DatasetFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -266,8 +266,8 @@ Result<Arguments> ReadHDF5DatasetFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::ImportHDF5DatasetFilterParameterConverter>(args, json, SIMPL::k_ImportInfoArrayKey, SIMPL::k_HDF5FilePathKey,
-                                                                                                                    SIMPL::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::ImportHDF5DatasetFilterParameterConverter>(args, json, simpl::k_ImportInfoArrayKey, simpl::k_HDF5FilePathKey,
+                                                                                                                    simpl::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

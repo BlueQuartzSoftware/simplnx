@@ -367,13 +367,13 @@ Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Argum
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_PlaneKey = "Plane";
 constexpr StringLiteral k_FileNameKey = "FileName";
 constexpr StringLiteral k_IndexOffsetKey = "IndexOffset";
 constexpr StringLiteral k_ImageArrayPathKey = "ImageArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -382,21 +382,21 @@ Result<Arguments> WriteImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  Result<> planeResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_PlaneKey, k_Plane_Key);
+  Result<> planeResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_PlaneKey, k_Plane_Key);
   if(planeResult.valid())
   {
     // Some 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(planeResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_FileNameKey, k_FileName_Key));
-  Result<> offsetResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_IndexOffsetKey, k_IndexOffset_Key);
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_FileNameKey, k_FileName_Key));
+  Result<> offsetResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_IndexOffsetKey, k_IndexOffset_Key);
   if(offsetResult.valid())
   {
     // 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(offsetResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ImageArrayPathKey, k_ImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ImageArrayPathKey, k_ImageArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

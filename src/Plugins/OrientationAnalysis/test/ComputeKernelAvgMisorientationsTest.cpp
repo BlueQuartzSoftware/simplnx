@@ -71,7 +71,7 @@ private:
   uint64 m_PreviousBudget = 0;
 };
 
-namespace AnalyticalFixtures
+namespace analytical_fixtures
 {
 const std::string k_GeomName = "ImageGeometry";
 const DataPath k_ImageGeomPath = DataPath({k_GeomName});
@@ -99,48 +99,48 @@ struct FixtureData
 {
   DataStructure ds;
   ImageGeom* geom = nullptr;
-  AttributeMatrix* cellAM = nullptr;
-  AttributeMatrix* ensembleAM = nullptr;
-  Int32Array* featureIds = nullptr;
-  Int32Array* cellPhases = nullptr;
+  AttributeMatrix* cell_am = nullptr;
+  AttributeMatrix* ensemble_am = nullptr;
+  Int32Array* feature_ids = nullptr;
+  Int32Array* cell_phases = nullptr;
   Float32Array* quats = nullptr;
-  UInt32Array* crystalStructures = nullptr;
-  usize totalCells = 0;
+  UInt32Array* crystal_structures = nullptr;
+  usize total_cells = 0;
 };
 
 // Build valid image, cell, and ensemble arrays. Cells start in feature and
 // phase one with identity quaternions. Ensemble index one is Cubic_High.
-FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numCrystalStructures = 2)
+FixtureData CreateScaffold(usize nX, usize ny, usize nz, usize numCrystalStructures = 2)
 {
   FixtureData td;
-  td.totalCells = nX * nY * nZ;
+  td.total_cells = nX * ny * nz;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
   REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  td.geom->setDimensions({nX, nY, nZ});
+  td.geom->setDimensions({nX, ny, nz});
 
-  td.cellAM = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());
-  td.ensembleAM = AttributeMatrix::Create(td.ds, "EnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
+  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nz, ny, nX}, td.geom->getId());
+  td.ensemble_am = AttributeMatrix::Create(td.ds, "EnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
-  td.featureIds = CreateTestDataArray<int32>(td.ds, k_FeatureIdsName, {nZ, nY, nX}, {1}, td.cellAM->getId());
-  td.cellPhases = CreateTestDataArray<int32>(td.ds, k_CellPhasesName, {nZ, nY, nX}, {1}, td.cellAM->getId());
-  td.quats = CreateTestDataArray<float32>(td.ds, k_QuatsName, {nZ, nY, nX}, {4}, td.cellAM->getId());
-  td.crystalStructures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numCrystalStructures}, {1}, td.ensembleAM->getId());
+  td.feature_ids = CreateTestDataArray<int32>(td.ds, k_FeatureIdsName, {nz, ny, nX}, {1}, td.cell_am->getId());
+  td.cell_phases = CreateTestDataArray<int32>(td.ds, k_CellPhasesName, {nz, ny, nX}, {1}, td.cell_am->getId());
+  td.quats = CreateTestDataArray<float32>(td.ds, k_QuatsName, {nz, ny, nX}, {4}, td.cell_am->getId());
+  td.crystal_structures = CreateTestDataArray<uint32>(td.ds, k_CrystalStructuresName, {numCrystalStructures}, {1}, td.ensemble_am->getId());
 
-  for(usize i = 0; i < td.totalCells; ++i)
+  for(usize i = 0; i < td.total_cells; ++i)
   {
-    (*td.featureIds)[i] = 1;
-    (*td.cellPhases)[i] = 1;
+    (*td.feature_ids)[i] = 1;
+    (*td.cell_phases)[i] = 1;
     (*td.quats)[i * 4 + 0] = 0.0f;
     (*td.quats)[i * 4 + 1] = 0.0f;
     (*td.quats)[i * 4 + 2] = 0.0f;
     (*td.quats)[i * 4 + 3] = 1.0f;
   }
-  (*td.crystalStructures)[0] = 999u;
+  (*td.crystal_structures)[0] = 999u;
   if(numCrystalStructures > 1)
   {
-    (*td.crystalStructures)[1] = 1u;
+    (*td.crystal_structures)[1] = 1u;
   }
   return td;
 }
@@ -167,43 +167,43 @@ Arguments BuildArgs(const std::vector<int32>& kernelRadius, bool useFeatureIds =
   return args;
 }
 
-const Float32Array& GetOutputKAM(const DataStructure& ds)
+const Float32Array& GetOutputKAM(const DataStructure& dataStructure)
 {
-  return ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_KAMOutName));
+  return dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_KAMOutName));
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 
-AnalyticalFixtures::FixtureData CreateOocFixture(usize nX, usize nY, usize nZ)
+analytical_fixtures::FixtureData CreateOocFixture(usize nX, usize ny, usize nz)
 {
-  AnalyticalFixtures::FixtureData td;
-  td.totalCells = nX * nY * nZ;
-  const ShapeType tupleShape = {nZ, nY, nX};
+  analytical_fixtures::FixtureData td;
+  td.total_cells = nX * ny * nz;
+  const ShapeType tupleShape = {nz, ny, nX};
 
-  td.geom = ImageGeom::Create(td.ds, AnalyticalFixtures::k_GeomName);
+  td.geom = ImageGeom::Create(td.ds, analytical_fixtures::k_GeomName);
   REQUIRE(td.geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(td.geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  td.geom->setDimensions({nX, nY, nZ});
+  td.geom->setDimensions({nX, ny, nz});
 
-  td.cellAM = AttributeMatrix::Create(td.ds, "CellData", tupleShape, td.geom->getId());
-  td.geom->setCellData(*td.cellAM);
-  td.ensembleAM = AttributeMatrix::Create(td.ds, "EnsembleData", {2}, td.geom->getId());
+  td.cell_am = AttributeMatrix::Create(td.ds, "CellData", tupleShape, td.geom->getId());
+  td.geom->setCellData(*td.cell_am);
+  td.ensemble_am = AttributeMatrix::Create(td.ds, "EnsembleData", {2}, td.geom->getId());
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, AnalyticalFixtures::k_CellDataPath.createChildPath(AnalyticalFixtures::k_FeatureIdsName), tupleShape, {1});
-  td.featureIds = Int32Array::Create(td.ds, AnalyticalFixtures::k_FeatureIdsName, featureIdsStore, td.cellAM->getId());
+  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_FeatureIdsName), tupleShape, {1});
+  td.feature_ids = Int32Array::Create(td.ds, analytical_fixtures::k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
 
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, AnalyticalFixtures::k_CellDataPath.createChildPath(AnalyticalFixtures::k_CellPhasesName), tupleShape, {1});
-  td.cellPhases = Int32Array::Create(td.ds, AnalyticalFixtures::k_CellPhasesName, phasesStore, td.cellAM->getId());
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_CellPhasesName), tupleShape, {1});
+  td.cell_phases = Int32Array::Create(td.ds, analytical_fixtures::k_CellPhasesName, phasesStore, td.cell_am->getId());
 
-  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, AnalyticalFixtures::k_CellDataPath.createChildPath(AnalyticalFixtures::k_QuatsName), tupleShape, {4});
-  td.quats = Float32Array::Create(td.ds, AnalyticalFixtures::k_QuatsName, quatsStore, td.cellAM->getId());
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_QuatsName), tupleShape, {4});
+  td.quats = Float32Array::Create(td.ds, analytical_fixtures::k_QuatsName, quatsStore, td.cell_am->getId());
 
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, AnalyticalFixtures::k_EnsembleDataPath.createChildPath(AnalyticalFixtures::k_CrystalStructuresName), {2}, {1});
-  td.crystalStructures = UInt32Array::Create(td.ds, AnalyticalFixtures::k_CrystalStructuresName, crystalStructuresStore, td.ensembleAM->getId());
+  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, analytical_fixtures::k_EnsembleDataPath.createChildPath(analytical_fixtures::k_CrystalStructuresName), {2}, {1});
+  td.crystal_structures = UInt32Array::Create(td.ds, analytical_fixtures::k_CrystalStructuresName, crystalStructuresStore, td.ensemble_am->getId());
 
-  REQUIRE(td.featureIds != nullptr);
-  REQUIRE(td.cellPhases != nullptr);
+  REQUIRE(td.feature_ids != nullptr);
+  REQUIRE(td.cell_phases != nullptr);
   REQUIRE(td.quats != nullptr);
-  REQUIRE(td.crystalStructures != nullptr);
+  REQUIRE(td.crystal_structures != nullptr);
   return td;
 }
 } // namespace
@@ -512,22 +512,22 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline 
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(1, 1, 1);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(1, 1, 1);
   constexpr int32 k_MaxRadius = std::numeric_limits<int32>::max();
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({k_MaxRadius, k_MaxRadius, k_MaxRadius});
+  Arguments args = analytical_fixtures::BuildArgs({k_MaxRadius, k_MaxRadius, k_MaxRadius});
 
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const Float32Array* kam = nullptr;
-  REQUIRE_NOTHROW(kam = &AnalyticalFixtures::GetOutputKAM(td.ds));
-  REQUIRE(kam != nullptr);
-  REQUIRE(kam->getNumberOfTuples() == 1);
-  CHECK((*kam)[0] == 0.0f);
+  const Float32Array* kamPtr = nullptr;
+  REQUIRE_NOTHROW(kamPtr = &analytical_fixtures::GetOutputKAM(td.ds));
+  REQUIRE(kamPtr != nullptr);
+  REQUIRE(kamPtr->getNumberOfTuples() == 1);
+  CHECK((*kamPtr)[0] == 0.0f);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline Handles Empty Image Geometry", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter][Scanline]")
@@ -542,20 +542,20 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline 
   {
     DYNAMIC_SECTION("dimensions = " << dimensions[0] << " x " << dimensions[1] << " x " << dimensions[2])
     {
-      AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(dimensions[0], dimensions[1], dimensions[2]);
+      analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(dimensions[0], dimensions[1], dimensions[2]);
 
       ComputeKernelAvgMisorientationsFilter filter;
-      Arguments args = AnalyticalFixtures::BuildArgs({1, 1, 1});
+      Arguments args = analytical_fixtures::BuildArgs({1, 1, 1});
 
       auto preflightResult = filter.preflight(td.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
       auto executeResult = scope.executeFilter(filter, td.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      const Float32Array* kam = nullptr;
-      REQUIRE_NOTHROW(kam = &AnalyticalFixtures::GetOutputKAM(td.ds));
-      REQUIRE(kam != nullptr);
-      CHECK(kam->getNumberOfTuples() == 0);
+      const Float32Array* kamPtr = nullptr;
+      REQUIRE_NOTHROW(kamPtr = &analytical_fixtures::GetOutputKAM(td.ds));
+      REQUIRE(kamPtr != nullptr);
+      CHECK(kamPtr->getNumberOfTuples() == 0);
     }
   }
 }
@@ -564,7 +564,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: SIMPL Bac
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -577,22 +577,22 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: SIMPL Bac
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeKernelAvgMisorientationsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeKernelAvgMisorientationsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Pipeline loading verifies IntVec3FilterParameterConverter.
       CHECK(args.value<DataPath>(ComputeKernelAvgMisorientationsFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeKernelAvgMisorientationsFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -618,18 +618,18 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
 
   // Identity orientations make every valid 2D kernel average zero. This checks
   // feature matching and boundary clamping.
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 1);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 1);
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({1, 1, 0});
+  Arguments args = analytical_fixtures::BuildArgs({1, 1, 0});
 
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
-  for(usize i = 0; i < td.totalCells; ++i)
+  const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
+  for(usize i = 0; i < td.total_cells; ++i)
   {
     REQUIRE(kam[i] == Approx(0.0f).margin(1e-4f));
   }
@@ -644,13 +644,13 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Phase and
   UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
-  AnalyticalFixtures::FixtureData fixture = AnalyticalFixtures::CreateScaffold(3, 1, 1);
+  analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(3, 1, 1);
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0});
+  Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
 
   SECTION("Participating Phase returns an error")
   {
-    (*fixture.cellPhases)[1] = static_cast<int32>(fixture.crystalStructures->getNumberOfTuples());
+    (*fixture.cell_phases)[1] = static_cast<int32>(fixture.crystal_structures->getNumberOfTuples());
     auto executeResult = scope.executeFilter(filter, fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -67203);
@@ -658,7 +658,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Phase and
 
   SECTION("Participating Laue index returns an error")
   {
-    (*fixture.crystalStructures)[1] = 999U;
+    (*fixture.crystal_structures)[1] = 999U;
     auto executeResult = scope.executeFilter(filter, fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -67204);
@@ -666,8 +666,8 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Phase and
 
   SECTION("Phase on a background Feature is ignored")
   {
-    (*fixture.featureIds)[1] = 0;
-    (*fixture.cellPhases)[1] = static_cast<int32>(fixture.crystalStructures->getNumberOfTuples());
+    (*fixture.feature_ids)[1] = 0;
+    (*fixture.cell_phases)[1] = static_cast<int32>(fixture.crystal_structures->getNumberOfTuples());
     auto executeResult = scope.executeFilter(filter, fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -684,21 +684,21 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
 
   // A 5-degree x gradient gives {2.5, 10/3, 10/3, 10/3, 2.5}. This checks
   // one-dimensional averaging and boundary clamping.
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(5, 1, 1);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(5, 1, 1);
   const std::array<float32, 5> phi1Deg = {0.0f, 5.0f, 10.0f, 15.0f, 20.0f};
   for(usize i = 0; i < 5; ++i)
   {
-    AnalyticalFixtures::SetCellQuat(td, i, AnalyticalFixtures::QuatFromPhi1Deg(phi1Deg[i]));
+    analytical_fixtures::SetCellQuat(td, i, analytical_fixtures::QuatFromPhi1Deg(phi1Deg[i]));
   }
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0});
+  Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
   const std::array<float32, 5> expected = {2.5f, 10.0f / 3.0f, 10.0f / 3.0f, 10.0f / 3.0f, 2.5f};
   for(usize i = 0; i < 5; ++i)
   {
@@ -717,21 +717,21 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
 
   // A 10-degree z gradient gives {5, 20/3, 5}. This checks the outer z loop
   // and z-boundary clamping.
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(1, 1, 3);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(1, 1, 3);
   const std::array<float32, 3> phi1Deg = {0.0f, 10.0f, 20.0f};
   for(usize i = 0; i < 3; ++i)
   {
-    AnalyticalFixtures::SetCellQuat(td, i, AnalyticalFixtures::QuatFromPhi1Deg(phi1Deg[i]));
+    analytical_fixtures::SetCellQuat(td, i, analytical_fixtures::QuatFromPhi1Deg(phi1Deg[i]));
   }
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({0, 0, 1});
+  Arguments args = analytical_fixtures::BuildArgs({0, 0, 1});
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
   const std::array<float32, 3> expected = {5.0f, 20.0f / 3.0f, 5.0f};
   for(usize i = 0; i < 3; ++i)
   {
@@ -750,33 +750,33 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
 
   // Mixed feature IDs verify same-feature accumulation, background zero, and
   // isolated-feature handling.
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(6, 1, 1);
-  (*td.featureIds)[0] = 1;
-  (*td.featureIds)[1] = 1;
-  (*td.featureIds)[2] = 2;
-  (*td.featureIds)[3] = 2;
-  (*td.featureIds)[4] = 0;
-  (*td.featureIds)[5] = 1;
-  (*td.cellPhases)[0] = 1;
-  (*td.cellPhases)[1] = 1;
-  (*td.cellPhases)[2] = 1;
-  (*td.cellPhases)[3] = 1;
-  (*td.cellPhases)[4] = 0;
-  (*td.cellPhases)[5] = 1;
-  AnalyticalFixtures::SetCellQuat(td, 0, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
-  AnalyticalFixtures::SetCellQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
-  AnalyticalFixtures::SetCellQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
-  AnalyticalFixtures::SetCellQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(20.0f));
-  AnalyticalFixtures::SetCellQuat(td, 5, AnalyticalFixtures::QuatFromPhi1Deg(30.0f));
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(6, 1, 1);
+  (*td.feature_ids)[0] = 1;
+  (*td.feature_ids)[1] = 1;
+  (*td.feature_ids)[2] = 2;
+  (*td.feature_ids)[3] = 2;
+  (*td.feature_ids)[4] = 0;
+  (*td.feature_ids)[5] = 1;
+  (*td.cell_phases)[0] = 1;
+  (*td.cell_phases)[1] = 1;
+  (*td.cell_phases)[2] = 1;
+  (*td.cell_phases)[3] = 1;
+  (*td.cell_phases)[4] = 0;
+  (*td.cell_phases)[5] = 1;
+  analytical_fixtures::SetCellQuat(td, 0, analytical_fixtures::QuatFromPhi1Deg(0.0f));
+  analytical_fixtures::SetCellQuat(td, 1, analytical_fixtures::QuatFromPhi1Deg(10.0f));
+  analytical_fixtures::SetCellQuat(td, 2, analytical_fixtures::QuatFromPhi1Deg(0.0f));
+  analytical_fixtures::SetCellQuat(td, 3, analytical_fixtures::QuatFromPhi1Deg(20.0f));
+  analytical_fixtures::SetCellQuat(td, 5, analytical_fixtures::QuatFromPhi1Deg(30.0f));
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0});
+  Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
   const std::array<float32, 6> expected = {5.0f, 5.0f, 10.0f, 10.0f, 0.0f, 0.0f};
   for(usize i = 0; i < 6; ++i)
   {
@@ -797,33 +797,33 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
 
   // Per-voxel mode admits positive same-phase neighbors across feature
   // boundaries. Feature zero remains excluded.
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(6, 1, 1);
-  (*td.featureIds)[0] = 1;
-  (*td.featureIds)[1] = 1;
-  (*td.featureIds)[2] = 2;
-  (*td.featureIds)[3] = 2;
-  (*td.featureIds)[4] = 0;
-  (*td.featureIds)[5] = 1;
-  (*td.cellPhases)[0] = 1;
-  (*td.cellPhases)[1] = 1;
-  (*td.cellPhases)[2] = 1;
-  (*td.cellPhases)[3] = 1;
-  (*td.cellPhases)[4] = 0;
-  (*td.cellPhases)[5] = 1;
-  AnalyticalFixtures::SetCellQuat(td, 0, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
-  AnalyticalFixtures::SetCellQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
-  AnalyticalFixtures::SetCellQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
-  AnalyticalFixtures::SetCellQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(20.0f));
-  AnalyticalFixtures::SetCellQuat(td, 5, AnalyticalFixtures::QuatFromPhi1Deg(30.0f));
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(6, 1, 1);
+  (*td.feature_ids)[0] = 1;
+  (*td.feature_ids)[1] = 1;
+  (*td.feature_ids)[2] = 2;
+  (*td.feature_ids)[3] = 2;
+  (*td.feature_ids)[4] = 0;
+  (*td.feature_ids)[5] = 1;
+  (*td.cell_phases)[0] = 1;
+  (*td.cell_phases)[1] = 1;
+  (*td.cell_phases)[2] = 1;
+  (*td.cell_phases)[3] = 1;
+  (*td.cell_phases)[4] = 0;
+  (*td.cell_phases)[5] = 1;
+  analytical_fixtures::SetCellQuat(td, 0, analytical_fixtures::QuatFromPhi1Deg(0.0f));
+  analytical_fixtures::SetCellQuat(td, 1, analytical_fixtures::QuatFromPhi1Deg(10.0f));
+  analytical_fixtures::SetCellQuat(td, 2, analytical_fixtures::QuatFromPhi1Deg(0.0f));
+  analytical_fixtures::SetCellQuat(td, 3, analytical_fixtures::QuatFromPhi1Deg(20.0f));
+  analytical_fixtures::SetCellQuat(td, 5, analytical_fixtures::QuatFromPhi1Deg(30.0f));
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0}, false);
+  Arguments args = analytical_fixtures::BuildArgs({1, 0, 0}, false);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
   const std::array<float32, 6> expected = {5.0f, 20.0f / 3.0f, 10.0f, 10.0f, 0.0f, 0.0f};
   for(usize i = 0; i < 6; ++i)
   {
@@ -842,26 +842,26 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   UnitTest::LoadPlugins();
 
   // Two cubic phases verify the per-voxel phase and feature-ID gates.
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(5, 1, 1, 3);
-  (*td.crystalStructures)[2] = 1u;
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(5, 1, 1, 3);
+  (*td.crystal_structures)[2] = 1u;
   const std::array<int32, 5> featureIds = {1, 2, 3, 4, 0};
   const std::array<int32, 5> phases = {1, 1, 2, 1, 1};
   const std::array<float32, 5> phi1Deg = {0.0f, 10.0f, 20.0f, 30.0f, 40.0f};
   for(usize i = 0; i < 5; ++i)
   {
-    (*td.featureIds)[i] = featureIds[i];
-    (*td.cellPhases)[i] = phases[i];
-    AnalyticalFixtures::SetCellQuat(td, i, AnalyticalFixtures::QuatFromPhi1Deg(phi1Deg[i]));
+    (*td.feature_ids)[i] = featureIds[i];
+    (*td.cell_phases)[i] = phases[i];
+    analytical_fixtures::SetCellQuat(td, i, analytical_fixtures::QuatFromPhi1Deg(phi1Deg[i]));
   }
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0}, false);
+  Arguments args = analytical_fixtures::BuildArgs({1, 0, 0}, false);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
   const std::array<float32, 5> expected = {5.0f, 5.0f, 0.0f, 0.0f, 0.0f};
   for(usize i = 0; i < 5; ++i)
   {
@@ -883,7 +883,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
   // A single-feature, single-phase gradient gives both modes the same neighbor
   // set. Compare the full three-dimensional outputs bit-for-bit.
   auto buildFixture = []() {
-    AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 3);
+    analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 3);
     for(usize z = 0; z < 3; ++z)
     {
       for(usize y = 0; y < 3; ++y)
@@ -892,19 +892,19 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
         {
           const usize idx = (z * 9) + (y * 3) + x;
           const auto phi1 = static_cast<float32>(2 * x + 3 * y + 4 * z);
-          AnalyticalFixtures::SetCellQuat(td, idx, AnalyticalFixtures::QuatFromPhi1Deg(phi1));
+          analytical_fixtures::SetCellQuat(td, idx, analytical_fixtures::QuatFromPhi1Deg(phi1));
         }
       }
     }
     return td;
   };
 
-  AnalyticalFixtures::FixtureData tdPerGrain = buildFixture();
-  AnalyticalFixtures::FixtureData tdPerVoxel = buildFixture();
+  analytical_fixtures::FixtureData tdPerGrain = buildFixture();
+  analytical_fixtures::FixtureData tdPerVoxel = buildFixture();
 
   ComputeKernelAvgMisorientationsFilter filter;
-  auto runFilter = [&filter, &scope](AnalyticalFixtures::FixtureData& td, bool useFeatureIds) {
-    Arguments args = AnalyticalFixtures::BuildArgs({1, 1, 1}, useFeatureIds);
+  auto runFilter = [&filter, &scope](analytical_fixtures::FixtureData& td, bool useFeatureIds) {
+    Arguments args = analytical_fixtures::BuildArgs({1, 1, 1}, useFeatureIds);
     auto preflightResult = filter.preflight(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
@@ -913,10 +913,10 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
   runFilter(tdPerGrain, true);
   runFilter(tdPerVoxel, false);
 
-  const auto& kamPerGrain = AnalyticalFixtures::GetOutputKAM(tdPerGrain.ds);
-  const auto& kamPerVoxel = AnalyticalFixtures::GetOutputKAM(tdPerVoxel.ds);
+  const auto& kamPerGrain = analytical_fixtures::GetOutputKAM(tdPerGrain.ds);
+  const auto& kamPerVoxel = analytical_fixtures::GetOutputKAM(tdPerVoxel.ds);
   bool anyNonzero = false;
-  for(usize i = 0; i < tdPerGrain.totalCells; ++i)
+  for(usize i = 0; i < tdPerGrain.total_cells; ++i)
   {
     REQUIRE(kamPerGrain[i] == kamPerVoxel[i]);
     if(kamPerGrain[i] > 1e-4f)
@@ -944,15 +944,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
 
   SECTION("(i) Uniform-orientation single-feature => KAM == 0")
   {
-    AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 3);
+    analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 3);
     ComputeKernelAvgMisorientationsFilter filter;
-    Arguments args = AnalyticalFixtures::BuildArgs({1, 1, 1});
+    Arguments args = analytical_fixtures::BuildArgs({1, 1, 1});
     auto preflightResult = filter.preflight(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
-    for(usize i = 0; i < td.totalCells; ++i)
+    const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
+    for(usize i = 0; i < td.total_cells; ++i)
     {
       REQUIRE(kam[i] == Approx(0.0f).margin(1e-4f));
     }
@@ -961,44 +961,44 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
   SECTION("(ii) Background cell => KAM == 0 exactly")
   {
     // The middle cell is background.
-    AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 1, 1);
-    (*td.featureIds)[1] = 0;
-    (*td.cellPhases)[1] = 0;
-    AnalyticalFixtures::SetCellQuat(td, 0, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
-    AnalyticalFixtures::SetCellQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
+    analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 1, 1);
+    (*td.feature_ids)[1] = 0;
+    (*td.cell_phases)[1] = 0;
+    analytical_fixtures::SetCellQuat(td, 0, analytical_fixtures::QuatFromPhi1Deg(0.0f));
+    analytical_fixtures::SetCellQuat(td, 2, analytical_fixtures::QuatFromPhi1Deg(10.0f));
     ComputeKernelAvgMisorientationsFilter filter;
-    Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0});
+    Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
     auto preflightResult = filter.preflight(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+    const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
     REQUIRE(kam[1] == 0.0f);
   }
 
   SECTION("(iii, iv, v) Range and non-triviality invariants on x-axis gradient")
   {
-    AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(5, 1, 1);
+    analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(5, 1, 1);
     const std::array<float32, 5> phi1Deg = {0.0f, 5.0f, 10.0f, 15.0f, 20.0f};
     for(usize i = 0; i < 5; ++i)
     {
-      AnalyticalFixtures::SetCellQuat(td, i, AnalyticalFixtures::QuatFromPhi1Deg(phi1Deg[i]));
+      analytical_fixtures::SetCellQuat(td, i, analytical_fixtures::QuatFromPhi1Deg(phi1Deg[i]));
     }
     ComputeKernelAvgMisorientationsFilter filter;
-    Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0});
+    Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
     auto preflightResult = filter.preflight(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
-    for(usize i = 0; i < td.totalCells; ++i)
+    const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
+    for(usize i = 0; i < td.total_cells; ++i)
     {
       REQUIRE(kam[i] >= 0.0f);
       REQUIRE(kam[i] <= k_CubicMaxAngleDeg);
     }
     // Require nonzero output from the gradient fixture.
     bool anyNonzero = false;
-    for(usize i = 0; i < td.totalCells; ++i)
+    for(usize i = 0; i < td.total_cells; ++i)
     {
       if(kam[i] > 1e-4f)
       {
@@ -1027,8 +1027,8 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded C
   const CacheMemoryBudgetSentinel budget(k_CacheBudget);
 
   auto td = CreateOocFixture(k_X, k_Y, k_Z);
-  scope.requireExpectedStore(*td.featureIds);
-  scope.requireExpectedStore(*td.cellPhases);
+  scope.requireExpectedStore(*td.feature_ids);
+  scope.requireExpectedStore(*td.cell_phases);
   scope.requireExpectedStore(*td.quats);
 
   const std::vector<int32> ids(k_SliceTuples, 1);
@@ -1038,37 +1038,37 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded C
 
   for(usize z = 0; z < k_Z; z++)
   {
-    const auto q = AnalyticalFixtures::QuatFromPhi1Deg(phi1Deg[z]);
+    const auto q = analytical_fixtures::QuatFromPhi1Deg(phi1Deg[z]);
     for(usize tuple = 0; tuple < k_SliceTuples; tuple++)
     {
       std::copy(q.begin(), q.end(), quats.begin() + tuple * 4);
     }
 
     const usize tupleOffset = z * k_SliceTuples;
-    auto featureIdsWriteResult = td.featureIds->getDataStoreRef().copyFromBuffer(tupleOffset, nonstd::span<const int32>(ids.data(), ids.size()));
+    auto featureIdsWriteResult = td.feature_ids->getDataStoreRef().copyFromBuffer(tupleOffset, nonstd::span<const int32>(ids.data(), ids.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
-    auto cellPhasesWriteResult = td.cellPhases->getDataStoreRef().copyFromBuffer(tupleOffset, nonstd::span<const int32>(phases.data(), phases.size()));
+    auto cellPhasesWriteResult = td.cell_phases->getDataStoreRef().copyFromBuffer(tupleOffset, nonstd::span<const int32>(phases.data(), phases.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(cellPhasesWriteResult);
     auto quatsWriteResult = td.quats->getDataStoreRef().copyFromBuffer(tupleOffset * 4, nonstd::span<const float32>(quats.data(), quats.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
   }
 
   const std::array<uint32, 2> structures = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Cubic_High};
-  auto crystalStructuresWriteResult = td.crystalStructures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(structures.data(), structures.size()));
+  auto crystalStructuresWriteResult = td.crystal_structures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(structures.data(), structures.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
 
   auto planResult =
-      CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{k_X, k_Y, k_Z}, {0, 0, 4}, k_CacheBudget, CacheMemoryBudgetManager::instance().usedBytes(), AnalyticalFixtures::k_ImageGeomPath);
+      CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{k_X, k_Y, k_Z}, {0, 0, 4}, k_CacheBudget, CacheMemoryBudgetManager::instance().usedBytes(), analytical_fixtures::k_ImageGeomPath);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   REQUIRE_FALSE(planResult.value().UseRollingWindow);
 
   ComputeKernelAvgMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs({0, 0, 4});
+  Arguments args = analytical_fixtures::BuildArgs({0, 0, 4});
   auto result = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   const std::array<float32, 5> expected = {10.0F, 7.0F, 6.0F, 7.0F, 10.0F};
-  const auto& output = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const auto& output = analytical_fixtures::GetOutputKAM(td.ds);
   scope.requireExpectedStore(output);
   std::vector<float32> outputSlice(k_SliceTuples);
   for(usize z = 0; z < k_Z; z++)

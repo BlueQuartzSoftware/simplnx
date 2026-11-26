@@ -23,14 +23,14 @@ std::string VertexGeomIO::getTypeName() const
 Result<> VertexGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                 const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* geometry = VertexGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
-  return INodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  auto* geometryPtr = VertexGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
+  return INodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, *geometryPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
 Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
 {
-  auto* geom = dataStructure.getDataAs<VertexGeom>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<VertexGeom>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50595, fmt::format("Failed to finish importing VertexGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }

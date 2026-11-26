@@ -41,38 +41,38 @@ public:
 
   void compute(usize start, usize end) const
   {
-    auto* array0 = m_Length ? m_Arrays[0]->template getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
-    if(m_Length && array0 == nullptr)
+    auto* array0Ptr = m_Length ? m_Arrays[0]->template getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
+    if(m_Length && array0Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
     }
-    auto* array1 = m_Min ? m_Arrays[1]->template getIDataStoreAs<StoreType>() : nullptr;
-    if(m_Min && array1 == nullptr)
+    auto* array1Ptr = m_Min ? m_Arrays[1]->template getIDataStoreAs<StoreType>() : nullptr;
+    if(m_Min && array1Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
     }
-    auto* array2 = m_Max ? m_Arrays[2]->template getIDataStoreAs<StoreType>() : nullptr;
-    if(m_Max && array2 == nullptr)
+    auto* array2Ptr = m_Max ? m_Arrays[2]->template getIDataStoreAs<StoreType>() : nullptr;
+    if(m_Max && array2Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
     }
-    auto* array3 = m_Mean ? m_Arrays[3]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Mean && array3 == nullptr)
+    auto* array3Ptr = m_Mean ? m_Arrays[3]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_Mean && array3Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
     }
-    auto* array4 = m_Median ? m_Arrays[4]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Median && array4 == nullptr)
+    auto* array4Ptr = m_Median ? m_Arrays[4]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_Median && array4Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
     }
-    auto* array5 = m_StdDeviation ? m_Arrays[5]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_StdDeviation && array5 == nullptr)
+    auto* array5Ptr = m_StdDeviation ? m_Arrays[5]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_StdDeviation && array5Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
     }
-    auto* array6 = m_Summation ? m_Arrays[6]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Summation && array6 == nullptr)
+    auto* array6Ptr = m_Summation ? m_Arrays[6]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_Summation && array6Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
     }
@@ -91,37 +91,37 @@ public:
       if(m_Length)
       {
         auto val = static_cast<int64_t>(tmpList.size());
-        array0->setValue(i, val);
+        array0Ptr->setValue(i, val);
       }
       if(m_Min)
       {
         T val = StatisticsCalculations::findMin(tmpList);
-        array1->setValue(i, val);
+        array1Ptr->setValue(i, val);
       }
       if(m_Max)
       {
         T val = StatisticsCalculations::findMax(tmpList);
-        array2->setValue(i, val);
+        array2Ptr->setValue(i, val);
       }
       if(m_Mean)
       {
         float val = StatisticsCalculations::findMean(tmpList);
-        array3->setValue(i, val);
+        array3Ptr->setValue(i, val);
       }
       if(m_Median)
       {
         float val = StatisticsCalculations::findMedian(tmpList);
-        array4->setValue(i, val);
+        array4Ptr->setValue(i, val);
       }
       if(m_StdDeviation)
       {
         float val = StatisticsCalculations::findStdDeviation(tmpList);
-        array5->setValue(i, val);
+        array5Ptr->setValue(i, val);
       }
       if(m_Summation)
       {
         float val = StatisticsCalculations::findSummation(tmpList);
-        array6->setValue(i, val);
+        array6Ptr->setValue(i, val);
       }
 
       m_Filter->sendThreadSafeProgressMessage(1);
@@ -167,7 +167,7 @@ ComputeNeighborListStatistics::~ComputeNeighborListStatistics() noexcept = defau
 // -----------------------------------------------------------------------------
 void ComputeNeighborListStatistics::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }
 

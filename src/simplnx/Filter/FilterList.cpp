@@ -97,14 +97,14 @@ Result<> FilterList::addPlugin(const std::shared_ptr<IPluginLoader>& loader)
   {
     return MakeErrorResult(-444, "Plugin was not loaded");
   }
-  AbstractPlugin* plugin = loader->getPlugin();
-  Uuid pluginUuid = plugin->getId();
+  AbstractPlugin* pluginPtr = loader->getPlugin();
+  Uuid pluginUuid = pluginPtr->getId();
   if(m_PluginMap.contains(pluginUuid))
   {
-    return MakeErrorResult(-445, fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", plugin->getName(), pluginUuid.str(),
+    return MakeErrorResult(-445, fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", pluginPtr->getName(), pluginUuid.str(),
                                              m_PluginMap[pluginUuid]->getPlugin()->getName()));
   }
-  auto pluginHandles = plugin->getFilterHandles();
+  auto pluginHandles = pluginPtr->getFilterHandles();
   m_FilterHandles.merge(pluginHandles);
   m_PluginMap[pluginUuid] = loader;
   return {};

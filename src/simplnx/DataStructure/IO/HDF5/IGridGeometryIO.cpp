@@ -29,8 +29,8 @@ Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructur
 
 Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& /*dataStructureGroup*/)
 {
-  auto* geom = dataStructure.getDataAs<IGridGeometry>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<IGridGeometry>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50594, fmt::format("Failed to finish importing IGridGeometry at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }

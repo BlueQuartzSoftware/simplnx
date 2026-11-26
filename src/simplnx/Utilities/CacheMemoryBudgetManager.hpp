@@ -357,7 +357,7 @@ private:
    * Delegates directly to the OS via Memory::GetTotalMemory(); it is not cached,
    * so do not call it on hot paths.
    */
-  static uint64 totalSystemRamBytes();
+  static uint64 TotalSystemRamBytes();
 
   mutable std::mutex m_Mutex;
   std::unordered_map<AllocationHandle, Entry> m_Entries;

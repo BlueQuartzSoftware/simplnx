@@ -165,14 +165,14 @@ Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_CompNumberKey = "CompNumber";
 constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 constexpr StringLiteral k_NewArrayArrayNameKey = "NewArrayArrayName";
 constexpr StringLiteral k_ReducedArrayArrayNameKey = "ReducedArrayArrayName";
 constexpr StringLiteral k_SaveRemovedComponentKey = "SaveRemovedComponent";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -181,14 +181,14 @@ Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_CompNumberKey, k_CompNumber_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayArrayNameKey, k_NewArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_CompNumberKey, k_CompNumber_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewArrayArrayNameKey, k_NewArrayName_Key));
 
-  if(json.contains(SIMPL::k_ReducedArrayArrayNameKey.str()))
+  if(json.contains(simpl::k_ReducedArrayArrayNameKey.str()))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ReducedArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveRemovedComponentKey, "@SIMPLNX_PARAMETER_KEY@"));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ReducedArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_SaveRemovedComponentKey, "@SIMPLNX_PARAMETER_KEY@"));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

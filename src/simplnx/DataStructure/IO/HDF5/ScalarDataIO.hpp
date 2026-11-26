@@ -38,8 +38,8 @@ public:
       return MakeErrorResult(-458, fmt::format("Failed to read ScalarData: {}", scalarName));
     }
 
-    ScalarData<T>* scalar = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);
-    if(scalar == nullptr)
+    ScalarData<T>* scalarPtr = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);
+    if(scalarPtr == nullptr)
     {
       return MakeErrorResult(-459, fmt::format("Failed to read ScalarData '{}'. No data imported", scalarName));
     }

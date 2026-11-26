@@ -17,23 +17,23 @@ using namespace nx::core;
 
 namespace
 {
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, FileCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, FileCache> SHeaderCache;
 } // namespace
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
 ReadDeformKeyFileV12Filter::ReadDeformKeyFileV12Filter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ReadDeformKeyFileV12Filter::~ReadDeformKeyFileV12Filter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
   DataPath cellDataPath = pQuadGeomPathValue.createChildPath(pCellAMNameValue);
 
   // Read from the file if the input file has changed or the input file's time stamp is out of date.
-  if(pInputFilePathValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFilePathValue))
+  if(pInputFilePathValue != SHeaderCache[m_InstanceId].inputFile || SHeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFilePathValue))
   {
     ReadDeformKeyFileV12InputValues inputValues;
     inputValues.InputFilePath = pInputFilePathValue;
@@ -126,37 +126,37 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
     ReadDeformKeyFileV12 algorithm(throwaway, messageHandler, shouldCancel, &inputValues);
     algorithm.operator()(false);
     // Cache the results from algorithm run
-    s_HeaderCache[m_InstanceId] = algorithm.getCache();
+    SHeaderCache[m_InstanceId] = algorithm.getCache();
 
     // Update the cached variables
-    s_HeaderCache[m_InstanceId].inputFile = pInputFilePathValue;
-    s_HeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFilePathValue);
+    SHeaderCache[m_InstanceId].inputFile = pInputFilePathValue;
+    SHeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFilePathValue);
   }
 
   // Read from the cache and create objects
   {
     auto createAction =
-        std::make_unique<CreateQuadGeometryAction>(pQuadGeomPathValue, s_HeaderCache[m_InstanceId].cellAttrMatTupleCount, s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount,
+        std::make_unique<CreateQuadGeometryAction>(pQuadGeomPathValue, SHeaderCache[m_InstanceId].cellAttrMatTupleCount, SHeaderCache[m_InstanceId].vertexAttrMatTupleCount,
                                                    vertexDataPath.getTargetName(), cellDataPath.getTargetName(), nx::core::QuadGeom::k_SharedVertexListName, nx::core::QuadGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  for(const DataArrayMetadata& daMetadata : s_HeaderCache[m_InstanceId].dataArrays)
+  for(const DataArrayMetadata& daMetadata : SHeaderCache[m_InstanceId].dataArrays)
   {
     if(daMetadata.path.getParent() == vertexDataPath)
     {
-      if(s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount != daMetadata.tupleCount)
+      if(SHeaderCache[m_InstanceId].vertexAttrMatTupleCount != daMetadata.tupleCount)
       {
         return MakePreflightErrorResult(-2020, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.path.getTargetName(),
-                                                           daMetadata.tupleCount, pVertexAMNameValue, s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount));
+                                                           daMetadata.tupleCount, pVertexAMNameValue, SHeaderCache[m_InstanceId].vertexAttrMatTupleCount));
       }
     }
     else if(daMetadata.path.getParent() == cellDataPath)
     {
-      if(s_HeaderCache[m_InstanceId].cellAttrMatTupleCount != daMetadata.tupleCount)
+      if(SHeaderCache[m_InstanceId].cellAttrMatTupleCount != daMetadata.tupleCount)
       {
         return MakePreflightErrorResult(-2021, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.path.getTargetName(),
-                                                           daMetadata.tupleCount, pCellAMNameValue, s_HeaderCache[m_InstanceId].cellAttrMatTupleCount));
+                                                           daMetadata.tupleCount, pCellAMNameValue, SHeaderCache[m_InstanceId].cellAttrMatTupleCount));
       }
     }
     else
@@ -180,7 +180,7 @@ Result<> ReadDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, c
 {
   ReadDeformKeyFileV12InputValues inputValues;
 
-  inputValues.InputFilePath = s_HeaderCache[m_InstanceId].inputFile;
+  inputValues.InputFilePath = SHeaderCache[m_InstanceId].inputFile;
   inputValues.QuadGeomPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key);
   inputValues.CellAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key));
   inputValues.VertexAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_VertexAMName_Key));
@@ -190,13 +190,13 @@ Result<> ReadDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, c
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_DEFORMInputFileKey = "DEFORMInputFile";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadDeformKeyFileV12Filter::FromSIMPLJson(const nlohmann::json& json)
@@ -205,11 +205,11 @@ Result<Arguments> ReadDeformKeyFileV12Filter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_DEFORMInputFileKey, k_InputFilePath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_DEFORMInputFileKey, k_InputFilePath_Key));
   // Verbose Output parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_QuadGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAMName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_QuadGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAMName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

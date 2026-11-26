@@ -22,7 +22,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize kBufferSize = 1024ULL;
+constexpr usize k_BufferSize = 1024ULL;
 constexpr usize k_MaxChunkBytes = 1048576;
 constexpr usize k_AsciiInputBufferSize = 16384;
 constexpr usize k_MaxAsciiTokenLength = 1024;
@@ -333,7 +333,7 @@ Result<> ReadAsciiData(std::istream& in, AbstractDataStore<T>& dataStore, usize 
  * @return Stream, conversion, or destination-write error, or success after cancellation.
  */
 template <typename T>
-Result<> readDataChunk(DataStructure& dataStructure, std::istream& in, bool binary, const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel)
+Result<> ReadDataChunk(DataStructure& dataStructure, std::istream& in, bool binary, const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel)
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
   auto& dataStore = dataArray.getDataStoreRef();
@@ -421,11 +421,11 @@ Result<> ReadString(std::istream& in, char* result, usize length)
 char* LowerCase(char* str, const usize len)
 {
   usize i = 0;
-  char* s = nullptr;
+  char* sPtr = nullptr;
 
-  for(i = 0, s = str; *s != '\0' && i < len; s++, i++)
+  for(i = 0, sPtr = str; *sPtr != '\0' && i < len; sPtr++, i++)
   {
-    *s = tolower(*s);
+    *sPtr = tolower(*sPtr);
   }
   return str;
 }
@@ -440,7 +440,7 @@ char* LowerCase(char* str, const usize len)
  * @param shouldCancel Stops before later input buffers when true.
  * @return Parser or stream error, or success after cancellation.
  */
-Result<> preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, usize numElements, const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel)
+Result<> PreflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, usize numElements, const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel)
 {
   switch(nxDType)
   {
@@ -632,17 +632,17 @@ Result<> ReadVtkStructuredPoints::readFile()
     return MakeErrorResult(to_underlying(ErrorCodes::FileOpenErr), msg);
   }
 
-  std::vector<char> buf(kBufferSize, '\0');
+  std::vector<char> buf(k_BufferSize, '\0');
   std::string line;
   // char* buffer = buf.data();
-  auto result = ReadLine(in, buf.data(), kBufferSize);
+  auto result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
   }
   std::fill(buf.begin(), buf.end(), '\0');
 
-  result = ReadLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -650,7 +650,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   setComment(std::string(buf.data()));
   std::fill(buf.begin(), buf.end(), '\0');
 
-  result = ReadLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -671,7 +671,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -700,7 +700,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   setDatasetType(dataset);
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -752,7 +752,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -787,7 +787,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -846,7 +846,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::fill(buf.begin(), buf.end(), '\0');
-  result = ReadLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), k_BufferSize);
   if(result.invalid())
   {
     return result;
@@ -923,11 +923,11 @@ Result<> ReadVtkStructuredPoints::readFile()
 
 Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int32 numValues, const std::string& nextKeyWord)
 {
-  std::vector<char> buf(kBufferSize, '\0');
+  std::vector<char> buf(k_BufferSize, '\0');
 
-  while(!m_ShouldCancel && ReadString(in, buf.data(), kBufferSize).valid())
+  while(!m_ShouldCancel && ReadString(in, buf.data(), k_BufferSize).valid())
   {
-    if(strncmp(LowerCase(buf.data(), kBufferSize), "scalars", 7) == 0)
+    if(strncmp(LowerCase(buf.data(), k_BufferSize), "scalars", 7) == 0)
     {
       auto result = readScalarData(in, numValues);
       if(result.invalid())
@@ -1039,7 +1039,7 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
       std::vector<std::string> tokens = StringUtilities::split(line, ' ');
       std::string sectionType = std::string(tokens[0]);
       std::fill(buf.begin(), buf.end(), '\0');
-      ReadString(in, buf.data(), kBufferSize);
+      ReadString(in, buf.data(), k_BufferSize);
       auto convertResultI32 = StringInterpretationUtilities::Convert<int32>({buf.data()});
       return {convertResultI32.value()};
     }
@@ -1190,48 +1190,48 @@ Result<> ReadVtkStructuredPoints::readDataArray(std::istream& in, int32 numPts, 
       auto createArrayAction = std::make_unique<CreateArrayAction>(nxDType, tupleShape, std::vector<usize>{numComp}, arrayDataPath);
       m_OutputActions.value().appendAction(std::move(createArrayAction));
     }
-    return preflightSkipVolume(nxDType, in, m_FileIsBinary, static_cast<usize>(numPts) * numComp, arrayDataPath, m_ShouldCancel);
+    return PreflightSkipVolume(nxDType, in, m_FileIsBinary, static_cast<usize>(numPts) * numComp, arrayDataPath, m_ShouldCancel);
   }
 
   if(scalarType == "unsigned_char")
   {
-    return readDataChunk<uint8>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<uint8>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "char")
   {
-    return readDataChunk<int8>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<int8>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "unsigned_short")
   {
-    return readDataChunk<uint16>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<uint16>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "short")
   {
-    return readDataChunk<int16>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<int16>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "unsigned_int")
   {
-    return readDataChunk<uint32>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<uint32>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "int")
   {
-    return readDataChunk<int32>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<int32>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "unsigned_long")
   {
-    return readDataChunk<uint64>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<uint64>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "long")
   {
-    return readDataChunk<int64>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<int64>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "float")
   {
-    return readDataChunk<float32>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<float32>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
   if(scalarType == "double")
   {
-    return readDataChunk<float64>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
+    return ReadDataChunk<float64>(m_DataStructure, in, m_FileIsBinary, arrayDataPath, m_ShouldCancel);
   }
 
   return {};

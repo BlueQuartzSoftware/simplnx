@@ -18,8 +18,8 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: int8 output saturates 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<int8>(ds, 4, 0.0, 1.0); // 64 values, 0..63
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<int8>(dataStructure, 4, 0.0, 1.0); // 64 values, 0..63
 
   InvertIntensityImageFilter filter;
   Arguments args;
@@ -27,11 +27,11 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: int8 output saturates 
   args.insertOrAssign(InvertIntensityImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(InvertIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(InvertIntensityImageFilter::k_Maximum_Key, std::make_any<float64>(150.0));
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int8>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int8>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getValue(0) == static_cast<int8>(127)); // 150-0=150 -> saturated to int8 max
   REQUIRE(outStore.getValue(63) == static_cast<int8>(87)); // 150-63=87 -> in range, exact
   bool allInRange = true;
@@ -51,18 +51,18 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: fractional maximum pre
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<int8>(ds, 2, 0.0, 1.0);
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<int8>(dataStructure, 2, 0.0, 1.0);
   InvertIntensityImageFilter filter;
   Arguments args;
   args.insertOrAssign(InvertIntensityImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
   args.insertOrAssign(InvertIntensityImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(InvertIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(InvertIntensityImageFilter::k_Maximum_Key, std::make_any<float64>(0.5));
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& output = ds.getDataRefAs<DataArray<int8>>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
+  const auto& output = dataStructure.getDataRefAs<DataArray<int8>>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
   REQUIRE(output.getValue(0) == 0);  // 0.5 truncates toward zero
   REQUIRE(output.getValue(1) == 0);  // -0.5 truncates toward zero
   REQUIRE(output.getValue(2) == -1); // -1.5 truncates toward zero
@@ -73,19 +73,19 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: extreme integral maxim
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<int32>(ds, 2, 0.0, 1.0);
-  ds.getDataRefAs<DataArray<int32>>(inputPath).getDataStoreRef().setValue(0, std::numeric_limits<int32>::lowest());
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<int32>(dataStructure, 2, 0.0, 1.0);
+  dataStructure.getDataRefAs<DataArray<int32>>(inputPath).getDataStoreRef().setValue(0, std::numeric_limits<int32>::lowest());
   InvertIntensityImageFilter filter;
   Arguments args;
   args.insertOrAssign(InvertIntensityImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
   args.insertOrAssign(InvertIntensityImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(InvertIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(InvertIntensityImageFilter::k_Maximum_Key, std::make_any<float64>(std::ldexp(1.0, 63) - 2048.0));
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& output = ds.getDataRefAs<DataArray<int32>>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
+  const auto& output = dataStructure.getDataRefAs<DataArray<int32>>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
   REQUIRE(output.getValue(0) == std::numeric_limits<int32>::max());
 }
 
@@ -103,8 +103,8 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: ITK real-image golden 
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -112,15 +112,15 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: ITK real-image golden 
   args.insertOrAssign(InvertIntensityImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(InvertIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   InvertIntensityImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: md5-validity-first (plan Sec.4).
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("InvertIntensityImageFilter 3d md5: ours='{}' committed='{}'", ourMd5, "76765a57f26a7979f33efc8ed9801a55"));
   REQUIRE(ourMd5 == "76765a57f26a7979f33efc8ed9801a55");
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

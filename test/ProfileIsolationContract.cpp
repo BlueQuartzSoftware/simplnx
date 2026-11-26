@@ -12,15 +12,15 @@
 namespace
 {
 // This deliberate extra owner tests the runner's failure-retention path.
-std::shared_ptr<nx::core::Application> s_RetainedApplication;
+std::shared_ptr<nx::core::Application> SRetainedApplication;
 } // namespace
 
 TEST_CASE("Test profile saves and reloads an isolated witness", "[.TestProfile]")
 {
   namespace fs = std::filesystem;
-  const char* active = std::getenv("SIMPLNX_TEST_ACTIVE_PROFILE");
-  REQUIRE(active != nullptr);
-  const fs::path root(active);
+  const char* activePtr = std::getenv("SIMPLNX_TEST_ACTIVE_PROFILE");
+  REQUIRE(activePtr != nullptr);
+  const fs::path root(activePtr);
   REQUIRE(root.is_absolute());
   REQUIRE(fs::is_regular_file(root / ".simplnx-test-profile"));
   REQUIRE(std::getenv("SIMPLNX_TEST_PROFILE_DIR") == nullptr);
@@ -50,8 +50,8 @@ TEST_CASE("Test profile retains a failed run", "[.TestProfile]")
 
 TEST_CASE("Test profile detects a retained Application owner", "[.TestProfile]")
 {
-  s_RetainedApplication = nx::core::Application::GetOrCreateInstance();
-  REQUIRE(s_RetainedApplication != nullptr);
+  SRetainedApplication = nx::core::Application::GetOrCreateInstance();
+  REQUIRE(SRetainedApplication != nullptr);
 }
 
 TEST_CASE("Test profile detects an Application save failure", "[.TestProfile]")

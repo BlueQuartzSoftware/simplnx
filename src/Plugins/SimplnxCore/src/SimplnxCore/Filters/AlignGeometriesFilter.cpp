@@ -99,12 +99,12 @@ Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_AlignmentTypeKey = "AlignmentType";
 constexpr StringLiteral k_MovingGeometryKey = "MovingGeometry";
 constexpr StringLiteral k_TargetGeometryKey = "TargetGeometry";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AlignGeometriesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -113,9 +113,9 @@ Result<Arguments> AlignGeometriesFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_AlignmentTypeKey, k_AlignmentType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_MovingGeometryKey, k_MovingGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TargetGeometryKey, k_TargetGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_AlignmentTypeKey, k_AlignmentType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_MovingGeometryKey, k_MovingGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TargetGeometryKey, k_TargetGeometry_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

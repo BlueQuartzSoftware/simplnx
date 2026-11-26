@@ -143,10 +143,10 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
   }
 
   // Get the number of tuples
-  const auto* eulersArray = dataStructure.getDataAs<Float32Array>(inputPath1);
+  const auto* eulersArrayPtr = dataStructure.getDataAs<Float32Array>(inputPath1);
 
   // Create output DataStructure Items
-  auto createDataAction = std::make_unique<CreateArrayAction>(DataType::float32, eulersArray->getIDataStore()->getTupleShape(), std::vector<usize>{4}, outputMisorientationPath);
+  auto createDataAction = std::make_unique<CreateArrayAction>(DataType::float32, eulersArrayPtr->getIDataStore()->getTupleShape(), std::vector<usize>{4}, outputMisorientationPath);
 
   OutputActions actions;
   actions.appendAction(std::move(createDataAction));

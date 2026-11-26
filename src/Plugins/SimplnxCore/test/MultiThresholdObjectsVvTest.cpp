@@ -68,37 +68,37 @@ DataStructure CreateTestDataStructure()
   DataStructure dataStructure;
   // Create two test arrays, a float array and a int array
   // Set up geometry for tuples, a cuboid with dimensions k_TupleCount, 1, 1
-  ImageGeom* image = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  ImageGeom* imagePtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
   std::vector<usize> dims = {k_TupleCount, 1, 1};
-  image->setDimensions(dims);
+  imagePtr->setDimensions(dims);
 
   ShapeType tDims = {k_TupleCount};
   ShapeType cDims = {1};
   ShapeType cDimsMulti = {k_MultiComponentCount};
 
-  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellData, tDims, image->getId());
-  Float32Array* data = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_TestArrayFloatName, tDims, cDims, am->getId());
-  Int32Array* data1 = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, am->getId());
-  Int32Array* multiComponentData = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, am->getId());
+  AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_CellData, tDims, imagePtr->getId());
+  Float32Array* dataPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_TestArrayFloatName, tDims, cDims, amPtr->getId());
+  Int32Array* data1Ptr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, amPtr->getId());
+  Int32Array* multiComponentDataPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, amPtr->getId());
 
   // Mismatched tuple count throws an error.
   // This is not true for mismatched component shapes.
-  Float32Array* problemArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
-  problemArray->fill(2.0);
+  Float32Array* problemArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
+  problemArrayPtr->fill(2.0);
 
-  usize numComponents = multiComponentData->getNumberOfComponents();
+  usize numComponents = multiComponentDataPtr->getNumberOfComponents();
 
   // Fill the float array with {.01,.02,.03,.04,.05,.06,.07,.08}
   // Fill the int array with {0,1,2,3,4,5,6,7}
   // Fill multi-component array with {{0, 0, 0}, {1, -1, 1}, {-2, 2, -2}, {3, -3, 3}, {-4, 4, -4}, {5, -5, 5}, {-6, 6, -6}, {7, -7, 7}}
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    (*data)[i] = InputFloatValue(i); // float array
-    (*data1)[i] = InputIntValue(i);  // int array
+    (*dataPtr)[i] = InputFloatValue(i); // float array
+    (*data1Ptr)[i] = InputIntValue(i);  // int array
 
     for(usize j = 0; j < k_MultiComponentCount; j++)
     {
-      multiComponentData->setComponent(i, j, InputIntComponentValue(i, j));
+      multiComponentDataPtr->setComponent(i, j, InputIntComponentValue(i, j));
     }
   }
   return dataStructure;
@@ -120,38 +120,38 @@ DataStructure CreateTestDataStructure2()
   DataStructure dataStructure;
   // Create two test arrays, a float array and a int array
   // Set up geometry for tuples, a cuboid with dimensions k_TupleCount, 1, 1
-  ImageGeom* image = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  ImageGeom* imagePtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
   std::vector<usize> dims = {k_TupleCount, 1, 1};
-  image->setDimensions(dims);
+  imagePtr->setDimensions(dims);
 
   ShapeType tDims = {k_TupleCount};
   ShapeType cDims = {1};
   ShapeType cDimsMulti = {k_MultiComponentCount};
 
-  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellData, tDims, image->getId());
-  auto* int8Array = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, "int8", tDims, cDims, am->getId());
-  auto* int16Array = Int16Array::CreateWithStore<Int16DataStore>(dataStructure, "int16", tDims, cDims, am->getId());
-  auto* int32Array = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "int32", tDims, cDims, am->getId());
-  auto* int64Array = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, "int64", tDims, cDims, am->getId());
-  auto* uint8Array = UInt8Array::CreateWithStore<UInt8DataStore>(dataStructure, "uint8", tDims, cDims, am->getId());
-  auto* uint16Array = UInt16Array::CreateWithStore<UInt16DataStore>(dataStructure, "uint16", tDims, cDims, am->getId());
-  auto* uint32Array = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "uint32", tDims, cDims, am->getId());
-  auto* uint64Array = UInt64Array::CreateWithStore<UInt64DataStore>(dataStructure, "uint64", tDims, cDims, am->getId());
-  auto* float32Array = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "float32", tDims, cDims, am->getId());
-  auto* float64Array = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "float64", tDims, cDims, am->getId());
-  auto* boolArray = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "bool", tDims, cDims, am->getId());
+  AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_CellData, tDims, imagePtr->getId());
+  auto* int8ArrayPtr = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, "int8", tDims, cDims, amPtr->getId());
+  auto* int16ArrayPtr = Int16Array::CreateWithStore<Int16DataStore>(dataStructure, "int16", tDims, cDims, amPtr->getId());
+  auto* int32ArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "int32", tDims, cDims, amPtr->getId());
+  auto* int64ArrayPtr = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, "int64", tDims, cDims, amPtr->getId());
+  auto* uint8ArrayPtr = UInt8Array::CreateWithStore<UInt8DataStore>(dataStructure, "uint8", tDims, cDims, amPtr->getId());
+  auto* uint16ArrayPtr = UInt16Array::CreateWithStore<UInt16DataStore>(dataStructure, "uint16", tDims, cDims, amPtr->getId());
+  auto* uint32ArrayPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "uint32", tDims, cDims, amPtr->getId());
+  auto* uint64ArrayPtr = UInt64Array::CreateWithStore<UInt64DataStore>(dataStructure, "uint64", tDims, cDims, amPtr->getId());
+  auto* float32ArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "float32", tDims, cDims, amPtr->getId());
+  auto* float64ArrayPtr = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "float64", tDims, cDims, amPtr->getId());
+  auto* boolArrayPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "bool", tDims, cDims, amPtr->getId());
 
-  SetArrayValues<int8>(*int8Array);
-  SetArrayValues<int16>(*int16Array);
-  SetArrayValues<int32>(*int32Array);
-  SetArrayValues<int64>(*int64Array);
-  SetArrayValues<uint8>(*uint8Array);
-  SetArrayValues<uint16>(*uint16Array);
-  SetArrayValues<uint32>(*uint32Array);
-  SetArrayValues<uint64>(*uint64Array);
-  SetArrayValues<float32>(*float32Array);
-  SetArrayValues<float64>(*float64Array);
-  SetArrayValues<bool>(*boolArray);
+  SetArrayValues<int8>(*int8ArrayPtr);
+  SetArrayValues<int16>(*int16ArrayPtr);
+  SetArrayValues<int32>(*int32ArrayPtr);
+  SetArrayValues<int64>(*int64ArrayPtr);
+  SetArrayValues<uint8>(*uint8ArrayPtr);
+  SetArrayValues<uint16>(*uint16ArrayPtr);
+  SetArrayValues<uint32>(*uint32ArrayPtr);
+  SetArrayValues<uint64>(*uint64ArrayPtr);
+  SetArrayValues<float32>(*float32ArrayPtr);
+  SetArrayValues<float64>(*float64ArrayPtr);
+  SetArrayValues<bool>(*boolArrayPtr);
 
   return dataStructure;
 }
@@ -1081,7 +1081,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Boolean C
 // DataType checks
 
 template <typename T>
-static void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
+static void CheckMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
 {
   auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<T>>(thresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
@@ -1104,7 +1104,7 @@ static void checkMaskValues(const DataStructure& dataStructure, const DataPath& 
 }
 
 template <typename T>
-static void runMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& args, DataStructure& dataStructure)
+static void RunMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& args, DataStructure& dataStructure)
 {
   const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -1118,7 +1118,7 @@ static void runMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& ar
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  checkMaskValues<T>(dataStructure, k_ThresholdArrayPath);
+  CheckMaskValues<T>(dataStructure, k_ThresholdArrayPath);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataType", "[SimplnxCore][MultiThresholdObjectsFilter]")
@@ -1146,28 +1146,28 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataTyp
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int8));
 
-    runMaskTypeFilter<int8>(filter, args, dataStructure);
+    RunMaskTypeFilter<int8>(filter, args, dataStructure);
   }
 
   SECTION("Int16 Threshold")
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int16));
 
-    runMaskTypeFilter<int16>(filter, args, dataStructure);
+    RunMaskTypeFilter<int16>(filter, args, dataStructure);
   }
 
   SECTION("Int32 Threshold")
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int32));
 
-    runMaskTypeFilter<int32>(filter, args, dataStructure);
+    RunMaskTypeFilter<int32>(filter, args, dataStructure);
   }
 
   SECTION("Int64 Threshold")
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int64));
 
-    runMaskTypeFilter<int64>(filter, args, dataStructure);
+    RunMaskTypeFilter<int64>(filter, args, dataStructure);
   }
 
   // Unsigned
@@ -1175,28 +1175,28 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataTyp
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint8));
 
-    runMaskTypeFilter<uint8>(filter, args, dataStructure);
+    RunMaskTypeFilter<uint8>(filter, args, dataStructure);
   }
 
   SECTION("UInt16 Threshold")
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint16));
 
-    runMaskTypeFilter<uint16>(filter, args, dataStructure);
+    RunMaskTypeFilter<uint16>(filter, args, dataStructure);
   }
 
   SECTION("UInt32 Threshold")
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint32));
 
-    runMaskTypeFilter<uint32>(filter, args, dataStructure);
+    RunMaskTypeFilter<uint32>(filter, args, dataStructure);
   }
 
   SECTION("UInt64 Threshold")
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint64));
 
-    runMaskTypeFilter<uint64>(filter, args, dataStructure);
+    RunMaskTypeFilter<uint64>(filter, args, dataStructure);
   }
 
   // Floating Point
@@ -1204,14 +1204,14 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataTyp
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float32));
 
-    runMaskTypeFilter<float32>(filter, args, dataStructure);
+    RunMaskTypeFilter<float32>(filter, args, dataStructure);
   }
 
   SECTION("Float64 Threshold")
   {
     args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float64));
 
-    runMaskTypeFilter<float64>(filter, args, dataStructure);
+    RunMaskTypeFilter<float64>(filter, args, dataStructure);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1334,9 +1334,9 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Input Array 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  auto* maskArray = dataStructure.getDataAs<Int8Array>(matrixPath.createChildPath(k_ThresholdArrayName));
-  REQUIRE(maskArray != nullptr);
-  auto& maskStore = maskArray->getDataStoreRef();
+  auto* maskArrayPtr = dataStructure.getDataAs<Int8Array>(matrixPath.createChildPath(k_ThresholdArrayName));
+  REQUIRE(maskArrayPtr != nullptr);
+  auto& maskStore = maskArrayPtr->getDataStoreRef();
   // Bool input
   if(isBoolInput)
   {
@@ -1354,7 +1354,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conver
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   // A legacy "Threshold Objects (Advanced)" pipeline whose thresholds are a leaf sibling to an inverted
   // nested set, with the nested set's children joined by Or:
@@ -1365,16 +1365,16 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conver
   // silently turned this into a four-way AND over the leaves. Both the nesting and the Or must survive.
   const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "MultiThresholdObjectsFilter_Nested.json";
 
-  auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+  auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
   REQUIRE(pipelineResult.valid());
 
   auto& pipeline = pipelineResult.value();
   REQUIRE(pipeline.size() == 1);
 
-  auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-  REQUIRE(pipelineFilter != nullptr);
+  auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(pipelineFilterPtr != nullptr);
 
-  const Arguments args = pipelineFilter->getArguments();
+  const Arguments args = pipelineFilterPtr->getArguments();
   auto thresholds = args.value<ArrayThresholdSet>(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key);
 
   auto topLevel = thresholds.getArrayThresholds();
@@ -1413,7 +1413,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compati
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1426,20 +1426,20 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compati
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(MultiThresholdObjectsFilter::k_CreatedDataName_Key) == "TestName");
     }
   }
@@ -1487,9 +1487,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution - Cu
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
-  auto* thresholdArray = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArray != nullptr);
-  auto& thresholdStore = thresholdArray->getDataStoreRef();
+  auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   // Use tuple count constant in case the underlying data size changes.
   for(usize i = 0; i < k_TupleCount; i++)

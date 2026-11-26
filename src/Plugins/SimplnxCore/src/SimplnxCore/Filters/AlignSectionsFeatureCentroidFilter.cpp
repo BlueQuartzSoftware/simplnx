@@ -155,12 +155,12 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
     return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, fmt::format("Reference Slice value ({}) must be ZERO or greater.", pReferenceSliceValue));
   }
 
-  const auto* gridGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
-  if(gridGeom == nullptr)
+  const auto* gridGeomPtr = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
+  if(gridGeomPtr == nullptr)
   {
     return MakePreflightErrorResult(-68070, fmt::format("The selected Image Geometry '{}' was not found or is not an Image Geometry.", inputImageGeometry.toString()));
   }
-  const usize dims = gridGeom->getDimensions().getZ();
+  const usize dims = gridGeomPtr->getDimensions().getZ();
   if(filterArgs.value<bool>(k_UseReferenceSlice_Key) && static_cast<usize>(pReferenceSliceValue) >= dims)
   {
     return MakePreflightErrorResult(k_ReferenceSliceExceedsZDimension, fmt::format("Reference Slice value ({}) is too large. Image Geometry '{}' has Z dimension {}. Use a value from 0 to {}.",
@@ -224,13 +224,13 @@ Result<> AlignSectionsFeatureCentroidFilter::executeImpl(DataStructure& dataStru
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_WriteAlignmentShiftsKey = "WriteAlignmentShifts";
 constexpr StringLiteral k_UseReferenceSliceKey = "UseReferenceSlice";
 constexpr StringLiteral k_ReferenceSliceKey = "ReferenceSlice";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AlignSectionsFeatureCentroidFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -239,12 +239,12 @@ Result<Arguments> AlignSectionsFeatureCentroidFilter::FromSIMPLJson(const nlohma
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_WriteAlignmentShiftsKey, k_StoreAlignmentShifts_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseReferenceSliceKey, k_UseReferenceSlice_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_ReferenceSliceKey, k_ReferenceSlice_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_WriteAlignmentShiftsKey, k_StoreAlignmentShifts_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseReferenceSliceKey, k_UseReferenceSlice_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ReferenceSliceKey, k_ReferenceSlice_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

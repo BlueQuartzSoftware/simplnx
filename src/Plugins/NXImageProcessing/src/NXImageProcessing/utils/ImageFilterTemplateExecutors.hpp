@@ -155,7 +155,7 @@ struct HistogramExecuteFn
     Result<Histogram> hist = [&]() -> Result<Histogram> {
       if constexpr(std::is_integral_v<T>)
       {
-        return ComputeIntegralHistogram<T>(inStore, operation.numBins, shouldCancel);
+        return ComputeIntegralHistogram<T>(inStore, operation.num_bins, shouldCancel);
       }
       else
       {
@@ -170,7 +170,7 @@ struct HistogramExecuteFn
         {
           return {};
         }
-        return ComputeHistogram<T>(inStore, operation.numBins, static_cast<float64>(stats.value().min), static_cast<float64>(stats.value().max), shouldCancel);
+        return ComputeHistogram<T>(inStore, operation.num_bins, static_cast<float64>(stats.value().min), static_cast<float64>(stats.value().max), shouldCancel);
       }
     }();
     if(hist.invalid())
@@ -182,7 +182,7 @@ struct HistogramExecuteFn
       return {};
     }
 
-    const std::vector<float64> thresholds = OtsuMultipleThresholds(hist.value(), operation.numThresholds, operation.valleyEmphasis, operation.returnBinMidpoint);
+    const std::vector<float64> thresholds = OtsuMultipleThresholds(hist.value(), operation.num_thresholds, operation.valley_emphasis, operation.return_bin_midpoint);
     auto classifyOp = operation.template makeClassifyOp<T, U>(thresholds);
     return ApplyPointwise<T, U>(inStore, outStore, classifyOp, shouldCancel, messageHandler);
   }

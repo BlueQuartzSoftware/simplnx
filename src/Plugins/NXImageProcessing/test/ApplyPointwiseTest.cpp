@@ -254,19 +254,19 @@ TEST_CASE("NXImageProcessing::ApplyPointwise doubles every value", "[NXImageProc
   // Keep the basic transform check pinned in memory; the dedicated non-power-of-two test below covers real OOC stores.
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize kDim = 10;
-  const ShapeType tupleShape = {kDim, kDim, kDim};
-  DataStructure ds;
+  constexpr usize k_Dim = 10;
+  const ShapeType tupleShape = {k_Dim, k_Dim, k_Dim};
+  DataStructure dataStructure;
 
   const DataPath inputPath({"input"});
   const DataPath outputPath({"output"});
-  auto inStore = DataStoreUtilities::CreateDataStore<int32>(ds, inputPath, tupleShape, {1});
-  auto* inArray = DataArray<int32>::Create(ds, "input", inStore, {});
-  auto outStore = DataStoreUtilities::CreateDataStore<int32>(ds, outputPath, tupleShape, {1});
-  auto* outArray = DataArray<int32>::Create(ds, "output", outStore, {});
+  auto inStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, inputPath, tupleShape, {1});
+  auto* inArrayPtr = DataArray<int32>::Create(dataStructure, "input", inStore, {});
+  auto outStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, outputPath, tupleShape, {1});
+  auto* outArrayPtr = DataArray<int32>::Create(dataStructure, "output", outStore, {});
 
   // Fill input with 0..N-1
-  auto& inRef = inArray->getDataStoreRef();
+  auto& inRef = inArrayPtr->getDataStoreRef();
   const usize n = inRef.getSize();
   for(usize i = 0; i < n; ++i)
   {
@@ -275,10 +275,10 @@ TEST_CASE("NXImageProcessing::ApplyPointwise doubles every value", "[NXImageProc
 
   const auto doubler = [](int32 v) -> int32 { return static_cast<int32>(v * 2); };
   Result<> result =
-      ImageProcessing::ApplyPointwise<int32, int32>(inArray->getDataStoreRef(), outArray->getDataStoreRef(), doubler, /*shouldCancel=*/std::atomic_bool(false), IFilter::MessageHandler{});
+      ImageProcessing::ApplyPointwise<int32, int32>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), doubler, /*shouldCancel=*/std::atomic_bool(false), IFilter::MessageHandler{});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  auto& outRef = outArray->getDataStoreRef();
+  auto& outRef = outArrayPtr->getDataStoreRef();
   for(usize i = 0; i < n; ++i)
   {
     REQUIRE(outRef.getValue(i) == static_cast<int32>(i * 2));
@@ -480,12 +480,12 @@ TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two
   auto outputStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, outputPath, tupleShape, {1});
   REQUIRE(inputStore != nullptr);
   REQUIRE(outputStore != nullptr);
-  auto* inputArray = DataArray<uint8>::Create(dataStructure, "Input", inputStore, {});
-  auto* outputArray = DataArray<uint8>::Create(dataStructure, "Output", outputStore, {});
-  REQUIRE(inputArray != nullptr);
-  REQUIRE(outputArray != nullptr);
-  REQUIRE(inputArray->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
-  REQUIRE(outputArray->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+  auto* inputArrayPtr = DataArray<uint8>::Create(dataStructure, "Input", inputStore, {});
+  auto* outputArrayPtr = DataArray<uint8>::Create(dataStructure, "Output", outputStore, {});
+  REQUIRE(inputArrayPtr != nullptr);
+  REQUIRE(outputArrayPtr != nullptr);
+  REQUIRE(inputArrayPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+  REQUIRE(outputArrayPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
 
   std::vector<uint8> input(k_TotalValues);
   std::vector<uint8> expected(k_TotalValues);
@@ -494,17 +494,17 @@ TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two
     input[index] = static_cast<uint8>((index * 17 + index / k_PlaneValues * 3) % 11);
     expected[index] = input[index] == 0 ? uint8{1} : uint8{0};
   }
-  Result<> copyFromBufferResult = inputArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(input.data(), input.size()));
+  Result<> copyFromBufferResult = inputArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(input.data(), input.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult);
 
   const auto logicalNot = [](uint8 value) -> uint8 { return value == 0 ? uint8{1} : uint8{0}; };
   std::atomic_bool shouldCancel{false};
   const ImageProcessing::detail::PointwiseExecutionOptions options{.targetScratchBytes = k_TargetScratchBytes, .forceBuffered = false};
-  const Result<> result = ImageProcessing::detail::ApplyPointwiseImpl(inputArray->getDataStoreRef(), outputArray->getDataStoreRef(), logicalNot, shouldCancel, {}, options);
+  const Result<> result = ImageProcessing::detail::ApplyPointwiseImpl(inputArrayPtr->getDataStoreRef(), outputArrayPtr->getDataStoreRef(), logicalNot, shouldCancel, {}, options);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   std::vector<uint8> actual(k_TotalValues);
-  Result<> copyIntoBufferResult = outputArray->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+  Result<> copyIntoBufferResult = outputArrayPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
   REQUIRE(actual == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

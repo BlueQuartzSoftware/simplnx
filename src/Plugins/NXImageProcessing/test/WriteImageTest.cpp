@@ -152,7 +152,7 @@ private:
   fs::path m_Path;
 };
 
-void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tempDirName, const fs::path& tempDirPath)
+void ValidateOutputFiles(size_t numImages, uint64 offset, const std::string& tempDirName, const fs::path& tempDirPath)
 {
   // Check and remove each expected image file.
   for(size_t i = 0; i < numImages; i++)
@@ -174,7 +174,7 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
 
 // Reads one image into the "ReadGeom" Image Geometry.
 // Single-slice output has no index, so the test reads the file directly.
-void readBackSingleImage(DataStructure& readDs, const fs::path& imagePath)
+void ReadBackSingleImage(DataStructure& readDs, const fs::path& imagePath)
 {
   ReadImageFilter reader;
   Arguments rArgs;
@@ -270,7 +270,7 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
 
   // Read the inline-written slice back and compare pixel RGB to the Create Color Map result.
   DataStructure readDs;
-  readBackSingleImage(readDs, inlineDir.path() / "slice.tif");
+  ReadBackSingleImage(readDs, inlineDir.path() / "slice.tif");
 
   // Locate the single RGB image-data array created by the reader and compare tuple-by-tuple.
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
@@ -392,10 +392,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-    SizeVec3 imageDims = imageGeom->getDimensions();
+    const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+    SizeVec3 imageDims = imageGeomPtr->getDimensions();
 
-    validateOutputFiles(imageDims[2], offset, tempDir.name(), tempDir.path());
+    ValidateOutputFiles(imageDims[2], offset, tempDir.name(), tempDir.path());
   }
 
   {
@@ -420,10 +420,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-    SizeVec3 imageDims = imageGeom->getDimensions();
+    const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+    SizeVec3 imageDims = imageGeomPtr->getDimensions();
 
-    validateOutputFiles(imageDims[1], offset, tempDir.name(), tempDir.path());
+    ValidateOutputFiles(imageDims[1], offset, tempDir.name(), tempDir.path());
   }
 
   {
@@ -448,10 +448,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-    SizeVec3 imageDims = imageGeom->getDimensions();
+    const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+    SizeVec3 imageDims = imageGeomPtr->getDimensions();
 
-    validateOutputFiles(imageDims[0], offset, tempDir.name(), tempDir.path());
+    ValidateOutputFiles(imageDims[0], offset, tempDir.name(), tempDir.path());
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -526,14 +526,14 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scala
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({3, 1, 2});
-  REQUIRE(imageGeom->setOrigin({10.0f, 20.0f, 40.0f}).valid());
-  REQUIRE(imageGeom->setSpacing({1.0f, 2.0f, 4.0f}).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {2, 1, 3}, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
-  auto* imageData = UnitTest::CreateTestDataArray<TestType>(dataStructure, "ImageData", {2, 1, 3}, {1}, cellData->getId());
-  auto& imageStore = imageData->getDataStoreRef();
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({3, 1, 2});
+  REQUIRE(imageGeomPtr->setOrigin({10.0f, 20.0f, 40.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 2.0f, 4.0f}).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {2, 1, 3}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
+  auto* imageDataPtr = UnitTest::CreateTestDataArray<TestType>(dataStructure, "ImageData", {2, 1, 3}, {1}, cellDataPtr->getId());
+  auto& imageStore = imageDataPtr->getDataStoreRef();
   const std::array<int32, 6> expectedValues = {0, 1, 2, 100, 101, 102};
   for(usize index = 0; index < expectedValues.size(); ++index)
   {
@@ -591,13 +591,13 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plan
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({3, 2, 2});
-  REQUIRE(imageGeom->setOrigin({10.0f, 20.0f, 40.0f}).valid());
-  REQUIRE(imageGeom->setSpacing({1.0f, 2.0f, 4.0f}).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {2, 2, 3}, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 2, 3}, {1}, cellData->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({3, 2, 2});
+  REQUIRE(imageGeomPtr->setOrigin({10.0f, 20.0f, 40.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 2.0f, 4.0f}).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {2, 2, 3}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 2, 3}, {1}, cellDataPtr->getId());
 
   struct PlaneMetadata
   {
@@ -660,12 +660,12 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK component coun
     DYNAMIC_SECTION("components=" << componentCount)
     {
       DataStructure dataStructure;
-      auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-      imageGeom->setDimensions({2, 1, 1});
-      auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 2}, imageGeom->getId());
-      imageGeom->setCellData(*cellData);
-      auto* imageData = UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {1, 1, 2}, {componentCount}, cellData->getId());
-      auto& imageStore = imageData->getDataStoreRef();
+      auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+      imageGeomPtr->setDimensions({2, 1, 1});
+      auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 2}, imageGeomPtr->getId());
+      imageGeomPtr->setCellData(*cellDataPtr);
+      auto* imageDataPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {1, 1, 2}, {componentCount}, cellDataPtr->getId());
+      auto& imageStore = imageDataPtr->getDataStoreRef();
       for(usize index = 0; index < imageStore.getSize(); ++index)
       {
         imageStore[index] = static_cast<uint8>(index);
@@ -712,11 +712,11 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK component coun
 TEST_CASE("NXImageProcessing::WriteImageFilter: validates fill characters and previews the first output index", "[NXImageProcessing][WriteImageFilter]")
 {
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions({2, 1, 2});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {2, 1, 2}, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 1, 2}, {1}, cellData->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({2, 1, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {2, 1, 2}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 1, 2}, {1}, cellDataPtr->getId());
 
   ScopedTempDir tempDir(k_BinaryTestOutputDir);
   WriteImageFilter filter;
@@ -1059,7 +1059,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
 
   // Reads a single-slice color image back from a directory and returns the pointer to the RGB array.
   auto readBackSlice = [&](const fs::path& dir, DataStructure& readDs) -> const UInt8Array* {
-    readBackSingleImage(readDs, dir / "slice.tif");
+    ReadBackSingleImage(readDs, dir / "slice.tif");
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
     return dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
   };
@@ -1273,7 +1273,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Flip output image about X or Y a
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
-    readBackSingleImage(readDs, tempDir.path() / "slice.png");
+    ReadBackSingleImage(readDs, tempDir.path() / "slice.png");
 
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
     const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
@@ -1385,7 +1385,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the co
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
-    readBackSingleImage(readDs, tempDir.path() / "slice.tif");
+    ReadBackSingleImage(readDs, tempDir.path() / "slice.tif");
 
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
     const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
@@ -1410,29 +1410,29 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the co
   const std::vector<uint8> flipXImage = writeColorAndReadBack(k_FlipAboutX);
   const std::vector<uint8> flipYImage = writeColorAndReadBack(k_FlipAboutY);
 
-  constexpr usize width = 4;
-  constexpr usize height = 4;
+  constexpr usize k_Width = 4;
+  constexpr usize k_Height = 4;
 
   // Reverse the source rows to calculate the expected X-axis flip.
   // Other tests verify the color calculation.
   std::vector<uint8> expectedFlipXImage(noneImage.size());
-  for(usize y = 0; y < height; y++)
+  for(usize y = 0; y < k_Height; y++)
   {
     const usize srcRow = y;
-    const usize dstRow = height - 1 - y;
-    std::copy(noneImage.begin() + static_cast<std::ptrdiff_t>(srcRow * width * 3), noneImage.begin() + static_cast<std::ptrdiff_t>((srcRow + 1) * width * 3),
-              expectedFlipXImage.begin() + static_cast<std::ptrdiff_t>(dstRow * width * 3));
+    const usize dstRow = k_Height - 1 - y;
+    std::copy(noneImage.begin() + static_cast<std::ptrdiff_t>(srcRow * k_Width * 3), noneImage.begin() + static_cast<std::ptrdiff_t>((srcRow + 1) * k_Width * 3),
+              expectedFlipXImage.begin() + static_cast<std::ptrdiff_t>(dstRow * k_Width * 3));
   }
   REQUIRE(flipXImage == expectedFlipXImage);
 
   // Reverse the RGB pixel groups in each row to calculate the expected Y-axis flip.
   std::vector<uint8> expectedFlipYImage(noneImage.size());
-  for(usize y = 0; y < height; y++)
+  for(usize y = 0; y < k_Height; y++)
   {
-    for(usize x = 0; x < width; x++)
+    for(usize x = 0; x < k_Width; x++)
     {
-      const usize srcPixel = y * width + x;
-      const usize dstPixel = y * width + (width - 1 - x);
+      const usize srcPixel = y * k_Width + x;
+      const usize dstPixel = y * k_Width + (k_Width - 1 - x);
       for(usize c = 0; c < 3; c++)
       {
         expectedFlipYImage[dstPixel * 3 + c] = noneImage[srcPixel * 3 + c];
@@ -1534,16 +1534,16 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
   // Writes a 200 x 100 uint8 ramp with 0.5 µm spacing and reads the PNG result.
   // Color-table output uses the default preset.
   auto writeAndReadBack = [&](bool addScaleBar, bool createColorTable, DataStructure& readDs) {
-    constexpr usize dimX = 200;
-    constexpr usize dimY = 100;
+    constexpr usize k_DimX = 200;
+    constexpr usize k_DimY = 100;
     DataStructure dataStructure;
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
-    imageGeomPtr->setDimensions({dimX, dimY, 1});
+    imageGeomPtr->setDimensions({k_DimX, k_DimY, 1});
     REQUIRE(imageGeomPtr->setSpacing({0.5f, 0.5f, 1.0f}).valid());
     imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
-    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, dimY, dimX}, imageGeomPtr->getId());
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, k_DimY, k_DimX}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, dimY, dimX}, {1}, cellAmPtr->getId());
+    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
     auto& scalarStore = scalarPtr->getDataStoreRef();
     for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
     {
@@ -1568,7 +1568,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
     }
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
-    readBackSingleImage(readDs, tempDir.path() / "slice.png");
+    ReadBackSingleImage(readDs, tempDir.path() / "slice.png");
   };
 
   // Expected layout for 200x100 @ 0.5 µm/px:
@@ -1576,9 +1576,9 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
   //   nice = ComputeNiceBarLength(200, 0.5) : target 25 µm -> 20 µm -> 40 px bar
   //   margin = 3, thickness = 2 -> bar vertically centered: rows (global) 100+(24-2)/2 = 111 and 112
   //   barStartCol = margin = 3 (left-justified) -> bar cols 3..42; label starts on the same line at col 3+40+3 = 46
-  constexpr usize dimX = 200;
-  constexpr usize dimY = 100;
-  constexpr usize bandHeight = 24;
+  constexpr usize k_DimX = 200;
+  constexpr usize k_DimY = 100;
+  constexpr usize k_BandHeight = 24;
 
   DataStructure withBarDs;
   writeAndReadBack(true, false, withBarDs);
@@ -1588,8 +1588,8 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
   REQUIRE_NOTHROW(withBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& readGeom = withBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
   SizeVec3 readDims = readGeom.getDimensions();
-  REQUIRE(readDims[0] == dimX);
-  REQUIRE(readDims[1] == dimY + bandHeight);
+  REQUIRE(readDims[0] == k_DimX);
+  REQUIRE(readDims[1] == k_DimY + k_BandHeight);
 
   const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
   REQUIRE(readArrayPtr != nullptr);
@@ -1605,17 +1605,17 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
   const usize plainComps = plainArrayPtr->getNumberOfComponents();
 
   auto barPixel = [&](usize row, usize col) -> std::array<uint8, 3> {
-    const usize i = (row * dimX + col) * readComps;
+    const usize i = (row * k_DimX + col) * readComps;
     return {readStore.getValue(i), readStore.getValue(i + 1), readStore.getValue(i + 2)};
   };
 
   SECTION("image region is untouched and grayscale-replicated")
   {
-    for(usize row = 0; row < dimY; row++)
+    for(usize row = 0; row < k_DimY; row++)
     {
-      for(usize col = 0; col < dimX; col++)
+      for(usize col = 0; col < k_DimX; col++)
       {
-        const uint8 expected = plainStore.getValue((row * dimX + col) * plainComps);
+        const uint8 expected = plainStore.getValue((row * k_DimX + col) * plainComps);
         const std::array<uint8, 3> rgb = barPixel(row, col);
         REQUIRE(rgb[0] == expected);
         REQUIRE(rgb[1] == expected);
@@ -1628,8 +1628,8 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
   {
     const std::array<uint8, 3> white = {255, 255, 255};
     const std::array<uint8, 3> black = {0, 0, 0};
-    REQUIRE(barPixel(dimY, 0) == white);
-    REQUIRE(barPixel(dimY + bandHeight - 1, dimX - 1) == white);
+    REQUIRE(barPixel(k_DimY, 0) == white);
+    REQUIRE(barPixel(k_DimY + k_BandHeight - 1, k_DimX - 1) == white);
     for(usize row : {usize(111), usize(112)})
     {
       REQUIRE(barPixel(row, 2) == white);
@@ -1644,9 +1644,9 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
   SECTION("label text renders in the band on the same line as the bar")
   {
     bool foundTextPixel = false;
-    for(usize row = dimY; row < dimY + bandHeight && !foundTextPixel; row++)
+    for(usize row = k_DimY; row < k_DimY + k_BandHeight && !foundTextPixel; row++)
     {
-      for(usize col = 46; col < dimX; col++)
+      for(usize col = 46; col < k_DimX; col++)
       {
         if(barPixel(row, col)[0] < 128)
         {
@@ -1670,8 +1670,8 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
     REQUIRE_NOTHROW(colorBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
     const auto& colorBarGeom = colorBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
     SizeVec3 colorBarDims = colorBarGeom.getDimensions();
-    REQUIRE(colorBarDims[0] == dimX);
-    REQUIRE(colorBarDims[1] == dimY + bandHeight);
+    REQUIRE(colorBarDims[0] == k_DimX);
+    REQUIRE(colorBarDims[1] == k_DimY + k_BandHeight);
 
     const auto* colorBarArrayPtr = dynamic_cast<const UInt8Array*>(colorBarGeom.getCellData()->begin()->second.get());
     REQUIRE(colorBarArrayPtr != nullptr);
@@ -1685,7 +1685,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
     const auto& colorPlainStore = colorPlainArrayPtr->getDataStoreRef();
     REQUIRE(colorPlainArrayPtr->getNumberOfComponents() == 3);
 
-    for(usize i = 0; i < dimX * dimY * 3; i++)
+    for(usize i = 0; i < k_DimX * k_DimY * 3; i++)
     {
       REQUIRE(colorBarStore.getValue(i) == colorPlainStore.getValue(i));
     }
@@ -1740,7 +1740,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar composes with flip and
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
   DataStructure readDs;
-  readBackSingleImage(readDs, tempDir.path() / "slice.png");
+  ReadBackSingleImage(readDs, tempDir.path() / "slice.png");
 
   REQUIRE_NOTHROW(readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
@@ -1776,18 +1776,18 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices loc
 
   // Distinct dimensions separate the XZ width and height from the slice count.
   // Distinct spacing detects selection of the incorrect horizontal axis.
-  constexpr usize dimX = 8;
-  constexpr usize dimY = 4;
-  constexpr usize dimZ = 6;
+  constexpr usize k_DimX = 8;
+  constexpr usize k_DimY = 4;
+  constexpr usize k_DimZ = 6;
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
   REQUIRE(imageGeomPtr->setSpacing({0.5f, 1.0f, 1.0f}).valid());
   imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {dimZ, dimY, dimX}, {1}, cellAmPtr->getId());
+  auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {k_DimZ, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
   auto& scalarStore = scalarPtr->getDataStoreRef();
   for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
   {
@@ -1837,8 +1837,8 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices loc
   REQUIRE_NOTHROW(readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
   SizeVec3 readDims = readGeom.getDimensions();
-  REQUIRE(readDims[0] == dimX);
-  REQUIRE(readDims[1] == dimZ + 24);
+  REQUIRE(readDims[0] == k_DimX);
+  REQUIRE(readDims[1] == k_DimZ + 24);
 
   const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
   REQUIRE(readArrayPtr != nullptr);
@@ -1846,7 +1846,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices loc
   REQUIRE(readArrayPtr->getNumberOfComponents() == 3);
 
   // First band row (row = dimZ, col = 0) is white background.
-  REQUIRE(readStore.getValue((dimZ * dimX + 0) * 3) == 255);
+  REQUIRE(readStore.getValue((k_DimZ * k_DimX + 0) * 3) == 255);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-owned bounded extents", "[NXImageProcessing][WriteImageFilter][OOC]")
@@ -1857,19 +1857,19 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-own
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
-  constexpr usize dimX = 8;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 4;
+  constexpr usize k_DimX = 8;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 4;
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto countingStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, uint8{0});
+  auto countingStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0});
   auto* scalarPtr = DataArray<uint8>::Create(dataStructure, scalarPath.getTargetName(), countingStore, cellAmPtr->getId());
   REQUIRE(scalarPtr != nullptr);
   for(usize tupleIdx = 0; tupleIdx < countingStore->getNumberOfTuples(); ++tupleIdx)
@@ -1892,7 +1892,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-own
   CAPTURE(countingStore->returnedExtentReadCount(), countingStore->callerProvidedExtentReadCount(), countingStore->maxCallerProvidedExtentValues());
   if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
-    REQUIRE(countingStore->returnedExtentReadCount() == dimX);
+    REQUIRE(countingStore->returnedExtentReadCount() == k_DimX);
     REQUIRE(countingStore->callerProvidedExtentReadCount() == 0);
     REQUIRE(countingStore->maxCallerProvidedExtentValues() == 0);
   }
@@ -1908,7 +1908,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-own
   {
     outputFileCount++;
   }
-  REQUIRE(outputFileCount == dimX);
+  REQUIRE(outputFileCount == k_DimX);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices into caller-owned bounded extents", "[NXImageProcessing][WriteImageFilter][OOC]")
@@ -1919,21 +1919,21 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices 
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
-  constexpr usize dimX = 8;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 4;
+  constexpr usize k_DimX = 8;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 4;
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
   const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto scalarStore = std::make_shared<ExtentCountingDataStore<float32>>(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 0.0F);
-  auto maskStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, uint8{1});
+  auto scalarStore = std::make_shared<ExtentCountingDataStore<float32>>(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0F);
+  auto maskStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{1});
   REQUIRE(DataArray<float32>::Create(dataStructure, scalarPath.getTargetName(), scalarStore, cellAmPtr->getId()) != nullptr);
   REQUIRE(DataArray<uint8>::Create(dataStructure, maskPath.getTargetName(), maskStore, cellAmPtr->getId()) != nullptr);
   for(usize tupleIdx = 0; tupleIdx < scalarStore->getNumberOfTuples(); ++tupleIdx)
@@ -1963,10 +1963,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices 
           maskStore->callerProvidedExtentReadCount(), maskStore->maxCallerProvidedExtentValues());
   if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
-    REQUIRE(scalarStore->returnedExtentReadCount() == dimX);
+    REQUIRE(scalarStore->returnedExtentReadCount() == k_DimX);
     REQUIRE(scalarStore->callerProvidedExtentReadCount() == 0);
     REQUIRE(scalarStore->maxCallerProvidedExtentValues() == 0);
-    REQUIRE(maskStore->returnedExtentReadCount() == dimX);
+    REQUIRE(maskStore->returnedExtentReadCount() == k_DimX);
     REQUIRE(maskStore->callerProvidedExtentReadCount() == 0);
     REQUIRE(maskStore->maxCallerProvidedExtentValues() == 0);
   }
@@ -1985,7 +1985,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices 
   {
     outputFileCount++;
   }
-  REQUIRE(outputFileCount == dimX);
+  REQUIRE(outputFileCount == k_DimX);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: reads direct XY slices into separate caller-owned extents", "[NXImageProcessing][WriteImageFilter][OOC]")
@@ -1996,18 +1996,18 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads direct XY slices into sepa
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
-  constexpr usize dimX = 8;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 4;
+  constexpr usize k_DimX = 8;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 4;
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto countingStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, uint8{7});
+  auto countingStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{7});
   REQUIRE(DataArray<uint8>::Create(dataStructure, scalarPath.getTargetName(), countingStore, cellAmPtr->getId()) != nullptr);
 
   ScopedTempDir tempDir(k_BinaryTestOutputDir);
@@ -2018,20 +2018,20 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads direct XY slices into sepa
   args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.tif"));
   args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
 
-  ImageProcessing::ScopedWorkingMemoryTuningOverride workingMemoryOverride(dimX * dimY * dimZ);
+  ImageProcessing::ScopedWorkingMemoryTuningOverride workingMemoryOverride(k_DimX * k_DimY * k_DimZ);
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
-    REQUIRE(countingStore->returnedExtentReadCount() == dimZ);
+    REQUIRE(countingStore->returnedExtentReadCount() == k_DimZ);
     REQUIRE(countingStore->callerProvidedExtentReadCount() == 0);
   }
   else
   {
     REQUIRE(countingStore->returnedExtentReadCount() == 0);
-    REQUIRE(countingStore->callerProvidedExtentReadCount() == dimZ);
-    REQUIRE(countingStore->maxCallerProvidedExtentValues() == dimX * dimY);
+    REQUIRE(countingStore->callerProvidedExtentReadCount() == k_DimZ);
+    REQUIRE(countingStore->maxCallerProvidedExtentValues() == k_DimX * k_DimY);
   }
 }
 
@@ -2043,20 +2043,20 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads color and mask XY slices i
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
-  constexpr usize dimX = 8;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 4;
+  constexpr usize k_DimX = 8;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 4;
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
   const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto scalarStore = std::make_shared<ExtentCountingDataStore<float32>>(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, 2.0F);
-  auto maskStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, uint8{1});
+  auto scalarStore = std::make_shared<ExtentCountingDataStore<float32>>(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 2.0F);
+  auto maskStore = std::make_shared<ExtentCountingDataStore<uint8>>(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{1});
   REQUIRE(DataArray<float32>::Create(dataStructure, scalarPath.getTargetName(), scalarStore, cellAmPtr->getId()) != nullptr);
   REQUIRE(DataArray<uint8>::Create(dataStructure, maskPath.getTargetName(), maskStore, cellAmPtr->getId()) != nullptr);
 
@@ -2072,23 +2072,23 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads color and mask XY slices i
   args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
 
-  ImageProcessing::ScopedWorkingMemoryTuningOverride workingMemoryOverride(dimX * dimY * dimZ * (sizeof(float32) + sizeof(uint8)));
+  ImageProcessing::ScopedWorkingMemoryTuningOverride workingMemoryOverride(k_DimX * k_DimY * k_DimZ * (sizeof(float32) + sizeof(uint8)));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
-    REQUIRE(scalarStore->returnedExtentReadCount() == dimZ);
-    REQUIRE(maskStore->returnedExtentReadCount() == dimZ);
+    REQUIRE(scalarStore->returnedExtentReadCount() == k_DimZ);
+    REQUIRE(maskStore->returnedExtentReadCount() == k_DimZ);
   }
   else
   {
     REQUIRE(scalarStore->returnedExtentReadCount() == 0);
-    REQUIRE(scalarStore->callerProvidedExtentReadCount() == dimZ);
-    REQUIRE(scalarStore->maxCallerProvidedExtentValues() == dimX * dimY);
+    REQUIRE(scalarStore->callerProvidedExtentReadCount() == k_DimZ);
+    REQUIRE(scalarStore->maxCallerProvidedExtentValues() == k_DimX * k_DimY);
     REQUIRE(maskStore->returnedExtentReadCount() == 0);
-    REQUIRE(maskStore->callerProvidedExtentReadCount() == dimZ);
-    REQUIRE(maskStore->maxCallerProvidedExtentValues() == dimX * dimY);
+    REQUIRE(maskStore->callerProvidedExtentReadCount() == k_DimZ);
+    REQUIRE(maskStore->maxCallerProvidedExtentValues() == k_DimX * k_DimY);
   }
 }
 
@@ -2100,18 +2100,18 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant sma
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
-  constexpr usize dimX = 8;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 4;
+  constexpr usize k_DimX = 8;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 4;
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName());
-  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, scalarPath.getTargetName(), {dimZ, dimY, dimX}, {1}, cellAmPtr->getId());
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, scalarPath.getTargetName(), {k_DimZ, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
 
   ScopedTempDir tempDir(k_BinaryTestOutputDir);
   WriteImageFilter filter;

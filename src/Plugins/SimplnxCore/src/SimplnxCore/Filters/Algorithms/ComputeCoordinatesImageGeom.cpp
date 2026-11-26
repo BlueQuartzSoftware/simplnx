@@ -76,32 +76,32 @@ public:
       {
         const usize rowOffset = sliceOffset + (yIndex * m_XCells);
         const float32 yCoordinate = yIndex * m_Spacing[1] + m_Origin[1] + (0.5F * m_Spacing[1]);
-        float32* coordinates = nullptr;
-        int32* indices = nullptr;
+        float32* coordinatesPtr = nullptr;
+        int32* indicesPtr = nullptr;
         if constexpr(WriteCoordinates)
         {
-          coordinates = m_Coordinates + (rowOffset * k_NumComponents);
+          coordinatesPtr = m_Coordinates + (rowOffset * k_NumComponents);
         }
         if constexpr(WriteIndices)
         {
-          indices = m_Indices + (rowOffset * k_NumComponents);
+          indicesPtr = m_Indices + (rowOffset * k_NumComponents);
         }
 
         for(usize xIndex = 0; xIndex < m_XCells; xIndex++)
         {
           if constexpr(WriteCoordinates)
           {
-            coordinates[0] = xIndex * m_Spacing[0] + m_Origin[0] + (0.5F * m_Spacing[0]);
-            coordinates[1] = yCoordinate;
-            coordinates[2] = zCoordinate;
-            coordinates += k_NumComponents;
+            coordinatesPtr[0] = xIndex * m_Spacing[0] + m_Origin[0] + (0.5F * m_Spacing[0]);
+            coordinatesPtr[1] = yCoordinate;
+            coordinatesPtr[2] = zCoordinate;
+            coordinatesPtr += k_NumComponents;
           }
           if constexpr(WriteIndices)
           {
-            indices[0] = static_cast<int32>(xIndex);
-            indices[1] = static_cast<int32>(yIndex);
-            indices[2] = static_cast<int32>(zIndex);
-            indices += k_NumComponents;
+            indicesPtr[0] = static_cast<int32>(xIndex);
+            indicesPtr[1] = static_cast<int32>(yIndex);
+            indicesPtr[2] = static_cast<int32>(zIndex);
+            indicesPtr += k_NumComponents;
           }
         }
       }
@@ -299,9 +299,9 @@ public:
    */
   Result<> operator()() const
   {
-    auto* coordinatesStore = m_Coordinates == nullptr ? nullptr : dynamic_cast<Float32DataStore*>(&m_Coordinates->getDataStoreRef());
-    auto* indicesStore = m_Indices == nullptr ? nullptr : dynamic_cast<Int32DataStore*>(&m_Indices->getDataStoreRef());
-    if((m_Coordinates != nullptr && coordinatesStore == nullptr) || (m_Indices != nullptr && indicesStore == nullptr))
+    auto* coordinatesStorePtr = m_Coordinates == nullptr ? nullptr : dynamic_cast<Float32DataStore*>(&m_Coordinates->getDataStoreRef());
+    auto* indicesStorePtr = m_Indices == nullptr ? nullptr : dynamic_cast<Int32DataStore*>(&m_Indices->getDataStoreRef());
+    if((m_Coordinates != nullptr && coordinatesStorePtr == nullptr) || (m_Indices != nullptr && indicesStorePtr == nullptr))
     {
       // A forced direct path delegates to scanline execution for noncontiguous stores.
       return ComputeCoordinatesImageGeomScanline(m_ImageGeom, m_Coordinates, m_Indices, m_ShouldCancel)();
@@ -311,17 +311,17 @@ public:
     // This specialized raw-buffer use does not establish generic DataArray or DataStore thread safety.
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, m_ImageGeom.getNumZCells());
-    if(coordinatesStore != nullptr && indicesStore != nullptr)
+    if(coordinatesStorePtr != nullptr && indicesStorePtr != nullptr)
     {
-      parallelAlgorithm.execute(GenerateCoordinatesDirectImpl<true, true>(m_ImageGeom, coordinatesStore->data(), indicesStore->data(), m_ShouldCancel));
+      parallelAlgorithm.execute(GenerateCoordinatesDirectImpl<true, true>(m_ImageGeom, coordinatesStorePtr->data(), indicesStorePtr->data(), m_ShouldCancel));
     }
-    else if(coordinatesStore != nullptr)
+    else if(coordinatesStorePtr != nullptr)
     {
-      parallelAlgorithm.execute(GenerateCoordinatesDirectImpl<true, false>(m_ImageGeom, coordinatesStore->data(), nullptr, m_ShouldCancel));
+      parallelAlgorithm.execute(GenerateCoordinatesDirectImpl<true, false>(m_ImageGeom, coordinatesStorePtr->data(), nullptr, m_ShouldCancel));
     }
-    else if(indicesStore != nullptr)
+    else if(indicesStorePtr != nullptr)
     {
-      parallelAlgorithm.execute(GenerateCoordinatesDirectImpl<false, true>(m_ImageGeom, nullptr, indicesStore->data(), m_ShouldCancel));
+      parallelAlgorithm.execute(GenerateCoordinatesDirectImpl<false, true>(m_ImageGeom, nullptr, indicesStorePtr->data(), m_ShouldCancel));
     }
     return {};
   }
@@ -349,16 +349,16 @@ Result<> ComputeCoordinatesImageGeom::operator()()
   const bool writeCoordinates = m_InputValues->CoordinateOption != to_underlying(OutputType::Index);
   const bool writeIndices = m_InputValues->CoordinateOption != to_underlying(OutputType::Physical);
 
-  Float32Array* coordinates = nullptr;
-  Int32Array* indices = nullptr;
+  Float32Array* coordinatesPtr = nullptr;
+  Int32Array* indicesPtr = nullptr;
   if(writeCoordinates)
   {
-    coordinates = &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CoordArrayPath);
+    coordinatesPtr = &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CoordArrayPath);
   }
   if(writeIndices)
   {
-    indices = &m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->IndexArrayPath);
+    indicesPtr = &m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->IndexArrayPath);
   }
 
-  return DispatchAlgorithm<ComputeCoordinatesImageGeomDirect, ComputeCoordinatesImageGeomScanline>({coordinates, indices}, imageGeom, coordinates, indices, m_ShouldCancel);
+  return DispatchAlgorithm<ComputeCoordinatesImageGeomDirect, ComputeCoordinatesImageGeomScanline>({coordinatesPtr, indicesPtr}, imageGeom, coordinatesPtr, indicesPtr, m_ShouldCancel);
 }

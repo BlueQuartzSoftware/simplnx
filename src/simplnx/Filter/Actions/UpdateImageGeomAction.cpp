@@ -22,22 +22,22 @@ UpdateImageGeomAction::~UpdateImageGeomAction() noexcept = default;
 
 Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "UpdateImageGeomAction: ";
-  auto* image = dataStructure.getDataAs<ImageGeom>(path());
-  if(image == nullptr)
+  static constexpr StringLiteral k_Prefix = "UpdateImageGeomAction: ";
+  auto* imagePtr = dataStructure.getDataAs<ImageGeom>(path());
+  if(imagePtr == nullptr)
   {
-    return MakeErrorResult(-6701, fmt::format("{}Unable to find ImageGeom at '{}'", prefix, path().toString()));
+    return MakeErrorResult(-6701, fmt::format("{}Unable to find ImageGeom at '{}'", k_Prefix, path().toString()));
   }
 
   const auto addGeometryPath = [&](Result<> result) {
     for(auto& error : result.errors())
     {
-      error.message = fmt::format("{}Geometry at '{}': {}", prefix, path().toString(), error.message);
+      error.message = fmt::format("{}Geometry at '{}': {}", k_Prefix, path().toString(), error.message);
     }
     return result;
   };
-  const FloatVec3 spacing = m_Spacing.value_or(image->getSpacing());
-  FloatVec3 origin = m_Origin.value_or(image->getOrigin());
+  const FloatVec3 spacing = m_Spacing.value_or(imagePtr->getSpacing());
+  FloatVec3 origin = m_Origin.value_or(imagePtr->getOrigin());
   if(auto result = ImageGeom::ValidateSpacing(spacing); result.invalid())
   {
     return addGeometryPath(std::move(result));
@@ -48,7 +48,7 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*
   }
   if(m_CenterOrigin)
   {
-    const SizeVec3 dims = image->getDimensions();
+    const SizeVec3 dims = imagePtr->getDimensions();
     const BoundingBox3Df bounds(std::array<float32, 6>{origin[0], origin[1], origin[2], origin[0] + dims[0] * spacing[0], origin[1] + dims[1] * spacing[1], origin[2] + dims[2] * spacing[2]});
     const Point3Df center = bounds.center();
     const Point3Df& min = bounds.getMinPoint();
@@ -64,14 +64,14 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*
 
   if(shouldUpdateSpacing())
   {
-    if(auto result = image->setSpacing(spacing); result.invalid())
+    if(auto result = imagePtr->setSpacing(spacing); result.invalid())
     {
       return addGeometryPath(std::move(result));
     }
   }
   if(shouldUpdateOrigin() || m_CenterOrigin)
   {
-    if(auto result = image->setOrigin(origin); result.invalid())
+    if(auto result = imagePtr->setOrigin(origin); result.invalid())
     {
       return addGeometryPath(std::move(result));
     }

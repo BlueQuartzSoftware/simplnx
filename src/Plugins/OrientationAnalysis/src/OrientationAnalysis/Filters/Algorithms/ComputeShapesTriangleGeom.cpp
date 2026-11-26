@@ -17,8 +17,8 @@ using namespace nx::core;
 
 namespace
 {
-using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+using TriStoreType = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
+using VertsStoreType = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
 // usize FindEulerCharacteristic(usize numVertices, usize numFaces, usize numRegions)
 // {
@@ -77,15 +77,15 @@ AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajo
   std::array<float64, 3> positive{};
   std::array<float64, 3> negative{};
 
-  using PointT = Eigen::Vector3<T>;
+  using PointTType = Eigen::Vector3<T>;
 
   // Each row is one unit principal axis; reversing it swaps the two distances.
-  const std::array<PointT, 3> directions = {orientationMatrix.row(0), orientationMatrix.row(1), orientationMatrix.row(2)};
+  const std::array<PointTType, 3> directions = {orientationMatrix.row(0), orientationMatrix.row(1), orientationMatrix.row(2)};
 
   IntersectionUtilities::MTPointsCache<T> cache;
 
   // Feature Centroid
-  cache.origin = PointT{centroidsStore[3 * featureId], centroidsStore[(3 * featureId) + 1], centroidsStore[(3 * featureId) + 2]};
+  cache.origin = PointTType{centroidsStore[3 * featureId], centroidsStore[(3 * featureId) + 1], centroidsStore[(3 * featureId) + 2]};
 
   for(const usize i : featureFaces)
   {
@@ -99,13 +99,13 @@ AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajo
 
     // Extract tuple index of the first vertex and compute the index to the first x-value in the SharedVertexList
     const usize vertAIndex = triStore[threeCompIndex] * 3;
-    cache.pointA = PointT{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
+    cache.pointA = PointTType{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
 
     const usize vertBIndex = triStore[threeCompIndex + 1] * 3;
-    cache.pointB = PointT{vertexStore[vertBIndex], vertexStore[vertBIndex + 1], vertexStore[vertBIndex + 2]};
+    cache.pointB = PointTType{vertexStore[vertBIndex], vertexStore[vertBIndex + 1], vertexStore[vertBIndex + 2]};
 
     const usize vertCIndex = triStore[threeCompIndex + 2] * 3;
-    cache.pointC = PointT{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
+    cache.pointC = PointTType{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
 
     cache.edge1 = cache.pointB - cache.pointA;
     cache.edge2 = cache.pointC - cache.pointA;
@@ -120,7 +120,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajo
       {
         positive[axis] = std::max(positive[axis], (positiveHit.value() - cache.origin).norm());
       }
-      const PointT oppositeDirection = -directions[axis];
+      const PointTType oppositeDirection = -directions[axis];
       const auto negativeHit = IntersectionUtilities::MTIntersection(oppositeDirection, cache);
       if(negativeHit.has_value())
       {
@@ -144,7 +144,7 @@ namespace
  * @param triangleList Provides triangle vertex indices.
  * @return The three face coordinates.
  */
-inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, const VertsStore& verts, const TriStore& triangleList)
+inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, const VertsStoreType& verts, const TriStoreType& triangleList)
 {
   const usize v0Idx = triangleList[triangleId * 3];
   const usize v1Idx = triangleList[(triangleId * 3) + 1];
@@ -230,7 +230,7 @@ std::array<size_t, 3> TripletSort(T aVal, T bVal, T cVal, bool lowToHigh)
   return idx;
 }
 
-using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
+using Matrix3x3Type = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
 
 class ComputeShapesTriangleGeomImpl
 {
@@ -259,10 +259,10 @@ public:
 
     std::vector<ShapeResultValues> results;
 
-    const TriStore& triangleList = m_TriangleGeom.getFacesRef().getDataStoreRef();
-    const VertsStore& verts = m_TriangleGeom.getVerticesRef().getDataStoreRef();
+    const TriStoreType& triangleList = m_TriangleGeom.getFacesRef().getDataStoreRef();
+    const VertsStoreType& verts = m_TriangleGeom.getVerticesRef().getDataStoreRef();
 
-    Matrix3x3 Cinertia;
+    Matrix3x3Type cinertia;
     nx::core::Point3Df centroid = {0.0F, 0.0F, 0.0F};
 
     // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
@@ -270,18 +270,18 @@ public:
     constexpr float64 k_Sphere = (2000.0 * std::numbers::pi * std::numbers::pi) / 9.0;
 
     // define the canonical cMatrix matrix
-    constexpr float64 aVal = 1.0 / 60.0;
-    constexpr float64 bVal = aVal / 2.0;
+    constexpr float64 k_AVal = 1.0 / 60.0;
+    constexpr float64 k_BVal = k_AVal / 2.0;
     /* clang-format off */
-    Matrix3x3 cMatrix;
-    cMatrix << aVal, bVal, bVal, bVal, aVal, bVal, bVal, bVal, aVal;
+    Matrix3x3Type cMatrix;
+    cMatrix << k_AVal, k_BVal, k_BVal, k_BVal, k_AVal, k_BVal, k_BVal, k_BVal, k_AVal;
 
     // and the identity matrix
-    Matrix3x3 identityMat;
+    Matrix3x3Type identityMat;
     identityMat << 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
 
     // The cMatrix-Prime matrix
-    Matrix3x3 cPrime;
+    Matrix3x3Type cPrime;
     cPrime << -0.50000000, 0.50000000, 0.50000000,
           0.50000000, -0.50000000, 0.50000000,
           0.50000000, 0.50000000, -0.50000000;
@@ -298,10 +298,10 @@ public:
       {
         return;
       }
-      float64 Vol = 0.0;
+      float64 vol = 0.0;
       // define the accumulator arrays
-      Matrix3x3 Cacc;
-      Cacc << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+      Matrix3x3Type cacc;
+      cacc << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
       // Get the centroid for the feature
       centroid[0] = m_Centroids[(3 * featureId) + 0];
@@ -321,30 +321,30 @@ public:
         const nx::core::Point3Df& bVert = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
         const nx::core::Point3Df& cVert = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
 
-        Matrix3x3 aMat;
+        Matrix3x3Type aMat;
         aMat << aVert[0], bVert[0], cVert[0], aVert[1], bVert[1], cVert[1], aVert[2], bVert[2], cVert[2];
 
         const float64 detA = aMat.determinant();
 
-        Cacc = (Cacc + detA * (aMat * (cMatrix * (aMat.transpose())))).eval();
-        Vol += (detA / 6.0f); // accumulate the volumes
+        cacc = (cacc + detA * (aMat * (cMatrix * (aMat.transpose())))).eval();
+        vol += (detA / 6.0f); // accumulate the volumes
       }
 
-      Cacc = (Cacc / Vol).eval();
-      Cinertia = identityMat * Cacc.trace() - Cacc;
+      cacc = (cacc / vol).eval();
+      cinertia = identityMat * cacc.trace() - cacc;
       // extract the moments from the inertia tensor
-      const Eigen::Vector3d eVec(Cinertia(0, 0), Cinertia(1, 1), Cinertia(2, 2));
+      const Eigen::Vector3d eVec(cinertia(0, 0), cinertia(1, 1), cinertia(2, 2));
       auto sols = cPrime * eVec;
-      currentResult.omega3 = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
+      currentResult.omega3 = static_cast<float32>(((vol * vol) / sols.prod()) / k_Sphere);
 
       // Inertia-tensor eigenvectors define the principal axes.
-      const Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia);
+      const Eigen::EigenSolver<Matrix3x3Type> eigenSolver(cinertia);
 
       // Sort by inertia eigenvalue; row 0 uses the smallest eigenvalue.
-      Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
+      Eigen::EigenSolver<Matrix3x3Type>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
 
       // Eigenvectors are columns until the ordered principal frame is assembled below.
-      Eigen::EigenSolver<Matrix3x3>::EigenvectorsType eigenvectors = eigenSolver.eigenvectors();
+      Eigen::EigenSolver<Matrix3x3Type>::EigenvectorsType eigenvectors = eigenSolver.eigenvectors();
 
       /**
        * Following section for debugging
@@ -385,7 +385,7 @@ public:
       auto col1 = eigenvectors.col(idxs[2]);
 
       // Principal vectors define the feature reference frame.
-      Matrix3x3 orientationMatrix = {};
+      Matrix3x3Type orientationMatrix = {};
       orientationMatrix.row(0) = col1.real();
       orientationMatrix.row(1) = col2.real();
       orientationMatrix.row(2) = col3.real();
@@ -451,7 +451,7 @@ ComputeShapesTriangleGeom::~ComputeShapesTriangleGeom() noexcept = default;
 
 void ComputeShapesTriangleGeom::updateResults(const std::vector<ShapeResultValues>& results)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   auto& omega3sRef = *m_Omega3s;                 // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega3sArrayPath);
   auto& axisEulerAnglesRef = *m_AxisEulerAngles; // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
   auto& axisLengthsRef = *m_AxisLengths;         // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);

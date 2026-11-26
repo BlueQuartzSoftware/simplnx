@@ -29,12 +29,12 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Anisotropic spacing places Z corr
   // Y-for-Z substitution is unmistakable in the resulting mesh's Z bounding box.
   UnitTest::LoadPlugins();
 
-  const FloatVec3 k_Spacing = {0.25F, 1.0F, 4.0F};
-  DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(/*flushWithBottom=*/true, k_Spacing);
-  const DataPath k_TriangleGeomPath({"SurfaceNets"});
+  const FloatVec3 kSpacing = {0.25F, 1.0F, 4.0F};
+  DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(/*flushWithBottom=*/true, kSpacing);
+  const DataPath kTriangleGeomPath({"SurfaceNets"});
 
   SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(
-      std::move(dataStructure), k_TriangleGeomPath, BoundingBoxSkinMode::k_Off,
+      std::move(dataStructure), kTriangleGeomPath, BoundingBoxSkinMode::k_Off,
       [](Arguments& args) {
         args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
         args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
@@ -43,20 +43,20 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Anisotropic spacing places Z corr
       },
       &scope);
 
-  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
-  const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(kTriangleGeomPath));
+  const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(kTriangleGeomPath);
   const auto boundingBox = triangleGeom.getBoundingBox();
 
   // The cylinder is flush with the box's bottom Z wall, and the box's top Z wall is pure
   // background over its full X/Y extent, so the mesh's Z bounding box exactly spans the box:
   // [0, dimZ * spacingZ]. With the bug (Y spacing substituted for Z spacing), every vertex's Z
   // is shifted by 0.5*(spacingZ - spacingY) = 1.5, moving both bounds to [1.5, 49.5].
-  const float32 k_ExpectedMinZ = 0.0F;
-  const float32 k_ExpectedMaxZ = static_cast<float32>(SurfaceMeshingTest::k_BoxDim) * k_Spacing[2];
-  const float32 k_Tolerance = 1.0e-4F;
+  const float32 kExpectedMinZ = 0.0F;
+  const float32 kExpectedMaxZ = static_cast<float32>(SurfaceMeshingTest::k_BoxDim) * kSpacing[2];
+  const float32 kTolerance = 1.0e-4F;
 
-  REQUIRE_THAT(boundingBox.getMinPoint()[2], Catch::Matchers::WithinAbs(k_ExpectedMinZ, k_Tolerance));
-  REQUIRE_THAT(boundingBox.getMaxPoint()[2], Catch::Matchers::WithinAbs(k_ExpectedMaxZ, k_Tolerance));
+  REQUIRE_THAT(boundingBox.getMinPoint()[2], Catch::Matchers::WithinAbs(kExpectedMinZ, kTolerance));
+  REQUIRE_THAT(boundingBox.getMaxPoint()[2], Catch::Matchers::WithinAbs(kExpectedMaxZ, kTolerance));
 
   UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
 }
@@ -145,11 +145,11 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Default", "[SimplnxCore][SurfaceN
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 668786);
-  REQUIRE(vertices->getNumberOfTuples() == 319447);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex list and shared triangle list
   auto& exemplarDataArray = dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath);
@@ -249,10 +249,10 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Smoothing", "[SimplnxCore][Surfac
   // Check a few things about the generated data.
   {
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-    IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
-    REQUIRE(triangle->getNumberOfTuples() == 668786);
-    REQUIRE(vertices->getNumberOfTuples() == 319447);
+    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+    REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+    REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
   }
 
   // Compare the shared vertex list and shared triangle list
@@ -352,11 +352,11 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding", "[SimplnxCore][SurfaceN
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 668786);
-  REQUIRE(vertices->getNumberOfTuples() == 319447);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex list and shared triangle list
   auto& exemplarDataArray = dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath);
@@ -455,11 +455,11 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding Smoothing", "[SimplnxCore
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 668786);
-  REQUIRE(vertices->getNumberOfTuples() == 319447);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex list and shared triangle list
   auto& exemplarDataArray = dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath);

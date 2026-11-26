@@ -71,7 +71,7 @@ void AbstractPipelineNode::setDataStructure(const DataStructure& dataStructure)
   m_DataStructure = std::move(candidate);
 }
 
-void AbstractPipelineNode::checkDataStructureSize(DataStructure& dataStructure)
+void AbstractPipelineNode::CheckDataStructureSize(DataStructure& dataStructure)
 {
   const uint64 largeDataStructureSize = Application::Instance()->getPreferences()->largeDataStructureSize();
   if(dataStructure.memoryUsage() > largeDataStructureSize)
@@ -269,16 +269,16 @@ void AbstractPipelineNode::sendFilterFaultDetailMessage(int32_t filterIndex, con
 
 std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 {
-  const auto* currentPipeline = this;
+  const auto* currentPipelinePtr = this;
   auto pipeline = getPrecedingPipelineSegment();
   if(pipeline == nullptr)
   {
     return nullptr;
   }
 
-  while((currentPipeline = currentPipeline->getParentPipeline()) != nullptr)
+  while((currentPipelinePtr = currentPipelinePtr->getParentPipeline()) != nullptr)
   {
-    auto segment = currentPipeline->getPrecedingPipelineSegment();
+    auto segment = currentPipelinePtr->getPrecedingPipelineSegment();
     if(segment == nullptr)
     {
       break;
@@ -290,20 +290,20 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 
 std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() const
 {
-  Pipeline* parentPipeline = getParentPipeline();
-  if(parentPipeline == nullptr)
+  Pipeline* parentPipelinePtr = getParentPipeline();
+  if(parentPipelinePtr == nullptr)
   {
     return nullptr;
   }
-  if(parentPipeline->isEmpty())
+  if(parentPipelinePtr->isEmpty())
   {
-    auto name = parentPipeline->getName();
-    auto* filterList = parentPipeline->getFilterList();
-    return std::make_unique<Pipeline>(name, filterList);
+    auto name = parentPipelinePtr->getName();
+    auto* filterListPtr = parentPipelinePtr->getFilterList();
+    return std::make_unique<Pipeline>(name, filterListPtr);
   }
 
-  auto iter = parentPipeline->find(this);
-  return parentPipeline->copySegment(parentPipeline->begin(), iter);
+  auto iter = parentPipelinePtr->find(this);
+  return parentPipelinePtr->copySegment(parentPipelinePtr->begin(), iter);
 }
 
 nx::core::FaultState AbstractPipelineNode::getFaultState() const

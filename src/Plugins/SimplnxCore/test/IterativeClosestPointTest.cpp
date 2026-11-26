@@ -43,25 +43,26 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DR
   Arguments args;
 
   DataPath movingVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
-  auto* movingVertexGeom = dataStructure.getDataAs<VertexGeom>(movingVertexPath);
+  auto* movingVertexGeomPtr = dataStructure.getDataAs<VertexGeom>(movingVertexPath);
 
   uint64 numIterations = 1;
   bool applyTransformation = true;
   DataPath transformArrayPath({Constants::k_SmallIN100, "Transform Array"});
 
-  auto* targetVertexGeom = VertexGeom::Create(dataStructure, "Vertex Geometry 2", movingVertexGeom->getParentIds().front());
-  auto* euler_data_2 = Float32Array::CreateWithStore<DataStore<float>>(dataStructure, "Euler 2", {movingVertexGeom->getVertices()->getNumberOfTuples()}, {3}, targetVertexGeom->getParentIds().front());
-  targetVertexGeom->setVertices(*euler_data_2);
+  auto* targetVertexGeomPtr = VertexGeom::Create(dataStructure, "Vertex Geometry 2", movingVertexGeomPtr->getParentIds().front());
+  auto* eulerData2Ptr =
+      Float32Array::CreateWithStore<DataStore<float>>(dataStructure, "Euler 2", {movingVertexGeomPtr->getVertices()->getNumberOfTuples()}, {3}, targetVertexGeomPtr->getParentIds().front());
+  targetVertexGeomPtr->setVertices(*eulerData2Ptr);
 
-  DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, targetVertexGeom->getName()});
+  DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, targetVertexGeomPtr->getName()});
 
-  auto* vertices1 = movingVertexGeom->getVertices();
-  auto* vertices2 = targetVertexGeom->getVertices();
-  usize numVertices = vertices1->getSize();
+  auto* vertices1Ptr = movingVertexGeomPtr->getVertices();
+  auto* vertices2Ptr = targetVertexGeomPtr->getVertices();
+  usize numVertices = vertices1Ptr->getSize();
   for(usize i = 0; i < numVertices; i++)
   {
-    (*vertices1)[i] = i;
-    (*vertices2)[i] = i;
+    (*vertices1Ptr)[i] = i;
+    (*vertices2Ptr)[i] = i;
   }
 
   args.insertOrAssign(IterativeClosestPointFilter::k_MovingVertexPath_Key, std::make_any<DataPath>(movingVertexPath));
@@ -85,7 +86,7 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -97,22 +98,22 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<IterativeClosestPointFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<IterativeClosestPointFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(IterativeClosestPointFilter::k_MovingVertexPath_Key) == DataPath({"MovingGeometry"}));
       CHECK(args.value<DataPath>(IterativeClosestPointFilter::k_TargetVertexPath_Key) == DataPath({"TargetGeometry"}));
       CHECK(args.value<uint64>(IterativeClosestPointFilter::k_NumIterations_Key) == 5);

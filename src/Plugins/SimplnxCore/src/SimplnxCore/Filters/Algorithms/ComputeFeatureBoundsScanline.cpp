@@ -386,7 +386,7 @@ Result<> ComputeFeatureBoundsScanline::operator()()
     /**
      * @brief Connects the eight bounding-box vertices into twelve edges.
      */
-    static constexpr std::array<std::pair<int, int>, 12> cubeEdges = {{{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}}};
+    static constexpr std::array<std::pair<int, int>, 12> k_CubeEdges = {{{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}}};
     std::array<usize, 2> vertPair = {0, 0};
 
     // Allocate maximum edge storage before omitting features without valid bounds.
@@ -446,10 +446,10 @@ Result<> ComputeFeatureBoundsScanline::operator()()
       edgeGeom.setVertexCoordinate(currentOffset * 8 + 6, {bounds[activeIndex + 3], bounds[activeIndex + 4], bounds[activeIndex + 5]});
       edgeGeom.setVertexCoordinate(currentOffset * 8 + 7, {bounds[activeIndex + 0], bounds[activeIndex + 4], bounds[activeIndex + 5]});
 
-      for(usize edgeIdx = 0; edgeIdx < cubeEdges.size(); ++edgeIdx)
+      for(usize edgeIdx = 0; edgeIdx < k_CubeEdges.size(); ++edgeIdx)
       {
-        vertPair[0] = currentOffset * 8 + (cubeEdges[edgeIdx].first);
-        vertPair[1] = currentOffset * 8 + (cubeEdges[edgeIdx].second);
+        vertPair[0] = currentOffset * 8 + (k_CubeEdges[edgeIdx].first);
+        vertPair[1] = currentOffset * 8 + (k_CubeEdges[edgeIdx].second);
 
         edgeGeom.setEdgePointIds(currentOffset * 12 + edgeIdx, vertPair);
         edgeFeatureIds[currentOffset * 12 + edgeIdx] = static_cast<int32>(idx);

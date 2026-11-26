@@ -50,69 +50,69 @@ constexpr StringLiteral k_Unit = "unit";
 
 struct FileBlock
 {
-  SizeVec3 RegionOfInterestStart = {0, 0, 0};
-  SizeVec3 RegionOfInterestEnd = {0, 0, 0};
-  std::string FileFormat = "raw";
-  SizeVec3 Size = {0, 0, 0};
-  std::string Name;
-  std::string Datatype = "float";
-  FloatVec2Type DataRange = {0.0F, 0.0F};
-  int8 BitsPerElement = 32;
+  SizeVec3 region_of_interest_start = {0, 0, 0};
+  SizeVec3 region_of_interest_end = {0, 0, 0};
+  std::string file_format = "raw";
+  SizeVec3 size = {0, 0, 0};
+  std::string name;
+  std::string datatype = "float";
+  FloatVec2Type data_range = {0.0F, 0.0F};
+  int8 bits_per_element = 32;
 };
 
 struct GeometryBlock
 {
-  std::string Status = "visible";
-  FloatVec3 RelativePosition = {0.0F, 0.0F, 0.0F};
-  FloatVec3 Position = {0.0F, 0.0F, 0.0F};
-  FloatVec3 Resolution = {0.0F, 0.0F, 0.0F};
-  FloatVec3 Scale = {1.0F, 1.0F, 1.0F};
-  FloatVec3 Center = {0.0F, 0.0F, 0.0F};
-  std::array<int32, 9> RotationMatrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-  std::string Unit = "mm";
+  std::string status = "visible";
+  FloatVec3 relative_position = {0.0F, 0.0F, 0.0F};
+  FloatVec3 position = {0.0F, 0.0F, 0.0F};
+  FloatVec3 resolution = {0.0F, 0.0F, 0.0F};
+  FloatVec3 scale = {1.0F, 1.0F, 1.0F};
+  FloatVec3 center = {0.0F, 0.0F, 0.0F};
+  std::array<int32, 9> rotation_matrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+  std::string unit = "mm";
 };
 
 template <usize Dimension, bool USizeType = false>
 struct ParserArgs
 {
-  static constexpr usize UseDimension = Dimension;
-  static constexpr bool UseUSize = USizeType;
+  static constexpr usize k_UseDimension = Dimension;
+  static constexpr bool k_UseUSize = USizeType;
 };
 
-using ParseIntArray = ParserArgs<9>;
-using ParseFloatVec2 = ParserArgs<2>;
-using ParseFloatVec3 = ParserArgs<3>;
-using ParseSizeVec3 = ParserArgs<3, true>;
+using ParseIntArrayType = ParserArgs<9>;
+using ParseFloatVec2Type = ParserArgs<2>;
+using ParseFloatVec3Type = ParserArgs<3>;
+using ParseSizeVec3Type = ParserArgs<3, true>;
 
-template <typename T, typename ParserArgs = ParseIntArray>
-Result<std::array<T, ParserArgs::UseDimension>> ParseArray(const std::vector<std::string>& tokens, usize& lineCount)
+template <typename T, typename ParserArgs = ParseIntArrayType>
+Result<std::array<T, ParserArgs::k_UseDimension>> ParseArray(const std::vector<std::string>& tokens, usize& lineCount)
 {
-  const auto Dimension = ParserArgs::UseDimension;
-  const auto UseSize = ParserArgs::UseUSize;
-  using VecT = std::array<T, Dimension>;
+  const auto dimension = ParserArgs::k_UseDimension;
+  const auto useSize = ParserArgs::k_UseUSize;
+  using VecTType = std::array<T, dimension>;
 
-  VecT vec = {0}; // auto initializes all values to 0
+  VecTType vec = {0}; // auto initializes all values to 0
 
   const std::string vgiParseErrorStr = "Error parsing {} value ({}) from vgi file.";
   const std::string vgiOutOfRangeErrorStr = "Value ({}) in vgi file is out of range for storage type {}.";
 
   std::string parseUnit = "float32"; // default to save calls
 
-  if constexpr(UseSize)
+  if constexpr(useSize)
   {
     parseUnit = "usize";
   }
 
-  if(tokens.size() < Dimension + 2)
+  if(tokens.size() < dimension + 2)
   {
-    return {MakeErrorResult<VecT>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least {} tokens.", lineCount, Dimension + 2))};
+    return {MakeErrorResult<VecTType>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least {} tokens.", lineCount, dimension + 2))};
   }
 
-  for(usize index = 0; index < Dimension; index++)
+  for(usize index = 0; index < dimension; index++)
   {
     try
     {
-      if constexpr(UseSize)
+      if constexpr(useSize)
       {
         vec[index] = std::stoull(tokens[index + 2]);
       }
@@ -122,10 +122,10 @@ Result<std::array<T, ParserArgs::UseDimension>> ParseArray(const std::vector<std
       }
     } catch(const std::invalid_argument& e)
     {
-      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(fmt::runtime(vgiParseErrorStr), parseUnit, tokens[index + 2]))};
+      return {MakeErrorResult<VecTType>(k_VgiParseError, fmt::format(fmt::runtime(vgiParseErrorStr), parseUnit, tokens[index + 2]))};
     } catch(const std::out_of_range& e)
     {
-      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(fmt::runtime(vgiOutOfRangeErrorStr), tokens[index + 2], parseUnit))};
+      return {MakeErrorResult<VecTType>(k_VgiParseError, fmt::format(fmt::runtime(vgiOutOfRangeErrorStr), tokens[index + 2], parseUnit))};
     }
   }
 
@@ -147,30 +147,30 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
     std::vector<std::string> tokens = StringUtilities::split(buf, ' ');
     if(tokens[0] == k_FileFormat)
     {
-      fileBlock.FileFormat = tokens[2];
+      fileBlock.file_format = tokens[2];
     }
     else if(tokens[0] == k_Name)
     {
-      fileBlock.Name = tokens[2];
+      fileBlock.name = tokens[2];
     }
     else if(tokens[0] == k_DataType)
     {
-      fileBlock.Datatype = tokens[2];
+      fileBlock.datatype = tokens[2];
     }
     else if(tokens[0] == k_DataRange)
     {
-      auto result = ParseArray<float32, ParseFloatVec2>(tokens, lineCount);
+      auto result = ParseArray<float32, ParseFloatVec2Type>(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<FileBlock>(ConvertResult(std::move(result)), {});
       }
-      fileBlock.DataRange = result.value();
+      fileBlock.data_range = result.value();
     }
     else if(tokens[0] == k_BitsPerElement)
     {
       try
       {
-        fileBlock.BitsPerElement = static_cast<int8>(std::stoi(tokens[2]));
+        fileBlock.bits_per_element = static_cast<int8>(std::stoi(tokens[2]));
       } catch(const std::invalid_argument& e)
       {
         return {MakeErrorResult<FileBlock>(k_VgiParseError, fmt::format("Error parsing 'Bits Per Element' integer value ({}) from vgi file.", tokens[2]))};
@@ -181,22 +181,22 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
     }
     else if(std::find(tokens.begin(), tokens.end(), "=") != tokens.end())
     {
-      auto result = ParseArray<usize, ParseSizeVec3>(tokens, lineCount);
+      auto result = ParseArray<usize, ParseSizeVec3Type>(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<FileBlock>(ConvertResult(std::move(result)), {});
       }
       if(tokens[0] == k_RegionOfInterestStart)
       {
-        fileBlock.RegionOfInterestStart = result.value();
+        fileBlock.region_of_interest_start = result.value();
       }
       else if(tokens[0] == k_RegionOfInterestEnd)
       {
-        fileBlock.RegionOfInterestEnd = result.value();
+        fileBlock.region_of_interest_end = result.value();
       }
       else if(tokens[0] == k_Size)
       {
-        fileBlock.Size = result.value();
+        fileBlock.size = result.value();
       }
     }
 
@@ -225,24 +225,24 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, const fs::pat
     tokens = StringUtilities::split(buf, ' ');
     if(tokens[0] == k_Status)
     {
-      block.Status = tokens[2];
+      block.status = tokens[2];
     }
     else if(tokens[0] == k_Unit)
     {
-      block.Unit = tokens[2];
+      block.unit = tokens[2];
     }
     else if(tokens[0] == k_Rotate)
     {
-      auto result = ParseArray<int32, ParseIntArray>(tokens, lineCount);
+      auto result = ParseArray<int32, ParseIntArrayType>(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(ConvertResult(std::move(result)), {});
       }
-      block.RotationMatrix = result.value();
+      block.rotation_matrix = result.value();
     }
     else
     {
-      auto result = ParseArray<float32, ParseFloatVec3>(tokens, lineCount);
+      auto result = ParseArray<float32, ParseFloatVec3Type>(tokens, lineCount);
       if(result.invalid())
       {
         auto& error = result.errors().front();
@@ -258,23 +258,23 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, const fs::pat
       }
       else if(tokens[0] == k_RelativePosition)
       {
-        block.RelativePosition = result.value();
+        block.relative_position = result.value();
       }
       else if(tokens[0] == k_Position)
       {
-        block.Position = result.value();
+        block.position = result.value();
       }
       else if(tokens[0] == k_Resolution)
       {
-        block.Resolution = result.value();
+        block.resolution = result.value();
       }
       else if(tokens[0] == k_Scale)
       {
-        block.Scale = result.value();
+        block.scale = result.value();
       }
       else if(tokens[0] == k_Center)
       {
-        block.Center = result.value();
+        block.center = result.value();
       }
     }
 
@@ -323,35 +323,35 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const fs
     }
   }
 
-  if(fileBlock.Datatype != "float" || fileBlock.BitsPerElement != 32)
+  if(fileBlock.datatype != "float" || fileBlock.bits_per_element != 32)
   {
     return MakeErrorResult<ReadVolumeGraphicsFileFilter::HeaderMetadata>(k_UnsupportedDataType,
                                                                          fmt::format("Unsupported Volume Graphics Datatype '{}' with BitsPerElement {} in '{}'. Only 32-bit float data is supported.",
-                                                                                     fileBlock.Datatype, fileBlock.BitsPerElement, vgHeaderFilePath.string()));
+                                                                                     fileBlock.datatype, fileBlock.bits_per_element, vgHeaderFilePath.string()));
   }
 
   vgHeaderFile.clear();
   vgHeaderFile.seekg(0);
 
   ReadVolumeGraphicsFileFilter::HeaderMetadata metadata;
-  metadata.Dimensions = fileBlock.Size;
-  metadata.Spacing = geomBlock.Resolution;
-  if(geomBlock.Unit == k_Millimeter)
+  metadata.Dimensions = fileBlock.size;
+  metadata.Spacing = geomBlock.resolution;
+  if(geomBlock.unit == k_Millimeter)
   {
     metadata.Units = IGeometry::LengthUnit::Millimeter;
   }
 
-  metadata.DataFilePath = (fs::absolute(vgHeaderFilePath.parent_path()) / fileBlock.Name).string();
+  metadata.DataFilePath = (fs::absolute(vgHeaderFilePath.parent_path()) / fileBlock.name).string();
   return {metadata};
 }
 
 struct ReadVolumeGraphicsFileFilterCache
 {
-  fs::path VgiDataFilePath;
+  fs::path vgi_data_file_path;
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ReadVolumeGraphicsFileFilterCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ReadVolumeGraphicsFileFilterCache> SHeaderCache;
 
 } // namespace
 
@@ -359,15 +359,15 @@ namespace nx::core
 {
 //------------------------------------------------------------------------------
 ReadVolumeGraphicsFileFilter::ReadVolumeGraphicsFileFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ReadVolumeGraphicsFileFilter::~ReadVolumeGraphicsFileFilter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -465,7 +465,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   const fs::path fiData = fs::path(metadata.DataFilePath);
-  s_HeaderCache[m_InstanceId].VgiDataFilePath = fiData; // Store the data file path in the cache
+  SHeaderCache[m_InstanceId].vgi_data_file_path = fiData; // Store the data file path in the cache
 
   if(!fs::exists(fiData))
   {
@@ -490,20 +490,20 @@ Result<> ReadVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructure,
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.DensityArrayName = filterArgs.value<std::string>(k_DensityArrayName_Key);
-  inputValues.VGDataFile = s_HeaderCache[m_InstanceId].VgiDataFilePath;
+  inputValues.VGDataFile = SHeaderCache[m_InstanceId].vgi_data_file_path;
 
   return ReadVolumeGraphicsFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_VGHeaderFileKey = "VGHeaderFile";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_DensityArrayNameKey = "DensityArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadVolumeGraphicsFileFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -512,10 +512,10 @@ Result<Arguments> ReadVolumeGraphicsFileFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_VGHeaderFileKey, k_VGHeaderFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DensityArrayNameKey, k_DensityArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_VGHeaderFileKey, k_VGHeaderFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DensityArrayNameKey, k_DensityArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

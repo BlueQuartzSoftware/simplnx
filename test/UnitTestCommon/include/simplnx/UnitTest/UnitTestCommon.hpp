@@ -966,10 +966,10 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
   }
   else
   {
-    const auto* generatedListArray = dynamic_cast<const NeighborList<T>*>(computedData);
-    const auto* exemplarListArray = dynamic_cast<const NeighborList<T>*>(exemplaryData);
-    const auto& computedList = *generatedListArray;
-    const auto& exemplaryList = *exemplarListArray;
+    const auto* generatedListArrayPtr = dynamic_cast<const NeighborList<T>*>(computedData);
+    const auto* exemplarListArrayPtr = dynamic_cast<const NeighborList<T>*>(exemplaryData);
+    const auto& computedList = *generatedListArrayPtr;
+    const auto& exemplaryList = *exemplarListArrayPtr;
 
     REQUIRE(computedList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
 
@@ -1151,40 +1151,40 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
   DataType type;
   if(arrayType == IArray::ArrayType::DataArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const IDataArray*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const IDataArray*>(exemplarArray);
-    type = generatedDataArray->getDataType();
-    DataType exemplarType = exemplarDataArray->getDataType();
+    const auto* generatedDataArrayPtr = dynamic_cast<const IDataArray*>(generatedArray);
+    const auto* exemplarDataArrayPtr = dynamic_cast<const IDataArray*>(exemplarArray);
+    type = generatedDataArrayPtr->getDataType();
+    DataType exemplarType = exemplarDataArrayPtr->getDataType();
 
     if(type != exemplarType)
     {
-      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
+      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArrayPtr->getName(), exemplarDataArrayPtr->getName(),
                                fmt::underlying(type), fmt::underlying(exemplarType))
                 << '\n';
       return;
     }
-    CompareDataArrays<T>(*exemplarDataArray, *generatedDataArray);
+    CompareDataArrays<T>(*exemplarDataArrayPtr, *generatedDataArrayPtr);
   }
   if(arrayType == IArray::ArrayType::NeighborListArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const INeighborList*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const INeighborList*>(exemplarArray);
-    type = generatedDataArray->getDataType();
-    DataType exemplarType = exemplarDataArray->getDataType();
+    const auto* generatedDataArrayPtr = dynamic_cast<const INeighborList*>(generatedArray);
+    const auto* exemplarDataArrayPtr = dynamic_cast<const INeighborList*>(exemplarArray);
+    type = generatedDataArrayPtr->getDataType();
+    DataType exemplarType = exemplarDataArrayPtr->getDataType();
     if(type != exemplarType)
     {
-      std::cout << fmt::format("NeighborList {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
+      std::cout << fmt::format("NeighborList {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArrayPtr->getName(), exemplarDataArrayPtr->getName(),
                                fmt::underlying(type), fmt::underlying(exemplarType))
                 << '\n';
       return;
     }
-    CompareNeighborLists<T>(exemplarDataArray, generatedDataArray);
+    CompareNeighborLists<T>(exemplarDataArrayPtr, generatedDataArrayPtr);
   }
   if(arrayType == IArray::ArrayType::StringArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const StringArray*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const StringArray*>(exemplarArray);
-    CompareStringArrays(*exemplarDataArray, *generatedDataArray);
+    const auto* generatedDataArrayPtr = dynamic_cast<const StringArray*>(generatedArray);
+    const auto* exemplarDataArrayPtr = dynamic_cast<const StringArray*>(exemplarArray);
+    CompareStringArrays(*exemplarDataArrayPtr, *generatedDataArrayPtr);
   }
 }
 
@@ -1215,9 +1215,9 @@ DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::strin
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
-  ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, name, tupleShape, componentShape, parentId);
-  dataArray->fill(static_cast<T>(0.0));
-  return dataArray;
+  ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, name, tupleShape, componentShape, parentId);
+  dataArrayPtr->fill(static_cast<T>(0.0));
+  return dataArrayPtr;
 }
 
 /**
@@ -1233,8 +1233,8 @@ template <typename T>
 NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId)
 {
   using NeighborListType = NeighborList<T>;
-  auto* neighborList = NeighborListType::Create(dataStructure, name, {numTuples}, parentId);
-  return neighborList;
+  auto* neighborListPtr = NeighborListType::Create(dataStructure, name, {numTuples}, parentId);
+  return neighborListPtr;
 }
 
 /**

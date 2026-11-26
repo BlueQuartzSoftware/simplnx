@@ -142,8 +142,8 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
                                     const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-  const auto* inputStore = dynamic_cast<const DataStore<T>*>(&inputArray.getDataStoreRef());
-  if(inputStore == nullptr)
+  const auto* inputStorePtr = dynamic_cast<const DataStore<T>*>(&inputArray.getDataStoreRef());
+  if(inputStorePtr == nullptr)
   {
     return SplitDataArraysScanlineTyped<T>(dataStructure, inputArrayPath, outputArrayPaths, splitDimension, messageHandler, shouldCancel);
   }
@@ -163,8 +163,8 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
                                                 outputArray.getNumberOfComponents()));
     }
 
-    auto* outputStore = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
-    if(outputStore == nullptr)
+    auto* outputStorePtr = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
+    if(outputStorePtr == nullptr)
     {
       return SplitDataArraysScanlineTyped<T>(dataStructure, inputArrayPath, outputArrayPaths, splitDimension, messageHandler, shouldCancel);
     }
@@ -187,7 +187,7 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
     const usize outputSplitCount = outputArray.getTupleShape()[splitDimension];
     const usize outputScanlineTuples = outputSplitCount * innerTuples;
     const auto task =
-        CopySplitDataArrayDirectTask<T>(inputStore->data(), outputStore.data(), inputScanlineTuples, outputScanlineTuples, splitStart * innerTuples, outerCount, numComponents, shouldCancel);
+        CopySplitDataArrayDirectTask<T>(inputStorePtr->data(), outputStore.data(), inputScanlineTuples, outputScanlineTuples, splitStart * innerTuples, outerCount, numComponents, shouldCancel);
     taskRunner.execute([&, task] {
       task();
       const std::lock_guard<std::mutex> guard(progressMutex);
@@ -575,17 +575,17 @@ private:
 };
 
 template <typename T>
-struct is_allowed_array_type : std::false_type
+struct IsSplittableArrayType : std::false_type
 {
 };
 
 template <typename T>
-struct is_allowed_array_type<DataArray<T>> : std::true_type
+struct IsSplittableArrayType<DataArray<T>> : std::true_type
 {
 };
 
 template <>
-struct is_allowed_array_type<StringArray> : std::true_type
+struct IsSplittableArrayType<StringArray> : std::true_type
 {
 };
 
@@ -604,7 +604,7 @@ struct is_allowed_array_type<StringArray> : std::true_type
  * Each task copies one output without further cancellation checks. Outputs can complete in a different order.
  */
 template <typename ArrayType>
-typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type SplitArraysByTupleImpl(DataStructure& dataStructure, const DataPath& inputArrayPath,
+typename std::enable_if<IsSplittableArrayType<ArrayType>::value, Result<>>::type SplitArraysByTupleImpl(DataStructure& dataStructure, const DataPath& inputArrayPath,
                                                                                                         const std::vector<DataPath>& outputArrayPaths, usize splitDimension,
                                                                                                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
@@ -734,13 +734,13 @@ Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputA
                             const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  const IDataArray* representativeOutputArray = nullptr;
+  const IDataArray* representativeOutputArrayPtr = nullptr;
   for(const DataPath& outputArrayPath : outputArrayPaths)
   {
     const auto& outputArray = dataStructure.getDataRefAs<IDataArray>(outputArrayPath);
-    if(representativeOutputArray == nullptr || IsOutOfCore(outputArray))
+    if(representativeOutputArrayPtr == nullptr || IsOutOfCore(outputArray))
     {
-      representativeOutputArray = &outputArray;
+      representativeOutputArrayPtr = &outputArray;
     }
     if(IsOutOfCore(outputArray))
     {
@@ -748,7 +748,7 @@ Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputA
     }
   }
 
-  return DispatchAlgorithm<SplitDataArraysDirect, SplitDataArraysScanline>({&inputDataArray, representativeOutputArray}, dataStructure, inputArrayPath, outputArrayPaths, splitDimension,
+  return DispatchAlgorithm<SplitDataArraysDirect, SplitDataArraysScanline>({&inputDataArray, representativeOutputArrayPtr}, dataStructure, inputArrayPath, outputArrayPaths, splitDimension,
                                                                            messageHandler, shouldCancel);
 }
 

@@ -222,9 +222,9 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
     return MakeErrorResult(-8355, fmt::format("Pointwise operation input and output store sizes must match. Input size: {}; output size: {}.", totalValues, outputStore.getSize()));
   }
 
-  const auto* inMemoryInputStore = dynamic_cast<const DataStore<T>*>(&inputStore);
-  auto* inMemoryOutputStore = dynamic_cast<DataStore<U>*>(&outputStore);
-  if(!options.forceBuffered && inMemoryInputStore != nullptr && inMemoryOutputStore != nullptr)
+  const auto* inMemoryInputStorePtr = dynamic_cast<const DataStore<T>*>(&inputStore);
+  auto* inMemoryOutputStorePtr = dynamic_cast<DataStore<U>*>(&outputStore);
+  if(!options.forceBuffered && inMemoryInputStorePtr != nullptr && inMemoryOutputStorePtr != nullptr)
   {
     if(shouldCancel)
     {
@@ -234,8 +234,8 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
     // Exact DataStore casts guarantee resident, contiguous storage. Obtain the views before entering TBB so workers
     // never call a DataStore method; they only read immutable input memory and write disjoint output values. Any OOC
     // or other abstract store takes the buffered path below.
-    const nonstd::span<const T> inputSpan = inMemoryInputStore->createSpan();
-    nonstd::span<U> outputSpan = inMemoryOutputStore->createSpan();
+    const nonstd::span<const T> inputSpan = inMemoryInputStorePtr->createSpan();
+    nonstd::span<U> outputSpan = inMemoryOutputStorePtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, totalValues);
     messageHandler.sendInfoMessage("Applying resident pointwise operation");
@@ -287,15 +287,15 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
 
   auto inputBuffer = std::make_unique_for_overwrite<T[]>(plan.batchValues);
   std::unique_ptr<U[]> outputBuffer;
-  U* mappedBuffer = nullptr;
+  U* mappedBufferPtr = nullptr;
   if constexpr(std::is_same_v<T, U>)
   {
-    mappedBuffer = inputBuffer.get();
+    mappedBufferPtr = inputBuffer.get();
   }
   else
   {
     outputBuffer = std::make_unique_for_overwrite<U[]>(plan.batchValues);
-    mappedBuffer = outputBuffer.get();
+    mappedBufferPtr = outputBuffer.get();
   }
   for(usize start = 0; start < totalValues;)
   {
@@ -310,12 +310,12 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
     }
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, count);
-    parallelAlgorithm.execute(PointwiseMapBody<T, U, MapOpT>{inputBuffer.get(), mappedBuffer, mapOp, shouldCancel});
+    parallelAlgorithm.execute(PointwiseMapBody<T, U, MapOpT>{inputBuffer.get(), mappedBufferPtr, mapOp, shouldCancel});
     if(shouldCancel)
     {
       return {};
     }
-    if(Result<> writeResult = outputStore.copyFromBuffer(start, nonstd::span<const U>(mappedBuffer, count)); writeResult.invalid())
+    if(Result<> writeResult = outputStore.copyFromBuffer(start, nonstd::span<const U>(mappedBufferPtr, count)); writeResult.invalid())
     {
       return writeResult;
     }

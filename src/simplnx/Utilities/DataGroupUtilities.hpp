@@ -137,7 +137,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsOfType(const DataStruct
     {
       bool ignore = false;
       DataPath childPath = parentGroup.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
+      const DataObject* dataObjectPtr = dataStructure.getData(childPath);
       for(const auto& ignoredPath : ignoredDataPaths)
       {
         if(childPath == ignoredPath)
@@ -146,7 +146,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsOfType(const DataStruct
           break;
         }
       }
-      if(!ignore && dynamic_cast<const TargetObjectT*>(dataObject) != nullptr)
+      if(!ignore && dynamic_cast<const TargetObjectT*>(dataObjectPtr) != nullptr)
       {
         childDataObjects.push_back(childPath);
       }

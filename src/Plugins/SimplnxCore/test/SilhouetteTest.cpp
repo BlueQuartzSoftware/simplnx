@@ -48,32 +48,32 @@ const DataPath k_ParityInputPath = k_ParityMatrixPath.createChildPath("Input");
 const DataPath k_ParityFeatureIdsPath = k_ParityMatrixPath.createChildPath("FeatureIds");
 const DataPath k_ParityOutputPath = k_ParityMatrixPath.createChildPath("Silhouette");
 
-void buildParityInput(DataStructure& dataStructure)
+void BuildParityInput(DataStructure& dataStructure)
 {
-  const ShapeType k_TupleShape = {1, 1, 6};
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Silhouette Parity ImageGeom");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({6, 1, 1});
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", k_TupleShape, imageGeom->getId());
-  REQUIRE(attributeMatrix != nullptr);
-  imageGeom->setCellData(*attributeMatrix);
+  const ShapeType kTupleShape = {1, 1, 6};
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Silhouette Parity ImageGeom");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({6, 1, 1});
+  auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", kTupleShape, imageGeomPtr->getId());
+  REQUIRE(attributeMatrixPtr != nullptr);
+  imageGeomPtr->setCellData(*attributeMatrixPtr);
 
-  auto inputStore = std::make_shared<DataStore<float64>>(k_TupleShape, ShapeType{2}, std::optional<float64>{});
-  auto* input = Float64Array::Create(dataStructure, "Input", inputStore, attributeMatrix->getId());
-  REQUIRE(input != nullptr);
+  auto inputStore = std::make_shared<DataStore<float64>>(kTupleShape, ShapeType{2}, std::optional<float64>{});
+  auto* inputPtr = Float64Array::Create(dataStructure, "Input", inputStore, attributeMatrixPtr->getId());
+  REQUIRE(inputPtr != nullptr);
   const std::array<float64, 12> inputValues = {0.0, 0.0, 0.0, 1.0, 4.0, 4.0, 4.0, 5.0, 8.0, 8.0, 8.0, 9.0};
   auto inputStoreWriteResult = inputStore->copyFromBuffer(0, nonstd::span<const float64>(inputValues.data(), inputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(inputStoreWriteResult);
 
-  auto featureIdsStore = std::make_shared<DataStore<int32>>(k_TupleShape, ShapeType{1}, std::optional<int32>{});
-  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, attributeMatrix->getId());
-  REQUIRE(featureIds != nullptr);
+  auto featureIdsStore = std::make_shared<DataStore<int32>>(kTupleShape, ShapeType{1}, std::optional<int32>{});
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, attributeMatrixPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
   const std::array<int32, 6> featureValues = {0, 1, 1, 7, 7, 7};
   auto featureIdsStoreWriteResult = featureIdsStore->copyFromBuffer(0, nonstd::span<const int32>(featureValues.data(), featureValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(featureIdsStoreWriteResult);
 }
 
-SilhouetteInputValues makeParityInputValues(const DataPath& maskPath, int32 metric)
+SilhouetteInputValues MakeParityInputValues(const DataPath& maskPath, int32 metric)
 {
   SilhouetteInputValues inputValues;
   inputValues.DistanceMetric = static_cast<ClusterUtilities::DistanceMetric>(metric);
@@ -86,25 +86,25 @@ SilhouetteInputValues makeParityInputValues(const DataPath& maskPath, int32 metr
 }
 
 template <typename MaskT>
-void addParityArrays(DataStructure& dataStructure, const StringLiteral& maskName, const std::array<MaskT, 6>& maskValues)
+void AddParityArrays(DataStructure& dataStructure, const StringLiteral& maskName, const std::array<MaskT, 6>& maskValues)
 {
-  const ShapeType k_TupleShape = {1, 1, 6};
+  const ShapeType kTupleShape = {1, 1, 6};
   auto& attributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(k_ParityMatrixPath);
-  auto outputStore = std::make_shared<DataStore<float64>>(k_TupleShape, ShapeType{1}, std::optional<float64>{});
+  auto outputStore = std::make_shared<DataStore<float64>>(kTupleShape, ShapeType{1}, std::optional<float64>{});
   REQUIRE(Float64Array::Create(dataStructure, "Silhouette", outputStore, attributeMatrix.getId()) != nullptr);
   outputStore->fill(42.0);
   if constexpr(std::is_same_v<MaskT, bool>)
   {
-    auto* mask = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, maskName, k_TupleShape, ShapeType{1}, attributeMatrix.getId());
-    REQUIRE(mask != nullptr);
-    auto maskWriteResult = mask->getDataStoreRef().copyFromBuffer(0, nonstd::span<const bool>(maskValues.data(), maskValues.size()));
+    auto* maskPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, maskName, kTupleShape, ShapeType{1}, attributeMatrix.getId());
+    REQUIRE(maskPtr != nullptr);
+    auto maskWriteResult = maskPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const bool>(maskValues.data(), maskValues.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
   }
   else
   {
-    auto maskStore = std::make_shared<DataStore<uint8>>(k_TupleShape, ShapeType{1}, std::optional<uint8>{});
-    auto* mask = UInt8Array::Create(dataStructure, maskName, maskStore, attributeMatrix.getId());
-    REQUIRE(mask != nullptr);
+    auto maskStore = std::make_shared<DataStore<uint8>>(kTupleShape, ShapeType{1}, std::optional<uint8>{});
+    auto* maskPtr = UInt8Array::Create(dataStructure, maskName, maskStore, attributeMatrix.getId());
+    REQUIRE(maskPtr != nullptr);
     auto maskStoreWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const uint8>(maskValues.data(), maskValues.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(maskStoreWriteResult);
   }
@@ -131,17 +131,17 @@ TEST_CASE("SimplnxCore::Silhouette: Direct and Scanline Bool UInt8 metric parity
       {
         CAPTURE(scenario);
         DataStructure dataStructure;
-        buildParityInput(dataStructure);
+        BuildParityInput(dataStructure);
         if(maskName.view() == "BoolMask")
         {
           const std::array<bool, 6> boolValues = {true, true, false, true, true, false};
-          addParityArrays(dataStructure, maskName, boolValues);
+          AddParityArrays(dataStructure, maskName, boolValues);
         }
         else
         {
-          addParityArrays(dataStructure, maskName, maskValues);
+          AddParityArrays(dataStructure, maskName, maskValues);
         }
-        auto values = makeParityInputValues(k_ParityMatrixPath.createChildPath(maskName), metric);
+        auto values = MakeParityInputValues(k_ParityMatrixPath.createChildPath(maskName), metric);
         UnitTest::AlgorithmTestScope scope(scenario);
         auto executeResult2 = scope.execute([&] { return Silhouette(dataStructure, {}, shouldCancel, &values)(); });
         SIMPLNX_RESULT_REQUIRE_VALID(executeResult2);
@@ -274,7 +274,7 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: SIMPL Backwards Compatibility", "[Simp
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -287,22 +287,22 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: SIMPL Backwards Compatibility", "[Simp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<SilhouetteFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<SilhouetteFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(SilhouetteFilter::k_DistanceMetric_Key) == 0);
       CHECK(args.value<bool>(SilhouetteFilter::k_UseMask_Key) == true);
       CHECK(args.value<DataPath>(SilhouetteFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -316,7 +316,7 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: SIMPL Backwards Compatibility", "[Simp
 namespace
 {
 template <typename T>
-void createRegressionArray(DataStructure& dataStructure, const std::string& name, const std::vector<T>& values, usize componentCount = 1)
+void CreateRegressionArray(DataStructure& dataStructure, const std::string& name, const std::vector<T>& values, usize componentCount = 1)
 {
   auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, DataPath({name}), {values.size() / componentCount}, {componentCount});
   REQUIRE(DataArray<T>::Create(dataStructure, name, store) != nullptr);
@@ -324,7 +324,7 @@ void createRegressionArray(DataStructure& dataStructure, const std::string& name
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 }
 
-Arguments makeRegressionArguments()
+Arguments MakeRegressionArguments()
 {
   auto args = SilhouetteFilter().getDefaultArguments();
   args.insertOrAssign(SilhouetteFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
@@ -344,10 +344,10 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: Sparse Feature Ids", "[SimplnxCore][Si
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
-  createRegressionArray<float64>(dataStructure, "Input", {0, 1, 10, 12});
-  createRegressionArray<int32>(dataStructure, "Cluster Ids", {3, 3, 7, 7});
+  CreateRegressionArray<float64>(dataStructure, "Input", {0, 1, 10, 12});
+  CreateRegressionArray<int32>(dataStructure, "Cluster Ids", {3, 3, 7, 7});
   SilhouetteFilter filter;
-  auto args = makeRegressionArguments();
+  auto args = MakeRegressionArguments();
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(DataPath({"Silhouette"})));
@@ -368,10 +368,10 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: Negative Cluster Ids", "[SimplnxCore][
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
-  createRegressionArray<float64>(dataStructure, "Input", {0, 1, 10, 12});
-  createRegressionArray<int32>(dataStructure, "Cluster Ids", {-1, 1, 1, 2});
+  CreateRegressionArray<float64>(dataStructure, "Input", {0, 1, 10, 12});
+  CreateRegressionArray<int32>(dataStructure, "Cluster Ids", {-1, 1, 1, 2});
   SilhouetteFilter filter;
-  auto args = makeRegressionArguments();
+  auto args = MakeRegressionArguments();
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == -54081);
@@ -385,10 +385,10 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: Cluster Zero Mean", "[SimplnxCore][Sil
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
-  createRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
-  createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
+  CreateRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
+  CreateRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
   SilhouetteFilter filter;
-  auto args = makeRegressionArguments();
+  auto args = MakeRegressionArguments();
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(DataPath({"Silhouette"})));
@@ -406,11 +406,11 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: Invalid Mask Tuple Count", "[SimplnxCo
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
-  createRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
-  createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
-  createRegressionArray<uint8>(dataStructure, "Mask", {1, 1, 1, 1, 1});
+  CreateRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
+  CreateRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
+  CreateRegressionArray<uint8>(dataStructure, "Mask", {1, 1, 1, 1, 1});
   SilhouetteFilter filter;
-  auto args = makeRegressionArguments();
+  auto args = MakeRegressionArguments();
   args.insertOrAssign(SilhouetteFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
@@ -422,23 +422,23 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: Invalid Component Shapes", "[SimplnxCo
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
-  createRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
+  CreateRegressionArray<float64>(dataStructure, "Input", {0, 2, 10, 11, 20, 24});
   std::string invalidArray;
   SECTION("Mask Array")
   {
     invalidArray = "Mask Array";
-    createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
-    createRegressionArray<uint8>(dataStructure, "Mask", std::vector<uint8>(12, 1), 2);
+    CreateRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 1, 1, 2, 2});
+    CreateRegressionArray<uint8>(dataStructure, "Mask", std::vector<uint8>(12, 1), 2);
   }
   SECTION("Cluster Ids")
   {
     invalidArray = "Cluster Ids";
-    createRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}, 2);
-    createRegressionArray<uint8>(dataStructure, "Mask", std::vector<uint8>(6, 1));
+    CreateRegressionArray<int32>(dataStructure, "Cluster Ids", {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}, 2);
+    CreateRegressionArray<uint8>(dataStructure, "Mask", std::vector<uint8>(6, 1));
   }
   CAPTURE(invalidArray);
   SilhouetteFilter filter;
-  auto args = makeRegressionArguments();
+  auto args = MakeRegressionArguments();
   args.insertOrAssign(SilhouetteFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);

@@ -24,23 +24,23 @@ TEST_CASE("ArgumentsTest")
   }
   SECTION("insert and retrieve class")
   {
-    const std::string k_FooValue = "value";
+    const std::string kFooValue = "value";
 
-    args.insert(k_FooKey, k_FooValue);
+    args.insert(k_FooKey, kFooValue);
 
     auto value = args.value<std::string>(k_FooKey);
 
-    REQUIRE(value == k_FooValue);
+    REQUIRE(value == kFooValue);
   }
   SECTION("valueRef test")
   {
-    const std::string k_FooValue = "value";
+    const std::string kFooValue = "value";
 
-    args.insert(k_FooKey, k_FooValue);
+    args.insert(k_FooKey, kFooValue);
 
     const auto& value = args.valueRef<std::string>(k_FooKey);
 
-    REQUIRE(value == k_FooValue);
+    REQUIRE(value == kFooValue);
   }
   SECTION("ref test")
   {

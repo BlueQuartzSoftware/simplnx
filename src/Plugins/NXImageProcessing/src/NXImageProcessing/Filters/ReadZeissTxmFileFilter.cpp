@@ -40,26 +40,26 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
   return options;
 }
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ReadZeissTxmFilterFileCache> s_HeaderCache;
-std::mutex s_HeaderCacheMutex;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ReadZeissTxmFilterFileCache> SHeaderCache;
+std::mutex SHeaderCacheMutex;
 } // namespace
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
 ReadZeissTxmFileFilter::ReadZeissTxmFileFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-  s_HeaderCache[m_InstanceId] = {};
+  std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ReadZeissTxmFileFilter::~ReadZeissTxmFileFilter() noexcept
 {
-  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-  s_HeaderCache.erase(m_InstanceId);
+  std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -153,8 +153,8 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   bool cacheValid = false;
   const auto currentTimeStamp = fs::last_write_time(pInputFilePathValue);
   {
-    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-    auto& cached = s_HeaderCache[m_InstanceId];
+    std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+    auto& cached = SHeaderCache[m_InstanceId];
     if(pInputFilePathValue == cached.inputFile && cached.timeStamp >= currentTimeStamp)
     {
       metadata = cached.metaData;
@@ -171,8 +171,8 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
     }
     metadata = metadataResult.value();
 
-    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
-    auto& cached = s_HeaderCache[m_InstanceId];
+    std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
+    auto& cached = SHeaderCache[m_InstanceId];
     cached.inputFile = pInputFilePathValue.string();
     cached.timeStamp = currentTimeStamp;
     cached.metaData = metadata;

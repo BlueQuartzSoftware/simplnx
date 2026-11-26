@@ -65,35 +65,35 @@ const DataPath k_ExemplarSSAListPath = k_FeatureAMPath.createChildPath(k_Exempla
 DataStructure CreateSingleVoxelDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 1}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 1}});
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{1, 1, 1}, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{1, 1, 1}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{2}, imageGeom->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{2}, imageGeomPtr->getId());
 
-  featureIds->setValue(0, 1);
+  featureIdsPtr->setValue(0, 1);
 
   // These arrays encode the complete analytical output for this fixture.
-  Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
-  exemplarBoundaryCells->setValue(0, 0);
+  Int8Array* exemplarBoundaryCellsPtr = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
+  exemplarBoundaryCellsPtr->setValue(0, 0);
 
-  BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarSurfaceFeatures->setValue(1, true);
+  BoolArray* exemplarSurfaceFeaturesPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarSurfaceFeaturesPtr->setValue(1, true);
 
-  Int32Array* exemplarNumNeighbors = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarNumNeighbors->setValue(1, 0);
+  Int32Array* exemplarNumNeighborsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarNumNeighborsPtr->setValue(1, 0);
 
-  Int32NeighborList* exemplarNeighborsList = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureData->getShape(), featureData->getId());
-  exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
+  Int32NeighborList* exemplarNeighborsListPtr = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarNeighborsListPtr->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
 
-  Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
-  exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  Float32NeighborList* exemplarSsaListPtr = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarSsaListPtr->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
 
   return dataStructure;
 }
@@ -105,14 +105,14 @@ DataStructure CreateSingleVoxelDataStructure()
  */
 void Fill1DImage(DataStructure& dataStructure, const ShapeType& imageShape)
 {
-  auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, imageShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, imageShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{5}, imageGeom->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{5}, imageGeomPtr->getId());
 
   // clang-format off
   const std::array<uint8, 7> featureIdsArray = {
@@ -120,44 +120,44 @@ void Fill1DImage(DataStructure& dataStructure, const ShapeType& imageShape)
   };
   // clang-format on
 
-  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  for(usize i = 0; i < featureIdsPtr->getNumberOfTuples(); i++)
   {
-    featureIds->setValue(i, featureIdsArray[i]);
+    featureIdsPtr->setValue(i, featureIdsArray[i]);
   }
 
   // These arrays encode the complete analytical output for this fixture.
-  Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
-  exemplarBoundaryCells->setValue(0, 1);
-  exemplarBoundaryCells->setValue(1, 1);
-  exemplarBoundaryCells->setValue(2, 0);
-  exemplarBoundaryCells->setValue(3, 1);
-  exemplarBoundaryCells->setValue(4, 1);
-  exemplarBoundaryCells->setValue(5, 0);
-  exemplarBoundaryCells->setValue(6, 0);
+  Int8Array* exemplarBoundaryCellsPtr = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
+  exemplarBoundaryCellsPtr->setValue(0, 1);
+  exemplarBoundaryCellsPtr->setValue(1, 1);
+  exemplarBoundaryCellsPtr->setValue(2, 0);
+  exemplarBoundaryCellsPtr->setValue(3, 1);
+  exemplarBoundaryCellsPtr->setValue(4, 1);
+  exemplarBoundaryCellsPtr->setValue(5, 0);
+  exemplarBoundaryCellsPtr->setValue(6, 0);
 
-  BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarSurfaceFeatures->setValue(1, true);
-  exemplarSurfaceFeatures->setValue(2, false);
-  exemplarSurfaceFeatures->setValue(3, false);
-  exemplarSurfaceFeatures->setValue(4, true);
+  BoolArray* exemplarSurfaceFeaturesPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarSurfaceFeaturesPtr->setValue(1, true);
+  exemplarSurfaceFeaturesPtr->setValue(2, false);
+  exemplarSurfaceFeaturesPtr->setValue(3, false);
+  exemplarSurfaceFeaturesPtr->setValue(4, true);
 
-  Int32Array* exemplarNumNeighbors = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarNumNeighbors->setValue(1, 1);
-  exemplarNumNeighbors->setValue(2, 2);
-  exemplarNumNeighbors->setValue(3, 1);
-  exemplarNumNeighbors->setValue(4, 0);
+  Int32Array* exemplarNumNeighborsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarNumNeighborsPtr->setValue(1, 1);
+  exemplarNumNeighborsPtr->setValue(2, 2);
+  exemplarNumNeighborsPtr->setValue(3, 1);
+  exemplarNumNeighborsPtr->setValue(4, 0);
 
-  Int32NeighborList* exemplarNeighborsList = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureData->getShape(), featureData->getId());
-  exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
-  exemplarNeighborsList->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 3}));
-  exemplarNeighborsList->setList(3, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
-  exemplarNeighborsList->setList(4, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
+  Int32NeighborList* exemplarNeighborsListPtr = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarNeighborsListPtr->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
+  exemplarNeighborsListPtr->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 3}));
+  exemplarNeighborsListPtr->setList(3, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
+  exemplarNeighborsListPtr->setList(4, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
 
-  Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
-  exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{1.0f}));
-  exemplarSSAList->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{1.0f, 1.0f}));
-  exemplarSSAList->setList(3, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{1.0f}));
-  exemplarSSAList->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  Float32NeighborList* exemplarSsaListPtr = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarSsaListPtr->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{1.0f}));
+  exemplarSsaListPtr->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{1.0f, 1.0f}));
+  exemplarSsaListPtr->setList(3, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{1.0f}));
+  exemplarSsaListPtr->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
 }
 
 /**
@@ -167,10 +167,10 @@ void Fill1DImage(DataStructure& dataStructure, const ShapeType& imageShape)
 DataStructure Create1DZDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 2.2f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 7}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 2.2f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 7}});
 
   Fill1DImage(dataStructure, ShapeType{1, 1, 7});
 
@@ -184,10 +184,10 @@ DataStructure Create1DZDataStructure()
 DataStructure Create1DYDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 7, 1}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{1, 7, 1}});
 
   Fill1DImage(dataStructure, ShapeType{1, 7, 1});
 
@@ -201,10 +201,10 @@ DataStructure Create1DYDataStructure()
 DataStructure Create1DXDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{7, 1, 1}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{7, 1, 1}});
 
   Fill1DImage(dataStructure, ShapeType{7, 1, 1});
 
@@ -218,14 +218,14 @@ DataStructure Create1DXDataStructure()
  */
 void Fill2DImage(DataStructure& dataStructure, const ShapeType& imageShape)
 {
-  auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, imageShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, imageShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{6}, imageGeom->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{6}, imageGeomPtr->getId());
 
   // clang-format off
   const std::array<uint8, 25> featureIdsArray = {
@@ -237,66 +237,66 @@ void Fill2DImage(DataStructure& dataStructure, const ShapeType& imageShape)
   };
   // clang-format on
 
-  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  for(usize i = 0; i < featureIdsPtr->getNumberOfTuples(); i++)
   {
-    featureIds->setValue(i, featureIdsArray[i]);
+    featureIdsPtr->setValue(i, featureIdsArray[i]);
   }
 
   // These arrays encode the complete analytical output for this fixture.
-  Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
-  exemplarBoundaryCells->setValue(0, 2);
-  exemplarBoundaryCells->setValue(1, 2);
-  exemplarBoundaryCells->setValue(2, 0);
-  exemplarBoundaryCells->setValue(3, 2);
-  exemplarBoundaryCells->setValue(4, 2);
-  exemplarBoundaryCells->setValue(5, 3);
-  exemplarBoundaryCells->setValue(6, 4);
-  exemplarBoundaryCells->setValue(7, 3);
-  exemplarBoundaryCells->setValue(8, 4);
-  exemplarBoundaryCells->setValue(9, 3);
-  exemplarBoundaryCells->setValue(10, 3);
-  exemplarBoundaryCells->setValue(11, 4);
-  exemplarBoundaryCells->setValue(12, 4);
-  exemplarBoundaryCells->setValue(13, 4);
-  exemplarBoundaryCells->setValue(14, 2);
-  exemplarBoundaryCells->setValue(15, 3);
-  exemplarBoundaryCells->setValue(16, 4);
-  exemplarBoundaryCells->setValue(17, 4);
-  exemplarBoundaryCells->setValue(18, 2);
-  exemplarBoundaryCells->setValue(19, 0);
-  exemplarBoundaryCells->setValue(20, 2);
-  exemplarBoundaryCells->setValue(21, 3);
-  exemplarBoundaryCells->setValue(22, 2);
-  exemplarBoundaryCells->setValue(23, 0);
-  exemplarBoundaryCells->setValue(24, 0);
+  Int8Array* exemplarBoundaryCellsPtr = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
+  exemplarBoundaryCellsPtr->setValue(0, 2);
+  exemplarBoundaryCellsPtr->setValue(1, 2);
+  exemplarBoundaryCellsPtr->setValue(2, 0);
+  exemplarBoundaryCellsPtr->setValue(3, 2);
+  exemplarBoundaryCellsPtr->setValue(4, 2);
+  exemplarBoundaryCellsPtr->setValue(5, 3);
+  exemplarBoundaryCellsPtr->setValue(6, 4);
+  exemplarBoundaryCellsPtr->setValue(7, 3);
+  exemplarBoundaryCellsPtr->setValue(8, 4);
+  exemplarBoundaryCellsPtr->setValue(9, 3);
+  exemplarBoundaryCellsPtr->setValue(10, 3);
+  exemplarBoundaryCellsPtr->setValue(11, 4);
+  exemplarBoundaryCellsPtr->setValue(12, 4);
+  exemplarBoundaryCellsPtr->setValue(13, 4);
+  exemplarBoundaryCellsPtr->setValue(14, 2);
+  exemplarBoundaryCellsPtr->setValue(15, 3);
+  exemplarBoundaryCellsPtr->setValue(16, 4);
+  exemplarBoundaryCellsPtr->setValue(17, 4);
+  exemplarBoundaryCellsPtr->setValue(18, 2);
+  exemplarBoundaryCellsPtr->setValue(19, 0);
+  exemplarBoundaryCellsPtr->setValue(20, 2);
+  exemplarBoundaryCellsPtr->setValue(21, 3);
+  exemplarBoundaryCellsPtr->setValue(22, 2);
+  exemplarBoundaryCellsPtr->setValue(23, 0);
+  exemplarBoundaryCellsPtr->setValue(24, 0);
 
-  BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarSurfaceFeatures->setValue(1, true);
-  exemplarSurfaceFeatures->setValue(2, true);
-  exemplarSurfaceFeatures->setValue(3, false);
-  exemplarSurfaceFeatures->setValue(4, false);
-  exemplarSurfaceFeatures->setValue(5, true);
+  BoolArray* exemplarSurfaceFeaturesPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarSurfaceFeaturesPtr->setValue(1, true);
+  exemplarSurfaceFeaturesPtr->setValue(2, true);
+  exemplarSurfaceFeaturesPtr->setValue(3, false);
+  exemplarSurfaceFeaturesPtr->setValue(4, false);
+  exemplarSurfaceFeaturesPtr->setValue(5, true);
 
-  Int32Array* exemplarNumNeighbors = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarNumNeighbors->setValue(1, 1);
-  exemplarNumNeighbors->setValue(2, 3);
-  exemplarNumNeighbors->setValue(3, 1);
-  exemplarNumNeighbors->setValue(4, 1);
-  exemplarNumNeighbors->setValue(5, 0);
+  Int32Array* exemplarNumNeighborsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarNumNeighborsPtr->setValue(1, 1);
+  exemplarNumNeighborsPtr->setValue(2, 3);
+  exemplarNumNeighborsPtr->setValue(3, 1);
+  exemplarNumNeighborsPtr->setValue(4, 1);
+  exemplarNumNeighborsPtr->setValue(5, 0);
 
-  Int32NeighborList* exemplarNeighborsList = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureData->getShape(), featureData->getId());
-  exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
-  exemplarNeighborsList->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 3, 4}));
-  exemplarNeighborsList->setList(3, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
-  exemplarNeighborsList->setList(4, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
-  exemplarNeighborsList->setList(5, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
+  Int32NeighborList* exemplarNeighborsListPtr = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarNeighborsListPtr->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
+  exemplarNeighborsListPtr->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 3, 4}));
+  exemplarNeighborsListPtr->setList(3, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
+  exemplarNeighborsListPtr->setList(4, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
+  exemplarNeighborsListPtr->setList(5, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
 
-  Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
-  exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{22.6f}));
-  exemplarSSAList->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{22.6f, 6.8f, 23.8f}));
-  exemplarSSAList->setList(3, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{6.8f}));
-  exemplarSSAList->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{23.8f}));
-  exemplarSSAList->setList(5, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  Float32NeighborList* exemplarSsaListPtr = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarSsaListPtr->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{22.6f}));
+  exemplarSsaListPtr->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{22.6f, 6.8f, 23.8f}));
+  exemplarSsaListPtr->setList(3, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{6.8f}));
+  exemplarSsaListPtr->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{23.8f}));
+  exemplarSsaListPtr->setList(5, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
 }
 
 /**
@@ -306,10 +306,10 @@ void Fill2DImage(DataStructure& dataStructure, const ShapeType& imageShape)
 DataStructure Create2DEmptyZDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.2f, 1.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 1}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.2f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 1}});
 
   Fill2DImage(dataStructure, ShapeType{5, 5, 1});
 
@@ -323,10 +323,10 @@ DataStructure Create2DEmptyZDataStructure()
 DataStructure Create2DEmptyYDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.2f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 1, 5}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.0f, 1.2f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{5, 1, 5}});
 
   Fill2DImage(dataStructure, ShapeType{5, 1, 5});
 
@@ -340,10 +340,10 @@ DataStructure Create2DEmptyYDataStructure()
 DataStructure Create2DEmptyXDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.2f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 5, 5}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.2f, 1.2f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{1, 5, 5}});
 
   Fill2DImage(dataStructure, ShapeType{1, 5, 5});
 
@@ -361,52 +361,52 @@ DataStructure Create2DEmptyXDataStructure()
  */
 void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imageShape, float32 expectedBoundaryFaceArea)
 {
-  auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, imageShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, imageShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3}, imageGeom->getId());
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3}, imageGeomPtr->getId());
 
   // The first three indices form feature row 1. The next three form feature row 2.
-  const usize totalVoxels = featureIds->getNumberOfTuples();
+  const usize totalVoxels = featureIdsPtr->getNumberOfTuples();
   REQUIRE(totalVoxels == 6);
   for(usize i = 0; i < 3; i++)
   {
-    featureIds->setValue(i, 1);
+    featureIdsPtr->setValue(i, 1);
   }
   for(usize i = 3; i < 6; i++)
   {
-    featureIds->setValue(i, 2);
+    featureIdsPtr->setValue(i, 2);
   }
 
   // Each cell touches the feature interface through exactly one face.
-  Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int8Array* exemplarBoundaryCellsPtr = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
   for(usize i = 0; i < 6; i++)
   {
-    exemplarBoundaryCells->setValue(i, 1);
+    exemplarBoundaryCellsPtr->setValue(i, 1);
   }
 
   // Both features touch the image boundary and are surface features.
-  BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarSurfaceFeatures->setValue(1, true);
-  exemplarSurfaceFeatures->setValue(2, true);
+  BoolArray* exemplarSurfaceFeaturesPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarSurfaceFeaturesPtr->setValue(1, true);
+  exemplarSurfaceFeaturesPtr->setValue(2, true);
 
-  Int32Array* exemplarNumNeighbors = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarNumNeighbors->setValue(1, 1);
-  exemplarNumNeighbors->setValue(2, 1);
+  Int32Array* exemplarNumNeighborsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarNumNeighborsPtr->setValue(1, 1);
+  exemplarNumNeighborsPtr->setValue(2, 1);
 
-  Int32NeighborList* exemplarNeighborsList = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureData->getShape(), featureData->getId());
-  exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
-  exemplarNeighborsList->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1}));
+  Int32NeighborList* exemplarNeighborsListPtr = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarNeighborsListPtr->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
+  exemplarNeighborsListPtr->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1}));
 
   // Three cells on each side contribute one face, so shared area equals three face areas.
   // An incorrect row stride misses one face and produces only two face areas.
   const float32 expectedSSA = 3.0f * expectedBoundaryFaceArea;
-  Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
-  exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
-  exemplarSSAList->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
+  Float32NeighborList* exemplarSsaListPtr = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarSsaListPtr->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
+  exemplarSsaListPtr->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
 }
 
 /**
@@ -416,11 +416,11 @@ void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imag
 DataStructure Create2DNonSquareEmptyZDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
   // The correct row stride is dimension 0 with length 3, not dimension 1 with length 2.
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 3.0f, 1.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 2, 1}});
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 3.0f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{3, 2, 1}});
   // A Y-normal boundary face has area `spacing[0] * spacing[2]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{3, 2, 1}, 2.0f);
   return dataStructure;
@@ -433,10 +433,10 @@ DataStructure Create2DNonSquareEmptyZDataStructure()
 DataStructure Create2DNonSquareEmptyYDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 1.0f, 3.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 1, 2}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 1.0f, 3.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{3, 1, 2}});
   // A Z-normal boundary face has area `spacing[0] * spacing[1]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{3, 1, 2}, 2.0f);
   return dataStructure;
@@ -449,10 +449,10 @@ DataStructure Create2DNonSquareEmptyYDataStructure()
 DataStructure Create2DNonSquareEmptyXDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.0f, 3.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 3, 2}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.0f, 3.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{1, 3, 2}});
   // A Z-normal boundary face has area `spacing[0] * spacing[1]`, which is 2.
   FillNonSquare2DFeatures(dataStructure, ShapeType{1, 3, 2}, 2.0f);
   return dataStructure;
@@ -465,17 +465,17 @@ DataStructure Create2DNonSquareEmptyXDataStructure()
 DataStructure Create3DDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.8f, 2.2f, 1.2f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 5}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.8f, 2.2f, 1.2f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 5}});
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{7}, imageGeom->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{7}, imageGeomPtr->getId());
 
   // clang-format off
   const std::array<uint8, 125> featureIdsArray = {
@@ -511,13 +511,13 @@ DataStructure Create3DDataStructure()
   };
   // clang-format on
 
-  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  for(usize i = 0; i < featureIdsPtr->getNumberOfTuples(); i++)
   {
-    featureIds->setValue(i, featureIdsArray[i]);
+    featureIdsPtr->setValue(i, featureIdsArray[i]);
   }
 
   // These arrays encode the complete analytical output for this fixture.
-  Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int8Array* exemplarBoundaryCellsPtr = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
   // clang-format off
   const std::array<int8, 125> boundaryCellsArray = {
@@ -553,42 +553,42 @@ DataStructure Create3DDataStructure()
   };
   // clang-format on
 
-  for(usize i = 0; i < exemplarBoundaryCells->getNumberOfTuples(); i++)
+  for(usize i = 0; i < exemplarBoundaryCellsPtr->getNumberOfTuples(); i++)
   {
-    exemplarBoundaryCells->setValue(i, boundaryCellsArray[i]);
+    exemplarBoundaryCellsPtr->setValue(i, boundaryCellsArray[i]);
   }
 
-  BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarSurfaceFeatures->setValue(1, true);
-  exemplarSurfaceFeatures->setValue(2, true);
-  exemplarSurfaceFeatures->setValue(3, true);
-  exemplarSurfaceFeatures->setValue(4, true);
-  exemplarSurfaceFeatures->setValue(5, true);
-  exemplarSurfaceFeatures->setValue(6, false);
+  BoolArray* exemplarSurfaceFeaturesPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarSurfaceFeaturesPtr->setValue(1, true);
+  exemplarSurfaceFeaturesPtr->setValue(2, true);
+  exemplarSurfaceFeaturesPtr->setValue(3, true);
+  exemplarSurfaceFeaturesPtr->setValue(4, true);
+  exemplarSurfaceFeaturesPtr->setValue(5, true);
+  exemplarSurfaceFeaturesPtr->setValue(6, false);
 
-  Int32Array* exemplarNumNeighbors = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureData->getShape(), ShapeType{1}, featureData->getId());
-  exemplarNumNeighbors->setValue(1, 4);
-  exemplarNumNeighbors->setValue(2, 4);
-  exemplarNumNeighbors->setValue(3, 4);
-  exemplarNumNeighbors->setValue(4, 4);
-  exemplarNumNeighbors->setValue(5, 0);
-  exemplarNumNeighbors->setValue(6, 4);
+  Int32Array* exemplarNumNeighborsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  exemplarNumNeighborsPtr->setValue(1, 4);
+  exemplarNumNeighborsPtr->setValue(2, 4);
+  exemplarNumNeighborsPtr->setValue(3, 4);
+  exemplarNumNeighborsPtr->setValue(4, 4);
+  exemplarNumNeighborsPtr->setValue(5, 0);
+  exemplarNumNeighborsPtr->setValue(6, 4);
 
-  Int32NeighborList* exemplarNeighborsList = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureData->getShape(), featureData->getId());
-  exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2, 3, 4, 6}));
-  exemplarNeighborsList->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 3, 4, 6}));
-  exemplarNeighborsList->setList(3, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 4, 6}));
-  exemplarNeighborsList->setList(4, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 3, 6}));
-  exemplarNeighborsList->setList(5, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
-  exemplarNeighborsList->setList(6, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 3, 4}));
+  Int32NeighborList* exemplarNeighborsListPtr = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarNeighborsListPtr->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2, 3, 4, 6}));
+  exemplarNeighborsListPtr->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 3, 4, 6}));
+  exemplarNeighborsListPtr->setList(3, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 4, 6}));
+  exemplarNeighborsListPtr->setList(4, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 3, 6}));
+  exemplarNeighborsListPtr->setList(5, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
+  exemplarNeighborsListPtr->setList(6, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 3, 4}));
 
-  Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
-  exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{98.88f, 44.16f, 46.80f, 24.96f}));
-  exemplarSSAList->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{98.88f, 21.00f, 19.32f, 11.88f}));
-  exemplarSSAList->setList(3, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{44.16f, 21.00f, 25.80f, 15.36f}));
-  exemplarSSAList->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{46.80f, 19.32f, 25.80f, 16.20f}));
-  exemplarSSAList->setList(5, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
-  exemplarSSAList->setList(6, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{24.96f, 11.88f, 15.36f, 16.20f}));
+  Float32NeighborList* exemplarSsaListPtr = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureDataPtr->getShape(), featureDataPtr->getId());
+  exemplarSsaListPtr->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{98.88f, 44.16f, 46.80f, 24.96f}));
+  exemplarSsaListPtr->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{98.88f, 21.00f, 19.32f, 11.88f}));
+  exemplarSsaListPtr->setList(3, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{44.16f, 21.00f, 25.80f, 15.36f}));
+  exemplarSsaListPtr->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{46.80f, 19.32f, 25.80f, 16.20f}));
+  exemplarSsaListPtr->setList(5, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  exemplarSsaListPtr->setList(6, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{24.96f, 11.88f, 15.36f, 16.20f}));
 
   return dataStructure;
 }
@@ -1227,7 +1227,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1240,22 +1240,22 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureNeighborsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureNeighborsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeFeatureNeighborsFilter::k_StoreBoundary_Key) == true);
       CHECK(args.value<bool>(ComputeFeatureNeighborsFilter::k_StoreSurface_Key) == true);
       CHECK(args.value<DataPath>(ComputeFeatureNeighborsFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));

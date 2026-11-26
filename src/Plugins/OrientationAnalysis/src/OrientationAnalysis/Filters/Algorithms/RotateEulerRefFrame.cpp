@@ -94,6 +94,6 @@ bool RotateEulerRefFrame::shouldCancel() const
 
 void RotateEulerRefFrame::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }

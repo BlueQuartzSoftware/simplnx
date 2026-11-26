@@ -20,25 +20,25 @@ namespace rt = recon_test;
 
 namespace
 {
-using CurvatureAnisoFilter = CurvatureAnisotropicDiffusionImageFilter;
+using CurvatureAnisoFilterType = CurvatureAnisotropicDiffusionImageFilter;
 
 // Sets the standard geom/input/output keys + TimeStep/ConductanceParameter/ConductanceScalingUpdateInterval/
 // NumberOfIterations on a shared Arguments, runs preflight + execute, and requires both succeed.
-void RunCurvatureAniso(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float64 timeStep, float64 conductanceParameter, uint32 conductanceScalingUpdateInterval,
+void RunCurvatureAniso(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 timeStep, float64 conductanceParameter, uint32 conductanceScalingUpdateInterval,
                        uint32 numberOfIterations, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(CurvatureAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(CurvatureAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(CurvatureAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(CurvatureAnisoFilter::k_TimeStep_Key, std::make_any<float64>(timeStep));
-  args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(conductanceParameter));
-  args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(conductanceScalingUpdateInterval));
-  args.insertOrAssign(CurvatureAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
-  auto preflightResult = filter.preflight(ds, args);
+  args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(timeStep));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(conductanceParameter));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(conductanceScalingUpdateInterval));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -79,69 +79,69 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: prefligh
     // BEFORE preflightImpl/PreflightImageFilter ever runs -- so this asserts rejection, not a specific error code
     // (unlike the multi-component case below, which int32 with 1 component sails past that parameter check and is
     // rejected inside PreflightImageFilter itself, where the code IS stable).
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int32> field = MakeRamp<int32>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, field);
-    CurvatureAnisoFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, field);
+    CurvatureAnisoFilterType filter;
     Arguments args;
-    args.insertOrAssign(CurvatureAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(CurvatureAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(CurvatureAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CurvatureAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.0625));
-    args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-    args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-    args.insertOrAssign(CurvatureAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    const auto result = filter.preflight(ds, args);
+    args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.0625));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   }
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, std::vector<float32>(36, 0.0f));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 0.0f));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<float32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<float32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<float32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    CurvatureAnisoFilter filter;
+    CurvatureAnisoFilterType filter;
     Arguments args;
-    args.insertOrAssign(CurvatureAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(CurvatureAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(CurvatureAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CurvatureAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.0625));
-    args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-    args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-    args.insertOrAssign(CurvatureAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    const auto result = filter.preflight(ds, args);
+    args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.0625));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar float input creates a SameAsInput output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = MakeRamp<float32>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, field);
-    CurvatureAnisoFilter filter;
-    RunCurvatureAniso(filter, ds, inputPath, 0.0625, 3.0, 1u, 5u);
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, field);
+    CurvatureAnisoFilterType filter;
+    RunCurvatureAniso(filter, dataStructure, inputPath, 0.0625, 3.0, 1u, 5u);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
   }
   SECTION("over-large TimeStep is VALID but carries a stability warning")
   {
     // effDim==2 (Z==1), unit spacing -> stable bound = 1/2^3 = 0.125. 0.5 is well above that.
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = MakeRamp<float32>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, field);
-    CurvatureAnisoFilter filter;
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, field);
+    CurvatureAnisoFilterType filter;
     Arguments args;
-    args.insertOrAssign(CurvatureAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-    args.insertOrAssign(CurvatureAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(CurvatureAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CurvatureAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.5));
-    args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-    args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-    args.insertOrAssign(CurvatureAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    const auto result = filter.preflight(ds, args);
+    args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.5));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+    args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
     REQUIRE_FALSE(result.outputActions.warnings().empty());
     REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
@@ -171,8 +171,8 @@ void RunCurvatureAnisoItkGolden(float64 timeStep, std::optional<uint32> numberOf
   const DataPath output = cellData.createChildPath("Output");
 
   // --- read input through OUR ITK-free reader ---
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Float.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Float.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   // --- run OUR filter with the ITK case's params ---
@@ -186,20 +186,20 @@ void RunCurvatureAnisoItkGolden(float64 timeStep, std::optional<uint32> numberOf
     args.insertOrAssign(CurvatureAnisotropicDiffusionImageFilter::k_NumberOfIterations_Key, std::make_any<uint32>(*numberOfIterations));
   }
   CurvatureAnisotropicDiffusionImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- (A) DURABLE golden: compare to ITK's committed baseline at tol 0.1 (SameAsInput output is owned by 'geom') ---
   const DataPath bGeom({"Baseline Geometry"});
-  const auto readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
+  const auto readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.1);
+  const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.1);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -232,16 +232,16 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: constant
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 7.0f));
-  CurvatureAnisoFilter filter;
-  RunCurvatureAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/5u);
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 7.0f));
+  CurvatureAnisoFilterType filter;
+  RunCurvatureAniso(filter, dataStructure, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/5u);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  rt::RequireExact<float32>(ds.getDataRefAs<IDataArray>(outputPath), ds.getDataRefAs<IDataArray>(inputPath));
+  rt::RequireExact<float32>(dataStructure.getDataRefAs<IDataArray>(outputPath), dataStructure.getDataRefAs<IDataArray>(inputPath));
 }
 
 // -----------------------------------------------------------------------------
@@ -255,21 +255,21 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-lar
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6;
-  constexpr usize DY = 6;
-  constexpr usize DZ = 6;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  CurvatureAnisoFilter filter;
+  constexpr usize k_Dx = 6;
+  constexpr usize k_Dy = 6;
+  constexpr usize k_Dz = 6;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  CurvatureAnisoFilterType filter;
   Arguments args;
-  args.insertOrAssign(CurvatureAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-  args.insertOrAssign(CurvatureAnisoFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(CurvatureAnisoFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(CurvatureAnisoFilter::k_TimeStep_Key, std::make_any<float64>(0.5));
-  args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
-  args.insertOrAssign(CurvatureAnisoFilter::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
-  args.insertOrAssign(CurvatureAnisoFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-  const auto result = filter.preflight(ds, args);
+  args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_TimeStep_Key, std::make_any<float64>(0.5));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceParameter_Key, std::make_any<float64>(3.0));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
+  args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+  const auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   REQUIRE_FALSE(result.outputActions.warnings().empty());
   REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
@@ -286,16 +286,16 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero con
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  CurvatureAnisoFilter filter;
-  RunCurvatureAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/0u, /*numberOfIterations=*/5u);
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  CurvatureAnisoFilterType filter;
+  RunCurvatureAniso(filter, dataStructure, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/0u, /*numberOfIterations=*/5u);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
+  REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float32);
 }
 
 // -----------------------------------------------------------------------------
@@ -307,14 +307,14 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero ite
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 8;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  CurvatureAnisoFilter filter;
-  RunCurvatureAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/0u);
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  CurvatureAnisoFilterType filter;
+  RunCurvatureAniso(filter, dataStructure, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/0u);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  rt::RequireExact<float32>(ds.getDataRefAs<IDataArray>(outputPath), ds.getDataRefAs<IDataArray>(inputPath));
+  rt::RequireExact<float32>(dataStructure.getDataRefAs<IDataArray>(outputPath), dataStructure.getDataRefAs<IDataArray>(inputPath));
 }

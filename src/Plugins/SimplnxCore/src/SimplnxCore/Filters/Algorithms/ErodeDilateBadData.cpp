@@ -45,7 +45,7 @@ Result<> ErodeDilateBadData::operator()()
   // these offsets yields the flat index of the corresponding face neighbor.
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
@@ -221,7 +221,7 @@ Result<> ErodeDilateBadData::operator()()
                 inSlice                                          // +Z
             };
 
-            for(const auto& faceIndex : faceNeighborInternalIdx)
+            for(const auto& faceIndex : k_FaceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
               {
@@ -258,7 +258,7 @@ Result<> ErodeDilateBadData::operator()()
             // array is clean for the next bad voxel (avoids a full memset).
             if(m_InputValues->Operation == detail::k_ErodeIndex)
             {
-              for(const auto& faceIndex : faceNeighborInternalIdx)
+              for(const auto& faceIndex : k_FaceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
                 {
@@ -305,6 +305,6 @@ Result<> ErodeDilateBadData::operator()()
 
 void ErodeDilateBadData::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementCount(counter);
 }

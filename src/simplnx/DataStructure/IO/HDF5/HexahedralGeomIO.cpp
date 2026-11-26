@@ -23,14 +23,14 @@ std::string HexahedralGeomIO::getTypeName() const
 Result<> HexahedralGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* geom = HexahedralGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
-  return INodeGeom3dIO::ReadNodeGeom3dData(structureReader, *geom, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  auto* geomPtr = HexahedralGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  return INodeGeom3dIO::ReadNodeGeom3dData(structureReader, *geomPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
 Result<> HexahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
 {
-  auto* geometry = dataStructure.getDataAs<HexahedralGeom>(dataPath);
-  if(geometry == nullptr)
+  auto* geometryPtr = dataStructure.getDataAs<HexahedralGeom>(dataPath);
+  if(geometryPtr == nullptr)
   {
     return MakeErrorResult(-25070, fmt::format("Failed to finish importing geometry at path '{}'. Geometry does not exist or is of wrong type.", dataPath.toString()));
   }

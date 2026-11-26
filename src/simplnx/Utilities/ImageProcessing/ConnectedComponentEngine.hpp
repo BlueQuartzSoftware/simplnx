@@ -335,16 +335,16 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
 
   plan.useTiles = true;
   plan.coreRows = 1;
-  constexpr usize haloBytes = 2 * sizeof(uint32);
+  constexpr usize k_HaloBytes = 2 * sizeof(uint32);
   const usize bytesPerColumn = sizeof(T) + 2 * sizeof(uint32);
-  if(haloBytes > targetBytes || bytesPerColumn > targetBytes - haloBytes)
+  if(k_HaloBytes > targetBytes || bytesPerColumn > targetBytes - k_HaloBytes)
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(
         -8374, fmt::format("Connected-component true-2-D tiled plan cannot fit one input/provisional column and previous-row halos for dimensions {} x {} in {} bytes.", dimX, dimY, targetBytes));
   }
-  plan.coreColumns = std::min(dimX, (targetBytes - haloBytes) / bytesPerColumn);
+  plan.coreColumns = std::min(dimX, (targetBytes - k_HaloBytes) / bytesPerColumn);
   usize tileColumnBytes = 0;
-  if(plan.coreColumns == 0 || !ConnectedComponentCheckedMultiply(plan.coreColumns, bytesPerColumn, tileColumnBytes) || !ConnectedComponentCheckedAdd(haloBytes, tileColumnBytes, plan.residentBytes))
+  if(plan.coreColumns == 0 || !ConnectedComponentCheckedMultiply(plan.coreColumns, bytesPerColumn, tileColumnBytes) || !ConnectedComponentCheckedAdd(k_HaloBytes, tileColumnBytes, plan.residentBytes))
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(-8374, fmt::format("Connected-component true-2-D tiled plan overflowed for dimensions {} x {} and {}-byte input values.", dimX, dimY, sizeof(T)));
   }
@@ -609,14 +609,14 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
                                const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ProgressCallback& reportProgress)
 {
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  if(nX == 0 || nY == 0 || nZ == 0)
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  if(nX == 0 || ny == 0 || nz == 0)
   {
     return {};
   }
-  const usize nYu = static_cast<usize>(nY);
-  const usize nZu = static_cast<usize>(nZ);
+  const usize nYu = static_cast<usize>(ny);
+  const usize nZu = static_cast<usize>(nz);
   const usize sliceValues = static_cast<usize>(nX) * nYu;
 
   // Size a bounded read-ahead band so each input read presents multiple whole Z-plane chunks instead of exactly
@@ -660,7 +660,7 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
   usize bandFirstZ = 0;       // first Z-plane index currently resident in planeBand
   usize bandLoadedPlanes = 0; // number of planes currently resident in planeBand, starting at bandFirstZ
 
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {
@@ -679,7 +679,7 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
         return r;
       }
     }
-    const T* planeData = planeBand.data() + (zu - bandFirstZ) * sliceValues;
+    const T* planeDataPtr = planeBand.data() + (zu - bandFirstZ) * sliceValues;
     if(provisional != nullptr)
     {
       std::fill(provPlane.begin(), provPlane.end(), 0u);
@@ -695,7 +695,7 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
           return;
         }
         const usize rowOffset = y * static_cast<usize>(nX);
-        EncodeLineGeometryInto<T, Pred>(nonstd::span<const T>(planeData + rowOffset, static_cast<usize>(nX)), nX, localPredicate, curPlane[y]);
+        EncodeLineGeometryInto<T, Pred>(nonstd::span<const T>(planeDataPtr + rowOffset, static_cast<usize>(nX)), nX, localPredicate, curPlane[y]);
       }
     };
     parallelRows.execute(encodeRows);
@@ -704,7 +704,7 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
       return {};
     }
 
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       const usize rowOffset = static_cast<usize>(y) * static_cast<usize>(nX);
       CcLine& line = curPlane[static_cast<usize>(y)];
@@ -1246,8 +1246,8 @@ Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedCompo
     std::shared_ptr<AbstractDataStore<uint32>> tileProvisionalOwner;
     std::unique_ptr<SweepTemporaryStore<uint32>> tileFixedRecords;
     std::unique_ptr<ConnectedComponentProvisionalStore> tileAdapter;
-    ConnectedComponentProvisionalStore* tileProvisional = provisional;
-    if(tileProvisional == nullptr)
+    ConnectedComponentProvisionalStore* tileProvisionalPtr = provisional;
+    if(tileProvisionalPtr == nullptr)
     {
       if(inStore.getStoreType() == IDataStore::StoreType::OutOfCore && DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
       {
@@ -1267,13 +1267,13 @@ Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedCompo
           tileAdapter = std::make_unique<ConnectedComponentProvisionalStore>(*tileProvisionalOwner);
         }
       }
-      tileProvisional = tileAdapter.get();
+      tileProvisionalPtr = tileAdapter.get();
     }
-    if(tileProvisional == nullptr)
+    if(tileProvisionalPtr == nullptr)
     {
       return MakeErrorResult(-8375, fmt::format("Connected-component true-2-D tiled count failed to create its {}-value provisional-label scratch store.", dims[0] * dims[1]));
     }
-    return Pass1TwoDimensionalTiles(inStore, *tileProvisional, dims, pred, fullyConnected, shouldCancel, uf, sizeByLabel, plan, reportProgress);
+    return Pass1TwoDimensionalTiles(inStore, *tileProvisionalPtr, dims, pred, fullyConnected, shouldCancel, uf, sizeByLabel, plan, reportProgress);
   }
   return Pass1TwoDimensionalBlocks(inStore, provisional, dims, pred, fullyConnected, shouldCancel, uf, sizeByLabel, plan, reportProgress);
 }
@@ -1342,8 +1342,8 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
     }
   }
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
 
   std::optional<detail::ConnectedComponentProvisionalSelection> provisionalSelection;
   std::shared_ptr<AbstractDataStore<uint32>> provisionalDataStore;
@@ -1371,8 +1371,8 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
   }
 
   detail::CcUnionFind uf;
-  beginProgressPhase("Labeling Connected Components", nZ == 1 ? vol : static_cast<usize>(nZ));
-  Result<> pass1Result = nZ == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, target2DBytes, reportPercent) :
+  beginProgressPhase("Labeling Connected Components", nz == 1 ? vol : static_cast<usize>(nz));
+  Result<> pass1Result = nz == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, target2DBytes, reportPercent) :
                                    detail::Pass1ThreeDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, reportCount);
   if(pass1Result.invalid())
   {
@@ -1407,16 +1407,16 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
     reportPercent(provisionalLabelCount + blockEnd - 1);
   }
 
-  beginProgressPhase("Assigning Final Connected Component Labels", nZ == 1 ? vol : static_cast<usize>(nZ));
+  beginProgressPhase("Assigning Final Connected Component Labels", nz == 1 ? vol : static_cast<usize>(nz));
 
   if(provisional == nullptr)
   {
-    return nZ == 1 ? detail::ReplayTwoDimensionalLabels(inStore, outStore, dims, pred, finalLabel, shouldCancel, target2DBytes, reportPercent) :
+    return nz == 1 ? detail::ReplayTwoDimensionalLabels(inStore, outStore, dims, pred, finalLabel, shouldCancel, target2DBytes, reportPercent) :
                      detail::ReplayThreeDimensionalLabels(inStore, outStore, dims, pred, finalLabel, shouldCancel, reportCount);
   }
 
   // ---- Pass 2: relabel the provisional scratch into consecutive output labels. ----
-  if(nZ == 1)
+  if(nz == 1)
   {
     auto chunkResult = detail::CreateConnectedComponent2DFinalChunkValues(vol, dims[0], target2DBytes, provisional->getChunkShape(), outStore.getChunkShape());
     if(chunkResult.invalid())
@@ -1457,7 +1457,7 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
   std::vector<uint32> provPlane(sliceValues);
   std::vector<uint32> outPlane(sliceValues);
   detail::ConnectedComponentProvisionalStore& provisionalPlaneStore = *provisional;
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {

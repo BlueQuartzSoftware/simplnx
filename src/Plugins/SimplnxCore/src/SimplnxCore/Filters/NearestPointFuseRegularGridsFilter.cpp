@@ -117,12 +117,12 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* sampleAM = dataStructure.getDataAs<AttributeMatrix>(pSamplingCellAttributeMatrixPathValue);
-  const auto* refAM = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
+  const auto* sampleAmPtr = dataStructure.getDataAs<AttributeMatrix>(pSamplingCellAttributeMatrixPathValue);
+  const auto* refAmPtr = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
 
   // The reference grid needs matching arrays for sampling-grid values.
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IArray>();
+    auto sampleVoxelArrays = sampleAmPtr->findAllChildrenOfType<IArray>();
     for(const auto& array : sampleVoxelArrays)
     {
       // Neighbor lists may implement IDataArray, but this filter intentionally does not create or
@@ -133,17 +133,17 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
       }
       const auto& dataArray = dynamic_cast<const IDataArray&>(*array);
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), refAM->getShape(), dataArray.getComponentShape(), createdArrayPath);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), refAmPtr->getShape(), dataArray.getComponentShape(), createdArrayPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
 
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<StringArray>();
+    auto sampleVoxelArrays = sampleAmPtr->findAllChildrenOfType<StringArray>();
     for(const auto& array : sampleVoxelArrays)
     {
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-      auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAM->getShape(), createdArrayPath);
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAmPtr->getShape(), createdArrayPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
@@ -179,11 +179,11 @@ Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStru
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ReferenceCellAttributeMatrixPathKey = "ReferenceCellAttributeMatrixPath";
 constexpr StringLiteral k_SamplingCellAttributeMatrixPathKey = "SamplingCellAttributeMatrixPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -193,12 +193,12 @@ Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohma
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_ReferenceCellAttributeMatrixPathKey,
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey,
                                                                                                                          k_ReferenceCellAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SamplingCellAttributeMatrixPathKey,
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey,
                                                                                                                          k_SamplingCellAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

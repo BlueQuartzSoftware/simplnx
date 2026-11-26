@@ -163,10 +163,10 @@ TEST_CASE("Vec3 Accessors")
 
   SECTION("data() pointer access")
   {
-    float32* ptr = v.data();
-    REQUIRE(ptr[0] == 1.0f);
-    REQUIRE(ptr[1] == 2.0f);
-    REQUIRE(ptr[2] == 3.0f);
+    float32* ptrPtr = v.data();
+    REQUIRE(ptrPtr[0] == 1.0f);
+    REQUIRE(ptrPtr[1] == 2.0f);
+    REQUIRE(ptrPtr[2] == 3.0f);
   }
 
   SECTION("size()")
@@ -535,14 +535,14 @@ TEST_CASE("Vec3 Iterator Support")
 
   SECTION("begin/end")
   {
-    auto it = v.begin();
-    REQUIRE(*it == 1.0f);
-    ++it;
-    REQUIRE(*it == 2.0f);
-    ++it;
-    REQUIRE(*it == 3.0f);
-    ++it;
-    REQUIRE(it == v.end());
+    auto itPtr = v.begin();
+    REQUIRE(*itPtr == 1.0f);
+    ++itPtr;
+    REQUIRE(*itPtr == 2.0f);
+    ++itPtr;
+    REQUIRE(*itPtr == 3.0f);
+    ++itPtr;
+    REQUIRE(itPtr == v.end());
   }
 }
 

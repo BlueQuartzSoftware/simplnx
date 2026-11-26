@@ -34,20 +34,20 @@ namespace
 {
 struct ReadCSVFileFilterCache
 {
-  std::string FilePath;
-  usize TotalLines = 0;
-  usize HeadersLine = 0;
+  std::string file_path;
+  usize total_lines = 0;
+  usize headers_line = 0;
   std::vector<char> Delimiters;
-  bool ConsecutiveDelimiters = false;
+  bool consecutive_delimiters = false;
   std::vector<std::string> Headers;
-  fs::file_time_type LastModifiedTime;
+  fs::file_time_type last_modified_time;
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ReadCSVFileFilterCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ReadCSVFileFilterCache> SHeaderCache;
 
 // -----------------------------------------------------------------------------
-Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const DataStructure& dataStructure, const std::vector<std::string>& headers)
+Result<OutputActions> ValidateExistingGroup(const DataPath& groupPath, const DataStructure& dataStructure, const std::vector<std::string>& headers)
 {
   if(groupPath.empty())
   {
@@ -73,7 +73,7 @@ Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const Dat
 }
 
 // -----------------------------------------------------------------------------
-Result<OutputActions> validateNewGroup(const DataPath& groupPath, const DataStructure& dataStructure)
+Result<OutputActions> ValidateNewGroup(const DataPath& groupPath, const DataStructure& dataStructure)
 {
   if(groupPath.empty())
   {
@@ -90,7 +90,7 @@ Result<OutputActions> validateNewGroup(const DataPath& groupPath, const DataStru
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize headersLineNum, const std::vector<char>& delimiters, bool consecutiveDelimiters, ReadCSVFileFilterCache& headerCache)
+IFilter::PreflightResult ReadHeaders(const std::string& inputFilePath, usize headersLineNum, const std::vector<char>& delimiters, bool consecutiveDelimiters, ReadCSVFileFilterCache& headerCache)
 {
   auto result = FileUtilities::CSV::ReadHeaders(inputFilePath, headersLineNum, delimiters, consecutiveDelimiters);
   if(result.invalid())
@@ -100,11 +100,11 @@ IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize hea
 
   // Read the headers line
   headerCache.Headers = result.value();
-  headerCache.HeadersLine = headersLineNum;
+  headerCache.headers_line = headersLineNum;
   return {};
 }
 
-Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
+Result<> CacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
 {
   std::fstream in(readCsvData.inputFilePath.c_str(), std::ios_base::in);
   if(!in.is_open())
@@ -122,10 +122,10 @@ Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
     if(currentLine == readCsvData.headersLine)
     {
       auto headers = StringUtilities::split(line, readCsvData.delimiters, !readCsvData.consecutiveDelimiters);
-      s_HeaderCache[instanceId].Headers = headers;
-      s_HeaderCache[instanceId].HeadersLine = readCsvData.headersLine;
-      s_HeaderCache[instanceId].Delimiters = readCsvData.delimiters;
-      s_HeaderCache[instanceId].ConsecutiveDelimiters = readCsvData.consecutiveDelimiters;
+      SHeaderCache[instanceId].Headers = headers;
+      SHeaderCache[instanceId].headers_line = readCsvData.headersLine;
+      SHeaderCache[instanceId].Delimiters = readCsvData.delimiters;
+      SHeaderCache[instanceId].consecutive_delimiters = readCsvData.consecutiveDelimiters;
       break;
     }
   }
@@ -140,9 +140,9 @@ Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
  * @param readCsvData Supplies the current header line and split settings.
  * @return True when the header line must be read and split again.
  */
-bool headersNeedReload(const ReadCSVFileFilterCache& cache, const ReadCSVData& readCsvData)
+bool HeadersNeedReload(const ReadCSVFileFilterCache& cache, const ReadCSVData& readCsvData)
 {
-  return readCsvData.headersLine != cache.HeadersLine || readCsvData.delimiters != cache.Delimiters || readCsvData.consecutiveDelimiters != cache.ConsecutiveDelimiters;
+  return readCsvData.headersLine != cache.headers_line || readCsvData.delimiters != cache.Delimiters || readCsvData.consecutiveDelimiters != cache.consecutive_delimiters;
 }
 
 // -----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ bool headersNeedReload(const ReadCSVFileFilterCache& cache, const ReadCSVData& r
  * @return The one-based line number, or no value when the checked lines have no empty field or
  * the file cannot be read here. The import reports read failures.
  */
-std::optional<usize> findLineWithEmptyField(const ReadCSVData& readCsvData, const std::vector<std::string>& headers)
+std::optional<usize> FindLineWithEmptyField(const ReadCSVData& readCsvData, const std::vector<std::string>& headers)
 {
   const auto isEmpty = [](const std::string& token) { return token.empty(); };
   if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && std::any_of(headers.begin(), headers.end(), isEmpty))
@@ -193,27 +193,27 @@ std::optional<usize> findLineWithEmptyField(const ReadCSVData& readCsvData, cons
  * @param warnings Supplies the warnings found before the error.
  * @return The error result with the warnings attached.
  */
-IFilter::PreflightResult makePreflightError(ReadCSVFile::IssueCodes code, std::string message, std::vector<Warning> warnings)
+IFilter::PreflightResult MakePreflightError(ReadCSVFile::IssueCodes code, std::string message, std::vector<Warning> warnings)
 {
   Result<OutputActions> result = MakeErrorResult<OutputActions>(to_underlying(code), std::move(message));
   result.warnings() = std::move(warnings);
   return {.outputActions = std::move(result)};
 }
 
-Result<> cacheFullFile(int32 instanceId, const ReadCSVData& readCsvData)
+Result<> CacheFullFile(int32 instanceId, const ReadCSVData& readCsvData)
 {
-  s_HeaderCache[instanceId].FilePath = readCsvData.inputFilePath;
-  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && headersNeedReload(s_HeaderCache[instanceId], readCsvData))
+  SHeaderCache[instanceId].file_path = readCsvData.inputFilePath;
+  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && HeadersNeedReload(SHeaderCache[instanceId], readCsvData))
   {
-    auto result = cacheHeaders(instanceId, readCsvData);
+    auto result = CacheHeaders(instanceId, readCsvData);
     if(result.invalid())
     {
       return result;
     }
   }
 
-  s_HeaderCache[instanceId].TotalLines = nx::core::FileUtilities::LinesInFile(readCsvData.inputFilePath);
-  s_HeaderCache[instanceId].LastModifiedTime = fs::last_write_time(readCsvData.inputFilePath);
+  SHeaderCache[instanceId].total_lines = nx::core::FileUtilities::LinesInFile(readCsvData.inputFilePath);
+  SHeaderCache[instanceId].last_modified_time = fs::last_write_time(readCsvData.inputFilePath);
 
   return {};
 }
@@ -223,15 +223,15 @@ namespace nx::core
 {
 //------------------------------------------------------------------------------
 ReadCSVFileFilter::ReadCSVFileFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 // -----------------------------------------------------------------------------
 ReadCSVFileFilter::~ReadCSVFileFilter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 // -----------------------------------------------------------------------------
@@ -329,28 +329,28 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
   std::vector<std::string> headers;
   auto lastModifiedTime = fs::last_write_time(readCSVData.inputFilePath);
-  if(readCSVData.inputFilePath != s_HeaderCache[m_InstanceId].FilePath || lastModifiedTime != s_HeaderCache[m_InstanceId].LastModifiedTime)
+  if(readCSVData.inputFilePath != SHeaderCache[m_InstanceId].file_path || lastModifiedTime != SHeaderCache[m_InstanceId].last_modified_time)
   {
     // File path changed or file was modified, so clear the cache and cache the full file again
-    s_HeaderCache[m_InstanceId] = ReadCSVFileFilterCache{};
-    auto result = cacheFullFile(m_InstanceId, readCSVData);
+    SHeaderCache[m_InstanceId] = ReadCSVFileFilterCache{};
+    auto result = CacheFullFile(m_InstanceId, readCSVData);
     if(result.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(result)), {})};
     }
   }
-  else if(headerMode == ReadCSVData::HeaderMode::LINE && headersNeedReload(s_HeaderCache[m_InstanceId], readCSVData))
+  else if(headerMode == ReadCSVData::HeaderMode::LINE && HeadersNeedReload(SHeaderCache[m_InstanceId], readCSVData))
   {
     // We are in header line mode and the header line number or the split settings changed
-    auto result = cacheHeaders(m_InstanceId, readCSVData);
+    auto result = CacheHeaders(m_InstanceId, readCSVData);
     if(result.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(result)), {})};
     }
   }
 
-  headers = (headerMode == ReadCSVData::HeaderMode::LINE) ? s_HeaderCache[m_InstanceId].Headers : readCSVData.customHeaders;
-  usize totalLines = s_HeaderCache[m_InstanceId].TotalLines;
+  headers = (headerMode == ReadCSVData::HeaderMode::LINE) ? SHeaderCache[m_InstanceId].Headers : readCSVData.customHeaders;
+  usize totalLines = SHeaderCache[m_InstanceId].total_lines;
 
   // Check that we have a valid start import row
   if(readCSVData.startImportRow == 0)
@@ -389,7 +389,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   // Kept empty fields change the column count. Attach this warning to the column-count errors below.
   if(!readCSVData.consecutiveDelimiters)
   {
-    if(const std::optional<usize> lineNumber = findLineWithEmptyField(readCSVData, headers); lineNumber.has_value())
+    if(const std::optional<usize> lineNumber = FindLineWithEmptyField(readCSVData, headers); lineNumber.has_value())
     {
       std::string msg = fmt::format("Line #{} of '{}' has empty fields because 'Ignore Consecutive Delimiters' is off. To treat a run of delimiters as one separator (for example, "
                                     "space-aligned columns), turn it on.",
@@ -411,7 +411,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     std::string errMsg =
         fmt::format("The number of data types ({}) does not match the number of imported array headers ({}).  The number of data types must match the number of imported array headers.",
                     readCSVData.dataTypes.size(), headers.size());
-    return makePreflightError(ReadCSVFile::IssueCodes::INCORRECT_DATATYPE_COUNT, std::move(errMsg), resultOutputActions.warnings());
+    return MakePreflightError(ReadCSVFile::IssueCodes::INCORRECT_DATATYPE_COUNT, std::move(errMsg), resultOutputActions.warnings());
   }
 
   if(readCSVData.skippedArrayMask.size() != headers.size())
@@ -420,7 +420,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
         "The number of booleans in the skipped array mask ({}) does not match the number of imported array headers ({}).  The number of booleans in the skipped array mask must match the number "
         "of imported array headers.",
         readCSVData.skippedArrayMask.size(), headers.size());
-    return makePreflightError(ReadCSVFile::IssueCodes::INCORRECT_MASK_COUNT, std::move(errMsg), resultOutputActions.warnings());
+    return MakePreflightError(ReadCSVFile::IssueCodes::INCORRECT_MASK_COUNT, std::move(errMsg), resultOutputActions.warnings());
   }
 
   headers = FileUtilities::CSV::RemoveIllegalCharacters(headers);
@@ -431,7 +431,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     if(headerName.empty())
     {
       std::string errMsg = fmt::format("The header for column #{} is empty.  Please fill in a header for column #{}.", i + 1, i + 1);
-      return makePreflightError(ReadCSVFile::IssueCodes::EMPTY_NAMES, std::move(errMsg), resultOutputActions.warnings());
+      return MakePreflightError(ReadCSVFile::IssueCodes::EMPTY_NAMES, std::move(errMsg), resultOutputActions.warnings());
     }
 
     if(StringUtilities::contains(headerName, '&') || StringUtilities::contains(headerName, ':') || StringUtilities::contains(headerName, '/') || StringUtilities::contains(headerName, '\\'))
@@ -474,7 +474,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   DataPath groupPath;
   if(useExistingGroupOrAM)
   {
-    Result<OutputActions> result = validateExistingGroup(selectedGroupOrAM, dataStructure, headers);
+    Result<OutputActions> result = ValidateExistingGroup(selectedGroupOrAM, dataStructure, headers);
     if(result.invalid())
     {
       return {.outputActions = std::move(result)};
@@ -483,7 +483,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   }
   else
   {
-    Result<OutputActions> result = validateNewGroup(createdDataAM, dataStructure);
+    Result<OutputActions> result = ValidateNewGroup(createdDataAM, dataStructure);
     if(result.invalid())
     {
       return {.outputActions = std::move(result)};
@@ -497,10 +497,10 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   std::transform(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), tupleDims.begin(), [](usize d) { return d; });
   if(useExistingGroupOrAM)
   {
-    const auto* am = dataStructure.getDataAs<AttributeMatrix>(groupPath);
-    if(am != nullptr)
+    const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(groupPath);
+    if(amPtr != nullptr)
     {
-      tupleDims = am->getShape();
+      tupleDims = amPtr->getShape();
 
       auto totalLinesRead = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
 
@@ -545,7 +545,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   auto selectedDataGroupOrAM = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
   auto createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
-  std::vector<std::string> headers = s_HeaderCache[m_InstanceId].Headers;
+  std::vector<std::string> headers = SHeaderCache[m_InstanceId].Headers;
 
   if(readCSVData.headerMode == ReadCSVData::HeaderMode::CUSTOM)
   {
@@ -557,10 +557,10 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   if(useExistingGroup)
   {
     groupPath = selectedDataGroupOrAM;
-    const AttributeMatrix* am = dataStructure.getDataAs<AttributeMatrix>(groupPath);
-    if(am != nullptr)
+    const AttributeMatrix* amPtr = dataStructure.getDataAs<AttributeMatrix>(groupPath);
+    if(amPtr != nullptr)
     {
-      tupleDims = am->getShape();
+      tupleDims = amPtr->getShape();
     }
   }
 
@@ -570,7 +570,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_AutomaticAttrMatrixKey = "Wizard_AutomaticAM";
 constexpr StringLiteral k_SelectedPathKey = "Wizard_SelectedPath";
@@ -596,7 +596,7 @@ std::vector<char> ConvertToChars(const std::string& string)
 {
   return std::vector<char>(string.begin(), string.end());
 }
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -617,22 +617,22 @@ Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   // Convert the existing attr matrix boolean
   {
-    auto result = SIMPLConversion::BooleanFilterParameterConverter::convert(json[SIMPL::k_AutomaticAttrMatrixKey]);
+    auto result = SIMPLConversion::BooleanFilterParameterConverter::convert(json[simpl::k_AutomaticAttrMatrixKey]);
     if(result.invalid())
     {
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SelectedPathKey, k_CreatedDataGroup_Key));
     }
     else
     {
       auto isCreatedDataGroup = result.value();
       if(isCreatedDataGroup)
       {
-        results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
+        results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_SelectedPathKey, k_CreatedDataGroup_Key));
       }
       else
       {
         results.push_back(
-            SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_SelectedAttributeMatrixPath_Key));
+            SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SelectedPathKey, k_SelectedAttributeMatrixPath_Key));
       }
     }
     results.push_back(ConvertResult(std::move(result)));

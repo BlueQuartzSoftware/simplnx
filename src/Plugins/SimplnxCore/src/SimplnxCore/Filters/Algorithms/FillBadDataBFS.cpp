@@ -361,9 +361,9 @@ Result<> FillBadDataBFS::operator()()
       {
         continue;
       }
-      auto* oldCellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+      auto* oldCellArrayPtr = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
 
-      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArray->getDataType(), featureIdsStore, oldCellArray, neighbors);
+      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArrayPtr->getDataType(), featureIdsStore, oldCellArrayPtr, neighbors);
     }
 
     // Update FeatureIds LAST: the FillBadDataUpdateTuples calls above rely

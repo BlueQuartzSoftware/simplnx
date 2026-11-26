@@ -121,14 +121,14 @@ public:
       m_SqrNumRows = static_cast<int32>((static_cast<float32>(hexNumRows) * hexYStep) / m_SqrYStep);
 
       // Get the hex grid data from the input file
-      float32* phi1 = reader.getPhi1Pointer();
-      float32* PHI = reader.getPhiPointer();
-      float32* phi2 = reader.getPhi2Pointer();
-      float32* ci = reader.getConfidenceIndexPointer();
-      float32* iq = reader.getImageQualityPointer();
-      float32* semSig = reader.getSEMSignalPointer();
-      float32* fit = reader.getFitPointer();
-      int32* phase = reader.getPhaseDataPointer();
+      float32* phi1Ptr = reader.getPhi1Pointer();
+      float32* phiPtr = reader.getPhiPointer();
+      float32* phi2Ptr = reader.getPhi2Pointer();
+      float32* ciPtr = reader.getConfidenceIndexPointer();
+      float32* iqPtr = reader.getImageQualityPointer();
+      float32* semSigPtr = reader.getSEMSignalPointer();
+      float32* fitPtr = reader.getFitPointer();
+      int32* phasePtr = reader.getPhaseDataPointer();
 
       // Loop on the header part of the file and modify the header while writing to the output file
       // the updated information
@@ -211,8 +211,8 @@ public:
           }
 
           // Write to the output file
-          outFile << "  " << phi1[hexGridIndex] << "	" << PHI[hexGridIndex] << "	" << phi2[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iq[hexGridIndex] << "	" << ci[hexGridIndex]
-                  << "	" << phase[hexGridIndex] << "	" << semSig[hexGridIndex] << "	" << fit[hexGridIndex] << "  "
+          outFile << "  " << phi1Ptr[hexGridIndex] << "	" << phiPtr[hexGridIndex] << "	" << phi2Ptr[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iqPtr[hexGridIndex] << "	"
+                  << ciPtr[hexGridIndex] << "	" << phasePtr[hexGridIndex] << "	" << semSigPtr[hexGridIndex] << "	" << fitPtr[hexGridIndex] << "  "
                   << "\n";
         }
       }

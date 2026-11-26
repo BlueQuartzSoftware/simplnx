@@ -42,7 +42,7 @@ public:
    */
   SilhouetteTemplate(const IDataArray& inputIDataArray, Float64AbstractDataStore& outputDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray, bool useMask,
                      usize numClusters, const std::vector<usize>& featureIds, ClusterUtilities::DistanceMetric distMetric)
-  : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreT>())
+  : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreTType>())
   , m_OutputData(outputDataArray)
   , m_FeatureIds(featureIds)
   , m_Mask(maskDataArray)
@@ -141,8 +141,8 @@ public:
   }
 
 private:
-  using AbstractDataStoreT = AbstractDataStore<T>;
-  const AbstractDataStoreT& m_InputData;
+  using AbstractDataStoreTType = AbstractDataStore<T>;
+  const AbstractDataStoreTType& m_InputData;
   Float64AbstractDataStore& m_OutputData;
   const std::vector<usize>& m_FeatureIds;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;

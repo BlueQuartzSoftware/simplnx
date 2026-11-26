@@ -8,19 +8,19 @@ template <class T, bool UseTemporaryWork>
 template <bool Dilation>
 bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T* mask, usize dimX, usize dimY, usize dimZ, usize sliceValues, detail::BoundedReconstructionQueue<uint64>& frontier)
 {
-  using Tr = detail::ReconTraits<T, Dilation>;
+  using TraitsType = detail::ReconTraits<T, Dilation>;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
-  auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
+  auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   struct NeighborDelta
   {
     detail::ReconOffset offset;
     int64 delta;
   };
-  const int64 nXY = nX * nY;
+  const int64 nXY = nX * ny;
   auto withDeltas = [nXY, nX](const std::vector<detail::ReconOffset>& offsets) {
     std::vector<NeighborDelta> neighbors;
     neighbors.reserve(offsets.size());
@@ -35,13 +35,13 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
   const std::vector<NeighborDelta> laterNeighbors = withDeltas(offsets.later);
   const std::vector<NeighborDelta> allNeighbors = withDeltas(offsets.all);
 
-  for(int64 z = 0; z < nZ; ++z)
+  for(int64 z = 0; z < nz; ++z)
   {
     if(m_ShouldCancel)
     {
       return false;
     }
-    for(int64 y = 0; y < nY; ++y)
+    for(int64 y = 0; y < ny; ++y)
     {
       for(int64 x = 0; x < nX; ++x)
       {
@@ -51,21 +51,21 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
         {
           if(inBounds(x + neighbor.offset.dx, y + neighbor.offset.dy, z + neighbor.offset.dz))
           {
-            value = Tr::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+            value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
           }
         }
-        work[position] = Tr::clampToMask(value, mask[position]);
+        work[position] = TraitsType::clampToMask(value, mask[position]);
       }
     }
   }
 
-  for(int64 z = nZ - 1; z >= 0; --z)
+  for(int64 z = nz - 1; z >= 0; --z)
   {
     if(m_ShouldCancel)
     {
       return false;
     }
-    for(int64 y = nY - 1; y >= 0; --y)
+    for(int64 y = ny - 1; y >= 0; --y)
     {
       for(int64 x = nX - 1; x >= 0; --x)
       {
@@ -75,10 +75,10 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
         {
           if(inBounds(x + neighbor.offset.dx, y + neighbor.offset.dy, z + neighbor.offset.dz))
           {
-            value = Tr::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+            value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
           }
         }
-        value = Tr::clampToMask(value, mask[position]);
+        value = TraitsType::clampToMask(value, mask[position]);
         work[position] = value;
         for(const NeighborDelta& neighbor : laterNeighbors)
         {
@@ -87,7 +87,7 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
             continue;
           }
           const usize neighborPosition = static_cast<usize>(static_cast<int64>(position) + neighbor.delta);
-          if(Tr::compare(value, work[neighborPosition]) && Tr::compare(mask[neighborPosition], work[neighborPosition]))
+          if(TraitsType::compare(value, work[neighborPosition]) && TraitsType::compare(mask[neighborPosition], work[neighborPosition]))
           {
             if(!frontier.tryPush(static_cast<uint64>(position)))
             {
@@ -119,9 +119,9 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
         continue;
       }
       const usize neighborPosition = static_cast<usize>(static_cast<int64>(position) + neighbor.delta);
-      if(Tr::compare(value, work[neighborPosition]) && work[neighborPosition] != mask[neighborPosition])
+      if(TraitsType::compare(value, work[neighborPosition]) && work[neighborPosition] != mask[neighborPosition])
       {
-        work[neighborPosition] = Tr::compare(mask[neighborPosition], value) ? value : mask[neighborPosition];
+        work[neighborPosition] = TraitsType::compare(mask[neighborPosition], value) ? value : mask[neighborPosition];
         if(!frontier.tryPush(static_cast<uint64>(neighborPosition)))
         {
           return false;
@@ -136,7 +136,7 @@ template <class T, bool UseTemporaryWork>
 template <bool Dilation>
 Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3D(usize dimX, usize dimY, usize dimZ, usize sliceValues, usize vol)
 {
-  using Tr = detail::ReconTraits<T, Dilation>;
+  using TraitsType = detail::ReconTraits<T, Dilation>;
 
   // Capacity comes from the active shared-budget reservation. The branch is used only when that fixed capacity
   // covers the complete logical image. Larger images use the external bounded fallback above.
@@ -180,10 +180,10 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3D(usize dimX, usize 
 
   const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   auto flat = [dimX, dimY](usize x, usize y, usize z) { return z * dimY * dimX + y * dimX + x; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   auto sweep = [&](bool forward, bool& changed) {
     const std::vector<detail::ReconOffset>& half = forward ? offsets.previous : offsets.later;
@@ -208,30 +208,30 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3D(usize dimX, usize 
             {
               if(z > 0)
               {
-                value = Tr::fold(value, work[position - sliceValues]);
+                value = TraitsType::fold(value, work[position - sliceValues]);
               }
               if(y > 0)
               {
-                value = Tr::fold(value, work[position - dimX]);
+                value = TraitsType::fold(value, work[position - dimX]);
               }
               if(x > 0)
               {
-                value = Tr::fold(value, work[position - 1]);
+                value = TraitsType::fold(value, work[position - 1]);
               }
             }
             else
             {
               if(x + 1 < dimX)
               {
-                value = Tr::fold(value, work[position + 1]);
+                value = TraitsType::fold(value, work[position + 1]);
               }
               if(y + 1 < dimY)
               {
-                value = Tr::fold(value, work[position + dimX]);
+                value = TraitsType::fold(value, work[position + dimX]);
               }
               if(z + 1 < dimZ)
               {
-                value = Tr::fold(value, work[position + sliceValues]);
+                value = TraitsType::fold(value, work[position + sliceValues]);
               }
             }
           }
@@ -244,11 +244,11 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3D(usize dimX, usize 
               const int64 neighborZ = static_cast<int64>(z) + offset.dz;
               if(inBounds(neighborX, neighborY, neighborZ))
               {
-                value = Tr::fold(value, work[flat(static_cast<usize>(neighborX), static_cast<usize>(neighborY), static_cast<usize>(neighborZ))]);
+                value = TraitsType::fold(value, work[flat(static_cast<usize>(neighborX), static_cast<usize>(neighborY), static_cast<usize>(neighborZ))]);
               }
             }
           }
-          const T newValue = Tr::clampToMask(value, mask[position]);
+          const T newValue = TraitsType::clampToMask(value, mask[position]);
           if(newValue != work[position])
           {
             work[position] = newValue;
@@ -284,7 +284,7 @@ template <class T, bool UseTemporaryWork>
 template <bool Dilation>
 Result<> ReconstructSweep<T, UseTemporaryWork>::runDirect(usize dimX, usize dimY, usize dimZ, usize sliceValues, usize vol)
 {
-  using Tr = detail::ReconTraits<T, Dilation>;
+  using TraitsType = detail::ReconTraits<T, Dilation>;
   const int64 nX = static_cast<int64>(dimX);
   const int64 nY = static_cast<int64>(dimY);
 
@@ -373,38 +373,38 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirect(usize dimX, usize dimY
               {
                 if(localZ > 0)
                 {
-                  v = Tr::fold(v, workSlab[p - sliceValues]);
+                  v = TraitsType::fold(v, workSlab[p - sliceValues]);
                 }
                 else if(haveAdjacent)
                 {
-                  v = Tr::fold(v, adjacent[p2d]);
+                  v = TraitsType::fold(v, adjacent[p2d]);
                 }
                 if(y > 0)
                 {
-                  v = Tr::fold(v, workSlab[p - dimX]);
+                  v = TraitsType::fold(v, workSlab[p - dimX]);
                 }
                 if(x > 0)
                 {
-                  v = Tr::fold(v, workSlab[p - 1]);
+                  v = TraitsType::fold(v, workSlab[p - 1]);
                 }
               }
               else
               {
                 if(x + 1 < nX)
                 {
-                  v = Tr::fold(v, workSlab[p + 1]);
+                  v = TraitsType::fold(v, workSlab[p + 1]);
                 }
                 if(y + 1 < nY)
                 {
-                  v = Tr::fold(v, workSlab[p + dimX]);
+                  v = TraitsType::fold(v, workSlab[p + dimX]);
                 }
                 if(localZ + 1 < currentSlabPlanes)
                 {
-                  v = Tr::fold(v, workSlab[p + sliceValues]);
+                  v = TraitsType::fold(v, workSlab[p + sliceValues]);
                 }
                 else if(haveAdjacent)
                 {
-                  v = Tr::fold(v, adjacent[p2d]);
+                  v = TraitsType::fold(v, adjacent[p2d]);
                 }
               }
             }
@@ -421,7 +421,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirect(usize dimX, usize dimY
                 const usize neighbor2d = flat2d(nx, ny);
                 if(o.dz == 0)
                 {
-                  v = Tr::fold(v, workSlab[planeOffset + neighbor2d]);
+                  v = TraitsType::fold(v, workSlab[planeOffset + neighbor2d]);
                 }
                 else
                 {
@@ -429,16 +429,16 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirect(usize dimX, usize dimY
                   if(neighborInsideSlab)
                   {
                     const usize neighborPlaneOffset = forward ? (planeOffset - sliceValues) : (planeOffset + sliceValues);
-                    v = Tr::fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
+                    v = TraitsType::fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
                   }
                   else if(haveAdjacent)
                   {
-                    v = Tr::fold(v, adjacent[neighbor2d]);
+                    v = TraitsType::fold(v, adjacent[neighbor2d]);
                   }
                 }
               }
             }
-            const T newVal = Tr::clampToMask(v, maskSlab[p]);
+            const T newVal = TraitsType::clampToMask(v, maskSlab[p]);
             if(newVal != workSlab[p])
             {
               workSlab[p] = newVal;

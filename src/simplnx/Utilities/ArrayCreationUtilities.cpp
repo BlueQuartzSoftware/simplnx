@@ -19,9 +19,9 @@ std::string ArrayCreationUtilities::ResolveStorageFormat(const DataStructure& da
 
 bool ArrayCreationUtilities::CheckMemoryRequirement(const DataStructure& dataStructure, uint64 requiredMemory)
 {
-  static const uint64 k_AvailableMemory = Memory::GetTotalMemory();
+  static const uint64 kAvailableMemory = Memory::GetTotalMemory();
   const uint64 memoryUsage = dataStructure.memoryUsage() + requiredMemory;
-  return memoryUsage < k_AvailableMemory;
+  return memoryUsage < kAvailableMemory;
 }
 
 bool ArrayCreationUtilities::WouldExceedAvailableMemory(uint64 currentUsageBytes, uint64 requiredMemory, uint64 availableBytes)

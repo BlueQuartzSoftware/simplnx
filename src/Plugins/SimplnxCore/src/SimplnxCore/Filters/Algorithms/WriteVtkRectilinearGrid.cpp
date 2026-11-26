@@ -32,47 +32,47 @@ Result<> WriteVtkRectilinearGrid::operator()()
   FloatVec3 res = imageGeom.getSpacing();
   FloatVec3 origin = imageGeom.getOrigin();
 
-  FILE* outputFile = nullptr;
-  outputFile = fopen(m_InputValues->OutputFile.string().c_str(), "wb");
-  if(nullptr == outputFile)
+  FILE* outputFilePtr = nullptr;
+  outputFilePtr = fopen(m_InputValues->OutputFile.string().c_str(), "wb");
+  if(nullptr == outputFilePtr)
   {
     return MakeErrorResult(-2073, fmt::format("Error opening output vtk file '{}'", m_InputValues->OutputFile.string()));
   }
 
-  writeVtkHeader(outputFile);
+  writeVtkHeader(outputFilePtr);
 
-  Result<> writeCoordsResults = writeCoords<float32>(outputFile, "X_COORDINATES", "float", dims[0] + 1, origin[0] - res[0] * 0.5f, res[0]);
+  Result<> writeCoordsResults = writeCoords<float32>(outputFilePtr, "X_COORDINATES", "float", dims[0] + 1, origin[0] - res[0] * 0.5f, res[0]);
   if(writeCoordsResults.invalid())
   {
     return MergeResults(writeCoordsResults, MakeErrorResult(-2075, fmt::format("Error writing X Coordinates in vtk file {}'\n ", m_InputValues->OutputFile.string())));
   }
-  writeCoordsResults = writeCoords<float32>(outputFile, "Y_COORDINATES", "float", dims[1] + 1, origin[1] - res[1] * 0.5f, res[1]);
+  writeCoordsResults = writeCoords<float32>(outputFilePtr, "Y_COORDINATES", "float", dims[1] + 1, origin[1] - res[1] * 0.5f, res[1]);
   if(writeCoordsResults.invalid())
   {
     return MergeResults(writeCoordsResults, MakeErrorResult(-2076, fmt::format("Error writing Y Coordinates in vtk file '{}'\n ", m_InputValues->OutputFile.string())));
   }
-  writeCoordsResults = writeCoords<float32>(outputFile, "Z_COORDINATES", "float", dims[2] + 1, origin[2] - res[2] * 0.5f, res[2]);
+  writeCoordsResults = writeCoords<float32>(outputFilePtr, "Z_COORDINATES", "float", dims[2] + 1, origin[2] - res[2] * 0.5f, res[2]);
   if(writeCoordsResults.invalid())
   {
     return MergeResults(writeCoordsResults, MakeErrorResult(-2077, fmt::format("Error writing Z Coordinates in vtk file '{}'\n ", m_InputValues->OutputFile.string())));
   }
 
   const auto totalCells = imageGeom.getNumXCells() * imageGeom.getNumYCells() * imageGeom.getNumZCells();
-  fprintf(outputFile, "CELL_DATA %d\n", static_cast<int>(totalCells));
+  fprintf(outputFilePtr, "CELL_DATA %d\n", static_cast<int>(totalCells));
 
   for(const DataPath& arrayPath : m_InputValues->SelectedDataArrayPaths)
   {
     // The shared writer expands Boolean values and byte-swaps only local pages.
-    auto writeArrayResult = ExecuteDataFunction(WriteVtkDataArrayFunctor{}, m_DataStructure.getDataAs<IDataArray>(arrayPath)->getDataType(), outputFile, m_InputValues->WriteBinaryFile,
+    auto writeArrayResult = ExecuteDataFunction(WriteVtkDataArrayFunctor{}, m_DataStructure.getDataAs<IDataArray>(arrayPath)->getDataType(), outputFilePtr, m_InputValues->WriteBinaryFile,
                                                 m_DataStructure, arrayPath, m_MessageHandler);
     if(writeArrayResult.invalid())
     {
-      fclose(outputFile);
+      fclose(outputFilePtr);
       return MergeResults(writeArrayResult, MakeErrorResult(-2091, fmt::format("Error writing data array '{}' to VTK file '{}'", arrayPath.toString(), m_InputValues->OutputFile.string())));
     }
   }
 
-  fclose(outputFile);
+  fclose(outputFilePtr);
 
   return {};
 }

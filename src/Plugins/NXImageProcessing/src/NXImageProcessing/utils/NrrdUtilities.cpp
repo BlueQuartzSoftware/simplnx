@@ -301,63 +301,63 @@ std::optional<std::pair<bool, bool>> NrrdSpaceOriginFlip(const std::string& spac
   struct SpaceEntry
   {
     std::string_view name;
-    bool negateX;
-    bool negateY;
+    bool negate_x;
+    bool negate_y;
   };
   // Full teem equivalence set (NrrdIO/enumsNrrd.c). RAS -> negate X,Y; LAS -> negate X;
   // every other recognized space -> no change (matches ITK's switch default). Anything
   // not listed here is an unrecognized space and errors, exactly as teem does.
   static constexpr SpaceEntry k_Spaces[] = {
       // right-anterior-superior (RAS): R->L, A->P
-      {.name = "right-anterior-superior", .negateX = true, .negateY = true},
-      {.name = "right anterior superior", .negateX = true, .negateY = true},
-      {.name = "rightanteriorsuperior", .negateX = true, .negateY = true},
-      {.name = "ras", .negateX = true, .negateY = true},
+      {.name = "right-anterior-superior", .negate_x = true, .negate_y = true},
+      {.name = "right anterior superior", .negate_x = true, .negate_y = true},
+      {.name = "rightanteriorsuperior", .negate_x = true, .negate_y = true},
+      {.name = "ras", .negate_x = true, .negate_y = true},
       // left-anterior-superior (LAS): R->L
-      {.name = "left-anterior-superior", .negateX = true, .negateY = false},
-      {.name = "left anterior superior", .negateX = true, .negateY = false},
-      {.name = "leftanteriorsuperior", .negateX = true, .negateY = false},
-      {.name = "las", .negateX = true, .negateY = false},
+      {.name = "left-anterior-superior", .negate_x = true, .negate_y = false},
+      {.name = "left anterior superior", .negate_x = true, .negate_y = false},
+      {.name = "leftanteriorsuperior", .negate_x = true, .negate_y = false},
+      {.name = "las", .negate_x = true, .negate_y = false},
       // left-posterior-superior (LPS): already ITK's target frame
-      {.name = "left-posterior-superior", .negateX = false, .negateY = false},
-      {.name = "left posterior superior", .negateX = false, .negateY = false},
-      {.name = "leftposteriorsuperior", .negateX = false, .negateY = false},
-      {.name = "lps", .negateX = false, .negateY = false},
+      {.name = "left-posterior-superior", .negate_x = false, .negate_y = false},
+      {.name = "left posterior superior", .negate_x = false, .negate_y = false},
+      {.name = "leftposteriorsuperior", .negate_x = false, .negate_y = false},
+      {.name = "lps", .negate_x = false, .negate_y = false},
       // *-time variants: ITK has no well-defined LPS conversion (default: no change)
-      {.name = "right-anterior-superior-time", .negateX = false, .negateY = false},
-      {.name = "right anterior superior time", .negateX = false, .negateY = false},
-      {.name = "rightanteriorsuperiortime", .negateX = false, .negateY = false},
-      {.name = "rast", .negateX = false, .negateY = false},
-      {.name = "left-anterior-superior-time", .negateX = false, .negateY = false},
-      {.name = "left anterior superior time", .negateX = false, .negateY = false},
-      {.name = "leftanteriorsuperiortime", .negateX = false, .negateY = false},
-      {.name = "last", .negateX = false, .negateY = false},
-      {.name = "left-posterior-superior-time", .negateX = false, .negateY = false},
-      {.name = "left posterior superior time", .negateX = false, .negateY = false},
-      {.name = "leftposteriorsuperiortime", .negateX = false, .negateY = false},
-      {.name = "lpst", .negateX = false, .negateY = false},
+      {.name = "right-anterior-superior-time", .negate_x = false, .negate_y = false},
+      {.name = "right anterior superior time", .negate_x = false, .negate_y = false},
+      {.name = "rightanteriorsuperiortime", .negate_x = false, .negate_y = false},
+      {.name = "rast", .negate_x = false, .negate_y = false},
+      {.name = "left-anterior-superior-time", .negate_x = false, .negate_y = false},
+      {.name = "left anterior superior time", .negate_x = false, .negate_y = false},
+      {.name = "leftanteriorsuperiortime", .negate_x = false, .negate_y = false},
+      {.name = "last", .negate_x = false, .negate_y = false},
+      {.name = "left-posterior-superior-time", .negate_x = false, .negate_y = false},
+      {.name = "left posterior superior time", .negate_x = false, .negate_y = false},
+      {.name = "leftposteriorsuperiortime", .negate_x = false, .negate_y = false},
+      {.name = "lpst", .negate_x = false, .negate_y = false},
       // scanner-xyz / 3D-handed frames: no LPS conversion (default: no change)
-      {.name = "scanner-xyz", .negateX = false, .negateY = false},
-      {.name = "scanner-xyz-time", .negateX = false, .negateY = false},
-      {.name = "scanner-xyzt", .negateX = false, .negateY = false},
-      {.name = "3d-right-handed", .negateX = false, .negateY = false},
-      {.name = "3d right handed", .negateX = false, .negateY = false},
-      {.name = "3drighthanded", .negateX = false, .negateY = false},
-      {.name = "3d-left-handed", .negateX = false, .negateY = false},
-      {.name = "3d left handed", .negateX = false, .negateY = false},
-      {.name = "3dlefthanded", .negateX = false, .negateY = false},
-      {.name = "3d-right-handed-time", .negateX = false, .negateY = false},
-      {.name = "3d right handed time", .negateX = false, .negateY = false},
-      {.name = "3drighthandedtime", .negateX = false, .negateY = false},
-      {.name = "3d-left-handed-time", .negateX = false, .negateY = false},
-      {.name = "3d left handed time", .negateX = false, .negateY = false},
-      {.name = "3dlefthandedtime", .negateX = false, .negateY = false},
+      {.name = "scanner-xyz", .negate_x = false, .negate_y = false},
+      {.name = "scanner-xyz-time", .negate_x = false, .negate_y = false},
+      {.name = "scanner-xyzt", .negate_x = false, .negate_y = false},
+      {.name = "3d-right-handed", .negate_x = false, .negate_y = false},
+      {.name = "3d right handed", .negate_x = false, .negate_y = false},
+      {.name = "3drighthanded", .negate_x = false, .negate_y = false},
+      {.name = "3d-left-handed", .negate_x = false, .negate_y = false},
+      {.name = "3d left handed", .negate_x = false, .negate_y = false},
+      {.name = "3dlefthanded", .negate_x = false, .negate_y = false},
+      {.name = "3d-right-handed-time", .negate_x = false, .negate_y = false},
+      {.name = "3d right handed time", .negate_x = false, .negate_y = false},
+      {.name = "3drighthandedtime", .negate_x = false, .negate_y = false},
+      {.name = "3d-left-handed-time", .negate_x = false, .negate_y = false},
+      {.name = "3d left handed time", .negate_x = false, .negate_y = false},
+      {.name = "3dlefthandedtime", .negate_x = false, .negate_y = false},
   };
   for(const auto& entry : k_Spaces)
   {
     if(s == entry.name)
     {
-      return std::make_pair(entry.negateX, entry.negateY);
+      return std::make_pair(entry.negate_x, entry.negate_y);
     }
   }
   return std::nullopt;

@@ -15,15 +15,15 @@ inline std::string timestamp()
 {
   // Waiting on (apple)clang support for P0355R7
   // Migrate to std::chrono::current_zone and zoned_time then
-  const auto utc_now = std::chrono::system_clock::now();
-  const auto utc_time_t = std::chrono::system_clock::to_time_t(utc_now);
-  std::tm tm_local = {};
+  const auto utcNow = std::chrono::system_clock::now();
+  const auto utcTimeT = std::chrono::system_clock::to_time_t(utcNow);
+  std::tm tmLocal = {};
 #ifdef _MSC_VER
-  localtime_s(&tm_local, &utc_time_t);
+  localtime_s(&tmLocal, &utcTimeT);
 #else
-  localtime_r(&utc_time_t, &tm_local);
+  localtime_r(&utcTimeT, &tmLocal);
 #endif
-  return fmt::format("[{:%Y:%m:%d %H:%M:%S}]", tm_local);
+  return fmt::format("[{:%Y:%m:%d %H:%M:%S}]", tmLocal);
 }
 
 /**
@@ -103,8 +103,8 @@ public:
   std::string toString() const;
 
 private:
-  std::chrono::steady_clock::time_point start_time; ///< The start time point of the measurement.
-  std::chrono::steady_clock::time_point end_time;   ///< The end time point of the measurement.
+  std::chrono::steady_clock::time_point m_StartTime; ///< The start time point of the measurement.
+  std::chrono::steady_clock::time_point m_EndTime;   ///< The end time point of the measurement.
 };
 
 } // namespace nx::core

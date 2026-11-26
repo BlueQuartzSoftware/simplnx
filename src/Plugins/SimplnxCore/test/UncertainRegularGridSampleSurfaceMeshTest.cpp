@@ -186,7 +186,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: SIMPL Backw
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -199,22 +199,22 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: SIMPL Backw
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -243,26 +243,26 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Ray exits l
   const std::array<IGeometry::MeshIndexType, 36> faces = {0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7};
   const std::array<int32, 24> labels = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
 
-  auto* triangleGeom = TriangleGeom::Create(dataStructure, k_TriGeomName);
-  REQUIRE(triangleGeom != nullptr);
-  auto* verticesArray =
-      Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {8}, {3}), triangleGeom->getId());
-  auto* facesArray = IGeometry::MeshIndexArrayType::Create(
-      dataStructure, "Faces", DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {12}, {3}), triangleGeom->getId());
-  REQUIRE(verticesArray != nullptr);
-  REQUIRE(facesArray != nullptr);
-  auto verticesResult = verticesArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(vertices));
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
+  REQUIRE(triangleGeomPtr != nullptr);
+  auto* verticesArrayPtr =
+      Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {8}, {3}), triangleGeomPtr->getId());
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::Create(
+      dataStructure, "Faces", DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {12}, {3}), triangleGeomPtr->getId());
+  REQUIRE(verticesArrayPtr != nullptr);
+  REQUIRE(facesArrayPtr != nullptr);
+  auto verticesResult = verticesArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(vertices));
   SIMPLNX_RESULT_REQUIRE_VALID(verticesResult);
-  auto facesResult = facesArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const IGeometry::MeshIndexType>(faces));
+  auto facesResult = facesArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const IGeometry::MeshIndexType>(faces));
   SIMPLNX_RESULT_REQUIRE_VALID(facesResult);
-  triangleGeom->setVertices(*verticesArray);
-  triangleGeom->setFaceList(*facesArray);
-  auto* faceData = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{12}, triangleGeom->getId());
-  REQUIRE(faceData != nullptr);
-  triangleGeom->setFaceAttributeMatrix(*faceData);
-  auto* faceLabels = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {12}, {2}), faceData->getId());
-  REQUIRE(faceLabels != nullptr);
-  auto labelsResult = faceLabels->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(labels));
+  triangleGeomPtr->setVertices(*verticesArrayPtr);
+  triangleGeomPtr->setFaceList(*facesArrayPtr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{12}, triangleGeomPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* faceLabelsPtr = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {12}, {2}), faceDataPtr->getId());
+  REQUIRE(faceLabelsPtr != nullptr);
+  auto labelsResult = faceLabelsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(labels));
   SIMPLNX_RESULT_REQUIRE_VALID(labelsResult);
 
   const float32 z = GENERATE(1.0F, 19.0F);

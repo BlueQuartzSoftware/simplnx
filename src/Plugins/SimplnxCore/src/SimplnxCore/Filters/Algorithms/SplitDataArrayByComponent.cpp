@@ -196,8 +196,8 @@ struct SplitArraysDirectFunctor
     using StoreType = AbstractDataStore<T>;
 
     const auto& inputStore = inputIDataArray.template getIDataStoreRefAs<StoreType>();
-    const auto* contiguousInputStore = dynamic_cast<const DataStore<T>*>(&inputStore);
-    if(contiguousInputStore == nullptr)
+    const auto* contiguousInputStorePtr = dynamic_cast<const DataStore<T>*>(&inputStore);
+    if(contiguousInputStorePtr == nullptr)
     {
       return SplitArraysInChunks<T>(dataStructure, inputIDataArray, inputValues, shouldCancel);
     }
@@ -207,15 +207,15 @@ struct SplitArraysDirectFunctor
     for(const usize component : inputValues.ExtractComponents)
     {
       auto& outputArray = dataStructure.getDataRefAs<DataArray<T>>(GetOutputArrayPath(inputValues, component));
-      auto* contiguousOutputStore = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
-      if(contiguousOutputStore == nullptr)
+      auto* contiguousOutputStorePtr = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
+      if(contiguousOutputStorePtr == nullptr)
       {
         return SplitArraysInChunks<T>(dataStructure, inputIDataArray, inputValues, shouldCancel);
       }
-      outputData.push_back(contiguousOutputStore->data());
+      outputData.push_back(contiguousOutputStorePtr->data());
     }
 
-    const usize numTuples = contiguousInputStore->getNumberOfTuples();
+    const usize numTuples = contiguousInputStorePtr->getNumberOfTuples();
     if(numTuples == 0 || outputData.empty() || shouldCancel)
     {
       return {};
@@ -223,9 +223,9 @@ struct SplitArraysDirectFunctor
 
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, numTuples);
-    parallelAlgorithm.execute(SplitContiguousData<T>(contiguousInputStore->data(), nonstd::span<T*>(outputData.data(), outputData.size()),
+    parallelAlgorithm.execute(SplitContiguousData<T>(contiguousInputStorePtr->data(), nonstd::span<T*>(outputData.data(), outputData.size()),
                                                      nonstd::span<const usize>(inputValues.ExtractComponents.data(), inputValues.ExtractComponents.size()),
-                                                     contiguousInputStore->getNumberOfComponents(), shouldCancel));
+                                                     contiguousInputStorePtr->getNumberOfComponents(), shouldCancel));
     if(shouldCancel)
     {
       return {};

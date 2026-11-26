@@ -99,8 +99,8 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
-  std::vector<size_t> inputCompShape = inputArray->getIDataStore()->getComponentShape();
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
+  std::vector<size_t> inputCompShape = inputArrayPtr->getIDataStore()->getComponentShape();
 
   if(inputCompShape.size() > 1)
   {
@@ -120,9 +120,9 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
-  auto numericType = inputArray->getDataType();
+  auto numericType = inputArrayPtr->getDataType();
   std::vector<size_t> componentDims = {representationElementCount[static_cast<size_t>(outputType)]};
-  auto action = std::make_unique<CreateArrayAction>(numericType, inputArray->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, inputArrayPtr->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
 
   // Create the Output actions
   OutputActions actions;
@@ -151,13 +151,13 @@ Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_InputTypeKey = "InputType";
 constexpr StringLiteral k_OutputTypeKey = "OutputType";
 constexpr StringLiteral k_InputOrientationArrayPathKey = "InputOrientationArrayPath";
 constexpr StringLiteral k_OutputOrientationArrayNameKey = "OutputOrientationArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -166,11 +166,11 @@ Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_InputTypeKey, k_InputType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_OutputTypeKey, k_OutputType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InputTypeKey, k_InputType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_OutputTypeKey, k_OutputType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

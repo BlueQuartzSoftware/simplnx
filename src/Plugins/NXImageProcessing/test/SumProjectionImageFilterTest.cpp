@@ -19,24 +19,24 @@ namespace
 // FilterList), so this independent closed form is the correctness oracle instead of legacy parity.
 float64 SumExpectedForSlot(uint32 projDim, usize slot, usize dim)
 {
-  const auto Dd = static_cast<float64>(dim);
-  const float64 sumIdx = Dd * (Dd - 1.0) / 2.0; // sum of {0,1,...,D-1}
+  const auto dd = static_cast<float64>(dim);
+  const float64 sumIdx = dd * (dd - 1.0) / 2.0; // sum of {0,1,...,D-1}
   switch(projDim)
   {
   case 0: { // collapse X: slot = z*D + y ; sum over x of (z*D^2 + y*D + x)
     const auto z = static_cast<float64>(slot / dim);
     const auto y = static_cast<float64>(slot % dim);
-    return Dd * (z * Dd * Dd + y * Dd) + sumIdx;
+    return dd * (z * dd * dd + y * dd) + sumIdx;
   }
   case 1: { // collapse Y: slot = z*D + x ; sum over y of (z*D^2 + y*D + x)
     const auto z = static_cast<float64>(slot / dim);
     const auto x = static_cast<float64>(slot % dim);
-    return Dd * (z * Dd * Dd + x) + Dd * sumIdx;
+    return dd * (z * dd * dd + x) + dd * sumIdx;
   }
   default: { // collapse Z: slot = y*D + x ; sum over z of (z*D^2 + y*D + x)
     const auto y = static_cast<float64>(slot / dim);
     const auto x = static_cast<float64>(slot % dim);
-    return Dd * (y * Dd + x) + Dd * Dd * sumIdx;
+    return dd * (y * dd + x) + dd * dd * sumIdx;
   }
   }
 }
@@ -53,9 +53,9 @@ float64 SumExpectedForSlot(uint32 projDim, usize slot, usize dim)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][SumProjectionImageFilter]")
 {
-  constexpr usize D = 12;
-  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0); },
-                                                                               [](uint32 projDim, usize slot) { return SumExpectedForSlot(projDim, slot, D); });
+  constexpr usize k_D = 12;
+  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& dataStructure) { return ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0); },
+                                                                               [](uint32 projDim, usize slot) { return SumExpectedForSlot(projDim, slot, k_D); });
 }
 
 // -----------------------------------------------------------------------------
@@ -65,9 +65,9 @@ TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (int16 input)", "[NXImageProcessing][SumProjectionImageFilter]")
 {
-  constexpr usize D = 8;
-  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<int16>(ds, D, 0.0, 1.0); },
-                                                                               [](uint32 projDim, usize slot) { return SumExpectedForSlot(projDim, slot, D); });
+  constexpr usize k_D = 8;
+  projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& dataStructure) { return ip_test::BuildRampImage<int16>(dataStructure, k_D, 0.0, 1.0); },
+                                                                               [](uint32 projDim, usize slot) { return SumExpectedForSlot(projDim, slot, k_D); });
 }
 
 // -----------------------------------------------------------------------------

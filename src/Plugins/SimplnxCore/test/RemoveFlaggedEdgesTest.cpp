@@ -10,7 +10,7 @@ using namespace nx::core;
 
 namespace
 {
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_edges_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path KBaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_edges_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
 constexpr StringLiteral k_RegionIdsName = "Region Ids";
 constexpr StringLiteral k_SliceIdsName = "Slice Ids";
@@ -32,7 +32,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(KBaseDataFilePath);
 
   {
     // Instantiate the filter and an Arguments Object

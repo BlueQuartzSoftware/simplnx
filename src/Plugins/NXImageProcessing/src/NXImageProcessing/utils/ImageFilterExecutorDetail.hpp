@@ -304,7 +304,7 @@ std::optional<usize> FindFirstNonBinaryValue(nonstd::span<const T> values, T fg,
   // The block OR-reduction has no data-dependent exit, so compilers can vectorize it.
   // The first-violation search runs only in the first block of each range that contains a violation.
   // The per-block check bounds unused work after another range publishes a smaller index.
-  const T* const data = values.data();
+  const T* const dataPtr = values.data();
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(0, values.size());
   parallelAlgorithm.execute([&](const Range& range) {
@@ -326,13 +326,13 @@ std::optional<usize> FindFirstNonBinaryValue(nonstd::span<const T> values, T fg,
       uint32 invalidMask = 0;
       for(usize i = blockBegin; i < blockEnd; ++i)
       {
-        invalidMask |= static_cast<uint32>(data[i] != foreground) & static_cast<uint32>(data[i] != background);
+        invalidMask |= static_cast<uint32>(dataPtr[i] != foreground) & static_cast<uint32>(dataPtr[i] != background);
       }
       if(invalidMask != 0)
       {
         for(usize i = blockBegin; i < blockEnd; ++i)
         {
-          if(data[i] != foreground && data[i] != background)
+          if(dataPtr[i] != foreground && dataPtr[i] != background)
           {
             PublishSmallerIndex(firstInvalid, i);
             return;
@@ -578,20 +578,20 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
     for(usize y = 0; y < dimY; ++y)
     {
       const usize py = y + r[1];
-      const T* croppedRow = paddedPlane.get() + py * pdimX + r[0];
-      T* outputRow = originalPlane.get() + y * dimX;
+      const T* croppedRowPtr = paddedPlane.get() + py * pdimX + r[0];
+      T* outputRowPtr = originalPlane.get() + y * dimX;
       if(order == CropSubtractOrder::OriginalMinusCropped)
       {
         for(usize x = 0; x < dimX; ++x)
         {
-          outputRow[x] = static_cast<T>(outputRow[x] - croppedRow[x]);
+          outputRowPtr[x] = static_cast<T>(outputRowPtr[x] - croppedRowPtr[x]);
         }
       }
       else
       {
         for(usize x = 0; x < dimX; ++x)
         {
-          outputRow[x] = static_cast<T>(croppedRow[x] - outputRow[x]);
+          outputRowPtr[x] = static_cast<T>(croppedRowPtr[x] - outputRowPtr[x]);
         }
       }
     }
@@ -671,15 +671,15 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
   const T interiorFill = (kind == ReconMarker::FillholeMaxBorder) ? statsResult.value().max : statsResult.value().min;
 
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  if(nX <= 0 || nY <= 0 || nZ <= 0)
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  if(nX <= 0 || ny <= 0 || nz <= 0)
   {
     return {};
   }
   const usize dimX = static_cast<usize>(nX);
-  const usize dimY = static_cast<usize>(nY);
-  const usize dimZ = static_cast<usize>(nZ);
+  const usize dimY = static_cast<usize>(ny);
+  const usize dimZ = static_cast<usize>(nz);
   if(inStore.getStoreType() != IDataStore::StoreType::OutOfCore && markerStore.getStoreType() != IDataStore::StoreType::OutOfCore)
   {
     const usize planeSize = dimX * dimY;

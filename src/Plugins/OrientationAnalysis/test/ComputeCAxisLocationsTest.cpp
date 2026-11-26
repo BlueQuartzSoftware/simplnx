@@ -37,44 +37,44 @@ namespace
 {
 struct FixtureData
 {
-  std::array<float32, 4> inputQuat{};
-  std::array<float32, 3> expectedOutput{};
+  std::array<float32, 4> input_quat{};
+  std::array<float32, 3> expected_output{};
 };
 
-constexpr float32 k_Sin_OneEighthPiF = 0.38268343f;
-constexpr float32 k_Sin_OneEighthPi_OverSqrt3F = k_Sin_OneEighthPiF / k_Sqrt3F;
+constexpr float32 k_SinOneEighthPiF = 0.38268343f;
+constexpr float32 k_SinOneEighthPiOverSqrt3F = k_SinOneEighthPiF / k_Sqrt3F;
 
 const std::vector<FixtureData> k_Fixtures = {
     // no rotation
-    {.inputQuat = {0.0f, 0.0f, 0.0f, 1.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
+    {.input_quat = {0.0f, 0.0f, 0.0f, 1.0f}, .expected_output = {0.0f, 0.0f, 1.0f}},
     // +90 about x
-    {.inputQuat = {k_HalfSqrt2F, 0.0f, 0.0f, k_HalfSqrt2F}, .expectedOutput = {0.0f, 1.0f, 0.0f}},
+    {.input_quat = {k_HalfSqrt2F, 0.0f, 0.0f, k_HalfSqrt2F}, .expected_output = {0.0f, 1.0f, 0.0f}},
     // +90 about y
-    {.inputQuat = {0.0f, k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}, .expectedOutput = {-1.0f, 0.0f, 0.0f}},
+    {.input_quat = {0.0f, k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}, .expected_output = {-1.0f, 0.0f, 0.0f}},
     // +90 about z
-    {.inputQuat = {0.0f, 0.0f, k_HalfSqrt2F, k_HalfSqrt2F}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
+    {.input_quat = {0.0f, 0.0f, k_HalfSqrt2F, k_HalfSqrt2F}, .expected_output = {0.0f, 0.0f, 1.0f}},
     // 180 about x; flip z sign
-    {.inputQuat = {1.0f, 0.0f, 0.0f, 0.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
+    {.input_quat = {1.0f, 0.0f, 0.0f, 0.0f}, .expected_output = {0.0f, 0.0f, 1.0f}},
     // 180 about y; flip z sign
-    {.inputQuat = {0.0f, 1.0f, 0.0f, 0.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
+    {.input_quat = {0.0f, 1.0f, 0.0f, 0.0f}, .expected_output = {0.0f, 0.0f, 1.0f}},
     // 180 about z
-    {.inputQuat = {0.0f, 0.0f, 1.0f, 0.0f}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
+    {.input_quat = {0.0f, 0.0f, 1.0f, 0.0f}, .expected_output = {0.0f, 0.0f, 1.0f}},
     // 120 about (1, 1, 1)
-    {.inputQuat = {0.5f, 0.5f, 0.5f, 0.5f}, .expectedOutput = {0.0f, 1.0f, 0.0f}},
+    {.input_quat = {0.5f, 0.5f, 0.5f, 0.5f}, .expected_output = {0.0f, 1.0f, 0.0f}},
     // +45 about x
-    {.inputQuat = {k_Sin_OneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, k_HalfSqrt2F, k_HalfSqrt2F}},
+    {.input_quat = {k_SinOneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expected_output = {0.0f, k_HalfSqrt2F, k_HalfSqrt2F}},
     // +45 about y
-    {.inputQuat = {0.0f, k_Sin_OneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {-k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
+    {.input_quat = {0.0f, k_SinOneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expected_output = {-k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
     // +45 about z
-    {.inputQuat = {0.0f, 0.0f, k_Sin_OneEighthPiF, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
+    {.input_quat = {0.0f, 0.0f, k_SinOneEighthPiF, k_Cos_OneEighthPiF}, .expected_output = {0.0f, 0.0f, 1.0f}},
     // -45 about x
-    {.inputQuat = {-k_Sin_OneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, -k_HalfSqrt2F, k_HalfSqrt2F}},
+    {.input_quat = {-k_SinOneEighthPiF, 0.0f, 0.0f, k_Cos_OneEighthPiF}, .expected_output = {0.0f, -k_HalfSqrt2F, k_HalfSqrt2F}},
     // -45 about y
-    {.inputQuat = {0.0f, -k_Sin_OneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expectedOutput = {k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
+    {.input_quat = {0.0f, -k_SinOneEighthPiF, 0.0f, k_Cos_OneEighthPiF}, .expected_output = {k_HalfSqrt2F, 0.0f, k_HalfSqrt2F}},
     // -45 about z
-    {.inputQuat = {0.0f, 0.0f, -k_Sin_OneEighthPiF, k_Cos_OneEighthPiF}, .expectedOutput = {0.0f, 0.0f, 1.0f}},
+    {.input_quat = {0.0f, 0.0f, -k_SinOneEighthPiF, k_Cos_OneEighthPiF}, .expected_output = {0.0f, 0.0f, 1.0f}},
     // +45 around (1, 1, 1); v_out = ((2 - sqrt(6) - sqrt(2))/6, (2 + sqrt(6) - sqrt(2))/6, (1 + sqrt(2))/3)
-    {.inputQuat = {k_Sin_OneEighthPi_OverSqrt3F, k_Sin_OneEighthPi_OverSqrt3F, k_Sin_OneEighthPi_OverSqrt3F, k_Cos_OneEighthPiF}, .expectedOutput = {-0.3106172, 0.50587934, 0.80473787}},
+    {.input_quat = {k_SinOneEighthPiOverSqrt3F, k_SinOneEighthPiOverSqrt3F, k_SinOneEighthPiOverSqrt3F, k_Cos_OneEighthPiF}, .expected_output = {-0.3106172, 0.50587934, 0.80473787}},
 };
 
 template <class T>
@@ -174,19 +174,19 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Preflight Error - C
   // validated together (Quats, CellPhases) do NOT share the same tuple count. This drives
   // the validateNumberOfTuples() guard in preflightImpl that emits error -3520.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
 
   // CellPhases lives in a separate AttributeMatrix with a deliberately different tuple
   // count (9 != 10) so the cross-array tuple-count check fails.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   ComputeCAxisLocationsFilter filter;
   Arguments args;
@@ -212,9 +212,9 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases
   UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1});
 
   // Create crystal structures array with no hexagonal phases
-  UInt32Array* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1});
-  crystalStructures->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
-  crystalStructures->setValue(1, ebsdlib::CrystalStructure::Cubic_High);
+  UInt32Array* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1});
+  crystalStructuresPtr->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
+  crystalStructuresPtr->setValue(1, ebsdlib::CrystalStructure::Cubic_High);
 
   ComputeCAxisLocationsFilter filter;
   Arguments args;
@@ -243,16 +243,16 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal p
   UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4});
 
   // Create crystal structures array with some non-hexagonal phases
-  UInt32Array* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {3}, {1});
-  crystalStructures->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
-  crystalStructures->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
-  crystalStructures->setValue(2, ebsdlib::CrystalStructure::Cubic_High);
+  UInt32Array* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {3}, {1});
+  crystalStructuresPtr->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
+  crystalStructuresPtr->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
+  crystalStructuresPtr->setValue(2, ebsdlib::CrystalStructure::Cubic_High);
 
   // All non-hexagonal phases
-  Int32Array* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1});
-  for(usize i = 0; i < phases->getSize(); i++)
+  Int32Array* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1});
+  for(usize i = 0; i < phasesPtr->getSize(); i++)
   {
-    phases->setValue(i, 2);
+    phasesPtr->setValue(i, 2);
   }
 
   DataPath cAxisLocationsPath({"CAxisLocations"});
@@ -292,24 +292,24 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle", "[
 
   const usize size = k_Fixtures.size();
 
-  Float32Array* quats = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {size}, {4});
+  Float32Array* quatsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {size}, {4});
 
   for(usize i = 0; i < size; i++)
   {
     for(usize j = 0; j < 4; j++)
     {
-      quats->setComponent(i, j, k_Fixtures[i].inputQuat[j]);
+      quatsPtr->setComponent(i, j, k_Fixtures[i].input_quat[j]);
     }
   }
 
-  UInt32Array* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1});
-  crystalStructures->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
-  crystalStructures->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
+  UInt32Array* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1});
+  crystalStructuresPtr->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
+  crystalStructuresPtr->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
 
-  Int32Array* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {size}, {1});
-  for(usize i = 0; i < phases->getSize(); i++)
+  Int32Array* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {size}, {1});
+  for(usize i = 0; i < phasesPtr->getSize(); i++)
   {
-    phases->setValue(i, 1);
+    phasesPtr->setValue(i, 1);
   }
 
   DataPath cAxisLocationsPath({"CAxisLocations"});
@@ -335,8 +335,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle", "[
   {
     for(usize j = 0; j < 3; j++)
     {
-      INFO(fmt::format("i = {} | j = {} | input_quat = ({}) | expected_vec = ({})", i, j, fmt::join(k_Fixtures[i].inputQuat, ", "), fmt::join(k_Fixtures[i].expectedOutput, ", ")));
-      REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expectedOutput[j]).margin(1e-7f));
+      INFO(fmt::format("i = {} | j = {} | input_quat = ({}) | expected_vec = ({})", i, j, fmt::join(k_Fixtures[i].input_quat, ", "), fmt::join(k_Fixtures[i].expected_output, ", ")));
+      REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expected_output[j]).margin(1e-7f));
     }
   }
 
@@ -351,27 +351,27 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mi
 
   const usize size = k_Fixtures.size();
 
-  Float32Array* quats = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {size}, {4});
+  Float32Array* quatsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {size}, {4});
 
   for(usize i = 0; i < size; i++)
   {
     for(usize j = 0; j < 4; j++)
     {
-      quats->setComponent(i, j, k_Fixtures[i].inputQuat[j]);
+      quatsPtr->setComponent(i, j, k_Fixtures[i].input_quat[j]);
     }
   }
 
-  UInt32Array* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {3}, {1});
-  crystalStructures->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
-  crystalStructures->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
-  crystalStructures->setValue(2, ebsdlib::CrystalStructure::Cubic_High);
+  UInt32Array* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {3}, {1});
+  crystalStructuresPtr->setValue(0, ebsdlib::CrystalStructure::UnknownCrystalStructure);
+  crystalStructuresPtr->setValue(1, ebsdlib::CrystalStructure::Hexagonal_High);
+  crystalStructuresPtr->setValue(2, ebsdlib::CrystalStructure::Cubic_High);
 
   // Alternate hexagonal and cubic cells in one execution.
   // This checks computed c-axes, non-hexagonal NaNs, and neighboring values.
-  Int32Array* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {size}, {1});
+  Int32Array* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {size}, {1});
   for(usize i = 0; i < size; i++)
   {
-    phases->setValue(i, i % 2 == 0 ? 1 : 2);
+    phasesPtr->setValue(i, i % 2 == 0 ? 1 : 2);
   }
 
   DataPath cAxisLocationsPath({"CAxisLocations"});
@@ -400,11 +400,11 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle - Mi
     const bool isHexCell = i % 2 == 0;
     for(usize j = 0; j < 3; j++)
     {
-      INFO(fmt::format("i = {} | j = {} | phase = {} | input_quat = ({}) | expected_vec = ({})", i, j, phases->getValue(i), fmt::join(k_Fixtures[i].inputQuat, ", "),
-                       fmt::join(k_Fixtures[i].expectedOutput, ", ")));
+      INFO(fmt::format("i = {} | j = {} | phase = {} | input_quat = ({}) | expected_vec = ({})", i, j, phasesPtr->getValue(i), fmt::join(k_Fixtures[i].input_quat, ", "),
+                       fmt::join(k_Fixtures[i].expected_output, ", ")));
       if(isHexCell)
       {
-        REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expectedOutput[j]).margin(1e-7f));
+        REQUIRE(cAxisLocations.getComponent(i, j) == Approx(k_Fixtures[i].expected_output[j]).margin(1e-7f));
       }
       else
       {
@@ -420,7 +420,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: SIMPL Backwards Com
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -433,22 +433,22 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: SIMPL Backwards Com
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeCAxisLocationsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeCAxisLocationsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeCAxisLocationsFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(ComputeCAxisLocationsFilter::k_CAxisLocationsArrayName_Key) == "TestName");
     }
@@ -520,12 +520,12 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 65536-
   auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, quatsPath, {k_CellTuples}, {4});
   auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, {k_CellTuples}, {1});
   auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
-  auto* quats = Float32Array::Create(dataStructure, quatsPath.getTargetName(), quatsStore);
-  auto* phases = Int32Array::Create(dataStructure, phasesPath.getTargetName(), phasesStore);
-  auto* crystalStructures = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore);
-  REQUIRE(quats != nullptr);
-  REQUIRE(phases != nullptr);
-  REQUIRE(crystalStructures != nullptr);
+  auto* quatsPtr = Float32Array::Create(dataStructure, quatsPath.getTargetName(), quatsStore);
+  auto* phasesPtr = Int32Array::Create(dataStructure, phasesPath.getTargetName(), phasesStore);
+  auto* crystalStructuresPtr = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore);
+  REQUIRE(quatsPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(crystalStructuresPtr != nullptr);
 
   std::vector<float32> quaternionValues(k_CellTuples * 4, 0.0F);
   std::vector<int32> phaseValues(k_CellTuples, 1);
@@ -534,21 +534,21 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 65536-
     quaternionValues[tupleIdx * 4 + 3] = 1.0F;
   }
 
-  quaternionValues[k_LastFullPageTuple * 4 + 1] = k_Sin_OneEighthPiF;
+  quaternionValues[k_LastFullPageTuple * 4 + 1] = k_SinOneEighthPiF;
   quaternionValues[k_LastFullPageTuple * 4 + 3] = k_Cos_OneEighthPiF;
   quaternionValues[k_TailTuple * 4] = k_HalfSqrt2F;
   quaternionValues[k_TailTuple * 4 + 3] = k_HalfSqrt2F;
   const std::array<uint32, 2> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
 
-  auto quatsWriteResult = quats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
+  auto quatsWriteResult = quatsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
-  auto phasesWriteResult = phases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
+  auto phasesWriteResult = phasesPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
-  auto crystalStructuresWriteResult = crystalStructures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
+  auto crystalStructuresWriteResult = crystalStructuresPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
 
-  REQUIRE(quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(quatsPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(phasesPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   ComputeCAxisLocationsFilter filter;
   Arguments args;

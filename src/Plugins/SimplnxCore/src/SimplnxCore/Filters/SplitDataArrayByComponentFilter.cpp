@@ -94,14 +94,14 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto& inputArrayRef = dataStructure.getDataRefAs<IDataArray>(pInputArrayPath);
-  const auto* inputArray = &inputArrayRef;
-  usize numComponents = inputArray->getNumberOfComponents();
+  const auto* inputArrayPtr = &inputArrayRef;
+  usize numComponents = inputArrayPtr->getNumberOfComponents();
   if(numComponents <= 1)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString()))};
   }
 
-  ShapeType tDims = inputArray->getIDataStoreRef().getTupleShape();
+  ShapeType tDims = inputArrayPtr->getIDataStoreRef().getTupleShape();
   ShapeType cDims(1, 1);
 
   if(pSelectComponents)
@@ -119,7 +119,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
       }
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(compIndex, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tDims, cDims, newArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArrayPtr->getDataType(), tDims, cDims, newArrayPath));
     }
   }
   else
@@ -128,7 +128,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
     {
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(i, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tDims, cDims, newArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArrayPtr->getDataType(), tDims, cDims, newArrayPath));
     }
   }
 
@@ -172,11 +172,11 @@ Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_InputArrayPathKey = "InputArrayPath";
 constexpr StringLiteral k_SplitArraysSuffixKey = "SplitArraysSuffix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> SplitDataArrayByComponentFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -185,8 +185,8 @@ Result<Arguments> SplitDataArrayByComponentFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputArrayPathKey, k_MultiCompArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_SplitArraysSuffixKey, k_Postfix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputArrayPathKey, k_MultiCompArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_SplitArraysSuffixKey, k_Postfix_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

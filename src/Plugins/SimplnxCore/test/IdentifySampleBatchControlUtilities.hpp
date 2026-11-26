@@ -36,7 +36,7 @@ void CheckGrant(ScopeT& scope, DataStructure& data, usize width, usize partialBy
   REQUIRE(partialBytes < k_PlaneBytes);
   REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
   auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
-  auto* originalStore = mask.getDataStore();
+  auto* originalStorePtr = mask.getDataStore();
   scope.requireExpectedStore(mask);
   const auto originalId = mask.getId();
   auto& budget = CacheMemoryBudgetManager::instance();
@@ -64,7 +64,7 @@ void CheckGrant(ScopeT& scope, DataStructure& data, usize width, usize partialBy
   }
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   REQUIRE(budget.budgetBytes() == originalBudget);
-  REQUIRE(mask.getDataStore() == originalStore);
+  REQUIRE(mask.getDataStore() == originalStorePtr);
   REQUIRE(mask.getId() == originalId);
   scope.requireExpectedStore(mask);
   REQUIRE_FALSE(counters.invalid);

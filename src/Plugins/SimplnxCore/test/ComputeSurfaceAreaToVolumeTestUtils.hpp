@@ -201,8 +201,8 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   const ShapeType componentShape = {1};
   const FloatVec3 origin = {-1.0f, 4.0f, 7.0f};
   REQUIRE(pairAxis < (singleSlice ? 2 : 3));
-  constexpr usize pairFeature = 2;
-  constexpr int32 enclosingFeature = 1;
+  constexpr usize k_PairFeature = 2;
+  constexpr int32 k_EnclosingFeature = 1;
   const usize cellCount = dimensions[0] * dimensions[1] * dimensions[2];
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
@@ -222,12 +222,12 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   REQUIRE(countsStorePtr != nullptr);
   REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", idsStorePtr, cellAttributeMatrixPtr->getId()) != nullptr);
   REQUIRE(Int32Array::Create(dataStructure, "NumCells", countsStorePtr, featureAttributeMatrixPtr->getId()) != nullptr);
-  std::vector<int32> labels(cellCount, enclosingFeature);
+  std::vector<int32> labels(cellCount, k_EnclosingFeature);
   const std::array<usize, 3> first = {2, 2, singleSlice ? usize{0} : usize{2}};
   auto second = first;
   second.at(pairAxis)++;
-  labels[(((first[2] * dimensions[1]) + first[1]) * dimensions[0]) + first[0]] = static_cast<int32>(pairFeature);
-  labels[(((second[2] * dimensions[1]) + second[1]) * dimensions[0]) + second[0]] = static_cast<int32>(pairFeature);
+  labels[(((first[2] * dimensions[1]) + first[1]) * dimensions[0]) + first[0]] = static_cast<int32>(k_PairFeature);
+  labels[(((second[2] * dimensions[1]) + second[1]) * dimensions[0]) + second[0]] = static_cast<int32>(k_PairFeature);
   const std::array<int32, 3> counts = {0, singleSlice ? 23 : 123, suppliedPairCount};
   auto idsWrite = idsStorePtr->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
@@ -263,8 +263,8 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   const double area = 2.0 * ((singleSlice ? 0.0 : sides[0] * sides[1]) + (sides[0] * sides[2]) + (sides[1] * sides[2]));
   const double voxelVolume = static_cast<double>(spacing[0]) * spacing[1] * spacing[2];
   std::array<double, 3> volumes = {0.0, 0.0, 0.0};
-  volumes[pairFeature] = suppliedPairCount * voxelVolume;
-  volumes[enclosingFeature] = (singleSlice ? 23.0 : 123.0) * voxelVolume;
+  volumes[k_PairFeature] = suppliedPairCount * voxelVolume;
+  volumes[k_EnclosingFeature] = (singleSlice ? 23.0 : 123.0) * voxelVolume;
   CAPTURE(pairAxis, spacing[0], spacing[1], spacing[2], calculateSphericity, singleSlice, suppliedPairCount, area);
   REQUIRE(area > 0.0);
 
@@ -397,24 +397,24 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
   // The x=1 backing plate is 111 by 35. Each odd (y,z) location extends a tooth
   // another 134 cells along X. All teeth connect through the plate and the entire
   // comb has a one-cell background border, so no exterior-domain faces enter the oracle.
-  constexpr int32 plateY = 111;
-  constexpr int32 plateZ = 35;
-  constexpr int32 toothLength = 134;
-  constexpr int32 teethY = 56;
-  constexpr int32 teethZ = 18;
-  constexpr int32 combCellCount = (plateY * plateZ) + (toothLength * teethY * teethZ);
-  constexpr std::array<int32, 3> normalFaceCounts = {2 * plateY * plateZ, (2 * plateZ) + (2 * toothLength * teethY * teethZ), (2 * plateY) + (2 * toothLength * teethY * teethZ)};
-  STATIC_REQUIRE(combCellCount == 138957);
-  STATIC_REQUIRE(normalFaceCounts[0] == 7770);
-  STATIC_REQUIRE(normalFaceCounts[1] == 270214);
-  STATIC_REQUIRE(normalFaceCounts[2] == 270366);
-  const std::array<int32, 2> counts = {static_cast<int32>(cellCount) - combCellCount, combCellCount};
+  constexpr int32 k_PlateY = 111;
+  constexpr int32 k_PlateZ = 35;
+  constexpr int32 k_ToothLength = 134;
+  constexpr int32 k_TeethY = 56;
+  constexpr int32 k_TeethZ = 18;
+  constexpr int32 k_CombCellCount = (k_PlateY * k_PlateZ) + (k_ToothLength * k_TeethY * k_TeethZ);
+  constexpr std::array<int32, 3> k_NormalFaceCounts = {2 * k_PlateY * k_PlateZ, (2 * k_PlateZ) + (2 * k_ToothLength * k_TeethY * k_TeethZ), (2 * k_PlateY) + (2 * k_ToothLength * k_TeethY * k_TeethZ)};
+  STATIC_REQUIRE(k_CombCellCount == 138957);
+  STATIC_REQUIRE(k_NormalFaceCounts[0] == 7770);
+  STATIC_REQUIRE(k_NormalFaceCounts[1] == 270214);
+  STATIC_REQUIRE(k_NormalFaceCounts[2] == 270366);
+  const std::array<int32, 2> counts = {static_cast<int32>(cellCount) - k_CombCellCount, k_CombCellCount};
   std::vector<int32> labels(cellCount, 0);
-  for(usize zIndex = 1; zIndex <= plateZ; zIndex++)
+  for(usize zIndex = 1; zIndex <= k_PlateZ; zIndex++)
   {
-    for(usize yIndex = 1; yIndex <= plateY; yIndex++)
+    for(usize yIndex = 1; yIndex <= k_PlateY; yIndex++)
     {
-      for(usize xIndex = 1; xIndex <= toothLength + 1; xIndex++)
+      for(usize xIndex = 1; xIndex <= k_ToothLength + 1; xIndex++)
       {
         if(xIndex == 1 || (yIndex % 2 == 1 && zIndex % 2 == 1))
         {
@@ -423,7 +423,7 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
       }
     }
   }
-  REQUIRE(std::count(labels.begin(), labels.end(), int32{1}) == combCellCount);
+  REQUIRE(std::count(labels.begin(), labels.end(), int32{1}) == k_CombCellCount);
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   REQUIRE(imageGeomPtr != nullptr);
@@ -470,9 +470,9 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
 
   // Count entire plate and tooth faces analytically; do not repeat the production neighbor scan.
   const std::array<double, 3> physicalSpacing = {spacing[0], spacing[1], spacing[2]};
-  const double area = (normalFaceCounts[0] * physicalSpacing[1] * physicalSpacing[2]) + (normalFaceCounts[1] * physicalSpacing[0] * physicalSpacing[2]) +
-                      (normalFaceCounts[2] * physicalSpacing[0] * physicalSpacing[1]);
-  const double volume = combCellCount * physicalSpacing[0] * physicalSpacing[1] * physicalSpacing[2];
+  const double area = (k_NormalFaceCounts[0] * physicalSpacing[1] * physicalSpacing[2]) + (k_NormalFaceCounts[1] * physicalSpacing[0] * physicalSpacing[2]) +
+                      (k_NormalFaceCounts[2] * physicalSpacing[0] * physicalSpacing[1]);
+  const double volume = k_CombCellCount * physicalSpacing[0] * physicalSpacing[1] * physicalSpacing[2];
   CAPTURE(spacing[0], spacing[1], spacing[2], calculateSphericity, area, volume);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ratioPath));
   const auto& ratios = dataStructure.getDataRefAs<Float32Array>(ratioPath);

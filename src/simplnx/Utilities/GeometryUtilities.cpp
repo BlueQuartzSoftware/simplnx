@@ -91,52 +91,52 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(c
 
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
-  const Float32Array* xBounds = geometry.getXBounds();
-  const Float32Array* yBounds = geometry.getYBounds();
-  const Float32Array* zBounds = geometry.getZBounds();
+  const Float32Array* xBoundsPtr = geometry.getXBounds();
+  const Float32Array* yBoundsPtr = geometry.getYBounds();
+  const Float32Array* zBoundsPtr = geometry.getZBounds();
 
-  if(xBounds == nullptr)
+  if(xBoundsPtr == nullptr)
   {
     return MakeErrorResult<FloatVec3>(-4000, "Unable to calculate partition lengths using the partition count - X Bounds array is not available.");
   }
 
-  if(yBounds == nullptr)
+  if(yBoundsPtr == nullptr)
   {
     return MakeErrorResult<FloatVec3>(-4001, "Unable to calculate partition lengths using the partition count - Y Bounds array is not available.");
   }
 
-  if(zBounds == nullptr)
+  if(zBoundsPtr == nullptr)
   {
     return MakeErrorResult<FloatVec3>(-4002, "Unable to calculate partition lengths using the partition count - Z Bounds array is not available.");
   }
 
-  if(xBounds->getSize() == 0)
+  if(xBoundsPtr->getSize() == 0)
   {
     return MakeErrorResult<FloatVec3>(-4003, "Unable to calculate partition lengths using the partition count - X Bounds array is empty.");
   }
 
-  if(yBounds->getSize() == 0)
+  if(yBoundsPtr->getSize() == 0)
   {
     return MakeErrorResult<FloatVec3>(-4004, "Unable to calculate partition lengths using the partition count - Y Bounds array is empty.");
   }
 
-  if(zBounds->getSize() == 0)
+  if(zBoundsPtr->getSize() == 0)
   {
     return MakeErrorResult<FloatVec3>(-4005, "Unable to calculate partition lengths using the partition count - Z Bounds array is empty.");
   }
 
   FloatVec3 lengthPerPartition = {0.0f, 0.0f, 0.0f};
 
-  const AbstractDataStore<float32>& xStore = xBounds->getDataStoreRef();
-  float32 maxX = xStore.getValue(xBounds->getNumberOfTuples() - 1);
+  const AbstractDataStore<float32>& xStore = xBoundsPtr->getDataStoreRef();
+  float32 maxX = xStore.getValue(xBoundsPtr->getNumberOfTuples() - 1);
   lengthPerPartition.setX((maxX - xStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
 
-  const AbstractDataStore<float32>& yStore = yBounds->getDataStoreRef();
-  float32 maxY = yStore.getValue(yBounds->getNumberOfTuples() - 1);
+  const AbstractDataStore<float32>& yStore = yBoundsPtr->getDataStoreRef();
+  float32 maxY = yStore.getValue(yBoundsPtr->getNumberOfTuples() - 1);
   lengthPerPartition.setY((maxY - yStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getY()));
 
-  const AbstractDataStore<float32>& zStore = zBounds->getDataStoreRef();
-  float32 maxZ = zStore.getValue(zBounds->getNumberOfTuples() - 1);
+  const AbstractDataStore<float32>& zStore = zBoundsPtr->getDataStoreRef();
+  float32 maxZ = zStore.getValue(zBoundsPtr->getNumberOfTuples() - 1);
   lengthPerPartition.setZ((maxZ - zStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
 
   return Result<FloatVec3>{lengthPerPartition};
@@ -295,22 +295,22 @@ struct Edge
   Point3Df start;
   Point3Df end;
   bool valid;
-  int32 regionId;
-  uint8 positiveCount = 0;
-  uint8 negativeCount = 0;
+  int32 region_id;
+  uint8 positive_count = 0;
+  uint8 negative_count = 0;
   uint8 zeroCount = 0;
 
   // Constructors
   Edge()
   : valid(false)
-  , regionId(0)
+  , region_id(0)
   {
   }
   Edge(Point3Df start_, Point3Df end_)
   : start(std::move(start_))
   , end(std::move(end_))
   , valid(true)
-  , regionId(0)
+  , region_id(0)
   {
   }
 
@@ -353,18 +353,18 @@ struct Plane
  */
 struct PointInfo
 {
-  float SignedDistance;
+  float signed_distance;
   uint8 location;
 
   explicit PointInfo(float signedDistance)
-  : SignedDistance(signedDistance)
+  : signed_distance(signedDistance)
   , location(3) // Default the point is on the plane
   {
-    if(SignedDistance > EPSILON)
+    if(signed_distance > EPSILON)
     {
       location = 1; // Above the plane
     }
-    else if(SignedDistance < -EPSILON)
+    else if(signed_distance < -EPSILON)
     {
       location = 2; // Below the plane
     }
@@ -406,16 +406,16 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
   if(positiveCount == 3 || negativeCount == 3 || zeroCount == 3)
   {
     Edge e;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e; // Invalid edge because triangle is completely above or below the plane
   }
 
   // Edge to store the intersection line segment
   Edge intersectionEdge;
-  intersectionEdge.positiveCount = positiveCount;
-  intersectionEdge.negativeCount = negativeCount;
+  intersectionEdge.positive_count = positiveCount;
+  intersectionEdge.negative_count = negativeCount;
   intersectionEdge.zeroCount = zeroCount;
 
   // Interpolate from the lower-z endpoint so shared edges produce identical points.
@@ -439,8 +439,8 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
   if(zeroCount == 1 && (positiveCount == 2 || negativeCount == 2))
   {
     Edge e;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
@@ -451,21 +451,21 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
     if(p0.onPlane())
     {
       e.start = v0;
-      e.end = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
+      e.end = computeIntersection({v1, v2}, p1.signed_distance, p2.signed_distance, zPlane);
     }
     else if(p1.onPlane())
     {
       e.start = v1;
-      e.end = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance, zPlane);
+      e.end = computeIntersection({v0, v2}, p0.signed_distance, p2.signed_distance, zPlane);
     }
     else if(p2.onPlane())
     {
       e.start = v2;
-      e.end = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
+      e.end = computeIntersection({v0, v1}, p0.signed_distance, p1.signed_distance, zPlane);
     }
     e.start[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     e.valid = true;
     return e;
@@ -477,8 +477,8 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
     Edge e{v0, v1};
     e.start[2] = zPlane;
     e.end[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
@@ -487,8 +487,8 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
     Edge e{v1, v2};
     e.start[2] = zPlane;
     e.end[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
@@ -497,50 +497,50 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
     Edge e{v0, v2};
     e.start[2] = zPlane;
     e.end[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   if(p0.planeSplitsEdge(p1) && p0.planeSplitsEdge(p2))
   {
-    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
-    auto intersectionPoint1 = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance, zPlane);
+    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.signed_distance, p1.signed_distance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v0, v2}, p0.signed_distance, p2.signed_distance, zPlane);
 
     Edge e{intersectionPoint0, intersectionPoint1};
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   if(p0.planeSplitsEdge(p1) && p1.planeSplitsEdge(p2))
   {
-    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
-    auto intersectionPoint1 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
+    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.signed_distance, p1.signed_distance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v1, v2}, p1.signed_distance, p2.signed_distance, zPlane);
     Edge e{intersectionPoint0, intersectionPoint1};
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   if(p1.planeSplitsEdge(p2) && p2.planeSplitsEdge(p0))
   {
-    auto intersectionPoint0 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
-    auto intersectionPoint1 = computeIntersection({v2, v0}, p2.SignedDistance, p0.SignedDistance, zPlane);
+    auto intersectionPoint0 = computeIntersection({v1, v2}, p1.signed_distance, p2.signed_distance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v2, v0}, p2.signed_distance, p0.signed_distance, zPlane);
     Edge e{intersectionPoint0, intersectionPoint1};
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   // No valid intersection found
   Edge e;
-  e.positiveCount = positiveCount;
-  e.negativeCount = negativeCount;
+  e.positive_count = positiveCount;
+  e.negative_count = negativeCount;
   e.zeroCount = zeroCount;
   return e; // Invalid edge
 }
@@ -706,7 +706,7 @@ Result<> GeometryUtilities::ValidatePositiveFiniteVector(nonstd::span<const floa
 Result<SizeVec3> GeometryUtilities::ComputePaddedDimensions(const SizeVec3& dims, const std::array<std::array<int32, 2>, 3>& padding, const std::array<bool, 3>& active)
 {
   SizeVec3 output = dims;
-  constexpr usize max = std::numeric_limits<usize>::max();
+  constexpr usize k_Max = std::numeric_limits<usize>::max();
   for(usize axis = 0; axis < 3; ++axis)
   {
     if(!active[axis])
@@ -716,10 +716,10 @@ Result<SizeVec3> GeometryUtilities::ComputePaddedDimensions(const SizeVec3& dims
     for(usize side = 0; side < 2; ++side)
     {
       const usize amount = static_cast<usize>(padding[axis][side]);
-      if(amount > max - output[axis])
+      if(amount > k_Max - output[axis])
       {
         return MakeErrorResult<SizeVec3>(k_PaddedExtentOverflowError, fmt::format("Parameter '{} Min & Max Padding' {} value {} with dimension {} produces an extent above {}.", "XYZ"[axis],
-                                                                                  side == 0 ? "Min" : "Max", amount, output[axis], max));
+                                                                                  side == 0 ? "Min" : "Max", amount, output[axis], k_Max));
       }
       output[axis] += amount;
     }
@@ -731,11 +731,11 @@ Result<SizeVec3> GeometryUtilities::ComputePaddedDimensions(const SizeVec3& dims
   usize product = 1;
   for(usize axis = 0; axis < 3; ++axis)
   {
-    if(output[axis] > max / product)
+    if(output[axis] > k_Max / product)
     {
       return MakeErrorResult<SizeVec3>(k_PaddedTupleOverflowError,
                                        fmt::format("Parameter '{} Min & Max Padding' values [{}, {}] with dimension {} produce padded {} extent {} and a tuple product above {}.", "XYZ"[axis],
-                                                   padding[axis][0], padding[axis][1], dims[axis], "XYZ"[axis], output[axis], max));
+                                                   padding[axis][0], padding[axis][1], dims[axis], "XYZ"[axis], output[axis], k_Max));
     }
     product *= output[axis];
   }

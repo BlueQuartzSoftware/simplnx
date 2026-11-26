@@ -364,21 +364,21 @@ Result<> ApplySmoothingRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
 /// inter-pass behavior.
 struct GradientMagnitudeRecursiveGaussianExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   FloatVec3 spacing;
   float64 sigma;
-  bool normalizeAcrossScale;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool normalize_across_scale;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<float32>& acc = outArray.getDataStoreRef(); // output doubles as the accumulator
 
@@ -408,17 +408,17 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
         return MakeErrorResult(-23620, fmt::format("Gradient magnitude recursive Gaussian bounded 2D scratch dimensions overflow for {} x {}.", dims[0], dims[1]));
       }
       checkpointCount = std::max(checkpointCount, detail::RecursiveGaussian2DXBlockCount(dims[0], plan.coreCols));
-      auto checkpointResult = detail::CreateGaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>(checkpointCount, plan.coreCols, shouldCancel);
+      auto checkpointResult = detail::CreateGaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>(checkpointCount, plan.coreCols, should_cancel);
       if(checkpointResult.invalid())
       {
         return ConvertResult(std::move(checkpointResult));
       }
-      auto workResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, shouldCancel);
+      auto workResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, should_cancel);
       if(workResult.invalid())
       {
         return ConvertResult(std::move(workResult));
       }
-      auto contributionResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, shouldCancel);
+      auto contributionResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, should_cancel);
       if(contributionResult.invalid())
       {
         return ConvertResult(std::move(contributionResult));
@@ -426,13 +426,13 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
       std::unique_ptr<detail::GaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>> checkpoints = std::move(checkpointResult.value());
       std::unique_ptr<detail::GaussianTemporaryStore<float32>> work = std::move(workResult.value());
       std::unique_ptr<detail::GaussianTemporaryStore<float32>> contribution = std::move(contributionResult.value());
-      return ApplyGradientMagnitudeRecursiveGaussian2D<T>(inStore, acc, *work, *contribution, *checkpoints, dims, spacing, sigma, normalizeAcrossScale, plan, shouldCancel, messageHandler);
+      return ApplyGradientMagnitudeRecursiveGaussian2D<T>(inStore, acc, *work, *contribution, *checkpoints, dims, spacing, sigma, normalize_across_scale, plan, should_cancel, message_handler);
     }
     if(usePlaneCascade && effDim == 3)
     {
       if(storagePlan.useTemporaryRecordStore)
       {
-        auto temporaryResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], shouldCancel);
+        auto temporaryResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], should_cancel);
         if(temporaryResult.invalid())
         {
           return ConvertResult(std::move(temporaryResult));
@@ -442,23 +442,23 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
         // cascade's Set/Accumulate below targets this instead of the real deflate-backed output store, so the
         // running gradient-magnitude sum never inflates/deflates against `acc`. Only the finished, square-rooted
         // result is streamed into `acc` once, at the end of ApplyGradientMagnitudeRecursiveGaussian3D.
-        auto accumulatorResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], shouldCancel);
+        auto accumulatorResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], should_cancel);
         if(accumulatorResult.invalid())
         {
           return ConvertResult(std::move(accumulatorResult));
         }
         std::unique_ptr<detail::GaussianTemporaryStore<float32>> rawAccumulator = std::move(accumulatorResult.value());
-        return ApplyGradientMagnitudeRecursiveGaussian3D<T>(inStore, acc, *rawAccumulator, *work, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+        return ApplyGradientMagnitudeRecursiveGaussian3D<T>(inStore, acc, *rawAccumulator, *work, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
       }
       auto work = DataStoreUtilities::CreateDataStoreWithFormat<float32>(storagePlan.workingDataFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      return ApplyGradientMagnitudeRecursiveGaussian3D<T>(inStore, acc, acc, *work, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+      return ApplyGradientMagnitudeRecursiveGaussian3D<T>(inStore, acc, acc, *work, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
     }
     if(usePlaneCascade)
     {
       std::vector<float32> accumulatorPlane(dims[0] * dims[1]);
       for(uint32 dim = 0; dim < 2; ++dim)
       {
-        if(shouldCancel)
+        if(should_cancel)
         {
           return {};
         }
@@ -492,9 +492,9 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
         };
 
         const uint32 otherAxis = dim == 0 ? 1u : 0u;
-        const RecursiveGaussianPlaneAxis derivative{.axis = dim, .sigma = sigma, .spacing = static_cast<double>(spacing[dim]), .order = 1, .normalizeAcrossScale = normalizeAcrossScale};
-        const RecursiveGaussianPlaneAxis smoothing{.axis = otherAxis, .sigma = sigma, .spacing = static_cast<double>(spacing[otherAxis]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale};
-        if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, derivative, smoothing, shouldCancel, messageHandler, terminalSink); result.invalid())
+        const RecursiveGaussianPlaneAxis derivative{.axis = dim, .sigma = sigma, .spacing = static_cast<double>(spacing[dim]), .order = 1, .normalizeAcrossScale = normalize_across_scale};
+        const RecursiveGaussianPlaneAxis smoothing{.axis = otherAxis, .sigma = sigma, .spacing = static_cast<double>(spacing[otherAxis]), .order = 0, .normalizeAcrossScale = normalize_across_scale};
+        if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, derivative, smoothing, should_cancel, message_handler, terminalSink); result.invalid())
         {
           return result;
         }
@@ -509,12 +509,13 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
 
     for(uint32 dim = 0; dim < effDim; ++dim)
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return {};
       }
       // order-1 derivative along `dim` (reads raw input T)
-      if(Result<> r = RecursiveGaussianAxisPass<T>(inStore, work, dims, dim, sigma, static_cast<double>(spacing[dim]), /*order=*/1, normalizeAcrossScale, shouldCancel, messageHandler); r.invalid())
+      if(Result<> r = RecursiveGaussianAxisPass<T>(inStore, work, dims, dim, sigma, static_cast<double>(spacing[dim]), /*order=*/1, normalize_across_scale, should_cancel, message_handler);
+         r.invalid())
       {
         return r;
       }
@@ -525,7 +526,8 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
         {
           continue;
         }
-        if(Result<> r = RecursiveGaussianAxisPass<float32>(work, work, dims, a, sigma, static_cast<double>(spacing[a]), /*order=*/0, normalizeAcrossScale, shouldCancel, messageHandler); r.invalid())
+        if(Result<> r = RecursiveGaussianAxisPass<float32>(work, work, dims, a, sigma, static_cast<double>(spacing[a]), /*order=*/0, normalize_across_scale, should_cancel, message_handler);
+           r.invalid())
         {
           return r;
         }
@@ -534,20 +536,20 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
       // fully writes acc. Set-then-Accumulate is bit-identical to the old Fill(0)+Accumulate for every dim.
       if(dim == 0)
       {
-        if(Result<> r = SetSquaredOverSpacing(acc, work, static_cast<double>(spacing[dim]), shouldCancel); r.invalid())
+        if(Result<> r = SetSquaredOverSpacing(acc, work, static_cast<double>(spacing[dim]), should_cancel); r.invalid())
         {
           return r;
         }
       }
       else
       {
-        if(Result<> r = AccumulateSquaredOverSpacing(acc, work, static_cast<double>(spacing[dim]), shouldCancel); r.invalid())
+        if(Result<> r = AccumulateSquaredOverSpacing(acc, work, static_cast<double>(spacing[dim]), should_cancel); r.invalid())
         {
           return r;
         }
       }
     }
-    return SqrtStoreInPlace(acc, shouldCancel);
+    return SqrtStoreInPlace(acc, should_cancel);
   }
 };
 
@@ -559,21 +561,21 @@ struct GradientMagnitudeRecursiveGaussianExecuteFn
  */
 struct GradientMagnitudeExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   FloatVec3 spacing;
-  bool useImageSpacing;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool use_image_spacing;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
-    return ApplyGradientMagnitude<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, useImageSpacing, spacing, shouldCancel, messageHandler);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
+    return ApplyGradientMagnitude<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, use_image_spacing, spacing, should_cancel, message_handler);
   }
 };
 
@@ -631,21 +633,21 @@ Result<> ApplyLaplacianRecursiveGaussianResident(const AbstractDataStore<T>& inp
 /// double-coefficient IIR and float32 inter-pass behavior.
 struct LaplacianRecursiveGaussianExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   FloatVec3 spacing;
   float64 sigma;
-  bool normalizeAcrossScale;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool normalize_across_scale;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<float32>& acc = outArray.getDataStoreRef(); // output doubles as the accumulator
 
@@ -673,12 +675,12 @@ struct LaplacianRecursiveGaussianExecuteFn
           {
             return result;
           }
-          if(Result<> result = ApplyLaplacianRecursiveGaussianResident(residentInput, residentAccumulator, residentWork, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+          if(Result<> result = ApplyLaplacianRecursiveGaussianResident(residentInput, residentAccumulator, residentWork, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
              result.invalid())
           {
             return result;
           }
-          if(shouldCancel)
+          if(should_cancel)
           {
             return {};
           }
@@ -711,17 +713,17 @@ struct LaplacianRecursiveGaussianExecuteFn
         return MakeErrorResult(-23621, fmt::format("Laplacian recursive Gaussian bounded 2D scratch dimensions overflow for {} x {}.", dims[0], dims[1]));
       }
       checkpointCount = std::max(checkpointCount, detail::RecursiveGaussian2DXBlockCount(dims[0], plan.coreCols));
-      auto checkpointResult = detail::CreateGaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>(checkpointCount, plan.coreCols, shouldCancel);
+      auto checkpointResult = detail::CreateGaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>(checkpointCount, plan.coreCols, should_cancel);
       if(checkpointResult.invalid())
       {
         return ConvertResult(std::move(checkpointResult));
       }
-      auto workResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, shouldCancel);
+      auto workResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, should_cancel);
       if(workResult.invalid())
       {
         return ConvertResult(std::move(workResult));
       }
-      auto contributionResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, shouldCancel);
+      auto contributionResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, should_cancel);
       if(contributionResult.invalid())
       {
         return ConvertResult(std::move(contributionResult));
@@ -729,13 +731,13 @@ struct LaplacianRecursiveGaussianExecuteFn
       std::unique_ptr<detail::GaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>> checkpoints = std::move(checkpointResult.value());
       std::unique_ptr<detail::GaussianTemporaryStore<float32>> work = std::move(workResult.value());
       std::unique_ptr<detail::GaussianTemporaryStore<float32>> contribution = std::move(contributionResult.value());
-      return ApplyLaplacianRecursiveGaussian2D<T>(inStore, acc, *work, *contribution, *checkpoints, dims, spacing, sigma, normalizeAcrossScale, plan, shouldCancel, messageHandler);
+      return ApplyLaplacianRecursiveGaussian2D<T>(inStore, acc, *work, *contribution, *checkpoints, dims, spacing, sigma, normalize_across_scale, plan, should_cancel, message_handler);
     }
     if(usePlaneCascade && effDim == 3)
     {
       if(storagePlan.useTemporaryRecordStore)
       {
-        auto temporaryResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], shouldCancel);
+        auto temporaryResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], should_cancel);
         if(temporaryResult.invalid())
         {
           return ConvertResult(std::move(temporaryResult));
@@ -745,23 +747,23 @@ struct LaplacianRecursiveGaussianExecuteFn
         // cascade's Set/Accumulate below targets this instead of the real deflate-backed output store, so the
         // running Laplacian sum never inflates/deflates against `acc`. Only the finished result is streamed into
         // `acc` once, at the end of ApplyLaplacianRecursiveGaussian3D.
-        auto accumulatorResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], shouldCancel);
+        auto accumulatorResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], should_cancel);
         if(accumulatorResult.invalid())
         {
           return ConvertResult(std::move(accumulatorResult));
         }
         std::unique_ptr<detail::GaussianTemporaryStore<float32>> rawAccumulator = std::move(accumulatorResult.value());
-        return ApplyLaplacianRecursiveGaussian3D<T>(inStore, acc, *rawAccumulator, *work, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+        return ApplyLaplacianRecursiveGaussian3D<T>(inStore, acc, *rawAccumulator, *work, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
       }
       auto work = DataStoreUtilities::CreateDataStoreWithFormat<float32>(storagePlan.workingDataFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      return ApplyLaplacianRecursiveGaussian3D<T>(inStore, acc, acc, *work, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+      return ApplyLaplacianRecursiveGaussian3D<T>(inStore, acc, acc, *work, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
     }
     if(usePlaneCascade)
     {
       std::vector<float32> accumulatorPlane(dims[0] * dims[1]);
       for(uint32 dim = 0; dim < 2; ++dim)
       {
-        if(shouldCancel)
+        if(should_cancel)
         {
           return {};
         }
@@ -789,9 +791,9 @@ struct LaplacianRecursiveGaussianExecuteFn
         };
 
         const uint32 otherAxis = dim == 0 ? 1u : 0u;
-        const RecursiveGaussianPlaneAxis derivative{.axis = dim, .sigma = sigma, .spacing = static_cast<double>(spacing[dim]), .order = 2, .normalizeAcrossScale = normalizeAcrossScale};
-        const RecursiveGaussianPlaneAxis smoothing{.axis = otherAxis, .sigma = sigma, .spacing = static_cast<double>(spacing[otherAxis]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale};
-        if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, derivative, smoothing, shouldCancel, messageHandler, terminalSink); result.invalid())
+        const RecursiveGaussianPlaneAxis derivative{.axis = dim, .sigma = sigma, .spacing = static_cast<double>(spacing[dim]), .order = 2, .normalizeAcrossScale = normalize_across_scale};
+        const RecursiveGaussianPlaneAxis smoothing{.axis = otherAxis, .sigma = sigma, .spacing = static_cast<double>(spacing[otherAxis]), .order = 0, .normalizeAcrossScale = normalize_across_scale};
+        if(Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, derivative, smoothing, should_cancel, message_handler, terminalSink); result.invalid())
         {
           return result;
         }
@@ -801,7 +803,7 @@ struct LaplacianRecursiveGaussianExecuteFn
 
     const std::string format = detail::SelectRecursiveGaussianWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), acc.getStoreType(), acc.getDataFormat());
     auto work = DataStoreUtilities::CreateDataStoreWithFormat<float32>(format, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-    return ApplyLaplacianRecursiveGaussianResident(inStore, acc, *work, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+    return ApplyLaplacianRecursiveGaussianResident(inStore, acc, *work, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
   }
 };
 
@@ -812,23 +814,23 @@ struct LaplacianRecursiveGaussianExecuteFn
 /// to T, preserving ITK's double-coefficient IIR and float32 inter-pass behavior.
 struct SmoothingRecursiveGaussianExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   FloatVec3 spacing;
   std::vector<float64> sigma; // per-axis (x,y,z)
-  bool normalizeAcrossScale;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool normalize_across_scale;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
     // Output is SameAsInput (type T). Inter-pass values use ITK's float32 InternalRealType. The first pass reads the raw T
     // input; later passes run float32 in place.
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<T>& outStore = outArray.getDataStoreRef();
 
@@ -859,34 +861,34 @@ struct SmoothingRecursiveGaussianExecuteFn
         return MakeErrorResult(-23622, fmt::format("Smoothing recursive Gaussian bounded 2D checkpoint dimensions overflow for {} x {}.", dims[0], dims[1]));
       }
       checkpointCount = std::max(checkpointCount, detail::RecursiveGaussian2DXBlockCount(dims[0], plan.coreCols));
-      auto checkpointResult = detail::CreateGaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>(checkpointCount, plan.coreCols, shouldCancel);
+      auto checkpointResult = detail::CreateGaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>(checkpointCount, plan.coreCols, should_cancel);
       if(checkpointResult.invalid())
       {
         return ConvertResult(std::move(checkpointResult));
       }
-      auto workResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, shouldCancel);
+      auto workResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), workBatchValues, should_cancel);
       if(workResult.invalid())
       {
         return ConvertResult(std::move(workResult));
       }
       std::unique_ptr<detail::GaussianTemporaryStore<detail::RecursiveGaussian2DCheckpoint>> checkpoints = std::move(checkpointResult.value());
       std::unique_ptr<detail::GaussianTemporaryStore<float32>> work = std::move(workResult.value());
-      return ApplySmoothingRecursiveGaussian2D<T>(inStore, outStore, *work, *checkpoints, dims, spacing, sigma, normalizeAcrossScale, plan, shouldCancel, messageHandler);
+      return ApplySmoothingRecursiveGaussian2D<T>(inStore, outStore, *work, *checkpoints, dims, spacing, sigma, normalize_across_scale, plan, should_cancel, message_handler);
     }
     if(usePlaneCascade && effDim == 3)
     {
       if(storagePlan.useTemporaryRecordStore)
       {
-        auto temporaryResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], shouldCancel);
+        auto temporaryResult = detail::CreateGaussianTemporaryStore<float32>(inStore.getSize(), dims[0] * dims[1], should_cancel);
         if(temporaryResult.invalid())
         {
           return ConvertResult(std::move(temporaryResult));
         }
         std::unique_ptr<detail::GaussianTemporaryStore<float32>> work = std::move(temporaryResult.value());
-        return ApplySmoothingRecursiveGaussian3D<T>(inStore, outStore, *work, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+        return ApplySmoothingRecursiveGaussian3D<T>(inStore, outStore, *work, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
       }
       auto work = DataStoreUtilities::CreateDataStoreWithFormat<float32>(storagePlan.workingDataFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      return ApplySmoothingRecursiveGaussian3D<T>(inStore, outStore, *work, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+      return ApplySmoothingRecursiveGaussian3D<T>(inStore, outStore, *work, dims, spacing, sigma, normalize_across_scale, should_cancel, message_handler);
     }
     if(usePlaneCascade)
     {
@@ -899,9 +901,9 @@ struct SmoothingRecursiveGaussianExecuteFn
         return outStore.copyFromBuffer(planeOffset, nonstd::span<const T>(outputPlane.data(), filteredPlane.size()));
       };
 
-      const RecursiveGaussianPlaneAxis first{.axis = 1, .sigma = sigma[1], .spacing = static_cast<double>(spacing[1]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale};
-      const RecursiveGaussianPlaneAxis second{.axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale};
-      return RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, first, second, shouldCancel, messageHandler, outputSink);
+      const RecursiveGaussianPlaneAxis first{.axis = 1, .sigma = sigma[1], .spacing = static_cast<double>(spacing[1]), .order = 0, .normalizeAcrossScale = normalize_across_scale};
+      const RecursiveGaussianPlaneAxis second{.axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalize_across_scale};
+      return RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, first, second, should_cancel, message_handler, outputSink);
     }
 
     const std::string format = detail::SelectRecursiveGaussianWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), outStore.getStoreType(), outStore.getDataFormat());
@@ -924,7 +926,7 @@ struct SmoothingRecursiveGaussianExecuteFn
       const double sp = static_cast<double>(spacing[axis]);
       if(first)
       {
-        if(Result<> r = RecursiveGaussianAxisPass<T>(inStore, work, dims, axis, s, sp, /*order=*/0, normalizeAcrossScale, shouldCancel, messageHandler); r.invalid())
+        if(Result<> r = RecursiveGaussianAxisPass<T>(inStore, work, dims, axis, s, sp, /*order=*/0, normalize_across_scale, should_cancel, message_handler); r.invalid())
         {
           return r;
         }
@@ -932,13 +934,13 @@ struct SmoothingRecursiveGaussianExecuteFn
       }
       else
       {
-        if(Result<> r = RecursiveGaussianAxisPass<float32>(work, work, dims, axis, s, sp, /*order=*/0, normalizeAcrossScale, shouldCancel, messageHandler); r.invalid())
+        if(Result<> r = RecursiveGaussianAxisPass<float32>(work, work, dims, axis, s, sp, /*order=*/0, normalize_across_scale, should_cancel, message_handler); r.invalid())
         {
           return r;
         }
       }
     }
-    return CastFloat32StoreTo<T>(work, outStore, shouldCancel);
+    return CastFloat32StoreTo<T>(work, outStore, should_cancel);
   }
 };
 
@@ -951,24 +953,25 @@ struct SmoothingRecursiveGaussianExecuteFn
  */
 struct DiscreteGaussianExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   FloatVec3 spacing;
-  std::vector<float64> variance;     // per-axis (x,y,z)
-  std::vector<float64> maximumError; // per-axis (x,y,z)
-  uint32 maximumKernelWidth;
-  bool useImageSpacing;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  std::vector<float64> variance;      // per-axis (x,y,z)
+  std::vector<float64> maximum_error; // per-axis (x,y,z)
+  uint32 maximum_kernel_width;
+  bool use_image_spacing;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
-    return ApplyDiscreteGaussian<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, variance, maximumKernelWidth, maximumError, useImageSpacing, spacing, shouldCancel, messageHandler);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
+    return ApplyDiscreteGaussian<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, variance, maximum_kernel_width, maximum_error, use_image_spacing, spacing, should_cancel,
+                                    message_handler);
   }
 };
 
@@ -979,87 +982,87 @@ struct DiscreteGaussianExecuteFn
 Result<> ExecuteGradientMagnitudeRecursiveGaussianImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
                                                               float64 sigma, bool normalizeAcrossScale, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::GradientMagnitudeRecursiveGaussianExecuteFn executeFn{.dataStructure = dataStructure,
-                                                                .inputArrayPath = inputArrayPath,
-                                                                .outputArrayPath = outputArrayPath,
+  detail::GradientMagnitudeRecursiveGaussianExecuteFn executeFn{.data_structure = dataStructure,
+                                                                .input_array_path = inputArrayPath,
+                                                                .output_array_path = outputArrayPath,
                                                                 .dims = dims,
                                                                 .spacing = spacing,
                                                                 .sigma = sigma,
-                                                                .normalizeAcrossScale = normalizeAcrossScale,
-                                                                .shouldCancel = shouldCancel,
-                                                                .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                                                .normalize_across_scale = normalizeAcrossScale,
+                                                                .should_cancel = shouldCancel,
+                                                                .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteGradientMagnitudeImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool useImageSpacing,
                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::GradientMagnitudeExecuteFn executeFn{.dataStructure = dataStructure,
-                                               .inputArrayPath = inputArrayPath,
-                                               .outputArrayPath = outputArrayPath,
+  detail::GradientMagnitudeExecuteFn executeFn{.data_structure = dataStructure,
+                                               .input_array_path = inputArrayPath,
+                                               .output_array_path = outputArrayPath,
                                                .dims = dims,
                                                .spacing = spacing,
-                                               .useImageSpacing = useImageSpacing,
-                                               .shouldCancel = shouldCancel,
-                                               .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                               .use_image_spacing = useImageSpacing,
+                                               .should_cancel = shouldCancel,
+                                               .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteLaplacianRecursiveGaussianImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, float64 sigma,
                                                       bool normalizeAcrossScale, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::LaplacianRecursiveGaussianExecuteFn executeFn{.dataStructure = dataStructure,
-                                                        .inputArrayPath = inputArrayPath,
-                                                        .outputArrayPath = outputArrayPath,
+  detail::LaplacianRecursiveGaussianExecuteFn executeFn{.data_structure = dataStructure,
+                                                        .input_array_path = inputArrayPath,
+                                                        .output_array_path = outputArrayPath,
                                                         .dims = dims,
                                                         .spacing = spacing,
                                                         .sigma = sigma,
-                                                        .normalizeAcrossScale = normalizeAcrossScale,
-                                                        .shouldCancel = shouldCancel,
-                                                        .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                                        .normalize_across_scale = normalizeAcrossScale,
+                                                        .should_cancel = shouldCancel,
+                                                        .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteSmoothingRecursiveGaussianImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
                                                       const std::vector<float64>& sigma, bool normalizeAcrossScale, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = SignedScalar;
+  using TypeSetPolicyType = SignedScalar;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::SmoothingRecursiveGaussianExecuteFn executeFn{.dataStructure = dataStructure,
-                                                        .inputArrayPath = inputArrayPath,
-                                                        .outputArrayPath = outputArrayPath,
+  detail::SmoothingRecursiveGaussianExecuteFn executeFn{.data_structure = dataStructure,
+                                                        .input_array_path = inputArrayPath,
+                                                        .output_array_path = outputArrayPath,
                                                         .dims = dims,
                                                         .spacing = spacing,
                                                         .sigma = sigma,
-                                                        .normalizeAcrossScale = normalizeAcrossScale,
-                                                        .shouldCancel = shouldCancel,
-                                                        .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                                        .normalize_across_scale = normalizeAcrossScale,
+                                                        .should_cancel = shouldCancel,
+                                                        .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -1067,24 +1070,24 @@ Result<> ExecuteDiscreteGaussianImageFilter(DataStructure& dataStructure, const 
                                             const std::vector<float64>& variance, uint32 maximumKernelWidth, const std::vector<float64>& maximumError, bool useImageSpacing,
                                             const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::DiscreteGaussianExecuteFn executeFn{.dataStructure = dataStructure,
-                                              .inputArrayPath = inputArrayPath,
-                                              .outputArrayPath = outputArrayPath,
+  detail::DiscreteGaussianExecuteFn executeFn{.data_structure = dataStructure,
+                                              .input_array_path = inputArrayPath,
+                                              .output_array_path = outputArrayPath,
                                               .dims = dims,
                                               .spacing = spacing,
                                               .variance = variance,
-                                              .maximumError = maximumError,
-                                              .maximumKernelWidth = maximumKernelWidth,
-                                              .useImageSpacing = useImageSpacing,
-                                              .shouldCancel = shouldCancel,
-                                              .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                              .maximum_error = maximumError,
+                                              .maximum_kernel_width = maximumKernelWidth,
+                                              .use_image_spacing = useImageSpacing,
+                                              .should_cancel = shouldCancel,
+                                              .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

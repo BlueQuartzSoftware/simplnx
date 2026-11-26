@@ -51,10 +51,10 @@ nlohmann::json MultiArraySelectionParameter::toJsonImpl(const std::any& value) c
 
 Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", k_Prefix, name()));
   }
 
   ValueType paths;
@@ -65,13 +65,13 @@ Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json
   {
     if(!item.is_string())
     {
-      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", prefix));
+      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", k_Prefix));
     }
     auto string = item.get<std::string>();
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
+      errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string)});
       continue;
     }
     paths.push_back(std::move(*path));
@@ -136,23 +136,23 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Empty_Value, .message = fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
-    const DataObject* object = dataStructure.getData(path);
-    if(object == nullptr)
+    const DataObject* objectPtr = dataStructure.getData(path);
+    if(objectPtr == nullptr)
     {
       errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Does_Not_Exist, .message = fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
-    const auto* dataArray = dataStructure.getDataAs<IArray>(path);
-    if(dataArray == nullptr)
+    const auto* dataArrayPtr = dataStructure.getDataAs<IArray>(path);
+    if(dataArrayPtr == nullptr)
     {
       errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Type_Error, .message = fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
       continue;
     }
-    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && !m_AllowedTypes.contains(dataArray->getArrayType()))
+    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && !m_AllowedTypes.contains(dataArrayPtr->getArrayType()))
     {
-      errors.push_back(Error{
-          .code = FilterParameter::Constants::k_Validate_Type_Error,
-          .message = fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(), dataArray->getTypeName(), IArray::StringListFromArrayType(m_AllowedTypes))});
+      errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Type_Error,
+                             .message = fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(), dataArrayPtr->getTypeName(),
+                                                    IArray::StringListFromArrayType(m_AllowedTypes))});
       continue;
     }
     if(!m_RequiredComponentShapes.empty())
@@ -161,7 +161,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       bool foundMatch = false;
       for(const auto& compShape : m_RequiredComponentShapes)
       {
-        if(compShape == dataArray->getComponentShape())
+        if(compShape == dataArrayPtr->getComponentShape())
         {
           foundMatch = true;
           break;

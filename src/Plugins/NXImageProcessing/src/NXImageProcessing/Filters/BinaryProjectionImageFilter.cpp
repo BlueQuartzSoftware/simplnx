@@ -41,8 +41,8 @@ constexpr int32 k_BinaryValueTruncated = -8352;
  */
 struct BinaryIntegerParamGuard
 {
-  nx::core::float64 foregroundValue;
-  nx::core::float64 backgroundValue;
+  nx::core::float64 foreground_value;
+  nx::core::float64 background_value;
 
   template <class T>
   nx::core::Result<> operator()() const
@@ -50,7 +50,7 @@ struct BinaryIntegerParamGuard
     using nx::core::MakeErrorResult;
     using nx::core::Warning;
     nx::core::Result<> result;
-    const std::array<std::pair<const char*, nx::core::float64>, 2> params{{{"Foreground Value", foregroundValue}, {"Background Value", backgroundValue}}};
+    const std::array<std::pair<const char*, nx::core::float64>, 2> params{{{"Foreground Value", foreground_value}, {"Background Value", background_value}}};
     const std::string typeName = nx::core::DataTypeToString(nx::core::GetDataType<T>());
     const auto lowest = static_cast<nx::core::float64>(std::numeric_limits<T>::lowest());
     const auto highest = static_cast<nx::core::float64>(std::numeric_limits<T>::max());
@@ -184,7 +184,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   if(ImageProcessing::GetIntegerScalarTypes().contains(inputType))
   {
-    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foregroundValue = foregroundValue, .backgroundValue = backgroundValue});
+    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foreground_value = foregroundValue, .background_value = backgroundValue});
     if(paramGuard.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
@@ -222,14 +222,14 @@ Result<> BinaryProjectionImageFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ProjectionDimensionKey = "ProjectionDimension";
 constexpr StringLiteral k_ForegroundValueKey = "ForegroundValue";
 constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> BinaryProjectionImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -238,12 +238,12 @@ Result<Arguments> BinaryProjectionImageFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, SIMPL::k_ProjectionDimensionKey, k_ProjectionDimension_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_ForegroundValueKey, k_ForegroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_ProjectionDimensionKey, k_ProjectionDimension_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

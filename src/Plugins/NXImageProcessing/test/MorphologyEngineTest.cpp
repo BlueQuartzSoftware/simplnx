@@ -161,14 +161,14 @@ private:
 
 DataPath BuildMorphologyFilterPreflightInput(DataStructure& dataStructure)
 {
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({4, 4, 3});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{3, 4, 4}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 4, 3});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{3, 4, 4}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
   auto store = std::make_shared<DataStore<uint8>>(ShapeType{3, 4, 4}, ShapeType{1}, uint8{0});
-  auto* input = DataArray<uint8>::Create(dataStructure, "Input", store, cellData->getId());
-  REQUIRE(input != nullptr);
+  auto* inputPtr = DataArray<uint8>::Create(dataStructure, "Input", store, cellDataPtr->getId());
+  REQUIRE(inputPtr != nullptr);
   return DataPath({"Image Geometry", "CellData", "Input"});
 }
 
@@ -183,9 +183,9 @@ void RequireDeferredMorphologyOutputAction(DataStructure& dataStructure, const D
   const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* action = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(action != nullptr);
-  REQUIRE(action->initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
+  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  REQUIRE(actionPtr != nullptr);
+  REQUIRE(actionPtr->initializationMode() == DataStoreInitializationMode::DeferredZeroFill);
 }
 
 template <class T>
@@ -783,10 +783,10 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling top-hat pipeline pre-can
 {
   const SizeVec3 dims{5, 4, 3};
   const usize count = dims[0] * dims[1] * dims[2];
-  constexpr int32 poison = 901;
+  constexpr int32 k_Poison = 901;
   const StructuringElement se = MakeStructuringElement(KernelType::Box, {1, 1, 1});
   DataStore<int32> input(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 7);
-  DataStore<int32> output(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, poison);
+  DataStore<int32> output(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, k_Poison);
   auto requiredBytesResult = CalculateMorphologyCompositePipelineWorkingMemoryBytes<int32>(dims, se, true);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredBytesResult);
   std::atomic_bool shouldCancel{true};
@@ -796,7 +796,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling top-hat pipeline pre-can
   std::vector<int32> actual(count);
   auto copyIntoBufferResult = output.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
-  REQUIRE(std::all_of(actual.cbegin(), actual.cend(), [poison](int32 value) { return value == poison; }));
+  REQUIRE(std::all_of(actual.cbegin(), actual.cend(), [k_Poison](int32 value) { return value == k_Poison; }));
 }
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline planner has the exact Ball-r2 benchmark payload", "[NXImageProcessing][MorphologyEngine][WorkingMemory]")
@@ -816,9 +816,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipel
   const std::vector<T> values = MakePattern<T>(dims[0], dims[1], dims[2]);
   struct Case
   {
-    MorphOp firstOp;
-    MorphOp secondOp;
-    ImageProcessing::detail::MorphologyCompositeOutputMode outputMode;
+    MorphOp first_op;
+    MorphOp second_op;
+    ImageProcessing::detail::MorphologyCompositeOutputMode output_mode;
   };
   const std::array<Case, 4> cases = {{{MorphOp::Erode, MorphOp::Dilate, ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
                                       {MorphOp::Dilate, MorphOp::Erode, ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
@@ -836,7 +836,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipel
       SIMPLNX_RESULT_REQUIRE_VALID(requiredBytesResult);
       std::atomic_bool shouldCancel{false};
       auto applyMorphologyCompositePipelineResult =
-          ApplyMorphologyCompositePipeline<T>(input, output, dims, se, testCase.firstOp, testCase.secondOp, safeBorder, testCase.outputMode, shouldCancel, requiredBytesResult.value());
+          ApplyMorphologyCompositePipeline<T>(input, output, dims, se, testCase.first_op, testCase.second_op, safeBorder, testCase.output_mode, shouldCancel, requiredBytesResult.value());
       SIMPLNX_RESULT_REQUIRE_VALID(applyMorphologyCompositePipelineResult);
 
       std::vector<T> expectedInput = values;
@@ -844,7 +844,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipel
       {
         const std::array<usize, 3> radius{1, 1, 1};
         const SizeVec3 paddedDims{dims[0] + 2, dims[1] + 2, dims[2] + 2};
-        const T padValue = testCase.firstOp == MorphOp::Erode ? std::numeric_limits<T>::max() : std::numeric_limits<T>::lowest();
+        const T padValue = testCase.first_op == MorphOp::Erode ? std::numeric_limits<T>::max() : std::numeric_limits<T>::lowest();
         std::vector<T> padded(paddedDims[0] * paddedDims[1] * paddedDims[2], padValue);
         for(usize z = 0; z < dims[2]; ++z)
         {
@@ -856,8 +856,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipel
             }
           }
         }
-        const std::vector<T> first = Oracle(padded, paddedDims[0], paddedDims[1], paddedDims[2], se, testCase.firstOp);
-        const std::vector<T> second = Oracle(first, paddedDims[0], paddedDims[1], paddedDims[2], se, testCase.secondOp);
+        const std::vector<T> first = Oracle(padded, paddedDims[0], paddedDims[1], paddedDims[2], se, testCase.first_op);
+        const std::vector<T> second = Oracle(first, paddedDims[0], paddedDims[1], paddedDims[2], se, testCase.second_op);
         expectedInput.resize(count);
         for(usize z = 0; z < dims[2]; ++z)
         {
@@ -872,19 +872,19 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipel
       }
       else
       {
-        expectedInput = Oracle(Oracle(values, dims[0], dims[1], dims[2], se, testCase.firstOp), dims[0], dims[1], dims[2], se, testCase.secondOp);
+        expectedInput = Oracle(Oracle(values, dims[0], dims[1], dims[2], se, testCase.first_op), dims[0], dims[1], dims[2], se, testCase.second_op);
       }
       std::vector<T> expected(count);
       for(usize index = 0; index < count; ++index)
       {
-        if(testCase.outputMode == ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology)
+        if(testCase.output_mode == ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology)
         {
           expected[index] = expectedInput[index];
         }
         else
         {
-          expected[index] = testCase.outputMode == ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<T>(values[index] - expectedInput[index]) :
-                                                                                                                                     static_cast<T>(expectedInput[index] - values[index]);
+          expected[index] = testCase.output_mode == ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<T>(values[index] - expectedInput[index]) :
+                                                                                                                                      static_cast<T>(expectedInput[index] - values[index]);
         }
       }
       std::vector<T> actual(count);
@@ -931,14 +931,14 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline uses 
   const std::vector<int32> values = MakePattern<int32>(dims[0], dims[1], dims[2]);
   struct Case
   {
-    MorphOp firstOp;
-    MorphOp secondOp;
-    ImageProcessing::detail::MorphologyCompositeOutputMode outputMode;
+    MorphOp first_op;
+    MorphOp second_op;
+    ImageProcessing::detail::MorphologyCompositeOutputMode output_mode;
   };
-  const std::array<Case, 4> cases = {{{.firstOp = MorphOp::Erode, .secondOp = MorphOp::Dilate, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
-                                      {.firstOp = MorphOp::Dilate, .secondOp = MorphOp::Erode, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
-                                      {.firstOp = MorphOp::Erode, .secondOp = MorphOp::Dilate, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology},
-                                      {.firstOp = MorphOp::Dilate, .secondOp = MorphOp::Erode, .outputMode = ImageProcessing::detail::MorphologyCompositeOutputMode::MorphologyMinusOriginal}}};
+  const std::array<Case, 4> cases = {{{.first_op = MorphOp::Erode, .second_op = MorphOp::Dilate, .output_mode = ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
+                                      {.first_op = MorphOp::Dilate, .second_op = MorphOp::Erode, .output_mode = ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology},
+                                      {.first_op = MorphOp::Erode, .second_op = MorphOp::Dilate, .output_mode = ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology},
+                                      {.first_op = MorphOp::Dilate, .second_op = MorphOp::Erode, .output_mode = ImageProcessing::detail::MorphologyCompositeOutputMode::MorphologyMinusOriginal}}};
   for(const bool safeBorder : {false, true})
   {
     for(const Case testCase : cases)
@@ -951,7 +951,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline uses 
       SIMPLNX_RESULT_REQUIRE_VALID(requiredBytesResult);
       std::atomic_bool shouldCancel{false};
       auto applyMorphologyCompositePipelineResult =
-          ApplyMorphologyCompositePipeline<int32>(input, output, dims, se, testCase.firstOp, testCase.secondOp, safeBorder, testCase.outputMode, shouldCancel, requiredBytesResult.value());
+          ApplyMorphologyCompositePipeline<int32>(input, output, dims, se, testCase.first_op, testCase.second_op, safeBorder, testCase.output_mode, shouldCancel, requiredBytesResult.value());
       SIMPLNX_RESULT_REQUIRE_VALID(applyMorphologyCompositePipelineResult);
       std::vector<int32> actual(count);
       auto copyIntoBufferResult = output.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
@@ -961,14 +961,14 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline uses 
       if(safeBorder)
       {
         const SizeVec3 paddedDims{dims[0] + 2, dims[1] + 2, 1};
-        const int32 padValue = testCase.firstOp == MorphOp::Erode ? std::numeric_limits<int32>::max() : std::numeric_limits<int32>::lowest();
+        const int32 padValue = testCase.first_op == MorphOp::Erode ? std::numeric_limits<int32>::max() : std::numeric_limits<int32>::lowest();
         std::vector<int32> padded(paddedDims[0] * paddedDims[1], padValue);
         for(usize y = 0; y < dims[1]; ++y)
         {
           std::copy_n(values.data() + y * dims[0], dims[0], padded.data() + (y + 1) * paddedDims[0] + 1);
         }
-        const std::vector<int32> first = Oracle(padded, paddedDims[0], paddedDims[1], 1, se, testCase.firstOp);
-        const std::vector<int32> second = Oracle(first, paddedDims[0], paddedDims[1], 1, se, testCase.secondOp);
+        const std::vector<int32> first = Oracle(padded, paddedDims[0], paddedDims[1], 1, se, testCase.first_op);
+        const std::vector<int32> second = Oracle(first, paddedDims[0], paddedDims[1], 1, se, testCase.second_op);
         morphology.resize(count);
         for(usize y = 0; y < dims[1]; ++y)
         {
@@ -977,15 +977,15 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline uses 
       }
       else
       {
-        morphology = Oracle(Oracle(values, dims[0], dims[1], dims[2], se, testCase.firstOp), dims[0], dims[1], dims[2], se, testCase.secondOp);
+        morphology = Oracle(Oracle(values, dims[0], dims[1], dims[2], se, testCase.first_op), dims[0], dims[1], dims[2], se, testCase.second_op);
       }
       for(usize index = 0; index < count; ++index)
       {
         int32 expected = morphology[index];
-        if(testCase.outputMode != ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology)
+        if(testCase.output_mode != ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology)
         {
-          expected = testCase.outputMode == ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<int32>(values[index] - morphology[index]) :
-                                                                                                                              static_cast<int32>(morphology[index] - values[index]);
+          expected = testCase.output_mode == ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<int32>(values[index] - morphology[index]) :
+                                                                                                                               static_cast<int32>(morphology[index] - values[index]);
         }
         REQUIRE(actual[index] == expected);
       }
@@ -999,12 +999,12 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: binary 2D boundary igno
                    BinaryErodeImageFilter)
 {
   UnitTest::LoadPlugins();
-  using FilterT = TestType;
+  using FilterTType = TestType;
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool boundaryToForeground = GENERATE(false, true);
   CAPTURE(scenario, boundaryToForeground);
   UnitTest::AlgorithmTestScope scope(scenario);
-  constexpr bool k_Dilate = std::is_same_v<FilterT, BinaryDilateImageFilter>;
+  constexpr bool k_Dilate = std::is_same_v<FilterTType, BinaryDilateImageFilter>;
 
   // A radius-one 2D Cross contains the center and its four axial neighbors.
   // Dilation of one point yields that cross. Foreground outside X/Y adds the perimeter.
@@ -1016,38 +1016,38 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: binary 2D boundary igno
   const auto& expected = k_Dilate ? (boundaryToForeground ? crossAndPerimeter : cross) : point;
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({5, 5, 1});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 5, 5}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({5, 5, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 5, 5}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, inputPath, ShapeType{1, 5, 5}, ShapeType{1});
   auto copyInputResult = store->copyFromBuffer(0, nonstd::span<const uint8>(input.data(), input.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyInputResult);
-  auto* inputArray = DataArray<uint8>::Create(dataStructure, "Input", store, cellData->getId());
-  REQUIRE(inputArray != nullptr);
-  scope.requireExpectedStore(*inputArray);
+  auto* inputArrayPtr = DataArray<uint8>::Create(dataStructure, "Input", store, cellDataPtr->getId());
+  REQUIRE(inputArrayPtr != nullptr);
+  scope.requireExpectedStore(*inputArrayPtr);
 
-  FilterT filter;
+  FilterTType filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(FilterT::k_KernelType_Key, std::make_any<uint64>(static_cast<uint64>(KernelType::Cross)));
-  args.insertOrAssign(FilterT::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(FilterT::k_ForegroundValue_Key, std::make_any<float64>(1.0));
-  args.insertOrAssign(FilterT::k_BackgroundValue_Key, std::make_any<float64>(0.0));
-  args.insertOrAssign(FilterT::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));
+  args.insertOrAssign(FilterTType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(FilterTType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterTType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(FilterTType::k_KernelType_Key, std::make_any<uint64>(static_cast<uint64>(KernelType::Cross)));
+  args.insertOrAssign(FilterTType::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(FilterTType::k_ForegroundValue_Key, std::make_any<float64>(1.0));
+  args.insertOrAssign(FilterTType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
+  args.insertOrAssign(FilterTType::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-  const DataArray<uint8>* output = nullptr;
-  REQUIRE_NOTHROW(output = &dataStructure.getDataRefAs<DataArray<uint8>>(DataPath({"Image Geometry", "CellData", "Output"})));
-  scope.requireExpectedStore(*output);
+  const DataArray<uint8>* outputPtr = nullptr;
+  REQUIRE_NOTHROW(outputPtr = &dataStructure.getDataRefAs<DataArray<uint8>>(DataPath({"Image Geometry", "CellData", "Output"})));
+  scope.requireExpectedStore(*outputPtr);
   std::vector<uint8> actual(expected.size());
-  auto copyOutputResult = output->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+  auto copyOutputResult = outputPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyOutputResult);
   REQUIRE(actual == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1057,7 +1057,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: empty XY binary kernel 
                    BinaryErodeImageFilter)
 {
   UnitTest::LoadPlugins();
-  using FilterT = TestType;
+  using FilterTType = TestType;
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool boundaryToForeground = GENERATE(false, true);
   const uint32 radiusZ = GENERATE(uint32{0}, uint32{1}, uint32{3});
@@ -1082,16 +1082,16 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: empty XY binary kernel 
   REQUIRE(inputArrayPtr != nullptr);
   scope.requireExpectedStore(*inputArrayPtr);
 
-  FilterT filter;
+  FilterTType filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(FilterT::k_KernelType_Key, std::make_any<uint64>(static_cast<uint64>(KernelType::Annulus)));
-  args.insertOrAssign(FilterT::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(std::vector<uint32>{0, 0, radiusZ}));
-  args.insertOrAssign(FilterT::k_ForegroundValue_Key, std::make_any<float64>(7.0));
-  args.insertOrAssign(FilterT::k_BackgroundValue_Key, std::make_any<float64>(3.0));
-  args.insertOrAssign(FilterT::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));
+  args.insertOrAssign(FilterTType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(FilterTType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterTType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(FilterTType::k_KernelType_Key, std::make_any<uint64>(static_cast<uint64>(KernelType::Annulus)));
+  args.insertOrAssign(FilterTType::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(std::vector<uint32>{0, 0, radiusZ}));
+  args.insertOrAssign(FilterTType::k_ForegroundValue_Key, std::make_any<float64>(7.0));
+  args.insertOrAssign(FilterTType::k_BackgroundValue_Key, std::make_any<float64>(3.0));
+  args.insertOrAssign(FilterTType::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
@@ -1223,24 +1223,24 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: interior X range excludes incomp
 {
   struct Case
   {
-    usize boundDimX;
-    usize outputOriginX;
-    usize outputWidth;
-    usize radiusX;
-    usize expectedBegin;
-    usize expectedEnd;
+    usize bound_dim_x;
+    usize output_origin_x;
+    usize output_width;
+    usize radius_x;
+    usize expected_begin;
+    usize expected_end;
   };
-  const std::array<Case, 6> cases = {{{.boundDimX = 9, .outputOriginX = 0, .outputWidth = 9, .radiusX = 2, .expectedBegin = 2, .expectedEnd = 7},
-                                      {.boundDimX = 9, .outputOriginX = 1, .outputWidth = 4, .radiusX = 2, .expectedBegin = 1, .expectedEnd = 4},
-                                      {.boundDimX = 9, .outputOriginX = 3, .outputWidth = 2, .radiusX = 2, .expectedBegin = 0, .expectedEnd = 2},
-                                      {.boundDimX = 4, .outputOriginX = 0, .outputWidth = 4, .radiusX = 2, .expectedBegin = 0, .expectedEnd = 0},
-                                      {.boundDimX = 9, .outputOriginX = 7, .outputWidth = 2, .radiusX = 2, .expectedBegin = 0, .expectedEnd = 0},
-                                      {.boundDimX = 9, .outputOriginX = 2, .outputWidth = 4, .radiusX = 0, .expectedBegin = 0, .expectedEnd = 4}}};
+  const std::array<Case, 6> cases = {{{.bound_dim_x = 9, .output_origin_x = 0, .output_width = 9, .radius_x = 2, .expected_begin = 2, .expected_end = 7},
+                                      {.bound_dim_x = 9, .output_origin_x = 1, .output_width = 4, .radius_x = 2, .expected_begin = 1, .expected_end = 4},
+                                      {.bound_dim_x = 9, .output_origin_x = 3, .output_width = 2, .radius_x = 2, .expected_begin = 0, .expected_end = 2},
+                                      {.bound_dim_x = 4, .output_origin_x = 0, .output_width = 4, .radius_x = 2, .expected_begin = 0, .expected_end = 0},
+                                      {.bound_dim_x = 9, .output_origin_x = 7, .output_width = 2, .radius_x = 2, .expected_begin = 0, .expected_end = 0},
+                                      {.bound_dim_x = 9, .output_origin_x = 2, .output_width = 4, .radius_x = 0, .expected_begin = 0, .expected_end = 4}}};
   for(const Case testCase : cases)
   {
-    const auto [begin, end] = ImageProcessing::detail::MorphologyInteriorXRange(testCase.boundDimX, testCase.outputOriginX, testCase.outputWidth, testCase.radiusX);
-    REQUIRE(begin == testCase.expectedBegin);
-    REQUIRE(end == testCase.expectedEnd);
+    const auto [begin, end] = ImageProcessing::detail::MorphologyInteriorXRange(testCase.bound_dim_x, testCase.output_origin_x, testCase.output_width, testCase.radius_x);
+    REQUIRE(begin == testCase.expected_begin);
+    REQUIRE(end == testCase.expected_end);
   }
 }
 
@@ -1571,10 +1571,10 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Direct matches Scanline on float
   // NaN would violate the std::map comparator's strict-weak-ordering on the Direct path; the engine skips
   // it, exactly as MorphScanline's v>acc / v<acc comparisons never let a NaN win. Both paths must still
   // agree bit-for-bit. Deterministic NaN injection over a moderate volume.
-  constexpr usize dimX = 12;
-  constexpr usize dimY = 12;
-  constexpr usize dimZ = 12;
-  std::vector<float32> input = MakePattern<float32>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 12;
+  constexpr usize k_DimY = 12;
+  constexpr usize k_DimZ = 12;
+  std::vector<float32> input = MakePattern<float32>(k_DimX, k_DimY, k_DimZ);
   for(usize i = 0; i < input.size(); ++i)
   {
     if(i % 13 == 0)
@@ -1590,8 +1590,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Direct matches Scanline on float
     const StructuringElement se = MakeStructuringElement(kt, {2, 2, 2});
     for(MorphOp op : ops)
     {
-      const std::vector<float32> scan = RunScanline(input, dimX, dimY, dimZ, se, op);
-      const std::vector<float32> direct = RunDirect(input, dimX, dimY, dimZ, se, op);
+      const std::vector<float32> scan = RunScanline(input, k_DimX, k_DimY, k_DimZ, se, op);
+      const std::vector<float32> direct = RunDirect(input, k_DimX, k_DimY, k_DimZ, se, op);
       for(usize i = 0; i < input.size(); ++i)
       {
         INFO("kernel=" << KernelName(kt) << " op=" << (op == MorphOp::Dilate ? "Dilate" : "Erode") << " index=" << i);
@@ -1611,27 +1611,28 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: ApplyMorphology entry point disp
 
   auto runAndCheck = [&](MorphOp op) {
     DataStructure dataStructure;
-    auto* inArray = UnitTest::CreateTestDataArray<int32>(dataStructure, "in", {k_Z, k_Y, k_X}, {1});
-    auto* outArray = UnitTest::CreateTestDataArray<int32>(dataStructure, "out", {k_Z, k_Y, k_X}, {1});
+    auto* inArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "in", {k_Z, k_Y, k_X}, {1});
+    auto* outArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "out", {k_Z, k_Y, k_X}, {1});
 
     std::vector<int32> ramp(vol);
     for(usize i = 0; i < vol; ++i)
     {
       ramp[i] = static_cast<int32>((i * 7) % 53); // non-monotonic so the winner is not a fixed neighbor
-      inArray->getDataStoreRef().setValue(i, ramp[i]);
+      inArrayPtr->getDataStoreRef().setValue(i, ramp[i]);
     }
 
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
 
-    const Result<> result = ApplyMorphology<int32>(inArray->getDataStoreRef(), outArray->getDataStoreRef(), SizeVec3{k_X, k_Y, k_Z}, se, op, *inArray, *outArray, shouldCancel, messageHandler);
+    const Result<> result =
+        ApplyMorphology<int32>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), SizeVec3{k_X, k_Y, k_Z}, se, op, *inArrayPtr, *outArrayPtr, shouldCancel, messageHandler);
     REQUIRE(result.valid());
 
     const std::vector<int32> expected = Oracle(ramp, k_X, k_Y, k_Z, se, op);
     for(usize i = 0; i < vol; ++i)
     {
       INFO("index=" << i);
-      REQUIRE(outArray->getDataStoreRef().getValue(i) == expected[i]);
+      REQUIRE(outArrayPtr->getDataStoreRef().getValue(i) == expected[i]);
     }
   };
 
@@ -1826,44 +1827,44 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: full-overwrite morphology filter
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: bounded 2D row blocks and overwide tiles match independent oracles", "[NXImageProcessing][MorphologyEngine]")
 {
-  constexpr usize dimX = 9;
-  constexpr usize dimY = 7;
-  constexpr usize dimZ = 1;
-  constexpr usize fullWidthTargetBytes = 216; // six int32 rows => two output rows plus two Y halos across input/output
-  constexpr usize overwideTargetBytes = 64;   // three halo rows plus one output row force two-column X tiles
-  constexpr int32 foreground = 1;
-  constexpr int32 background = 0;
+  constexpr usize k_DimX = 9;
+  constexpr usize k_DimY = 7;
+  constexpr usize k_DimZ = 1;
+  constexpr usize k_FullWidthTargetBytes = 216; // six int32 rows => two output rows plus two Y halos across input/output
+  constexpr usize k_OverwideTargetBytes = 64;   // three halo rows plus one output row force two-column X tiles
+  constexpr int32 k_Foreground = 1;
+  constexpr int32 k_Background = 0;
   const StructuringElement se = MakeStructuringElement(KernelType::Ball, {1, 1, 0});
-  const std::vector<int32> grayscaleInput = MakePattern<int32>(dimX, dimY, dimZ);
-  const std::vector<int32> binaryInput = MakeBinaryPattern<int32>(dimX, dimY, dimZ);
+  const std::vector<int32> grayscaleInput = MakePattern<int32>(k_DimX, k_DimY, k_DimZ);
+  const std::vector<int32> binaryInput = MakeBinaryPattern<int32>(k_DimX, k_DimY, k_DimZ);
 
-  for(const usize targetBytes : {fullWidthTargetBytes, overwideTargetBytes})
+  for(const usize targetBytes : {k_FullWidthTargetBytes, k_OverwideTargetBytes})
   {
     for(const MorphOp op : {MorphOp::Dilate, MorphOp::Erode})
     {
-      DataStore<int32> grayscaleStore = MakeStore(grayscaleInput, dimX, dimY, dimZ);
-      DataStore<int32> grayscaleOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int32{0});
+      DataStore<int32> grayscaleStore = MakeStore(grayscaleInput, k_DimX, k_DimY, k_DimZ);
+      DataStore<int32> grayscaleOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{0});
       std::atomic_bool shouldCancel{false};
       IFilter::MessageHandler messageHandler{};
-      MorphScanline<int32> grayscaleAlgorithm{grayscaleStore, grayscaleOutput, SizeVec3{dimX, dimY, dimZ}, se, op, shouldCancel, messageHandler, targetBytes};
+      MorphScanline<int32> grayscaleAlgorithm{grayscaleStore, grayscaleOutput, SizeVec3{k_DimX, k_DimY, k_DimZ}, se, op, shouldCancel, messageHandler, targetBytes};
       auto grayscaleAlgorithmResult = grayscaleAlgorithm();
       SIMPLNX_RESULT_REQUIRE_VALID(grayscaleAlgorithmResult);
       std::vector<int32> actual(grayscaleInput.size());
       auto copyIntoBufferResult = grayscaleOutput.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
-      REQUIRE(actual == Oracle(grayscaleInput, dimX, dimY, dimZ, se, op));
+      REQUIRE(actual == Oracle(grayscaleInput, k_DimX, k_DimY, k_DimZ, se, op));
 
       for(const bool boundaryToForeground : {false, true})
       {
-        DataStore<int32> binaryStore = MakeStore(binaryInput, dimX, dimY, dimZ);
-        DataStore<int32> binaryOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int32{0});
-        BinaryMorphScanline<int32> binaryAlgorithm{binaryStore,    binaryOutput, SizeVec3{dimX, dimY, dimZ}, se, op, foreground, background, boundaryToForeground, shouldCancel,
+        DataStore<int32> binaryStore = MakeStore(binaryInput, k_DimX, k_DimY, k_DimZ);
+        DataStore<int32> binaryOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{0});
+        BinaryMorphScanline<int32> binaryAlgorithm{binaryStore,    binaryOutput, SizeVec3{k_DimX, k_DimY, k_DimZ}, se, op, k_Foreground, k_Background, boundaryToForeground, shouldCancel,
                                                    messageHandler, targetBytes};
         auto binaryAlgorithmResult = binaryAlgorithm();
         SIMPLNX_RESULT_REQUIRE_VALID(binaryAlgorithmResult);
         auto copyIntoBufferResult2 = binaryOutput.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
         SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult2);
-        REQUIRE(actual == BinaryOracle(binaryInput, dimX, dimY, dimZ, se, op, foreground, background, boundaryToForeground));
+        REQUIRE(actual == BinaryOracle(binaryInput, k_DimX, k_DimY, k_DimZ, se, op, k_Foreground, k_Background, boundaryToForeground));
       }
     }
   }
@@ -1871,75 +1872,75 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: bounded 2D row blocks and overwi
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: bounded gradient 2D transfers never span the complete plane", "[NXImageProcessing][MorphologyEngine]")
 {
-  constexpr usize dimX = 9;
-  constexpr usize dimY = 7;
-  constexpr usize dimZ = 1;
-  constexpr usize totalValues = dimX * dimY;
-  const std::vector<int32> input = MakePattern<int32>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 9;
+  constexpr usize k_DimY = 7;
+  constexpr usize k_DimZ = 1;
+  constexpr usize k_TotalValues = k_DimX * k_DimY;
+  const std::vector<int32> input = MakePattern<int32>(k_DimX, k_DimY, k_DimZ);
   const StructuringElement se = MakeStructuringElement(KernelType::Ball, {1, 1, 0});
 
   struct TransferCase
   {
     const char* label;
-    usize targetBytes;
-    usize maximumReadValues;
-    usize maximumWriteValues;
+    usize target_bytes;
+    usize maximum_read_values;
+    usize maximum_write_values;
   };
-  const std::array<TransferCase, 2> transferCases = {{{.label = "full-width blocks", .targetBytes = 216, .maximumReadValues = 9, .maximumWriteValues = 18},
-                                                      {.label = "overwide X tiles", .targetBytes = 64, .maximumReadValues = 4, .maximumWriteValues = 2}}};
+  const std::array<TransferCase, 2> transferCases = {{{.label = "full-width blocks", .target_bytes = 216, .maximum_read_values = 9, .maximum_write_values = 18},
+                                                      {.label = "overwide X tiles", .target_bytes = 64, .maximum_read_values = 4, .maximum_write_values = 2}}};
 
   for(const TransferCase& transferCase : transferCases)
   {
     DYNAMIC_SECTION(transferCase.label)
     {
-      TransferCountingDataStore<int32> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int32{0});
-      TransferCountingDataStore<int32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int32{0});
+      TransferCountingDataStore<int32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{0});
+      TransferCountingDataStore<int32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{0});
       auto copyFromBufferResult = inputStore.copyFromBuffer(0, nonstd::span<const int32>(input.data(), input.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult);
 
       std::atomic_bool shouldCancel{false};
       IFilter::MessageHandler messageHandler{};
-      MorphGradientScanline<int32> gradient{inputStore, outputStore, SizeVec3{dimX, dimY, dimZ}, se, shouldCancel, messageHandler, transferCase.targetBytes};
+      MorphGradientScanline<int32> gradient{inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, se, shouldCancel, messageHandler, transferCase.target_bytes};
       auto gradientResult = gradient();
       SIMPLNX_RESULT_REQUIRE_VALID(gradientResult);
 
-      std::vector<int32> actual(totalValues);
+      std::vector<int32> actual(k_TotalValues);
       auto copyIntoBufferResult = outputStore.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
-      REQUIRE(actual == GradientOracle(input, dimX, dimY, dimZ, se));
+      REQUIRE(actual == GradientOracle(input, k_DimX, k_DimY, k_DimZ, se));
       CAPTURE(transferCase.label, inputStore.maxReadValues(), outputStore.maxWriteValues(), outputStore.writtenValues());
-      REQUIRE(inputStore.maxReadValues() == transferCase.maximumReadValues);
-      REQUIRE(outputStore.maxWriteValues() == transferCase.maximumWriteValues);
-      REQUIRE(outputStore.writtenValues() == totalValues);
+      REQUIRE(inputStore.maxReadValues() == transferCase.maximum_read_values);
+      REQUIRE(outputStore.maxWriteValues() == transferCase.maximum_write_values);
+      REQUIRE(outputStore.writtenValues() == k_TotalValues);
     }
   }
 
   SECTION("empty structuring element uses bounded zero fills")
   {
-    constexpr usize targetBytes = 32;
-    constexpr usize maximumWriteValues = targetBytes / sizeof(int32);
+    constexpr usize k_TargetBytes = 32;
+    constexpr usize k_MaximumWriteValues = k_TargetBytes / sizeof(int32);
     const StructuringElement emptySe = MakeStructuringElement(KernelType::Annulus, {0, 0, 0});
     REQUIRE(emptySe.offsets.empty());
 
-    TransferCountingDataStore<int32> inputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int32{0});
-    TransferCountingDataStore<int32> outputStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int32{7});
+    TransferCountingDataStore<int32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{0});
+    TransferCountingDataStore<int32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{7});
     auto copyFromBufferResult2 = inputStore.copyFromBuffer(0, nonstd::span<const int32>(input.data(), input.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult2);
 
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
-    MorphGradientScanline<int32> gradient{inputStore, outputStore, SizeVec3{dimX, dimY, dimZ}, emptySe, shouldCancel, messageHandler, targetBytes};
+    MorphGradientScanline<int32> gradient{inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, emptySe, shouldCancel, messageHandler, k_TargetBytes};
     auto gradientResult2 = gradient();
     SIMPLNX_RESULT_REQUIRE_VALID(gradientResult2);
 
-    std::vector<int32> actual(totalValues);
+    std::vector<int32> actual(k_TotalValues);
     auto copyIntoBufferResult2 = outputStore.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult2);
-    REQUIRE(actual == std::vector<int32>(totalValues, 0));
+    REQUIRE(actual == std::vector<int32>(k_TotalValues, 0));
     CAPTURE(inputStore.maxReadValues(), outputStore.maxWriteValues(), outputStore.writtenValues());
     REQUIRE(inputStore.maxReadValues() == 0);
-    REQUIRE(outputStore.maxWriteValues() == maximumWriteValues);
-    REQUIRE(outputStore.writtenValues() == totalValues);
+    REQUIRE(outputStore.maxWriteValues() == k_MaximumWriteValues);
+    REQUIRE(outputStore.writtenValues() == k_TotalValues);
   }
 }
 
@@ -2075,17 +2076,17 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: slab planner bounds normal batch
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: resident 8-bit plan requires complete dataset-scaled input and output memory", "[NXImageProcessing][MorphologyEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 600;
-  constexpr usize dimY = 450;
-  constexpr usize dimZ = 128;
-  constexpr usize valueCount = dimX * dimY * dimZ;
+  constexpr usize k_DimX = 600;
+  constexpr usize k_DimY = 450;
+  constexpr usize k_DimZ = 128;
+  constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{dimX, dimY, dimZ};
+  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateMorphologyResidentWorkingMemoryBytes<uint8>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
-  REQUIRE(requiredResult.value() == 2 * valueCount * sizeof(uint8));
-  auto halfResult = ImageProcessing::detail::CalculateMorphologyResidentWorkingMemoryBytes<uint8>(SizeVec3{dimX, dimY, dimZ / 2});
+  REQUIRE(requiredResult.value() == 2 * k_ValueCount * sizeof(uint8));
+  auto halfResult = ImageProcessing::detail::CalculateMorphologyResidentWorkingMemoryBytes<uint8>(SizeVec3{k_DimX, k_DimY, k_DimZ / 2});
   SIMPLNX_RESULT_REQUIRE_VALID(halfResult);
   REQUIRE(halfResult.value() * 2 == requiredResult.value());
   auto calculateMorphologyResidentWorkingMemoryBytesResult = ImageProcessing::detail::CalculateMorphologyResidentWorkingMemoryBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 1});
@@ -2126,8 +2127,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: resident flat fold is limited to
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slabs and cropped rings to independent oracles", "[NXImageProcessing][MorphologyEngine]")
 {
-  constexpr uint8 foreground = 1;
-  constexpr uint8 background = 0;
+  constexpr uint8 k_Foreground = 1;
+  constexpr uint8 k_Background = 0;
   const StructuringElement se = MakeStructuringElement(KernelType::Ball, {2, 2, 2});
   std::atomic_bool shouldCancel{false};
 
@@ -2152,13 +2153,13 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slab
     const SizeVec3 boundDims{7, 6, 8};
     const SizeVec3 outputOrigin{0, 0, 3};
     const SizeVec3 outputDims{boundDims[0], boundDims[1], 2};
-    constexpr usize stagedZLo = 1;
-    constexpr usize stagedDepth = 6;
+    constexpr usize k_StagedZLo = 1;
+    constexpr usize k_StagedDepth = 6;
     const usize planeValues = boundDims[0] * boundDims[1];
     const std::vector<uint8> grayscaleVolume = MakePattern<uint8>(boundDims[0], boundDims[1], boundDims[2]);
     const std::vector<uint8> binaryVolume = MakeBinaryPattern<uint8>(boundDims[0], boundDims[1], boundDims[2]);
-    const std::vector<uint8> grayscaleSlab(grayscaleVolume.cbegin() + stagedZLo * planeValues, grayscaleVolume.cbegin() + (stagedZLo + stagedDepth) * planeValues);
-    const std::vector<uint8> binarySlab(binaryVolume.cbegin() + stagedZLo * planeValues, binaryVolume.cbegin() + (stagedZLo + stagedDepth) * planeValues);
+    const std::vector<uint8> grayscaleSlab(grayscaleVolume.cbegin() + k_StagedZLo * planeValues, grayscaleVolume.cbegin() + (k_StagedZLo + k_StagedDepth) * planeValues);
+    const std::vector<uint8> binarySlab(binaryVolume.cbegin() + k_StagedZLo * planeValues, binaryVolume.cbegin() + (k_StagedZLo + k_StagedDepth) * planeValues);
     const usize outputValues = outputDims[0] * outputDims[1] * outputDims[2];
 
     std::vector<uint8> grayscaleDilate(outputValues, 255);
@@ -2166,20 +2167,21 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slab
     std::vector<uint8> gradient(outputValues, 255);
     std::vector<uint8> binaryDilate(outputValues, 255);
     std::vector<uint8> binaryErode(outputValues, 255);
-    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, true>(grayscaleSlab.data(), grayscaleDilate.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, false>(grayscaleSlab.data(), grayscaleErode.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunMorphologyGradientFlatFoldBlock<uint8>(grayscaleSlab.data(), gradient.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binarySlab.data(), binaryDilate.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, foreground, background, false,
-                                                                           shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binarySlab.data(), binaryErode.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, foreground, background, false,
-                                                                            shouldCancel);
+    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, true>(grayscaleSlab.data(), grayscaleDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
+    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, false>(grayscaleSlab.data(), grayscaleErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
+    ImageProcessing::detail::RunMorphologyGradientFlatFoldBlock<uint8>(grayscaleSlab.data(), gradient.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binarySlab.data(), binaryDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                           false, shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binarySlab.data(), binaryErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                            false, shouldCancel);
 
     REQUIRE(grayscaleDilate == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate), boundDims, outputOrigin, outputDims));
     REQUIRE(grayscaleErode == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode), boundDims, outputOrigin, outputDims));
     REQUIRE(gradient == extractBlock(GradientOracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se), boundDims, outputOrigin, outputDims));
     REQUIRE(binaryDilate ==
-            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate, foreground, background, false), boundDims, outputOrigin, outputDims));
-    REQUIRE(binaryErode == extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, foreground, background, false), boundDims, outputOrigin, outputDims));
+            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate, k_Foreground, k_Background, false), boundDims, outputOrigin, outputDims));
+    REQUIRE(binaryErode ==
+            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, k_Foreground, k_Background, false), boundDims, outputOrigin, outputDims));
   }
 
   SECTION("one-plane cropped ring uses nonzero padded-space origins")
@@ -2187,13 +2189,13 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slab
     const SizeVec3 boundDims{9, 8, 7};
     const SizeVec3 outputOrigin{1, 1, 3};
     const SizeVec3 outputDims{4, 3, 1};
-    constexpr usize stagedZLo = 1;
-    constexpr usize stagedDepth = 5;
+    constexpr usize k_StagedZLo = 1;
+    constexpr usize k_StagedDepth = 5;
     const usize planeValues = boundDims[0] * boundDims[1];
     const std::vector<uint8> grayscaleVolume = MakePattern<uint8>(boundDims[0], boundDims[1], boundDims[2]);
     const std::vector<uint8> binaryVolume = MakeBinaryPattern<uint8>(boundDims[0], boundDims[1], boundDims[2]);
-    const std::vector<uint8> grayscaleRing(grayscaleVolume.cbegin() + stagedZLo * planeValues, grayscaleVolume.cbegin() + (stagedZLo + stagedDepth) * planeValues);
-    const std::vector<uint8> binaryRing(binaryVolume.cbegin() + stagedZLo * planeValues, binaryVolume.cbegin() + (stagedZLo + stagedDepth) * planeValues);
+    const std::vector<uint8> grayscaleRing(grayscaleVolume.cbegin() + k_StagedZLo * planeValues, grayscaleVolume.cbegin() + (k_StagedZLo + k_StagedDepth) * planeValues);
+    const std::vector<uint8> binaryRing(binaryVolume.cbegin() + k_StagedZLo * planeValues, binaryVolume.cbegin() + (k_StagedZLo + k_StagedDepth) * planeValues);
     const usize outputValues = outputDims[0] * outputDims[1] * outputDims[2];
 
     std::vector<uint8> grayscaleDilate(outputValues, 255);
@@ -2201,19 +2203,21 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slab
     std::vector<uint8> gradient(outputValues, 255);
     std::vector<uint8> binaryDilate(outputValues, 255);
     std::vector<uint8> binaryErode(outputValues, 255);
-    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, true>(grayscaleRing.data(), grayscaleDilate.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, false>(grayscaleRing.data(), grayscaleErode.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunMorphologyGradientFlatFoldBlock<uint8>(grayscaleRing.data(), gradient.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binaryRing.data(), binaryDilate.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, foreground, background, true,
-                                                                           shouldCancel);
-    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binaryRing.data(), binaryErode.data(), boundDims, stagedZLo, outputDims, outputOrigin, se, foreground, background, true,
-                                                                            shouldCancel);
+    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, true>(grayscaleRing.data(), grayscaleDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
+    ImageProcessing::detail::RunMorphologyFlatFoldBlock<uint8, false>(grayscaleRing.data(), grayscaleErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
+    ImageProcessing::detail::RunMorphologyGradientFlatFoldBlock<uint8>(grayscaleRing.data(), gradient.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, true>(binaryRing.data(), binaryDilate.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                           true, shouldCancel);
+    ImageProcessing::detail::RunBinaryMorphologyFlatFoldBlock<uint8, false>(binaryRing.data(), binaryErode.data(), boundDims, k_StagedZLo, outputDims, outputOrigin, se, k_Foreground, k_Background,
+                                                                            true, shouldCancel);
 
     REQUIRE(grayscaleDilate == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate), boundDims, outputOrigin, outputDims));
     REQUIRE(grayscaleErode == extractBlock(Oracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode), boundDims, outputOrigin, outputDims));
     REQUIRE(gradient == extractBlock(GradientOracle(grayscaleVolume, boundDims[0], boundDims[1], boundDims[2], se), boundDims, outputOrigin, outputDims));
-    REQUIRE(binaryDilate == extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate, foreground, background, true), boundDims, outputOrigin, outputDims));
-    REQUIRE(binaryErode == extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, foreground, background, true), boundDims, outputOrigin, outputDims));
+    REQUIRE(binaryDilate ==
+            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Dilate, k_Foreground, k_Background, true), boundDims, outputOrigin, outputDims));
+    REQUIRE(binaryErode ==
+            extractBlock(BinaryOracle(binaryVolume, boundDims[0], boundDims[1], boundDims[2], se, MorphOp::Erode, k_Foreground, k_Background, true), boundDims, outputOrigin, outputDims));
   }
 }
 
@@ -2282,28 +2286,28 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: packed binary blocks match compl
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: packed binary rings retain logical planes across wrap", "[NXImageProcessing][MorphologyEngine]")
 {
-  const SizeVec3 k_BoundDims{65, 2, 8};
+  const SizeVec3 kBoundDims{65, 2, 8};
   constexpr BinaryMorphWord k_TailMask = (BinaryMorphWord{1} << 1) - BinaryMorphWord{1};
-  const ImageProcessing::detail::PackedBinaryPlaneLayout layout = ImageProcessing::detail::MakePackedBinaryPlaneLayout(k_BoundDims);
+  const ImageProcessing::detail::PackedBinaryPlaneLayout layout = ImageProcessing::detail::MakePackedBinaryPlaneLayout(kBoundDims);
   ImageProcessing::detail::PackedBinaryRing ring(layout, 3);
 
-  BinaryMorphWord* plane4 = ring.appendPlane(4);
-  plane4[0] = BinaryMorphWord{0x0123456789ABCDEF};
-  plane4[1] = BinaryMorphWord{0x13579BDF2468ACE0} & k_TailMask;
-  plane4[2] = BinaryMorphWord{0x0F0E0D0C0B0A0908};
-  plane4[3] = BinaryMorphWord{0x2468ACE013579BDF} & k_TailMask;
+  BinaryMorphWord* plane4Ptr = ring.appendPlane(4);
+  plane4Ptr[0] = BinaryMorphWord{0x0123456789ABCDEF};
+  plane4Ptr[1] = BinaryMorphWord{0x13579BDF2468ACE0} & k_TailMask;
+  plane4Ptr[2] = BinaryMorphWord{0x0F0E0D0C0B0A0908};
+  plane4Ptr[3] = BinaryMorphWord{0x2468ACE013579BDF} & k_TailMask;
 
-  BinaryMorphWord* plane5 = ring.appendPlane(5);
-  plane5[0] = BinaryMorphWord{0x89ABCDEF01234567};
-  plane5[1] = BinaryMorphWord{0xFEDCBA9876543211} & k_TailMask;
-  plane5[2] = BinaryMorphWord{0x76543210FEDCBA98};
-  plane5[3] = BinaryMorphWord{0xABCDEF0123456781} & k_TailMask;
+  BinaryMorphWord* plane5Ptr = ring.appendPlane(5);
+  plane5Ptr[0] = BinaryMorphWord{0x89ABCDEF01234567};
+  plane5Ptr[1] = BinaryMorphWord{0xFEDCBA9876543211} & k_TailMask;
+  plane5Ptr[2] = BinaryMorphWord{0x76543210FEDCBA98};
+  plane5Ptr[3] = BinaryMorphWord{0xABCDEF0123456781} & k_TailMask;
 
-  BinaryMorphWord* plane6 = ring.appendPlane(6);
-  plane6[0] = BinaryMorphWord{0x55AA55AA55AA55AA};
-  plane6[1] = BinaryMorphWord{0xAAAAAAAAAAAAAAAA} & k_TailMask;
-  plane6[2] = BinaryMorphWord{0xAA55AA55AA55AA55};
-  plane6[3] = BinaryMorphWord{0x5555555555555555} & k_TailMask;
+  BinaryMorphWord* plane6Ptr = ring.appendPlane(6);
+  plane6Ptr[0] = BinaryMorphWord{0x55AA55AA55AA55AA};
+  plane6Ptr[1] = BinaryMorphWord{0xAAAAAAAAAAAAAAAA} & k_TailMask;
+  plane6Ptr[2] = BinaryMorphWord{0xAA55AA55AA55AA55};
+  plane6Ptr[3] = BinaryMorphWord{0x5555555555555555} & k_TailMask;
 
   const ImageProcessing::detail::PackedBinaryPlanesView initialView = ring.view();
   REQUIRE(initialView.zLo == 4);
@@ -2315,61 +2319,61 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: packed binary rings retain logic
   REQUIRE(initialView.layout.dimY == 2);
   REQUIRE(initialView.layout.wordsPerRow == 2);
   REQUIRE(initialView.layout.planeWords == 4);
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, k_BoundDims, 0, 0, 4, false) == BinaryMorphWord{0x0123456789ABCDEF});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, k_BoundDims, 0, 1, 4, false) == BinaryMorphWord{0x0F0E0D0C0B0A0908});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, k_BoundDims, 0, 0, 5, false) == BinaryMorphWord{0x89ABCDEF01234567});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, k_BoundDims, 0, 1, 5, false) == BinaryMorphWord{0x76543210FEDCBA98});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, k_BoundDims, 0, 0, 6, false) == BinaryMorphWord{0x55AA55AA55AA55AA});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, k_BoundDims, 0, 1, 6, false) == BinaryMorphWord{0xAA55AA55AA55AA55});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, kBoundDims, 0, 0, 4, false) == BinaryMorphWord{0x0123456789ABCDEF});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, kBoundDims, 0, 1, 4, false) == BinaryMorphWord{0x0F0E0D0C0B0A0908});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, kBoundDims, 0, 0, 5, false) == BinaryMorphWord{0x89ABCDEF01234567});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, kBoundDims, 0, 1, 5, false) == BinaryMorphWord{0x76543210FEDCBA98});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, kBoundDims, 0, 0, 6, false) == BinaryMorphWord{0x55AA55AA55AA55AA});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(initialView, kBoundDims, 0, 1, 6, false) == BinaryMorphWord{0xAA55AA55AA55AA55});
 
-  BinaryMorphWord* plane7 = ring.appendPlane(7);
-  plane7[0] = BinaryMorphWord{0x1111222233334444};
-  plane7[1] = BinaryMorphWord{0xFFFFFFFFFFFFFFFF} & k_TailMask;
-  plane7[2] = BinaryMorphWord{0x4444333322221111};
-  plane7[3] = BinaryMorphWord{0x0000000000000001} & k_TailMask;
+  BinaryMorphWord* plane7Ptr = ring.appendPlane(7);
+  plane7Ptr[0] = BinaryMorphWord{0x1111222233334444};
+  plane7Ptr[1] = BinaryMorphWord{0xFFFFFFFFFFFFFFFF} & k_TailMask;
+  plane7Ptr[2] = BinaryMorphWord{0x4444333322221111};
+  plane7Ptr[3] = BinaryMorphWord{0x0000000000000001} & k_TailMask;
 
   const ImageProcessing::detail::PackedBinaryPlanesView wrappedView = ring.view();
   REQUIRE(wrappedView.zLo == 5);
   REQUIRE(wrappedView.depth == 3);
   REQUIRE(wrappedView.capacity == 3);
   REQUIRE(wrappedView.head == 1);
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 0, 5, false) == BinaryMorphWord{0x89ABCDEF01234567});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 1, 5, false) == BinaryMorphWord{0x76543210FEDCBA98});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 0, 6, false) == BinaryMorphWord{0x55AA55AA55AA55AA});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 1, 6, false) == BinaryMorphWord{0xAA55AA55AA55AA55});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 0, 7, false) == BinaryMorphWord{0x1111222233334444});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 1, 7, false) == BinaryMorphWord{0x4444333322221111});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 1, 0, 5, false) ==
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 0, 5, false) == BinaryMorphWord{0x89ABCDEF01234567});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 1, 5, false) == BinaryMorphWord{0x76543210FEDCBA98});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 0, 6, false) == BinaryMorphWord{0x55AA55AA55AA55AA});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 1, 6, false) == BinaryMorphWord{0xAA55AA55AA55AA55});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 0, 7, false) == BinaryMorphWord{0x1111222233334444});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 1, 7, false) == BinaryMorphWord{0x4444333322221111});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 1, 0, 5, false) ==
           ((BinaryMorphWord{0x89ABCDEF01234567} >> 1) | ((BinaryMorphWord{0xFEDCBA9876543211} & k_TailMask) << 63)));
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 0, -1, false) == BinaryMorphWord{0});
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, k_BoundDims, 0, 0, 8, true) == std::numeric_limits<BinaryMorphWord>::max());
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 0, -1, false) == BinaryMorphWord{0});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(wrappedView, kBoundDims, 0, 0, 8, true) == std::numeric_limits<BinaryMorphWord>::max());
 
   const StructuringElement boxRadiusOne = MakeStructuringElement(KernelType::Box, {1, 1, 1});
   std::vector<uint8> rawOutput(65 * 2, uint8{0xA5});
   std::vector<BinaryMorphWord> packedOutput(layout.planeWords, BinaryMorphWord{0xDEADBEEFDEADBEEF});
   std::atomic_bool shouldCancel{true};
-  const bool rawCompleted = ImageProcessing::detail::RunPrepackedBinaryMorphologyBlock<uint8, true>(wrappedView, rawOutput.data(), k_BoundDims, SizeVec3{65, 2, 1}, SizeVec3{0, 0, 6}, boxRadiusOne,
+  const bool rawCompleted = ImageProcessing::detail::RunPrepackedBinaryMorphologyBlock<uint8, true>(wrappedView, rawOutput.data(), kBoundDims, SizeVec3{65, 2, 1}, SizeVec3{0, 0, 6}, boxRadiusOne,
                                                                                                     uint8{1}, uint8{0}, false, shouldCancel);
-  const bool packedCompleted = ImageProcessing::detail::RunPrepackedBinaryMorphologyPlane<true>(wrappedView, packedOutput.data(), k_BoundDims, SizeVec3{0, 0, 6}, boxRadiusOne, false, shouldCancel);
+  const bool packedCompleted = ImageProcessing::detail::RunPrepackedBinaryMorphologyPlane<true>(wrappedView, packedOutput.data(), kBoundDims, SizeVec3{0, 0, 6}, boxRadiusOne, false, shouldCancel);
   REQUIRE_FALSE(rawCompleted);
   REQUIRE_FALSE(packedCompleted);
   REQUIRE(std::all_of(rawOutput.cbegin(), rawOutput.cend(), [](uint8 value) { return value == uint8{0xA5}; }));
   REQUIRE(std::all_of(packedOutput.cbegin(), packedOutput.cend(), [](BinaryMorphWord value) { return value == BinaryMorphWord{0xDEADBEEFDEADBEEF}; }));
 
   ImageProcessing::detail::PackedBinaryRing onePlaneRing(layout, 1);
-  BinaryMorphWord* plane2 = onePlaneRing.appendPlane(2);
-  plane2[0] = BinaryMorphWord{0x0000000000000001};
-  plane2[1] = BinaryMorphWord{0x0000000000000001} & k_TailMask;
-  BinaryMorphWord* plane3 = onePlaneRing.appendPlane(3);
-  plane3[0] = BinaryMorphWord{0x8000000000000000};
-  plane3[1] = BinaryMorphWord{0x0000000000000000} & k_TailMask;
+  BinaryMorphWord* plane2Ptr = onePlaneRing.appendPlane(2);
+  plane2Ptr[0] = BinaryMorphWord{0x0000000000000001};
+  plane2Ptr[1] = BinaryMorphWord{0x0000000000000001} & k_TailMask;
+  BinaryMorphWord* plane3Ptr = onePlaneRing.appendPlane(3);
+  plane3Ptr[0] = BinaryMorphWord{0x8000000000000000};
+  plane3Ptr[1] = BinaryMorphWord{0x0000000000000000} & k_TailMask;
 
   const ImageProcessing::detail::PackedBinaryPlanesView onePlaneView = onePlaneRing.view();
   REQUIRE(onePlaneView.zLo == 3);
   REQUIRE(onePlaneView.depth == 1);
   REQUIRE(onePlaneView.capacity == 1);
   REQUIRE(onePlaneView.head == 0);
-  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(onePlaneView, k_BoundDims, 0, 0, 3, false) == BinaryMorphWord{0x8000000000000000});
+  REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(onePlaneView, kBoundDims, 0, 0, 3, false) == BinaryMorphWord{0x8000000000000000});
 }
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: pre-cancel preserves poisoned scanline outputs", "[NXImageProcessing][MorphologyEngine]")
@@ -2398,9 +2402,9 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: pre-cancel preserves poisoned sc
   SIMPLNX_RESULT_REQUIRE_VALID(binaryAlgorithmResult);
 
   std::vector<int32> actual(k_VolumeValues);
-  for(AbstractDataStore<int32>* store : std::array<AbstractDataStore<int32>*, 3>{&morphStore, &gradientStore, &binaryStore})
+  for(AbstractDataStore<int32>* storePtr : std::array<AbstractDataStore<int32>*, 3>{&morphStore, &gradientStore, &binaryStore})
   {
-    auto copyIntoBufferResult = store->copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
+    auto copyIntoBufferResult = storePtr->copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
     REQUIRE(std::all_of(actual.cbegin(), actual.cend(), [](int32 value) { return value == k_Poison; }));
   }
@@ -2408,31 +2412,31 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: pre-cancel preserves poisoned sc
 
 TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract matches manual oracle", "[NXImageProcessing][MorphologyEngine]", uint8, int32, float32)
 {
-  using Order = ImageProcessing::detail::CropSubtractOrder;
+  using OrderType = ImageProcessing::detail::CropSubtractOrder;
 
   SECTION("asymmetric 3D, original minus cropped")
   {
-    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, Order::OriginalMinusCropped, false);
+    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, OrderType::OriginalMinusCropped, false);
   }
   SECTION("asymmetric 3D, cropped minus original")
   {
-    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, Order::CroppedMinusOriginal, false);
+    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, OrderType::CroppedMinusOriginal, false);
   }
   SECTION("2D with zero Z pad")
   {
-    RequireCropSubtractCase<TestType>(SizeVec3{4, 3, 1}, {2, 1, 0}, Order::OriginalMinusCropped, false);
+    RequireCropSubtractCase<TestType>(SizeVec3{4, 3, 1}, {2, 1, 0}, OrderType::OriginalMinusCropped, false);
   }
   SECTION("zero radius")
   {
-    RequireCropSubtractCase<TestType>(SizeVec3{3, 2, 2}, {0, 0, 0}, Order::CroppedMinusOriginal, false);
+    RequireCropSubtractCase<TestType>(SizeVec3{3, 2, 2}, {0, 0, 0}, OrderType::CroppedMinusOriginal, false);
   }
   SECTION("original/output alias, original minus cropped")
   {
-    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, Order::OriginalMinusCropped, true);
+    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, OrderType::OriginalMinusCropped, true);
   }
   SECTION("original/output alias, cropped minus original")
   {
-    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, Order::CroppedMinusOriginal, true);
+    RequireCropSubtractCase<TestType>(SizeVec3{5, 3, 2}, {1, 2, 1}, OrderType::CroppedMinusOriginal, true);
   }
 }
 
@@ -2441,7 +2445,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract h
   constexpr usize k_DimX = 3;
   constexpr usize k_DimY = 2;
   constexpr usize k_DimZ = 2;
-  const SizeVec3 k_Dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3 kDims{k_DimX, k_DimY, k_DimZ};
   constexpr std::array<usize, 3> k_Radius{1, 2, 1};
   constexpr usize k_PaddedX = k_DimX + 2 * k_Radius[0];
   constexpr usize k_PaddedY = k_DimY + 2 * k_Radius[1];
@@ -2453,7 +2457,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract h
   std::atomic_bool shouldCancel{true};
 
   auto cropSubtractFromStoreResult =
-      ImageProcessing::detail::CropSubtractFromStore<int32>(paddedStore, originalStore, outputStore, k_Dims, k_Radius, ImageProcessing::detail::CropSubtractOrder::CroppedMinusOriginal, shouldCancel);
+      ImageProcessing::detail::CropSubtractFromStore<int32>(paddedStore, originalStore, outputStore, kDims, k_Radius, ImageProcessing::detail::CropSubtractOrder::CroppedMinusOriginal, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(cropSubtractFromStoreResult);
 
   std::vector<int32> actual(k_DimX * k_DimY * k_DimZ);
@@ -2469,7 +2473,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract u
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 3;
   constexpr usize k_DimZ = 2;
-  const SizeVec3 k_Dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3 kDims{k_DimX, k_DimY, k_DimZ};
   constexpr std::array<usize, 3> k_Radius{1, 2, 1};
   constexpr usize k_PaddedX = k_DimX + 2 * k_Radius[0];
   constexpr usize k_PaddedY = k_DimY + 2 * k_Radius[1];
@@ -2517,7 +2521,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract u
   SIMPLNX_RESULT_REQUIRE_VALID(copyFromBufferResult2);
 
   std::atomic_bool shouldCancel{false};
-  auto cropSubtractFromStoreResult = ImageProcessing::detail::CropSubtractFromStore<int32>(*paddedStore, *originalStore, *outputStore, k_Dims, k_Radius,
+  auto cropSubtractFromStoreResult = ImageProcessing::detail::CropSubtractFromStore<int32>(*paddedStore, *originalStore, *outputStore, kDims, k_Radius,
                                                                                            ImageProcessing::detail::CropSubtractOrder::CroppedMinusOriginal, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(cropSubtractFromStoreResult);
   std::vector<int32> actual(k_Volume);
@@ -2557,40 +2561,42 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
   const IFilter::MessageHandler handler;
   SECTION("Safe Border volume")
   {
-    DataStructure ds;
-    const auto inputPath = morph_test::BuildKernelRadiusMetadata(ds, {3, 3, 1024});
+    DataStructure dataStructure;
+    const auto inputPath = morph_test::BuildKernelRadiusMetadata(dataStructure, {3, 3, 1024});
     const auto geomPath = inputPath.getParent().getParent();
     const auto outputPath = inputPath.replaceName("Output");
     ImageProcessing::StructuringElement se;
     se.radius = {100000000, 100000000, 0};
     // The invalid layout returns before resolving or allocating an output or scratch store.
-    auto grayscale = ImageProcessing::ExecuteMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler);
+    auto grayscale = ImageProcessing::ExecuteMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler);
     SIMPLNX_RESULT_REQUIRE_INVALID(grayscale);
     REQUIRE(grayscale.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
     morph_test::RequireSingleGeometryContext(grayscale.errors().front().message, geomPath);
-    auto binary = ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler);
+    auto binary =
+        ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler);
     SIMPLNX_RESULT_REQUIRE_INVALID(binary);
     REQUIRE(binary.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
     morph_test::RequireSingleGeometryContext(binary.errors().front().message, geomPath);
-    REQUIRE_FALSE(ds.containsData(outputPath));
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_FALSE(dataStructure.containsData(outputPath));
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
   SECTION("All seven execution helpers")
   {
-    DataStructure ds;
-    const auto inputPath = morph_test::BuildKernelRadiusMetadata(ds, {static_cast<usize>(std::numeric_limits<int64>::max()) - 2, 1, 1});
+    DataStructure dataStructure;
+    const auto inputPath = morph_test::BuildKernelRadiusMetadata(dataStructure, {static_cast<usize>(std::numeric_limits<int64>::max()) - 2, 1, 1});
     const auto geomPath = inputPath.getParent().getParent();
     const auto outputPath = inputPath.replaceName("Output");
     const auto se = ImageProcessing::MakeStructuringElement(ImageProcessing::KernelType::Box, {2, 0, 0});
     // These checks return before dispatch, so no algorithm-path witness or value store is needed.
     std::vector<Result<>> results;
-    results.push_back(ImageProcessing::ExecuteMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteObjectMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::ObjectMorphOp::Dilate, 5, 0, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteBinaryMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, 5, 0, false, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteReconstructionOpenCloseImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Erode, false, false, cancel, handler));
-    results.push_back(ImageProcessing::ExecuteBinaryOpeningByReconstructionImageFilter(ds, geomPath, inputPath, outputPath, se, 5, 0, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteObjectMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::ObjectMorphOp::Dilate, 5, 0, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryMorphologyImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, 5, 0, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler));
+    results.push_back(
+        ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteReconstructionOpenCloseImageFilter(dataStructure, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Erode, false, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryOpeningByReconstructionImageFilter(dataStructure, geomPath, inputPath, outputPath, se, 5, 0, false, cancel, handler));
     for(usize i = 0; i < results.size(); ++i)
     {
       DYNAMIC_SECTION("Execution helper " << i)
@@ -2601,7 +2607,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
         morph_test::RequireSingleGeometryContext(result.errors().front().message, geomPath);
       }
     }
-    REQUIRE_FALSE(ds.containsData(outputPath));
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_FALSE(dataStructure.containsData(outputPath));
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

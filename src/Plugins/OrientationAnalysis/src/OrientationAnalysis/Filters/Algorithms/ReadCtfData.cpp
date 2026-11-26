@@ -80,14 +80,14 @@ Result<> ReadCtfData::loadMaterialInfo(ebsdlib::CtfReader* reader) const
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::MaterialName));
   auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::LatticeConstants));
 
-  const std::string k_InvalidPhase = "Invalid Phase";
+  const std::string kInvalidPhase = "Invalid Phase";
   const usize numTuples = crystalStructures.getNumberOfTuples();
 
   // Defaults preserve invalid and omitted phase slots.
   for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
   {
     crystalStructures[tupleIndex] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-    materialNames[tupleIndex] = k_InvalidPhase;
+    materialNames[tupleIndex] = kInvalidPhase;
     for(usize i = 0; i < 6; i++)
     {
       latticeConstants.getDataStoreRef().setComponent(tupleIndex, i, 0.0F);
@@ -201,7 +201,7 @@ Result<> ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
     }
     const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
     // Reuse validated reader phases to avoid a second output-array read.
-    const auto* cellPhases = static_cast<const int32*>(phaseColumnPtr);
+    const auto* cellPhasesPtr = static_cast<const int32*>(phaseColumnPtr);
 
     // Cache the small ensemble-level array once to avoid repeated out-of-core lookups.
     const auto& csStore = crystalStructures.getDataStoreRef();
@@ -212,9 +212,9 @@ Result<> ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
       return ConvertResult(std::move(ioResult));
     }
 
-    const auto* fComp0 = static_cast<const float32*>(euler1Ptr);
-    const auto* fComp1 = static_cast<const float32*>(euler2Ptr);
-    const auto* fComp2 = static_cast<const float32*>(euler3Ptr);
+    const auto* fComp0Ptr = static_cast<const float32*>(euler1Ptr);
+    const auto* fComp1Ptr = static_cast<const float32*>(euler2Ptr);
+    const auto* fComp2Ptr = static_cast<const float32*>(euler3Ptr);
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
     auto& eulerStore = cellEulerAngles.getDataStoreRef();
@@ -227,10 +227,10 @@ Result<> ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
       const usize count = std::min(k_ChunkSize, totalCells - offset);
       for(usize i = 0; i < count; i++)
       {
-        float32 euler1 = fComp0[offset + i];
-        float32 euler2 = fComp1[offset + i];
-        float32 euler3 = fComp2[offset + i];
-        if(EbsdReaderUtilities::IsHexagonalCrystalStructure(csCache[static_cast<usize>(cellPhases[offset + i])]) && m_InputValues->EdaxHexagonalAlignment)
+        float32 euler1 = fComp0Ptr[offset + i];
+        float32 euler2 = fComp1Ptr[offset + i];
+        float32 euler3 = fComp2Ptr[offset + i];
+        if(EbsdReaderUtilities::IsHexagonalCrystalStructure(csCache[static_cast<usize>(cellPhasesPtr[offset + i])]) && m_InputValues->EdaxHexagonalAlignment)
         {
           euler3 = static_cast<float32>(static_cast<float64>(euler3) + EbsdReaderUtilities::k_HexagonalAlignmentDegrees);
         }

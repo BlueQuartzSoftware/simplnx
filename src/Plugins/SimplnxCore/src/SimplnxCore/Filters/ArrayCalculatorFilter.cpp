@@ -84,8 +84,8 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Parse and validate the expression
-  const std::atomic_bool m_ShouldCancel(false);
-  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, m_ShouldCancel);
+  const std::atomic_bool mShouldCancel(false);
+  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, mShouldCancel);
   std::vector<usize> calculatedTupleShape;
   std::vector<usize> calculatedComponentShape;
   Result<> parseResult = parser.parseAndValidate(calculatedTupleShape, calculatedComponentShape);
@@ -102,9 +102,9 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   // use the AttributeMatrix's shape instead
   if(calculatedTupleShape.size() == 1 && calculatedTupleShape[0] == 1)
   {
-    if(const auto* attributeMatrix = dataStructure.getDataAs<AttributeMatrix>(outputGroupPath); attributeMatrix != nullptr)
+    if(const auto* attributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(outputGroupPath); attributeMatrixPtr != nullptr)
     {
-      calculatedTupleShape = attributeMatrix->getShape();
+      calculatedTupleShape = attributeMatrixPtr->getShape();
     }
   }
 
@@ -132,13 +132,13 @@ Result<> ArrayCalculatorFilter::executeImpl(DataStructure& dataStructure, const 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
 constexpr StringLiteral k_InfixEquationKey = "InfixEquation";
 constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
 constexpr StringLiteral k_CalculatedArrayKey = "CalculatedArray";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ArrayCalculatorFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -150,13 +150,13 @@ Result<Arguments> ArrayCalculatorFilter::FromSIMPLJson(const nlohmann::json& jso
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedAttributeMatrixKey,
   // "@SIMPLNX_PARAMETER_KEY@"));
   results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::CalculatorFilterParameterConverter>(args, json, k_CalculatorParameter_Key));
-  Result<> result = SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key);
+  Result<> result = SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key);
   if(result.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(result));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CalculatedArrayKey, k_CalculatedArray_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CalculatedArrayKey, k_CalculatedArray_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

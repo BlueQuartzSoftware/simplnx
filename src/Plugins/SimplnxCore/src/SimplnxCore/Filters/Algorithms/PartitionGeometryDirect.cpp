@@ -422,8 +422,8 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
   dataAlg.setRange(dims[0], dims[1], dims[2]);
   dataAlg.requireStoresInMemory(algStores);
 
-  auto* inMemoryPartitionIdsStore = dynamic_cast<Int32DataStore*>(&partitionIdsStore);
-  if(inputGeometry.getGeomType() == IGeometry::Type::Image && inMemoryPartitionIdsStore != nullptr)
+  auto* inMemoryPartitionIdsStorePtr = dynamic_cast<Int32DataStore*>(&partitionIdsStore);
+  if(inputGeometry.getGeomType() == IGeometry::Type::Image && inMemoryPartitionIdsStorePtr != nullptr)
   {
     const auto& imageGeom = dynamic_cast<const ImageGeom&>(inputGeometry);
     const SizeVec3 partitionDimensions = psImageGeom.getDimensions();
@@ -438,7 +438,7 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
     const std::vector<usize> zPartitionIndices =
         CreateImageAxisPartitionIndices(dims[2], inputOrigin[2], inputSpacing[2], partitionDimensions[2], partitionOrigin[2], partitionSpacing[2], partitionDimensions[0] * partitionDimensions[1]);
 
-    dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStore->data(), m_InputValues->StartingFeatureID, outOfBoundsValue,
+    dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStorePtr->data(), m_InputValues->StartingFeatureID, outOfBoundsValue,
                                                m_ShouldCancel));
     return {};
   }

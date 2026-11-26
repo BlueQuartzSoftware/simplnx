@@ -45,10 +45,10 @@ nlohmann::json MultiPathSelectionParameter::toJsonImpl(const std::any& value) co
 
 Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", k_Prefix, name()));
   }
 
   ValueType paths;
@@ -59,13 +59,13 @@ Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json&
   {
     if(!item.is_string())
     {
-      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", prefix));
+      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", k_Prefix));
     }
     auto string = item.get<std::string>();
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
+      errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string)});
       continue;
     }
     paths.push_back(std::move(*path));
@@ -115,8 +115,8 @@ Result<> MultiPathSelectionParameter::validatePaths(const DataStructure& dataStr
       errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Empty_Value, .message = fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
-    const DataObject* object = dataStructure.getData(path);
-    if(object == nullptr)
+    const DataObject* objectPtr = dataStructure.getData(path);
+    if(objectPtr == nullptr)
     {
       errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Does_Not_Exist, .message = fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;

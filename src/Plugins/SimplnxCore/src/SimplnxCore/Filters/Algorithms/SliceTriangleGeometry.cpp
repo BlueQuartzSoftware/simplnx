@@ -89,11 +89,11 @@ Result<> SliceTriangleGeometry::operator()()
   DataPath edgeAmPath = m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->EdgeAttributeMatrixName);
   auto& sliceId = m_DataStructure.getDataRefAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->SliceIdArrayName));
   sliceId.fill(0);
-  Int32Array* triRegionIds = nullptr;
+  Int32Array* triRegionIdsPtr = nullptr;
   if(m_InputValues->HaveRegionIds)
   {
-    triRegionIds = m_DataStructure.getDataAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->RegionIdArrayPath.getTargetName()));
-    triRegionIds->fill(0);
+    triRegionIdsPtr = m_DataStructure.getDataAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->RegionIdArrayPath.getTargetName()));
+    triRegionIdsPtr->fill(0);
   }
 
   for(usize i = 0; i < numEdges; i++)
@@ -109,7 +109,7 @@ Result<> SliceTriangleGeometry::operator()()
     sliceId[i] = sliceTriangleResult.SliceIds[i];
     if(m_InputValues->HaveRegionIds)
     {
-      (*triRegionIds)[i] = sliceTriangleResult.RegionIds[i];
+      (*triRegionIdsPtr)[i] = sliceTriangleResult.RegionIds[i];
     }
   }
 
@@ -121,8 +121,8 @@ Result<> SliceTriangleGeometry::operator()()
 
   // REMOVE DUPLICATE EDGES FROM THE GENERATED EDGE GEOMETRY
   // Remember to also fix up the sliceIds and regionIds arrays
-  using UniqueEdges = std::set<std::pair<uint64, uint64>>;
-  UniqueEdges uniqueEdges;
+  using UniqueEdgesType = std::set<std::pair<uint64, uint64>>;
+  UniqueEdgesType uniqueEdges;
   usize currentEdgeListSize = 0;
   for(usize edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
   {
@@ -135,7 +135,7 @@ Result<> SliceTriangleGeometry::operator()()
       sliceId[currentEdgeListSize] = sliceId[edgeIdx];
       if(m_InputValues->HaveRegionIds)
       {
-        (*triRegionIds)[currentEdgeListSize] = (*triRegionIds)[edgeIdx];
+        (*triRegionIdsPtr)[currentEdgeListSize] = (*triRegionIdsPtr)[edgeIdx];
       }
       currentEdgeListSize++;
     }

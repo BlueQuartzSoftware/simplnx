@@ -195,10 +195,10 @@ public:
       bool useBufferedPath = !ForceInCoreAlgorithm() && (ForceOocAlgorithm() || dataStore.getStoreType() != IDataStore::StoreType::InMemory);
       if(!useBufferedPath)
       {
-        auto* inCoreStore = dynamic_cast<DataStore<T>*>(&dataStore);
-        if(inCoreStore != nullptr)
+        auto* inCoreStorePtr = dynamic_cast<DataStore<T>*>(&dataStore);
+        if(inCoreStorePtr != nullptr)
         {
-          m_InCoreData = inCoreStore->data();
+          m_InCoreData = inCoreStorePtr->data();
         }
         else
         {

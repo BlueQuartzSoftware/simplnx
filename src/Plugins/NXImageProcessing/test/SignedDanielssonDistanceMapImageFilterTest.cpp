@@ -15,24 +15,24 @@ namespace rt = recon_test;
 
 namespace
 {
-using SignedDanielssonFilter = SignedDanielssonDistanceMapImageFilter;
+using SignedDanielssonFilterType = SignedDanielssonDistanceMapImageFilter;
 
 // Sets the geometry, input, and output keys plus the three parameters on the Arguments. The helper runs preflight
 // and execute, and requires that both steps succeed.
-void RunSignedDanielsson(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bool insideIsPositive, bool squaredDistance, bool useImageSpacing,
+void RunSignedDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool insideIsPositive, bool squaredDistance, bool useImageSpacing,
                          UnitTest::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(SignedDanielssonFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(SignedDanielssonFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(SignedDanielssonFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(SignedDanielssonFilter::k_InsideIsPositive_Key, std::make_any<bool>(insideIsPositive));
-  args.insertOrAssign(SignedDanielssonFilter::k_SquaredDistance_Key, std::make_any<bool>(squaredDistance));
-  args.insertOrAssign(SignedDanielssonFilter::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
-  auto preflightResult = filter.preflight(ds, args);
+  args.insertOrAssign(SignedDanielssonFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(SignedDanielssonFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(SignedDanielssonFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(SignedDanielssonFilterType::k_InsideIsPositive_Key, std::make_any<bool>(insideIsPositive));
+  args.insertOrAssign(SignedDanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(squaredDistance));
+  args.insertOrAssign(SignedDanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = scope == nullptr ? filter.execute(ds, args) : scope->executeFilter(filter, ds, args);
+  auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace
@@ -46,30 +46,30 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orien
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize D = 11;
-  std::vector<int32> pattern(D * D * D, 0);
+  constexpr usize k_D = 11;
+  std::vector<int32> pattern(k_D * k_D * k_D, 0);
   for(usize z = 3; z <= 7; ++z)
   {
     for(usize y = 3; y <= 7; ++y)
     {
       for(usize x = 3; x <= 7; ++x)
       {
-        pattern[rt::FlatIndex(x, y, z, D, D)] = 1; // filled 5x5x5 cube object
+        pattern[rt::FlatIndex(x, y, z, k_D, k_D)] = 1; // filled 5x5x5 cube object
       }
     }
   }
-  const usize cornerIdx = rt::FlatIndex(0, 0, 0, D, D); // well outside the object
-  const usize centerIdx = rt::FlatIndex(5, 5, 5, D, D); // deep inside the object
+  const usize cornerIdx = rt::FlatIndex(0, 0, 0, k_D, k_D); // well outside the object
+  const usize centerIdx = rt::FlatIndex(5, 5, 5, k_D, k_D); // deep inside the object
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
 
   auto runSign = [&](bool insideIsPositive) {
     UnitTest::AlgorithmTestScope scope(scenario);
-    DataStructure ds;
-    const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, D, D, D, pattern);
-    scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
-    SignedDanielssonFilter filter;
-    RunSignedDanielsson(filter, ds, inputPath, insideIsPositive, /*squaredDistance=*/false, /*useImageSpacing=*/false, &scope);
-    const auto& out = ds.getDataRefAs<DataArray<float32>>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
+    DataStructure dataStructure;
+    const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_D, k_D, k_D, pattern);
+    scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+    SignedDanielssonFilterType filter;
+    RunSignedDanielsson(filter, dataStructure, inputPath, insideIsPositive, /*squaredDistance=*/false, /*useImageSpacing=*/false, &scope);
+    const auto& out = dataStructure.getDataRefAs<DataArray<float32>>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
     return std::make_pair(out.getValue(cornerIdx), out.getValue(centerIdx));
   };
 
@@ -98,44 +98,44 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orien
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 11;
-  std::vector<int32> pattern(D * D * D, 0);
+  constexpr usize k_D = 11;
+  std::vector<int32> pattern(k_D * k_D * k_D, 0);
   for(usize z = 3; z <= 7; ++z)
   {
     for(usize y = 3; y <= 7; ++y)
     {
       for(usize x = 3; x <= 7; ++x)
       {
-        pattern[rt::FlatIndex(x, y, z, D, D)] = 1; // filled 5x5x5 cube object
+        pattern[rt::FlatIndex(x, y, z, k_D, k_D)] = 1; // filled 5x5x5 cube object
       }
     }
   }
-  const usize cornerIdx = rt::FlatIndex(0, 0, 0, D, D); // well outside the object
-  const usize centerIdx = rt::FlatIndex(5, 5, 5, D, D); // deep inside the object
+  const usize cornerIdx = rt::FlatIndex(0, 0, 0, k_D, k_D); // well outside the object
+  const usize centerIdx = rt::FlatIndex(5, 5, 5, k_D, k_D); // deep inside the object
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, D, D, D, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_D, k_D, k_D, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
-  SignedDanielssonFilter filter;
+  SignedDanielssonFilterType filter;
   Arguments args;
-  args.insertOrAssign(SignedDanielssonFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
-  args.insertOrAssign(SignedDanielssonFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(SignedDanielssonFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(SignedDanielssonFilter::k_InsideIsPositive_Key, std::make_any<bool>(false));
-  args.insertOrAssign(SignedDanielssonFilter::k_SquaredDistance_Key, std::make_any<bool>(false));
-  args.insertOrAssign(SignedDanielssonFilter::k_UseImageSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SignedDanielssonFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+  args.insertOrAssign(SignedDanielssonFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(SignedDanielssonFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(SignedDanielssonFilterType::k_InsideIsPositive_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SignedDanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SignedDanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& out = outArray.getDataStoreRef();
   REQUIRE(out.getValue(cornerIdx) > 0.0f); // outside is positive when InsideIsPositive is Off
   REQUIRE(out.getValue(centerIdx) < 0.0f); // inside is negative
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -146,59 +146,59 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight 
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6;
-  constexpr usize DY = 6;
-  constexpr usize DZ = 1;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 1.0f));
+  constexpr usize k_Dx = 6;
+  constexpr usize k_Dy = 6;
+  constexpr usize k_Dz = 1;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, std::vector<float32>(k_Dx * k_Dy * k_Dz, 1.0f));
   const DataPath geomPath = inputPath.getParent().getParent();
 
-  SignedDanielssonFilter filter;
+  SignedDanielssonFilterType filter;
   Arguments args;
-  args.insertOrAssign(SignedDanielssonFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(SignedDanielssonFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(SignedDanielssonFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(SignedDanielssonFilter::k_InsideIsPositive_Key, std::make_any<bool>(false));
-  args.insertOrAssign(SignedDanielssonFilter::k_SquaredDistance_Key, std::make_any<bool>(true));
-  args.insertOrAssign(SignedDanielssonFilter::k_UseImageSpacing_Key, std::make_any<bool>(false));
-  auto result = filter.preflight(ds, args);
+  args.insertOrAssign(SignedDanielssonFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(SignedDanielssonFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(SignedDanielssonFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(SignedDanielssonFilterType::k_InsideIsPositive_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SignedDanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(true));
+  args.insertOrAssign(SignedDanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
+  auto result = filter.preflight(dataStructure, args);
   REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure ds;
-  const DataPath input = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+  DataStructure dataStructure;
+  const DataPath input = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
   const DataPath geomPath = input.getParent().getParent();
-  SignedDanielssonFilter filter;
+  SignedDanielssonFilterType filter;
   auto argsFor = [&](const DataPath& path) {
     Arguments args;
-    args.insertOrAssign(SignedDanielssonFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(SignedDanielssonFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(path));
-    args.insertOrAssign(SignedDanielssonFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SignedDanielssonFilter::k_InsideIsPositive_Key, std::make_any<bool>(false));
-    args.insertOrAssign(SignedDanielssonFilter::k_SquaredDistance_Key, std::make_any<bool>(true));
-    args.insertOrAssign(SignedDanielssonFilter::k_UseImageSpacing_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SignedDanielssonFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(SignedDanielssonFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(path));
+    args.insertOrAssign(SignedDanielssonFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(SignedDanielssonFilterType::k_InsideIsPositive_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SignedDanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(true));
+    args.insertOrAssign(SignedDanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
     return args;
   };
   SECTION("non-scalar")
   {
     const DataPath path({"Image Geometry", "CellData", "Vec"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, {1, 6, 6}, {3});
-    DataArray<int32>::Create(ds, "Vec", store, ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
-    const auto result = filter.preflight(ds, argsFor(path));
+    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
+    DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
+    const auto result = filter.preflight(dataStructure, argsFor(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8550);
   }
   SECTION("tuple mismatch")
   {
-    const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
-    auto* wrongAM = AttributeMatrix::Create(ds, "WrongCellData", {35}, geom.getId());
+    const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+    auto* wrongAmPtr = AttributeMatrix::Create(dataStructure, "WrongCellData", {35}, geom.getId());
     const DataPath path({"Image Geometry", "WrongCellData", "Short"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(ds, path, {35}, {1});
-    DataArray<int32>::Create(ds, "Short", store, wrongAM->getId());
-    const auto result = filter.preflight(ds, argsFor(path));
+    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
+    DataArray<int32>::Create(dataStructure, "Short", store, wrongAmPtr->getId());
+    const auto result = filter.preflight(dataStructure, argsFor(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().front().code == -8001);
   }
@@ -217,12 +217,12 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: FromSIMPLJ
   const Result<Arguments> result = SignedDanielssonDistanceMapImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<bool>(SignedDanielssonFilter::k_InsideIsPositive_Key) == true);
-  REQUIRE(args.value<bool>(SignedDanielssonFilter::k_SquaredDistance_Key) == true);
-  REQUIRE(args.value<bool>(SignedDanielssonFilter::k_UseImageSpacing_Key) == true);
-  REQUIRE(args.value<DataPath>(SignedDanielssonFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
-  REQUIRE(args.value<DataPath>(SignedDanielssonFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
-  REQUIRE(args.value<std::string>(SignedDanielssonFilter::k_OutputImageArrayName_Key) == "SignedDanielssonOut");
+  REQUIRE(args.value<bool>(SignedDanielssonFilterType::k_InsideIsPositive_Key) == true);
+  REQUIRE(args.value<bool>(SignedDanielssonFilterType::k_SquaredDistance_Key) == true);
+  REQUIRE(args.value<bool>(SignedDanielssonFilterType::k_UseImageSpacing_Key) == true);
+  REQUIRE(args.value<DataPath>(SignedDanielssonFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
+  REQUIRE(args.value<DataPath>(SignedDanielssonFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
+  REQUIRE(args.value<std::string>(SignedDanielssonFilterType::k_OutputImageArrayName_Key) == "SignedDanielssonOut");
 }
 
 // -----------------------------------------------------------------------------

@@ -31,13 +31,13 @@ template <typename T>
 Arguments CreatePhaseFixture(DataStructure& dataStructure, const std::vector<T>& values, const ShapeType& componentShape = {1})
 {
   const usize numComponents = componentShape.front();
-  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", {values.size() / numComponents});
-  REQUIRE(featureData != nullptr);
-  auto* phases = UnitTest::CreateTestDataArray<T>(dataStructure, "Phases", {values.size() / numComponents}, componentShape, featureData->getId());
-  REQUIRE(phases != nullptr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", {values.size() / numComponents});
+  REQUIRE(featureDataPtr != nullptr);
+  auto* phasesPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "Phases", {values.size() / numComponents}, componentShape, featureDataPtr->getId());
+  REQUIRE(phasesPtr != nullptr);
   for(usize index = 0; index < values.size(); index++)
   {
-    (*phases)[index] = values[index];
+    (*phasesPtr)[index] = values[index];
   }
   REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble Data", {3}) != nullptr);
 
@@ -204,7 +204,7 @@ TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: SIMPL Backwards Compatibility"
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -217,22 +217,22 @@ TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: SIMPL Backwards Compatibility"
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeNumFeaturesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeNumFeaturesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeNumFeaturesFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeNumFeaturesFilter::k_EnsembleAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<std::string>(ComputeNumFeaturesFilter::k_NumFeaturesArrayName_Key) == "TestArray");

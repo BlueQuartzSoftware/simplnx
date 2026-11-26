@@ -17,8 +17,8 @@ namespace
 template <bool UseNonContiguousNeighbors, bool FindCheckedFeatures>
 struct FindDensitySpecializations
 {
-  static constexpr bool UsingNonContiguousNeighbors = UseNonContiguousNeighbors;
-  static constexpr bool FindingCheckedFeatures = FindCheckedFeatures;
+  static constexpr bool k_UsingNonContiguousNeighbors = UseNonContiguousNeighbors;
+  static constexpr bool k_FindingCheckedFeatures = FindCheckedFeatures;
 };
 
 // Core grouping-density computation. For each parent, walk its assigned
@@ -72,7 +72,7 @@ public:
     std::unordered_set<int32> totalFeatureCheckList = {};
 
     std::vector<float32> checkedFeatureVolumes = {0.0f};
-    if constexpr(FindDensitySpecializations::FindingCheckedFeatures)
+    if constexpr(FindDensitySpecializations::k_FindingCheckedFeatures)
     {
       // Default value-initialized to zeroes: https://en.cppreference.com/w/cpp/named_req/DefaultInsertable
       checkedFeatureVolumes.resize(numFeatures);
@@ -101,7 +101,7 @@ public:
             totalFeatureCheckVolume += m_FeatureVolumes[currentFeatureId];      // Increment the checked volume by aggregating volumes from each feature that made up the parent feature
             totalFeatureCheckList.insert(static_cast<int32>(currentFeatureId)); // This is to the list of checked features
 
-            if constexpr(FindDensitySpecializations::FindingCheckedFeatures)
+            if constexpr(FindDensitySpecializations::k_FindingCheckedFeatures)
             {
               if(parentVolumesRef[currentParentId] > checkedFeatureVolumes[currentFeatureId])
               {
@@ -111,7 +111,7 @@ public:
             }
           }
           processNeighborListData(m_ContiguousNL, currentFeatureId, currentParentId, totalFeatureCheckList, totalFeatureCheckVolume, parentVolumesRef, checkedFeatureVolumes, outCheckedFeaturesRef);
-          if constexpr(FindDensitySpecializations::UsingNonContiguousNeighbors)
+          if constexpr(FindDensitySpecializations::k_UsingNonContiguousNeighbors)
           {
             processNeighborListData(m_NonContiguousNL, currentFeatureId, currentParentId, totalFeatureCheckList, totalFeatureCheckVolume, parentVolumesRef, checkedFeatureVolumes,
                                     outCheckedFeaturesRef);
@@ -159,7 +159,7 @@ public:
         // update the volumes and the check list
         totalFeatureCheckVolume += m_FeatureVolumes[neighborId]; // Increment the total volume for this neighbor
         totalFeatureCheckList.insert(neighborId);
-        if constexpr(FindDensitySpecializations::FindingCheckedFeatures)
+        if constexpr(FindDensitySpecializations::k_FindingCheckedFeatures)
         {
           if(parentVolumesRef[currentParentId] > checkedFeatureVolumes[neighborId])
           {

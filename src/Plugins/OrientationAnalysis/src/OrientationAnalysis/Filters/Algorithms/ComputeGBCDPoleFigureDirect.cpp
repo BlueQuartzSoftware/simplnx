@@ -150,7 +150,7 @@ public:
                 // find symmetric poles using the first symmetry operator
                 rotNormal = sym1 * vec;
                 // get coordinates in square projection of crystal normal parallel to boundary normal
-                nhCheck = getSquareCoord(rotNormal.data(), sqCoord.data());
+                nhCheck = GetSquareCoord(rotNormal.data(), sqCoord.data());
                 // Note the switch to have theta in the 4 slot and cos(Phi) int he 3 slot
                 auto location4 = static_cast<int32>((sqCoord[0] - m_GbcdLimits[3]) / m_GbcdDeltas[3]);
                 auto location5 = static_cast<int32>((sqCoord[1] - m_GbcdLimits[4]) / m_GbcdDeltas[4]);
@@ -183,7 +183,7 @@ public:
                 // find symmetric poles using the first symmetry operator
                 rotNormal2 = sym1 * vec2;
                 // get coordinates in square projection of crystal normal parallel to boundary normal
-                nhCheck = getSquareCoord(rotNormal2.data(), sqCoord.data());
+                nhCheck = GetSquareCoord(rotNormal2.data(), sqCoord.data());
                 // Note the switch to have theta in the 4 slot and cos(Phi) int he 3 slot
                 auto location4 = static_cast<int32>((sqCoord[0] - m_GbcdLimits[3]) / m_GbcdDeltas[3]);
                 auto location5 = static_cast<int32>((sqCoord[1] - m_GbcdLimits[4]) / m_GbcdDeltas[4]);
@@ -216,7 +216,7 @@ public:
   }
 
 private:
-  static bool getSquareCoord(float32* crystalNormal, float32* sqCoord)
+  static bool GetSquareCoord(float32* crystalNormal, float32* sqCoord)
   {
     bool nhCheck = false;
     float32 adjust = 1.0;

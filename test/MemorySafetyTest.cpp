@@ -63,25 +63,25 @@ TEST_CASE("MemorySafety: WouldExceedAvailableMemory pure overload", "[MemorySafe
 TEST_CASE("MemorySafety: EmptyDataStore::memoryUsage in-core vs OOC", "[MemorySafety]")
 {
   RegisterPlaceholderManagerForStrictBuild();
-  using StoreT = EmptyDataStore<float32>;
+  using StoreTType = EmptyDataStore<float32>;
   const ShapeType tupleShape{100}; // 100 tuples
   const ShapeType compShape{4};    // x4 components
   const uint64 logicalBytes = uint64{100} * 4 * sizeof(float32);
 
   // Empty format (in-core) -> logical size.
-  auto inCore = StoreT::Create(tupleShape, compShape, "");
+  auto inCore = StoreTType::Create(tupleShape, compShape, "");
   REQUIRE(inCore.valid());
   REQUIRE(inCore.value()->memoryUsage() == logicalBytes);
 
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
   // Non-empty format (OOC placeholder) -> 0 (data lives on disk).
-  auto ooc = StoreT::Create(tupleShape, compShape, "HDF5-OOC");
+  auto ooc = StoreTType::Create(tupleShape, compShape, "HDF5-OOC");
   REQUIRE(ooc.valid());
   REQUIRE(ooc.value()->memoryUsage() == 0);
 #endif
 
   // Zero tuples -> zero bytes regardless of storage strategy.
-  auto empty = StoreT::Create(ShapeType{0}, compShape, "");
+  auto empty = StoreTType::Create(ShapeType{0}, compShape, "");
   REQUIRE(empty.valid());
   REQUIRE(empty.value()->memoryUsage() == 0);
 }
@@ -97,10 +97,10 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
 
   // 1) Huge IN-CORE array (empty dataFormat) -> exactly one -271 warning.
   {
-    DataStructure ds;
-    DataGroup::Create(ds, "Group");
+    DataStructure dataStructure;
+    DataGroup::Create(dataStructure, "Group");
     const DataPath path({"Group", "BigInCore"});
-    Result<> r = ArrayCreationUtilities::CreateArray<float32>(ds, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
+    Result<> r = ArrayCreationUtilities::CreateArray<float32>(dataStructure, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
     REQUIRE_FALSE(r.invalid());
     const auto count = std::count_if(r.warnings().cbegin(), r.warnings().cend(), [](const Warning& w) { return w.code == -271; });
     REQUIRE(count == 1);
@@ -110,10 +110,10 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
   //    A non-empty dataFormat makes isInCore false regardless of OOC build config,
   //    so the preflight warning branch is correctly skipped.
   {
-    DataStructure ds;
-    DataGroup::Create(ds, "Group");
+    DataStructure dataStructure;
+    DataGroup::Create(dataStructure, "Group");
     const DataPath path({"Group", "BigOoc"});
-    Result<> r = ArrayCreationUtilities::CreateArray<float32>(ds, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "HDF5-OOC");
+    Result<> r = ArrayCreationUtilities::CreateArray<float32>(dataStructure, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "HDF5-OOC");
     REQUIRE_FALSE(r.invalid());
     const auto count = std::count_if(r.warnings().cbegin(), r.warnings().cend(), [](const Warning& w) { return w.code == -271; });
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
@@ -125,10 +125,10 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
 
   // 3) Small in-core array -> NO -271 warning.
   {
-    DataStructure ds;
-    DataGroup::Create(ds, "Group");
+    DataStructure dataStructure;
+    DataGroup::Create(dataStructure, "Group");
     const DataPath path({"Group", "SmallInCore"});
-    Result<> r = ArrayCreationUtilities::CreateArray<float32>(ds, smallTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
+    Result<> r = ArrayCreationUtilities::CreateArray<float32>(dataStructure, smallTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
     REQUIRE_FALSE(r.invalid());
     const auto count = std::count_if(r.warnings().cbegin(), r.warnings().cend(), [](const Warning& w) { return w.code == -271; });
     REQUIRE(count == 0);
@@ -138,20 +138,20 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
 TEST_CASE("MemorySafety: DataStructure::memoryUsage counts OOC preflight arrays as 0", "[MemorySafety]")
 {
   RegisterPlaceholderManagerForStrictBuild();
-  DataStructure ds;
-  DataGroup::Create(ds, "Group");
+  DataStructure dataStructure;
+  DataGroup::Create(dataStructure, "Group");
   const std::vector<usize> tupleShape{1000};
   const std::vector<usize> compShape{1};
   const uint64 inCoreBytes = uint64{1000} * 1 * sizeof(float32);
 
-  REQUIRE_FALSE(ArrayCreationUtilities::CreateArray<float32>(ds, tupleShape, compShape, DataPath({"Group", "InCore"}), IDataAction::Mode::Preflight, "").invalid());
-  REQUIRE_FALSE(ArrayCreationUtilities::CreateArray<float32>(ds, tupleShape, compShape, DataPath({"Group", "Ooc"}), IDataAction::Mode::Preflight, "HDF5-OOC").invalid());
+  REQUIRE_FALSE(ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, compShape, DataPath({"Group", "InCore"}), IDataAction::Mode::Preflight, "").invalid());
+  REQUIRE_FALSE(ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, compShape, DataPath({"Group", "Ooc"}), IDataAction::Mode::Preflight, "HDF5-OOC").invalid());
 
   // In-core builds normalize an unavailable OOC request to memory. Strict OOC builds preserve the OOC plan.
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
-  REQUIRE(ds.memoryUsage() == inCoreBytes);
+  REQUIRE(dataStructure.memoryUsage() == inCoreBytes);
 #else
-  REQUIRE(ds.memoryUsage() == 2 * inCoreBytes);
+  REQUIRE(dataStructure.memoryUsage() == 2 * inCoreBytes);
 #endif
 }
 
@@ -211,11 +211,11 @@ public:
 TEST_CASE("MemorySafety: IFilter::execute converts std::bad_alloc to a -272 error", "[MemorySafety]")
 {
   MockOomFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
   std::atomic_bool shouldCancel{false};
 
-  IFilter::ExecuteResult result = filter.execute(ds, args, nullptr, {}, shouldCancel, {});
+  IFilter::ExecuteResult result = filter.execute(dataStructure, args, nullptr, {}, shouldCancel, {});
 
   REQUIRE(result.result.invalid());
   REQUIRE(result.result.errors().size() == 1);

@@ -75,35 +75,35 @@ CreateRectGridGeometryAction::~CreateRectGridGeometryAction() noexcept = default
 
 Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  static constexpr StringLiteral prefix = "CreateRectGridGeometryAction: ";
+  static constexpr StringLiteral k_Prefix = "CreateRectGridGeometryAction: ";
   if(getCreatedPath().empty())
   {
-    return MakeErrorResult(-5901, fmt::format("{}CreateRectGridGeometryAction: Geometry Path cannot be empty", prefix));
+    return MakeErrorResult(-5901, fmt::format("{}CreateRectGridGeometryAction: Geometry Path cannot be empty", k_Prefix));
   }
-  if(auto* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath()); parentObject != nullptr)
+  if(auto* parentObjectPtr = dataStructure.getDataAs<BaseGroup>(getCreatedPath()); parentObjectPtr != nullptr)
   {
-    return MakeErrorResult(-5902, fmt::format("{}CreateRectGridGeometryAction: DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5902, fmt::format("{}CreateRectGridGeometryAction: DataObject already exists at path '{}'", k_Prefix, getCreatedPath().toString()));
   }
-  auto* const xBounds = dataStructure.getDataAs<Float32Array>(m_InputXBounds);
-  if(m_ArrayHandlingType != ArrayHandlingType::Create && xBounds == nullptr)
+  auto* const xBoundsPtr = dataStructure.getDataAs<Float32Array>(m_InputXBounds);
+  if(m_ArrayHandlingType != ArrayHandlingType::Create && xBoundsPtr == nullptr)
   {
-    return MakeErrorResult(-5905, fmt::format("{}CreateRectGridGeometryAction: Could not find x bounds array at path '{}'", prefix, m_InputXBounds.toString()));
+    return MakeErrorResult(-5905, fmt::format("{}CreateRectGridGeometryAction: Could not find x bounds array at path '{}'", k_Prefix, m_InputXBounds.toString()));
   }
-  auto* const yBounds = dataStructure.getDataAs<Float32Array>(m_InputYBounds);
-  if(m_ArrayHandlingType != ArrayHandlingType::Create && yBounds == nullptr)
+  auto* const yBoundsPtr = dataStructure.getDataAs<Float32Array>(m_InputYBounds);
+  if(m_ArrayHandlingType != ArrayHandlingType::Create && yBoundsPtr == nullptr)
   {
-    return MakeErrorResult(-5906, fmt::format("{}CreateRectGridGeometryAction: Could not find y bounds array at path '{}'", prefix, m_InputYBounds.toString()));
+    return MakeErrorResult(-5906, fmt::format("{}CreateRectGridGeometryAction: Could not find y bounds array at path '{}'", k_Prefix, m_InputYBounds.toString()));
   }
-  auto* const zBounds = dataStructure.getDataAs<Float32Array>(m_InputZBounds);
-  if(m_ArrayHandlingType != ArrayHandlingType::Create && zBounds == nullptr)
+  auto* const zBoundsPtr = dataStructure.getDataAs<Float32Array>(m_InputZBounds);
+  if(m_ArrayHandlingType != ArrayHandlingType::Create && zBoundsPtr == nullptr)
   {
-    return MakeErrorResult(-5907, fmt::format("{}CreateRectGridGeometryAction: Could not find z bounds array at path '{}'", prefix, m_InputZBounds.toString()));
+    return MakeErrorResult(-5907, fmt::format("{}CreateRectGridGeometryAction: Could not find z bounds array at path '{}'", k_Prefix, m_InputZBounds.toString()));
   }
 
   const auto addGeometryPath = [&](Result<> result) {
     for(auto& error : result.errors())
     {
-      error.message = fmt::format("{}Geometry at '{}': {}", prefix, getCreatedPath().toString(), error.message);
+      error.message = fmt::format("{}Geometry at '{}': {}", k_Prefix, getCreatedPath().toString(), error.message);
     }
     return result;
   };
@@ -120,7 +120,7 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
       }
     }
   }
-  else if(auto result = RectGridGeom::ValidateBounds(xBounds, yBounds, zBounds); result.invalid())
+  else if(auto result = RectGridGeom::ValidateBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr); result.invalid())
   {
     return addGeometryPath(std::move(result));
   }
@@ -130,41 +130,41 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   {
     if(Result<LinkedPath> geomPath = dataStructure.makePath(parentPath); geomPath.invalid())
     {
-      return MakeErrorResult(-5903, fmt::format("{}CreateRectGridGeometryAction: Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
+      return MakeErrorResult(-5903, fmt::format("{}CreateRectGridGeometryAction: Geometry could not be created at path:'{}'", k_Prefix, getCreatedPath().toString()));
     }
   }
   if(!dataStructure.getId(parentPath).has_value())
   {
-    return MakeErrorResult(-5904, fmt::format("{}CreateRectGridGeometryAction: Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
+    return MakeErrorResult(-5904, fmt::format("{}CreateRectGridGeometryAction: Parent Id was not available for path:'{}'", k_Prefix, parentPath.toString()));
   }
 
-  RectGridGeom* rectGridGeom = RectGridGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
-  if(rectGridGeom == nullptr)
+  RectGridGeom* rectGridGeomPtr = RectGridGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+  if(rectGridGeomPtr == nullptr)
   {
-    return MakeErrorResult(-5908, fmt::format("{}CreateRectGridGeometryAction: Failed to create RectGridGeometry:'{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5908, fmt::format("{}CreateRectGridGeometryAction: Failed to create RectGridGeometry:'{}'", k_Prefix, getCreatedPath().toString()));
   }
   DimensionType dims = {m_NumXBoundTuples - 1, m_NumYBoundTuples - 1, m_NumZBoundTuples - 1};
   if(m_ArrayHandlingType != ArrayHandlingType::Create)
   {
-    dims = {xBounds->getNumberOfTuples() - 1, yBounds->getNumberOfTuples() - 1, zBounds->getNumberOfTuples() - 1};
+    dims = {xBoundsPtr->getNumberOfTuples() - 1, yBoundsPtr->getNumberOfTuples() - 1, zBoundsPtr->getNumberOfTuples() - 1};
   }
-  rectGridGeom->setDimensions(dims);
+  rectGridGeomPtr->setDimensions(dims);
 
   // Cell AttributeMatrix tuple order is ZYX to match cell arrays.
   const DimensionType reversedDims(dims.rbegin(), dims.rend());
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, reversedDims, rectGridGeom->getId());
-  if(attributeMatrix == nullptr)
+  auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, m_CellDataName, reversedDims, rectGridGeomPtr->getId());
+  if(attributeMatrixPtr == nullptr)
   {
-    return MakeErrorResult(-5909, fmt::format("{}CreateRectGridGeometryAction: Failed to create RectGridGeometry: '{}'", prefix, getCreatedPath().createChildPath(m_CellDataName).toString()));
+    return MakeErrorResult(-5909, fmt::format("{}CreateRectGridGeometryAction: Failed to create RectGridGeometry: '{}'", k_Prefix, getCreatedPath().createChildPath(m_CellDataName).toString()));
   }
 
-  rectGridGeom->setCellData(*attributeMatrix);
+  rectGridGeomPtr->setCellData(*attributeMatrixPtr);
 
   if(m_ArrayHandlingType == ArrayHandlingType::Copy)
   {
-    std::shared_ptr<DataObject> xCopy = xBounds->deepCopy(getCreatedPath().createChildPath(m_XBoundsArrayName));
-    std::shared_ptr<DataObject> yCopy = yBounds->deepCopy(getCreatedPath().createChildPath(m_YBoundsArrayName));
-    std::shared_ptr<DataObject> zCopy = zBounds->deepCopy(getCreatedPath().createChildPath(m_ZBoundsArrayName));
+    std::shared_ptr<DataObject> xCopy = xBoundsPtr->deepCopy(getCreatedPath().createChildPath(m_XBoundsArrayName));
+    std::shared_ptr<DataObject> yCopy = yBoundsPtr->deepCopy(getCreatedPath().createChildPath(m_YBoundsArrayName));
+    std::shared_ptr<DataObject> zCopy = zBoundsPtr->deepCopy(getCreatedPath().createChildPath(m_ZBoundsArrayName));
     const auto xBoundsArray = std::dynamic_pointer_cast<Float32Array>(xCopy);
     const auto yBoundsArray = std::dynamic_pointer_cast<Float32Array>(yCopy);
     const auto zBoundsArray = std::dynamic_pointer_cast<Float32Array>(zCopy);
@@ -173,80 +173,80 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
       return MakeErrorResult(k_BoundsCopyFailed, fmt::format("Failed to copy bounds arrays for rectilinear grid geometry at '{}'.", getCreatedPath().toString()));
     }
     // The copies have the same values as the validated inputs.
-    rectGridGeom->setXBoundsId(xBoundsArray->getId());
-    rectGridGeom->setYBoundsId(yBoundsArray->getId());
-    rectGridGeom->setZBoundsId(zBoundsArray->getId());
+    rectGridGeomPtr->setXBoundsId(xBoundsArray->getId());
+    rectGridGeomPtr->setYBoundsId(yBoundsArray->getId());
+    rectGridGeomPtr->setZBoundsId(zBoundsArray->getId());
   }
   else if(m_ArrayHandlingType == ArrayHandlingType::Move)
   {
-    const auto rectGeomId = rectGridGeom->getId();
-    const auto xBoundId = xBounds->getId();
+    const auto rectGeomId = rectGridGeomPtr->getId();
+    const auto xBoundId = xBoundsPtr->getId();
     dataStructure.setAdditionalParent(xBoundId, rectGeomId);
     const auto oldXParentId = dataStructure.getId(m_InputXBounds.getParent());
     if(!oldXParentId.has_value())
     {
-      return MakeErrorResult(-5910, fmt::format("{}CreateRectGridGeometryAction: Failed to remove x bounds array '{}' from parent at path '{}' while moving array", prefix, m_XBoundsArrayName,
+      return MakeErrorResult(-5910, fmt::format("{}CreateRectGridGeometryAction: Failed to remove x bounds array '{}' from parent at path '{}' while moving array", k_Prefix, m_XBoundsArrayName,
                                                 m_InputXBounds.getParent().toString()));
     }
     dataStructure.removeParent(xBoundId, oldXParentId.value());
 
-    const auto yBoundId = yBounds->getId();
+    const auto yBoundId = yBoundsPtr->getId();
     dataStructure.setAdditionalParent(yBoundId, rectGeomId);
     const auto oldYParentId = dataStructure.getId(m_InputYBounds.getParent());
     if(!oldYParentId.has_value())
     {
-      return MakeErrorResult(-5911, fmt::format("{}CreateRectGridGeometryAction: Failed to remove y bounds array '{}' from parent at path '{}' while moving array", prefix, m_YBoundsArrayName,
+      return MakeErrorResult(-5911, fmt::format("{}CreateRectGridGeometryAction: Failed to remove y bounds array '{}' from parent at path '{}' while moving array", k_Prefix, m_YBoundsArrayName,
                                                 m_InputYBounds.getParent().toString()));
     }
     dataStructure.removeParent(yBoundId, oldYParentId.value());
 
-    const auto zBoundId = zBounds->getId();
+    const auto zBoundId = zBoundsPtr->getId();
     dataStructure.setAdditionalParent(zBoundId, rectGeomId);
     const auto oldZParentId = dataStructure.getId(m_InputZBounds.getParent());
     if(!oldZParentId.has_value())
     {
-      return MakeErrorResult(-5912, fmt::format("{}CreateRectGridGeometryAction: Failed to remove z bounds array '{}' from parent at path '{}' while moving array", prefix, m_ZBoundsArrayName,
+      return MakeErrorResult(-5912, fmt::format("{}CreateRectGridGeometryAction: Failed to remove z bounds array '{}' from parent at path '{}' while moving array", k_Prefix, m_ZBoundsArrayName,
                                                 m_InputZBounds.getParent().toString()));
     }
     dataStructure.removeParent(zBoundId, oldZParentId.value());
 
     // Parent changes preserve the already validated bounds values.
-    rectGridGeom->setXBoundsId(xBounds->getId());
-    rectGridGeom->setYBoundsId(yBounds->getId());
-    rectGridGeom->setZBoundsId(zBounds->getId());
+    rectGridGeomPtr->setXBoundsId(xBoundsPtr->getId());
+    rectGridGeomPtr->setYBoundsId(yBoundsPtr->getId());
+    rectGridGeomPtr->setZBoundsId(zBoundsPtr->getId());
   }
   else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
   {
-    const auto rectGeomId = rectGridGeom->getId();
-    dataStructure.setAdditionalParent(xBounds->getId(), rectGeomId);
-    dataStructure.setAdditionalParent(yBounds->getId(), rectGeomId);
-    dataStructure.setAdditionalParent(zBounds->getId(), rectGeomId);
+    const auto rectGeomId = rectGridGeomPtr->getId();
+    dataStructure.setAdditionalParent(xBoundsPtr->getId(), rectGeomId);
+    dataStructure.setAdditionalParent(yBoundsPtr->getId(), rectGeomId);
+    dataStructure.setAdditionalParent(zBoundsPtr->getId(), rectGeomId);
     // Parent changes preserve the already validated bounds values.
-    rectGridGeom->setXBoundsId(xBounds->getId());
-    rectGridGeom->setYBoundsId(yBounds->getId());
-    rectGridGeom->setZBoundsId(zBounds->getId());
+    rectGridGeomPtr->setXBoundsId(xBoundsPtr->getId());
+    rectGridGeomPtr->setYBoundsId(yBoundsPtr->getId());
+    rectGridGeomPtr->setZBoundsId(zBoundsPtr->getId());
   }
   else
   {
     std::vector<Error> errors;
-    auto* xBoundsArray = createBoundArray(dataStructure, mode, m_XBoundsArrayName, m_NumXBoundTuples, errors);
-    auto* yBoundsArray = createBoundArray(dataStructure, mode, m_YBoundsArrayName, m_NumYBoundTuples, errors);
-    auto* zBoundsArray = createBoundArray(dataStructure, mode, m_ZBoundsArrayName, m_NumZBoundTuples, errors);
+    auto* xBoundsArrayPtr = createBoundArray(dataStructure, mode, m_XBoundsArrayName, m_NumXBoundTuples, errors);
+    auto* yBoundsArrayPtr = createBoundArray(dataStructure, mode, m_YBoundsArrayName, m_NumYBoundTuples, errors);
+    auto* zBoundsArrayPtr = createBoundArray(dataStructure, mode, m_ZBoundsArrayName, m_NumZBoundTuples, errors);
     if(!errors.empty())
     {
       return addGeometryPath({nonstd::make_unexpected(std::move(errors))});
     }
     if(mode == Mode::Execute)
     {
-      for(auto* bounds : {xBoundsArray, yBoundsArray, zBoundsArray})
+      for(auto* boundsPtr : {xBoundsArrayPtr, yBoundsArrayPtr, zBoundsArrayPtr})
       {
-        if(auto result = InitializeBounds(*bounds); result.invalid())
+        if(auto result = InitializeBounds(*boundsPtr); result.invalid())
         {
           return addGeometryPath(std::move(result));
         }
       }
     }
-    if(auto result = rectGridGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray); result.invalid())
+    if(auto result = rectGridGeomPtr->setBounds(xBoundsArrayPtr, yBoundsArrayPtr, zBoundsArrayPtr); result.invalid())
     {
       return addGeometryPath(std::move(result));
     }
@@ -275,13 +275,13 @@ Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& data
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;
   }
-  auto* boundsArray = dataStructure.getDataAs<Float32Array>(boundsPath);
-  if(boundsArray == nullptr)
+  auto* boundsArrayPtr = dataStructure.getDataAs<Float32Array>(boundsPath);
+  if(boundsArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", boundsPath.toString()));
   }
 
-  return boundsArray;
+  return boundsArrayPtr;
 }
 
 DataPath CreateRectGridGeometryAction::path() const

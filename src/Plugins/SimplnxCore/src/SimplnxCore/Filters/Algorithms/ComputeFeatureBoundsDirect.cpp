@@ -45,8 +45,8 @@ constexpr usize k_InvalidIndex = std::numeric_limits<usize>::max();
  */
 struct ImageFeatureIndexBounds
 {
-  std::array<usize, 3> minIndices = {k_InvalidIndex, k_InvalidIndex, k_InvalidIndex};
-  std::array<usize, 3> maxIndices = {0, 0, 0};
+  std::array<usize, 3> min_indices = {k_InvalidIndex, k_InvalidIndex, k_InvalidIndex};
+  std::array<usize, 3> max_indices = {0, 0, 0};
 };
 
 /**
@@ -56,7 +56,7 @@ struct ImageFeatureIndexBounds
 struct ImageBoundsResult
 {
   std::vector<float32> bounds;
-  int32 numFeatures = 0;
+  int32 num_features = 0;
 };
 
 /**
@@ -84,13 +84,13 @@ ImageBoundsResult ComputeImageBounds(const ImageGeom& imageGeom, const int32* fe
     const usize sliceOffset = z * sliceSize;
     for(usize y = 0; y < yPoints; y++)
     {
-      const int32* rowFeatureIds = featureIds + sliceOffset + (y * xPoints);
+      const int32* rowFeatureIdsPtr = featureIds + sliceOffset + (y * xPoints);
       usize runStart = 0;
       while(runStart < xPoints)
       {
-        const int32 featureId = rowFeatureIds[runStart];
+        const int32 featureId = rowFeatureIdsPtr[runStart];
         usize runEnd = runStart + 1;
-        while(runEnd < xPoints && rowFeatureIds[runEnd] == featureId)
+        while(runEnd < xPoints && rowFeatureIdsPtr[runEnd] == featureId)
         {
           runEnd++;
         }
@@ -102,12 +102,12 @@ ImageBoundsResult ComputeImageBounds(const ImageGeom& imageGeom, const int32* fe
           if(featureIndex < featureTupleCount)
           {
             ImageFeatureIndexBounds& featureBounds = indexBounds[featureIndex];
-            featureBounds.minIndices[0] = std::min(featureBounds.minIndices[0], runStart);
-            featureBounds.minIndices[1] = std::min(featureBounds.minIndices[1], y);
-            featureBounds.minIndices[2] = std::min(featureBounds.minIndices[2], z);
-            featureBounds.maxIndices[0] = std::max(featureBounds.maxIndices[0], runEnd - 1);
-            featureBounds.maxIndices[1] = std::max(featureBounds.maxIndices[1], y);
-            featureBounds.maxIndices[2] = std::max(featureBounds.maxIndices[2], z);
+            featureBounds.min_indices[0] = std::min(featureBounds.min_indices[0], runStart);
+            featureBounds.min_indices[1] = std::min(featureBounds.min_indices[1], y);
+            featureBounds.min_indices[2] = std::min(featureBounds.min_indices[2], z);
+            featureBounds.max_indices[0] = std::max(featureBounds.max_indices[0], runEnd - 1);
+            featureBounds.max_indices[1] = std::max(featureBounds.max_indices[1], y);
+            featureBounds.max_indices[2] = std::max(featureBounds.max_indices[2], z);
           }
         }
         runStart = runEnd;
@@ -116,8 +116,8 @@ ImageBoundsResult ComputeImageBounds(const ImageGeom& imageGeom, const int32* fe
   }
 
   ImageBoundsResult result;
-  result.numFeatures = maxFeatureId + 1;
-  if(result.numFeatures > featureTupleCount)
+  result.num_features = maxFeatureId + 1;
+  if(result.num_features > featureTupleCount)
   {
     return result;
   }
@@ -128,7 +128,7 @@ ImageBoundsResult ComputeImageBounds(const ImageGeom& imageGeom, const int32* fe
   for(usize featureId = 0; featureId < featureTupleCount; featureId++)
   {
     const ImageFeatureIndexBounds& featureBounds = indexBounds[featureId];
-    if(featureBounds.minIndices[0] == k_InvalidIndex)
+    if(featureBounds.min_indices[0] == k_InvalidIndex)
     {
       continue;
     }
@@ -137,8 +137,8 @@ ImageBoundsResult ComputeImageBounds(const ImageGeom& imageGeom, const int32* fe
     for(usize component = 0; component < 3; component++)
     {
       const bool isIncreasing = spacing[component] >= 0.0f;
-      const usize minIndex = isIncreasing ? featureBounds.minIndices[component] : featureBounds.maxIndices[component];
-      const usize maxIndex = isIncreasing ? featureBounds.maxIndices[component] : featureBounds.minIndices[component];
+      const usize minIndex = isIncreasing ? featureBounds.min_indices[component] : featureBounds.max_indices[component];
+      const usize maxIndex = isIncreasing ? featureBounds.max_indices[component] : featureBounds.min_indices[component];
       result.bounds[activeIndex + component] = minIndex * spacing[component] + origin[component];
       result.bounds[activeIndex + 3 + component] = maxIndex * spacing[component] + origin[component] + spacing[component];
     }
@@ -348,7 +348,7 @@ Result<> ComputeFeatureBoundsDirect::operator()()
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
   const auto& featureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAMPath);
 
-  const auto* inMemoryFeatureIds = dynamic_cast<const Int32DataStore*>(&featureIds);
+  const auto* inMemoryFeatureIdsPtr = dynamic_cast<const Int32DataStore*>(&featureIds);
   const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
 
   if(m_ShouldCancel)
@@ -358,16 +358,16 @@ Result<> ComputeFeatureBoundsDirect::operator()()
 
   int32 numFeatures = 0;
   std::vector<float32> bounds;
-  if(geom.getGeomType() == IGeometry::Type::Image && inMemoryFeatureIds != nullptr)
+  if(geom.getGeomType() == IGeometry::Type::Image && inMemoryFeatureIdsPtr != nullptr)
   {
-    ImageBoundsResult imageBounds = ComputeImageBounds(dynamic_cast<const ImageGeom&>(geom), inMemoryFeatureIds->data(), featureAM.getNumberOfTuples());
-    numFeatures = imageBounds.numFeatures;
+    ImageBoundsResult imageBounds = ComputeImageBounds(dynamic_cast<const ImageGeom&>(geom), inMemoryFeatureIdsPtr->data(), featureAM.getNumberOfTuples());
+    numFeatures = imageBounds.num_features;
     bounds = std::move(imageBounds.bounds);
   }
   else
   {
-    const int32 maxFeatureId = inMemoryFeatureIds != nullptr ? *std::max_element(inMemoryFeatureIds->data(), inMemoryFeatureIds->data() + inMemoryFeatureIds->getSize()) :
-                                                               *std::max_element(featureIds.cbegin(), featureIds.cend());
+    const int32 maxFeatureId = inMemoryFeatureIdsPtr != nullptr ? *std::max_element(inMemoryFeatureIdsPtr->data(), inMemoryFeatureIdsPtr->data() + inMemoryFeatureIdsPtr->getSize()) :
+                                                                  *std::max_element(featureIds.cbegin(), featureIds.cend());
     numFeatures = maxFeatureId + 1;
   }
 

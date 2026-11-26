@@ -32,7 +32,7 @@ const std::string k_OutputArrayName = "Output";
 constexpr size_t k_Size = 4;
 constexpr float32 k_Increment = 90.0f / k_Size;
 
-static std::vector<usize> k_TupleShape = {k_Size * k_Size * k_Size};
+static std::vector<usize> KTupleShape = {k_Size * k_Size * k_Size};
 
 } // namespace compute_misorientations_test
 
@@ -196,17 +196,17 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
 
   for(uint32 xtal = 0; xtal < 11; xtal++)
   {
-    DataPath k_EulersDataPath = DataPath::FromString(fmt::format("{}/Eulers", xtal)).value();
-    DataPath k_Eulers2DataPath = DataPath::FromString(fmt::format("{}/Eulers2", xtal)).value();
-    DataPath k_PhasesDataPath = DataPath::FromString(fmt::format("{}/Phases", xtal)).value();
+    DataPath kEulersDataPath = DataPath::FromString(fmt::format("{}/Eulers", xtal)).value();
+    DataPath kEulers2DataPath = DataPath::FromString(fmt::format("{}/Eulers2", xtal)).value();
+    DataPath kPhasesDataPath = DataPath::FromString(fmt::format("{}/Phases", xtal)).value();
 
     ComputeMisorientationsFilter filter;
     Arguments args;
     std::string computedArrayName = "Computed Values";
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesDataPath));
+    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(kEulersDataPath));
+    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(kEulers2DataPath));
+    args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(kPhasesDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(compute_misorientations_test::k_CrystalStructuresDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(computedArrayName));
@@ -217,7 +217,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    UnitTest::CompareArrays<float32>(dataStructure, k_EulersDataPath.replaceName(computedArrayName), k_EulersDataPath.replaceName(compute_misorientations_test::k_OutputArrayName));
+    UnitTest::CompareArrays<float32>(dataStructure, kEulersDataPath.replaceName(computedArrayName), kEulersDataPath.replaceName(compute_misorientations_test::k_OutputArrayName));
   }
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_reference_orientation.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -237,18 +237,18 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
   {
     INFO(fmt::format("Crystal Class:'{}'", xtal));
 
-    DataPath k_EulersDataPath = DataPath::FromString(fmt::format("{}/Eulers", xtal)).value();
-    DataPath k_Eulers2DataPath = DataPath::FromString(fmt::format("{}/Eulers2", xtal)).value();
-    DataPath k_PhasesDataPath = DataPath::FromString(fmt::format("{}/Phases", xtal)).value();
+    DataPath kEulersDataPath = DataPath::FromString(fmt::format("{}/Eulers", xtal)).value();
+    DataPath kEulers2DataPath = DataPath::FromString(fmt::format("{}/Eulers2", xtal)).value();
+    DataPath kPhasesDataPath = DataPath::FromString(fmt::format("{}/Phases", xtal)).value();
 
     ComputeMisorientationsFilter filter;
     Arguments args;
 
     std::string computedArrayName = "Computed Values";
     args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(k_EulersDataPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(k_Eulers2DataPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesDataPath));
+    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(kEulersDataPath));
+    args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(kEulers2DataPath));
+    args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(kPhasesDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(compute_misorientations_test::k_CrystalStructuresDataPath));
     args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f, 0.0f, 1.0f, 0.0f}));
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(computedArrayName));
@@ -259,7 +259,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    UnitTest::CompareArrays<float32>(dataStructure, k_EulersDataPath.replaceName(computedArrayName), k_EulersDataPath.replaceName(compute_misorientations_test::k_OutputArrayName));
+    UnitTest::CompareArrays<float32>(dataStructure, kEulersDataPath.replaceName(computedArrayName), kEulersDataPath.replaceName(compute_misorientations_test::k_OutputArrayName));
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT

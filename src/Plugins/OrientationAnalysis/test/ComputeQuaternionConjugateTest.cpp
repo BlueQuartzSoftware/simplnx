@@ -41,33 +41,33 @@ TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter", "[Orientation
 
   DataStructure dataStructure;
 
-  Float32Array* quats = UnitTest::CreateTestDataArray<float32>(dataStructure, k_QuatName, {4ULL}, {4ULL}, {});
+  Float32Array* quatsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_QuatName, {4ULL}, {4ULL}, {});
 
   for(size_t i = 0; i < 16; i++)
   {
-    (*quats)[i] = static_cast<float32>(i);
+    (*quatsPtr)[i] = static_cast<float32>(i);
   }
-  Float32Array* exemplarData = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
+  Float32Array* exemplarDataPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
 
-  (*exemplarData)[0] = -0.0F;
-  (*exemplarData)[1] = -1.0F;
-  (*exemplarData)[2] = -2.0F;
-  (*exemplarData)[3] = 3.0F;
+  (*exemplarDataPtr)[0] = -0.0F;
+  (*exemplarDataPtr)[1] = -1.0F;
+  (*exemplarDataPtr)[2] = -2.0F;
+  (*exemplarDataPtr)[3] = 3.0F;
 
-  (*exemplarData)[4] = -4.0F;
-  (*exemplarData)[5] = -5.0F;
-  (*exemplarData)[6] = -6.0F;
-  (*exemplarData)[7] = 7.0F;
+  (*exemplarDataPtr)[4] = -4.0F;
+  (*exemplarDataPtr)[5] = -5.0F;
+  (*exemplarDataPtr)[6] = -6.0F;
+  (*exemplarDataPtr)[7] = 7.0F;
 
-  (*exemplarData)[8] = -8.0F;
-  (*exemplarData)[9] = -9.0F;
-  (*exemplarData)[10] = -10.0F;
-  (*exemplarData)[11] = 11.0F;
+  (*exemplarDataPtr)[8] = -8.0F;
+  (*exemplarDataPtr)[9] = -9.0F;
+  (*exemplarDataPtr)[10] = -10.0F;
+  (*exemplarDataPtr)[11] = 11.0F;
 
-  (*exemplarData)[12] = -12.0F;
-  (*exemplarData)[13] = -13.0F;
-  (*exemplarData)[14] = -14.0F;
-  (*exemplarData)[15] = 15.0F;
+  (*exemplarDataPtr)[12] = -12.0F;
+  (*exemplarDataPtr)[13] = -13.0F;
+  (*exemplarDataPtr)[14] = -14.0F;
+  (*exemplarDataPtr)[15] = 15.0F;
   {
     const ComputeQuaternionConjugateFilter filter;
 
@@ -84,7 +84,7 @@ TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter", "[Orientation
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName}));
-    UnitTest::CompareDataArrays<float32>(*exemplarData, outputArray);
+    UnitTest::CompareDataArrays<float32>(*exemplarDataPtr, outputArray);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -94,7 +94,7 @@ TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter: SIMPL Backward
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -107,22 +107,22 @@ TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter: SIMPL Backward
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeQuaternionConjugateFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeQuaternionConjugateFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeQuaternionConjugateFilter::k_CellQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(ComputeQuaternionConjugateFilter::k_OutputDataArrayName_Key) == "TestArray");
       CHECK(args.value<bool>(ComputeQuaternionConjugateFilter::k_DeleteOriginalData_Key) == true);

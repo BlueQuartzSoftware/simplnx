@@ -184,11 +184,11 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     }
   }
 
-  for(DataObject* topLevelObject : dataStructureShallowCopy.getTopLevelData())
+  for(DataObject* topLevelObjectPtr : dataStructureShallowCopy.getTopLevelData())
   {
-    if(topLevelObject->getName() != targetName)
+    if(topLevelObjectPtr->getName() != targetName)
     {
-      dataStructureShallowCopy.removeData(topLevelObject->getId());
+      dataStructureShallowCopy.removeData(topLevelObjectPtr->getId());
     }
   }
 
@@ -296,9 +296,9 @@ Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, 
   }
 
   // NeighborList links require the NumNeighbors companion array for reconstruction.
-  if(const auto* neighborList = dynamic_cast<const INeighborList*>(dataObject))
+  if(const auto* neighborListPtr = dynamic_cast<const INeighborList*>(dataObject))
   {
-    auto numNeighborsName = neighborList->getNumNeighborsArrayName();
+    auto numNeighborsName = neighborListPtr->getNumNeighborsArrayName();
     auto dataPath = getPathForObjectSibling(dataObject->getId(), numNeighborsName);
     result = parentGroup.createLink(dataPath);
     if(result.invalid())

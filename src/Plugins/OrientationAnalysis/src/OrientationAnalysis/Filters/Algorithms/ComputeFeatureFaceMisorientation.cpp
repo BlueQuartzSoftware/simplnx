@@ -23,7 +23,7 @@
 #include <vector>
 
 using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
-using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
+using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
 using namespace nx::core;
 
@@ -94,7 +94,7 @@ class ComputeFeatureMisorientationPerTriangleImpl
   const UInt32Array& m_CrystalStructures;
   const std::atomic_bool& m_ShouldCancel;
   Float32Array& m_Misorientations;
-  LaueOpsContainer m_LaueOrientationOps;
+  LaueOpsContainerType m_LaueOrientationOps;
 
 public:
   ComputeFeatureMisorientationPerTriangleImpl(const Int32Array& labels, const Int32Array& phases, const Float32Array& quats, const UInt32Array& crystalStructures, const std::atomic_bool& shouldCancel,
@@ -191,9 +191,9 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
     return {};
   }
   using namespace orientation::detail;
-  constexpr usize faceBytes = (2 * sizeof(int32)) + sizeof(float32);
-  auto planResult =
-      PlanLookups({.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 4, .FaceBytes = faceBytes}, -98425);
+  constexpr usize k_FaceBytes = (2 * sizeof(int32)) + sizeof(float32);
+  auto planResult = PlanLookups(
+      {.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 4, .FaceBytes = k_FaceBytes}, -98425);
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
@@ -229,7 +229,7 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
     }
   }
 
-  const LaueOpsContainer orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const LaueOpsContainerType orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
   std::vector<float32> misorientationsBuffer(bufferTriangles);
   for(usize start = 0; start < numTriangles;)

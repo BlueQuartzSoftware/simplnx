@@ -47,9 +47,9 @@ TEST_CASE("Data Format: ForceInCore keeps useOocData false and stores in memory"
   REQUIRE_FALSE(app->getPreferences()->useOocData());
 
   // CreateDataStore should produce an InMemory store regardless of size.
-  DataStructure ds;
+  DataStructure dataStructure;
   DataPath dp({"TestArray"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, dp, {100, 100, 100}, {1});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 }
@@ -67,9 +67,9 @@ TEST_CASE("Data Format: Adaptive and ForceOutOfCore report useOocData true", "[I
 
   // With no OOC manager registered in this build, even ForceOutOfCore can only
   // produce an in-memory store — the resolver has no disk-backed format to return.
-  DataStructure ds;
+  DataStructure dataStructure;
   DataPath dp({"TestArray"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, dp, {100, 100, 100}, {1});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 }
@@ -146,29 +146,29 @@ TEST_CASE("Data Format: NeighborList action retains an explicit InMemory format"
   const CreateNeighborListAction action(DataType::int32, {3}, path, std::string(Preferences::k_InMemoryFormat));
 
   const auto clonedAction = action.clone();
-  const auto* clonedNeighborListAction = dynamic_cast<const CreateNeighborListAction*>(clonedAction.get());
-  REQUIRE(clonedNeighborListAction != nullptr);
-  CHECK(clonedNeighborListAction->dataFormat() == Preferences::k_InMemoryFormat);
+  const auto* clonedNeighborListActionPtr = dynamic_cast<const CreateNeighborListAction*>(clonedAction.get());
+  REQUIRE(clonedNeighborListActionPtr != nullptr);
+  CHECK(clonedNeighborListActionPtr->dataFormat() == Preferences::k_InMemoryFormat);
 
   DataStructure preflightDataStructure;
   auto applyResult2 = action.apply(preflightDataStructure, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult2);
-  NeighborList<int32>* preflightList = nullptr;
-  REQUIRE_NOTHROW(preflightList = &preflightDataStructure.getDataRefAs<NeighborList<int32>>(path));
-  REQUIRE(preflightList != nullptr);
-  CHECK(preflightList->getIListStore()->getTupleShape() == ShapeType{3});
+  NeighborList<int32>* preflightListPtr = nullptr;
+  REQUIRE_NOTHROW(preflightListPtr = &preflightDataStructure.getDataRefAs<NeighborList<int32>>(path));
+  REQUIRE(preflightListPtr != nullptr);
+  CHECK(preflightListPtr->getIListStore()->getTupleShape() == ShapeType{3});
 
   DataStructure executeDataStructure;
   auto applyResult = action.apply(executeDataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
-  NeighborList<int32>* executeList = nullptr;
-  REQUIRE_NOTHROW(executeList = &executeDataStructure.getDataRefAs<NeighborList<int32>>(path));
-  REQUIRE(executeList != nullptr);
-  CHECK(executeList->getDataType() == DataType::int32);
-  CHECK_FALSE(executeList->getIListStore()->isOutOfCore());
-  CHECK(executeList->getIListStore()->getTupleShape() == ShapeType{3});
-  executeList->setList(1, {13, 21});
-  CHECK((executeList->getList(1) == std::vector<int32>{13, 21}));
+  NeighborList<int32>* executeListPtr = nullptr;
+  REQUIRE_NOTHROW(executeListPtr = &executeDataStructure.getDataRefAs<NeighborList<int32>>(path));
+  REQUIRE(executeListPtr != nullptr);
+  CHECK(executeListPtr->getDataType() == DataType::int32);
+  CHECK_FALSE(executeListPtr->getIListStore()->isOutOfCore());
+  CHECK(executeListPtr->getIListStore()->getTupleShape() == ShapeType{3});
+  executeListPtr->setList(1, {13, 21});
+  CHECK((executeListPtr->getList(1) == std::vector<int32>{13, 21}));
 }
 
 TEST_CASE("Data Format: external-sort capability is optional and storage neutral", "[IOTest][ExternalSort]")
@@ -182,8 +182,8 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
       {
         return MakeErrorResult(-7000, "cancelled");
       }
-      m_AppendedRecordCount += recordCount;
-      m_LastBatchSize = records.size();
+      m_appended_record_count += recordCount;
+      m_last_batch_size = records.size();
       if(progressCallback)
       {
         progressCallback(recordCount, recordCount);
@@ -208,11 +208,11 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
 
     uint64 recordCount() const override
     {
-      return m_AppendedRecordCount;
+      return m_appended_record_count;
     }
 
-    uint64 m_AppendedRecordCount = 0;
-    usize m_LastBatchSize = 0;
+    uint64 m_appended_record_count = 0;
+    usize m_last_batch_size = 0;
   };
 
   class FakeExternalSortManager : public IDataIOManager

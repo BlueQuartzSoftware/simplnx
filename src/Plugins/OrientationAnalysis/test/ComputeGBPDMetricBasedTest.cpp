@@ -95,7 +95,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_gbpd_metric_based.tar.gz", "6_6_find_gbpd_metric_based");
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_find_gbpd_metric_based.dream3d", unit_test::k_TestFilesDir));
@@ -141,7 +141,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
 
   // read in exemplar and computed data files for comparison
   {
-    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
+    auto filter = filterListPtr->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
     // exemplar distribution
     {
@@ -285,7 +285,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: SIMPL Backwards Co
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -298,22 +298,22 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: SIMPL Backwards Co
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeGBPDMetricBasedFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeGBPDMetricBasedFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int32>(ComputeGBPDMetricBasedFilter::k_PhaseOfInterest_Key) == 5);
       CHECK(args.value<float32>(ComputeGBPDMetricBasedFilter::k_LimitDist_Key) == 2.5f);
       CHECK(args.value<int32>(ComputeGBPDMetricBasedFilter::k_NumSamplPts_Key) == 5);

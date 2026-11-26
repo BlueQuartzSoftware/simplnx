@@ -949,12 +949,12 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight Stale Arrays",
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure = BuildTestData();
-  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAmPath);
-  REQUIRE(featureAM != nullptr);
+  const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAmPath);
+  REQUIRE(featureAmPtr != nullptr);
   const DataPath neighborListPath = k_FeatureAmPath.createChildPath("NeighborList");
   const DataPath labelsPath = k_FeatureAmPath.createChildPath("Labels");
-  REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAM->getShape(), featureAM->getId()) != nullptr);
-  REQUIRE(StringArray::CreateWithValues(dataStructure, "Labels", featureAM->getShape(), {"Background", "One", "Two", "Three", "Four"}, featureAM->getId()) != nullptr);
+  REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Labels", featureAmPtr->getShape(), {"Background", "One", "Two", "Three", "Four"}, featureAmPtr->getId()) != nullptr);
 
   KeepRemoveRankedFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, MakeArgs(0, 0, 2));

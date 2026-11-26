@@ -1,4 +1,4 @@
-# nxcleanup completed P2c
+# nxcleanup completed P3
 # Shared BlueQuartz clang-tidy configuration (simplnx, SimplnxOoc, SimplnxReview, DREAM3DNX).
 # Only HeaderFilterRegex and the macro allowlist differ between repositories.
 #
@@ -140,7 +140,6 @@
 # nxcleanup P4 naming-kind MacroDefinition
 # nxcleanup P4 naming-kind Method
 # nxcleanup P4 naming-kind Namespace
-# nxcleanup P3 naming-kind PrivateMember
 # nxcleanup P4 naming-kind PublicMember
 # nxcleanup P4 naming-kind Struct
 # nxcleanup P4 naming-kind TypeAlias
@@ -218,8 +217,6 @@ CheckOptions:
   readability-identifier-naming.MacroDefinitionIgnoredRegexp: .*
   # Enable Namespace in P4 after its findings are resolved.
   readability-identifier-naming.NamespaceIgnoredRegexp: .*
-  # Enable PrivateMember in P3 after its findings are resolved.
-  readability-identifier-naming.PrivateMemberIgnoredRegexp: .*
   # Enable Struct in P4 after its findings are resolved.
   readability-identifier-naming.StructIgnoredRegexp: .*
   # Enable Variable in P3 after its findings are resolved.

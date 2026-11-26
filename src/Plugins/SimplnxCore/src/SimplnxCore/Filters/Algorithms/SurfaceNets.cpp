@@ -54,10 +54,10 @@ Result<> SurfaceNets::operator()()
   appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath));
   appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath));
 
-  if(const auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath); triangleGeom != nullptr)
+  if(const auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath); triangleGeomPtr != nullptr)
   {
-    appendArray(triangleGeom->getVertices());
-    appendArray(triangleGeom->getFaces());
+    appendArray(triangleGeomPtr->getVertices());
+    appendArray(triangleGeomPtr->getFaces());
   }
   return DispatchAlgorithm<SurfaceNetsDirect, SurfaceNetsScanline>(AlgorithmArrayTargets(std::move(dispatchTargets)), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

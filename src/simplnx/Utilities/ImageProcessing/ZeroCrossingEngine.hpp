@@ -148,8 +148,8 @@ inline ZeroCrossingMagnitudeType<T> ZeroCrossingMagnitude(T value)
 {
   if constexpr(std::is_integral_v<T>)
   {
-    using Unsigned = std::make_unsigned_t<T>;
-    const Unsigned magnitude = value < T{} ? static_cast<Unsigned>(Unsigned{0} - static_cast<Unsigned>(value)) : static_cast<Unsigned>(value);
+    using UnsignedType = std::make_unsigned_t<T>;
+    const UnsignedType magnitude = value < T{} ? static_cast<UnsignedType>(UnsignedType{0} - static_cast<UnsignedType>(value)) : static_cast<UnsignedType>(value);
     return static_cast<ZeroCrossingMagnitudeType<T>>(magnitude);
   }
   else
@@ -248,25 +248,25 @@ inline void ZeroCrossingRow(const T* previousPlaneRow, const T* previousRow, con
   const uint32 firstHit = ZeroCrossingHitAt(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, 0, 0, 1);
   output[0] = firstHit != 0 ? foreground : background;
 
-  const T* const negativeZ = previousPlaneRow;
-  const T* const negativeY = previousRow;
-  const T* const center = row;
-  const T* const positiveY = nextRow;
-  const T* const positiveZ = nextPlaneRow;
-  uint8* const labels = output;
+  const T* const negativeZPtr = previousPlaneRow;
+  const T* const negativeYPtr = previousRow;
+  const T* const centerPtr = row;
+  const T* const positiveYPtr = nextRow;
+  const T* const positiveZPtr = nextPlaneRow;
+  uint8* const labelsPtr = output;
   const uint8 foregroundLabel = foreground;
   const uint8 backgroundLabel = background;
   const usize lastX = nx - 1;
   for(usize x = 1; x < lastX; ++x)
   {
-    const T c = center[x];
-    uint32 hit = ZeroCrossingCrosses(c, center[x - 1], uint32{0});
-    hit |= ZeroCrossingCrosses(c, negativeY[x], uint32{0});
-    hit |= ZeroCrossingCrosses(c, negativeZ[x], uint32{0});
-    hit |= ZeroCrossingCrosses(c, center[x + 1], uint32{1});
-    hit |= ZeroCrossingCrosses(c, positiveY[x], uint32{1});
-    hit |= ZeroCrossingCrosses(c, positiveZ[x], uint32{1});
-    labels[x] = hit != 0 ? foregroundLabel : backgroundLabel;
+    const T c = centerPtr[x];
+    uint32 hit = ZeroCrossingCrosses(c, centerPtr[x - 1], uint32{0});
+    hit |= ZeroCrossingCrosses(c, negativeYPtr[x], uint32{0});
+    hit |= ZeroCrossingCrosses(c, negativeZPtr[x], uint32{0});
+    hit |= ZeroCrossingCrosses(c, centerPtr[x + 1], uint32{1});
+    hit |= ZeroCrossingCrosses(c, positiveYPtr[x], uint32{1});
+    hit |= ZeroCrossingCrosses(c, positiveZPtr[x], uint32{1});
+    labelsPtr[x] = hit != 0 ? foregroundLabel : backgroundLabel;
   }
 
   const uint32 lastHit = ZeroCrossingHitAt(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, lastX, lastX - 1, lastX);
@@ -369,10 +369,10 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
 
   // The single-slice route above is one shared implementation, so only the 3-D routes record an algorithm path.
   const bool usesOutOfCoreStore = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || outStore.getStoreType() == IDataStore::StoreType::OutOfCore;
-  const auto* inMemoryInput = dynamic_cast<const DataStore<T>*>(&inStore);
-  auto* inMemoryOutput = dynamic_cast<DataStore<uint8>*>(&outStore);
+  const auto* inMemoryInputPtr = dynamic_cast<const DataStore<T>*>(&inStore);
+  auto* inMemoryOutputPtr = dynamic_cast<DataStore<uint8>*>(&outStore);
   // Direct spans require concrete resident stores even when a test requests the in-core route.
-  const bool direct = !usesOutOfCoreStore && inMemoryInput != nullptr && inMemoryOutput != nullptr && !ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
+  const bool direct = !usesOutOfCoreStore && inMemoryInputPtr != nullptr && inMemoryOutputPtr != nullptr && !ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
   RecordAlgorithmPathExecution(direct ? AlgorithmPath::InCore : AlgorithmPath::OutOfCore, usesOutOfCoreStore);
   if(shouldCancel)
   {
@@ -380,43 +380,43 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
   }
 
   const usize nX = dims[0];
-  const usize nY = dims[1];
-  const usize nZ = dims[2];
-  if(nX == 0 || nY == 0 || nZ == 0)
+  const usize ny = dims[1];
+  const usize nz = dims[2];
+  if(nX == 0 || ny == 0 || nz == 0)
   {
     return {};
   }
-  const usize slice = nX * nY;
+  const usize slice = nX * ny;
   static_cast<void>(messageHandler);
 
   if(direct)
   {
-    const T* values = inMemoryInput->createSpan().data();
-    uint8* output = inMemoryOutput->createSpan().data();
+    const T* valuesPtr = inMemoryInputPtr->createSpan().data();
+    uint8* outputPtr = inMemoryOutputPtr->createSpan().data();
     // Planes are dispatched in groups of about k_ZeroCrossingDirectGroupValues values. A group is large enough that
     // the parallel dispatch cost is negligible, and the cancellation check between groups stays responsive.
     const usize planesPerGroup = std::max<usize>(usize{1}, detail::k_ZeroCrossingDirectGroupValues / slice);
-    for(usize zBegin = 0; zBegin < nZ; zBegin += planesPerGroup)
+    for(usize zBegin = 0; zBegin < nz; zBegin += planesPerGroup)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize zEnd = std::min(nZ, zBegin + planesPerGroup);
+      const usize zEnd = std::min(nz, zBegin + planesPerGroup);
       ParallelDataAlgorithm parallelAlgorithm;
-      parallelAlgorithm.setRange(0, (zEnd - zBegin) * nY);
-      parallelAlgorithm.execute([values, output, zBegin, nX, nY, nZ, slice, foregroundValue, backgroundValue](const Range& range) {
+      parallelAlgorithm.setRange(0, (zEnd - zBegin) * ny);
+      parallelAlgorithm.execute([valuesPtr, outputPtr, zBegin, nX, ny, nz, slice, foregroundValue, backgroundValue](const Range& range) {
         for(usize index = range.min(); index < range.max(); ++index)
         {
-          const usize z = zBegin + index / nY;
-          const usize y = index % nY;
+          const usize z = zBegin + index / ny;
+          const usize y = index % ny;
           const usize zPrevious = z > 0 ? z - 1 : z;
-          const usize zNext = z + 1 < nZ ? z + 1 : z;
+          const usize zNext = z + 1 < nz ? z + 1 : z;
           const usize yPrevious = y > 0 ? y - 1 : y;
-          const usize yNext = y + 1 < nY ? y + 1 : y;
-          const T* plane = values + z * slice;
-          detail::ZeroCrossingRow(values + zPrevious * slice + y * nX, plane + yPrevious * nX, plane + y * nX, plane + yNext * nX, values + zNext * slice + y * nX, output + z * slice + y * nX, nX,
-                                  foregroundValue, backgroundValue);
+          const usize yNext = y + 1 < ny ? y + 1 : y;
+          const T* planePtr = valuesPtr + z * slice;
+          detail::ZeroCrossingRow(valuesPtr + zPrevious * slice + y * nX, planePtr + yPrevious * nX, planePtr + y * nX, planePtr + yNext * nX, valuesPtr + zNext * slice + y * nX,
+                                  outputPtr + z * slice + y * nX, nX, foregroundValue, backgroundValue);
         }
       });
     }
@@ -445,15 +445,15 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
                     plan.inputPlanes, plan.inputBytes, plan.corePlanes, plan.outputBytes, reservation.sizeBytes(), StringUtilities::formatDimensions3D(dims)));
   }
 
-  for(usize z0 = 0; z0 < nZ; z0 += plan.corePlanes)
+  for(usize z0 = 0; z0 < nz; z0 += plan.corePlanes)
   {
     if(shouldCancel)
     {
       return {};
     }
     const usize zLo = z0 > 0 ? z0 - 1 : 0;
-    const usize count = std::min(nZ, z0 + plan.corePlanes);
-    const usize zHi = std::min(nZ, count + 1);
+    const usize count = std::min(nz, z0 + plan.corePlanes);
+    const usize zHi = std::min(nz, count + 1);
     const usize inputValueCount = (zHi - zLo) * slice;
     if(Result<> result = inStore.copyIntoBuffer(zLo * slice, nonstd::span<T>(input.get(), inputValueCount)); result.invalid())
     {
@@ -461,22 +461,22 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
     }
 
     ParallelDataAlgorithm parallelAlgorithm;
-    parallelAlgorithm.setRange(0, (count - z0) * nY);
-    parallelAlgorithm.execute([inputValues = input.get(), outputValues = output.get(), z0, zLo, zHi, nX, nY, slice, foregroundValue, backgroundValue](const Range& range) {
+    parallelAlgorithm.setRange(0, (count - z0) * ny);
+    parallelAlgorithm.execute([inputValuesPtr = input.get(), outputValuesPtr = output.get(), z0, zLo, zHi, nX, ny, slice, foregroundValue, backgroundValue](const Range& range) {
       for(usize index = range.min(); index < range.max(); ++index)
       {
-        const usize z = z0 + index / nY;
-        const usize y = index % nY;
+        const usize z = z0 + index / ny;
+        const usize y = index % ny;
         const usize zPrevious = z > zLo ? z - 1 : zLo;
         const usize zNext = z + 1 < zHi ? z + 1 : zHi - 1;
         const usize yPrevious = y > 0 ? y - 1 : y;
-        const usize yNext = y + 1 < nY ? y + 1 : y;
-        const T* row = inputValues + (z - zLo) * slice + y * nX;
-        const T* previousPlaneRow = inputValues + (zPrevious - zLo) * slice + y * nX;
-        const T* previousRow = inputValues + (z - zLo) * slice + yPrevious * nX;
-        const T* nextRow = inputValues + (z - zLo) * slice + yNext * nX;
-        const T* nextPlaneRow = inputValues + (zNext - zLo) * slice + y * nX;
-        detail::ZeroCrossingRow(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, outputValues + (z - z0) * slice + y * nX, nX, foregroundValue, backgroundValue);
+        const usize yNext = y + 1 < ny ? y + 1 : y;
+        const T* rowPtr = inputValuesPtr + (z - zLo) * slice + y * nX;
+        const T* previousPlaneRowPtr = inputValuesPtr + (zPrevious - zLo) * slice + y * nX;
+        const T* previousRowPtr = inputValuesPtr + (z - zLo) * slice + yPrevious * nX;
+        const T* nextRowPtr = inputValuesPtr + (z - zLo) * slice + yNext * nX;
+        const T* nextPlaneRowPtr = inputValuesPtr + (zNext - zLo) * slice + y * nX;
+        detail::ZeroCrossingRow(previousPlaneRowPtr, previousRowPtr, rowPtr, nextRowPtr, nextPlaneRowPtr, outputValuesPtr + (z - z0) * slice + y * nX, nX, foregroundValue, backgroundValue);
       }
     });
 

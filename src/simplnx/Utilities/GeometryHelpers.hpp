@@ -340,7 +340,7 @@ template <typename T, typename K>
   std::vector<uint8> visited(numElems, 0);
 
   // Reuse one neighbor vector across source elements.
-  std::vector<K> loop_neighbors(32, 0);
+  std::vector<K> loopNeighbors(32, 0);
 
   // Keep one candidate element outside the active chunk in local memory.
   auto neighborVertsBuf = std::make_unique<K[]>(numVertsPerElem);
@@ -367,25 +367,25 @@ template <typename T, typename K>
       {
         K vertId = chunkBuf[localOffset + v];
         T nEs = elemsContainingVert->getNumberOfElements(vertId);
-        K* vertIdxs = elemsContainingVert->getElementListPointer(vertId);
+        K* vertIdxsPtr = elemsContainingVert->getElementListPointer(vertId);
 
         for(T vt = 0; vt < nEs; vt++)
         {
-          if(vertIdxs[vt] == static_cast<K>(t))
+          if(vertIdxsPtr[vt] == static_cast<K>(t))
           {
             continue; // This is the same element as our "source"
           }
-          if(visited[vertIdxs[vt]])
+          if(visited[vertIdxsPtr[vt]])
           {
             continue; // We already added this element so loop again
           }
 
           // Reuse the active chunk or read one exterior candidate.
-          K candidateElem = vertIdxs[vt];
-          const K* candidateVerts = nullptr;
+          K candidateElem = vertIdxsPtr[vt];
+          const K* candidateVertsPtr = nullptr;
           if(candidateElem >= chunkStart && candidateElem < chunkStart + chunkCount)
           {
-            candidateVerts = &chunkBuf[(candidateElem - chunkStart) * numVertsPerElem];
+            candidateVertsPtr = &chunkBuf[(candidateElem - chunkStart) * numVertsPerElem];
           }
           else
           {
@@ -394,7 +394,7 @@ template <typename T, typename K>
             {
               return candidateReadResult;
             }
-            candidateVerts = neighborVertsBuf.get();
+            candidateVertsPtr = neighborVertsBuf.get();
           }
 
           // Count shared vertices between this source and candidate.
@@ -403,7 +403,7 @@ template <typename T, typename K>
           {
             for(usize j = 0; j < numVertsPerElem; j++)
             {
-              if(chunkBuf[localOffset + i] == candidateVerts[j])
+              if(chunkBuf[localOffset + i] == candidateVertsPtr[j])
               {
                 vCount++;
               }
@@ -413,13 +413,13 @@ template <typename T, typename K>
           // A complete shared boundary entity defines one neighbor.
           if(vCount == numSharedVerts)
           {
-            loop_neighbors[linkCount[t]] = vertIdxs[vt];
+            loopNeighbors[linkCount[t]] = vertIdxsPtr[vt];
             ++linkCount[t];
-            if(linkCount[t] >= loop_neighbors.size())
+            if(linkCount[t] >= loopNeighbors.size())
             {
-              loop_neighbors.resize(loop_neighbors.size() + 10);
+              loopNeighbors.resize(loopNeighbors.size() + 10);
             }
-            visited[vertIdxs[vt]] = true;
+            visited[vertIdxsPtr[vt]] = true;
           }
         }
       }
@@ -427,9 +427,9 @@ template <typename T, typename K>
       // Clear only visited indexes recorded for this source element.
       for(int64 k = 0; k < linkCount[t]; k++)
       {
-        visited[loop_neighbors[k]] = false;
+        visited[loopNeighbors[k]] = false;
       }
-      dynamicList->setElementList(t, linkCount[t], loop_neighbors.data());
+      dynamicList->setElementList(t, linkCount[t], loopNeighbors.data());
     }
   }
 
@@ -1303,25 +1303,25 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     float32 nz = (normal[2] > 0.0 ? normal[2] : -normal[2]);
     int32 projection = (nx > ny ? (nx > nz ? 0 : 2) : (ny > nz ? 1 : 2));
 
-    float* coordinates = coordinate.data();
+    float* coordinatesPtr = coordinate.data();
     for(int64 j = 0; j < numVertsPerElem; j++)
     {
-      Point3D<float32> vert0(coordinates + (3 * j));
-      Point3D<float32> vert1(coordinates + (3 * ((j + 1) % numVertsPerElem)));
-      Point3D<float32> vert2(coordinates + (3 * ((j + 2) % numVertsPerElem)));
+      Point3D<float32> vert0(coordinatesPtr + (3 * j));
+      Point3D<float32> vert1(coordinatesPtr + (3 * ((j + 1) % numVertsPerElem)));
+      Point3D<float32> vert2(coordinatesPtr + (3 * ((j + 2) % numVertsPerElem)));
 
       switch(projection)
       {
       case 0: {
-        area += coordinates[3 * ((j + 1) % numVertsPerElem) + 1] * (coordinates[3 * ((j + 2) % numVertsPerElem) + 2] - coordinates[3 * j + 2]);
+        area += coordinatesPtr[3 * ((j + 1) % numVertsPerElem) + 1] * (coordinatesPtr[3 * ((j + 2) % numVertsPerElem) + 2] - coordinatesPtr[3 * j + 2]);
         continue;
       }
       case 1: {
-        area += coordinates[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinates[3 * ((j + 2) % numVertsPerElem) + 2] - coordinates[3 * j + 2]);
+        area += coordinatesPtr[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinatesPtr[3 * ((j + 2) % numVertsPerElem) + 2] - coordinatesPtr[3 * j + 2]);
         continue;
       }
       case 2: {
-        area += coordinates[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinates[3 * ((j + 2) % numVertsPerElem) + 1] - coordinates[3 * j + 1]);
+        area += coordinatesPtr[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinatesPtr[3 * ((j + 2) % numVertsPerElem) + 1] - coordinatesPtr[3 * j + 1]);
         continue;
       }
       default:

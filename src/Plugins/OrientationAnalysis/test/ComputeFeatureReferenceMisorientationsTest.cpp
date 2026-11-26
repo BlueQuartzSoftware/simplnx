@@ -36,7 +36,7 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-namespace AnalyticalFixtures
+namespace analytical_fixtures
 {
 // Test-side default paths (kept consistent with the existing `Small_IN100`-style fixtures).
 const std::string k_GeomName = "DataContainer";
@@ -69,54 +69,54 @@ inline std::array<float32, 4> QuatFromPhi1Deg(float32 phi1Deg)
 struct FixtureData
 {
   DataStructure ds;
-  ImageGeom* imageGeom = nullptr;
-  AttributeMatrix* cellDataAM = nullptr;
-  AttributeMatrix* cellFeatureDataAM = nullptr;
-  AttributeMatrix* cellEnsembleAM = nullptr;
-  Int32Array* featureIds = nullptr;
-  Int32Array* cellPhases = nullptr;
+  ImageGeom* image_geom = nullptr;
+  AttributeMatrix* cell_data_am = nullptr;
+  AttributeMatrix* cell_feature_data_am = nullptr;
+  AttributeMatrix* cell_ensemble_am = nullptr;
+  Int32Array* feature_ids = nullptr;
+  Int32Array* cell_phases = nullptr;
   Float32Array* quats = nullptr;
-  Float32Array* avgQuats = nullptr;             // sized for numFeatures; populated only for Mode 0
-  Float32Array* gbEuclideanDistances = nullptr; // only populated for Mode 1
-  UInt32Array* crystalStructures = nullptr;
+  Float32Array* avg_quats = nullptr;              // sized for numFeatures; populated only for Mode 0
+  Float32Array* gb_euclidean_distances = nullptr; // only populated for Mode 1
+  UInt32Array* crystal_structures = nullptr;
 };
 
 inline FixtureData CreateScaffold(const usize dimX, const usize dimY, const usize dimZ, const usize numFeatures)
 {
   FixtureData td;
-  td.imageGeom = ImageGeom::Create(td.ds, k_GeomName);
-  REQUIRE(td.imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(td.imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  td.imageGeom->setDimensions({dimX, dimY, dimZ});
+  td.image_geom = ImageGeom::Create(td.ds, k_GeomName);
+  REQUIRE(td.image_geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.image_geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  td.image_geom->setDimensions({dimX, dimY, dimZ});
   const ShapeType cellTupleShape{dimZ, dimY, dimX};
   const usize totalVoxels = dimX * dimY * dimZ;
 
-  td.cellDataAM = AttributeMatrix::Create(td.ds, k_CellData, cellTupleShape, td.imageGeom->getId());
-  td.imageGeom->setCellData(*td.cellDataAM);
+  td.cell_data_am = AttributeMatrix::Create(td.ds, k_CellData, cellTupleShape, td.image_geom->getId());
+  td.image_geom->setCellData(*td.cell_data_am);
 
-  td.cellFeatureDataAM = AttributeMatrix::Create(td.ds, k_CellFeatureData, ShapeType{numFeatures}, td.imageGeom->getId());
-  td.cellEnsembleAM = AttributeMatrix::Create(td.ds, k_CellEnsembleData, ShapeType{2}, td.imageGeom->getId());
+  td.cell_feature_data_am = AttributeMatrix::Create(td.ds, k_CellFeatureData, ShapeType{numFeatures}, td.image_geom->getId());
+  td.cell_ensemble_am = AttributeMatrix::Create(td.ds, k_CellEnsembleData, ShapeType{2}, td.image_geom->getId());
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
-  td.featureIds = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cellDataAM->getId());
+  td.feature_ids = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_data_am->getId());
   auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_PhasesName), cellTupleShape, {1});
-  td.cellPhases = Int32Array::Create(td.ds, k_PhasesName, cellPhasesStore, td.cellDataAM->getId());
+  td.cell_phases = Int32Array::Create(td.ds, k_PhasesName, cellPhasesStore, td.cell_data_am->getId());
   auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_CellDataPath.createChildPath(k_QuatsName), cellTupleShape, {4});
-  td.quats = Float32Array::Create(td.ds, k_QuatsName, quatsStore, td.cellDataAM->getId());
+  td.quats = Float32Array::Create(td.ds, k_QuatsName, quatsStore, td.cell_data_am->getId());
   auto gbEuclideanDistancesStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_CellDataPath.createChildPath(k_GBEuclideanName), cellTupleShape, {1});
-  td.gbEuclideanDistances = Float32Array::Create(td.ds, k_GBEuclideanName, gbEuclideanDistancesStore, td.cellDataAM->getId());
+  td.gb_euclidean_distances = Float32Array::Create(td.ds, k_GBEuclideanName, gbEuclideanDistancesStore, td.cell_data_am->getId());
   auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_CellFeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
-  td.avgQuats = Float32Array::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.cellFeatureDataAM->getId());
+  td.avg_quats = Float32Array::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.cell_feature_data_am->getId());
 
   auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_CellEnsembleDataPath.createChildPath(k_CrystalStructuresName), {2}, {1});
-  td.crystalStructures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.cellEnsembleAM->getId());
-  (*td.crystalStructures)[0] = 999u; // UnknownCrystalStructure sentinel
-  (*td.crystalStructures)[1] = 1u;   // Cubic_High (EbsdLib LaueOps index 1)
+  td.crystal_structures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.cell_ensemble_am->getId());
+  (*td.crystal_structures)[0] = 999u; // UnknownCrystalStructure sentinel
+  (*td.crystal_structures)[1] = 1u;   // Cubic_High (EbsdLib LaueOps index 1)
 
   // Bulk initialization preserves the same defaults for large HDF5 fixtures.
-  td.featureIds->fill(0);
-  td.cellPhases->fill(0);
-  td.gbEuclideanDistances->fill(0.0F);
+  td.feature_ids->fill(0);
+  td.cell_phases->fill(0);
+  td.gb_euclidean_distances->fill(0.0F);
   std::vector<float32> quaternionValues(totalVoxels * 4, 0.0F);
   for(usize i = 0; i < totalVoxels; ++i)
   {
@@ -126,10 +126,10 @@ inline FixtureData CreateScaffold(const usize dimX, const usize dimY, const usiz
   SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
   for(usize f = 0; f < numFeatures; ++f)
   {
-    (*td.avgQuats)[f * 4 + 0] = 0.0f;
-    (*td.avgQuats)[f * 4 + 1] = 0.0f;
-    (*td.avgQuats)[f * 4 + 2] = 0.0f;
-    (*td.avgQuats)[f * 4 + 3] = 1.0f;
+    (*td.avg_quats)[f * 4 + 0] = 0.0f;
+    (*td.avg_quats)[f * 4 + 1] = 0.0f;
+    (*td.avg_quats)[f * 4 + 2] = 0.0f;
+    (*td.avg_quats)[f * 4 + 3] = 1.0f;
   }
 
   return td;
@@ -154,10 +154,10 @@ inline Arguments BuildArgs(int32 referenceOrientation)
 }
 
 // Helper: assert per-voxel FRM matches expected value within tolerance.
-inline void RequireFRMClose(const DataStructure& ds, usize voxelIdx, float32 expectedDeg, float32 tolDeg = 1e-3f)
+inline void RequireFRMClose(const DataStructure& dataStructure, usize voxelIdx, float32 expectedDeg, float32 tolDeg = 1e-3f)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
-  const auto& frm = ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
+  const auto& frm = dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
   const float32 actual = frm[voxelIdx];
   const float32 diff = std::abs(actual - expectedDeg);
   if(diff > tolDeg)
@@ -178,23 +178,23 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Ph
   CAPTURE(referenceOrientation);
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
-  AnalyticalFixtures::FixtureData fixture = AnalyticalFixtures::CreateScaffold(/*dimX=*/2, /*dimY=*/1, /*dimZ=*/1, /*numFeatures=*/2);
+  analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(/*dimX=*/2, /*dimY=*/1, /*dimZ=*/1, /*numFeatures=*/2);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
-    REQUIRE(fixture.cellPhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(fixture.cell_phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
   }
-  (*fixture.featureIds)[0] = 1;
-  (*fixture.featureIds)[1] = 1;
-  (*fixture.cellPhases)[0] = 1;
-  (*fixture.cellPhases)[1] = 1;
-  (*fixture.gbEuclideanDistances)[0] = 1.0F;
+  (*fixture.feature_ids)[0] = 1;
+  (*fixture.feature_ids)[1] = 1;
+  (*fixture.cell_phases)[0] = 1;
+  (*fixture.cell_phases)[1] = 1;
+  (*fixture.gb_euclidean_distances)[0] = 1.0F;
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs(referenceOrientation);
+  Arguments args = analytical_fixtures::BuildArgs(referenceOrientation);
 
   SECTION("Participating Phase returns an error")
   {
-    (*fixture.cellPhases)[1] = 2;
+    (*fixture.cell_phases)[1] = 2;
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -34901);
@@ -202,7 +202,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Ph
 
   SECTION("Participating Laue index returns an error")
   {
-    (*fixture.crystalStructures)[1] = 999U;
+    (*fixture.crystal_structures)[1] = 999U;
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -34902);
@@ -210,8 +210,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Ph
 
   SECTION("Phase on feature zero is ignored")
   {
-    (*fixture.featureIds)[1] = 0;
-    (*fixture.cellPhases)[1] = 2;
+    (*fixture.feature_ids)[1] = 0;
+    (*fixture.cell_phases)[1] = 2;
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -219,12 +219,12 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Ph
   UnitTest::CheckArraysInheritTupleDims(fixture.ds);
 }
 
-inline void RequireAvgClose(const DataStructure& ds, usize featureIdx, float32 expectedDeg, float32 tolDeg = 1e-3f, bool isMode1 = false)
+inline void RequireAvgClose(const DataStructure& dataStructure, usize featureIdx, float32 expectedDeg, float32 tolDeg = 1e-3f, bool isMode1 = false)
 {
   const std::string& avgName = k_FeatureAvgMisorientationsOutName;
   const auto avgPath = k_CellFeatureDataPath.createChildPath(avgName);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(avgPath));
-  const auto& avg = ds.getDataRefAs<Float32Array>(avgPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgPath));
+  const auto& avg = dataStructure.getDataRefAs<Float32Array>(avgPath);
   const float32 actual = avg[featureIdx];
   const float32 diff = std::abs(actual - expectedDeg);
   if(diff > tolDeg)
@@ -238,16 +238,16 @@ inline void RequireAvgClose(const DataStructure& ds, usize featureIdx, float32 e
 }
 
 // Class 4 invariant predicates — assert every invariant on the filter's output.
-inline void AssertClass4Invariants(const DataStructure& ds, bool isMode1)
+inline void AssertClass4Invariants(const DataStructure& dataStructure, bool isMode1)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
-  const auto& featureIds = ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName)));
-  const auto& cellPhases = ds.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
-  const auto& frm = ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName)));
-  const auto& avg = ds.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName)));
+  const auto& cellPhases = dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
+  const auto& frm = dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName)));
+  const auto& avg = dataStructure.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName));
 
   const usize totalVoxels = featureIds.getNumberOfTuples();
   const usize numFeatures = avg.getNumberOfTuples();
@@ -295,7 +295,7 @@ inline void AssertClass4Invariants(const DataStructure& ds, bool isMode1)
   }
 }
 
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 } // namespace
 
 // The retired Small IN100 exemplar archive was generated from earlier SIMPLNX output and formed a circular oracle.
@@ -308,7 +308,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: SI
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -321,22 +321,22 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: SI
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureReferenceMisorientationsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureReferenceMisorientationsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(ComputeFeatureReferenceMisorientationsFilter::k_ReferenceOrientation_Key) == 0);
       CHECK(args.value<DataPath>(ComputeFeatureReferenceMisorientationsFilter::k_CellFeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<DataPath>(ComputeFeatureReferenceMisorientationsFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -364,35 +364,35 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: ge
   CAPTURE(referenceMode);
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BlockTuples = 65536;
-  auto fixture = AnalyticalFixtures::CreateScaffold(k_BlockTuples + 1, 1, 1, 2);
+  auto fixture = analytical_fixtures::CreateScaffold(k_BlockTuples + 1, 1, 1, 2);
 
   const std::array<usize, 2> cellIndices = {k_BlockTuples - 1, k_BlockTuples};
   const std::array<float32, 2> angles = {15.0F, 30.0F};
   for(usize witnessIdx = 0; witnessIdx < cellIndices.size(); witnessIdx++)
   {
     const usize cellIdx = cellIndices[witnessIdx];
-    (*fixture.featureIds)[cellIdx] = 1;
-    (*fixture.cellPhases)[cellIdx] = 1;
-    (*fixture.gbEuclideanDistances)[cellIdx] = 5.0F;
-    const auto quat = AnalyticalFixtures::QuatFromPhi1Deg(angles[witnessIdx]);
+    (*fixture.feature_ids)[cellIdx] = 1;
+    (*fixture.cell_phases)[cellIdx] = 1;
+    (*fixture.gb_euclidean_distances)[cellIdx] = 5.0F;
+    const auto quat = analytical_fixtures::QuatFromPhi1Deg(angles[witnessIdx]);
     for(usize compIdx = 0; compIdx < 4; compIdx++)
     {
       (*fixture.quats)[cellIdx * 4 + compIdx] = quat[compIdx];
     }
   }
-  REQUIRE(fixture.featureIds->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(fixture.cellPhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.feature_ids->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.cell_phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(fixture.quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(fixture.avgQuats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(fixture.gbEuclideanDistances->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.avg_quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(fixture.gb_euclidean_distances->getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  auto args = AnalyticalFixtures::BuildArgs(referenceMode);
+  auto args = analytical_fixtures::BuildArgs(referenceMode);
   auto result = filter.execute(fixture.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-  const auto cellOutputPath = AnalyticalFixtures::k_CellDataPath.createChildPath(AnalyticalFixtures::k_CellMisorientationsOutName);
-  const auto averageOutputPath = AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureAvgMisorientationsOutName);
+  const auto cellOutputPath = analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_CellMisorientationsOutName);
+  const auto averageOutputPath = analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureAvgMisorientationsOutName);
   REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(cellOutputPath));
   REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(averageOutputPath));
   const auto& cellOutput = fixture.ds.getDataRefAs<Float32Array>(cellOutputPath);
@@ -407,7 +407,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: ge
   if(referenceMode == 1)
   {
     // Equal maximum distances straddle the block boundary; the later cell wins.
-    const auto centersPath = AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName);
+    const auto centersPath = analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName);
     REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(centersPath));
     const auto& centers = fixture.ds.getDataRefAs<Float32Array>(centersPath);
     REQUIRE(centers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -423,18 +423,18 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: ge
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 0 SingleGrainIdentity", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(2, 2, 2, 2);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(2, 2, 2, 2);
 
   // 8 voxels, all featureId=1, all phase=1, all quats = identity (already initialized).
   for(usize i = 0; i < 8; ++i)
   {
-    (*td.featureIds)[i] = 1;
-    (*td.cellPhases)[i] = 1;
+    (*td.feature_ids)[i] = 1;
+    (*td.cell_phases)[i] = 1;
   }
   // AvgQuats[1] = identity (already initialized).
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs(0);
+  Arguments args = analytical_fixtures::BuildArgs(0);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
@@ -442,10 +442,10 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 
   for(usize i = 0; i < 8; ++i)
   {
-    AnalyticalFixtures::RequireFRMClose(td.ds, i, 0.0f);
+    analytical_fixtures::RequireFRMClose(td.ds, i, 0.0f);
   }
-  AnalyticalFixtures::RequireAvgClose(td.ds, 1, 0.0f);
-  AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
+  analytical_fixtures::RequireAvgClose(td.ds, 1, 0.0f);
+  analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
 }
 
 // Fixture B: Mode 0, single 2x2x2 grain, all quats identical (5 deg about z), AvgQuats[1] = identity.
@@ -454,13 +454,13 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 0 KnownAngle5deg", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(2, 2, 2, 2);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(2, 2, 2, 2);
 
-  const auto qVoxel = AnalyticalFixtures::QuatFromPhi1Deg(5.0f);
+  const auto qVoxel = analytical_fixtures::QuatFromPhi1Deg(5.0f);
   for(usize i = 0; i < 8; ++i)
   {
-    (*td.featureIds)[i] = 1;
-    (*td.cellPhases)[i] = 1;
+    (*td.feature_ids)[i] = 1;
+    (*td.cell_phases)[i] = 1;
     (*td.quats)[i * 4 + 0] = qVoxel[0];
     (*td.quats)[i * 4 + 1] = qVoxel[1];
     (*td.quats)[i * 4 + 2] = qVoxel[2];
@@ -469,7 +469,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   // AvgQuats[1] = identity (already initialized).
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs(0);
+  Arguments args = analytical_fixtures::BuildArgs(0);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
@@ -477,10 +477,10 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 
   for(usize i = 0; i < 8; ++i)
   {
-    AnalyticalFixtures::RequireFRMClose(td.ds, i, 5.0f);
+    analytical_fixtures::RequireFRMClose(td.ds, i, 5.0f);
   }
-  AnalyticalFixtures::RequireAvgClose(td.ds, 1, 5.0f);
-  AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
+  analytical_fixtures::RequireAvgClose(td.ds, 1, 5.0f);
+  analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
 }
 
 // Fixture C: Mode 0, 4x3x1 image with 5 features. Tests:
@@ -491,11 +491,11 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 0 MultiGrain EdgeCases", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(4, 3, 1, 5);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(4, 3, 1, 5);
 
-  const auto qIdentity = AnalyticalFixtures::QuatFromPhi1Deg(0.0f);
-  const auto q5 = AnalyticalFixtures::QuatFromPhi1Deg(5.0f);
-  const auto q10 = AnalyticalFixtures::QuatFromPhi1Deg(10.0f);
+  const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
+  const auto q5 = analytical_fixtures::QuatFromPhi1Deg(5.0f);
+  const auto q10 = analytical_fixtures::QuatFromPhi1Deg(10.0f);
   auto setQuat = [&](usize voxelIdx, const std::array<float32, 4>& q) {
     (*td.quats)[voxelIdx * 4 + 0] = q[0];
     (*td.quats)[voxelIdx * 4 + 1] = q[1];
@@ -503,93 +503,93 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
     (*td.quats)[voxelIdx * 4 + 3] = q[3];
   };
   auto setAvg = [&](usize featureIdx, const std::array<float32, 4>& q) {
-    (*td.avgQuats)[featureIdx * 4 + 0] = q[0];
-    (*td.avgQuats)[featureIdx * 4 + 1] = q[1];
-    (*td.avgQuats)[featureIdx * 4 + 2] = q[2];
-    (*td.avgQuats)[featureIdx * 4 + 3] = q[3];
+    (*td.avg_quats)[featureIdx * 4 + 0] = q[0];
+    (*td.avg_quats)[featureIdx * 4 + 1] = q[1];
+    (*td.avg_quats)[featureIdx * 4 + 2] = q[2];
+    (*td.avg_quats)[featureIdx * 4 + 3] = q[3];
   };
 
   // Voxel 0: featureId=0 (background), phase=0 -> FRM = 0
-  (*td.featureIds)[0] = 0;
-  (*td.cellPhases)[0] = 0;
+  (*td.feature_ids)[0] = 0;
+  (*td.cell_phases)[0] = 0;
   setQuat(0, qIdentity);
 
   // Voxels 1, 2: featureId=1, phase=1, quats = identity. AvgQuats[1] = 5deg -> FRM = 5deg.
-  (*td.featureIds)[1] = 1;
-  (*td.cellPhases)[1] = 1;
+  (*td.feature_ids)[1] = 1;
+  (*td.cell_phases)[1] = 1;
   setQuat(1, qIdentity);
-  (*td.featureIds)[2] = 1;
-  (*td.cellPhases)[2] = 1;
+  (*td.feature_ids)[2] = 1;
+  (*td.cell_phases)[2] = 1;
   setQuat(2, qIdentity);
   setAvg(1, q5);
 
   // Voxels 3, 4: featureId=2, phase=1, quats = identity. AvgQuats[2] = identity -> FRM = 0.
-  (*td.featureIds)[3] = 2;
-  (*td.cellPhases)[3] = 1;
+  (*td.feature_ids)[3] = 2;
+  (*td.cell_phases)[3] = 1;
   setQuat(3, qIdentity);
-  (*td.featureIds)[4] = 2;
-  (*td.cellPhases)[4] = 1;
+  (*td.feature_ids)[4] = 2;
+  (*td.cell_phases)[4] = 1;
   setQuat(4, qIdentity);
   setAvg(2, qIdentity);
 
   // Voxel 5: featureId=3, phase=1, quats = 10deg. AvgQuats[3] = 5deg -> FRM = 5deg.
-  (*td.featureIds)[5] = 3;
-  (*td.cellPhases)[5] = 1;
+  (*td.feature_ids)[5] = 3;
+  (*td.cell_phases)[5] = 1;
   setQuat(5, q10);
   // Voxels 6, 7: featureId=3, phase=0 (un-phased) -> FRM = 0 (skip path).
-  (*td.featureIds)[6] = 3;
-  (*td.cellPhases)[6] = 0;
+  (*td.feature_ids)[6] = 3;
+  (*td.cell_phases)[6] = 0;
   setQuat(6, qIdentity);
-  (*td.featureIds)[7] = 3;
-  (*td.cellPhases)[7] = 0;
+  (*td.feature_ids)[7] = 3;
+  (*td.cell_phases)[7] = 0;
   setQuat(7, qIdentity);
   setAvg(3, q5);
 
   // Voxels 8-11: featureId=4, phase=0 (entire feature un-phased) -> all FRM = 0,
   // avgMisorientationCounts[4] == 0 -> avg[4] = 0 (path 7).
-  (*td.featureIds)[8] = 4;
-  (*td.cellPhases)[8] = 0;
+  (*td.feature_ids)[8] = 4;
+  (*td.cell_phases)[8] = 0;
   setQuat(8, qIdentity);
-  (*td.featureIds)[9] = 4;
-  (*td.cellPhases)[9] = 0;
+  (*td.feature_ids)[9] = 4;
+  (*td.cell_phases)[9] = 0;
   setQuat(9, qIdentity);
-  (*td.featureIds)[10] = 4;
-  (*td.cellPhases)[10] = 0;
+  (*td.feature_ids)[10] = 4;
+  (*td.cell_phases)[10] = 0;
   setQuat(10, qIdentity);
-  (*td.featureIds)[11] = 4;
-  (*td.cellPhases)[11] = 0;
+  (*td.feature_ids)[11] = 4;
+  (*td.cell_phases)[11] = 0;
   setQuat(11, qIdentity);
   setAvg(4, qIdentity);
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs(0);
+  Arguments args = analytical_fixtures::BuildArgs(0);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Per-voxel expected FRMs.
-  AnalyticalFixtures::RequireFRMClose(td.ds, 0, 0.0f); // background
-  AnalyticalFixtures::RequireFRMClose(td.ds, 1, 5.0f); // feature 1
-  AnalyticalFixtures::RequireFRMClose(td.ds, 2, 5.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 3, 0.0f); // feature 2
-  AnalyticalFixtures::RequireFRMClose(td.ds, 4, 0.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 5, 5.0f); // feature 3, only valid voxel
-  AnalyticalFixtures::RequireFRMClose(td.ds, 6, 0.0f); // feature 3, un-phased
-  AnalyticalFixtures::RequireFRMClose(td.ds, 7, 0.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 8, 0.0f); // feature 4, all un-phased
-  AnalyticalFixtures::RequireFRMClose(td.ds, 9, 0.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 10, 0.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 11, 0.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 0, 0.0f); // background
+  analytical_fixtures::RequireFRMClose(td.ds, 1, 5.0f); // feature 1
+  analytical_fixtures::RequireFRMClose(td.ds, 2, 5.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 3, 0.0f); // feature 2
+  analytical_fixtures::RequireFRMClose(td.ds, 4, 0.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 5, 5.0f); // feature 3, only valid voxel
+  analytical_fixtures::RequireFRMClose(td.ds, 6, 0.0f); // feature 3, un-phased
+  analytical_fixtures::RequireFRMClose(td.ds, 7, 0.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 8, 0.0f); // feature 4, all un-phased
+  analytical_fixtures::RequireFRMClose(td.ds, 9, 0.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 10, 0.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 11, 0.0f);
 
   // Per-feature expected averages.
-  AnalyticalFixtures::RequireAvgClose(td.ds, 0, 0.0f); // background (no voxels contribute)
-  AnalyticalFixtures::RequireAvgClose(td.ds, 1, 5.0f); // (5 + 5) / 2
-  AnalyticalFixtures::RequireAvgClose(td.ds, 2, 0.0f); // (0 + 0) / 2
-  AnalyticalFixtures::RequireAvgClose(td.ds, 3, 5.0f); // 5 / 1 (only voxel 5 valid)
-  AnalyticalFixtures::RequireAvgClose(td.ds, 4, 0.0f); // count==0 -> avg=0 (path 7)
+  analytical_fixtures::RequireAvgClose(td.ds, 0, 0.0f); // background (no voxels contribute)
+  analytical_fixtures::RequireAvgClose(td.ds, 1, 5.0f); // (5 + 5) / 2
+  analytical_fixtures::RequireAvgClose(td.ds, 2, 0.0f); // (0 + 0) / 2
+  analytical_fixtures::RequireAvgClose(td.ds, 3, 5.0f); // 5 / 1 (only voxel 5 valid)
+  analytical_fixtures::RequireAvgClose(td.ds, 4, 0.0f); // count==0 -> avg=0 (path 7)
 
-  AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
+  analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
 }
 
 // Fixture D: Mode 1, 3x3x1 single grain. Center voxel (4) has max GBEuclideanDistance and
@@ -599,26 +599,26 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 KnownCenter", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 1, 2);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 1, 2);
 
-  const auto qIdentity = AnalyticalFixtures::QuatFromPhi1Deg(0.0f);
-  const auto q5 = AnalyticalFixtures::QuatFromPhi1Deg(5.0f);
+  const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
+  const auto q5 = analytical_fixtures::QuatFromPhi1Deg(5.0f);
 
   for(usize i = 0; i < 9; ++i)
   {
-    (*td.featureIds)[i] = 1;
-    (*td.cellPhases)[i] = 1;
+    (*td.feature_ids)[i] = 1;
+    (*td.cell_phases)[i] = 1;
   }
   // Distances: corners=0.25, edges=1.0, center=1.5. Center voxel (index 4) has max.
-  (*td.gbEuclideanDistances)[0] = 0.25f;
-  (*td.gbEuclideanDistances)[1] = 1.0f;
-  (*td.gbEuclideanDistances)[2] = 0.25f;
-  (*td.gbEuclideanDistances)[3] = 1.0f;
-  (*td.gbEuclideanDistances)[4] = 1.5f;
-  (*td.gbEuclideanDistances)[5] = 1.0f;
-  (*td.gbEuclideanDistances)[6] = 0.25f;
-  (*td.gbEuclideanDistances)[7] = 1.0f;
-  (*td.gbEuclideanDistances)[8] = 0.25f;
+  (*td.gb_euclidean_distances)[0] = 0.25f;
+  (*td.gb_euclidean_distances)[1] = 1.0f;
+  (*td.gb_euclidean_distances)[2] = 0.25f;
+  (*td.gb_euclidean_distances)[3] = 1.0f;
+  (*td.gb_euclidean_distances)[4] = 1.5f;
+  (*td.gb_euclidean_distances)[5] = 1.0f;
+  (*td.gb_euclidean_distances)[6] = 0.25f;
+  (*td.gb_euclidean_distances)[7] = 1.0f;
+  (*td.gb_euclidean_distances)[8] = 0.25f;
 
   // Quats: voxel 4 = identity (this is the reference); others = 5deg.
   for(usize i = 0; i < 9; ++i)
@@ -631,7 +631,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   }
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs(1);
+  Arguments args = analytical_fixtures::BuildArgs(1);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
@@ -642,19 +642,19 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   //  FRM expected: voxel 4 = 0 (vs itself), others = 5deg.
   for(usize i = 0; i < 9; ++i)
   {
-    AnalyticalFixtures::RequireFRMClose(td.ds, i, (i == 4) ? 0.0f : 5.0f);
+    analytical_fixtures::RequireFRMClose(td.ds, i, (i == 4) ? 0.0f : 5.0f);
   }
   // avg = (0 + 5*8) / 9 = 40/9 deg
-  AnalyticalFixtures::RequireAvgClose(td.ds, 1, 40.0f / 9.0f);
+  analytical_fixtures::RequireAvgClose(td.ds, 1, 40.0f / 9.0f);
 
   // EuclideanCenters[1] should be coords of voxel 4 = (1.5, 1.5, 0.5) with spacing 1 and origin 0.
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName)));
-  const auto& centers = td.ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName));
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
+  const auto& centers = td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
   REQUIRE(centers[1 * 3 + 0] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 1] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 2] == Approx(0.5f).margin(1e-5f));
 
-  AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
+  analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
 }
 
 // Fixture E is a 2x3x1 Mode 1 image with two three-voxel Features.
@@ -662,7 +662,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 MultiGrain CenterIsolation", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(2, 3, 1, 3);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(2, 3, 1, 3);
 
   // The 2x3x1 layout has six row-major voxels in the z=0 plane.
   // Voxels 0 and 1 in row 0 belong to Feature 1.
@@ -672,27 +672,27 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   // Voxels 0, 1, and 2 belong to Feature 1. Voxels 3, 4, and 5 belong to Feature 2.
   for(usize i = 0; i < 3; ++i)
   {
-    (*td.featureIds)[i] = 1;
-    (*td.cellPhases)[i] = 1;
+    (*td.feature_ids)[i] = 1;
+    (*td.cell_phases)[i] = 1;
   }
   for(usize i = 3; i < 6; ++i)
   {
-    (*td.featureIds)[i] = 2;
-    (*td.cellPhases)[i] = 1;
+    (*td.feature_ids)[i] = 2;
+    (*td.cell_phases)[i] = 1;
   }
 
   // Distances chosen so that:
   //   feature 1 center = voxel 1 (max=1.0)
   //   feature 2 center = voxel 5 (tied 1.5; >= comparison picks later)
-  (*td.gbEuclideanDistances)[0] = 0.5f;
-  (*td.gbEuclideanDistances)[1] = 1.0f;
-  (*td.gbEuclideanDistances)[2] = 0.5f;
-  (*td.gbEuclideanDistances)[3] = 1.5f;
-  (*td.gbEuclideanDistances)[4] = 0.5f;
-  (*td.gbEuclideanDistances)[5] = 1.5f;
+  (*td.gb_euclidean_distances)[0] = 0.5f;
+  (*td.gb_euclidean_distances)[1] = 1.0f;
+  (*td.gb_euclidean_distances)[2] = 0.5f;
+  (*td.gb_euclidean_distances)[3] = 1.5f;
+  (*td.gb_euclidean_distances)[4] = 0.5f;
+  (*td.gb_euclidean_distances)[5] = 1.5f;
 
-  const auto qIdentity = AnalyticalFixtures::QuatFromPhi1Deg(0.0f);
-  const auto q5 = AnalyticalFixtures::QuatFromPhi1Deg(5.0f);
+  const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
+  const auto q5 = analytical_fixtures::QuatFromPhi1Deg(5.0f);
   auto setQuat = [&](usize voxelIdx, const std::array<float32, 4>& q) {
     (*td.quats)[voxelIdx * 4 + 0] = q[0];
     (*td.quats)[voxelIdx * 4 + 1] = q[1];
@@ -709,28 +709,28 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   setQuat(5, qIdentity);
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs(1);
+  Arguments args = analytical_fixtures::BuildArgs(1);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Expected: FRM[1]=0, FRM[0]=5, FRM[2]=5, FRM[5]=0, FRM[3]=5, FRM[4]=5.
-  AnalyticalFixtures::RequireFRMClose(td.ds, 0, 5.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 1, 0.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 2, 5.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 3, 5.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 4, 5.0f);
-  AnalyticalFixtures::RequireFRMClose(td.ds, 5, 0.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 0, 5.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 1, 0.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 2, 5.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 3, 5.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 4, 5.0f);
+  analytical_fixtures::RequireFRMClose(td.ds, 5, 0.0f);
   // avg[1] = (5+0+5)/3 = 10/3; avg[2] = (5+5+0)/3 = 10/3.
-  AnalyticalFixtures::RequireAvgClose(td.ds, 1, 10.0f / 3.0f);
-  AnalyticalFixtures::RequireAvgClose(td.ds, 2, 10.0f / 3.0f);
+  analytical_fixtures::RequireAvgClose(td.ds, 1, 10.0f / 3.0f);
+  analytical_fixtures::RequireAvgClose(td.ds, 2, 10.0f / 3.0f);
 
   // Per-feature EuclideanCenters: feature 1 = voxel 1 coords; feature 2 = voxel 5 coords.
   // Voxel 1 in a 2x3x1 grid is at (x=1, y=0, z=0); voxel 5 is at (x=1, y=2, z=0). With spacing 1 and
   // origin 0, getCoordsf returns center-of-cell coordinates: voxel 1 -> (1.5, 0.5, 0.5); voxel 5 -> (1.5, 2.5, 0.5).
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName)));
-  const auto& centers = td.ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName));
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
+  const auto& centers = td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
   REQUIRE(centers[1 * 3 + 0] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 1] == Approx(0.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 2] == Approx(0.5f).margin(1e-5f));
@@ -738,7 +738,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   REQUIRE(centers[2 * 3 + 1] == Approx(2.5f).margin(1e-5f));
   REQUIRE(centers[2 * 3 + 2] == Approx(0.5f).margin(1e-5f));
 
-  AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
+  analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
 }
 
 // Fixture F: Mode 1, 3D (3x3x2 = 18 voxels) single grain. Verifies the linear voxelIdx -> 3D coord
@@ -748,19 +748,19 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 3D Volume", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 2, 2);
+  analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 2, 2);
 
-  const auto qIdentity = AnalyticalFixtures::QuatFromPhi1Deg(0.0f);
-  const auto q5 = AnalyticalFixtures::QuatFromPhi1Deg(5.0f);
+  const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
+  const auto q5 = analytical_fixtures::QuatFromPhi1Deg(5.0f);
 
   for(usize i = 0; i < 18; ++i)
   {
-    (*td.featureIds)[i] = 1;
-    (*td.cellPhases)[i] = 1;
-    (*td.gbEuclideanDistances)[i] = 0.5f;
+    (*td.feature_ids)[i] = 1;
+    (*td.cell_phases)[i] = 1;
+    (*td.gb_euclidean_distances)[i] = 0.5f;
   }
   // Make voxel 13 (layer 1, y=1, x=1) the unique max-distance voxel.
-  (*td.gbEuclideanDistances)[13] = 1.5f;
+  (*td.gb_euclidean_distances)[13] = 1.5f;
 
   // Quats: voxel 13 = identity (reference); others = 5deg.
   for(usize i = 0; i < 18; ++i)
@@ -773,7 +773,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   }
 
   ComputeFeatureReferenceMisorientationsFilter filter;
-  Arguments args = AnalyticalFixtures::BuildArgs(1);
+  Arguments args = analytical_fixtures::BuildArgs(1);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
@@ -784,20 +784,20 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   // FRM expected: voxel 13 = 0 (vs itself), others = 5deg.
   for(usize i = 0; i < 18; ++i)
   {
-    AnalyticalFixtures::RequireFRMClose(td.ds, i, (i == 13) ? 0.0f : 5.0f);
+    analytical_fixtures::RequireFRMClose(td.ds, i, (i == 13) ? 0.0f : 5.0f);
   }
   // avg = (0 + 5*17) / 18 = 85/18 deg.
-  AnalyticalFixtures::RequireAvgClose(td.ds, 1, 85.0f / 18.0f);
+  analytical_fixtures::RequireAvgClose(td.ds, 1, 85.0f / 18.0f);
 
   // EuclideanCenters[1] should be coords of voxel 13. Spacing=1, origin=0, getCoordsf returns
   // cell-center coords: voxel 13 is at (x=1, y=1, z=1) -> center coords (1.5, 1.5, 1.5).
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName)));
-  const auto& centers = td.ds.getDataRefAs<Float32Array>(AnalyticalFixtures::k_CellFeatureDataPath.createChildPath(AnalyticalFixtures::k_FeatureEuclideanCentersOutName));
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
+  const auto& centers = td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
   REQUIRE(centers[1 * 3 + 0] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 1] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 2] == Approx(1.5f).margin(1e-5f));
 
-  AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
+  analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
 }
 
 // The Class 4 sweep checks invariants without exact-value comparisons.
@@ -808,69 +808,69 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 
   // Sweep 1 uses a 3x3x1 Mode 0 grid with valid, background, and unphased voxels across three Features.
   {
-    AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 1, 3);
-    const auto q0 = AnalyticalFixtures::QuatFromPhi1Deg(0.0f);
-    const auto q7 = AnalyticalFixtures::QuatFromPhi1Deg(7.0f);
+    analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 1, 3);
+    const auto q0 = analytical_fixtures::QuatFromPhi1Deg(0.0f);
+    const auto q7 = analytical_fixtures::QuatFromPhi1Deg(7.0f);
     // Voxels: bg, f1, f1, f1, f2(un-phased), f2, bg, f2, f1
     const std::array<std::pair<int32, int32>, 9> layout = {{{0, 0}, {1, 1}, {1, 1}, {1, 1}, {2, 0}, {2, 1}, {0, 0}, {2, 1}, {1, 1}}};
     for(usize i = 0; i < 9; ++i)
     {
-      (*td.featureIds)[i] = layout[i].first;
-      (*td.cellPhases)[i] = layout[i].second;
+      (*td.feature_ids)[i] = layout[i].first;
+      (*td.cell_phases)[i] = layout[i].second;
       const auto& q = (i % 2 == 0) ? q0 : q7;
       (*td.quats)[i * 4 + 0] = q[0];
       (*td.quats)[i * 4 + 1] = q[1];
       (*td.quats)[i * 4 + 2] = q[2];
       (*td.quats)[i * 4 + 3] = q[3];
     }
-    (*td.avgQuats)[1 * 4 + 0] = q0[0];
-    (*td.avgQuats)[1 * 4 + 1] = q0[1];
-    (*td.avgQuats)[1 * 4 + 2] = q0[2];
-    (*td.avgQuats)[1 * 4 + 3] = q0[3];
-    (*td.avgQuats)[2 * 4 + 0] = q7[0];
-    (*td.avgQuats)[2 * 4 + 1] = q7[1];
-    (*td.avgQuats)[2 * 4 + 2] = q7[2];
-    (*td.avgQuats)[2 * 4 + 3] = q7[3];
+    (*td.avg_quats)[1 * 4 + 0] = q0[0];
+    (*td.avg_quats)[1 * 4 + 1] = q0[1];
+    (*td.avg_quats)[1 * 4 + 2] = q0[2];
+    (*td.avg_quats)[1 * 4 + 3] = q0[3];
+    (*td.avg_quats)[2 * 4 + 0] = q7[0];
+    (*td.avg_quats)[2 * 4 + 1] = q7[1];
+    (*td.avg_quats)[2 * 4 + 2] = q7[2];
+    (*td.avg_quats)[2 * 4 + 3] = q7[3];
 
     ComputeFeatureReferenceMisorientationsFilter filter;
-    Arguments args = AnalyticalFixtures::BuildArgs(0);
+    Arguments args = analytical_fixtures::BuildArgs(0);
     auto preflightResult = filter.preflight(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = filter.execute(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
+    analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
   }
 
   // Sweep 2: Mode 1 with the Fixture-D config (re-run, assert invariants only).
   {
-    AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(3, 3, 1, 2);
-    const auto qIdentity = AnalyticalFixtures::QuatFromPhi1Deg(0.0f);
-    const auto q5 = AnalyticalFixtures::QuatFromPhi1Deg(5.0f);
+    analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 1, 2);
+    const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
+    const auto q5 = analytical_fixtures::QuatFromPhi1Deg(5.0f);
     for(usize i = 0; i < 9; ++i)
     {
-      (*td.featureIds)[i] = 1;
-      (*td.cellPhases)[i] = 1;
+      (*td.feature_ids)[i] = 1;
+      (*td.cell_phases)[i] = 1;
       const auto& q = (i == 4) ? qIdentity : q5;
       (*td.quats)[i * 4 + 0] = q[0];
       (*td.quats)[i * 4 + 1] = q[1];
       (*td.quats)[i * 4 + 2] = q[2];
       (*td.quats)[i * 4 + 3] = q[3];
     }
-    (*td.gbEuclideanDistances)[4] = 1.5f;
+    (*td.gb_euclidean_distances)[4] = 1.5f;
     for(usize i = 0; i < 9; ++i)
     {
       if(i != 4)
       {
-        (*td.gbEuclideanDistances)[i] = 0.5f;
+        (*td.gb_euclidean_distances)[i] = 0.5f;
       }
     }
 
     ComputeFeatureReferenceMisorientationsFilter filter;
-    Arguments args = AnalyticalFixtures::BuildArgs(1);
+    Arguments args = analytical_fixtures::BuildArgs(1);
     auto preflightResult = filter.preflight(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = filter.execute(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    AnalyticalFixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
+    analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);
   }
 }

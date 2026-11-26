@@ -161,23 +161,23 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // The number of vertices and faces is not known until execute; create empty and resize in the algorithm.
-  constexpr usize numElements = 0;
+  constexpr usize k_NumElements = 0;
 
   // Create the Triangle Geometry
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, numElements, pVertexGroupDataName, pFaceGroupDataName,
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, k_NumElements, k_NumElements, pVertexGroupDataName, pFaceGroupDataName,
                                                                                        TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
   // NodeTypes (int8, 1 component) on the vertex AttributeMatrix
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int8, std::vector<usize>{numElements}, std::vector<usize>{1},
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int8, std::vector<usize>{k_NumElements}, std::vector<usize>{1},
                                                                  pTriangleGeometryPath.createChildPath(pVertexGroupDataName).createChildPath(pNodeTypesName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // FaceLabels (int32, 2 components) on the face AttributeMatrix
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2},
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{k_NumElements}, std::vector<usize>{2},
                                                                  pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
@@ -190,7 +190,7 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     auto compShape = iDataArray.getComponentShape();
     compShape.insert(compShape.begin(), 2);
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{k_NumElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   for(const auto& selectedDataPath : pFeatureDataPaths)
@@ -199,7 +199,7 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     auto compShape = iDataArray.getComponentShape();
     compShape.insert(compShape.begin(), 2);
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{k_NumElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -243,7 +243,7 @@ Result<> M3CSurfaceMeshingFilter::executeImpl(DataStructure& dataStructure, cons
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
@@ -251,7 +251,7 @@ constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixN
 constexpr StringLiteral k_SurfaceMeshNodeTypesArrayNameKey = "SurfaceMeshNodeTypesArrayName";
 constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
 constexpr StringLiteral k_FaceLabelsArrayNameKey = "FaceLabelsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> M3CSurfaceMeshingFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -261,13 +261,13 @@ Result<Arguments> M3CSurfaceMeshingFilter::FromSIMPLJson(const nlohmann::json& j
   std::vector<Result<>> results;
 
   // The legacy M3CSliceBySlice took the FeatureIds path; use its container as the input geometry.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_GridGeometryDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SurfaceDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshNodeTypesArrayNameKey, k_NodeTypesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceDataGroupName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceLabelsArrayNameKey, k_FaceLabelsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GridGeometryDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceMeshNodeTypesArrayNameKey, k_NodeTypesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceDataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceLabelsArrayNameKey, k_FaceLabelsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

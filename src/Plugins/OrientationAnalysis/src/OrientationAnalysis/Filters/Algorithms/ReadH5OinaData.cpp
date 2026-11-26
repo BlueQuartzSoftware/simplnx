@@ -44,7 +44,7 @@ const std::vector<std::pair<std::string, usize>> k_RequiredDataSets = {
  * to the longer extent and the extra rows would be silently dropped, which is not a
  * result a caller can distinguish from a correct import.
  */
-Result<> validateDataSetExtents(const std::filesystem::path& filePath, const std::string& scanName, usize totalPoints)
+Result<> ValidateDataSetExtents(const std::filesystem::path& filePath, const std::string& scanName, usize totalPoints)
 {
   hid_t fileId = H5Support::H5Utilities::openFile(filePath.string(), true);
   if(fileId < 0)
@@ -84,12 +84,12 @@ Result<> validateDataSetExtents(const std::filesystem::path& filePath, const std
 }
 
 template <typename T>
-Result<> copyRawData(const ReadH5DataInputValues* inputValues, usize count, DataStructure& dataStructure, ebsdlib::H5OINAReader& reader, const std::string& name, usize offset,
+Result<> CopyRawData(const ReadH5DataInputValues* inputValues, usize count, DataStructure& dataStructure, ebsdlib::H5OINAReader& reader, const std::string& name, usize offset,
                      const std::atomic_bool& shouldCancel)
 {
   using ArrayType = DataArray<T>;
   auto& dataRef = dataStructure.getDataRefAs<ArrayType>(inputValues->CellAttributeMatrixPath.createChildPath(name));
-  const auto* rawData = reinterpret_cast<const T*>(reader.getPointerByName(name));
+  const auto* rawDataPtr = reinterpret_cast<const T*>(reader.getPointerByName(name));
   constexpr usize k_ValuesPerBatch = 65536;
   for(usize localOffset = 0; localOffset < count; localOffset += k_ValuesPerBatch)
   {
@@ -98,7 +98,7 @@ Result<> copyRawData(const ReadH5DataInputValues* inputValues, usize count, Data
       return {};
     }
     const usize batchCount = std::min(k_ValuesPerBatch, count - localOffset);
-    Result<> result = dataRef.getDataStoreRef().copyFromBuffer(offset + localOffset, nonstd::span<const T>(rawData + localOffset, batchCount));
+    Result<> result = dataRef.getDataStoreRef().copyFromBuffer(offset + localOffset, nonstd::span<const T>(rawDataPtr + localOffset, batchCount));
     if(result.invalid())
     {
       return result;
@@ -119,7 +119,7 @@ Result<> copyRawData(const ReadH5DataInputValues* inputValues, usize count, Data
  * @pre Phase indices are validated against the ensemble array.
  */
 template <typename T>
-Result<> convertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize totalPoints, usize tupleOffset, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
+Result<> ConvertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize totalPoints, usize tupleOffset, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
   using ArrayType = DataArray<T>;
 
@@ -254,13 +254,13 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
 
   const std::string& scanName = m_CurrentScanName;
 
-  if(Result<> extentResults = validateDataSetExtents(m_InputValues->SelectedScanNames.inputFilePath, scanName, totalPoints); extentResults.invalid())
+  if(Result<> extentResults = ValidateDataSetExtents(m_InputValues->SelectedScanNames.inputFilePath, scanName, totalPoints); extentResults.invalid())
   {
     return extentResults;
   }
 
   const auto copy = [this](auto typeTag, usize count, const std::string& name, usize offset) {
-    return copyRawData<decltype(typeTag)>(m_InputValues, count, m_DataStructure, *m_Reader, name, offset, m_ShouldCancel);
+    return CopyRawData<decltype(typeTag)>(m_InputValues, count, m_DataStructure, *m_Reader, name, offset, m_ShouldCancel);
   };
   Result<> result = copy(uint8{}, totalPoints, ebsdlib::H5OINA::BandContrast, tupleOffset);
   if(result.invalid())
@@ -364,11 +364,11 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
   {
     if(m_InputValues->ConvertPhaseToInt32)
     {
-      result = convertHexEulerAngle<int32>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
+      result = ConvertHexEulerAngle<int32>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
     }
     else
     {
-      result = convertHexEulerAngle<uint8>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
+      result = ConvertHexEulerAngle<uint8>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
     }
     if(result.invalid())
     {

@@ -198,7 +198,7 @@ Result<> RegularizeZSpacing::operator()()
     const std::string srcName = oldDataArrayPtr->getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     {
-      std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+      std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
       m_MessageHandler.sendInfoMessage(fmt::format("Copying Data Array: '{}'", srcName));
     }
 
@@ -243,7 +243,7 @@ Result<> RegularizeZSpacing::operator()()
 // -----------------------------------------------------------------------------
 void RegularizeZSpacing::sendThreadSafeProgressMessage(usize completedPlanes)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(completedPlanes);
 }
 } // namespace nx::core

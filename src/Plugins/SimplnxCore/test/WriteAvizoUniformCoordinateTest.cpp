@@ -36,20 +36,20 @@ namespace
 {
 DataPath CreateUniformWriterInput(DataStructure& dataStructure, const SizeVec3& dims, const std::vector<int32>& labels)
 {
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions(dims);
-  REQUIRE(geometry->setSpacing({2, 3, 4}).valid());
-  REQUIRE(geometry->setOrigin({10, -5, 2}).valid());
+  auto* geometryPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometryPtr != nullptr);
+  geometryPtr->setDimensions(dims);
+  REQUIRE(geometryPtr->setSpacing({2, 3, 4}).valid());
+  REQUIRE(geometryPtr->setOrigin({10, -5, 2}).valid());
   const ShapeType shape = {dims[2], dims[1], dims[0]};
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
-  REQUIRE(cells != nullptr);
-  geometry->setCellData(cells->getId());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", shape, geometryPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geometryPtr->setCellData(cellsPtr->getId());
   const DataPath labelsPath({"Image", "Cells", "Labels"});
-  auto* array = Int32Array::Create(dataStructure, "Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, labelsPath, shape, {1}), cells->getId());
-  REQUIRE(array != nullptr);
-  REQUIRE(labels.size() == array->getNumberOfTuples());
-  auto writeResult = array->getDataStoreRef().copyFromBuffer(0, labels);
+  auto* arrayPtr = Int32Array::Create(dataStructure, "Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, labelsPath, shape, {1}), cellsPtr->getId());
+  REQUIRE(arrayPtr != nullptr);
+  REQUIRE(labels.size() == arrayPtr->getNumberOfTuples());
+  auto writeResult = arrayPtr->getDataStoreRef().copyFromBuffer(0, labels);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   return labelsPath;
 }
@@ -309,7 +309,7 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: SIMPL Backwards Compa
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -322,22 +322,22 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: SIMPL Backwards Compa
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteAvizoUniformCoordinateFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteAvizoUniformCoordinateFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteAvizoUniformCoordinateFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<bool>(WriteAvizoUniformCoordinateFilter::k_WriteBinaryFile_Key) == true);
       CHECK(args.value<DataPath>(WriteAvizoUniformCoordinateFilter::k_GeometryPath_Key) == DataPath({"DataContainer"}));

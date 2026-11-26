@@ -274,12 +274,12 @@ protected:
   template <class T>
   std::optional<IdType> adoptCopiedChild(const DataPath& copyPath, const std::string& childName)
   {
-    const auto* childCopy = getDataStructureRef().template getDataAs<T>(copyPath.createChildPath(childName));
-    if(childCopy == nullptr)
+    const auto* childCopyPtr = getDataStructureRef().template getDataAs<T>(copyPath.createChildPath(childName));
+    if(childCopyPtr == nullptr)
     {
       return {};
     }
-    return childCopy->getId();
+    return childCopyPtr->getId();
   }
 
   /**

@@ -46,11 +46,11 @@ inline constexpr StringLiteral k_SetSpacingLabel = "Set Spacing";
 inline void InsertGeometryOverrideParameters(Parameters& params)
 {
   using V = VectorFloat32Parameter::ValueType;
-  using Names = VectorFloat32Parameter::NamesType;
+  using NamesType = VectorFloat32Parameter::NamesType;
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin, k_SetOriginLabel, "Use the supplied origin for the imported image.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin, "Origin (Physical Units)", "Origin coordinates in X, Y, Z order.", V{0.0F, 0.0F, 0.0F}, Names{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin, "Origin (Physical Units)", "Origin coordinates in X, Y, Z order.", V{0.0F, 0.0F, 0.0F}, NamesType{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing, k_SetSpacingLabel, "Use the supplied spacing for the imported image.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing, "Spacing (Physical Units)", "Positive spacing in X, Y, Z order.", V{1.0F, 1.0F, 1.0F}, Names{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing, "Spacing (Physical Units)", "Positive spacing in X, Y, Z order.", V{1.0F, 1.0F, 1.0F}, NamesType{"X", "Y", "Z"}));
   params.linkParameters(k_ChangeOrigin, k_Origin, true);
   params.linkParameters(k_ChangeSpacing, k_Spacing, true);
 }

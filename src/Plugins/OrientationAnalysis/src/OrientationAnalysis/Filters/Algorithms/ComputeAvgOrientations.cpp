@@ -231,15 +231,15 @@ bool CheckedMultiply(usize lhs, usize rhs, usize& product)
  */
 Result<> ValidateFloatOutput(DataStructure& dataStructure, const DataPath& path, usize tupleCount, usize componentCount)
 {
-  const auto* array = dataStructure.getDataAs<Float32Array>(path);
-  if(array == nullptr)
+  const auto* arrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  if(arrayPtr == nullptr)
   {
     return MakeErrorResult(-54674, fmt::format("ComputeAvgOrientations: required Float32 output array '{}' does not exist.", path.toString()));
   }
-  if(array->getNumberOfTuples() != tupleCount || array->getNumberOfComponents() != componentCount)
+  if(arrayPtr->getNumberOfTuples() != tupleCount || arrayPtr->getNumberOfComponents() != componentCount)
   {
     return MakeErrorResult(-54675, fmt::format("ComputeAvgOrientations: output array '{}' has {} tuples and {} components; expected {} tuples and {} components.", path.toString(),
-                                               array->getNumberOfTuples(), array->getNumberOfComponents(), tupleCount, componentCount));
+                                               arrayPtr->getNumberOfTuples(), arrayPtr->getNumberOfComponents(), tupleCount, componentCount));
   }
   return {};
 }
@@ -285,24 +285,24 @@ struct DirectionalOutputBuffers
     const float32 nan = std::numeric_limits<float32>::quiet_NaN();
     if(useVmf)
     {
-      VmfQuats.assign(featureCount * 4, nan);
-      VmfEuler.assign(featureCount * 3, nan);
-      VmfKappa.assign(featureCount, nan);
+      vmf_quats.assign(featureCount * 4, nan);
+      vmf_euler.assign(featureCount * 3, nan);
+      vmf_kappa.assign(featureCount, nan);
     }
     if(useWatson)
     {
-      WatsonQuats.assign(featureCount * 4, nan);
-      WatsonEuler.assign(featureCount * 3, nan);
-      WatsonKappa.assign(featureCount, nan);
+      watson_quats.assign(featureCount * 4, nan);
+      watson_euler.assign(featureCount * 3, nan);
+      watson_kappa.assign(featureCount, nan);
     }
   }
 
-  std::vector<float32> VmfQuats;
-  std::vector<float32> VmfEuler;
-  std::vector<float32> VmfKappa;
-  std::vector<float32> WatsonQuats;
-  std::vector<float32> WatsonEuler;
-  std::vector<float32> WatsonKappa;
+  std::vector<float32> vmf_quats;
+  std::vector<float32> vmf_euler;
+  std::vector<float32> vmf_kappa;
+  std::vector<float32> watson_quats;
+  std::vector<float32> watson_euler;
+  std::vector<float32> watson_kappa;
 };
 
 /**
@@ -379,7 +379,7 @@ Result<> ComputeDirectionalFeature(usize featureId, const ebsdlib::LaueOps::Poin
 
   if(inputValues.useVonMisesAverage)
   {
-    Result<> result = computeEstimate("VMF", outputs.VmfQuats, outputs.VmfEuler, outputs.VmfKappa);
+    Result<> result = computeEstimate("VMF", outputs.vmf_quats, outputs.vmf_euler, outputs.vmf_kappa);
     if(result.invalid() || shouldCancel)
     {
       return result;
@@ -387,7 +387,7 @@ Result<> ComputeDirectionalFeature(usize featureId, const ebsdlib::LaueOps::Poin
   }
   if(inputValues.useWatsonAverage)
   {
-    Result<> result = computeEstimate("WAT", outputs.WatsonQuats, outputs.WatsonEuler, outputs.WatsonKappa);
+    Result<> result = computeEstimate("WAT", outputs.watson_quats, outputs.watson_euler, outputs.watson_kappa);
     if(result.invalid() || shouldCancel)
     {
       return result;
@@ -520,7 +520,7 @@ ComputeAvgOrientations::~ComputeAvgOrientations() noexcept = default;
 
 void ComputeAvgOrientations::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
 
   m_Throttle.incrementPercent(counter);
 }
@@ -530,9 +530,9 @@ Result<> ComputeAvgOrientations::operator()()
   std::vector<const IArray*> targets;
   targets.reserve(13);
   const auto appendTarget = [&](const DataPath& path) {
-    if(const auto* array = m_DataStructure.getDataAs<IArray>(path); array != nullptr)
+    if(const auto* arrayPtr = m_DataStructure.getDataAs<IArray>(path); arrayPtr != nullptr)
     {
-      targets.push_back(array);
+      targets.push_back(arrayPtr);
     }
   };
 
@@ -651,54 +651,54 @@ Result<> ComputeAvgOrientations::executeScanline()
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
   }
 
-  const auto* featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
-  const auto* phases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  const auto* quaternions = m_DataStructure.getDataAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
-  const auto* crystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
-  if(featureIds == nullptr || phases == nullptr || quaternions == nullptr || crystalStructures == nullptr)
+  const auto* featureIdsPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
+  const auto* phasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+  const auto* quaternionsPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
+  const auto* crystalStructuresPtr = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  if(featureIdsPtr == nullptr || phasesPtr == nullptr || quaternionsPtr == nullptr || crystalStructuresPtr == nullptr)
   {
     return MakeErrorResult(-54674, "ComputeAvgOrientations: one or more required input arrays are missing or have the wrong scalar type.");
   }
-  const usize tupleCount = featureIds->getNumberOfTuples();
-  if(featureIds->getNumberOfComponents() != 1 || phases->getNumberOfComponents() != 1 || quaternions->getNumberOfComponents() != 4 || crystalStructures->getNumberOfComponents() != 1 ||
-     phases->getNumberOfTuples() != tupleCount || quaternions->getNumberOfTuples() != tupleCount)
+  const usize tupleCount = featureIdsPtr->getNumberOfTuples();
+  if(featureIdsPtr->getNumberOfComponents() != 1 || phasesPtr->getNumberOfComponents() != 1 || quaternionsPtr->getNumberOfComponents() != 4 || crystalStructuresPtr->getNumberOfComponents() != 1 ||
+     phasesPtr->getNumberOfTuples() != tupleCount || quaternionsPtr->getNumberOfTuples() != tupleCount)
   {
     return MakeErrorResult(
         -54675,
         fmt::format("ComputeAvgOrientations: FeatureIds, Phases, and Quaternions must have identical tuple counts and component counts 1, 1, and 4; observed tuples {}/{}/{} and components {}/{}/{}.",
-                    tupleCount, phases->getNumberOfTuples(), quaternions->getNumberOfTuples(), featureIds->getNumberOfComponents(), phases->getNumberOfComponents(),
-                    quaternions->getNumberOfComponents()));
+                    tupleCount, phasesPtr->getNumberOfTuples(), quaternionsPtr->getNumberOfTuples(), featureIdsPtr->getNumberOfComponents(), phasesPtr->getNumberOfComponents(),
+                    quaternionsPtr->getNumberOfComponents()));
   }
   usize quaternionValueCount = 0;
   if(!CheckedMultiply(tupleCount, usize{4}, quaternionValueCount))
   {
     return MakeErrorResult(-54676, fmt::format("ComputeAvgOrientations: {} quaternion tuples cannot be addressed as four-component values on this platform.", tupleCount));
   }
-  if(quaternions->getSize() != quaternionValueCount)
+  if(quaternionsPtr->getSize() != quaternionValueCount)
   {
-    return MakeErrorResult(
-        -54675, fmt::format("ComputeAvgOrientations: quaternion array '{}' has {} values; expected {} tuples times four components.", quaternions->getName(), quaternions->getSize(), tupleCount));
+    return MakeErrorResult(-54675, fmt::format("ComputeAvgOrientations: quaternion array '{}' has {} values; expected {} tuples times four components.", quaternionsPtr->getName(),
+                                               quaternionsPtr->getSize(), tupleCount));
   }
 
-  const DataPath* featureCountPath = nullptr;
+  const DataPath* featureCountPathPtr = nullptr;
   if(m_InputValues->useRodriguesAverage)
   {
-    featureCountPath = &m_InputValues->avgEulerAnglesArrayPath;
+    featureCountPathPtr = &m_InputValues->avgEulerAnglesArrayPath;
   }
   else if(m_InputValues->useVonMisesAverage)
   {
-    featureCountPath = &m_InputValues->VMFEulerAnglesArrayPath;
+    featureCountPathPtr = &m_InputValues->VMFEulerAnglesArrayPath;
   }
   else
   {
-    featureCountPath = &m_InputValues->WatsonEulerAnglesArrayPath;
+    featureCountPathPtr = &m_InputValues->WatsonEulerAnglesArrayPath;
   }
-  const auto* featureCountArray = m_DataStructure.getDataAs<Float32Array>(*featureCountPath);
-  if(featureCountArray == nullptr)
+  const auto* featureCountArrayPtr = m_DataStructure.getDataAs<Float32Array>(*featureCountPathPtr);
+  if(featureCountArrayPtr == nullptr)
   {
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
   }
-  m_NumberOfFeatures = featureCountArray->getNumberOfTuples();
+  m_NumberOfFeatures = featureCountArrayPtr->getNumberOfTuples();
 
   const auto validateOutputs = [&](bool enabled, const DataPath& quaternionPath, const DataPath& eulerPath, const DataPath* kappaPath) -> Result<> {
     if(!enabled)
@@ -733,7 +733,7 @@ Result<> ComputeAvgOrientations::executeScanline()
     return outputResult;
   }
 
-  const auto& featureIdsStore = featureIds->getDataStoreRef();
+  const auto& featureIdsStore = featureIdsPtr->getDataStoreRef();
   auto featureBuffer = std::make_unique<int32[]>(k_ChunkTuples);
   int32 minimumFeatureId = std::numeric_limits<int32>::max();
   int32 maximumFeatureId = std::numeric_limits<int32>::lowest();
@@ -762,12 +762,12 @@ Result<> ComputeAvgOrientations::executeScanline()
   {
     return MakeErrorResult(
         -5355, fmt::format("Feature Ids array with name '{}' has negative values within the array. The most negative value encountered was '{}'. All values must be positive within the array",
-                           featureIds->getName(), minimumFeatureId));
+                           featureIdsPtr->getName(), minimumFeatureId));
   }
   if(tupleCount > 0 && static_cast<uint64>(maximumFeatureId) >= static_cast<uint64>(m_NumberOfFeatures))
   {
-    return MakeErrorResult(-5351, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected Data Path: '{}'", featureIds->getName(),
-                                              maximumFeatureId, m_NumberOfFeatures, featureCountPath->toString()));
+    return MakeErrorResult(-5351, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected Data Path: '{}'", featureIdsPtr->getName(),
+                                              maximumFeatureId, m_NumberOfFeatures, featureCountPathPtr->toString()));
   }
 
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
@@ -1272,14 +1272,14 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
     return WriteFloatOutput(m_DataStructure, kappaPath, m_NumberOfFeatures, 1, kappas);
   };
 
-  Result<> writeResult = writeOutput(m_InputValues->useVonMisesAverage, m_InputValues->VMFQuatsArrayPath, m_InputValues->VMFEulerAnglesArrayPath, m_InputValues->VMFKappaArrayPath, outputs.VmfQuats,
-                                     outputs.VmfEuler, outputs.VmfKappa);
+  Result<> writeResult = writeOutput(m_InputValues->useVonMisesAverage, m_InputValues->VMFQuatsArrayPath, m_InputValues->VMFEulerAnglesArrayPath, m_InputValues->VMFKappaArrayPath, outputs.vmf_quats,
+                                     outputs.vmf_euler, outputs.vmf_kappa);
   if(writeResult.invalid() || m_ShouldCancel)
   {
     return writeResult;
   }
-  writeResult = writeOutput(m_InputValues->useWatsonAverage, m_InputValues->WatsonQuatsArrayPath, m_InputValues->WatsonEulerAnglesArrayPath, m_InputValues->WatsonKappaArrayPath, outputs.WatsonQuats,
-                            outputs.WatsonEuler, outputs.WatsonKappa);
+  writeResult = writeOutput(m_InputValues->useWatsonAverage, m_InputValues->WatsonQuatsArrayPath, m_InputValues->WatsonEulerAnglesArrayPath, m_InputValues->WatsonKappaArrayPath, outputs.watson_quats,
+                            outputs.watson_euler, outputs.watson_kappa);
   if(writeResult.invalid() || m_ShouldCancel)
   {
     return writeResult;

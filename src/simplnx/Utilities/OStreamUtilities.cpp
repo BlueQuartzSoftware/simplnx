@@ -572,32 +572,32 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
       std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
 
       Result<> result;
-      auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-      if(dataArray != nullptr)
+      auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
+      if(dataArrayPtr != nullptr)
       {
         if(exportToBinary)
         {
-          result = ExecuteDataFunction(PrintBinaryDataArray{}, dataArray->getDataType(), outStrm, *dataArray, shouldCancel, swapEndian);
+          result = ExecuteDataFunction(PrintBinaryDataArray{}, dataArrayPtr->getDataType(), outStrm, *dataArrayPtr, shouldCancel, swapEndian);
         }
         else
         {
-          result = ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outStrm, *dataArray, mesgHandler, shouldCancel, delimiter, tuplesPerLine);
+          result = ExecuteDataFunction(PrintDataArray{}, dataArrayPtr->getDataType(), outStrm, *dataArrayPtr, mesgHandler, shouldCancel, delimiter, tuplesPerLine);
         }
       }
-      auto* stringArray = dataStructure.getDataAs<StringArray>(dataPath);
-      if(stringArray != nullptr)
+      auto* stringArrayPtr = dataStructure.getDataAs<StringArray>(dataPath);
+      if(stringArrayPtr != nullptr)
       {
-        PrintStringArray(outStrm, *stringArray, mesgHandler, shouldCancel, delimiter);
+        PrintStringArray(outStrm, *stringArrayPtr, mesgHandler, shouldCancel, delimiter);
       }
-      auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
-      if(neighborList != nullptr)
+      auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataPath);
+      if(neighborListPtr != nullptr)
       {
         if(exportToBinary)
         {
           throw std::runtime_error(
               fmt::format("{}({}): Function {}: Error. Cannot print a NeighborList to binary: '{}'", "PrintDataSetsToMultipleFiles", __FILE__, __LINE__, dataPath.getTargetName()));
         }
-        ExecuteNeighborFunction(PrintNeighborList{}, neighborList->getDataType(), outStrm, neighborList, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
+        ExecuteNeighborFunction(PrintNeighborList{}, neighborListPtr->getDataType(), outStrm, neighborListPtr, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
       }
       if(result.invalid())
       {
@@ -626,20 +626,20 @@ void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
 {
   mesgHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
 
-  auto* dataArray = dataStructure.getDataAs<IDataArray>(objectPath);
-  if(dataArray != nullptr)
+  auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(objectPath);
+  if(dataArrayPtr != nullptr)
   {
-    ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outputStrm, *dataArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
+    ExecuteDataFunction(PrintDataArray{}, dataArrayPtr->getDataType(), outputStrm, *dataArrayPtr, mesgHandler, shouldCancel, delimiter, componentsPerLine);
   }
-  auto* stringArray = dataStructure.getDataAs<StringArray>(objectPath);
-  if(stringArray != nullptr)
+  auto* stringArrayPtr = dataStructure.getDataAs<StringArray>(objectPath);
+  if(stringArrayPtr != nullptr)
   {
-    PrintStringArray(outputStrm, *stringArray, mesgHandler, shouldCancel, delimiter);
+    PrintStringArray(outputStrm, *stringArrayPtr, mesgHandler, shouldCancel, delimiter);
   }
-  auto* neighborList = dataStructure.getDataAs<INeighborList>(objectPath);
-  if(neighborList != nullptr)
+  auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(objectPath);
+  if(neighborListPtr != nullptr)
   {
-    ExecuteNeighborFunction(PrintNeighborList{}, neighborList->getDataType(), outputStrm, neighborList, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
+    ExecuteNeighborFunction(PrintNeighborList{}, neighborListPtr->getDataType(), outputStrm, neighborListPtr, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
   }
 };
 
@@ -746,10 +746,10 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   {
     for(const auto& dataPath : neighborLists)
     {
-      auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
-      if(neighborList != nullptr)
+      auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataPath);
+      if(neighborListPtr != nullptr)
       {
-        ExecuteNeighborFunction(PrintNeighborList{}, neighborList->getDataType(), outputStrm, neighborList, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
+        ExecuteNeighborFunction(PrintNeighborList{}, neighborListPtr->getDataType(), outputStrm, neighborListPtr, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
       }
       if(shouldCancel)
       {

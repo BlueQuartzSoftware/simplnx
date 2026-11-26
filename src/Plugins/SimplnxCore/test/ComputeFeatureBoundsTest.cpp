@@ -35,7 +35,7 @@ constexpr StringLiteral k_VertexAttributeMatrixName = "VertexData";
 const DataPath k_VertexGeomPath{std::vector<std::string>{"VertexGeom"}};
 const DataPath k_VertexDataPath = k_VertexGeomPath.createChildPath(k_VertexAttributeMatrixName);
 const DataPath k_CroppedGeomPath{std::vector<std::string>{"Cropped VertexGeom"}};
-const std::vector<DataPath> targetDataArrays{k_VertexDataPath.createChildPath("DataArray")};
+const std::vector<DataPath> k_TargetDataArrays{k_VertexDataPath.createChildPath("DataArray")};
 
 constexpr usize k_BenchmarkDim = 200;
 constexpr usize k_BenchmarkBlockSize = k_BenchmarkDim / 2;
@@ -53,17 +53,17 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
-  imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  REQUIRE(imageGeom->setOrigin({-10.0f, 2.0f, 5.0f}).valid());
-  REQUIRE(imageGeom->setSpacing({0.5f, 1.5f, 2.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
+  imageGeomPtr->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
+  REQUIRE(imageGeomPtr->setOrigin({-10.0f, 2.0f, 5.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({0.5f, 1.5f, 2.0f}).valid());
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIds = Int32Array::Create(dataStructure, k_BenchmarkFeatureIdsName, featureIdsStore, cellData->getId());
-  auto& featureIdsStoreRef = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, k_BenchmarkFeatureIdsName, featureIdsStore, cellDataPtr->getId());
+  auto& featureIdsStoreRef = featureIdsPtr->getDataStoreRef();
 
   constexpr usize k_SliceSize = k_BenchmarkDim * k_BenchmarkDim;
   auto sliceBuffer = std::make_unique<int32[]>(k_SliceSize);
@@ -84,7 +84,7 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
-  AttributeMatrix::Create(dataStructure, k_BenchmarkFeatureDataName, {k_BenchmarkFeatureCount + 1}, imageGeom->getId());
+  AttributeMatrix::Create(dataStructure, k_BenchmarkFeatureDataName, {k_BenchmarkFeatureCount + 1}, imageGeomPtr->getId());
 }
 } // namespace
 
@@ -96,23 +96,23 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Keeps All Boxes An
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({4, 3, 2});
-  REQUIRE(imageGeom->setOrigin({1, 2, 3}).valid());
-  REQUIRE(imageGeom->setSpacing({0.5f, 1, 2}).valid());
-  auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 3, 4}, imageGeom->getId());
-  REQUIRE(cellAm != nullptr);
-  imageGeom->setCellData(*cellAm);
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {2, 3, 4}, {1}, cellAm->getId());
-  REQUIRE(featureIds != nullptr);
-  featureIds->fill(-1);
-  (*featureIds)[0] = 1;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 3, 2});
+  REQUIRE(imageGeomPtr->setOrigin({1, 2, 3}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({0.5f, 1, 2}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 3, 4}, imageGeomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {2, 3, 4}, {1}, cellAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  featureIdsPtr->fill(-1);
+  (*featureIdsPtr)[0] = 1;
   for(usize cellIdx : {18, 19, 22, 23})
   {
-    (*featureIds)[cellIdx] = 3;
+    (*featureIdsPtr)[cellIdx] = 3;
   }
-  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {4}, imageGeom->getId()) != nullptr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {4}, imageGeomPtr->getId()) != nullptr);
 
   ComputeFeatureBoundsFilter filter;
   Arguments args;
@@ -176,25 +176,25 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Feature AM Larger Than Max I
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
-  REQUIRE(vertexGeom != nullptr);
-  auto* vertices = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {3}, {3}, vertexGeom->getId());
-  REQUIRE(vertices != nullptr);
-  vertexGeom->setVertices(*vertices);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
+  REQUIRE(vertexGeomPtr != nullptr);
+  auto* verticesPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {3}, {3}, vertexGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  vertexGeomPtr->setVertices(*verticesPtr);
   const std::array<float32, 9> coordinates = {-1, 0.5f, 7, 1, 2, 3, 4, 6, 9};
   for(usize valueIdx = 0; valueIdx < coordinates.size(); valueIdx++)
   {
-    (*vertices)[valueIdx] = coordinates[valueIdx];
+    (*verticesPtr)[valueIdx] = coordinates[valueIdx];
   }
-  auto* vertexAm = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, vertexGeom->getId());
-  REQUIRE(vertexAm != nullptr);
-  vertexGeom->setVertexAttributeMatrix(*vertexAm);
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {3}, {1}, vertexAm->getId());
-  REQUIRE(featureIds != nullptr);
-  (*featureIds)[0] = 0;
-  (*featureIds)[1] = 1;
-  (*featureIds)[2] = 1;
-  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {5}, vertexGeom->getId()) != nullptr);
+  auto* vertexAmPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, vertexGeomPtr->getId());
+  REQUIRE(vertexAmPtr != nullptr);
+  vertexGeomPtr->setVertexAttributeMatrix(*vertexAmPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {3}, {1}, vertexAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  (*featureIdsPtr)[0] = 0;
+  (*featureIdsPtr)[1] = 1;
+  (*featureIdsPtr)[2] = 1;
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {5}, vertexGeomPtr->getId()) != nullptr);
 
   ComputeFeatureBoundsFilter filter;
   Arguments args;
@@ -231,18 +231,18 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Reject Multi Component Featu
 {
   UnitTest::LoadPlugins();
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({1, 1, 1});
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
-  auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 1}, imageGeom->getId());
-  REQUIRE(cellAm != nullptr);
-  imageGeom->setCellData(*cellAm);
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {1, 1, 1}, {2}, cellAm->getId());
-  REQUIRE(featureIds != nullptr);
-  featureIds->fill(0);
-  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {1}, imageGeom->getId()) != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({1, 1, 1});
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 1}, imageGeomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {1, 1, 1}, {2}, cellAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  featureIdsPtr->fill(0);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {1}, imageGeomPtr->getId()) != nullptr);
 
   ComputeFeatureBoundsFilter filter;
   Arguments args;
@@ -263,40 +263,40 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "ImageGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "ImageGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, kGeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
   dims[2] = 5;
 
-  const std::string k_CellAMName = "Cell Data";
-  const DataPath k_CellAMPath = k_GeomPath.createChildPath(k_CellAMName);
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellAMName, dims, imageGeom->getId());
+  const std::string kCellAmName = "Cell Data";
+  const DataPath kCellAmPath = kGeomPath.createChildPath(kCellAmName);
+  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, kCellAmName, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAm->getId());
-  featureIds->fill(-1);
-  (*featureIds)[6] = 1;
-  (*featureIds)[7] = 1;
-  (*featureIds)[8] = 1;
-  (*featureIds)[11] = 1;
-  (*featureIds)[12] = 1;
-  (*featureIds)[13] = 1;
-  (*featureIds)[16] = 1;
-  (*featureIds)[17] = 1;
-  (*featureIds)[18] = 1;
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
+  featureIdsPtr->fill(-1);
+  (*featureIdsPtr)[6] = 1;
+  (*featureIdsPtr)[7] = 1;
+  (*featureIdsPtr)[8] = 1;
+  (*featureIdsPtr)[11] = 1;
+  (*featureIdsPtr)[12] = 1;
+  (*featureIdsPtr)[13] = 1;
+  (*featureIdsPtr)[16] = 1;
+  (*featureIdsPtr)[17] = 1;
+  (*featureIdsPtr)[18] = 1;
 
   dims.resize(1);
   dims[0] = 2;
-  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeom->getId());
+  AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, kFeatureAmName, dims, imageGeomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -304,9 +304,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kCellAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
@@ -323,25 +323,25 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
   }
 
   // const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
-  static constexpr std::array<std::array<float32, 3>, 8> expectedVertices = {
+  static constexpr std::array<std::array<float32, 3>, 8> k_ExpectedVertices = {
       {{1.0f, 1.0f, 0.0f}, {4.0f, 1.0f, 0.0f}, {4.0f, 4.0f, 0.0f}, {1.0f, 4.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {4.0f, 1.0f, 1.0f}, {4.0f, 4.0f, 1.0f}, {1.0f, 4.0f, 1.0f}}};
 
   // define all 12 cube edges as pairs of vertex indices
-  static constexpr std::array<std::array<int32, 2>, 12> expectedEdges = {{// bottom face
-                                                                          {0, 1},
-                                                                          {1, 2},
-                                                                          {2, 3},
-                                                                          {3, 0},
-                                                                          // top face
-                                                                          {4, 5},
-                                                                          {5, 6},
-                                                                          {6, 7},
-                                                                          {7, 4},
-                                                                          // vertical sides
-                                                                          {0, 4},
-                                                                          {1, 5},
-                                                                          {2, 6},
-                                                                          {3, 7}}};
+  static constexpr std::array<std::array<int32, 2>, 12> k_ExpectedEdges = {{// bottom face
+                                                                            {0, 1},
+                                                                            {1, 2},
+                                                                            {2, 3},
+                                                                            {3, 0},
+                                                                            // top face
+                                                                            {4, 5},
+                                                                            {5, 6},
+                                                                            {6, 7},
+                                                                            {7, 4},
+                                                                            // vertical sides
+                                                                            {0, 4},
+                                                                            {1, 5},
+                                                                            {2, 6},
+                                                                            {3, 7}}};
 
   const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(DataPath({"EdgeGeom"}));
   const auto& sharedVertList = edgeGeom.getVerticesRef();
@@ -350,9 +350,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
 
   for(usize i = 0; i < sharedVertList.getNumberOfTuples(); i++)
   {
-    REQUIRE(sharedVertList[(i * 3) + 0] == expectedVertices[i][0]);
-    REQUIRE(sharedVertList[(i * 3) + 1] == expectedVertices[i][1]);
-    REQUIRE(sharedVertList[(i * 3) + 2] == expectedVertices[i][2]);
+    REQUIRE(sharedVertList[(i * 3) + 0] == k_ExpectedVertices[i][0]);
+    REQUIRE(sharedVertList[(i * 3) + 1] == k_ExpectedVertices[i][1]);
+    REQUIRE(sharedVertList[(i * 3) + 2] == k_ExpectedVertices[i][2]);
   }
 
   for(usize i = 0; i < sharedEdgeList.getNumberOfTuples(); i++)
@@ -360,8 +360,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
     // Feature 0 is reserved, so begin comparisons at feature 1.
     REQUIRE(edgeFeatureIds[i] == 1);
 
-    REQUIRE(sharedEdgeList[(i * 2) + 0] == expectedEdges[i][0]);
-    REQUIRE(sharedEdgeList[(i * 2) + 1] == expectedEdges[i][1]);
+    REQUIRE(sharedEdgeList[(i * 2) + 0] == k_ExpectedEdges[i][0]);
+    REQUIRE(sharedEdgeList[(i * 2) + 1] == k_ExpectedEdges[i][1]);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -375,40 +375,40 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
 
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "EdgeGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "EdgeGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, kGeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
   dims[2] = 5;
 
-  const std::string k_CellAMName = "Cell Data";
-  const DataPath k_CellAMPath = k_GeomPath.createChildPath(k_CellAMName);
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellAMName, dims, imageGeom->getId());
+  const std::string kCellAmName = "Cell Data";
+  const DataPath kCellAmPath = kGeomPath.createChildPath(kCellAmName);
+  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, kCellAmName, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAm->getId());
-  featureIds->fill(0);
-  (*featureIds)[6] = 1;
-  (*featureIds)[7] = 1;
-  (*featureIds)[8] = 1;
-  (*featureIds)[11] = 1;
-  (*featureIds)[12] = 1;
-  (*featureIds)[13] = 1;
-  (*featureIds)[16] = 1;
-  (*featureIds)[17] = 1;
-  (*featureIds)[18] = 1;
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
+  featureIdsPtr->fill(0);
+  (*featureIdsPtr)[6] = 1;
+  (*featureIdsPtr)[7] = 1;
+  (*featureIdsPtr)[8] = 1;
+  (*featureIdsPtr)[11] = 1;
+  (*featureIdsPtr)[12] = 1;
+  (*featureIdsPtr)[13] = 1;
+  (*featureIdsPtr)[16] = 1;
+  (*featureIdsPtr)[17] = 1;
+  (*featureIdsPtr)[18] = 1;
 
   dims.resize(1);
   dims[0] = 2;
-  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeom->getId());
+  AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, kFeatureAmName, dims, imageGeomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -416,9 +416,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kCellAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -430,7 +430,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
 
   const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
   // Feature 0 is reserved, so begin comparisons at feature 1.
   for(usize j = 0; j < 6; j++)
   {
@@ -448,40 +448,40 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
 
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "EdgeGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "EdgeGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, kGeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
   dims[2] = 5;
 
-  const std::string k_CellAMName = "Cell Data";
-  const DataPath k_CellAMPath = k_GeomPath.createChildPath(k_CellAMName);
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellAMName, dims, imageGeom->getId());
+  const std::string kCellAmName = "Cell Data";
+  const DataPath kCellAmPath = kGeomPath.createChildPath(kCellAmName);
+  AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, kCellAmName, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAm->getId());
-  featureIds->fill(0);
-  (*featureIds)[6] = 1;
-  (*featureIds)[7] = 1;
-  (*featureIds)[8] = 1;
-  (*featureIds)[11] = 1;
-  (*featureIds)[12] = 1;
-  (*featureIds)[13] = 1;
-  (*featureIds)[16] = 1;
-  (*featureIds)[17] = 1;
-  (*featureIds)[18] = 1;
+  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
+  featureIdsPtr->fill(0);
+  (*featureIdsPtr)[6] = 1;
+  (*featureIdsPtr)[7] = 1;
+  (*featureIdsPtr)[8] = 1;
+  (*featureIdsPtr)[11] = 1;
+  (*featureIdsPtr)[12] = 1;
+  (*featureIdsPtr)[13] = 1;
+  (*featureIdsPtr)[16] = 1;
+  (*featureIdsPtr)[17] = 1;
+  (*featureIdsPtr)[18] = 1;
 
   dims.resize(1);
   dims[0] = 2;
-  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeom->getId());
+  AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, kFeatureAmName, dims, imageGeomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -489,9 +489,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kCellAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
@@ -504,8 +504,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
 
   const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
   for(usize j = 0; j < 6; j++)
   {
     if(j < 3)
@@ -527,16 +527,16 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
-  auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*vertexArray);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*vertexArrayPtr);
 
-  auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {k_TupleCount}, vertexGeom->getId());
-  vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);
+  auto* vertexAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {k_TupleCount}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertexAttributeMatrix(*vertexAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     dataStore[i] = (i % 2) + 1;
@@ -545,7 +545,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
     vertices[i * 3 + 2] = i;
   }
 
-  AttributeMatrix::Create(dataStructure, "feature_data", {2 + 1}, vertexGeom->getId());
+  AttributeMatrix::Create(dataStructure, "feature_data", {2 + 1}, vertexGeomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -586,16 +586,16 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
-  auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*vertexArray);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*vertexArrayPtr);
 
-  auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {k_TupleCount}, vertexGeom->getId());
-  vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);
+  auto* vertexAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {k_TupleCount}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertexAttributeMatrix(*vertexAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     dataStore[i] = (i % 2) + 1;
@@ -604,7 +604,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
     vertices[i * 3 + 2] = i;
   }
 
-  AttributeMatrix::Create(dataStructure, "feature_data", {2 + 1}, vertexGeom->getId());
+  AttributeMatrix::Create(dataStructure, "feature_data", {2 + 1}, vertexGeomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -655,27 +655,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "EdgeGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "EdgeGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = EdgeGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
-  geom->setEdgeList(*edgesArray);
+  auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
+  geomPtr->setEdgeList(*edgesArrayPtr);
 
-  const std::string k_EdgeAMName = "Edge Data";
-  const DataPath k_EdgeAMPath = k_GeomPath.createChildPath(k_EdgeAMName);
-  auto* edgeAttributeMatrix = AttributeMatrix::Create(dataStructure, k_EdgeAMName, {k_TupleCount}, geom->getId());
-  geom->setEdgeAttributeMatrix(*edgeAttributeMatrix);
+  const std::string kEdgeAmName = "Edge Data";
+  const DataPath kEdgeAmPath = kGeomPath.createChildPath(kEdgeAmName);
+  auto* edgeAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kEdgeAmName, {k_TupleCount}, geomPtr->getId());
+  geomPtr->setEdgeAttributeMatrix(*edgeAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& edges = edgesArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& edges = edgesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     dataStore[i] = (i % 2) + 1;
@@ -687,7 +687,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
   }
   edges[((k_TupleCount - 1) * 2) + 1] = 0;
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {2 + 1}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -695,9 +695,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_EdgeAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kEdgeAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -709,7 +709,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}, std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < unified.getNumberOfTuples(); i++)
   {
@@ -729,27 +729,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "EdgeGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "EdgeGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = EdgeGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
-  geom->setEdgeList(*edgesArray);
+  auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
+  geomPtr->setEdgeList(*edgesArrayPtr);
 
-  const std::string k_EdgeAMName = "Edge Data";
-  const DataPath k_EdgeAMPath = k_GeomPath.createChildPath(k_EdgeAMName);
-  auto* edgeAttributeMatrix = AttributeMatrix::Create(dataStructure, k_EdgeAMName, {k_TupleCount}, geom->getId());
-  geom->setEdgeAttributeMatrix(*edgeAttributeMatrix);
+  const std::string kEdgeAmName = "Edge Data";
+  const DataPath kEdgeAmPath = kGeomPath.createChildPath(kEdgeAmName);
+  auto* edgeAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kEdgeAmName, {k_TupleCount}, geomPtr->getId());
+  geomPtr->setEdgeAttributeMatrix(*edgeAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& edges = edgesArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& edges = edgesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     dataStore[i] = (i % 2) + 1;
@@ -761,7 +761,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
   }
   edges[((k_TupleCount - 1) * 2) + 1] = 0;
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {2 + 1}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -769,9 +769,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_EdgeAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kEdgeAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
@@ -784,8 +784,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}, std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < min.getNumberOfTuples(); i++)
   {
@@ -812,27 +812,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "TriangleGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "TriangleGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  const std::string k_FaceAMName = "Face Data";
-  const DataPath k_FaceAMPath = k_GeomPath.createChildPath(k_FaceAMName);
-  auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, k_FaceAMName, {2}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceAttributeMatrix);
+  const std::string kFaceAmName = "Face Data";
+  const DataPath kFaceAmPath = kGeomPath.createChildPath(kFaceAmName);
+  auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -843,7 +843,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
   dataStore[0] = 1;
   dataStore[1] = 2;
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {2 + 1}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -851,9 +851,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kFaceAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -865,7 +865,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f}, std::array<float32, 6>{3.0f, 3.0f, 3.0f, 5.0f, 5.0f, 5.0f}};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < unified.getNumberOfTuples(); i++)
   {
@@ -885,27 +885,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "TriangleGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "TriangleGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  const std::string k_FaceAMName = "Face Data";
-  const DataPath k_FaceAMPath = k_GeomPath.createChildPath(k_FaceAMName);
-  auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, k_FaceAMName, {2}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceAttributeMatrix);
+  const std::string kFaceAmName = "Face Data";
+  const DataPath kFaceAmPath = kGeomPath.createChildPath(kFaceAmName);
+  auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -916,7 +916,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
   dataStore[0] = 1;
   dataStore[1] = 2;
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {3}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {3}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -924,9 +924,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kFaceAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
@@ -939,8 +939,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f}, std::array<float32, 6>{3.0f, 3.0f, 3.0f, 5.0f, 5.0f, 5.0f}};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < min.getNumberOfTuples(); i++)
   {
@@ -967,27 +967,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "QuadGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "QuadGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = QuadGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = QuadGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  const std::string k_FaceAMName = "Face Data";
-  const DataPath k_FaceAMPath = k_GeomPath.createChildPath(k_FaceAMName);
-  auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, k_FaceAMName, {2}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceAttributeMatrix);
+  const std::string kFaceAmName = "Face Data";
+  const DataPath kFaceAmPath = kGeomPath.createChildPath(kFaceAmName);
+  auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     faces[i] = i;
@@ -998,7 +998,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
   dataStore[0] = 1;
   dataStore[1] = 2;
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {2 + 1}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -1006,9 +1006,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kFaceAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -1020,7 +1020,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 3.0f, 3.0f, 3.0f}, std::array<float32, 6>{4.0f, 4.0f, 4.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < unified.getNumberOfTuples(); i++)
   {
@@ -1040,27 +1040,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "QuadGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "QuadGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = QuadGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = QuadGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  const std::string k_FaceAMName = "Face Data";
-  const DataPath k_FaceAMPath = k_GeomPath.createChildPath(k_FaceAMName);
-  auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, k_FaceAMName, {2}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceAttributeMatrix);
+  const std::string kFaceAmName = "Face Data";
+  const DataPath kFaceAmPath = kGeomPath.createChildPath(kFaceAmName);
+  auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     faces[i] = i;
@@ -1071,7 +1071,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
   dataStore[0] = 1;
   dataStore[1] = 2;
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2 + 1}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {2 + 1}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -1079,9 +1079,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kFaceAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
@@ -1094,8 +1094,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 3.0f, 3.0f, 3.0f}, std::array<float32, 6>{4.0f, 4.0f, 4.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < min.getNumberOfTuples(); i++)
   {
@@ -1119,26 +1119,26 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
 {
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "TriangleGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "TriangleGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  const std::string k_FaceAMName = "Face Data";
-  const DataPath k_FaceAMPath = k_GeomPath.createChildPath(k_FaceAMName);
-  auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, k_FaceAMName, {2}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceAttributeMatrix);
+  const std::string kFaceAmName = "Face Data";
+  const DataPath kFaceAmPath = kGeomPath.createChildPath(kFaceAmName);
+  auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {4}, {1});
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {4}, {1});
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {3}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {3}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -1146,9 +1146,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"feature_ids"})));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
@@ -1166,27 +1166,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  const std::string k_GeomName = "TriangleGeom";
-  const DataPath k_GeomPath({k_GeomName});
-  const std::string k_FeatureAMName = "Feature Data";
-  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+  const std::string kGeomName = "TriangleGeom";
+  const DataPath kGeomPath({kGeomName});
+  const std::string kFeatureAmName = "Feature Data";
+  const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
+  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  const std::string k_FaceAMName = "Face Data";
-  const DataPath k_FaceAMPath = k_GeomPath.createChildPath(k_FaceAMName);
-  auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, k_FaceAMName, {2}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceAttributeMatrix);
+  const std::string kFaceAmName = "Face Data";
+  const DataPath kFaceAmPath = kGeomPath.createChildPath(kFaceAmName);
+  auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrix->getId());
-  auto& dataStore = dataArray->getDataStoreRef();
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto& dataStore = dataArrayPtr->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -1197,7 +1197,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
   dataStore[0] = 1;
   dataStore[1] = 4;
 
-  AttributeMatrix::Create(dataStructure, k_FeatureAMName, {3}, geom->getId());
+  AttributeMatrix::Create(dataStructure, kFeatureAmName, {3}, geomPtr->getId());
 
   {
     // Configure the filter arguments.
@@ -1205,9 +1205,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
     Arguments args;
 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FaceAMPath.createChildPath("feature_ids")));
-    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(kFaceAmPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(kFeatureAmPath));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 

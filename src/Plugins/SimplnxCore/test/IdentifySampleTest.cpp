@@ -53,31 +53,31 @@ const DataPath k_NonSquareMaskPath = k_NonSquareImagePath.createChildPath("CellD
 DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims, bool useConfiguredStore = false)
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_NonSquareImagePath.getTargetName());
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(dims);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_NonSquareImagePath.getTargetName());
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(dims);
 
   const ShapeType imageShape{dims[0], dims[1], dims[2]};
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, "CellData", imageShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", imageShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   std::shared_ptr<AbstractDataStore<bool>> maskStore;
   if(useConfiguredStore)
   {
-    maskStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_NonSquareMaskPath, cellData->getShape(), ShapeType{1});
+    maskStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_NonSquareMaskPath, cellDataPtr->getShape(), ShapeType{1});
   }
   else
   {
-    maskStore = std::make_shared<BoolDataStore>(cellData->getShape(), ShapeType{1}, std::optional<bool>{});
+    maskStore = std::make_shared<BoolDataStore>(cellDataPtr->getShape(), ShapeType{1}, std::optional<bool>{});
   }
-  BoolArray* mask = BoolArray::Create(dataStructure, "Mask", maskStore, cellData->getId());
+  BoolArray* maskPtr = BoolArray::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId());
 
   const std::array<bool, 12> values = {true, true, false, true, true, false, false, false, true, false, false, true};
-  REQUIRE(mask->getNumberOfTuples() == values.size());
+  REQUIRE(maskPtr->getNumberOfTuples() == values.size());
   for(usize i = 0; i < values.size(); i++)
   {
-    mask->setValue(i, values[i]);
+    maskPtr->setValue(i, values[i]);
   }
   return dataStructure;
 }
@@ -158,14 +158,14 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
     std::string slice_by_slice = std::get<0>(testParam);
     bool sliceBySlice = slice_by_slice == "sliced";
 
-    std::string slice_plane = std::get<1>(testParam);
+    std::string slicePlane = std::get<1>(testParam);
 
     ChoicesParameter::ValueType sliceBySlicePlane = 0;
-    if(slice_plane == "xz")
+    if(slicePlane == "xz")
     {
       sliceBySlicePlane = 1;
     }
-    else if(slice_plane == "yz")
+    else if(slicePlane == "yz")
     {
       sliceBySlicePlane = 2;
     }
@@ -173,9 +173,9 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
     std::string fill_holes = std::get<2>(testParam);
     bool fillHoles = fill_holes == "fill";
 
-    SECTION(fmt::format("{}_{}_{}", slice_by_slice, slice_plane, fill_holes))
+    SECTION(fmt::format("{}_{}_{}", slice_by_slice, slicePlane, fill_holes))
     {
-      fs::path inputFilePath = fs::path(fmt::format("{}/identify_sample_v2/{}_{}_{}.dream3d", unit_test::k_TestFilesDir, slice_by_slice, slice_plane, fill_holes));
+      fs::path inputFilePath = fs::path(fmt::format("{}/identify_sample_v2/{}_{}_{}.dream3d", unit_test::k_TestFilesDir, slice_by_slice, slicePlane, fill_holes));
 
       DataStructure dataStructure = LoadDataStructure(inputFilePath);
       IdentifySampleFilter filter;
@@ -215,17 +215,17 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and 
   constexpr usize k_CellTuples = 3 * k_SliceTuples;
   constexpr usize k_Hole = k_SliceTuples + 10 * k_Width + 10;
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({k_Width, k_Height, 3});
-  REQUIRE(geometry->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  REQUIRE(geometry->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {3, k_Height, k_Width}, geometry->getId());
-  REQUIRE(cellData != nullptr);
-  geometry->setCellData(*cellData);
+  auto* geometryPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometryPtr != nullptr);
+  geometryPtr->setDimensions({k_Width, k_Height, 3});
+  REQUIRE(geometryPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(geometryPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {3, k_Height, k_Width}, geometryPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  geometryPtr->setCellData(*cellDataPtr);
   auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, k_NonSquareMaskPath, {3, k_Height, k_Width}, {1});
-  auto* mask = UInt8Array::Create(dataStructure, "Mask", store, cellData->getId());
-  REQUIRE(mask != nullptr);
+  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", store, cellDataPtr->getId());
+  REQUIRE(maskPtr != nullptr);
 
   // Slice zero creates over 8,000 isolated provisional labels. Slice one joins
   // the labels at x<127, across the 4,096-record equivalence-page boundary.
@@ -256,10 +256,10 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and 
   const auto after = GetAlgorithmPathExecutionCounts();
   REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
   REQUIRE(after.InCore == before.InCore);
-  REQUIRE(mask->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(maskPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   std::vector<uint8> actual(k_CellTuples);
-  auto readResult = mask->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+  auto readResult = maskPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   for(usize z = 0; z < 3; z++)
   {
@@ -282,7 +282,7 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -295,22 +295,22 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: SIMPL Backwards Compatibility", "[
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<IdentifySampleFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<IdentifySampleFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(IdentifySampleFilter::k_FillHoles_Key) == true);
       CHECK(args.value<DataPath>(IdentifySampleFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(IdentifySampleFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -431,17 +431,17 @@ private:
  */
 struct IdentifySampleTransferCounts
 {
-  usize readCalls = 0;
-  usize writeCalls = 0;
-  usize successfulReads = 0;
-  usize successfulWrites = 0;
-  usize requestedReadValues = 0;
-  usize requestedWriteValues = 0;
-  usize maximumSpan = 0;
-  usize activeCalls = 0;
-  usize maximumConcurrentCalls = 0;
-  uint64 minimumReservedBytes = std::numeric_limits<uint64>::max();
-  uint64 maximumReservedBytes = 0;
+  usize read_calls = 0;
+  usize write_calls = 0;
+  usize successful_reads = 0;
+  usize successful_writes = 0;
+  usize requested_read_values = 0;
+  usize requested_write_values = 0;
+  usize maximum_span = 0;
+  usize active_calls = 0;
+  usize maximum_concurrent_calls = 0;
+  uint64 minimum_reserved_bytes = std::numeric_limits<uint64>::max();
+  uint64 maximum_reserved_bytes = 0;
 };
 
 /**
@@ -487,7 +487,7 @@ public:
     if(result.valid())
     {
       const std::lock_guard<std::mutex> lock(m_CountMutex);
-      m_Counts.successfulReads++;
+      m_Counts.successful_reads++;
     }
     return result;
   }
@@ -510,7 +510,7 @@ public:
     if(result.valid())
     {
       const std::lock_guard<std::mutex> lock(m_CountMutex);
-      m_Counts.successfulWrites++;
+      m_Counts.successful_writes++;
     }
     return result;
   }
@@ -538,24 +538,24 @@ private:
     const std::lock_guard<std::mutex> lock(m_CountMutex);
     if(isRead)
     {
-      m_Counts.readCalls++;
-      m_Counts.requestedReadValues += values;
+      m_Counts.read_calls++;
+      m_Counts.requested_read_values += values;
     }
     else
     {
-      m_Counts.writeCalls++;
-      m_Counts.requestedWriteValues += values;
+      m_Counts.write_calls++;
+      m_Counts.requested_write_values += values;
     }
-    m_Counts.maximumSpan = std::max(m_Counts.maximumSpan, values);
-    m_Counts.maximumConcurrentCalls = std::max(m_Counts.maximumConcurrentCalls, ++m_Counts.activeCalls);
-    m_Counts.minimumReservedBytes = std::min(m_Counts.minimumReservedBytes, reserved);
-    m_Counts.maximumReservedBytes = std::max(m_Counts.maximumReservedBytes, reserved);
+    m_Counts.maximum_span = std::max(m_Counts.maximum_span, values);
+    m_Counts.maximum_concurrent_calls = std::max(m_Counts.maximum_concurrent_calls, ++m_Counts.active_calls);
+    m_Counts.minimum_reserved_bytes = std::min(m_Counts.minimum_reserved_bytes, reserved);
+    m_Counts.maximum_reserved_bytes = std::max(m_Counts.maximum_reserved_bytes, reserved);
   }
 
   void endTransfer() const noexcept
   {
     const std::lock_guard<std::mutex> lock(m_CountMutex);
-    m_Counts.activeCalls--;
+    m_Counts.active_calls--;
   }
 
   bool m_Armed = false;
@@ -614,17 +614,17 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
     {
       // With no headroom, CCL retains the one-plane transfer schedule and full XY spans.
       const auto counts = store->counts();
-      REQUIRE(counts.readCalls == 2 * k_X * k_Z);
-      REQUIRE(counts.writeCalls == k_X * k_Z);
-      REQUIRE(counts.successfulReads == counts.readCalls);
-      REQUIRE(counts.successfulWrites == counts.writeCalls);
-      REQUIRE(counts.requestedReadValues == counts.readCalls * k_X * k_Y);
-      REQUIRE(counts.requestedWriteValues == counts.writeCalls * k_X * k_Y);
-      REQUIRE(counts.maximumSpan == k_X * k_Y);
-      REQUIRE(counts.maximumConcurrentCalls == 1);
-      REQUIRE(counts.activeCalls == 0);
-      REQUIRE(counts.minimumReservedBytes == capacity);
-      REQUIRE(counts.maximumReservedBytes == capacity);
+      REQUIRE(counts.read_calls == 2 * k_X * k_Z);
+      REQUIRE(counts.write_calls == k_X * k_Z);
+      REQUIRE(counts.successful_reads == counts.read_calls);
+      REQUIRE(counts.successful_writes == counts.write_calls);
+      REQUIRE(counts.requested_read_values == counts.read_calls * k_X * k_Y);
+      REQUIRE(counts.requested_write_values == counts.write_calls * k_X * k_Y);
+      REQUIRE(counts.maximum_span == k_X * k_Y);
+      REQUIRE(counts.maximum_concurrent_calls == 1);
+      REQUIRE(counts.active_calls == 0);
+      REQUIRE(counts.minimum_reserved_bytes == capacity);
+      REQUIRE(counts.maximum_reserved_bytes == capacity);
     }
     REQUIRE(budget.reservedWorkingMemoryBytes() == capacity);
   }

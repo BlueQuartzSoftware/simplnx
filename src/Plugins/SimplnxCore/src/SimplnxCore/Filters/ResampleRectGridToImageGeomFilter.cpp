@@ -141,12 +141,12 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   for(const auto& path : pSelectedDataArrayPathsValue)
   {
     const DataPath destPath = destCellDataPath.createChildPath(path.getTargetName());
-    const auto* srcArray = dataStructure.getDataAs<IArray>(path);
+    const auto* srcArrayPtr = dataStructure.getDataAs<IArray>(path);
 
     if(srcCellDataPath != path.getParent())
     {
       const usize numGeomCells = rectGridGeom.getNumberOfCells();
-      const usize numArrayElements = srcArray->getNumberOfTuples() * srcArray->getNumberOfComponents();
+      const usize numArrayElements = srcArrayPtr->getNumberOfTuples() * srcArrayPtr->getNumberOfComponents();
       if(numGeomCells == numArrayElements)
       {
         resultOutputActions.warnings().push_back({-7365, fmt::format("Data Object at path '{}' is not a cell level array but has the same number of elements as the parent geometry and will be copied "
@@ -164,17 +164,17 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
       }
     }
 
-    IArray::ArrayType arrayType = srcArray->getArrayType();
+    IArray::ArrayType arrayType = srcArrayPtr->getArrayType();
     if(arrayType == IArray::ArrayType::DataArray)
     {
-      const auto* srcDataArray = dataStructure.getDataAs<IDataArray>(path);
-      auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArray->getDataType(), cellTupleShape, srcDataArray->getComponentShape(), destPath);
+      const auto* srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(path);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArrayPtr->getDataType(), cellTupleShape, srcDataArrayPtr->getComponentShape(), destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::NeighborListArray)
     {
-      const auto* srcDataArray = dataStructure.getDataAs<INeighborList>(path);
-      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), cellTupleShape, destPath);
+      const auto* srcDataArrayPtr = dataStructure.getDataAs<INeighborList>(path);
+      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArrayPtr->getDataType(), cellTupleShape, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::StringArray)
@@ -217,14 +217,14 @@ Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStruc
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_RectilinearGridPathKey = "RectilinearGridPath";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 constexpr StringLiteral k_DimensionsKey = "Dimensions";
 constexpr StringLiteral k_ImageGeometryPathKey = "ImageGeometryPath";
 constexpr StringLiteral k_ImageGeomCellAttributeMatrixKey = "ImageGeomCellAttributeMatrix";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -233,14 +233,14 @@ Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
   // Rect Grid Geometry description parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
   // Created Geometry description is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrixName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

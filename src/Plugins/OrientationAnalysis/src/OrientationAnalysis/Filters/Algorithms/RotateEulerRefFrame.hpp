@@ -75,7 +75,7 @@ public:
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
   const std::atomic_bool& m_ShouldCancel;
   const RotateEulerRefFrameInputValues* m_InputValues = nullptr;

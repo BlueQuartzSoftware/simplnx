@@ -129,17 +129,17 @@ void CheckSecondBlockFailure(bool writeBinary, bool existingDestination,
   }
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({65537, 1, 1});
-  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 65537}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({65537, 1, 1});
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 65537}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
   store->throwAllocation = throwAllocation;
-  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", store, cellData->getId());
-  REQUIRE(featureIds != nullptr);
+  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", store, cellDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
 
   FilterType filter;
   Arguments args = filter.getDefaultArguments();

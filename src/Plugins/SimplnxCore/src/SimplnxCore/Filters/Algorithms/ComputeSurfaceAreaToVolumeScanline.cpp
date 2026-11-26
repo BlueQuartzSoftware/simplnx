@@ -176,8 +176,8 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
   // The slice buffers are released before these batches are allocated. The cap
   // gives paired count/result buffers a 512 KiB budget, not a feature-count limit.
   // For F >= 2, B <= F/2 also limits their combined payload to 4*F bytes.
-  constexpr usize maxBatchTuples = 65536;
-  const usize batchCapacity = std::min(maxBatchTuples, std::max(usize{1}, numFeatures / 2));
+  constexpr usize k_MaxBatchTuples = 65536;
+  const usize batchCapacity = std::min(k_MaxBatchTuples, std::max(usize{1}, numFeatures / 2));
   std::vector<int32> localNumCells(batchCapacity);
   std::vector<float32> localMetrics(batchCapacity);
 

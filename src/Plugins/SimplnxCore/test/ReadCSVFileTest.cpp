@@ -160,7 +160,7 @@ static void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::
  * @param newGroupName Output group name.
  * @return Configured filter arguments.
  */
-static Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
+static Arguments CreateArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
                                  const std::vector<std::string>& customHeaders, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
                                  nonstd::span<std::string> /*values*/, const std::string& newGroupName)
 {
@@ -186,7 +186,7 @@ static Arguments createArguments(const std::string& inputFilePath, usize startIm
 
 // Run primitive type cases through the selected algorithm scope.
 template <typename T>
-static void TestCase_TestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values)
+static void TestCaseTestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values)
 {
   INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
   INFO(fmt::format("Values = {}", values))
@@ -199,7 +199,7 @@ static void TestCase_TestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd:
   ReadCSVFileFilter filter;
   DataStructure dataStructure;
   Arguments args =
-      createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetCSVType<T>()}, {false}, {static_cast<usize>(values.size())}, values, newGroupName);
+      CreateArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetCSVType<T>()}, {false}, {static_cast<usize>(values.size())}, values, newGroupName);
 
   // Write the test input file.
   CreateTestDataFile(k_TestInput, values, {arrayName});
@@ -211,17 +211,17 @@ static void TestCase_TestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd:
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Compare the generated arrays.
-  const DataArray<T>* array = dataStructure.getDataAs<DataArray<T>>(arrayPath);
-  REQUIRE(array != nullptr);
-  scope.requireExpectedStore(*array);
+  const DataArray<T>* arrayPtr = dataStructure.getDataAs<DataArray<T>>(arrayPath);
+  REQUIRE(arrayPtr != nullptr);
+  scope.requireExpectedStore(*arrayPtr);
 
-  REQUIRE(values.size() == array->getSize());
+  REQUIRE(values.size() == arrayPtr->getSize());
   for(int i = 0; i < values.size(); i++)
   {
     Result<T> parseResult = StringInterpretationUtilities::Convert<T>(values[i]);
     SIMPLNX_RESULT_REQUIRE_VALID(parseResult);
     const auto& exemplaryValue = parseResult.value();
-    const auto& testValue = array->at(i);
+    const auto& testValue = arrayPtr->at(i);
     REQUIRE(testValue == exemplaryValue);
   }
 
@@ -229,7 +229,7 @@ static void TestCase_TestPrimitives(UnitTest::AlgorithmTestScope& scope, nonstd:
 }
 
 template <typename T>
-static void TestCase_TestPrimitives_Error(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values, int32 expectedErrorCode)
+static void TestCaseTestPrimitivesError(UnitTest::AlgorithmTestScope& scope, nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
   INFO(fmt::format("Values = {}", values))
@@ -243,7 +243,7 @@ static void TestCase_TestPrimitives_Error(UnitTest::AlgorithmTestScope& scope, n
 
   ReadCSVFileFilter filter;
   DataStructure dataStructure;
-  Arguments args = createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetCSVType<T>()}, {false}, {tupleCount}, values, newGroupName);
+  Arguments args = CreateArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetCSVType<T>()}, {false}, {tupleCount}, values, newGroupName);
 
   // Write the test input file.
   fs::create_directories(k_TestInput.parent_path());
@@ -258,14 +258,14 @@ static void TestCase_TestPrimitives_Error(UnitTest::AlgorithmTestScope& scope, n
   REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
 }
 
-static void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
-                                            const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
-                                            nonstd::span<std::string> values, int32 expectedErrorCode)
+static void TestCaseTestImporterDataError(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
+                                          const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
+                                          nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   std::string newGroupName = "New Group";
   ReadCSVFileFilter filter;
   DataStructure dataStructure;
-  Arguments args = createArguments(inputFilePath, startImportRow, headerMode, headersLine, delimiters, headers, dataTypes, skippedArrayMask, tupleDims, values, newGroupName);
+  Arguments args = CreateArguments(inputFilePath, startImportRow, headerMode, headersLine, delimiters, headers, dataTypes, skippedArrayMask, tupleDims, values, newGroupName);
 
   auto executeResult = filter.execute(dataStructure, args);
   if(expectedErrorCode == 0)
@@ -291,37 +291,37 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 1): Valid filter execution")
   fs::create_directories(k_TestInput.parent_path());
 
   std::vector<std::string> v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
-  TestCase_TestPrimitives<int8>(scope, v);
+  TestCaseTestPrimitives<int8>(scope, v);
 
   v = {std::to_string(std::numeric_limits<int16>::min()), std::to_string(std::numeric_limits<int16>::max())};
-  TestCase_TestPrimitives<int16>(scope, v);
+  TestCaseTestPrimitives<int16>(scope, v);
 
   v = {std::to_string(std::numeric_limits<int32>::min()), std::to_string(std::numeric_limits<int32>::max())};
-  TestCase_TestPrimitives<int32>(scope, v);
+  TestCaseTestPrimitives<int32>(scope, v);
 
   v = {std::to_string(std::numeric_limits<int64>::min()), std::to_string(std::numeric_limits<int64>::max())};
-  TestCase_TestPrimitives<int64>(scope, v);
+  TestCaseTestPrimitives<int64>(scope, v);
 
   v = {std::to_string(std::numeric_limits<uint8>::min()), std::to_string(std::numeric_limits<uint8>::max())};
-  TestCase_TestPrimitives<uint8>(scope, v);
+  TestCaseTestPrimitives<uint8>(scope, v);
 
   v = {std::to_string(std::numeric_limits<uint16>::min()), std::to_string(std::numeric_limits<uint16>::max())};
-  TestCase_TestPrimitives<uint16>(scope, v);
+  TestCaseTestPrimitives<uint16>(scope, v);
 
   v = {std::to_string(std::numeric_limits<uint32>::min()), std::to_string(std::numeric_limits<uint32>::max())};
-  TestCase_TestPrimitives<uint32>(scope, v);
+  TestCaseTestPrimitives<uint32>(scope, v);
 
   v = {std::to_string(std::numeric_limits<uint64>::min()), std::to_string(std::numeric_limits<uint64>::max())};
-  TestCase_TestPrimitives<uint64>(scope, v);
+  TestCaseTestPrimitives<uint64>(scope, v);
 
   v = {std::to_string(std::numeric_limits<float32>::min()), std::to_string(std::numeric_limits<float32>::max())};
-  TestCase_TestPrimitives<float32>(scope, v);
+  TestCaseTestPrimitives<float32>(scope, v);
 
   v = {std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max())};
-  TestCase_TestPrimitives<float64>(scope, v);
+  TestCaseTestPrimitives<float64>(scope, v);
 
   v = {std::to_string(static_cast<int>(std::numeric_limits<bool>::min())), std::to_string(static_cast<int>(std::numeric_limits<bool>::max()))};
-  TestCase_TestPrimitives<bool>(scope, v);
+  TestCaseTestPrimitives<bool>(scope, v);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 2): Valid filter execution - Skipped Array")
@@ -336,7 +336,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 2): Valid filter execution - Ski
   ReadCSVFileFilter filter;
   DataStructure dataStructure;
   std::vector<std::string> values = {"0"};
-  Arguments args = createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {CSVType::int8}, {true}, {static_cast<usize>(values.size())}, values, newGroupName);
+  Arguments args = CreateArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {CSVType::int8}, {true}, {static_cast<usize>(values.size())}, values, newGroupName);
 
   // Write the test input file.
   CreateTestDataFile(k_TestInput, values, {arrayName});
@@ -348,8 +348,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 2): Valid filter execution - Ski
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check that the array does not exist
-  const IDataArray* array = dataStructure.getDataAs<IDataArray>(arrayPath);
-  REQUIRE(array == nullptr);
+  const IDataArray* arrayPtr = dataStructure.getDataAs<IDataArray>(arrayPath);
+  REQUIRE(arrayPtr == nullptr);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -366,73 +366,73 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 3): Invalid filter execution - O
 
   // Int8 - Out of bounds
   std::vector<std::string> v = {"-129"};
-  TestCase_TestPrimitives_Error<int8>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<int8>(scope, v, k_OverflowErrorCode);
 
   v = {"128"};
-  TestCase_TestPrimitives_Error<int8>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<int8>(scope, v, k_OverflowErrorCode);
 
   // Int16 - Out of bounds
   v = {"-32769"};
-  TestCase_TestPrimitives_Error<int16>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<int16>(scope, v, k_OverflowErrorCode);
 
   v = {"32768"};
-  TestCase_TestPrimitives_Error<int16>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<int16>(scope, v, k_OverflowErrorCode);
 
   // Int32 - Out of bounds
   v = {"-2147483649"};
-  TestCase_TestPrimitives_Error<int32>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<int32>(scope, v, k_OverflowErrorCode);
 
   v = {"2147483648"};
-  TestCase_TestPrimitives_Error<int32>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<int32>(scope, v, k_OverflowErrorCode);
 
   // Int64 - Out of bounds
   v = {"-9223372036854775809"};
-  TestCase_TestPrimitives_Error<int64>(scope, v, -10352);
+  TestCaseTestPrimitivesError<int64>(scope, v, -10352);
 
   v = {"9223372036854775808"};
-  TestCase_TestPrimitives_Error<int64>(scope, v, -10352);
+  TestCaseTestPrimitivesError<int64>(scope, v, -10352);
 
   // UInt8 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint8>(scope, v, -10350);
+  TestCaseTestPrimitivesError<uint8>(scope, v, -10350);
 
   v = {"256"};
-  TestCase_TestPrimitives_Error<uint8>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<uint8>(scope, v, k_OverflowErrorCode);
 
   // UInt16 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint16>(scope, v, -10350);
+  TestCaseTestPrimitivesError<uint16>(scope, v, -10350);
 
   v = {"65536"};
-  TestCase_TestPrimitives_Error<uint16>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<uint16>(scope, v, k_OverflowErrorCode);
 
   // UInt32 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint32>(scope, v, -10350);
+  TestCaseTestPrimitivesError<uint32>(scope, v, -10350);
 
   v = {"4294967296"};
-  TestCase_TestPrimitives_Error<uint32>(scope, v, k_OverflowErrorCode);
+  TestCaseTestPrimitivesError<uint32>(scope, v, k_OverflowErrorCode);
 
   // UInt64 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint64>(scope, v, -10350);
+  TestCaseTestPrimitivesError<uint64>(scope, v, -10350);
 
   v = {"18446744073709551616"};
-  TestCase_TestPrimitives_Error<uint64>(scope, v, -10352);
+  TestCaseTestPrimitivesError<uint64>(scope, v, -10352);
 
   // Float32 - Out of bounds
   v = {"-3.5E38"};
-  TestCase_TestPrimitives_Error<float32>(scope, v, -10352);
+  TestCaseTestPrimitivesError<float32>(scope, v, -10352);
 
   v = {"3.5E38"};
-  TestCase_TestPrimitives_Error<float32>(scope, v, -10352);
+  TestCaseTestPrimitivesError<float32>(scope, v, -10352);
 
   // Float64 - Out of bounds
   v = {"-1.8E308"};
-  TestCase_TestPrimitives_Error<float64>(scope, v, -10352);
+  TestCaseTestPrimitivesError<float64>(scope, v, -10352);
 
   v = {"1.8E308"};
-  TestCase_TestPrimitives_Error<float64>(scope, v, -10352);
+  TestCaseTestPrimitivesError<float64>(scope, v, -10352);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 4): Invalid filter execution - Invalid arguments")
@@ -446,40 +446,40 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 4): Invalid filter execution - I
   fs::create_directories(k_TestInput.parent_path());
 
   std::vector<std::string> v = {" "};
-  TestCase_TestPrimitives_Error<int8>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int16>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int64>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint8>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint16>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint64>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<float32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<float64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int8>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int16>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint8>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint16>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<float32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<float64>(scope, v, k_InvalidArgumentErrorCode);
 
   v = {"a"};
-  TestCase_TestPrimitives_Error<int8>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int16>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int64>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint8>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint16>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint64>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<float32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<float64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int8>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int16>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint8>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint16>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<float32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<float64>(scope, v, k_InvalidArgumentErrorCode);
 
   v = {"&"};
-  TestCase_TestPrimitives_Error<int8>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int16>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<int64>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint8>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint16>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<uint64>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<float32>(scope, v, k_InvalidArgumentErrorCode);
-  TestCase_TestPrimitives_Error<float64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int8>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int16>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<int64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint8>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint16>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<uint64>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<float32>(scope, v, k_InvalidArgumentErrorCode);
+  TestCaseTestPrimitivesError<float64>(scope, v, k_InvalidArgumentErrorCode);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - Invalid ReadCSVData values")
@@ -495,87 +495,86 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - I
   ShapeType tupleDims = {static_cast<usize>(v.size())};
 
   // Empty input file path
-  TestCase_TestImporterData_Error("", 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_EmptyFile);
+  TestCaseTestImporterDataError("", 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_EmptyFile);
 
   // Input file does not exist
-  fs::path tmp_file = fs::temp_directory_path() / "ThisFileDoesNotExist.txt";
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_FileDoesNotExist);
+  fs::path tmpFile = fs::temp_directory_path() / "ThisFileDoesNotExist.txt";
+  TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_FileDoesNotExist);
 
   // Start Import Row Out-of-Range
-  TestCase_TestImporterData_Error(k_TestInput.string(), 0, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 500, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
+  TestCaseTestImporterDataError(k_TestInput.string(), 0, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
+  TestCaseTestImporterDataError(k_TestInput.string(), 500, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
 
   // Header Line Number Out-of-Range
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 0, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 600, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 3, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 0, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 600, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 3, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
 
   // Empty array headers
-  tmp_file = fs::temp_directory_path() / "BlankLines.txt";
+  tmpFile = fs::temp_directory_path() / "BlankLines.txt";
   v = {std::to_string(std::numeric_limits<int8>::min()), "", std::to_string(std::numeric_limits<int8>::max())};
-  CreateTestDataFile(tmp_file, v, {"Array"});
-  TestCase_TestImporterData_Error(tmp_file.string(), 4, ReadCSVData::HeaderMode::LINE, 3, {','}, {}, {CSVType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {}, {CSVType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
-  fs::remove(tmp_file);
+  CreateTestDataFile(tmpFile, v, {"Array"});
+  TestCaseTestImporterDataError(tmpFile.string(), 4, ReadCSVData::HeaderMode::LINE, 3, {','}, {}, {CSVType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {}, {CSVType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
+  fs::remove(tmpFile);
   v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
 
   // Incorrect Data Type Count
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8, CSVType::int32}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8, CSVType::int32}, {false}, tupleDims, v,
-                                  k_IncorrectDataTypeCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8, CSVType::int32}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8, CSVType::int32}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
 
   // Incorrect Skipped Array Mask Count
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
 
   // Empty Header Names
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {""}, {CSVType::int8}, {false}, tupleDims, v, k_EmptyNames);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {""}, {CSVType::int8}, {false}, tupleDims, v, k_EmptyNames);
 
   // Duplicate Header Names
-  tmp_file = fs::temp_directory_path() / "DuplicateHeaders.txt";
+  tmpFile = fs::temp_directory_path() / "DuplicateHeaders.txt";
   std::vector<std::string> duplicateHeaders = {"Custom Array", "Custom Array"};
-  CreateTestDataFile(tmp_file, v, duplicateHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, duplicateHeaders, {CSVType::int8, CSVType::int8}, {false, false}, tupleDims, v, k_DuplicateNames);
-  fs::remove(tmp_file);
+  CreateTestDataFile(tmpFile, v, duplicateHeaders);
+  TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, duplicateHeaders, {CSVType::int8, CSVType::int8}, {false, false}, tupleDims, v, k_DuplicateNames);
+  fs::remove(tmpFile);
 
   // Illegal Header Names
-  tmp_file = fs::temp_directory_path() / "IllegalHeaders.txt";
+  tmpFile = fs::temp_directory_path() / "IllegalHeaders.txt";
 
   std::vector<std::string> illegalHeaders = {"Illegal/Header"};
-  CreateTestDataFile(tmp_file, v, illegalHeaders);
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  CreateTestDataFile(tmpFile, v, illegalHeaders);
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
 
   illegalHeaders = {"Illegal\\Header"};
-  CreateTestDataFile(tmp_file, v, illegalHeaders);
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  CreateTestDataFile(tmpFile, v, illegalHeaders);
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
 
   illegalHeaders = {"Illegal&Header"};
-  CreateTestDataFile(tmp_file, v, illegalHeaders);
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  CreateTestDataFile(tmpFile, v, illegalHeaders);
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
 
   illegalHeaders = {"Illegal:Header"};
-  CreateTestDataFile(tmp_file, v, illegalHeaders);
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
-  scope.execute([&] { TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  CreateTestDataFile(tmpFile, v, illegalHeaders);
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, 0); });
+  scope.execute([&] { TestCaseTestImporterDataError(tmpFile.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {CSVType::int8}, {false}, tupleDims, v, 0); });
 
-  fs::remove(tmp_file);
+  fs::remove(tmpFile);
 
   // Incorrect Tuple Dimensions
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {0}, v, k_IncorrectTuples);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {30}, v, k_IncorrectTuples);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {30, 2}, v, k_IncorrectTuples);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {30, 5, 7}, v, k_IncorrectTuples);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {0}, v, k_IncorrectTuples);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {30}, v, k_IncorrectTuples);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {30, 2}, v, k_IncorrectTuples);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {CSVType::int8}, {false}, {30, 5, 7}, v, k_IncorrectTuples);
 
   // Inconsistent Columns
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array", "Custom Array2"}, {CSVType::int8, CSVType::int8}, {false, false}, tupleDims, v,
-                                  k_InconsistentCols);
+  TestCaseTestImporterDataError(k_TestInput.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array", "Custom Array2"}, {CSVType::int8, CSVType::int8}, {false, false}, tupleDims, v,
+                                k_InconsistentCols);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 6): Invalid filter execution - Blank Lines")
@@ -590,7 +589,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 6): Invalid filter execution - B
 
   // The first row is blank.
   std::vector<std::string> v = {"", std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
-  TestCase_TestPrimitives_Error<int8>(scope, v, k_BlankLineErrorCode);
+  TestCaseTestPrimitivesError<int8>(scope, v, k_BlankLineErrorCode);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 7): Valid filter execution - String Data")
@@ -605,7 +604,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 7): Valid filter execution - Str
   CreateTestDataFile(k_TestInput, v, arrayNames);
 
   Arguments args =
-      createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, arrayNames, {CSVType::string, CSVType::string}, {false, false}, {static_cast<usize>(v.size())}, v, groupName);
+      CreateArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, arrayNames, {CSVType::string, CSVType::string}, {false, false}, {static_cast<usize>(v.size())}, v, groupName);
 
   ReadCSVFileFilter filter;
   DataStructure dataStructure;
@@ -619,12 +618,12 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 7): Valid filter execution - Str
   // Verify both string arrays were created and contain the expected values
   for(const auto& name : arrayNames)
   {
-    const StringArray* array = dataStructure.getDataAs<StringArray>(DataPath({groupName, name}));
-    REQUIRE(array != nullptr);
-    REQUIRE(array->getSize() == v.size());
+    const StringArray* arrayPtr = dataStructure.getDataAs<StringArray>(DataPath({groupName, name}));
+    REQUIRE(arrayPtr != nullptr);
+    REQUIRE(arrayPtr->getSize() == v.size());
     for(usize i = 0; i < v.size(); ++i)
     {
-      REQUIRE(array->at(i) == v[i]);
+      REQUIRE(arrayPtr->at(i) == v[i]);
     }
   }
 
@@ -653,7 +652,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 8): Valid filter execution - Mix
 
   // Set up filter arguments
   std::vector<std::string> dummy = {"1", "2", "3"};
-  Arguments args = createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {"SQ", "DQ", "Num"}, {CSVType::string, CSVType::string, CSVType::string}, {false, false, false},
+  Arguments args = CreateArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {"SQ", "DQ", "Num"}, {CSVType::string, CSVType::string, CSVType::string}, {false, false, false},
                                    {static_cast<usize>(dummy.size())}, dummy, "New Group");
 
   ReadCSVFileFilter filter;
@@ -667,32 +666,32 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 8): Valid filter execution - Mix
   const std::regex re(R"(^['"]+|['"]+$)"); // Remove quotes and double quotes
 
   // Verify single quoted column
-  const StringArray* sqArray = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "SQ"}));
-  REQUIRE(sqArray != nullptr);
-  REQUIRE(sqArray->getSize() == rows.size());
-  for(usize i = 0; i < sqArray->getSize(); ++i)
+  const StringArray* sqArrayPtr = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "SQ"}));
+  REQUIRE(sqArrayPtr != nullptr);
+  REQUIRE(sqArrayPtr->getSize() == rows.size());
+  for(usize i = 0; i < sqArrayPtr->getSize(); ++i)
   {
     auto str = std::regex_replace(std::get<0>(rows[i]), re, "");
-    REQUIRE(sqArray->at(i) == str);
+    REQUIRE(sqArrayPtr->at(i) == str);
   }
 
   // Verify double quoted column
-  const StringArray* dqArray = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "DQ"}));
-  REQUIRE(dqArray != nullptr);
-  REQUIRE(dqArray->getSize() == rows.size());
-  for(usize i = 0; i < dqArray->getSize(); ++i)
+  const StringArray* dqArrayPtr = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "DQ"}));
+  REQUIRE(dqArrayPtr != nullptr);
+  REQUIRE(dqArrayPtr->getSize() == rows.size());
+  for(usize i = 0; i < dqArrayPtr->getSize(); ++i)
   {
     auto str = std::regex_replace(std::get<1>(rows[i]), re, "");
-    REQUIRE(sqArray->at(i) == str);
+    REQUIRE(sqArrayPtr->at(i) == str);
   }
 
   // Verify integer column
-  const StringArray* numArray = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "Num"}));
-  REQUIRE(numArray != nullptr);
-  REQUIRE(numArray->getSize() == rows.size());
-  for(usize i = 0; i < numArray->getSize(); ++i)
+  const StringArray* numArrayPtr = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "Num"}));
+  REQUIRE(numArrayPtr != nullptr);
+  REQUIRE(numArrayPtr->getSize() == rows.size());
+  for(usize i = 0; i < numArrayPtr->getSize(); ++i)
   {
-    REQUIRE(numArray->at(i) == std::get<2>(rows[i]));
+    REQUIRE(numArrayPtr->at(i) == std::get<2>(rows[i]));
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -702,7 +701,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: SIMPL Backwards Compatibility", "[Sim
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -715,20 +714,20 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: SIMPL Backwards Compatibility", "[Sim
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadCSVFileFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadCSVFileFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Fixture has Wizard_AutomaticAM=1, so the CreationFilter branch fires and sets k_CreatedDataGroup_Key.
       CHECK(args.value<DataPath>(ReadCSVFileFilter::k_CreatedDataGroup_Key) == DataPath({"DataContainer", "CellData"}));
       // DREAM.3D 6.x dropped every empty token whatever Wizard_ConsecutiveDelimiters was (fixture: 0), so the converted option must collapse delimiters.
@@ -784,10 +783,10 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Consecutive delimiters collapse space
   const std::vector<std::pair<std::string, int32>> expected = {{"A", 1}, {"B", 2}, {"C", 3}};
   for(const auto& [name, value] : expected)
   {
-    const auto* array = dataStructure.getDataAs<Int32Array>(DataPath({"Values", name}));
-    REQUIRE(array != nullptr);
-    REQUIRE(array->getSize() == 1);
-    REQUIRE(array->at(0) == value);
+    const auto* arrayPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Values", name}));
+    REQUIRE(arrayPtr != nullptr);
+    REQUIRE(arrayPtr->getSize() == 1);
+    REQUIRE(arrayPtr->at(0) == value);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -831,10 +830,10 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Consecutive delimiters off preserves 
   const std::vector<std::string> expected = {"1", "", "2", "", "", "3"};
   for(usize i = 0; i < expected.size(); ++i)
   {
-    const auto* array = dataStructure.getDataAs<StringArray>(DataPath({"Values", data.customHeaders[i]}));
-    REQUIRE(array != nullptr);
-    REQUIRE(array->getSize() == 1);
-    REQUIRE(array->at(0) == expected[i]);
+    const auto* arrayPtr = dataStructure.getDataAs<StringArray>(DataPath({"Values", data.customHeaders[i]}));
+    REQUIRE(arrayPtr != nullptr);
+    REQUIRE(arrayPtr->getSize() == 1);
+    REQUIRE(arrayPtr->at(0) == expected[i]);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -868,7 +867,7 @@ constexpr int32 k_EmptyFieldsWarning = to_underlying(ReadCSVFile::IssueCodes::EM
 constexpr int32 k_InconsistentColumnsError = -104;
 
 // -----------------------------------------------------------------------------
-void writeDelimiterInput(const fs::path& inputPath, const std::string& contents)
+void WriteDelimiterInput(const fs::path& inputPath, const std::string& contents)
 {
   fs::create_directories(inputPath.parent_path());
   std::ofstream file(inputPath);
@@ -877,7 +876,7 @@ void writeDelimiterInput(const fs::path& inputPath, const std::string& contents)
 }
 
 // -----------------------------------------------------------------------------
-ReadCSVData createDelimiterData(const fs::path& inputPath, ReadCSVData::HeaderMode headerMode, const std::vector<char>& delimiters, bool consecutiveDelimiters)
+ReadCSVData CreateDelimiterData(const fs::path& inputPath, ReadCSVData::HeaderMode headerMode, const std::vector<char>& delimiters, bool consecutiveDelimiters)
 {
   ReadCSVData data;
   data.inputFilePath = inputPath.string();
@@ -894,7 +893,7 @@ ReadCSVData createDelimiterData(const fs::path& inputPath, ReadCSVData::HeaderMo
 }
 
 // -----------------------------------------------------------------------------
-Arguments createDelimiterArguments(const ReadCSVData& data)
+Arguments CreateDelimiterArguments(const ReadCSVData& data)
 {
   Arguments args;
   args.insertOrAssign(ReadCSVFileFilter::k_ReadCSVData_Key, std::make_any<ReadCSVData>(data));
@@ -904,7 +903,7 @@ Arguments createDelimiterArguments(const ReadCSVData& data)
 }
 
 // -----------------------------------------------------------------------------
-bool hasWarningCode(const std::vector<Warning>& warnings, int32 code)
+bool HasWarningCode(const std::vector<Warning>& warnings, int32 code)
 {
   return std::any_of(warnings.begin(), warnings.end(), [code](const Warning& warning) { return warning.code == code; });
 }
@@ -923,8 +922,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Empty fields warn while consecutive d
 
   SECTION("First import row")
   {
-    writeDelimiterInput(inputPath, "1  2   3\n");
-    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::CUSTOM, {' '}, false));
+    WriteDelimiterInput(inputPath, "1  2   3\n");
+    const Arguments args = CreateDelimiterArguments(CreateDelimiterData(inputPath, ReadCSVData::HeaderMode::CUSTOM, {' '}, false));
     const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
@@ -935,13 +934,13 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Empty fields warn while consecutive d
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == k_InconsistentColumnsError);
-    REQUIRE(hasWarningCode(executeResult.result.warnings(), k_EmptyFieldsWarning));
+    REQUIRE(HasWarningCode(executeResult.result.warnings(), k_EmptyFieldsWarning));
   }
 
   SECTION("Header line")
   {
-    writeDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
-    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false));
+    WriteDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
+    const Arguments args = CreateDelimiterArguments(CreateDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false));
     const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors()[0].code == to_underlying(ReadCSVFile::IssueCodes::INCORRECT_DATATYPE_COUNT));
@@ -952,29 +951,29 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Empty fields warn while consecutive d
 
   SECTION("Trailing delimiter")
   {
-    writeDelimiterInput(inputPath, "1,2,3,\n");
-    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::CUSTOM, {','}, false));
+    WriteDelimiterInput(inputPath, "1,2,3,\n");
+    const Arguments args = CreateDelimiterArguments(CreateDelimiterData(inputPath, ReadCSVData::HeaderMode::CUSTOM, {','}, false));
     const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(hasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
+    REQUIRE(HasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
   }
 
   SECTION("No empty fields")
   {
-    writeDelimiterInput(inputPath, "A B C\n1 2 3\n");
-    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false));
+    WriteDelimiterInput(inputPath, "A B C\n1 2 3\n");
+    const Arguments args = CreateDelimiterArguments(CreateDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false));
     const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE_FALSE(hasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
+    REQUIRE_FALSE(HasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
   }
 
   SECTION("Consecutive delimiters ignored")
   {
-    writeDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
-    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, true));
+    WriteDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
+    const Arguments args = CreateDelimiterArguments(CreateDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, true));
     const auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE_FALSE(hasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
+    REQUIRE_FALSE(HasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
   }
 }
 
@@ -993,27 +992,27 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Changed split settings reload cached 
 
   SECTION("Ignore Consecutive Delimiters")
   {
-    writeDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
-    ReadCSVData data = createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false);
-    const auto keptResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    WriteDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
+    ReadCSVData data = CreateDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false);
+    const auto keptResult = filter.preflight(dataStructure, CreateDelimiterArguments(data));
     SIMPLNX_RESULT_REQUIRE_INVALID(keptResult.outputActions);
     REQUIRE(keptResult.outputActions.errors()[0].code == k_DataTypeCountError);
 
     data.consecutiveDelimiters = true;
-    const auto ignoredResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    const auto ignoredResult = filter.preflight(dataStructure, CreateDelimiterArguments(data));
     SIMPLNX_RESULT_REQUIRE_VALID(ignoredResult.outputActions);
   }
 
   SECTION("Delimiters")
   {
-    writeDelimiterInput(inputPath, "A,B;C\n1,2;3\n");
-    ReadCSVData data = createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {','}, false);
-    const auto commaResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    WriteDelimiterInput(inputPath, "A,B;C\n1,2;3\n");
+    ReadCSVData data = CreateDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {','}, false);
+    const auto commaResult = filter.preflight(dataStructure, CreateDelimiterArguments(data));
     SIMPLNX_RESULT_REQUIRE_INVALID(commaResult.outputActions);
     REQUIRE(commaResult.outputActions.errors()[0].code == k_DataTypeCountError);
 
     data.delimiters = {',', ';'};
-    const auto bothResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    const auto bothResult = filter.preflight(dataStructure, CreateDelimiterArguments(data));
     SIMPLNX_RESULT_REQUIRE_VALID(bothResult.outputActions);
   }
 }

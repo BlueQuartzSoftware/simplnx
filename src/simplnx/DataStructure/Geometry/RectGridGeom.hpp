@@ -452,9 +452,9 @@ protected:
   void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
 
 private:
-  std::optional<IdType> m_xBoundsId;
-  std::optional<IdType> m_yBoundsId;
-  std::optional<IdType> m_zBoundsId;
+  std::optional<IdType> m_XBoundsId;
+  std::optional<IdType> m_YBoundsId;
+  std::optional<IdType> m_ZBoundsId;
   SizeVec3 m_Dimensions;
 };
 } // namespace nx::core

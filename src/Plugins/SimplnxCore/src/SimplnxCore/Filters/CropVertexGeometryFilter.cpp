@@ -151,13 +151,13 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     }
   }
 
-  const auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
-  if(vertexAM == nullptr)
+  const auto* vertexAmPtr = vertexGeom.getVertexAttributeMatrix();
+  if(vertexAmPtr == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())),
             .outputValues = {}};
   }
-  auto tupleShape = vertexAM->getShape();
+  auto tupleShape = vertexAmPtr->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName, VertexGeom::k_SharedVertexListName);
   DataPath croppedVertexDataPath = action->getVertexDataPath();
@@ -194,7 +194,7 @@ Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, con
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_XMinKey = "XMin";
@@ -204,7 +204,7 @@ constexpr StringLiteral k_XMaxKey = "XMax";
 constexpr StringLiteral k_YMaxKey = "YMax";
 constexpr StringLiteral k_ZMaxKey = "ZMax";
 constexpr StringLiteral k_CroppedDataContainerNameKey = "CroppedDataContainerName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -214,10 +214,10 @@ Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& 
   std::vector<Result<>> results;
 
   // Convert 3 numeric inputs into Vec3 inputs
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, SIMPL::k_XMinKey, SIMPL::k_YMinKey, SIMPL::k_ZMinKey, k_MinPos_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, SIMPL::k_XMaxKey, SIMPL::k_YMaxKey, SIMPL::k_ZMaxKey, k_MaxPos_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPos_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPos_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

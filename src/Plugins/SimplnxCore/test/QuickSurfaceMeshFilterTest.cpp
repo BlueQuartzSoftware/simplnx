@@ -153,9 +153,9 @@ void CorrectLegacyExemplarTransferOrder(DataStructure& dataStructure, const Data
       {
         if(object->getName() != k_Face_Labels)
         {
-          auto* array = dynamic_cast<IDataArray*>(object.get());
-          REQUIRE(array != nullptr);
-          ExecuteDataFunction(SwapExemplarSides{}, array->getDataType(), *array, face);
+          auto* arrayPtr = dynamic_cast<IDataArray*>(object.get());
+          REQUIRE(arrayPtr != nullptr);
+          ExecuteDataFunction(SwapExemplarSides{}, arrayPtr->getDataType(), *arrayPtr, face);
         }
       }
     }
@@ -185,40 +185,40 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Transferred sides match face lab
   UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
-  auto* image = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(image != nullptr);
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imagePtr != nullptr);
   SizeVec3 dims = {1, 1, 1};
   dims[axis] = 2;
-  image->setDimensions(dims);
-  REQUIRE(image->setOrigin({0, 0, 0}).valid());
-  REQUIRE(image->setSpacing({1, 1, 1}).valid());
+  imagePtr->setDimensions(dims);
+  REQUIRE(imagePtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imagePtr->setSpacing({1, 1, 1}).valid());
   const ShapeType shape = {dims[2], dims[1], dims[0]};
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, image->getId());
-  REQUIRE(cells != nullptr);
-  image->setCellData(cells->getId());
-  auto* ids = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ids", shape, {1}, cells->getId());
-  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Cell Values", shape, {2}, cells->getId());
-  auto* features = AttributeMatrix::Create(dataStructure, "Features", {3}, image->getId());
-  REQUIRE(features != nullptr);
-  auto* featureValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {3}, {2}, features->getId());
-  REQUIRE(ids != nullptr);
-  REQUIRE(values != nullptr);
-  REQUIRE(featureValues != nullptr);
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", shape, imagePtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imagePtr->setCellData(cellsPtr->getId());
+  auto* idsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
+  auto* valuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Cell Values", shape, {2}, cellsPtr->getId());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {3}, imagePtr->getId());
+  REQUIRE(featuresPtr != nullptr);
+  auto* featureValuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {3}, {2}, featuresPtr->getId());
+  REQUIRE(idsPtr != nullptr);
+  REQUIRE(valuesPtr != nullptr);
+  REQUIRE(featureValuesPtr != nullptr);
   // Independent oracle: feature f owns cell tuple (10*f, 10*f+1) and feature tuple (100*f, 100*f+1).
   // Two adjacent unit cubes have exactly two internal triangles, each with labels (1, 2).
   for(usize cell = 0; cell < 2; cell++)
   {
     const int32 id = ascending ? static_cast<int32>(cell + 1) : static_cast<int32>(2 - cell);
-    (*ids)[cell] = id;
+    (*idsPtr)[cell] = id;
     for(usize component = 0; component < 2; component++)
     {
-      (*values)[2 * cell + component] = 10 * id + static_cast<int32>(component);
+      (*valuesPtr)[2 * cell + component] = 10 * id + static_cast<int32>(component);
     }
   }
   for(usize f = 0; f < 3; f++)
   {
-    (*featureValues)[2 * f] = static_cast<int32>(100 * f);
-    (*featureValues)[2 * f + 1] = static_cast<int32>(100 * f + 1);
+    (*featureValuesPtr)[2 * f] = static_cast<int32>(100 * f);
+    (*featureValuesPtr)[2 * f + 1] = static_cast<int32>(100 * f + 1);
   }
   QuickSurfaceMeshFilter filter;
   Arguments args;
@@ -302,24 +302,24 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Feature DataArray tuple bounds",
   UnitTest::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({3, 1, 1});
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 3}, imageGeom->getId());
-  REQUIRE(cellAM != nullptr);
-  imageGeom->setCellData(cellAM->getId());
-  auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Ids", {1, 1, 3}, {1}, cellAM->getId());
-  REQUIRE(featureIds != nullptr);
-  (*featureIds)[0] = 0;
-  (*featureIds)[1] = 1;
-  (*featureIds)[2] = 2;
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, imageGeom->getId());
-  REQUIRE(featureAM != nullptr);
-  auto* featureValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {2}, {1}, featureAM->getId());
-  REQUIRE(featureValues != nullptr);
-  featureValues->fill(7);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({3, 1, 1});
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 3}, imageGeomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  imageGeomPtr->setCellData(cellAmPtr->getId());
+  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Ids", {1, 1, 3}, {1}, cellAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  (*featureIdsPtr)[0] = 0;
+  (*featureIdsPtr)[1] = 1;
+  (*featureIdsPtr)[2] = 2;
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, imageGeomPtr->getId());
+  REQUIRE(featureAmPtr != nullptr);
+  auto* featureValuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {2}, {1}, featureAmPtr->getId());
+  REQUIRE(featureValuesPtr != nullptr);
+  featureValuesPtr->fill(7);
 
   QuickSurfaceMeshFilter filter;
   Arguments args;
@@ -428,11 +428,11 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 63440);
-  REQUIRE(vertices->getNumberOfTuples() == 28910);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 63440);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 28910);
 
   // Compare the shared vertex and triangle lists.
   CompareArrays<IGeometry::MeshIndexType>(dataStructure, exemplarSharedTriPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
@@ -526,11 +526,11 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 63440);
-  REQUIRE(vertices->getNumberOfTuples() == 28910);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 63440);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 28910);
 
   // Compare the shared vertex and triangle lists.
   CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
@@ -624,11 +624,11 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 63410);
-  REQUIRE(vertices->getNumberOfTuples() == 28902);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 63410);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 28902);
 
   // Compare the shared vertex and triangle lists.
   CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
@@ -722,11 +722,11 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 63410);
-  REQUIRE(vertices->getNumberOfTuples() == 28902);
+  REQUIRE(trianglePtr->getNumberOfTuples() == 63410);
+  REQUIRE(verticesPtr->getNumberOfTuples() == 28902);
 
   // Compare the shared vertex and triangle lists.
   CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
@@ -844,7 +844,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: SIMPL Backwards Compatibility", 
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -857,22 +857,22 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: SIMPL Backwards Compatibility", 
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<QuickSurfaceMeshFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<QuickSurfaceMeshFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<bool>(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key) == true);
@@ -896,22 +896,22 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem voxel correction handles
   const usize diagonal = GENERATE(0, 1, 2, 3);
   CAPTURE(scenario, diagonal);
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 2, 2});
-  REQUIRE(geometry->setSpacing({2, 3, 5}).valid());
-  REQUIRE(geometry->setOrigin({10, 20, 30}).valid());
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", {2, 2, 2}, geometry->getId());
-  REQUIRE(cells != nullptr);
-  geometry->setCellData(cells->getId());
+  auto* geometryPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometryPtr != nullptr);
+  geometryPtr->setDimensions({2, 2, 2});
+  REQUIRE(geometryPtr->setSpacing({2, 3, 5}).valid());
+  REQUIRE(geometryPtr->setOrigin({10, 20, 30}).valid());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", {2, 2, 2}, geometryPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geometryPtr->setCellData(cellsPtr->getId());
   const DataPath idsPath({"Image", "Cells", "Ids"});
-  auto* ids = Int32Array::Create(dataStructure, "Ids", DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, {2, 2, 2}, {1}), cells->getId());
-  REQUIRE(ids != nullptr);
+  auto* idsPtr = Int32Array::Create(dataStructure, "Ids", DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, {2, 2, 2}, {1}), cellsPtr->getId());
+  REQUIRE(idsPtr != nullptr);
   // Opposite corners in X-fastest order are (0,7), (1,6), (2,5), and (3,4).
   std::array<int32, 8> input = {1, 1, 1, 1, 1, 1, 1, 1};
   input[diagonal] = 2;
   input[7 - diagonal] = 3;
-  auto writeResult = ids->getDataStoreRef().copyFromBuffer(0, input);
+  auto writeResult = idsPtr->getDataStoreRef().copyFromBuffer(0, input);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   QuickSurfaceMeshFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -924,7 +924,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem voxel correction handles
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   std::array<int32, 8> actual{};
-  auto readResult = ids->getDataStoreRef().copyIntoBuffer(0, actual);
+  auto readResult = idsPtr->getDataStoreRef().copyIntoBuffer(0, actual);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   auto firstAllowed = input;
   auto secondAllowed = input;

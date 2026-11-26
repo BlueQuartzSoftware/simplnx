@@ -8,7 +8,7 @@ using namespace nx::core;
 namespace
 {
 // This maps previous filters from DREAM3D-NX Version 6.x to DREAM3D-NX Version 7.x
-std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
+std::map<nx::core::Uuid, nx::core::Uuid> KSimplToComplexFilterMapping = {
     {Uuid::FromString("{f4a7c2df-e9b0-5da9-b745-a862666d6c99}").value(), Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value()}, /* BadDataNeighborOrientationCheck */
     {Uuid::FromString("{f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792}").value(), Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value()}, /* ChangeAngleRepresentationFilter */
     {Uuid::FromString("{e1343abe-e5ad-5eb1-a89d-c209e620e4de}").value(), Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value()}, /* ConvertHexGridToSquareGrid */

@@ -29,14 +29,14 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
   DataStructure dataStructure;
   Arguments args;
 
-  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
-  array1->setComponent(0, 0, 0);
-  array1->setComponent(0, 1, 1);
-  array1->setComponent(0, 2, 0);
-  auto array2 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
-  array2->setComponent(0, 0, 1);
-  array2->setComponent(0, 1, 1);
-  array2->setComponent(0, 2, 1);
+  auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
+  array1Ptr->setComponent(0, 0, 0);
+  array1Ptr->setComponent(0, 1, 1);
+  array1Ptr->setComponent(0, 2, 0);
+  auto array2Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
+  array2Ptr->setComponent(0, 0, 1);
+  array2Ptr->setComponent(0, 1, 1);
+  array2Ptr->setComponent(0, 2, 1);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -68,16 +68,16 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
   DataStructure dataStructure;
   Arguments args;
 
-  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{2}, std::vector<usize>{2});
-  array1->setComponent(0, 0, 0);
-  array1->setComponent(0, 1, 1);
-  array1->setComponent(1, 0, 0);
-  array1->setComponent(1, 1, 0);
-  auto array2 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{2}, std::vector<usize>{2});
-  array2->setComponent(0, 0, 1);
-  array2->setComponent(0, 1, 1);
-  array2->setComponent(1, 0, 1);
-  array2->setComponent(1, 1, 0);
+  auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{2}, std::vector<usize>{2});
+  array1Ptr->setComponent(0, 0, 0);
+  array1Ptr->setComponent(0, 1, 1);
+  array1Ptr->setComponent(1, 0, 0);
+  array1Ptr->setComponent(1, 1, 0);
+  auto array2Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{2}, std::vector<usize>{2});
+  array2Ptr->setComponent(0, 0, 1);
+  array2Ptr->setComponent(0, 1, 1);
+  array2Ptr->setComponent(1, 0, 1);
+  array2Ptr->setComponent(1, 1, 0);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -111,14 +111,14 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
   DataStructure dataStructure;
   Arguments args;
 
-  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{3}, std::vector<usize>{1});
-  array1->setValue(0, 0);
-  array1->setValue(1, 1);
-  array1->setValue(2, 0);
-  auto array2 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{3}, std::vector<usize>{1});
-  array2->setValue(0, 1);
-  array2->setValue(1, 1);
-  array2->setValue(2, 1);
+  auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{3}, std::vector<usize>{1});
+  array1Ptr->setValue(0, 0);
+  array1Ptr->setValue(1, 1);
+  array1Ptr->setValue(2, 0);
+  auto array2Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{3}, std::vector<usize>{1});
+  array2Ptr->setValue(0, 1);
+  array2Ptr->setValue(1, 1);
+  array2Ptr->setValue(2, 1);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -150,16 +150,16 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
   DataStructure dataStructure;
   Arguments args;
 
-  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{2, 2}, std::vector<usize>{1});
-  array1->setValue(0, 0);
-  array1->setValue(1, 1);
-  array1->setValue(2, 0);
-  array1->setValue(3, 0);
-  auto array2 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{2, 2}, std::vector<usize>{1});
-  array2->setValue(0, 1);
-  array2->setValue(1, 1);
-  array2->setValue(2, 1);
-  array2->setValue(3, 0);
+  auto array1Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{2, 2}, std::vector<usize>{1});
+  array1Ptr->setValue(0, 0);
+  array1Ptr->setValue(1, 1);
+  array1Ptr->setValue(2, 0);
+  array1Ptr->setValue(3, 0);
+  auto array2Ptr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{2, 2}, std::vector<usize>{1});
+  array2Ptr->setValue(0, 1);
+  array2Ptr->setValue(1, 1);
+  array2Ptr->setValue(2, 1);
+  array2Ptr->setValue(3, 0);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -193,12 +193,12 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, ShapeType{1});
+  auto inputNeighborList1Ptr = NeighborList<T>::Create(dataStructure, k_TestArray1Name, ShapeType{1});
   typename NeighborList<T>::VectorType inputList1({0, 1, 0});
-  inputNeighborList1->setList(0, inputList1);
-  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, ShapeType{1});
+  inputNeighborList1Ptr->setList(0, inputList1);
+  auto inputNeighborList2Ptr = NeighborList<T>::Create(dataStructure, k_TestArray2Name, ShapeType{1});
   typename NeighborList<T>::VectorType inputList2({1, 1, 1});
-  inputNeighborList2->setList(0, inputList2);
+  inputNeighborList2Ptr->setList(0, inputList2);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -228,16 +228,16 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, ShapeType{2});
+  auto inputNeighborList1Ptr = NeighborList<T>::Create(dataStructure, k_TestArray1Name, ShapeType{2});
   typename NeighborList<T>::VectorType inputList1({0, 1, 0});
-  inputNeighborList1->setList(0, inputList1);
+  inputNeighborList1Ptr->setList(0, inputList1);
   typename NeighborList<T>::VectorType inputList2({1, 0, 0});
-  inputNeighborList1->setList(1, inputList2);
-  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, ShapeType{2});
+  inputNeighborList1Ptr->setList(1, inputList2);
+  auto inputNeighborList2Ptr = NeighborList<T>::Create(dataStructure, k_TestArray2Name, ShapeType{2});
   typename NeighborList<T>::VectorType inputList3({1, 1, 1});
-  inputNeighborList2->setList(0, inputList3);
+  inputNeighborList2Ptr->setList(0, inputList3);
   typename NeighborList<T>::VectorType inputList4({0, 0, 1});
-  inputNeighborList2->setList(1, inputList4);
+  inputNeighborList2Ptr->setList(1, inputList4);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -271,20 +271,20 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, ShapeType{3});
+  auto inputNeighborList1Ptr = NeighborList<T>::Create(dataStructure, k_TestArray1Name, ShapeType{3});
   typename NeighborList<T>::VectorType inputList1({0, 1, 0});
-  inputNeighborList1->setList(0, inputList1);
+  inputNeighborList1Ptr->setList(0, inputList1);
   typename NeighborList<T>::VectorType inputList2({1, 0, 0});
-  inputNeighborList1->setList(1, inputList2);
+  inputNeighborList1Ptr->setList(1, inputList2);
   typename NeighborList<T>::VectorType inputList3({2, 2, 1});
-  inputNeighborList1->setList(2, inputList3);
-  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, ShapeType{3});
+  inputNeighborList1Ptr->setList(2, inputList3);
+  auto inputNeighborList2Ptr = NeighborList<T>::Create(dataStructure, k_TestArray2Name, ShapeType{3});
   typename NeighborList<T>::VectorType inputList4({1, 1, 1});
-  inputNeighborList2->setList(0, inputList4);
+  inputNeighborList2Ptr->setList(0, inputList4);
   typename NeighborList<T>::VectorType inputList5({0, 0, 1});
-  inputNeighborList2->setList(1, inputList5);
+  inputNeighborList2Ptr->setList(1, inputList5);
   typename NeighborList<T>::VectorType inputList6({4, 5, 6});
-  inputNeighborList2->setList(2, inputList6);
+  inputNeighborList2Ptr->setList(2, inputList6);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));

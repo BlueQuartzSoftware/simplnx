@@ -36,7 +36,7 @@ using namespace nx::core;
  * @brief Verifies common node geometry operations.
  * @param geom Geometry under test.
  */
-static void testAbstractGeometry(IGeometry* geom)
+static void TestAbstractGeometry(IGeometry* geom)
 {
   SECTION("abstract geometry")
   {
@@ -63,7 +63,7 @@ static void testAbstractGeometry(IGeometry* geom)
  * @brief Verifies vertex and edge operations on a two-dimensional geometry.
  * @param geom Geometry under test.
  */
-static void testGeom2D(INodeGeometry2D* geom)
+static void TestGeom2D(INodeGeometry2D* geom)
 {
   SECTION("abstract geometry 2D")
   {
@@ -72,10 +72,10 @@ static void testGeom2D(INodeGeometry2D* geom)
 
     // Vertices
     {
-      const auto* vertices = createVertexList(geom);
-      REQUIRE(vertices != nullptr);
-      geom->setVertices(*vertices);
-      REQUIRE(geom->getVertices() == vertices);
+      const auto* verticesPtr = createVertexList(geom);
+      REQUIRE(verticesPtr != nullptr);
+      geom->setVertices(*verticesPtr);
+      REQUIRE(geom->getVertices() == verticesPtr);
       const usize numVertices = 10;
       REQUIRE(geom->resizeVertexList(numVertices).valid());
       REQUIRE(geom->getNumberOfVertices() == numVertices);
@@ -86,9 +86,9 @@ static void testGeom2D(INodeGeometry2D* geom)
 
     // edges
     {
-      const auto* edges = createEdgeList(geom);
-      geom->setEdgeList(*edges);
-      REQUIRE(geom->getEdges() == edges);
+      const auto* edgesPtr = createEdgeList(geom);
+      geom->setEdgeList(*edgesPtr);
+      REQUIRE(geom->getEdges() == edgesPtr);
       const usize numEdges = 5;
       REQUIRE(geom->resizeEdgeList(numEdges).valid());
       REQUIRE(geom->getNumberOfEdges() == numEdges);
@@ -96,15 +96,15 @@ static void testGeom2D(INodeGeometry2D* geom)
       std::array<usize, 2> verts = {vertId, vertId + 1};
       geom->setEdgePointIds(edgeId, verts);
 
-      std::array<Point3Df, 2> edge_verts;
+      std::array<Point3Df, 2> edgeVerts;
       std::array<usize, 2> vertsOut = {0, 0};
       geom->getEdgePointIds(edgeId, vertsOut);
       for(usize i = 0; i < 2; i++)
       {
         REQUIRE(verts[i] == vertsOut[i]);
       }
-      geom->getEdgeCoordinates(edgeId, edge_verts);
-      REQUIRE(edge_verts[0] == coord);
+      geom->getEdgeCoordinates(edgeId, edgeVerts);
+      REQUIRE(edgeVerts[0] == coord);
     }
   }
 }
@@ -113,7 +113,7 @@ static void testGeom2D(INodeGeometry2D* geom)
  * @brief Verifies vertex, edge, and face operations on a three-dimensional geometry.
  * @param geom Geometry under test.
  */
-static void testGeom3D(INodeGeometry3D* geom)
+static void TestGeom3D(INodeGeometry3D* geom)
 {
   SECTION("abstract geometry 3D")
   {
@@ -122,9 +122,9 @@ static void testGeom3D(INodeGeometry3D* geom)
 
     // vertices
     {
-      const auto* vertices = createVertexList(geom);
-      geom->setVertices(*vertices);
-      REQUIRE(geom->getVertices() == vertices);
+      const auto* verticesPtr = createVertexList(geom);
+      geom->setVertices(*verticesPtr);
+      REQUIRE(geom->getVertices() == verticesPtr);
       const usize numVertices = 10;
       REQUIRE(geom->resizeVertexList(numVertices).valid());
       REQUIRE(geom->getNumberOfVertices() == numVertices);
@@ -134,9 +134,9 @@ static void testGeom3D(INodeGeometry3D* geom)
     }
     // edges
     {
-      const auto* edges = createEdgeList(geom);
-      geom->setEdgeList(*edges);
-      REQUIRE(geom->getEdges() == edges);
+      const auto* edgesPtr = createEdgeList(geom);
+      geom->setEdgeList(*edgesPtr);
+      REQUIRE(geom->getEdges() == edgesPtr);
       const usize numEdges = 5;
       REQUIRE(geom->resizeEdgeList(numEdges).valid());
       REQUIRE(geom->getNumberOfEdges() == numEdges);
@@ -149,10 +149,10 @@ static void testGeom3D(INodeGeometry3D* geom)
       {
         REQUIRE(verts[i] == vertsOut[i]);
       }
-      std::array<Point3Df, 2> edge_verts;
+      std::array<Point3Df, 2> edgeVerts;
 
-      geom->getEdgeCoordinates(edgeId, edge_verts);
-      REQUIRE(edge_verts[0] == coord);
+      geom->getEdgeCoordinates(edgeId, edgeVerts);
+      REQUIRE(edgeVerts[0] == coord);
     }
     // faces
     {
@@ -164,7 +164,7 @@ static void testGeom3D(INodeGeometry3D* geom)
  * @brief Verifies dimensions and cell counts on a grid geometry.
  * @param geom Geometry under test.
  */
-static void testGeomGrid(IGridGeometry* geom)
+static void TestGeomGrid(IGridGeometry* geom)
 {
   SECTION("abstract geometry grid")
   {
@@ -191,7 +191,7 @@ static void testGeomGrid(IGridGeometry* geom)
  * @param expectedMax Expected maximum point.
  */
 template <typename T>
-static void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
+static void CheckBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
 {
   REQUIRE(bbox.isValid());
   REQUIRE(bbox.getMinPoint()[0] == Approx(expectedMin[0]));
@@ -207,39 +207,39 @@ static void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& exp
  * @tparam GeomType Specifies the geometry type.
  */
 template <class GeomType>
-static void testNodeGeometryBoundingBox()
+static void TestNodeGeometryBoundingBox()
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<GeomType>(dataStructure);
+  auto* geomPtr = createGeom<GeomType>(dataStructure);
 
-  const auto* vertices = createVertexList(geom);
-  geom->setVertices(*vertices);
+  const auto* verticesPtr = createVertexList(geomPtr);
+  geomPtr->setVertices(*verticesPtr);
 
   // Negative coordinates require the upper corner to start below every input value.
   {
-    REQUIRE(geom->resizeVertexList(4).valid());
-    geom->setVertexCoordinate(0, Point3Df{-3.0f, -4.0f, -5.0f});
-    geom->setVertexCoordinate(1, Point3Df{-1.0f, -8.0f, -2.0f});
-    geom->setVertexCoordinate(2, Point3Df{-6.0f, -2.0f, -9.0f});
-    geom->setVertexCoordinate(3, Point3Df{-4.0f, -5.0f, -7.0f});
-    checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{-6.0f, -8.0f, -9.0f}, Point3Df{-1.0f, -2.0f, -2.0f});
+    REQUIRE(geomPtr->resizeVertexList(4).valid());
+    geomPtr->setVertexCoordinate(0, Point3Df{-3.0f, -4.0f, -5.0f});
+    geomPtr->setVertexCoordinate(1, Point3Df{-1.0f, -8.0f, -2.0f});
+    geomPtr->setVertexCoordinate(2, Point3Df{-6.0f, -2.0f, -9.0f});
+    geomPtr->setVertexCoordinate(3, Point3Df{-4.0f, -5.0f, -7.0f});
+    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), Point3Df{-6.0f, -8.0f, -9.0f}, Point3Df{-1.0f, -2.0f, -2.0f});
   }
 
   // Mixed-sign coordinates include zero on every axis.
   {
-    REQUIRE(geom->resizeVertexList(3).valid());
-    geom->setVertexCoordinate(0, Point3Df{-2.0f, 3.0f, -4.0f});
-    geom->setVertexCoordinate(1, Point3Df{5.0f, -6.0f, 1.0f});
-    geom->setVertexCoordinate(2, Point3Df{0.0f, 0.0f, 0.0f});
-    checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{-2.0f, -6.0f, -4.0f}, Point3Df{5.0f, 3.0f, 1.0f});
+    REQUIRE(geomPtr->resizeVertexList(3).valid());
+    geomPtr->setVertexCoordinate(0, Point3Df{-2.0f, 3.0f, -4.0f});
+    geomPtr->setVertexCoordinate(1, Point3Df{5.0f, -6.0f, 1.0f});
+    geomPtr->setVertexCoordinate(2, Point3Df{0.0f, 0.0f, 0.0f});
+    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), Point3Df{-2.0f, -6.0f, -4.0f}, Point3Df{5.0f, 3.0f, 1.0f});
   }
 
   // Positive coordinates verify the common case remains correct.
   {
-    REQUIRE(geom->resizeVertexList(2).valid());
-    geom->setVertexCoordinate(0, Point3Df{2.0f, 4.0f, 6.0f});
-    geom->setVertexCoordinate(1, Point3Df{8.0f, 1.0f, 3.0f});
-    checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{2.0f, 1.0f, 3.0f}, Point3Df{8.0f, 4.0f, 6.0f});
+    REQUIRE(geomPtr->resizeVertexList(2).valid());
+    geomPtr->setVertexCoordinate(0, Point3Df{2.0f, 4.0f, 6.0f});
+    geomPtr->setVertexCoordinate(1, Point3Df{8.0f, 1.0f, 3.0f});
+    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), Point3Df{2.0f, 1.0f, 3.0f}, Point3Df{8.0f, 4.0f, 6.0f});
   }
 }
 
@@ -247,13 +247,13 @@ static void testNodeGeometryBoundingBox()
 TEST_CASE("EdgeGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<EdgeGeom>(dataStructure);
+  auto* geomPtr = createGeom<EdgeGeom>(dataStructure);
 
-  testAbstractGeometry(geom);
+  TestAbstractGeometry(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "EdgeGeom");
+    REQUIRE(geomPtr->getTypeName() == "EdgeGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -262,13 +262,13 @@ TEST_CASE("EdgeGeomTest")
 TEST_CASE("HexahedralGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<HexahedralGeom>(dataStructure);
+  auto* geomPtr = createGeom<HexahedralGeom>(dataStructure);
 
-  testGeom3D(geom);
+  TestGeom3D(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "HexahedralGeom");
+    REQUIRE(geomPtr->getTypeName() == "HexahedralGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -277,13 +277,13 @@ TEST_CASE("HexahedralGeomTest")
 TEST_CASE("ImageGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<ImageGeom>(dataStructure);
+  auto* geomPtr = createGeom<ImageGeom>(dataStructure);
 
-  testGeomGrid(geom);
+  TestGeomGrid(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "ImageGeom");
+    REQUIRE(geomPtr->getTypeName() == "ImageGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -294,17 +294,17 @@ TEST_CASE("ImageGeomTest")
 TEST_CASE("ImageGeom::findElementSizes 3D valid spacing")
 {
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Image");
-  geom->setDimensions(SizeVec3{2, 3, 4});
-  REQUIRE(geom->setSpacing(FloatVec3{2.0f, 3.0f, 5.0f}).valid());
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
+  geomPtr->setDimensions(SizeVec3{2, 3, 4});
+  REQUIRE(geomPtr->setSpacing(FloatVec3{2.0f, 3.0f, 5.0f}).valid());
 
-  REQUIRE(geom->findElementSizes(false).valid());
-  const auto* voxelSizes = geom->getElementSizes();
-  REQUIRE(voxelSizes != nullptr);
-  REQUIRE(voxelSizes->getNumberOfTuples() == 2 * 3 * 4);
+  REQUIRE(geomPtr->findElementSizes(false).valid());
+  const auto* voxelSizesPtr = geomPtr->getElementSizes();
+  REQUIRE(voxelSizesPtr != nullptr);
+  REQUIRE(voxelSizesPtr->getNumberOfTuples() == 2 * 3 * 4);
   // Every voxel has the same volume: spacing[0] * spacing[1] * spacing[2].
-  REQUIRE((*voxelSizes)[0] == Approx(2.0f * 3.0f * 5.0f));
-  REQUIRE((*voxelSizes)[voxelSizes->getNumberOfTuples() - 1] == Approx(2.0f * 3.0f * 5.0f));
+  REQUIRE((*voxelSizesPtr)[0] == Approx(2.0f * 3.0f * 5.0f));
+  REQUIRE((*voxelSizesPtr)[voxelSizesPtr->getNumberOfTuples() - 1] == Approx(2.0f * 3.0f * 5.0f));
 }
 
 TEST_CASE("ImageGeom::findElementSizes 2D uses spacing product verbatim (paper example)")
@@ -313,20 +313,20 @@ TEST_CASE("ImageGeom::findElementSizes 2D uses spacing product verbatim (paper e
   // spacing {0.5, 0.5, 0.004}. The element size is the product of all three
   // spacings — the filter treats the empty-axis spacing as real thickness.
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Paper");
-  geom->setDimensions(SizeVec3{17, 22, 1});
-  REQUIRE(geom->setSpacing(FloatVec3{0.5f, 0.5f, 0.004f}).valid());
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Paper");
+  geomPtr->setDimensions(SizeVec3{17, 22, 1});
+  REQUIRE(geomPtr->setSpacing(FloatVec3{0.5f, 0.5f, 0.004f}).valid());
 
-  REQUIRE(geom->findElementSizes(false).valid());
-  const auto* voxelSizes = geom->getElementSizes();
-  REQUIRE(voxelSizes != nullptr);
-  REQUIRE((*voxelSizes)[0] == Approx(0.5f * 0.5f * 0.004f));
+  REQUIRE(geomPtr->findElementSizes(false).valid());
+  const auto* voxelSizesPtr = geomPtr->getElementSizes();
+  REQUIRE(voxelSizesPtr != nullptr);
+  REQUIRE((*voxelSizesPtr)[0] == Approx(0.5f * 0.5f * 0.004f));
 
   // Unit spacing explicitly represents a zero-thickness axis.
-  REQUIRE(geom->setSpacing(FloatVec3{0.5f, 0.5f, 1.0f}).valid());
-  REQUIRE(geom->findElementSizes(true).valid());
-  const auto* voxelSizesFlat = geom->getElementSizes();
-  REQUIRE((*voxelSizesFlat)[0] == Approx(0.25f));
+  REQUIRE(geomPtr->setSpacing(FloatVec3{0.5f, 0.5f, 1.0f}).valid());
+  REQUIRE(geomPtr->findElementSizes(true).valid());
+  const auto* voxelSizesFlatPtr = geomPtr->getElementSizes();
+  REQUIRE((*voxelSizesFlatPtr)[0] == Approx(0.25f));
 }
 
 TEST_CASE("ImageGeom rejects invalid spacing atomically", "[simplnx][ImageGeom]")
@@ -335,22 +335,22 @@ TEST_CASE("ImageGeom rejects invalid spacing atomically", "[simplnx][ImageGeom]"
   const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), 0.0f, -2.0f);
   CAPTURE(axis, value);
   const std::array<std::string, 3> axes = {"X", "Y", "Z"};
-  DataStructure ds;
-  auto* geom = ImageGeom::Create(ds, "Image");
-  REQUIRE(geom != nullptr);
-  CHECK(geom->getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
+  DataStructure dataStructure;
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geomPtr != nullptr);
+  CHECK(geomPtr->getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
   const FloatVec3 original{0.5f, 2.0f, 4.0f};
-  const auto initialResult = geom->setSpacing(original);
+  const auto initialResult = geomPtr->setSpacing(original);
   SIMPLNX_RESULT_REQUIRE_VALID(initialResult);
 
   FloatVec3 candidate{3.0f, 5.0f, 7.0f};
   candidate[axis] = value;
-  const auto result = geom->setSpacing(candidate[0], candidate[1], candidate[2]);
+  const auto result = geomPtr->setSpacing(candidate[0], candidate[1], candidate[2]);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == ImageGeom::k_InvalidSpacing);
   CHECK(result.errors().front().message.find(axes[axis]) != std::string::npos);
   CHECK(result.errors().front().message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(geom->getSpacing() == original);
+  CHECK(geomPtr->getSpacing() == original);
 }
 
 TEST_CASE("ImageGeom rejects nonfinite origin atomically", "[simplnx][ImageGeom]")
@@ -359,22 +359,22 @@ TEST_CASE("ImageGeom rejects nonfinite origin atomically", "[simplnx][ImageGeom]
   const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(axis, value);
   const std::array<std::string, 3> axes = {"X", "Y", "Z"};
-  DataStructure ds;
-  auto* geom = ImageGeom::Create(ds, "Image");
-  REQUIRE(geom != nullptr);
-  CHECK(geom->getOrigin() == FloatVec3{0.0f, 0.0f, 0.0f});
+  DataStructure dataStructure;
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geomPtr != nullptr);
+  CHECK(geomPtr->getOrigin() == FloatVec3{0.0f, 0.0f, 0.0f});
   const FloatVec3 original{-3.0f, 0.0f, 5.0f};
-  const auto initialResult = geom->setOrigin(original[0], original[1], original[2]);
+  const auto initialResult = geomPtr->setOrigin(original[0], original[1], original[2]);
   SIMPLNX_RESULT_REQUIRE_VALID(initialResult);
 
   FloatVec3 candidate{1.0f, 2.0f, 3.0f};
   candidate[axis] = value;
-  const auto result = geom->setOrigin(candidate);
+  const auto result = geomPtr->setOrigin(candidate);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == ImageGeom::k_InvalidOrigin);
   CHECK(result.errors().front().message.find(axes[axis]) != std::string::npos);
   CHECK(result.errors().front().message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(geom->getOrigin() == original);
+  CHECK(geomPtr->getOrigin() == original);
 }
 
 TEST_CASE("Image geometry actions reject invalid metadata", "[simplnx][CreateImageGeometryAction][UpdateImageGeomAction]")
@@ -385,29 +385,29 @@ TEST_CASE("Image geometry actions reject invalid metadata", "[simplnx][CreateIma
   const FloatVec3 origin{-2.0f, 5.0f, badSpacing ? 0.0f : infinity};
   const FloatVec3 spacing{2.0f, 3.0f, badSpacing ? 0.0f : 4.0f};
   const auto expectedCode = badSpacing ? ImageGeom::k_InvalidSpacing : ImageGeom::k_InvalidOrigin;
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath path({"Parent", "Image"});
   SECTION("create")
   {
     const CreateImageGeometryAction action(path, {2, 3, 4}, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), "Cell Data");
-    const auto result = action.apply(ds, mode);
+    const auto result = action.apply(dataStructure, mode);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     CHECK(result.errors().front().code == expectedCode);
     CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
-    CHECK_FALSE(ds.containsData(path));
+    CHECK_FALSE(dataStructure.containsData(path));
   }
   SECTION("update")
   {
-    REQUIRE(DataGroup::Create(ds, "Parent") != nullptr);
-    auto* geom = ImageGeom::Create(ds, "Image", ds.getId(path.getParent()));
-    REQUIRE(geom != nullptr);
+    REQUIRE(DataGroup::Create(dataStructure, "Parent") != nullptr);
+    auto* geomPtr = ImageGeom::Create(dataStructure, "Image", dataStructure.getId(path.getParent()));
+    REQUIRE(geomPtr != nullptr);
     const UpdateImageGeomAction action(origin, spacing, path);
-    const auto result = action.apply(ds, mode);
+    const auto result = action.apply(dataStructure, mode);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     CHECK(result.errors().front().code == expectedCode);
     CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
-    CHECK(geom->getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
-    CHECK(geom->getOrigin() == FloatVec3{0.0f, 0.0f, 0.0f});
+    CHECK(geomPtr->getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
+    CHECK(geomPtr->getOrigin() == FloatVec3{0.0f, 0.0f, 0.0f});
   }
 }
 
@@ -416,27 +416,27 @@ TEST_CASE("ImageGeom::findElementSizes 1D image computes length correctly")
   // One-dimensional images require unit spacing on their empty axes.
   // Element size is the remaining-axis length scaled by the other spacings.
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Line");
-  geom->setDimensions(SizeVec3{5, 1, 1});
-  REQUIRE(geom->setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Line");
+  geomPtr->setDimensions(SizeVec3{5, 1, 1});
+  REQUIRE(geomPtr->setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
 
-  REQUIRE(geom->findElementSizes(false).valid());
-  const auto* voxelSizes = geom->getElementSizes();
-  REQUIRE(voxelSizes != nullptr);
-  REQUIRE(voxelSizes->getNumberOfTuples() == 5);
-  REQUIRE((*voxelSizes)[0] == Approx(2.0f));
+  REQUIRE(geomPtr->findElementSizes(false).valid());
+  const auto* voxelSizesPtr = geomPtr->getElementSizes();
+  REQUIRE(voxelSizesPtr != nullptr);
+  REQUIRE(voxelSizesPtr->getNumberOfTuples() == 5);
+  REQUIRE((*voxelSizesPtr)[0] == Approx(2.0f));
 }
 
 TEST_CASE("QuadGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<QuadGeom>(dataStructure);
+  auto* geomPtr = createGeom<QuadGeom>(dataStructure);
 
-  testGeom2D(geom);
+  TestGeom2D(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "QuadGeom");
+    REQUIRE(geomPtr->getTypeName() == "QuadGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -448,42 +448,42 @@ TEST_CASE("CreateRectGridGeometryAction creates bounds in preflight and execute"
   INFO("mode = " << (mode == IDataAction::Mode::Preflight ? "Preflight" : "Execute"));
   DataStructure dataStructure;
   const DataPath path({"RectGrid"});
-  constexpr usize xTuples = 4;
-  constexpr usize yTuples = 5;
-  constexpr usize zTuples = 6;
-  const CreateRectGridGeometryAction action(path, xTuples, yTuples, zTuples, "Cell Data", "X Bounds", "Y Bounds", "Z Bounds");
+  constexpr usize k_XTuples = 4;
+  constexpr usize k_YTuples = 5;
+  constexpr usize k_ZTuples = 6;
+  const CreateRectGridGeometryAction action(path, k_XTuples, k_YTuples, k_ZTuples, "Cell Data", "X Bounds", "Y Bounds", "Z Bounds");
 
   const Result<> result = action.apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const auto* geom = dataStructure.getDataAs<RectGridGeom>(path);
-  REQUIRE(geom != nullptr);
-  REQUIRE(geom->getDimensions() == SizeVec3{xTuples - 1, yTuples - 1, zTuples - 1});
+  const auto* geomPtr = dataStructure.getDataAs<RectGridGeom>(path);
+  REQUIRE(geomPtr != nullptr);
+  REQUIRE(geomPtr->getDimensions() == SizeVec3{k_XTuples - 1, k_YTuples - 1, k_ZTuples - 1});
 
-  const auto* xBounds = dataStructure.getDataAs<Float32Array>(path.createChildPath("X Bounds"));
-  const auto* yBounds = dataStructure.getDataAs<Float32Array>(path.createChildPath("Y Bounds"));
-  const auto* zBounds = dataStructure.getDataAs<Float32Array>(path.createChildPath("Z Bounds"));
-  REQUIRE(xBounds != nullptr);
-  REQUIRE(yBounds != nullptr);
-  REQUIRE(zBounds != nullptr);
-  REQUIRE(xBounds->getNumberOfTuples() == xTuples);
-  REQUIRE(yBounds->getNumberOfTuples() == yTuples);
-  REQUIRE(zBounds->getNumberOfTuples() == zTuples);
-  REQUIRE(geom->getXBounds() == xBounds);
-  REQUIRE(geom->getYBounds() == yBounds);
-  REQUIRE(geom->getZBounds() == zBounds);
+  const auto* xBoundsPtr = dataStructure.getDataAs<Float32Array>(path.createChildPath("X Bounds"));
+  const auto* yBoundsPtr = dataStructure.getDataAs<Float32Array>(path.createChildPath("Y Bounds"));
+  const auto* zBoundsPtr = dataStructure.getDataAs<Float32Array>(path.createChildPath("Z Bounds"));
+  REQUIRE(xBoundsPtr != nullptr);
+  REQUIRE(yBoundsPtr != nullptr);
+  REQUIRE(zBoundsPtr != nullptr);
+  REQUIRE(xBoundsPtr->getNumberOfTuples() == k_XTuples);
+  REQUIRE(yBoundsPtr->getNumberOfTuples() == k_YTuples);
+  REQUIRE(zBoundsPtr->getNumberOfTuples() == k_ZTuples);
+  REQUIRE(geomPtr->getXBounds() == xBoundsPtr);
+  REQUIRE(geomPtr->getYBounds() == yBoundsPtr);
+  REQUIRE(geomPtr->getZBounds() == zBoundsPtr);
 
   if(mode == IDataAction::Mode::Execute)
   {
-    CHECK(xBounds->getValue(0) == 0.0f);
-    CHECK(xBounds->getValue(xTuples - 1) == 3.0f);
-    CHECK(yBounds->getValue(yTuples - 1) == 4.0f);
-    CHECK(zBounds->getValue(zTuples - 1) == 5.0f);
+    CHECK(xBoundsPtr->getValue(0) == 0.0f);
+    CHECK(xBoundsPtr->getValue(k_XTuples - 1) == 3.0f);
+    CHECK(yBoundsPtr->getValue(k_YTuples - 1) == 4.0f);
+    CHECK(zBoundsPtr->getValue(k_ZTuples - 1) == 5.0f);
   }
 
-  const auto* cellData = dataStructure.getDataAs<AttributeMatrix>(path.createChildPath("Cell Data"));
-  REQUIRE(cellData != nullptr);
-  REQUIRE(geom->getCellData() == cellData);
-  REQUIRE(cellData->getShape() == ShapeType{zTuples - 1, yTuples - 1, xTuples - 1});
+  const auto* cellDataPtr = dataStructure.getDataAs<AttributeMatrix>(path.createChildPath("Cell Data"));
+  REQUIRE(cellDataPtr != nullptr);
+  REQUIRE(geomPtr->getCellData() == cellDataPtr);
+  REQUIRE(cellDataPtr->getShape() == ShapeType{k_ZTuples - 1, k_YTuples - 1, k_XTuples - 1});
 }
 
 TEST_CASE("CreateRectGridGeometryAction reports a bound array that cannot be created", "[simplnx][CreateRectGridGeometryAction]")
@@ -503,26 +503,26 @@ TEST_CASE("CreateRectGridGeometryAction reports a bound array that cannot be cre
 TEST_CASE("CreateRectGridGeometryAction rejects a count below two", "[simplnx][CreateRectGridGeometryAction]")
 {
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath path({"RectGrid"});
   const CreateRectGridGeometryAction action(path, 3, 1, 3, "Cell Data", "X Bounds", "Y Bounds", "Z Bounds");
-  const auto result = action.apply(ds, mode);
+  const auto result = action.apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == -5914);
   CHECK(result.errors().front().message.find("Y bounds") != std::string::npos);
-  CHECK_FALSE(ds.containsData(path));
+  CHECK_FALSE(dataStructure.containsData(path));
 }
 
 TEST_CASE("RectGridGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<RectGridGeom>(dataStructure);
+  auto* geomPtr = createGeom<RectGridGeom>(dataStructure);
 
-  testGeomGrid(geom);
+  TestGeomGrid(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "RectGridGeom");
+    REQUIRE(geomPtr->getTypeName() == "RectGridGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -531,13 +531,13 @@ TEST_CASE("RectGridGeomTest")
 TEST_CASE("TetrahedralGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<TetrahedralGeom>(dataStructure);
+  auto* geomPtr = createGeom<TetrahedralGeom>(dataStructure);
 
-  testGeom3D(geom);
+  TestGeom3D(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "TetrahedralGeom");
+    REQUIRE(geomPtr->getTypeName() == "TetrahedralGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -546,13 +546,13 @@ TEST_CASE("TetrahedralGeomTest")
 TEST_CASE("TriangleGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<TriangleGeom>(dataStructure);
+  auto* geomPtr = createGeom<TriangleGeom>(dataStructure);
 
-  testGeom2D(geom);
+  TestGeom2D(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "TriangleGeom");
+    REQUIRE(geomPtr->getTypeName() == "TriangleGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -561,13 +561,13 @@ TEST_CASE("TriangleGeomTest")
 TEST_CASE("VertexGeomTest")
 {
   DataStructure dataStructure;
-  auto* geom = createGeom<VertexGeom>(dataStructure);
+  auto* geomPtr = createGeom<VertexGeom>(dataStructure);
 
-  testAbstractGeometry(geom);
+  TestAbstractGeometry(geomPtr);
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getTypeName() == "VertexGeom");
+    REQUIRE(geomPtr->getTypeName() == "VertexGeom");
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -582,17 +582,17 @@ TEST_CASE("CreateVertexGeometryAction: units and cloning", "[simplnx][CreateVert
   CAPTURE(handling, units, mode, shouldCloneAction);
 
   DataStructure dataStructure;
-  const DataPath k_GeometryPath({"Vertices"});
-  const std::string k_InputGroupName = "Input";
-  const std::string k_CoordinatesName = "Coordinates";
-  const std::string k_VertexDataName = "Vertex Data";
+  const DataPath kGeometryPath({"Vertices"});
+  const std::string kInputGroupName = "Input";
+  const std::string kCoordinatesName = "Coordinates";
+  const std::string kVertexDataName = "Vertex Data";
   constexpr usize k_NumVertices = 2;
   constexpr usize k_NumComponents = 3;
-  const DataPath k_InputPath({k_InputGroupName, k_CoordinatesName});
+  const DataPath kInputPath({kInputGroupName, kCoordinatesName});
   if(handling != ArrayHandlingType::Create)
   {
-    REQUIRE(DataGroup::Create(dataStructure, k_InputGroupName) != nullptr);
-    const auto result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {k_NumVertices}, {k_NumComponents}, k_InputPath, IDataAction::Mode::Execute);
+    REQUIRE(DataGroup::Create(dataStructure, kInputGroupName) != nullptr);
+    const auto result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {k_NumVertices}, {k_NumComponents}, kInputPath, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
 
@@ -601,22 +601,22 @@ TEST_CASE("CreateVertexGeometryAction: units and cloning", "[simplnx][CreateVert
   {
     if(units == IGeometry::LengthUnit::Meter)
     {
-      actionPtr = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_NumVertices, k_VertexDataName, k_CoordinatesName);
+      actionPtr = std::make_unique<CreateVertexGeometryAction>(kGeometryPath, k_NumVertices, kVertexDataName, kCoordinatesName);
     }
     else
     {
-      actionPtr = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_NumVertices, k_VertexDataName, k_CoordinatesName, units);
+      actionPtr = std::make_unique<CreateVertexGeometryAction>(kGeometryPath, k_NumVertices, kVertexDataName, kCoordinatesName, units);
     }
   }
   else
   {
     if(units == IGeometry::LengthUnit::Meter)
     {
-      actionPtr = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_InputPath, k_VertexDataName, handling);
+      actionPtr = std::make_unique<CreateVertexGeometryAction>(kGeometryPath, kInputPath, kVertexDataName, handling);
     }
     else
     {
-      actionPtr = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_InputPath, k_VertexDataName, handling, units);
+      actionPtr = std::make_unique<CreateVertexGeometryAction>(kGeometryPath, kInputPath, kVertexDataName, handling, units);
     }
   }
   CHECK(actionPtr->units() == units);
@@ -631,7 +631,7 @@ TEST_CASE("CreateVertexGeometryAction: units and cloning", "[simplnx][CreateVert
   }
   const auto result = shouldCloneAction ? clonedActionPtr->apply(dataStructure, mode) : actionPtr->apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(k_GeometryPath);
+  const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(kGeometryPath);
   REQUIRE(vertexGeomPtr != nullptr);
   CHECK(vertexGeomPtr->getUnits() == units);
   CHECK(vertexGeomPtr->getNumberOfVertices() == k_NumVertices);
@@ -644,20 +644,20 @@ TEST_CASE("CreateImageGeometryAction: units and cloning", "[simplnx][CreateImage
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   CAPTURE(units, mode);
 
-  const DataPath k_GeometryPath({"Image"});
-  const CreateImageGeometryAction::DimensionType k_Dimensions = {2, 3, 4};
-  const CreateImageGeometryAction::OriginType k_Origin = {0.0F, 0.0F, 0.0F};
-  const CreateImageGeometryAction::SpacingType k_Spacing = {1.0F, 1.0F, 1.0F};
-  const std::string k_CellDataName = "Cell Data";
+  const DataPath kGeometryPath({"Image"});
+  const CreateImageGeometryAction::DimensionType kDimensions = {2, 3, 4};
+  const CreateImageGeometryAction::OriginType kOrigin = {0.0F, 0.0F, 0.0F};
+  const CreateImageGeometryAction::SpacingType kSpacing = {1.0F, 1.0F, 1.0F};
+  const std::string kCellDataName = "Cell Data";
 
   std::unique_ptr<CreateImageGeometryAction> actionPtr;
   if(units == IGeometry::LengthUnit::Micrometer)
   {
-    actionPtr = std::make_unique<CreateImageGeometryAction>(k_GeometryPath, k_Dimensions, k_Origin, k_Spacing, k_CellDataName);
+    actionPtr = std::make_unique<CreateImageGeometryAction>(kGeometryPath, kDimensions, kOrigin, kSpacing, kCellDataName);
   }
   else
   {
-    actionPtr = std::make_unique<CreateImageGeometryAction>(k_GeometryPath, k_Dimensions, k_Origin, k_Spacing, k_CellDataName, units);
+    actionPtr = std::make_unique<CreateImageGeometryAction>(kGeometryPath, kDimensions, kOrigin, kSpacing, kCellDataName, units);
   }
   CHECK(actionPtr->units() == units);
 
@@ -670,7 +670,7 @@ TEST_CASE("CreateImageGeometryAction: units and cloning", "[simplnx][CreateImage
   DataStructure dataStructure;
   const auto result = clonedActionPtr->apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_GeometryPath);
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(kGeometryPath);
   REQUIRE(imageGeomPtr != nullptr);
   CHECK(imageGeomPtr->getUnits() == units);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -682,21 +682,21 @@ TEST_CASE("CreateVertexGeometryAction: existing DataArray at the geometry path",
   CAPTURE(mode);
 
   DataStructure dataStructure;
-  const DataPath k_GeometryPath({"Vertices"});
-  const auto createResult = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {2}, {3}, k_GeometryPath, IDataAction::Mode::Execute);
+  const DataPath kGeometryPath({"Vertices"});
+  const auto createResult = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {2}, {3}, kGeometryPath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(createResult);
-  const auto existingId = dataStructure.getId(k_GeometryPath);
+  const auto existingId = dataStructure.getId(kGeometryPath);
   REQUIRE(existingId.has_value());
 
   // VertexGeom::Create fails because a DataArray already uses the name. The action must return an error, not use the missing geometry.
-  const CreateVertexGeometryAction action(k_GeometryPath, 2, "Vertex Data", "Coordinates", IGeometry::LengthUnit::Unspecified);
+  const CreateVertexGeometryAction action(kGeometryPath, 2, "Vertex Data", "Coordinates", IGeometry::LengthUnit::Unspecified);
   const auto result = action.apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors().front().code == -6108);
-  CHECK(result.errors().front().message.find(k_GeometryPath.toString()) != std::string::npos);
-  CHECK(dataStructure.getDataAs<Float32Array>(k_GeometryPath) != nullptr);
-  CHECK(dataStructure.getId(k_GeometryPath) == existingId);
+  CHECK(result.errors().front().message.find(kGeometryPath.toString()) != std::string::npos);
+  CHECK(dataStructure.getDataAs<Float32Array>(kGeometryPath) != nullptr);
+  CHECK(dataStructure.getId(kGeometryPath) == existingId);
 }
 
 // Each node geometry inherits the same bounding-box implementation.
@@ -705,27 +705,27 @@ TEST_CASE("Node geometry getBoundingBox handles negative coordinates")
 {
   SECTION("VertexGeom")
   {
-    testNodeGeometryBoundingBox<VertexGeom>();
+    TestNodeGeometryBoundingBox<VertexGeom>();
   }
   SECTION("EdgeGeom")
   {
-    testNodeGeometryBoundingBox<EdgeGeom>();
+    TestNodeGeometryBoundingBox<EdgeGeom>();
   }
   SECTION("TriangleGeom")
   {
-    testNodeGeometryBoundingBox<TriangleGeom>();
+    TestNodeGeometryBoundingBox<TriangleGeom>();
   }
   SECTION("QuadGeom")
   {
-    testNodeGeometryBoundingBox<QuadGeom>();
+    TestNodeGeometryBoundingBox<QuadGeom>();
   }
   SECTION("TetrahedralGeom")
   {
-    testNodeGeometryBoundingBox<TetrahedralGeom>();
+    TestNodeGeometryBoundingBox<TetrahedralGeom>();
   }
   SECTION("HexahedralGeom")
   {
-    testNodeGeometryBoundingBox<HexahedralGeom>();
+    TestNodeGeometryBoundingBox<HexahedralGeom>();
   }
 }
 
@@ -738,77 +738,77 @@ TEST_CASE("Node geometry getBoundingBox handles negative coordinates")
 // -----------------------------------------------------------------------------
 namespace
 {
-Float32Array* makeBoundsAxis(DataStructure& ds, RectGridGeom* geom, const std::string& name, std::vector<float32> values)
+Float32Array* MakeBoundsAxis(DataStructure& dataStructure, RectGridGeom* geom, const std::string& name, std::vector<float32> values)
 {
-  auto* arr = Float32Array::CreateWithStore<DataStore<float32>>(ds, name, ShapeType{values.size()}, ShapeType{1}, geom->getId());
+  auto* arrPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, name, ShapeType{values.size()}, ShapeType{1}, geom->getId());
   for(usize i = 0; i < values.size(); ++i)
   {
-    arr->setValue(i, values[i]);
+    arrPtr->setValue(i, values[i]);
   }
-  return arr;
+  return arrPtr;
 }
 } // namespace
 
 TEST_CASE("RectGridGeom::setBounds accepts valid arrays")
 {
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
 
   SECTION("positive monotonically increasing")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f, 2.5f, 5.0f});
-    auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 3.0f});
-    auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f, 2.0f});
-    auto result = geom->setBounds(x, y, z);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f, 2.5f, 5.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 3.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f, 2.0f});
+    auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(geom->getXBounds() == x);
-    REQUIRE(geom->getYBounds() == y);
-    REQUIRE(geom->getZBounds() == z);
+    REQUIRE(geomPtr->getXBounds() == xPtr);
+    REQUIRE(geomPtr->getYBounds() == yPtr);
+    REQUIRE(geomPtr->getZBounds() == zPtr);
   }
 
   SECTION("all-negative monotonically increasing")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {-10.0f, -5.0f, -1.0f});
-    auto* y = makeBoundsAxis(ds, geom, "Y", {-20.0f, -3.0f});
-    auto* z = makeBoundsAxis(ds, geom, "Z", {-7.0f, -0.5f});
-    auto result = geom->setBounds(x, y, z);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {-10.0f, -5.0f, -1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {-20.0f, -3.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {-7.0f, -0.5f});
+    auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(geom->getXBounds() == x);
-    REQUIRE(geom->getYBounds() == y);
-    REQUIRE(geom->getZBounds() == z);
+    REQUIRE(geomPtr->getXBounds() == xPtr);
+    REQUIRE(geomPtr->getYBounds() == yPtr);
+    REQUIRE(geomPtr->getZBounds() == zPtr);
   }
 
   SECTION("straddling zero")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {-2.0f, 0.0f, 3.0f});
-    auto* y = makeBoundsAxis(ds, geom, "Y", {-5.0f, 1.0f});
-    auto* z = makeBoundsAxis(ds, geom, "Z", {-1.0f, 0.0f, 1.0f});
-    auto result = geom->setBounds(x, y, z);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {-2.0f, 0.0f, 3.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {-5.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {-1.0f, 0.0f, 1.0f});
+    auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
 
   SECTION("minimum valid size — 2 elements each")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f});
-    auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 1.0f});
-    auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f});
-    auto result = geom->setBounds(x, y, z);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f});
+    auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
 
   SECTION("nullptr pointers clear bounds IDs")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f});
-    auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 1.0f});
-    auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f});
-    auto setResult = geom->setBounds(x, y, z);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f});
+    auto setResult = geomPtr->setBounds(xPtr, yPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(setResult);
 
-    auto clearResult = geom->setBounds(nullptr, nullptr, nullptr);
+    auto clearResult = geomPtr->setBounds(nullptr, nullptr, nullptr);
     SIMPLNX_RESULT_REQUIRE_VALID(clearResult);
-    REQUIRE(geom->getXBounds() == nullptr);
-    REQUIRE(geom->getYBounds() == nullptr);
-    REQUIRE(geom->getZBounds() == nullptr);
+    REQUIRE(geomPtr->getXBounds() == nullptr);
+    REQUIRE(geomPtr->getYBounds() == nullptr);
+    REQUIRE(geomPtr->getZBounds() == nullptr);
   }
 }
 
@@ -817,19 +817,19 @@ TEST_CASE("RectGridGeom::setBounds validates EmptyDataStore metadata")
   const usize size = GENERATE(usize{0}, usize{1}, usize{2}, usize{3});
   const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(size, axis);
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
   std::array<Float32Array*, 3> bounds = {};
   const std::array<std::string, 3> names = {"X", "Y", "Z"};
   for(usize i = 0; i < bounds.size(); ++i)
   {
     auto storeResult = EmptyDataStore<float32>::Create(ShapeType{i == axis ? size : 3}, ShapeType{1}, "");
     SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
-    bounds[i] = Float32Array::Create(ds, names[i], std::move(storeResult.value()), geom->getId());
+    bounds[i] = Float32Array::Create(dataStructure, names[i], std::move(storeResult.value()), geomPtr->getId());
     REQUIRE(bounds[i] != nullptr);
     REQUIRE(bounds[i]->getDataStoreRef().getStoreType() == IDataStore::StoreType::Empty);
   }
-  const auto result = geom->setBounds(bounds[0], bounds[1], bounds[2]);
+  const auto result = geomPtr->setBounds(bounds[0], bounds[1], bounds[2]);
   if(size < 2)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -838,23 +838,23 @@ TEST_CASE("RectGridGeom::setBounds validates EmptyDataStore metadata")
   else
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(geom->getXBounds() == bounds[0]);
-    REQUIRE(geom->getYBounds() == bounds[1]);
-    REQUIRE(geom->getZBounds() == bounds[2]);
+    REQUIRE(geomPtr->getXBounds() == bounds[0]);
+    REQUIRE(geomPtr->getYBounds() == bounds[1]);
+    REQUIRE(geomPtr->getZBounds() == bounds[2]);
   }
 }
 
 TEST_CASE("RectGridGeom::setBounds rejects nonscalar bounds", "[simplnx][RectGridGeom]")
 {
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
-  REQUIRE(geom != nullptr);
-  auto* bounds = Float32Array::CreateWithStore<DataStore<float32>>(ds, "Y", ShapeType{3}, ShapeType{2}, geom->getId());
-  REQUIRE(bounds != nullptr);
-  const auto result = geom->setBounds(nullptr, bounds, nullptr);
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+  REQUIRE(geomPtr != nullptr);
+  auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Y", ShapeType{3}, ShapeType{2}, geomPtr->getId());
+  REQUIRE(boundsPtr != nullptr);
+  const auto result = geomPtr->setBounds(nullptr, boundsPtr, nullptr);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == RectGridGeom::k_NonscalarBounds);
-  CHECK(geom->getYBounds() == nullptr);
+  CHECK(geomPtr->getYBounds() == nullptr);
 }
 
 TEST_CASE("RectGridGeom::setBounds rejects nonfinite bounds", "[simplnx][RectGridGeom]")
@@ -862,70 +862,70 @@ TEST_CASE("RectGridGeom::setBounds rejects nonfinite bounds", "[simplnx][RectGri
   const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
   const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(axis, value);
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
-  REQUIRE(geom != nullptr);
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+  REQUIRE(geomPtr != nullptr);
   const std::array<std::string, 3> axes = {"X", "Y", "Z"};
   std::array<Float32Array*, 3> bounds = {};
   for(usize i = 0; i < bounds.size(); ++i)
   {
-    bounds[i] = makeBoundsAxis(ds, geom, axes[i], {0.0f, 1.0f, 2.0f});
+    bounds[i] = MakeBoundsAxis(dataStructure, geomPtr, axes[i], {0.0f, 1.0f, 2.0f});
   }
   bounds[axis]->setValue(1, value);
-  const auto result = geom->setBounds(bounds[0], bounds[1], bounds[2]);
+  const auto result = geomPtr->setBounds(bounds[0], bounds[1], bounds[2]);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == RectGridGeom::k_NonfiniteBounds);
   CHECK(result.errors().front().message.find(axes[axis] + " bounds") != std::string::npos);
   CHECK(result.errors().front().message.find("index 1") != std::string::npos);
   CHECK(result.errors().front().message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(geom->getXBounds() == nullptr);
-  CHECK(geom->getYBounds() == nullptr);
-  CHECK(geom->getZBounds() == nullptr);
+  CHECK(geomPtr->getXBounds() == nullptr);
+  CHECK(geomPtr->getYBounds() == nullptr);
+  CHECK(geomPtr->getZBounds() == nullptr);
 }
 
 TEST_CASE("CreateRectGridGeometryAction reports invalid input bounds before moving arrays", "[simplnx][CreateRectGridGeometryAction]")
 {
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const auto handling = GENERATE(ArrayHandlingType::Copy, ArrayHandlingType::Move, ArrayHandlingType::Reference);
-  DataStructure ds;
-  auto* source = RectGridGeom::Create(ds, "Source");
-  REQUIRE(source != nullptr);
-  makeBoundsAxis(ds, source, "X", {0.0f, 1.0f});
-  makeBoundsAxis(ds, source, "Y", {0.0f, 1.0f});
-  makeBoundsAxis(ds, source, "Z", {0.0f, 0.0f});
+  DataStructure dataStructure;
+  auto* sourcePtr = RectGridGeom::Create(dataStructure, "Source");
+  REQUIRE(sourcePtr != nullptr);
+  MakeBoundsAxis(dataStructure, sourcePtr, "X", {0.0f, 1.0f});
+  MakeBoundsAxis(dataStructure, sourcePtr, "Y", {0.0f, 1.0f});
+  MakeBoundsAxis(dataStructure, sourcePtr, "Z", {0.0f, 0.0f});
   const DataPath path({"Parent", "RectGrid"});
   const DataPath xPath({"Source", "X"});
   const DataPath yPath({"Source", "Y"});
   const DataPath zPath({"Source", "Z"});
   const CreateRectGridGeometryAction action(path, xPath, yPath, zPath, "Cell Data", handling);
-  const auto result = action.apply(ds, mode);
+  const auto result = action.apply(dataStructure, mode);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == -4007);
   CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
-  CHECK(ds.containsData(xPath));
-  CHECK(ds.containsData(yPath));
-  CHECK(ds.containsData(zPath));
-  CHECK_FALSE(ds.containsData(path));
+  CHECK(dataStructure.containsData(xPath));
+  CHECK(dataStructure.containsData(yPath));
+  CHECK(dataStructure.containsData(zPath));
+  CHECK_FALSE(dataStructure.containsData(path));
 }
 
 TEST_CASE("RectGridGeom::setBounds validates across bulk read boundaries")
 {
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
   std::vector<float32> values(8193);
   for(usize i = 0; i < values.size(); ++i)
   {
     values[i] = static_cast<float32>(i);
   }
-  auto* x = makeBoundsAxis(ds, geom, "X", values);
-  auto* y = makeBoundsAxis(ds, geom, "Y", {0.0f, 1.0f});
-  auto* z = makeBoundsAxis(ds, geom, "Z", {0.0f, 1.0f});
-  const auto validResult = geom->setBounds(x, y, z);
+  auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", values);
+  auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {0.0f, 1.0f});
+  auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {0.0f, 1.0f});
+  const auto validResult = geomPtr->setBounds(xPtr, yPtr, zPtr);
   SIMPLNX_RESULT_REQUIRE_VALID(validResult);
 
   // The first value of the second 4096-value chunk decreases from the preceding chunk.
-  x->setValue(4096, 4094.0f);
-  const auto result = geom->setBounds(x, y, z);
+  xPtr->setValue(4096, 4094.0f);
+  const auto result = geomPtr->setBounds(xPtr, yPtr, zPtr);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -4007);
   REQUIRE(result.errors().front().message == "RectGridGeom: X bounds array is not strictly monotonically increasing at index 4096: bounds[4095]=4095 >= bounds[4096]=4094");
@@ -933,41 +933,41 @@ TEST_CASE("RectGridGeom::setBounds validates across bulk read boundaries")
 
 TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
 {
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
-  auto* goodY = makeBoundsAxis(ds, geom, "GoodY", {0.0f, 1.0f});
-  auto* goodZ = makeBoundsAxis(ds, geom, "GoodZ", {0.0f, 1.0f});
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+  auto* goodYPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodY", {0.0f, 1.0f});
+  auto* goodZPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodZ", {0.0f, 1.0f});
 
   SECTION("empty X array")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {});
-    auto result = geom->setBounds(x, goodY, goodZ);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {});
+    auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
   }
 
   SECTION("single-element X array")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {5.0f});
-    auto result = geom->setBounds(x, goodY, goodZ);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {5.0f});
+    auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
   }
 
   SECTION("single-element Y array")
   {
-    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f});
-    auto* y = makeBoundsAxis(ds, geom, "Y", {3.0f});
-    auto result = geom->setBounds(goodX, y, goodZ);
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {3.0f});
+    auto result = geomPtr->setBounds(goodXPtr, yPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
   }
 
   SECTION("single-element Z array")
   {
-    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f});
-    auto* z = makeBoundsAxis(ds, geom, "Z", {7.0f});
-    auto result = geom->setBounds(goodX, goodY, z);
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {7.0f});
+    auto result = geomPtr->setBounds(goodXPtr, goodYPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4006);
   }
@@ -975,57 +975,57 @@ TEST_CASE("RectGridGeom::setBounds rejects too-small arrays")
 
 TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 {
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
-  auto* goodY = makeBoundsAxis(ds, geom, "GoodY", {0.0f, 1.0f});
-  auto* goodZ = makeBoundsAxis(ds, geom, "GoodZ", {0.0f, 1.0f});
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+  auto* goodYPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodY", {0.0f, 1.0f});
+  auto* goodZPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodZ", {0.0f, 1.0f});
 
   SECTION("equal adjacent values on X")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 1.0f, 1.0f, 2.0f});
-    auto result = geom->setBounds(x, goodY, goodZ);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 1.0f, 1.0f, 2.0f});
+    auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
   }
 
   SECTION("strictly decreasing on X")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {5.0f, 3.0f, 1.0f});
-    auto result = geom->setBounds(x, goodY, goodZ);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {5.0f, 3.0f, 1.0f});
+    auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
   }
 
   SECTION("reversal in the middle of X")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {0.0f, 2.0f, 1.0f, 3.0f});
-    auto result = geom->setBounds(x, goodY, goodZ);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {0.0f, 2.0f, 1.0f, 3.0f});
+    auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
   }
 
   SECTION("non-monotonic Y axis")
   {
-    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f, 2.0f});
-    auto* y = makeBoundsAxis(ds, geom, "Y", {3.0f, 1.0f});
-    auto result = geom->setBounds(goodX, y, goodZ);
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f, 2.0f});
+    auto* yPtr = MakeBoundsAxis(dataStructure, geomPtr, "Y", {3.0f, 1.0f});
+    auto result = geomPtr->setBounds(goodXPtr, yPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
   }
 
   SECTION("non-monotonic Z axis")
   {
-    auto* goodX = makeBoundsAxis(ds, geom, "GoodX", {0.0f, 1.0f});
-    auto* z = makeBoundsAxis(ds, geom, "Z", {2.0f, 1.0f});
-    auto result = geom->setBounds(goodX, goodY, z);
+    auto* goodXPtr = MakeBoundsAxis(dataStructure, geomPtr, "GoodX", {0.0f, 1.0f});
+    auto* zPtr = MakeBoundsAxis(dataStructure, geomPtr, "Z", {2.0f, 1.0f});
+    auto result = geomPtr->setBounds(goodXPtr, goodYPtr, zPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
   }
 
   SECTION("equal adjacent negative values")
   {
-    auto* x = makeBoundsAxis(ds, geom, "X", {-5.0f, -3.0f, -3.0f, -1.0f});
-    auto result = geom->setBounds(x, goodY, goodZ);
+    auto* xPtr = MakeBoundsAxis(dataStructure, geomPtr, "X", {-5.0f, -3.0f, -3.0f, -1.0f});
+    auto result = geomPtr->setBounds(xPtr, goodYPtr, goodZPtr);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -4007);
   }
@@ -1033,64 +1033,64 @@ TEST_CASE("RectGridGeom::setBounds rejects non-monotonic arrays")
 
 TEST_CASE("RectGridGeom::setBounds is atomic — geometry unchanged on failure")
 {
-  DataStructure ds;
-  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  DataStructure dataStructure;
+  auto* geomPtr = RectGridGeom::Create(dataStructure, "RectGrid");
 
-  auto* x0 = makeBoundsAxis(ds, geom, "X0", {0.0f, 1.0f, 2.0f});
-  auto* y0 = makeBoundsAxis(ds, geom, "Y0", {0.0f, 5.0f});
-  auto* z0 = makeBoundsAxis(ds, geom, "Z0", {0.0f, 3.0f});
-  auto initialSet = geom->setBounds(x0, y0, z0);
+  auto* x0Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X0", {0.0f, 1.0f, 2.0f});
+  auto* y0Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y0", {0.0f, 5.0f});
+  auto* z0Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z0", {0.0f, 3.0f});
+  auto initialSet = geomPtr->setBounds(x0Ptr, y0Ptr, z0Ptr);
   SIMPLNX_RESULT_REQUIRE_VALID(initialSet);
 
   SECTION("X fails — Y and Z original IDs preserved")
   {
-    auto* x1 = makeBoundsAxis(ds, geom, "X1", {9.0f}); // too small
-    auto* y1 = makeBoundsAxis(ds, geom, "Y1", {0.0f, 4.0f});
-    auto* z1 = makeBoundsAxis(ds, geom, "Z1", {0.0f, 2.0f});
-    auto badResult = geom->setBounds(x1, y1, z1);
+    auto* x1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X1", {9.0f}); // too small
+    auto* y1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y1", {0.0f, 4.0f});
+    auto* z1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z1", {0.0f, 2.0f});
+    auto badResult = geomPtr->setBounds(x1Ptr, y1Ptr, z1Ptr);
     SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
-    REQUIRE(geom->getXBounds() == x0);
-    REQUIRE(geom->getYBounds() == y0);
-    REQUIRE(geom->getZBounds() == z0);
+    REQUIRE(geomPtr->getXBounds() == x0Ptr);
+    REQUIRE(geomPtr->getYBounds() == y0Ptr);
+    REQUIRE(geomPtr->getZBounds() == z0Ptr);
   }
 
   SECTION("Y fails — X and Z original IDs preserved")
   {
-    auto* x1 = makeBoundsAxis(ds, geom, "X1", {0.0f, 4.0f});
-    auto* y1 = makeBoundsAxis(ds, geom, "Y1", {99.0f}); // too small
-    auto* z1 = makeBoundsAxis(ds, geom, "Z1", {0.0f, 2.0f});
-    auto badResult = geom->setBounds(x1, y1, z1);
+    auto* x1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X1", {0.0f, 4.0f});
+    auto* y1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y1", {99.0f}); // too small
+    auto* z1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z1", {0.0f, 2.0f});
+    auto badResult = geomPtr->setBounds(x1Ptr, y1Ptr, z1Ptr);
     SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
-    REQUIRE(geom->getXBounds() == x0);
-    REQUIRE(geom->getYBounds() == y0);
-    REQUIRE(geom->getZBounds() == z0);
+    REQUIRE(geomPtr->getXBounds() == x0Ptr);
+    REQUIRE(geomPtr->getYBounds() == y0Ptr);
+    REQUIRE(geomPtr->getZBounds() == z0Ptr);
   }
 
   SECTION("Z fails — X and Y original IDs preserved")
   {
-    auto* x1 = makeBoundsAxis(ds, geom, "X1", {0.0f, 4.0f});
-    auto* y1 = makeBoundsAxis(ds, geom, "Y1", {0.0f, 2.0f});
-    auto* z1 = makeBoundsAxis(ds, geom, "Z1", {5.0f, 2.0f}); // decreasing
-    auto badResult = geom->setBounds(x1, y1, z1);
+    auto* x1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "X1", {0.0f, 4.0f});
+    auto* y1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Y1", {0.0f, 2.0f});
+    auto* z1Ptr = MakeBoundsAxis(dataStructure, geomPtr, "Z1", {5.0f, 2.0f}); // decreasing
+    auto badResult = geomPtr->setBounds(x1Ptr, y1Ptr, z1Ptr);
     SIMPLNX_RESULT_REQUIRE_INVALID(badResult);
-    REQUIRE(geom->getXBounds() == x0);
-    REQUIRE(geom->getYBounds() == y0);
-    REQUIRE(geom->getZBounds() == z0);
+    REQUIRE(geomPtr->getXBounds() == x0Ptr);
+    REQUIRE(geomPtr->getYBounds() == y0Ptr);
+    REQUIRE(geomPtr->getZBounds() == z0Ptr);
   }
 }
 
 TEST_CASE("ImageGeom getBoundingBox handles a negative origin")
 {
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Image");
-  geom->setDimensions(SizeVec3{4, 5, 6});
-  REQUIRE(geom->setSpacing(FloatVec3{0.5f, 2.0f, 1.5f}).valid());
-  REQUIRE(geom->setOrigin(FloatVec3{-3.0f, -10.0f, -1.0f}).valid());
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
+  geomPtr->setDimensions(SizeVec3{4, 5, 6});
+  REQUIRE(geomPtr->setSpacing(FloatVec3{0.5f, 2.0f, 1.5f}).valid());
+  REQUIRE(geomPtr->setOrigin(FloatVec3{-3.0f, -10.0f, -1.0f}).valid());
 
   // Lower corner is the origin; upper corner is origin + dims * spacing:
   //   x: -3 + 4 * 0.5  = -1
   //   y: -10 + 5 * 2.0 =  0
   //   z: -1 + 6 * 1.5  =  8
-  checkBoundingBox<float64>(geom->getBoundingBox(), Point3Dd{-3.0, -10.0, -1.0}, Point3Dd{-1.0, 0.0, 8.0});
-  checkBoundingBox<float32>(geom->getBoundingBoxf(), Point3Df{-3.0f, -10.0f, -1.0f}, Point3Df{-1.0f, 0.0f, 8.0f});
+  CheckBoundingBox<float64>(geomPtr->getBoundingBox(), Point3Dd{-3.0, -10.0, -1.0}, Point3Dd{-1.0, 0.0, 8.0});
+  CheckBoundingBox<float32>(geomPtr->getBoundingBoxf(), Point3Df{-3.0f, -10.0f, -1.0f}, Point3Df{-1.0f, 0.0f, 8.0f});
 }

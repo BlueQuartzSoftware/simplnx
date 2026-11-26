@@ -126,13 +126,13 @@ Result<> ReadRawBinary::execute()
   {
     return {};
   }
-  auto* binaryIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
+  auto* binaryIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
 
   usize numComponents = std::accumulate(m_InputValues.componentDimsValue.begin(), m_InputValues.componentDimsValue.end(), static_cast<usize>(1), std::multiplies<>());
-  if(binaryIDataArray->getNumberOfComponents() != numComponents)
+  if(binaryIDataArrayPtr->getNumberOfComponents() != numComponents)
   {
     return MakeErrorResult(-1071, fmt::format("DataArray at path '{}' has {} components but expected {}.", m_InputValues.createdAttributeArrayPathValue.toString(),
-                                              binaryIDataArray->getNumberOfComponents(), numComponents));
+                                              binaryIDataArrayPtr->getNumberOfComponents(), numComponents));
   }
 
   const std::string inputFile = m_InputValues.inputFileValue.string();
@@ -140,25 +140,25 @@ Result<> ReadRawBinary::execute()
   switch(m_InputValues.scalarTypeValue)
   {
   case NumericType::int8:
-    return ReadBinaryFile<int8>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<int8>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint8:
-    return ReadBinaryFile<uint8>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<uint8>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::int16:
-    return ReadBinaryFile<int16>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<int16>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint16:
-    return ReadBinaryFile<uint16>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<uint16>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::int32:
-    return ReadBinaryFile<int32>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<int32>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint32:
-    return ReadBinaryFile<uint32>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<uint32>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::int64:
-    return ReadBinaryFile<int64>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<int64>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint64:
-    return ReadBinaryFile<uint64>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<uint64>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::float32:
-    return ReadBinaryFile<float32>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<float32>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::float64:
-    return ReadBinaryFile<float64>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
+    return ReadBinaryFile<float64>(binaryIDataArrayPtr, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   default:
     return MakeErrorResult(nx::core::k_UnsupportedScalarType, "The chosen scalar type is not supported by this filter.");
   }

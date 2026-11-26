@@ -37,16 +37,16 @@ public:
       numericText.erase(0, 1);
     }
     std::replace(numericText.begin(), numericText.end(), ',', '.');
-    const char* begin = numericText.c_str();
-    char* end = nullptr;
-    const float32 value = std::strtof(begin, &end);
-    if(end != begin)
+    const char* beginPtr = numericText.c_str();
+    char* endPtr = nullptr;
+    const float32 value = std::strtof(beginPtr, &endPtr);
+    if(endPtr != beginPtr)
     {
-      while(std::isspace(static_cast<unsigned char>(*end)) != 0)
+      while(std::isspace(static_cast<unsigned char>(*endPtr)) != 0)
       {
-        ++end;
+        ++endPtr;
       }
-      if(*end == '\0')
+      if(*endPtr == '\0')
       {
         m_Stored = value;
         if(!std::isfinite(value) || !(value > 0.0F))

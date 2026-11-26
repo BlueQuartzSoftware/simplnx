@@ -36,11 +36,11 @@ struct ExecuteFindDifferenceMapFunctor
   template <typename DataType>
   Result<> operator()(const IDataArray& firstArray, const IDataArray& secondArray, IDataArray& differenceMap, const std::atomic_bool& shouldCancel) const
   {
-    using store_type = AbstractDataStore<DataType>;
+    using StoreTypeType = AbstractDataStore<DataType>;
 
-    const auto& firstStore = firstArray.template getIDataStoreRefAs<store_type>();
-    const auto& secondStore = secondArray.template getIDataStoreRefAs<store_type>();
-    auto& differenceStore = differenceMap.template getIDataStoreRefAs<store_type>();
+    const auto& firstStore = firstArray.template getIDataStoreRefAs<StoreTypeType>();
+    const auto& secondStore = secondArray.template getIDataStoreRefAs<StoreTypeType>();
+    auto& differenceStore = differenceMap.template getIDataStoreRefAs<StoreTypeType>();
 
     const usize numTuples = firstStore.getNumberOfTuples();
     const usize numComps = firstStore.getNumberOfComponents();

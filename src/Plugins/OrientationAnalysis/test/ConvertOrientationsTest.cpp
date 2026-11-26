@@ -93,7 +93,7 @@ const std::vector<std::vector<std::vector<float>>> k_Ref = {
 
 // This section of code exists solely to generate a source code in case another
 // orientation representation is created. Leave this code here.
-static void _make_code()
+static void MakeCode()
 {
   std::vector<std::string> inRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};
   std::vector<std::string> outRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};
@@ -158,8 +158,8 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
+  DataGroup* scanDataPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroupPtr->getId());
 
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
@@ -178,7 +178,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* anglesPtr = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanDataPtr->getId());
 
   // Create default Parameters for the filter.
   {
@@ -250,18 +250,18 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Dispatch and striding (8x8 
         DataStructure dataStructure;
         Arguments args;
 
-        DataGroup* topLevelGroup = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
-        DataGroup* scanData = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroup->getId());
+        DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
+        DataGroup* scanDataPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroupPtr->getId());
 
         std::vector<size_t> tupleShape = {numTuples};
         std::vector<size_t> componentShape = {k_Comps[in]};
-        Float32Array* input = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+        Float32Array* inputPtr = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanDataPtr->getId());
 
         for(size_t t = 0; t < numTuples; t++)
         {
           for(size_t c = 0; c < k_Comps[in]; c++)
           {
-            (*input)[t * k_Comps[in] + c] = k_Ref[t][in][c];
+            (*inputPtr)[t * k_Comps[in] + c] = k_Ref[t][in][c];
           }
         }
 
@@ -318,18 +318,18 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Stereographic closed form (
   DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
+  DataGroup* scanDataPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroupPtr->getId());
 
   std::vector<size_t> tupleShape = {numTuples};
   std::vector<size_t> componentShape = {k_Comps[k_Qu]};
-  Float32Array* input = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* inputPtr = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanDataPtr->getId());
 
   for(size_t t = 0; t < numTuples; t++)
   {
     for(size_t c = 0; c < k_Comps[k_Qu]; c++)
     {
-      (*input)[t * k_Comps[k_Qu] + c] = k_Ref[t][k_Qu][c];
+      (*inputPtr)[t * k_Comps[k_Qu] + c] = k_Ref[t][k_Qu][c];
     }
   }
 
@@ -372,18 +372,18 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations", "[C
   DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
+  DataGroup* scanDataPtr = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroupPtr->getId());
 
   std::vector<usize> tupleShape = {12};
   std::vector<usize> componentShape = {4};
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* anglesPtr = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanDataPtr->getId());
 
   for(size_t t = 0; t < tupleShape[0]; t++)
   {
     for(size_t c = 0; c < componentShape[0]; c++)
     {
-      (*angles)[t * componentShape[0] + c] = 0;
+      (*anglesPtr)[t * componentShape[0] + c] = 0;
     }
   }
 
@@ -449,7 +449,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsFilter: SIMPL Backwards Compa
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -462,22 +462,22 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsFilter: SIMPL Backwards Compa
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ConvertOrientationsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ConvertOrientationsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(ConvertOrientationsFilter::k_InputType_Key) == 0);
       CHECK(args.value<ChoicesParameter::ValueType>(ConvertOrientationsFilter::k_OutputType_Key) == 0);
       CHECK(args.value<DataPath>(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

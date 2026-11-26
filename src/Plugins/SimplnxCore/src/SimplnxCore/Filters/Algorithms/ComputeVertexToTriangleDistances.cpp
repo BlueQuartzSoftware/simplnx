@@ -20,8 +20,8 @@ using namespace nx::core;
 namespace
 {
 using RTreeType = RTree<size_t, float, 3, float>;
-using SharedTriListT = AbstractDataStore<IGeometry::SharedTriList::value_type>;
-using SharedVertexListT = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+using SharedTriListTType = AbstractDataStore<IGeometry::SharedTriList::value_type>;
+using SharedVertexListTType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
 /**
  * @brief Caps candidate-box expansion attempts.
@@ -43,7 +43,7 @@ constexpr int32 k_MaxBoxExpansions = 64;
  * https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h,
  * which has an Apache license.
  */
-Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const Matrix3X1f& b, const Matrix3X1f& c)
+Matrix3X1f ClosestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const Matrix3X1f& b, const Matrix3X1f& c)
 {
   const Matrix3X1f ab = b - a;
   const Matrix3X1f ac = c - a;
@@ -115,7 +115,7 @@ Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const 
  */
 float32 PointTriangleDistance(const Matrix3X1f& point, const Matrix3X1f& vert0, const Matrix3X1f& vert1, const Matrix3X1f& vert2, const int64 triangle, const Float64AbstractDataStore& normals)
 {
-  Matrix3X1f closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
+  Matrix3X1f closestPointInTriangle = ClosestPointTriangle(point, vert0, vert1, vert2);
 
   auto diffPoint = point - closestPointInTriangle;
   // The squared form avoids square roots for nonwinning candidates.
@@ -192,7 +192,7 @@ std::vector<size_t> FindCandidateTrianglesByExpandingBox(const RTreeType& rtree,
  * Ascending indexes and strict comparison retain the lowest index for an exact
  * distance tie. This matches an ascending brute-force scan.
  */
-void EvaluateClosestCandidate(nonstd::span<const size_t> candidateIds, const Matrix3X1f& point, const SharedTriListT& triangleList, const SharedVertexListT& triangleVertices,
+void EvaluateClosestCandidate(nonstd::span<const size_t> candidateIds, const Matrix3X1f& point, const SharedTriListTType& triangleList, const SharedVertexListTType& triangleVertices,
                               const Float64AbstractDataStore& normals, float32& bestSignedSquaredDistance, int64& bestTriangleId)
 {
   for(const size_t t : candidateIds)
@@ -236,7 +236,7 @@ public:
    * @param initialSearchHalfExtent Seeds candidate-box expansion.
    * @param reportProgress Reports completed items through the synchronized callback.
    */
-  ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
+  ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListTType& triangles, const SharedVertexListTType& vertices, SharedVertexListTType& sourcePoints,
                                        Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType& rtree,
                                        float32 initialSearchHalfExtent, const std::function<void(usize)>& reportProgress)
   : m_Filter(filter)
@@ -352,9 +352,9 @@ public:
 
 private:
   ComputeVertexToTriangleDistances* m_Filter;
-  const SharedTriListT& m_SharedTriangleList;
-  const SharedVertexListT& m_TriangleVertices;
-  SharedVertexListT& m_SourcePoints;
+  const SharedTriListTType& m_SharedTriangleList;
+  const SharedVertexListTType& m_TriangleVertices;
+  SharedVertexListTType& m_SourcePoints;
   Float32AbstractDataStore& m_Distances;
   Int64AbstractDataStore& m_ClosestTri;
   const Float64AbstractDataStore& m_Normals;
@@ -370,7 +370,7 @@ private:
  * @param triId Identifies the triangle.
  * @param bounds Receives [xmin, ymin, zmin, xmax, ymax, zmax].
  */
-void GetBoundingBoxAtTri(const SharedTriListT& triList, const SharedVertexListT& vertList, size_t triId, nonstd::span<float> bounds)
+void GetBoundingBoxAtTri(const SharedTriListTType& triList, const SharedVertexListTType& vertList, size_t triId, nonstd::span<float> bounds)
 {
   size_t v0Index = triList[triId * 3 + 0] * 3;
   size_t v1Index = triList[triId * 3 + 1] * 3;
@@ -408,15 +408,15 @@ const std::atomic_bool& ComputeVertexToTriangleDistances::getCancel()
 Result<> ComputeVertexToTriangleDistances::operator()()
 {
   auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexDataContainer);
-  SharedVertexListT& sourceVertices = vertexGeom.getVertices()->getDataStoreRef();
+  SharedVertexListTType& sourceVertices = vertexGeom.getVertices()->getDataStoreRef();
   usize totalElements = vertexGeom.getNumberOfVertices();
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainer);
   auto numTris = triangleGeom.getNumberOfFaces();
-  const SharedTriListT& triangles = triangleGeom.getFaces()->getDataStoreRef();
-  const SharedVertexListT& vertices = triangleGeom.getVertices()->getDataStoreRef();
+  const SharedTriListTType& triangles = triangleGeom.getFaces()->getDataStoreRef();
+  const SharedVertexListTType& vertices = triangleGeom.getVertices()->getDataStoreRef();
 
-  RTreeType m_RTree;
+  RTreeType mRTree;
   // The largest bound extent seeds the first candidate box and reduces later
   // expansion attempts.
   std::vector<float> triBoundsArray(numTris * 6, 0.0F);
@@ -424,7 +424,7 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   for(size_t triIndex = 0; triIndex < numTris; triIndex++)
   {
     GetBoundingBoxAtTri(triangles, vertices, triIndex, {triBoundsArray.data() + (6 * triIndex), 6});
-    m_RTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex);
+    mRTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex);
 
     const float32 extentX = triBoundsArray[6 * triIndex + 3] - triBoundsArray[6 * triIndex + 0];
     const float32 extentY = triBoundsArray[6 * triIndex + 4] - triBoundsArray[6 * triIndex + 1];
@@ -451,13 +451,13 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   dataAlg.setParallelizationEnabled(true);
   dataAlg.setRange(0, totalElements);
   dataAlg.execute(
-      ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, initialSearchHalfExtent, reportProgress));
+      ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, mRTree, initialSearchHalfExtent, reportProgress));
 
   return {};
 }
 
 void ComputeVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }

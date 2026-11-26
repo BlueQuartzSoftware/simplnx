@@ -50,9 +50,9 @@ struct ReplaceValueInArrayDirectFunctor
     const ScalarType replaceVal = StringInterpretationUtilities::Convert<ScalarType>(replaceValue).value();
     const usize size = dataStore.getNumberOfTuples() * dataStore.getNumberOfComponents();
 
-    if(auto* contiguousStore = dynamic_cast<DataStore<ScalarType>*>(&dataStore); contiguousStore != nullptr)
+    if(auto* contiguousStorePtr = dynamic_cast<DataStore<ScalarType>*>(&dataStore); contiguousStorePtr != nullptr)
     {
-      ScalarType* values = contiguousStore->data();
+      ScalarType* valuesPtr = contiguousStorePtr->data();
       for(usize offset = 0; offset < size; offset += k_TargetChunkValues)
       {
         if(shouldCancel)
@@ -63,9 +63,9 @@ struct ReplaceValueInArrayDirectFunctor
         const usize end = std::min(offset + k_TargetChunkValues, size);
         for(usize index = offset; index < end; index++)
         {
-          if(values[index] == removeVal)
+          if(valuesPtr[index] == removeVal)
           {
-            values[index] = replaceVal;
+            valuesPtr[index] = replaceVal;
           }
         }
       }
@@ -118,12 +118,12 @@ struct ConditionalReplaceValueDirectFunctor
       auto& targetStore = targetDataArray.getDataStoreRef();
       const auto& conditionalStore = conditionalDataArray.getDataStoreRef();
 
-      auto* contiguousTargetStore = dynamic_cast<DataStore<TargetType>*>(&targetStore);
-      const auto* contiguousConditionalStore = dynamic_cast<const DataStore<ConditionalType>*>(&conditionalStore);
-      if(contiguousTargetStore != nullptr && contiguousConditionalStore != nullptr)
+      auto* contiguousTargetStorePtr = dynamic_cast<DataStore<TargetType>*>(&targetStore);
+      const auto* contiguousConditionalStorePtr = dynamic_cast<const DataStore<ConditionalType>*>(&conditionalStore);
+      if(contiguousTargetStorePtr != nullptr && contiguousConditionalStorePtr != nullptr)
       {
-        TargetType* targetValues = contiguousTargetStore->data();
-        const ConditionalType* conditionalValues = contiguousConditionalStore->data();
+        TargetType* targetValuesPtr = contiguousTargetStorePtr->data();
+        const ConditionalType* conditionalValuesPtr = contiguousConditionalStorePtr->data();
         if(numComps == 1)
         {
           for(usize tupleOffset = 0; tupleOffset < numTuples; tupleOffset += chunkTuples)
@@ -136,9 +136,9 @@ struct ConditionalReplaceValueDirectFunctor
             const usize tupleEnd = std::min(tupleOffset + chunkTuples, numTuples);
             for(usize tupleIndex = tupleOffset; tupleIndex < tupleEnd; tupleIndex++)
             {
-              if(static_cast<bool>(conditionalValues[tupleIndex]) != invertMask)
+              if(static_cast<bool>(conditionalValuesPtr[tupleIndex]) != invertMask)
               {
-                targetValues[tupleIndex] = replaceValue;
+                targetValuesPtr[tupleIndex] = replaceValue;
               }
             }
           }
@@ -155,9 +155,9 @@ struct ConditionalReplaceValueDirectFunctor
           const usize tupleEnd = std::min(tupleOffset + chunkTuples, numTuples);
           for(usize tupleIndex = tupleOffset; tupleIndex < tupleEnd; tupleIndex++)
           {
-            if(static_cast<bool>(conditionalValues[tupleIndex]) != invertMask)
+            if(static_cast<bool>(conditionalValuesPtr[tupleIndex]) != invertMask)
             {
-              std::fill_n(targetValues + tupleIndex * numComps, numComps, replaceValue);
+              std::fill_n(targetValuesPtr + tupleIndex * numComps, numComps, replaceValue);
             }
           }
         }

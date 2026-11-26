@@ -116,11 +116,11 @@ using UnsignedIntegralType = std::make_unsigned_t<T>;
 template <class T>
 constexpr UnsignedIntegralType<T> IntegralMonotonicKey(T value) noexcept
 {
-  using Key = UnsignedIntegralType<T>;
-  Key key = static_cast<Key>(value);
+  using KeyType = UnsignedIntegralType<T>;
+  KeyType key = static_cast<KeyType>(value);
   if constexpr(std::is_signed_v<T>)
   {
-    constexpr Key k_SignBit = Key{1} << (std::numeric_limits<Key>::digits - 1);
+    constexpr KeyType k_SignBit = KeyType{1} << (std::numeric_limits<KeyType>::digits - 1);
     key ^= k_SignBit;
   }
   return key;
@@ -129,10 +129,10 @@ constexpr UnsignedIntegralType<T> IntegralMonotonicKey(T value) noexcept
 template <class T>
 float64 IntegralKeyAsFloat64(UnsignedIntegralType<T> key) noexcept
 {
-  using Key = UnsignedIntegralType<T>;
+  using KeyType = UnsignedIntegralType<T>;
   if constexpr(std::is_signed_v<T>)
   {
-    constexpr Key k_SignBit = Key{1} << (std::numeric_limits<Key>::digits - 1);
+    constexpr KeyType k_SignBit = KeyType{1} << (std::numeric_limits<KeyType>::digits - 1);
     if(key < k_SignBit)
     {
       return -static_cast<float64>(k_SignBit - key);
@@ -213,12 +213,12 @@ template <class T>
 Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, usize numBins, const std::atomic_bool& shouldCancel, const HistogramScanOptions& options = {})
 {
   static_assert(std::is_integral_v<T> && !std::is_same_v<T, bool>, "ComputeIntegralHistogram requires a non-boolean integral type");
-  using Key = detail::UnsignedIntegralType<T>;
+  using KeyType = detail::UnsignedIntegralType<T>;
 
   constexpr usize k_RingSize = 65536;
   struct FrequencyEntry
   {
-    Key key{};
+    KeyType key{};
     usize count = 0;
   };
 
@@ -234,8 +234,8 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
   bool compactRange = true;
   T minValue{};
   T maxValue{};
-  Key minKey{};
-  Key maxKey{};
+  KeyType minKey{};
+  KeyType maxKey{};
 
   auto scanBuffer = detail::ReserveHistogramScanBuffer<T>(store, total, options);
   {
@@ -264,7 +264,7 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
         for(usize i = blockStart; i < blockEnd; ++i)
         {
           const T value = buffer[i];
-          const Key key = detail::IntegralMonotonicKey(value);
+          const KeyType key = detail::IntegralMonotonicKey(value);
           if(first)
           {
             minValue = value;
@@ -289,11 +289,11 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
 
           if(compactRange)
           {
-            constexpr Key k_MaxCompactSpan = static_cast<Key>(k_RingSize - 1);
+            constexpr KeyType k_MaxCompactSpan = static_cast<KeyType>(k_RingSize - 1);
             compactRange = (maxKey - minKey) <= k_MaxCompactSpan;
             if(compactRange)
             {
-              constexpr Key k_RingMask = static_cast<Key>(k_RingSize - 1);
+              constexpr KeyType k_RingMask = static_cast<KeyType>(k_RingSize - 1);
               FrequencyEntry& entry = frequencies[static_cast<usize>(key & k_RingMask)];
               if(entry.count == 0)
               {
@@ -354,9 +354,9 @@ namespace detail
 inline bool FloatAlmostEqual(float64 x1, float64 x2, int64 maxUlps = 1)
 {
   // Close-to-zero guard (ITK default maxAbsoluteDifference = 0.1 * epsilon).
-  constexpr float64 maxAbsoluteDifference = 0.1 * std::numeric_limits<float64>::epsilon();
+  constexpr float64 k_MaxAbsoluteDifference = 0.1 * std::numeric_limits<float64>::epsilon();
   const float64 absDifference = std::abs(x1 - x2);
-  if(absDifference <= maxAbsoluteDifference)
+  if(absDifference <= k_MaxAbsoluteDifference)
   {
     return true;
   }

@@ -25,28 +25,28 @@ std::string EdgeGeomIO::getTypeName() const
 Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                               const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* geometry = EdgeGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
-  Result<> result = INodeGeom1dIO::ReadNodeGeom1dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  auto* geometryPtr = EdgeGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  Result<> result = INodeGeom1dIO::ReadNodeGeom1dData(structureReader, *geometryPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
     return result;
   }
 
   auto groupReader = parentGroup.openGroup(objectName);
-  geometry->setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
-  geometry->setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
-  geometry->setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
-  geometry->setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
-  geometry->setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
-  geometry->setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
+  geometryPtr->setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
+  geometryPtr->setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+  geometryPtr->setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+  geometryPtr->setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+  geometryPtr->setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  geometryPtr->setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
 
   return {};
 }
 
 Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& /*dataStructureGroup*/) const
 {
-  auto* geometry = dataStructure.getDataAs<EdgeGeom>(dataPath);
-  if(geometry == nullptr)
+  auto* geometryPtr = dataStructure.getDataAs<EdgeGeom>(dataPath);
+  if(geometryPtr == nullptr)
   {
     return MakeErrorResult(-25070, fmt::format("Failed to finish importing geometry at path '{}'. Geometry does not exist or is of wrong type.", dataPath.toString()));
   }

@@ -150,22 +150,22 @@ public:
               if(eulerMis[0] < nx::core::Constants::k_PiOver2D && eulerMis[1] < nx::core::Constants::k_PiOver2D && eulerMis[2] < nx::core::Constants::k_PiOver2D)
               {
                 eulerMis[1] = cosf(eulerMis[1]);
-                int32 gbcd_index = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoord);
-                if(gbcd_index != -1)
+                int32 gbcdIndex = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoord);
+                if(gbcdIndex != -1)
                 {
-                  const usize k_GbcdBinIndex = minGbcdBinIndex + symCounter;
-                  hemiCheck[k_GbcdBinIndex] = nhCheck;
-                  gbcdBins[k_GbcdBinIndex] = gbcd_index;
+                  const usize kGbcdBinIndex = minGbcdBinIndex + symCounter;
+                  hemiCheck[kGbcdBinIndex] = nhCheck;
+                  gbcdBins[kGbcdBinIndex] = gbcdIndex;
                 }
                 symCounter++;
                 if(inversion == 1)
                 {
-                  gbcd_index = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoordInv);
-                  if(gbcd_index != -1)
+                  gbcdIndex = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoordInv);
+                  if(gbcdIndex != -1)
                   {
-                    const usize k_GbcdBinIndex = minGbcdBinIndex + symCounter;
-                    hemiCheck[k_GbcdBinIndex] = nhCheckInv;
-                    gbcdBins[k_GbcdBinIndex] = gbcd_index;
+                    const usize kGbcdBinIndex = minGbcdBinIndex + symCounter;
+                    hemiCheck[kGbcdBinIndex] = nhCheckInv;
+                    gbcdBins[kGbcdBinIndex] = gbcdIndex;
                   }
                   symCounter++;
                 }
@@ -212,10 +212,10 @@ public:
       return -1;
     }
 
-    const int32 k_N1 = gbcdSz[0];
-    const int32 k_N1N2 = k_N1 * (gbcdSz[1]);
-    const int32 k_N1N2N3 = k_N1N2 * (gbcdSz[2]);
-    const int32 k_N1N2N3N4 = k_N1N2N3 * (gbcdSz[3]);
+    const int32 kN1 = gbcdSz[0];
+    const int32 kN1N2 = kN1 * (gbcdSz[1]);
+    const int32 kN1N2N3 = kN1N2 * (gbcdSz[2]);
+    const int32 kN1N2N3N4 = kN1N2N3 * (gbcdSz[3]);
 
     for(usize i = 0; i < k_GBCDParamCount; i++)
     {
@@ -224,7 +224,7 @@ public:
       index[i] = std::max(index[i], 0);
     }
 
-    gbcdIndex = index[0] + k_N1 * index[1] + k_N1N2 * index[2] + k_N1N2N3 * index[3] + k_N1N2N3N4 * index[4];
+    gbcdIndex = index[0] + kN1 * index[1] + kN1N2 * index[2] + kN1N2N3 * index[3] + kN1N2N3N4 * index[4];
 
     return gbcdIndex;
   }
@@ -502,11 +502,11 @@ Result<> ComputeGBCD::operator()()
   // in the local buffer, then bulk-write the final result to the DataStore.
   for(usize i = 0; i < totalPhases; i++)
   {
-    const usize k_PhaseShift = i * static_cast<usize>(totalGBCDBins);
-    const float64 k_MrdFactor = static_cast<float64>(totalGBCDBins) / totalFaceArea[i];
+    const usize kPhaseShift = i * static_cast<usize>(totalGBCDBins);
+    const float64 kMrdFactor = static_cast<float64>(totalGBCDBins) / totalFaceArea[i];
     for(usize j = 0; j < static_cast<usize>(totalGBCDBins); j++)
     {
-      gbcdBuf[k_PhaseShift + j] *= k_MrdFactor;
+      gbcdBuf[kPhaseShift + j] *= kMrdFactor;
     }
     if(i + 1 < totalPhases)
     {

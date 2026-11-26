@@ -148,11 +148,11 @@ nx::core::Result<> CopyData(nx::core::DataStructure& dataStructure, H5EbsdReader
   {
     if(selectedArrayNames.find(arrayName) != selectedArrayNames.end())
     {
-      T* source = reinterpret_cast<T*>(ebsdReader->getPointerByName(arrayName));
+      T* sourcePtr = reinterpret_cast<T*>(ebsdReader->getPointerByName(arrayName));
       nx::core::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName);
       auto& destination = dataStructure.getDataRefAs<DataArrayType>(dataPath);
       // Use one destination transfer because EbsdLib already owns the full source array.
-      if(nx::core::Result<> ioResult = destination.getDataStoreRef().copyFromBuffer(0, nonstd::span<const T>(source, totalPoints * destination.getNumberOfComponents())); ioResult.invalid())
+      if(nx::core::Result<> ioResult = destination.getDataStoreRef().copyFromBuffer(0, nonstd::span<const T>(sourcePtr, totalPoints * destination.getNumberOfComponents())); ioResult.invalid())
       {
         return nx::core::ConvertResult(std::move(ioResult));
       }
@@ -253,9 +253,9 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
 
   if(selectedArrayNames.find(ebsdlib::CellData::EulerAngles) != selectedArrayNames.end())
   {
-    auto* euler0 = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[0]));
-    auto* euler1 = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[1]));
-    auto* euler2 = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[2]));
+    auto* euler0Ptr = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[0]));
+    auto* euler1Ptr = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[1]));
+    auto* euler2Ptr = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[2]));
     nx::core::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles);
     auto& eulerData = dataStructure.getDataRefAs<nx::core::Float32Array>(eulerDataPath);
 
@@ -289,9 +289,9 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
       for(usize i = 0; i < count; i++)
       {
         usize srcIdx = startTup + i;
-        eulerBuf[i * 3] = euler0[srcIdx] * degToRad;
-        eulerBuf[i * 3 + 1] = euler1[srcIdx] * degToRad;
-        eulerBuf[i * 3 + 2] = euler2[srcIdx] * degToRad;
+        eulerBuf[i * 3] = euler0Ptr[srcIdx] * degToRad;
+        eulerBuf[i * 3 + 1] = euler1Ptr[srcIdx] * degToRad;
+        eulerBuf[i * 3 + 2] = euler2Ptr[srcIdx] * degToRad;
         if(applyHexCorrection && xtalCache[phasePtr[srcIdx]] == ebsdlib::CrystalStructure::Hexagonal_High)
         {
           eulerBuf[i * 3 + 2] += (30.0F * degToRad);
@@ -427,13 +427,13 @@ Result<> ReadH5Ebsd::operator()()
 
     if(sampleTransAngle > 0)
     {
-      const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-      auto* filterList = Application::Instance()->getFilterList();
+      const Uuid kSimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+      auto* filterListPtr = Application::Instance()->getFilterList();
 
-      const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
-      const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_SimplnxCorePluginId);
+      const Uuid kRotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
+      const FilterHandle kRotateSampleRefFrameFilterHandle(kRotateSampleRefFrameFilterId, kSimplnxCorePluginId);
 
-      auto filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
+      auto filter = filterListPtr->createFilter(kRotateSampleRefFrameFilterHandle);
       if(nullptr == filter)
       {
         return MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter. Ensure the SimplnxCore plugin is loaded."));

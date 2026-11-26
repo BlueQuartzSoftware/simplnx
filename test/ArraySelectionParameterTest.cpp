@@ -50,33 +50,33 @@ public:
  * @param location Specifies the required storage location.
  * @param expectedValid Specifies the expected validation result.
  */
-void checkLocation(const DataStructure& dataStructure, const DataPath& path, ArraySelectionParameter::DataLocation location, bool expectedValid)
+void CheckLocation(const DataStructure& dataStructure, const DataPath& path, ArraySelectionParameter::DataLocation location, bool expectedValid)
 {
   ArraySelectionParameter parameter("values", "Values", "Select values.", path, {DataType::int32}, {{1}}, location);
   auto copy = parameter.clone();
-  const auto* typedCopy = dynamic_cast<ArraySelectionParameter*>(copy.get());
-  REQUIRE(typedCopy != nullptr);
+  const auto* typedCopyPtr = dynamic_cast<ArraySelectionParameter*>(copy.get());
+  REQUIRE(typedCopyPtr != nullptr);
   CHECK(parameter.allowedDataLocations() == location);
-  CHECK(typedCopy->allowedDataLocations() == location);
+  CHECK(typedCopyPtr->allowedDataLocations() == location);
 
   const auto originalResult = parameter.validate(dataStructure, std::any{path});
-  const auto copyResult = typedCopy->validate(dataStructure, std::any{path});
+  const auto copyResult = typedCopyPtr->validate(dataStructure, std::any{path});
   CHECK(originalResult.valid() == expectedValid);
   CHECK(copyResult.valid() == expectedValid);
 
   if(!expectedValid)
   {
-    for(const auto* result : {&originalResult, &copyResult})
+    for(const auto* resultPtr : {&originalResult, &copyResult})
     {
-      if(result->invalid())
+      if(resultPtr->invalid())
       {
-        CHECK_FALSE(result->errors().empty());
-        if(!result->errors().empty())
+        CHECK_FALSE(resultPtr->errors().empty());
+        if(!resultPtr->errors().empty())
         {
-          CHECK(result->errors().front().code == FilterParameter::Constants::k_Validate_DataLocation_Error);
-          CHECK(result->errors().front().message.find(path.toString()) != std::string::npos);
-          CHECK(result->errors().front().message.find("in-memory") != std::string::npos);
-          CHECK(result->errors().front().message.find("out-of-core") != std::string::npos);
+          CHECK(resultPtr->errors().front().code == FilterParameter::Constants::k_Validate_DataLocation_Error);
+          CHECK(resultPtr->errors().front().message.find(path.toString()) != std::string::npos);
+          CHECK(resultPtr->errors().front().message.find("in-memory") != std::string::npos);
+          CHECK(resultPtr->errors().front().message.find("out-of-core") != std::string::npos);
         }
       }
     }
@@ -111,16 +111,16 @@ TEST_CASE("ArraySelectionParameter location and clone", "[simplnx][Parameters]")
                                                                         ArraySelectionParameter::DataLocation::OutOfCore};
   for(const auto& store : stores)
   {
-    const auto* array = dataStructure.getDataAs<IDataArray>(store.path);
-    REQUIRE(array != nullptr);
-    CHECK(array->getStoreType() == store.actual);
+    const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(store.path);
+    REQUIRE(arrayPtr != nullptr);
+    CHECK(arrayPtr->getStoreType() == store.actual);
     for(const auto location : locations)
     {
       INFO("array: " << store.path.toString());
       const bool expectedValid = location == ArraySelectionParameter::DataLocation::Any || store.actual == IDataStore::StoreType::Empty ||
                                  (location == ArraySelectionParameter::DataLocation::InMemory && store.actual == IDataStore::StoreType::InMemory) ||
                                  (location == ArraySelectionParameter::DataLocation::OutOfCore && store.actual == IDataStore::StoreType::OutOfCore);
-      checkLocation(dataStructure, store.path, location, expectedValid);
+      CheckLocation(dataStructure, store.path, location, expectedValid);
     }
   }
 }
@@ -144,21 +144,21 @@ TEST_CASE("ArraySelectionParameter keeps type and shape checks for empty stores"
     {
       ArraySelectionParameter parameter("values", "Values", "Select values.", path, {DataType::int32}, {{1}}, location);
       auto copy = parameter.clone();
-      const auto* typedCopy = dynamic_cast<ArraySelectionParameter*>(copy.get());
-      REQUIRE(typedCopy != nullptr);
-      CHECK(typedCopy->allowedDataLocations() == location);
+      const auto* typedCopyPtr = dynamic_cast<ArraySelectionParameter*>(copy.get());
+      REQUIRE(typedCopyPtr != nullptr);
+      CHECK(typedCopyPtr->allowedDataLocations() == location);
       const auto originalResult = parameter.validate(dataStructure, std::any{path});
-      const auto copyResult = typedCopy->validate(dataStructure, std::any{path});
+      const auto copyResult = typedCopyPtr->validate(dataStructure, std::any{path});
       const auto expectedCode = path.getTargetName() == "WrongType" ? FilterParameter::Constants::k_Validate_AllowedType_Error : FilterParameter::Constants::k_Validate_TupleShapeValue;
-      for(const auto* result : {&originalResult, &copyResult})
+      for(const auto* resultPtr : {&originalResult, &copyResult})
       {
-        CHECK(result->invalid());
-        if(result->invalid())
+        CHECK(resultPtr->invalid());
+        if(resultPtr->invalid())
         {
-          CHECK_FALSE(result->errors().empty());
-          if(!result->errors().empty())
+          CHECK_FALSE(resultPtr->errors().empty());
+          if(!resultPtr->errors().empty())
           {
-            CHECK(result->errors().front().code == expectedCode);
+            CHECK(resultPtr->errors().front().code == expectedCode);
           }
         }
       }
@@ -177,6 +177,6 @@ TEST_CASE("ArraySelectionParameter retains StringArray and default location beha
 
   for(const auto location : {ArraySelectionParameter::DataLocation::Any, ArraySelectionParameter::DataLocation::InMemory, ArraySelectionParameter::DataLocation::OutOfCore})
   {
-    checkLocation(dataStructure, path, location, true);
+    CheckLocation(dataStructure, path, location, true);
   }
 }

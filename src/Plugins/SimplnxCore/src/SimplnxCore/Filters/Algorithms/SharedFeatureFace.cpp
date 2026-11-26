@@ -76,32 +76,32 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-using SeedGenerator = std::mt19937_64;
-using Int64Distribution = std::uniform_int_distribution<int64>;
+using SeedGeneratorType = std::mt19937_64;
+using Int64DistributionType = std::uniform_int_distribution<int64>;
 // -----------------------------------------------------------------------------
-SeedGenerator initializeStaticVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax)
+SeedGeneratorType InitializeStaticVoxelSeedGenerator(Int64DistributionType& distribution, const int64 rangeMin, const int64 rangeMax)
 {
-  SeedGenerator generator(SeedGenerator::default_seed);
+  SeedGeneratorType generator(SeedGeneratorType::default_seed);
   distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
 
   return generator;
 }
 
 // -----------------------------------------------------------------------------
-void RandomizeFaceIds(nx::core::Int32Array& featureIds, uint64 totalFeatures, Int64Distribution& distribution)
+void RandomizeFaceIds(nx::core::Int32Array& featureIds, uint64 totalFeatures, Int64DistributionType& distribution)
 {
   // Generate an even distribution of numbers between the min and max range
   const int64 rangeMin = 1;
   const int64 rangeMax = totalFeatures - 1;
-  auto generator = initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+  auto generator = InitializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
   DataStructure tmpStructure;
-  auto* rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
-  auto* rndStore = rndNumbers->getDataStore();
+  auto* rndNumbersPtr = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
+  auto* rndStorePtr = rndNumbersPtr->getDataStore();
 
   for(int64 i = 0; i < totalFeatures; ++i)
   {
-    rndStore->setValue(i, i);
+    rndStorePtr->setValue(i, i);
   }
 
   int64 r = 0;
@@ -115,17 +115,17 @@ void RandomizeFaceIds(nx::core::Int32Array& featureIds, uint64 totalFeatures, In
     {
       continue;
     }
-    temp = rndStore->getValue(i);
-    rndStore->setValue(i, rndStore->getValue(r));
-    rndStore->setValue(r, temp);
+    temp = rndStorePtr->getValue(i);
+    rndStorePtr->setValue(i, rndStorePtr->getValue(r));
+    rndStorePtr->setValue(r, temp);
   }
 
   // Now adjust all the GrainId values for each Voxel
-  auto* featureIdsStore = featureIds.getDataStore();
+  auto* featureIdsStorePtr = featureIds.getDataStore();
   uint64 totalPoints = featureIds.getNumberOfTuples();
   for(int64 i = 0; i < totalPoints; ++i)
   {
-    featureIdsStore->setValue(i, rndStore->getValue(featureIdsStore->getValue(i)));
+    featureIdsStorePtr->setValue(i, rndStorePtr->getValue(featureIdsStorePtr->getValue(i)));
   }
 }
 
@@ -246,19 +246,19 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
 
   {
     // Each admitted row holds both labels and its count. Cap rows before multiplying to keep byte arithmetic bounded.
-    constexpr usize kMetadataBytesPerRow = 3 * sizeof(int32);
-    constexpr usize kPreferredMetadataRows = 262144;
-    const usize requestedBytes = std::min(kPreferredMetadataRows, faceLabelVector.size()) * kMetadataBytesPerRow;
+    constexpr usize k_MetadataBytesPerRow = 3 * sizeof(int32);
+    constexpr usize k_PreferredMetadataRows = 262144;
+    const usize requestedBytes = std::min(k_PreferredMetadataRows, faceLabelVector.size()) * k_MetadataBytesPerRow;
     auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
-    const usize blockRows = static_cast<usize>(reservation.sizeBytes() / kMetadataBytesPerRow);
+    const usize blockRows = static_cast<usize>(reservation.sizeBytes() / k_MetadataBytesPerRow);
     if(blockRows == 0)
     {
       return MergeResults(std::move(result),
                           MakeErrorResult(-12918, fmt::format("Cannot allocate shared face metadata buffers for '{}': requested {} bytes but received {}. At least {} bytes are required. "
                                                               "Release other working memory or increase the cache budget and retry.",
-                                                              inputValues.GrainBoundaryAttributeMatrixPath.toString(), requestedBytes, reservation.sizeBytes(), kMetadataBytesPerRow)));
+                                                              inputValues.GrainBoundaryAttributeMatrixPath.toString(), requestedBytes, reservation.sizeBytes(), k_MetadataBytesPerRow)));
     }
-    reservation.shrinkTo(blockRows * kMetadataBytesPerRow);
+    reservation.shrinkTo(blockRows * k_MetadataBytesPerRow);
     std::vector<int32> metadataBuffer(blockRows * 3);
     const nonstd::span<int32> metadataValues(metadataBuffer.data(), metadataBuffer.size());
     const auto& countsByFace = faceSizeMap;
@@ -326,8 +326,8 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
   {
     // Match RandomizeFaceIds' seed, int64 distribution and swap order exactly.
     const uint64 totalFeatures = index;
-    Int64Distribution distribution;
-    auto generator = initializeStaticVoxelSeedGenerator(distribution, 1, totalFeatures - 1);
+    Int64DistributionType distribution;
+    auto generator = InitializeStaticVoxelSeedGenerator(distribution, 1, totalFeatures - 1);
     std::vector<int64> rndNumbers(totalFeatures);
     for(int64 i = 0; i < totalFeatures; ++i)
     {
@@ -512,8 +512,8 @@ Result<> SharedFeatureFace::operator()()
   {
     const int64 rangeMin = 0;
     const auto rangeMax = static_cast<int64>(surfaceMeshFeatureFaceNumTriangles.getNumberOfTuples() - 1);
-    Int64Distribution distribution;
-    initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+    Int64DistributionType distribution;
+    InitializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
     ::RandomizeFaceIds(surfaceMeshFeatureFaceIds, index, distribution);
   }
   return {};

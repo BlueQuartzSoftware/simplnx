@@ -41,16 +41,16 @@ Result<> ReadStlFile::operator()()
   const uintmax_t stlFileSize = stlFileCheck.fileSize;
 
   // Open File
-  FILE* f = std::fopen(stlFilePathStr.c_str(), "rb");
-  if(nullptr == f)
+  FILE* fPtr = std::fopen(stlFilePathStr.c_str(), "rb");
+  if(nullptr == fPtr)
   {
     return MakeErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening STL file '{}'", stlFilePathStr));
   }
-  StlUtilities::StlFileSentinel fileSentinel(f); // Will ensure that the file is closed when this method returns
+  StlUtilities::StlFileSentinel fileSentinel(fPtr); // Will ensure that the file is closed when this method returns
 
   // Skip past the 80 byte header and the triangle count. SanityCheckFile() already parsed both,
   // so there is no reason to read them a second time.
-  if(std::fseek(f, static_cast<long>(StlConstants::k_StlFixedHeaderBytes), SEEK_SET) != 0)
+  if(std::fseek(fPtr, static_cast<long>(StlConstants::k_StlFixedHeaderBytes), SEEK_SET) != 0)
   {
     return MakeErrorResult(StlConstants::k_StlHeaderParseError, fmt::format("Error seeking past the {} byte header of STL file '{}'", StlConstants::k_StlFixedHeaderBytes, stlFilePathStr));
   }
@@ -68,11 +68,11 @@ Result<> ReadStlFile::operator()()
     return resizeResult;
   }
 
-  using SharedTriList = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
-  using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using SharedTriListType = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
+  using SharedVertListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
-  SharedTriList& triangles = triangleGeom.getFaces()->getDataStoreRef();
-  SharedVertList& nodes = triangleGeom.getVertices()->getDataStoreRef();
+  SharedTriListType& triangles = triangleGeom.getFaces()->getDataStoreRef();
+  SharedVertListType& nodes = triangleGeom.getVertices()->getDataStoreRef();
 
   auto& faceNormalsStore = m_DataStructure.getDataAs<Float64Array>(m_InputValues->faceNormalsDataPath)->getDataStoreRef();
 
@@ -113,7 +113,7 @@ Result<> ReadStlFile::operator()()
     }
 
     // Read the Vertices and Normal (12 total float32 = 48 Bytes)
-    size_t objsRead = std::fread(fileVert.data(), sizeof(float), StlConstants::k_StlElementCount, f); // Read the Triangle
+    size_t objsRead = std::fread(fileVert.data(), sizeof(float), StlConstants::k_StlElementCount, fPtr); // Read the Triangle
     if(StlConstants::k_StlElementCount != objsRead)
     {
       std::string msg = fmt::format("Error reading Triangle '{}' from STL file '{}'. Object Count was {} and should have been {}", t, stlFilePathStr, objsRead, StlConstants::k_StlElementCount);
@@ -122,7 +122,7 @@ Result<> ReadStlFile::operator()()
     // Read the Uint16 value. This value is supposed to represent the number of bytes following
     // a triangle that are file- or vendor-specific metadata
     // Lots of writers/vendors do NOT set this properly, which can cause problems.
-    objsRead = std::fread(&attrByteCount, sizeof(uint16_t), 1, f); // Read the Triangle Attribute Data length
+    objsRead = std::fread(&attrByteCount, sizeof(uint16_t), 1, fPtr); // Read the Triangle Attribute Data length
     if(objsRead != 1)
     {
       std::string msg = fmt::format("Error reading Number of attributes for triangle '{}' from STL file '{}'. uint16 count was {} and should have been 1", t, stlFilePathStr, objsRead);
@@ -136,7 +136,7 @@ Result<> ReadStlFile::operator()()
     if(attrByteCount > 0 && stlFileCheck.attributePayloadPresent)
     {
       // Skip past the Triangle Attribute data since we don't know how to read it anyway
-      if(std::fseek(f, static_cast<long>(attrByteCount), SEEK_CUR) != 0)
+      if(std::fseek(fPtr, static_cast<long>(attrByteCount), SEEK_CUR) != 0)
       {
         std::string msg = fmt::format("Error seeking past the {} attribute bytes that follow triangle '{}' in STL file '{}'", attrByteCount, t, stlFilePathStr);
         return MakeErrorResult(StlConstants::k_AttributeParseError, msg);

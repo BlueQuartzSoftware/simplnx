@@ -346,7 +346,7 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
   return H5Aexists(selfId, attributeName.c_str()) > 0;
 }
 
-usize ObjectIO::getNumElementsInAttribute(hid_t attribId)
+usize ObjectIO::GetNumElementsInAttribute(hid_t attribId)
 {
   // getTypeFromId() self-locks, so retain the local HDF5 handles across the
   // lock boundary and call it without holding the non-recursive ApiLock.

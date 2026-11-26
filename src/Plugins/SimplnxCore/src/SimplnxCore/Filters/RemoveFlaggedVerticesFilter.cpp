@@ -174,14 +174,14 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   // The cleared Feature AM keeps its source shape until optional renumbering.
   if(clearFeatureAttributeMatrix)
   {
-    const auto* sourceFeatureAm = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
-    if(sourceFeatureAm == nullptr || !inputVertexGeom.contains(sourceFeatureAm))
+    const auto* sourceFeatureAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(sourceFeatureAmPtr == nullptr || !inputVertexGeom.contains(sourceFeatureAmPtr))
     {
       return MakePreflightErrorResult(-67421, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Vertex Geometry '{}'. Select an Attribute Matrix that is a direct "
                                                           "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
                                                           featureAmPath.toString(), vertexGeomPath.toString()));
     }
-    if(inputVertexGeom.getVertexAttributeMatrix() == sourceFeatureAm)
+    if(inputVertexGeom.getVertexAttributeMatrix() == sourceFeatureAmPtr)
     {
       return MakePreflightErrorResult(-67422, fmt::format("The Feature Attribute Matrix '{}' is the Vertex Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn "
                                                           "off 'Clear Feature Attribute Matrix'.",
@@ -209,12 +209,12 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
                                 featureIdsPath.toString(), featureIds.getNumberOfTuples(), vertexGeomPath.toString(), numVertices));
       }
     }
-    ignorePaths.push_back(vertexGeomPath.createChildPath(sourceFeatureAm->getName()));
+    ignorePaths.push_back(vertexGeomPath.createChildPath(sourceFeatureAmPtr->getName()));
     const DataPath destFeatureAmPath = reducedVertexPath.createChildPath(featureAmPath.getTargetName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAm->getShape()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAmPtr->getShape()));
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *sourceFeatureAm)
+    for(const auto& [identifier, object] : *sourceFeatureAmPtr)
     {
       clearedList += "\n" + featureAmPath.createChildPath(object->getName()).toString();
     }
@@ -271,12 +271,12 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_VertexGeometryKey = "VertexGeometry";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_ReducedVertexGeometryKey = "ReducedVertexGeometry";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RemoveFlaggedVerticesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -287,9 +287,9 @@ Result<Arguments> RemoveFlaggedVerticesFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_VertexGeometryKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_InputMaskPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_ReducedVertexGeometryKey, k_CreatedVertexGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_VertexGeometryKey, k_SelectedVertexGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_InputMaskPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_ReducedVertexGeometryKey, k_CreatedVertexGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

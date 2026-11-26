@@ -50,19 +50,19 @@ std::string detail::PathForDiagnostic(const fs::path& path)
 
 int64 LinesInFile(const std::string& filepath)
 {
-  const usize BUFFER_SIZE = 16384;
+  const usize bufferSize = 16384;
   usize lines = 0;
 
-  FILE* fd = fopen(filepath.c_str(), "rb");
-  if(nullptr == fd)
+  FILE* fdPtr = fopen(filepath.c_str(), "rb");
+  if(nullptr == fdPtr)
   {
     return -1;
   }
 
   // Count a final line that has no newline terminator.
-  fseek(fd, -1, SEEK_END);
+  fseek(fdPtr, -1, SEEK_END);
   char last[1];
-  usize bytesRead = fread(last, 1, 1, fd);
+  usize bytesRead = fread(last, 1, 1, fdPtr);
   if(bytesRead != 1)
   {
     return -1;
@@ -71,34 +71,34 @@ int64 LinesInFile(const std::string& filepath)
   {
     lines++;
   }
-  rewind(fd);
+  rewind(fdPtr);
 
-  char buf[BUFFER_SIZE + 1];
+  char buf[bufferSize + 1];
   while(true)
   {
-    memset(buf, 0, BUFFER_SIZE + 1);
-    size_t bytes_read = fread(buf, 1, BUFFER_SIZE, fd);
+    memset(buf, 0, bufferSize + 1);
+    size_t bytes_read = fread(buf, 1, bufferSize, fdPtr);
     if(bytes_read == 0)
     {
       break;
     }
 
-    char* end = buf + bytes_read;
+    char* endPtr = buf + bytes_read;
     usize buflines = 0;
 
-    for(char* p = buf; p < end; p++)
+    for(char* pPtr = buf; pPtr < endPtr; pPtr++)
     {
-      buflines += static_cast<usize>(*p == '\n');
+      buflines += static_cast<usize>(*pPtr == '\n');
     }
     lines += buflines;
   }
-  fclose(fd);
+  fclose(fdPtr);
   return lines;
 }
 
 Result<> ValidateCSVFile(const std::string& filePath)
 {
-  constexpr int64_t bufferSize = 2048;
+  constexpr int64_t k_BufferSize = 2048;
 
   auto absPath = std::filesystem::absolute(filePath);
 
@@ -130,8 +130,8 @@ Result<> ValidateCSVFile(const std::string& filePath)
     fileSize -= 3;
   }
 
-  usize actualSize = bufferSize;
-  if(fileSize <= bufferSize)
+  usize actualSize = k_BufferSize;
+  if(fileSize <= k_BufferSize)
   {
     actualSize = fileSize;
   }
@@ -215,7 +215,7 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     }
   }
 
-  constexpr int32 pathStatusError = -4092;
+  constexpr int32 k_PathStatusError = -4092;
   const auto rootPath = checkedPath.root_path();
   bool checkedPathExists = false;
 
@@ -227,8 +227,8 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     checkedPathExists = fs::exists(checkedPath, statusError);
     if(statusError)
     {
-      return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect path '{}' while checking write permission for '{}'. Check directory access. Operating system error {}: {}",
-                                                          detail::PathForDiagnostic(checkedPath), detail::PathForDiagnostic(path), statusError.value(), statusError.message()));
+      return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect path '{}' while checking write permission for '{}'. Check directory access. Operating system error {}: {}",
+                                                            detail::PathForDiagnostic(checkedPath), detail::PathForDiagnostic(path), statusError.value(), statusError.message()));
     }
     if(checkedPathExists || checkedPath == rootPath)
     {
@@ -257,18 +257,18 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
 
 std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath)
 {
-  FILE* f = fopen(filePath.string().c_str(), "rb");
-  if(nullptr == f)
+  FILE* fPtr = fopen(filePath.string().c_str(), "rb");
+  if(nullptr == fPtr)
   {
     return {false, -1};
   }
   std::array<uint8, 3> buf = {0, 0, 0};
-  if(fread(buf.data(), 1, 3, f) != 3)
+  if(fread(buf.data(), 1, 3, fPtr) != 3)
   {
-    std::ignore = fclose(f);
+    std::ignore = fclose(fPtr);
     return {false, -1};
   }
-  std::ignore = fclose(f);
+  std::ignore = fclose(fPtr);
   if(buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF)
   {
     return {true, 0};

@@ -109,7 +109,7 @@ public:
     // double for loop for each choice possibility
     for(uint64 fValue = 0; fValue < k_EndianessElements; fValue++)
     {
-      Test(fValue);
+      test(fValue);
     }
   }
 
@@ -198,7 +198,7 @@ private:
     return {};
   }
 
-  void CompareResults(IDataArray& selectedArray) // compare hash of both file strings
+  void compareResults(IDataArray& selectedArray) // compare hash of both file strings
   {
     fs::path writtenFilePath = fs::path(k_TestOutput.string() + "/" + selectedArray.getName() + ".bin");
     REQUIRE(fs::exists(writtenFilePath));
@@ -209,7 +209,7 @@ private:
     REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
   }
 
-  void Test(uint64 endianess)
+  void test(uint64 endianess)
   {
     // create data set
     m_DataStructure.clear();
@@ -219,9 +219,9 @@ private:
       using DataStoreType = DataStore<T>;
       using ArrayType = DataArray<T>;
 
-      ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(endianess) + "_" + "array_" + std::to_string(index),
-                                                                                {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
-      dataArray->fill(m_FillValue[index]);
+      ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(endianess) + "_" + "array_" + std::to_string(index),
+                                                                                   {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
+      dataArrayPtr->fill(m_FillValue[index]);
     }
     std::vector<DataPath> daps1 = m_DataStructure.getAllDataPaths();
 
@@ -246,7 +246,7 @@ private:
     // read the file(s) back in
     for(const auto& i : daps1)
     {
-      CompareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
+      compareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
     }
   }
 };
@@ -295,9 +295,9 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
     using DataStoreType = DataStore<int32>;
     using ArrayType = DataArray<int32>;
 
-    ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, std::to_string(0) + "_" + "array_" + std::to_string(index), {static_cast<usize>(k_NumOfTuples)},
-                                                                              {static_cast<usize>(k_NumComponents)});
-    dataArray->fill(123123);
+    ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, std::to_string(0) + "_" + "array_" + std::to_string(index), {static_cast<usize>(k_NumOfTuples)},
+                                                                                 {static_cast<usize>(k_NumComponents)});
+    dataArrayPtr->fill(123123);
   }
   std::vector<DataPath> daps1 = dataStructure.getAllDataPaths();
 

@@ -337,7 +337,7 @@ protected:
    * @param parentId Optional parent ID; if provided, object is added as a child to that parent
    * @return True if the object was added successfully, false otherwise
    */
-  static bool AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const OptionalId& parentId);
+  static bool AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalId& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.

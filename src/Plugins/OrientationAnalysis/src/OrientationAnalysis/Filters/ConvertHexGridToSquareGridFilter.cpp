@@ -22,28 +22,28 @@ namespace
 {
 struct ConvertHexGridToSquareGridFilterCache
 {
-  fs::path workingPath;
-  std::string preflightReturnString;
-  fs::file_time_type lastWrite;
+  fs::path working_path;
+  std::string preflight_return_string;
+  fs::file_time_type last_write;
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ConvertHexGridToSquareGridFilterCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ConvertHexGridToSquareGridFilterCache> SHeaderCache;
 } // namespace
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
 ConvertHexGridToSquareGridFilter::ConvertHexGridToSquareGridFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ConvertHexGridToSquareGridFilter::~ConvertHexGridToSquareGridFilter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -154,11 +154,11 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     return MakePreflightErrorResult(-446003, "Please select a valid file path to run");
   }
 
-  if(!fs::exists(s_HeaderCache[m_InstanceId].workingPath) || s_HeaderCache[m_InstanceId].workingPath != inputPath ||
-     fs::last_write_time(s_HeaderCache[m_InstanceId].workingPath) > s_HeaderCache[m_InstanceId].lastWrite || s_HeaderCache[m_InstanceId].preflightReturnString.empty())
+  if(!fs::exists(SHeaderCache[m_InstanceId].working_path) || SHeaderCache[m_InstanceId].working_path != inputPath ||
+     fs::last_write_time(SHeaderCache[m_InstanceId].working_path) > SHeaderCache[m_InstanceId].last_write || SHeaderCache[m_InstanceId].preflight_return_string.empty())
   {
-    s_HeaderCache[m_InstanceId].workingPath = inputPath;
-    s_HeaderCache[m_InstanceId].lastWrite = fs::last_write_time(inputPath);
+    SHeaderCache[m_InstanceId].working_path = inputPath;
+    SHeaderCache[m_InstanceId].last_write = fs::last_write_time(inputPath);
     ebsdlib::AngReader reader;
     reader.setFileName(inputPath.string());
     reader.setReadHexGrid(true);
@@ -178,10 +178,10 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     std::stringstream preflightString;
     preflightString << "Hex Grid X Spacing: " << reader.getXStep() << "\n"
                     << "Hex Grid Y Spacing: " << reader.getYStep();
-    s_HeaderCache[m_InstanceId].preflightReturnString = preflightString.str();
+    SHeaderCache[m_InstanceId].preflight_return_string = preflightString.str();
   }
 
-  preflightUpdatedValues.emplace_back(PreflightValue{.name = "Suggested Spacing", .value = s_HeaderCache[m_InstanceId].preflightReturnString});
+  preflightUpdatedValues.emplace_back(PreflightValue{.name = "Suggested Spacing", .value = SHeaderCache[m_InstanceId].preflight_return_string});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};

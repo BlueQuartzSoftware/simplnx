@@ -21,7 +21,7 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
 {
-  const DataPath k_ExemplarShiftsPath = Constants::k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
+  const DataPath kExemplarShiftsPath = Constants::k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
   UnitTest::LoadPlugins();
 
@@ -67,7 +67,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[R
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
 {
-  const std::string k_CentroidsName = "Centroids";
+  const std::string kCentroidsName = "Centroids";
 
   UnitTest::LoadPlugins();
 
@@ -99,7 +99,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SlicesArrayName_Key, std::make_any<std::string>(Constants::k_SlicesArrayName));
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_RelativeShiftsArrayName_Key, std::make_any<std::string>(Constants::k_RelativeShiftsArrayName));
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>(Constants::k_CumulativeShiftsArrayName));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(kCentroidsName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -129,7 +129,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
   UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
 
-  const DataPath centroidsPath = alignmentAMPath.createChildPath(k_CentroidsName);
+  const DataPath centroidsPath = alignmentAMPath.createChildPath(kCentroidsName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(centroidsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(centroidsPath));
   UnitTest::CompareDataArrays<float32>(exemplarDataStructure.getDataRefAs<IDataArray>(centroidsPath), dataStructure.getDataRefAs<IDataArray>(centroidsPath));
@@ -192,24 +192,24 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
   UnitTest::AlgorithmTestScope scope(scenario);
   using FilterType = AlignSectionsFeatureCentroidFilter;
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geom != nullptr);
-  geom->setDimensions({3, 3, 4});
-  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geom->getId());
-  REQUIRE(cells != nullptr);
-  geom->setCellData(*cells);
-  auto* mask = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cells->getId());
-  REQUIRE(mask != nullptr);
-  mask->fill(0);
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions({3, 3, 4});
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geomPtr->setCellData(*cellsPtr);
+  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
+  REQUIRE(maskPtr != nullptr);
+  maskPtr->fill(0);
   // One marked cell per slice: (1,1), (0,0), (1,1), (2,2) in ascending Z.
   // Reference index 1 counts from the top, so it is physical slice 2.
   // Centroid differences in descending Z are (+1,+1), (0,0), (-1,-1), (0,0).
   // Reading source at destination + shift must place all marks at (1,1).
-  (*mask)[4] = 1;
-  (*mask)[9] = 1;
-  (*mask)[22] = 1;
-  (*mask)[35] = 1;
+  (*maskPtr)[4] = 1;
+  (*maskPtr)[9] = 1;
+  (*maskPtr)[22] = 1;
+  (*maskPtr)[35] = 1;
 
   FilterType filter;
   Arguments args;
@@ -229,7 +229,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
     for(usize xy = 0; xy < 9; xy++)
     {
       CAPTURE(z, xy);
-      CHECK((*mask)[(z * 9) + xy] == (xy == 4 ? 1 : 0));
+      CHECK((*maskPtr)[(z * 9) + xy] == (xy == 4 ? 1 : 0));
     }
   }
   if(storeShifts)
@@ -262,16 +262,16 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
   UnitTest::AlgorithmTestScope scope(scenario);
   using FilterType = AlignSectionsFeatureCentroidFilter;
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geom != nullptr);
-  geom->setDimensions({3, 3, 4});
-  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geom->getId());
-  REQUIRE(cells != nullptr);
-  geom->setCellData(*cells);
-  auto* mask = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cells->getId());
-  REQUIRE(mask != nullptr);
-  mask->fill(0);
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions({3, 3, 4});
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geomPtr->setCellData(*cellsPtr);
+  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
+  REQUIRE(maskPtr != nullptr);
+  maskPtr->fill(0);
   // Descending-Z centroids are (2,2), (1,1), (0,0), (1,1) before removing a mark.
   // Empty top with reference 1: offsets [0,0,-1,0]. Empty reference: all offsets 0.
   // Empty middle (index 2), consecutive: relative [0,-1,0,0], cumulative [0,-1,-1,-1].
@@ -284,16 +284,16 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
   {
     if(z != emptyZ)
     {
-      (*mask)[z * 9 + markXY[z]] = 1;
+      (*maskPtr)[z * 9 + markXY[z]] = 1;
     }
   }
   // A separate marker makes the empty slice's applied shift observable without diagnostics.
-  auto* values = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cells->getId());
-  REQUIRE(values != nullptr);
-  values->fill(0);
+  auto* valuesPtr = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
+  valuesPtr->fill(0);
   for(usize z = 0; z < 4; z++)
   {
-    (*values)[z * 9 + 4] = 7;
+    (*valuesPtr)[z * 9 + 4] = 7;
   }
 
   FilterType filter;
@@ -317,7 +317,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
       CAPTURE(z, xy);
       const int64 sourceX = static_cast<int64>(xy % 3) + shift;
       const int64 sourceY = static_cast<int64>(xy / 3) + shift;
-      CHECK((*values)[z * 9 + xy] == (sourceX == 1 && sourceY == 1 ? 7 : 0));
+      CHECK((*valuesPtr)[z * 9 + xy] == (sourceX == 1 && sourceY == 1 ? 7 : 0));
     }
   }
   if(storeShifts)
@@ -352,13 +352,13 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice boun
   const int32 reference = static_cast<int32>(atUpperBound ? zDim : zDim - 1);
   CAPTURE(zDim, useReference, reference, storeShifts);
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geom != nullptr);
-  geom->setDimensions({3, 3, zDim});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{zDim, 3, 3}, geom->getId());
-  REQUIRE(cells != nullptr);
-  geom->setCellData(*cells);
-  REQUIRE(UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{zDim, 3, 3}, ShapeType{1}, 0), cells->getId()) != nullptr);
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions({3, 3, zDim});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{zDim, 3, 3}, geomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geomPtr->setCellData(*cellsPtr);
+  REQUIRE(UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{zDim, 3, 3}, ShapeType{1}, 0), cellsPtr->getId()) != nullptr);
 
   FilterType filter;
   Arguments args;

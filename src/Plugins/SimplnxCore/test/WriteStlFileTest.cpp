@@ -35,7 +35,7 @@ const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContain
 const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
 const std::string k_PartNumberName = "Part Number";
 
-std::vector<char> readIn(const fs::path& filePath)
+std::vector<char> ReadIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -107,7 +107,7 @@ struct StlTriangle
 struct BinaryStl
 {
   std::string header;
-  int32 triangleCount = 0;
+  int32 triangle_count = 0;
   std::vector<StlTriangle> triangles;
 };
 
@@ -115,14 +115,14 @@ struct BinaryStl
 BinaryStl ReadBinaryStl(const fs::path& path)
 {
   CAPTURE(path);
-  const auto bytes = readIn(path);
+  const auto bytes = ReadIn(path);
   REQUIRE(bytes.size() >= 84);
   BinaryStl stl;
   stl.header.assign(bytes.begin(), std::find(bytes.begin(), bytes.begin() + 80, '\0'));
-  std::memcpy(&stl.triangleCount, bytes.data() + 80, sizeof(int32));
-  REQUIRE(stl.triangleCount >= 0);
-  REQUIRE(bytes.size() == 84 + 50 * static_cast<usize>(stl.triangleCount));
-  for(usize triangleIdx = 0; triangleIdx < static_cast<usize>(stl.triangleCount); triangleIdx++)
+  std::memcpy(&stl.triangle_count, bytes.data() + 80, sizeof(int32));
+  REQUIRE(stl.triangle_count >= 0);
+  REQUIRE(bytes.size() == 84 + 50 * static_cast<usize>(stl.triangle_count));
+  for(usize triangleIdx = 0; triangleIdx < static_cast<usize>(stl.triangle_count); triangleIdx++)
   {
     const usize offset = 84 + 50 * triangleIdx;
     StlTriangle triangle;
@@ -149,7 +149,7 @@ void RequireStl(const fs::path& path, const std::string& header, const std::vect
   REQUIRE(fs::file_size(path) == 84 + 50 * expectedTriangles.size());
   const auto stl = ReadBinaryStl(path);
   REQUIRE(stl.header == header);
-  REQUIRE(stl.triangleCount == static_cast<int32>(expectedTriangles.size()));
+  REQUIRE(stl.triangle_count == static_cast<int32>(expectedTriangles.size()));
   for(usize triangleIdx = 0; triangleIdx < expectedTriangles.size(); triangleIdx++)
   {
     CAPTURE(triangleIdx);
@@ -204,12 +204,12 @@ void CompareMultipleResults() // compare hash of both file strings
   REQUIRE(fs::exists(writtenFilePath));
   fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/ExemplarFeature_0.stl");
   REQUIRE(fs::exists(exemplarFilePath));
-  REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
+  REQUIRE(ReadIn(writtenFilePath) == ReadIn(exemplarFilePath));
   fs::path writtenFilePath2 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/TriangleFeature_1.stl");
   REQUIRE(fs::exists(writtenFilePath2));
   fs::path exemplarFilePath2 = fs::path(k_ExemplarDir + "/ExemplarFeature_1.stl");
   REQUIRE(fs::exists(exemplarFilePath2));
-  REQUIRE(readIn(writtenFilePath2) == readIn(exemplarFilePath2));
+  REQUIRE(ReadIn(writtenFilePath2) == ReadIn(exemplarFilePath2));
 }
 
 void CompareSingleResult() // compare hash of both file strings
@@ -218,7 +218,7 @@ void CompareSingleResult() // compare hash of both file strings
   REQUIRE(fs::exists(writtenFilePath));
   fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/Exemplar.stl");
   REQUIRE(fs::exists(exemplarFilePath));
-  REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
+  REQUIRE(ReadIn(writtenFilePath) == ReadIn(exemplarFilePath));
 }
 
 void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& computedDirPath)
@@ -233,7 +233,7 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
 
     bool found = false;
     const fs::path& targetPath = exemplarDirectoryEntry.path();
-    auto exemplarFileContents = readIn(targetPath);
+    auto exemplarFileContents = ReadIn(targetPath);
     std::string exemplarMD5Hash = nx::core::UnitTest::ComputeMD5Hash(exemplarFileContents);
 
     for(const auto& computedDirectoryEntry : fs::directory_iterator(computedDirPath))
@@ -243,7 +243,7 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
       {
         found = true;
 
-        auto computedFileContents = readIn(currentPath);
+        auto computedFileContents = ReadIn(currentPath);
         std::string computedMD5Hash = nx::core::UnitTest::ComputeMD5Hash(computedFileContents);
 
         REQUIRE(computedMD5Hash == exemplarMD5Hash);
@@ -384,13 +384,13 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStl
 
   fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Part_Number_1.stl");
   REQUIRE(fs::exists(writtenFilePath));
-  auto fileContents = readIn(writtenFilePath);
+  auto fileContents = ReadIn(writtenFilePath);
   std::string md5Hash = nx::core::UnitTest::ComputeMD5Hash(fileContents);
   REQUIRE(md5Hash == "a0383b898d0668d70f08e135e5064efb");
 
   writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Part_Number_2.stl");
   REQUIRE(fs::exists(writtenFilePath));
-  fileContents = readIn(writtenFilePath);
+  fileContents = ReadIn(writtenFilePath);
   md5Hash = nx::core::UnitTest::ComputeMD5Hash(fileContents);
   REQUIRE(md5Hash == "d45a0d99495df506384fdbbb46a79f5c");
 
@@ -638,7 +638,7 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: SIMPL Backwards Compatibility", "[Si
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -651,22 +651,22 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: SIMPL Backwards Compatibility", "[Si
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteStlFileFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteStlFileFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteStlFileFilter::k_OutputStlDirectory_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<std::string>(WriteStlFileFilter::k_OutputStlPrefix_Key) == "TestName");
       CHECK(args.value<DataPath>(WriteStlFileFilter::k_TriangleGeomPath_Key) == DataPath({"DataContainer"}));

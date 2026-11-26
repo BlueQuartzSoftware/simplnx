@@ -31,9 +31,9 @@ struct TiffPage
 {
   uint32_t width = 0;
   uint32_t height = 0;
-  uint16_t spp = 1;                    // samples-per-pixel
-  std::optional<uint32_t> subfileType; // nullopt => do not emit the SubfileType tag
-  std::vector<uint8_t> pixels;         // row-major, top-to-bottom, size == width*height*spp
+  uint16_t spp = 1;                     // samples-per-pixel
+  std::optional<uint32_t> subfile_type; // nullopt => do not emit the SubfileType tag
+  std::vector<uint8_t> pixels;          // row-major, top-to-bottom, size == width*height*spp
 };
 
 // Builds a page filled with a single constant value across all pixels/components.
@@ -43,7 +43,7 @@ TiffPage MakeConstantPage(uint32_t width, uint32_t height, uint16_t spp, uint8_t
   page.width = width;
   page.height = height;
   page.spp = spp;
-  page.subfileType = subfileType;
+  page.subfile_type = subfileType;
   page.pixels.assign(static_cast<size_t>(width) * height * spp, value);
   return page;
 }
@@ -56,7 +56,7 @@ TiffPage MakeRampPage(uint32_t width, uint32_t height, std::optional<uint32_t> s
   page.width = width;
   page.height = height;
   page.spp = 1;
-  page.subfileType = subfileType;
+  page.subfile_type = subfileType;
   page.pixels.resize(static_cast<size_t>(width) * height);
   for(size_t i = 0; i < page.pixels.size(); ++i)
   {
@@ -68,42 +68,42 @@ TiffPage MakeRampPage(uint32_t width, uint32_t height, std::optional<uint32_t> s
 // Synthesizes a (possibly multi-directory) uint8_t TIFF at @p path using libtiff directly.
 void WriteTiff(const fs::path& path, const std::vector<TiffPage>& pages)
 {
-  TIFF* tif = TIFFOpen(path.string().c_str(), "w");
-  REQUIRE(tif != nullptr);
+  TIFF* tifPtr = TIFFOpen(path.string().c_str(), "w");
+  REQUIRE(tifPtr != nullptr);
   for(const auto& page : pages)
   {
     REQUIRE(page.pixels.size() == static_cast<size_t>(page.width) * page.height * page.spp);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, page.width) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, page.height) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, page.spp) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 8) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, page.spp == 1 ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, 0)) != 0);
-    if(page.subfileType.has_value())
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGEWIDTH, page.width) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGELENGTH, page.height) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLESPERPIXEL, page.spp) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_BITSPERSAMPLE, 8) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PHOTOMETRIC, page.spp == 1 ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tifPtr, 0)) != 0);
+    if(page.subfile_type.has_value())
     {
-      REQUIRE(TIFFSetField(tif, TIFFTAG_SUBFILETYPE, page.subfileType.value()) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SUBFILETYPE, page.subfile_type.value()) != 0);
     }
     const size_t rowBytes = static_cast<size_t>(page.width) * page.spp;
     for(uint32_t row = 0; row < page.height; ++row)
     {
       // TIFFWriteScanline takes a non-const void* but does not modify the buffer.
-      REQUIRE(TIFFWriteScanline(tif, const_cast<uint8_t*>(page.pixels.data() + static_cast<size_t>(row) * rowBytes), row, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tifPtr, const_cast<uint8_t*>(page.pixels.data() + static_cast<size_t>(row) * rowBytes), row, 0) >= 0);
     }
-    REQUIRE(TIFFWriteDirectory(tif) != 0);
+    REQUIRE(TIFFWriteDirectory(tifPtr) != 0);
   }
-  TIFFClose(tif);
+  TIFFClose(tifPtr);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::TiffImageIO: single-page 2D uint8_t", "[SimplnxCore][ImageIO]")
 {
-  constexpr uint32_t width = 4;
-  constexpr uint32_t height = 3;
+  constexpr uint32_t k_Width = 4;
+  constexpr uint32_t k_Height = 3;
   const fs::path path = ImageIOOutputDir() / "single_page.tif";
-  const TiffPage page = MakeRampPage(width, height);
+  const TiffPage page = MakeRampPage(k_Width, k_Height);
   WriteTiff(path, {page});
 
   const TiffImageIO io;
@@ -111,25 +111,25 @@ TEST_CASE("SimplnxCore::TiffImageIO: single-page 2D uint8_t", "[SimplnxCore][Ima
   REQUIRE(metaResult.valid());
   const ImageMetadata& meta = metaResult.value();
   REQUIRE(meta.numPages == 1);
-  REQUIRE(meta.width == width);
-  REQUIRE(meta.height == height);
+  REQUIRE(meta.width == k_Width);
+  REQUIRE(meta.height == k_Height);
   REQUIRE(meta.numComponents == 1);
   REQUIRE(meta.dataType == DataType::uint8);
 
-  std::vector<uint8_t> buffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> buffer(static_cast<size_t>(k_Width) * k_Height);
   REQUIRE(io.readPixelData(path, buffer, 0).valid());
   REQUIRE(buffer == page.pixels);
 
   // Default page argument reads page 0.
-  std::vector<uint8_t> defaultBuffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> defaultBuffer(static_cast<size_t>(k_Width) * k_Height);
   REQUIRE(io.readPixelData(path, defaultBuffer).valid());
   REQUIRE(defaultBuffer == page.pixels);
 }
 
 TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8_t Z-stack", "[SimplnxCore][ImageIO]")
 {
-  constexpr uint32_t width = 3;
-  constexpr uint32_t height = 2;
+  constexpr uint32_t k_Width = 3;
+  constexpr uint32_t k_Height = 2;
   const std::vector<uint8_t> planeValues = {10, 20, 30};
 
   std::vector<TiffPage> pages;
@@ -137,7 +137,7 @@ TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8_t Z-stack", "[SimplnxCore]
   for(uint8_t value : planeValues)
   {
     // No SubfileType tag: the common ImageJ-style multi-page stack layout.
-    pages.push_back(MakeConstantPage(width, height, 1, value));
+    pages.push_back(MakeConstantPage(k_Width, k_Height, 1, value));
   }
   const fs::path path = ImageIOOutputDir() / "three_page_stack.tif";
   WriteTiff(path, pages);
@@ -149,25 +149,25 @@ TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8_t Z-stack", "[SimplnxCore]
 
   for(usize p = 0; p < planeValues.size(); ++p)
   {
-    std::vector<uint8_t> buffer(static_cast<size_t>(width) * height);
+    std::vector<uint8_t> buffer(static_cast<size_t>(k_Width) * k_Height);
     REQUIRE(io.readPixelData(path, buffer, p).valid());
-    const std::vector<uint8_t> expected(static_cast<size_t>(width) * height, planeValues[p]);
+    const std::vector<uint8_t> expected(static_cast<size_t>(k_Width) * k_Height, planeValues[p]);
     REQUIRE(buffer == expected);
   }
 
   // Requesting a page past the end fails cleanly rather than reading garbage.
-  std::vector<uint8_t> overflowBuffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> overflowBuffer(static_cast<size_t>(k_Width) * k_Height);
   REQUIRE(io.readPixelData(path, overflowBuffer, 3).invalid());
 }
 
 TEST_CASE("SimplnxCore::TiffImageIO: reduced-resolution subfile excluded from page count", "[SimplnxCore][ImageIO]")
 {
-  constexpr uint32_t fullWidth = 4;
-  constexpr uint32_t fullHeight = 3;
+  constexpr uint32_t k_FullWidth = 4;
+  constexpr uint32_t k_FullHeight = 3;
 
   // Directory 0: full-resolution page (SubfileType == 0). Directory 1: a reduced-resolution
   // pyramid level (SubfileType == FILETYPE_REDUCEDIMAGE) that must be ignored.
-  const TiffPage fullPage = MakeRampPage(fullWidth, fullHeight, static_cast<uint32_t>(0));
+  const TiffPage fullPage = MakeRampPage(k_FullWidth, k_FullHeight, static_cast<uint32_t>(0));
   const TiffPage reducedPage = MakeConstantPage(2, 2, 1, 99, static_cast<uint32_t>(FILETYPE_REDUCEDIMAGE));
   const fs::path path = ImageIOOutputDir() / "pyramid.tif";
   WriteTiff(path, {fullPage, reducedPage});
@@ -176,10 +176,10 @@ TEST_CASE("SimplnxCore::TiffImageIO: reduced-resolution subfile excluded from pa
   const auto metaResult = io.readMetadata(path);
   REQUIRE(metaResult.valid());
   REQUIRE(metaResult.value().numPages == 1);
-  REQUIRE(metaResult.value().width == fullWidth);
-  REQUIRE(metaResult.value().height == fullHeight);
+  REQUIRE(metaResult.value().width == k_FullWidth);
+  REQUIRE(metaResult.value().height == k_FullHeight);
 
-  std::vector<uint8_t> buffer(static_cast<size_t>(fullWidth) * fullHeight);
+  std::vector<uint8_t> buffer(static_cast<size_t>(k_FullWidth) * k_FullHeight);
   REQUIRE(io.readPixelData(path, buffer, 0).valid());
   REQUIRE(buffer == fullPage.pixels);
 
@@ -190,17 +190,17 @@ TEST_CASE("SimplnxCore::TiffImageIO: reduced-resolution subfile excluded from pa
 
 TEST_CASE("SimplnxCore::StbImageIO: single-image formats reject non-zero page index", "[SimplnxCore][ImageIO]")
 {
-  constexpr int width = 4;
-  constexpr int height = 3;
-  std::vector<uint8_t> pixels(static_cast<size_t>(width) * height);
+  constexpr int k_Width = 4;
+  constexpr int k_Height = 3;
+  std::vector<uint8_t> pixels(static_cast<size_t>(k_Width) * k_Height);
   for(size_t i = 0; i < pixels.size(); ++i)
   {
     pixels[i] = static_cast<uint8_t>(i);
   }
 
   ImageMetadata writeMeta;
-  writeMeta.width = width;
-  writeMeta.height = height;
+  writeMeta.width = k_Width;
+  writeMeta.height = k_Height;
   writeMeta.numComponents = 1;
   writeMeta.dataType = DataType::uint8;
 
@@ -213,11 +213,11 @@ TEST_CASE("SimplnxCore::StbImageIO: single-image formats reject non-zero page in
   REQUIRE(metaResult.value().numPages == 1);
 
   // Page 0 round-trips the pixel data.
-  std::vector<uint8_t> buffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> buffer(static_cast<size_t>(k_Width) * k_Height);
   REQUIRE(io.readPixelData(path, buffer, 0).valid());
   REQUIRE(buffer == pixels);
 
   // Any page beyond 0 is an error for a single-image format.
-  std::vector<uint8_t> pageOneBuffer(static_cast<size_t>(width) * height);
+  std::vector<uint8_t> pageOneBuffer(static_cast<size_t>(k_Width) * k_Height);
   REQUIRE(io.readPixelData(path, pageOneBuffer, 1).invalid());
 }

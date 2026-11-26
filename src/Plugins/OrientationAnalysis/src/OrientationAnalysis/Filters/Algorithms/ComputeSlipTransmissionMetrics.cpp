@@ -42,12 +42,12 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 
   auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListArrayPath);
 
-  std::vector<std::vector<float32>> F1Lists(totalFeatures);
-  std::vector<std::vector<float32>> F1sPtLists(totalFeatures);
-  std::vector<std::vector<float32>> F7Lists(totalFeatures);
+  std::vector<std::vector<float32>> f1Lists(totalFeatures);
+  std::vector<std::vector<float32>> f1sPtLists(totalFeatures);
+  std::vector<std::vector<float32>> f7Lists(totalFeatures);
   std::vector<std::vector<float32>> mPrimeLists(totalFeatures);
 
-  float64 LD[3] = {0.0, 0.0, 1.0};
+  float64 ld[3] = {0.0, 0.0, 1.0};
 
   bool emitLaueClassWarning = false;
 
@@ -59,9 +59,9 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
     }
 
     const usize listLength = neighborList[featureIdx].size();
-    F1Lists[featureIdx].assign(listLength, 0.0F);
-    F1sPtLists[featureIdx].assign(listLength, 0.0F);
-    F7Lists[featureIdx].assign(listLength, 0.0F);
+    f1Lists[featureIdx].assign(listLength, 0.0F);
+    f1sPtLists[featureIdx].assign(listLength, 0.0F);
+    f7Lists[featureIdx].assign(listLength, 0.0F);
     mPrimeLists[featureIdx].assign(listLength, 0.0F);
     for(usize neighborIdx = 0; neighborIdx < listLength; neighborIdx++)
     {
@@ -74,9 +74,9 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
       const int32 neighborFeaturePhaseIdx = featurePhasesArrayRef[neighborFeatureIdx];
 
       float32 mPrime = 0.0F;
-      float32 F1 = 0.0F;
-      float32 F1sPt = 0.0F;
-      float32 F7 = 0.0F;
+      float32 f1 = 0.0F;
+      float32 f1sPt = 0.0F;
+      float32 f7 = 0.0F;
 
       // Positive phase indices must be valid before the crystal structures are read.
       if(currentPhaseIdx > 0 || neighborFeaturePhaseIdx > 0)
@@ -109,10 +109,10 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
         }
         if(currentLaueIndex == ebsdlib::CrystalStructure::Cubic_High && neighborLaueIndex == ebsdlib::CrystalStructure::Cubic_High)
         {
-          mPrime = static_cast<float32>(orientationOps[currentLaueIndex]->getmPrime(q1, q2, LD));
-          F1 = static_cast<float32>(orientationOps[currentLaueIndex]->getF1(q1, q2, LD, true));
-          F1sPt = static_cast<float32>(orientationOps[currentLaueIndex]->getF1spt(q1, q2, LD, true));
-          F7 = static_cast<float32>(orientationOps[currentLaueIndex]->getF7(q1, q2, LD, true));
+          mPrime = static_cast<float32>(orientationOps[currentLaueIndex]->getmPrime(q1, q2, ld));
+          f1 = static_cast<float32>(orientationOps[currentLaueIndex]->getF1(q1, q2, ld, true));
+          f1sPt = static_cast<float32>(orientationOps[currentLaueIndex]->getF1spt(q1, q2, ld, true));
+          f7 = static_cast<float32>(orientationOps[currentLaueIndex]->getF7(q1, q2, ld, true));
         }
         else
         {
@@ -120,20 +120,20 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
         }
       }
       mPrimeLists[featureIdx][neighborIdx] = mPrime;
-      F1Lists[featureIdx][neighborIdx] = F1;
-      F1sPtLists[featureIdx][neighborIdx] = F1sPt;
-      F7Lists[featureIdx][neighborIdx] = F7;
+      f1Lists[featureIdx][neighborIdx] = f1;
+      f1sPtLists[featureIdx][neighborIdx] = f1sPt;
+      f7Lists[featureIdx][neighborIdx] = f7;
     }
   }
 
-  auto& F1L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1ListArrayName);
-  auto& F1sptL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1sptListArrayName);
-  auto& F7L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F7ListArrayName);
+  auto& f1L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1ListArrayName);
+  auto& f1sptL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1sptListArrayName);
+  auto& f7L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F7ListArrayName);
   auto& mPrimeL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->mPrimeListArrayName);
 
-  F1L.setLists(F1Lists);
-  F1sptL.setLists(F1sPtLists);
-  F7L.setLists(F7Lists);
+  f1L.setLists(f1Lists);
+  f1sptL.setLists(f1sPtLists);
+  f7L.setLists(f7Lists);
   mPrimeL.setLists(mPrimeLists);
 
   // for(usize i = 1; i < totalFeatures; i++)

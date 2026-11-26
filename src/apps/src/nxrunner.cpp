@@ -167,7 +167,7 @@ private:
   std::fstream m_LogStream;
 };
 
-CliStream cliOut;
+CliStream CliOut;
 
 /**
  * @enum ArgumentType
@@ -205,7 +205,7 @@ struct Argument
   }
 };
 
-using CliArguments = std::vector<Argument>;
+using CliArgumentsType = std::vector<Argument>;
 
 /**
  * @brief Copies one command-line token to a string.
@@ -215,7 +215,7 @@ using CliArguments = std::vector<Argument>;
  * @return The selected token, or an empty string when index is greater than argc.
  * @pre index must be less than argc for safe access.
  */
-std::string toString(int argc, char* argv[], int index)
+std::string ToString(int argc, char* argv[], int index)
 {
   if(index > argc)
   {
@@ -255,15 +255,15 @@ std::string ParseArgument(int argc, char* argv[], int& index)
  * @param argv Command-line token array.
  * @return Parsed arguments, or an error when no operand exists.
  */
-Result<CliArguments> ParseParameters(int argc, char* argv[])
+Result<CliArgumentsType> ParseParameters(int argc, char* argv[])
 {
   if(argc < 2)
   {
     std::string ss = "No arguments to parse";
-    return nx::core::MakeErrorResult<CliArguments>(k_NoArgumentsProvided, ss);
+    return nx::core::MakeErrorResult<CliArgumentsType>(k_NoArgumentsProvided, ss);
   }
 
-  CliArguments args;
+  CliArgumentsType args;
 
   int index = 1;
   std::string arg = argv[index];
@@ -336,13 +336,13 @@ int PrintResult(const Result<T>& result)
 
   for(const auto& warning : result.warnings())
   {
-    cliOut << fmt::format("Warning {}: {}", warning.code, warning.message);
-    cliOut.endline();
+    CliOut << fmt::format("Warning {}: {}", warning.code, warning.message);
+    CliOut.endline();
   }
   for(const auto& error : result.errors())
   {
-    cliOut << fmt::format("Error {}: {}", error.code, error.message);
-    cliOut.endline();
+    CliOut << fmt::format("Error {}: {}", error.code, error.message);
+    CliOut.endline();
   }
   return result.errors()[0].code;
 }
@@ -355,8 +355,8 @@ int PrintResult(const Result<T>& result)
 Result<> PreflightPipeline(Pipeline& pipeline)
 {
   const CLI::PipelineObserver obs(&pipeline);
-  cliOut << "\n-------------------------";
-  cliOut.endline();
+  CliOut << "\n-------------------------";
+  CliOut.endline();
 
   if(!pipeline.preflight())
   {
@@ -364,8 +364,8 @@ Result<> PreflightPipeline(Pipeline& pipeline)
     return nx::core::MakeErrorResult(-2, ss);
   }
 
-  cliOut << "Finished preflighting pipeline";
-  cliOut.endline();
+  CliOut << "Finished preflighting pipeline";
+  CliOut.endline();
   return {};
 }
 
@@ -377,16 +377,16 @@ Result<> PreflightPipeline(Pipeline& pipeline)
 Result<> ExecutePipeline(Pipeline& pipeline)
 {
   const CLI::PipelineObserver obs(&pipeline);
-  cliOut << "\n-------------------------";
-  cliOut.endline();
+  CliOut << "\n-------------------------";
+  CliOut.endline();
 
   if(!pipeline.execute())
   {
     std::string ss = "Error executing pipeline";
     return nx::core::MakeErrorResult(k_ExecutePipelineError, ss);
   }
-  cliOut << timestamp() << " Finished executing pipeline";
-  cliOut.endline();
+  CliOut << timestamp() << " Finished executing pipeline";
+  CliOut.endline();
   return {};
 }
 
@@ -401,38 +401,38 @@ Result<> ExecutePipeline(Pipeline& pipeline)
 Result<> ExecutePipeline(const Argument& arg)
 {
   std::string pipelinePath = arg.value;
-  cliOut << "Executing Pipeline: " << pipelinePath << "\n";
+  CliOut << "Executing Pipeline: " << pipelinePath << "\n";
 
   auto loadPipelineResult = Pipeline::FromFile(pipelinePath);
 
   if(pipelinePath.ends_with(".json"))
   {
-    cliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
-    cliOut << "  You will need to run `nxrunner --convert [PATH TO .JSON FILE]` to first convert the\n";
-    cliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
-    cliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
+    CliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
+    CliOut << "  You will need to run `nxrunner --convert [PATH TO .JSON FILE]` to first convert the\n";
+    CliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
+    CliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
 
   if(loadPipelineResult.invalid())
   {
-    cliOut << fmt::format("Error: Could not load pipeline at path: '{}'", pipelinePath);
-    cliOut.endline();
+    CliOut << fmt::format("Error: Could not load pipeline at path: '{}'", pipelinePath);
+    CliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
   if(!loadPipelineResult.m_Warnings.empty())
   {
-    cliOut << "Input Pipeline Warnings"
+    CliOut << "Input Pipeline Warnings"
            << "\n";
     for(const auto& warning : loadPipelineResult.m_Warnings)
     {
-      cliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
+      CliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
     }
   }
 
   Pipeline pipeline = loadPipelineResult.value();
-  cliOut << fmt::format("Executing pipeline at path: '{}'\n", pipelinePath);
-  cliOut.endline();
+  CliOut << fmt::format("Executing pipeline at path: '{}'\n", pipelinePath);
+  CliOut.endline();
   return ExecutePipeline(pipeline);
 }
 
@@ -447,36 +447,36 @@ Result<> ExecutePipeline(const Argument& arg)
 Result<> PreflightPipeline(const Argument& arg)
 {
   std::string pipelinePath = arg.value;
-  cliOut << "Preflight Pipeline: " << pipelinePath << "\n";
+  CliOut << "Preflight Pipeline: " << pipelinePath << "\n";
   auto loadPipelineResult = Pipeline::FromFile(pipelinePath);
 
   if(pipelinePath.ends_with(".json"))
   {
-    cliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
-    cliOut << "  You will need to run `nxrunner --convert [PATH TO .JSON FILE]` to first convert the\n";
-    cliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
-    cliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
+    CliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
+    CliOut << "  You will need to run `nxrunner --convert [PATH TO .JSON FILE]` to first convert the\n";
+    CliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
+    CliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
 
   if(loadPipelineResult.invalid())
   {
-    cliOut << fmt::format("Error: Could not load pipeline at path: '{}'", pipelinePath);
-    cliOut.endline();
+    CliOut << fmt::format("Error: Could not load pipeline at path: '{}'", pipelinePath);
+    CliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
   if(!loadPipelineResult.m_Warnings.empty())
   {
-    cliOut << "Preflight Pipeline: Input Pipeline Warnings"
+    CliOut << "Preflight Pipeline: Input Pipeline Warnings"
            << "\n";
     for(const auto& warning : loadPipelineResult.m_Warnings)
     {
-      cliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
+      CliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
     }
   }
 
-  cliOut << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath);
-  cliOut.endline();
+  CliOut << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath);
+  CliOut.endline();
 
   Pipeline pipeline = loadPipelineResult.value();
   return PreflightPipeline(pipeline);
@@ -495,8 +495,8 @@ Result<> PreflightPipeline(const Argument& arg)
 Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool saveConverted)
 {
   std::string pipelinePath = arg.value;
-  cliOut << fmt::format("Input File: '{}'", pipelinePath);
-  cliOut.endline();
+  CliOut << fmt::format("Input File: '{}'", pipelinePath);
+  CliOut.endline();
 
   nx::core::Result<nx::core::Pipeline> loadPipelineResult;
   if(pipelinePath.ends_with(".json"))
@@ -505,25 +505,25 @@ Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool 
   }
   else if(pipelinePath.ends_with(".d3dpipeline"))
   {
-    cliOut << "Input file is already a DREAM3D-NX formatted pipeline file. A sanity check will be run instead. Any warnings will be printed\n";
+    CliOut << "Input file is already a DREAM3D-NX formatted pipeline file. A sanity check will be run instead. Any warnings will be printed\n";
     loadPipelineResult = nx::core::Pipeline::FromFile(pipelinePath, true);
     saveConverted = false;
 
     for(const auto& warning : loadPipelineResult.warnings())
     {
-      cliOut << fmt::format("Warning ({}): {}\n", warning.code, warning.message);
+      CliOut << fmt::format("Warning ({}): {}\n", warning.code, warning.message);
     }
   }
   else
   {
-    cliOut << "Error: Input file extension is not recognized. Aborting execution now.\n";
+    CliOut << "Error: Input file extension is not recognized. Aborting execution now.\n";
     return ConvertResult(std::move(loadPipelineResult));
   }
 
   if(loadPipelineResult.invalid())
   {
-    cliOut << fmt::format("Error: Could not convert pipeline at path: '{}'", pipelinePath);
-    cliOut.endline();
+    CliOut << fmt::format("Error: Could not convert pipeline at path: '{}'", pipelinePath);
+    CliOut.endline();
     return ConvertResult(std::move(loadPipelineResult));
   }
 
@@ -539,13 +539,13 @@ Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool 
     fout << pipeline.toJson().dump(4);
     fout.flush();
 
-    cliOut << fmt::format("Converted File: '{}'", pipelinePath);
-    cliOut.endline();
+    CliOut << fmt::format("Converted File: '{}'", pipelinePath);
+    CliOut.endline();
   }
   if(printConvertedPipeline)
   {
-    cliOut << pipeline.toJson().dump(4);
-    cliOut.endline();
+    CliOut << pipeline.toJson().dump(4);
+    CliOut.endline();
   }
   return ConvertResult(std::move(loadPipelineResult));
 }
@@ -555,17 +555,17 @@ Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool 
  */
 void DisplayDefaultHelp()
 {
-  cliOut << "Options:\n";
-  cliOut << fmt::format("  {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
+  CliOut << "Options:\n";
+  CliOut << fmt::format("  {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
          << "  Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
-  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
+  CliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
          << "  Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
-  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
+  CliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
          << "  Convert the SIMPL pipeline at the target filepath. Optionally, create a log file at the specified path.";
-  cliOut << fmt::format("  <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "  Creates a log file at the specified path.";
-  cliOut << fmt::format("  {} <gigabytes>\t", k_CacheMemoryBudgetParamLong)
+  CliOut << fmt::format("  <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "  Creates a log file at the specified path.";
+  CliOut << fmt::format("  {} <gigabytes>\t", k_CacheMemoryBudgetParamLong)
          << "  Override the cache memory budget for this run (decimal GB, e.g. 8 or 1.5). This does not cap total process memory or modify saved preferences.\n";
-  cliOut.endline();
+  CliOut.endline();
 }
 
 /**
@@ -573,10 +573,10 @@ void DisplayDefaultHelp()
  */
 void DisplayExecuteHelp()
 {
-  cliOut << "To execute a target pipeline file:\n\t";
-  cliOut << fmt::format("  {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
+  CliOut << "To execute a target pipeline file:\n\t";
+  CliOut << fmt::format("  {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
          << "  Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.";
-  cliOut.endline();
+  CliOut.endline();
 }
 
 /**
@@ -584,10 +584,10 @@ void DisplayExecuteHelp()
  */
 void DisplayPreflightHelp()
 {
-  cliOut << "To preflight a target pipeline file:\n\t";
-  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
+  CliOut << "To preflight a target pipeline file:\n\t";
+  CliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
          << "  Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.";
-  cliOut.endline();
+  CliOut.endline();
 }
 
 /**
@@ -595,10 +595,10 @@ void DisplayPreflightHelp()
  */
 void DisplayConvertHelp()
 {
-  cliOut << "To convert a target SIMPL pipeline file:\n\t";
-  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
+  CliOut << "To convert a target SIMPL pipeline file:\n\t";
+  CliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
          << "  Convert the SIMPL pipeline at the target filepath. Optionally, create a log file at the specified path.";
-  cliOut.endline();
+  CliOut.endline();
 }
 
 /**
@@ -606,9 +606,9 @@ void DisplayConvertHelp()
  */
 void DisplayLogfileHelp()
 {
-  cliOut << "To export output a log file:\n\t";
-  cliOut << fmt::format("  <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "  Creates a log file at the specified path.";
-  cliOut.endline();
+  CliOut << "To export output a log file:\n\t";
+  CliOut << fmt::format("  <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "  Creates a log file at the specified path.";
+  CliOut.endline();
 }
 
 /**
@@ -616,10 +616,10 @@ void DisplayLogfileHelp()
  */
 void DisplayCacheMemoryBudgetHelp()
 {
-  cliOut << "To override the cache memory budget for this run:\n\t";
-  cliOut << fmt::format("  {} <gigabytes>\t", k_CacheMemoryBudgetParamLong)
+  CliOut << "To override the cache memory budget for this run:\n\t";
+  CliOut << fmt::format("  {} <gigabytes>\t", k_CacheMemoryBudgetParamLong)
          << "  Override the cache memory budget for this run only (decimal gigabytes, e.g. 8 or 1.5). This does not cap total process memory or modify saved preferences.";
-  cliOut.endline();
+  CliOut.endline();
 }
 
 /**
@@ -687,7 +687,7 @@ Result<> CreateArgumentError(const Argument& argument)
 Result<> SetLogFile(const Argument& argument)
 {
   std::filesystem::path filepath(argument.value);
-  return cliOut.setLogFile(filepath);
+  return CliOut.setLogFile(filepath);
 }
 } // namespace
 
@@ -699,7 +699,7 @@ Result<> SetLogFile(const Argument& argument)
  */
 int main(int argc, char* argv[])
 {
-  cliOut << fmt::format("nxrunner: Version {} Build Date:{}\n\n", nx::core::Version::Package(), nx::core::Version::BuildDate());
+  CliOut << fmt::format("nxrunner: Version {} Build Date:{}\n\n", nx::core::Version::Package(), nx::core::Version::BuildDate());
   // cliOut.endline();
   // cliOut << "ARGUMENT LISTING START\n";
   // for(int argIndex = 0; argIndex < argc; argIndex++)
@@ -708,13 +708,13 @@ int main(int argc, char* argv[])
   // }
   // cliOut << "ARGUMENT LISTING END\n";
 
-  Result<CliArguments> parsingResult = ParseParameters(argc, argv);
+  Result<CliArgumentsType> parsingResult = ParseParameters(argc, argv);
   if(parsingResult.invalid())
   {
-    return PrintResult<CliArguments>(parsingResult);
+    return PrintResult<CliArgumentsType>(parsingResult);
   }
 
-  CliArguments arguments = parsingResult.value();
+  CliArgumentsType arguments = parsingResult.value();
   std::vector<Result<>> results;
 
   std::optional<uint64> overrideCacheMemoryBudgetBytes;
@@ -787,8 +787,8 @@ int main(int argc, char* argv[])
   struct PreferencesCacheBudgetRestorer
   {
     Preferences* prefs = nullptr;
-    bool wasPresent = false;
-    uint64 originalValue = 0;
+    bool was_present = false;
+    uint64 original_value = 0;
     /**
      * @brief Restores or removes the cache-budget preference key.
      */
@@ -798,9 +798,9 @@ int main(int argc, char* argv[])
       {
         return;
       }
-      if(wasPresent)
+      if(was_present)
       {
-        prefs->setCacheMemoryBudgetBytes(originalValue);
+        prefs->setCacheMemoryBudgetBytes(original_value);
       }
       else
       {
@@ -812,16 +812,16 @@ int main(int argc, char* argv[])
 
   if(overrideCacheMemoryBudgetBytes.has_value())
   {
-    Preferences* preferences = app->getPreferences();
-    if(preferences != nullptr)
+    Preferences* preferencesPtr = app->getPreferences();
+    if(preferencesPtr != nullptr)
     {
-      cacheBudgetRestorer.prefs = preferences;
-      cacheBudgetRestorer.wasPresent = preferences->contains(std::string(Preferences::k_CacheMemoryBudgetBytes_Key));
-      if(cacheBudgetRestorer.wasPresent)
+      cacheBudgetRestorer.prefs = preferencesPtr;
+      cacheBudgetRestorer.was_present = preferencesPtr->contains(std::string(Preferences::k_CacheMemoryBudgetBytes_Key));
+      if(cacheBudgetRestorer.was_present)
       {
-        cacheBudgetRestorer.originalValue = preferences->cacheMemoryBudgetBytes();
+        cacheBudgetRestorer.original_value = preferencesPtr->cacheMemoryBudgetBytes();
       }
-      preferences->setCacheMemoryBudgetBytes(*overrideCacheMemoryBudgetBytes);
+      preferencesPtr->setCacheMemoryBudgetBytes(*overrideCacheMemoryBudgetBytes);
       // The preference does not update the running manager. Apply the value there too.
       // setBudgetBytes() clamps the request to the machine-safe maximum.
       // This call keeps headless OOC caches from using the manager's default budget.
@@ -878,7 +878,7 @@ int main(int argc, char* argv[])
   case ArgumentType::Execute: {
     try
     {
-      cliOut << "###### EXECUTE MODE ########\n";
+      CliOut << "###### EXECUTE MODE ########\n";
       auto result = ExecutePipeline(arguments[0]);
       results.push_back(result);
     }
@@ -899,7 +899,7 @@ int main(int argc, char* argv[])
   case ArgumentType::Preflight: {
     try
     {
-      cliOut << "###### PREFLIGHT MODE ########\n";
+      CliOut << "###### PREFLIGHT MODE ########\n";
       auto result = PreflightPipeline(arguments[0]);
       results.push_back(result);
     }

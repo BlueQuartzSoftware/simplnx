@@ -27,18 +27,18 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-const std::vector<float> s_Vertices = {0.0F,      0.0F,       -8.305164E-7F,  40.35763F, 0.0F,       -8.305164E-7F,  139.6424F, 0.0F,       -8.305164E-7F,  180.0F,    0.0F,       -8.305164E-7F,
-                                       45.55068F, 1.3076F,    -7.733594E-7F,  134.4493F, 1.3076F,    -7.733594E-7F,  50.82293F, 2.2462597F, -7.323292E-7F,  56.14818F, 2.8113308F, -7.076292E-7F,
-                                       123.8518F, 2.8113308F, -7.076292E-7F,  129.1771F, 2.2462597F, -7.323292E-7F,  61.5F,     3.0F,       -6.993822E-7F,  118.5F,    3.0F,       -6.993822E-7F,
-                                       50.82293F, 16.753738F, -9.8187236E-8F, 56.14818F, 16.18867F,  -1.2288719E-7F, 61.5F,     16.0F,      -1.3113416E-7F, 118.5F,    16.0F,      -1.3113416E-7F,
-                                       123.8518F, 16.18867F,  -1.2288719E-7F, 129.1771F, 16.753738F, -9.8187236E-8F, 45.55068F, 17.692402F, -5.7156925E-8F, 134.4493F, 17.692402F, -5.7156925E-8F,
-                                       0.0F,      19.0F,      0.0F,           40.35763F, 19.0F,      0.0F,           139.6424F, 19.0F,      0.0F,           180.0F,    19.0F,      0.0F,
-                                       0.0F,      0.0F,       3.1999993F,     40.35763F, 0.0F,       3.1999993F,     139.6424F, 0.0F,       3.1999993F,     180.0F,    0.0F,       3.1999993F,
-                                       45.55068F, 1.3076F,    3.1999993F,     134.4493F, 1.3076F,    3.1999993F,     50.82293F, 2.2462597F, 3.1999993F,     56.14818F, 2.8113308F, 3.1999993F,
-                                       123.8518F, 2.8113308F, 3.1999993F,     129.1771F, 2.2462597F, 3.1999993F,     61.5F,     3.0F,       3.1999993F,     118.5F,    3.0F,       3.1999993F,
-                                       50.82293F, 16.753738F, 3.2F,           56.14818F, 16.18867F,  3.1999998F,     61.5F,     16.0F,      3.1999998F,     118.5F,    16.0F,      3.1999998F,
-                                       123.8518F, 16.18867F,  3.1999998F,     129.1771F, 16.753738F, 3.2F,           45.55068F, 17.692402F, 3.2F,           134.4493F, 17.692402F, 3.2F,
-                                       0.0F,      19.0F,      3.2F,           40.35763F, 19.0F,      3.2F,           139.6424F, 19.0F,      3.2F,           180.0F,    19.0F,      3.2};
+const std::vector<float> k_SVertices = {0.0F,      0.0F,       -8.305164E-7F,  40.35763F, 0.0F,       -8.305164E-7F,  139.6424F, 0.0F,       -8.305164E-7F,  180.0F,    0.0F,       -8.305164E-7F,
+                                        45.55068F, 1.3076F,    -7.733594E-7F,  134.4493F, 1.3076F,    -7.733594E-7F,  50.82293F, 2.2462597F, -7.323292E-7F,  56.14818F, 2.8113308F, -7.076292E-7F,
+                                        123.8518F, 2.8113308F, -7.076292E-7F,  129.1771F, 2.2462597F, -7.323292E-7F,  61.5F,     3.0F,       -6.993822E-7F,  118.5F,    3.0F,       -6.993822E-7F,
+                                        50.82293F, 16.753738F, -9.8187236E-8F, 56.14818F, 16.18867F,  -1.2288719E-7F, 61.5F,     16.0F,      -1.3113416E-7F, 118.5F,    16.0F,      -1.3113416E-7F,
+                                        123.8518F, 16.18867F,  -1.2288719E-7F, 129.1771F, 16.753738F, -9.8187236E-8F, 45.55068F, 17.692402F, -5.7156925E-8F, 134.4493F, 17.692402F, -5.7156925E-8F,
+                                        0.0F,      19.0F,      0.0F,           40.35763F, 19.0F,      0.0F,           139.6424F, 19.0F,      0.0F,           180.0F,    19.0F,      0.0F,
+                                        0.0F,      0.0F,       3.1999993F,     40.35763F, 0.0F,       3.1999993F,     139.6424F, 0.0F,       3.1999993F,     180.0F,    0.0F,       3.1999993F,
+                                        45.55068F, 1.3076F,    3.1999993F,     134.4493F, 1.3076F,    3.1999993F,     50.82293F, 2.2462597F, 3.1999993F,     56.14818F, 2.8113308F, 3.1999993F,
+                                        123.8518F, 2.8113308F, 3.1999993F,     129.1771F, 2.2462597F, 3.1999993F,     61.5F,     3.0F,       3.1999993F,     118.5F,    3.0F,       3.1999993F,
+                                        50.82293F, 16.753738F, 3.2F,           56.14818F, 16.18867F,  3.1999998F,     61.5F,     16.0F,      3.1999998F,     118.5F,    16.0F,      3.1999998F,
+                                        123.8518F, 16.18867F,  3.1999998F,     129.1771F, 16.753738F, 3.2F,           45.55068F, 17.692402F, 3.2F,           134.4493F, 17.692402F, 3.2F,
+                                        0.0F,      19.0F,      3.2F,           40.35763F, 19.0F,      3.2F,           139.6424F, 19.0F,      3.2F,           180.0F,    19.0F,      3.2};
 }
 
 TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[ApproximatePointCloudHullFilter]")
@@ -80,19 +80,19 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
   {
     // Create a Vertex Geometry from the vertices from the STL file
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
-    DataArray<float>* triangleVertices = triangleGeom.getVertices();
+    DataArray<float>* triangleVerticesPtr = triangleGeom.getVertices();
 
     DataPath vertexGeomPath({"[Vertex Geometry]"});
-    CreateVertexGeometryAction createVertexGeometryAction(vertexGeomPath, triangleVertices->getNumberOfTuples(), INodeGeometry0D::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName);
+    CreateVertexGeometryAction createVertexGeometryAction(vertexGeomPath, triangleVerticesPtr->getNumberOfTuples(), INodeGeometry0D::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName);
     Result<> createVertexResult = createVertexGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
     REQUIRE(createVertexResult.valid());
 
     // Copy the vertices into the new Vertex Geometry
     VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-    Float32Array* vertices = vertexGeom.getVertices();
-    for(size_t eIdx = 0; eIdx < triangleVertices->getSize(); eIdx++)
+    Float32Array* verticesPtr = vertexGeom.getVertices();
+    for(size_t eIdx = 0; eIdx < triangleVerticesPtr->getSize(); eIdx++)
     {
-      (*vertices)[eIdx] = (*triangleVertices)[eIdx];
+      (*verticesPtr)[eIdx] = (*triangleVerticesPtr)[eIdx];
     }
 
     ApproximatePointCloudHullFilter filter;
@@ -118,11 +118,11 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
   {
     VertexGeom& vertexGeom1 = dataStructure.getDataRefAs<VertexGeom>(hullVertexGeomPath);
     REQUIRE(vertexGeom1.getNumberOfVertices() == 48);
-    Float32Array* vertices = vertexGeom1.getVertices();
+    Float32Array* verticesPtr = vertexGeom1.getVertices();
     bool verticesEqual = true;
-    for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
+    for(size_t eIdx = 0; eIdx < verticesPtr->getSize(); eIdx++)
     {
-      if((*vertices)[eIdx] != s_Vertices[eIdx])
+      if((*verticesPtr)[eIdx] != k_SVertices[eIdx])
       {
         verticesEqual = false;
         break;
@@ -143,7 +143,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: SIMPL Backwards Compati
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -155,22 +155,22 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: SIMPL Backwards Compati
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ApproximatePointCloudHullFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ApproximatePointCloudHullFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<uint64>(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key) == 5);
       CHECK(args.value<DataPath>(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key) == DataPath({"VertexDataContainer"}));
       CHECK(args.value<DataPath>(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key) == DataPath({"HullDataContainer"}));

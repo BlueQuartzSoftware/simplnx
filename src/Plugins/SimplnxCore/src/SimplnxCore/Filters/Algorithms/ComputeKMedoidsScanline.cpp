@@ -492,14 +492,14 @@ const std::atomic_bool& ComputeKMedoidsScanline::getCancel()
 
 Result<> ComputeKMedoidsScanline::operator()()
 {
-  auto* clustering = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* medoids = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath);
-  auto* mask = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-  if(m_InputValues->UseMask && (mask == nullptr || (mask->getDataType() != DataType::boolean && mask->getDataType() != DataType::uint8)))
+  auto* clusteringPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto* medoidsPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath);
+  auto* maskPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  if(m_InputValues->UseMask && (maskPtr == nullptr || (maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)))
   {
     return MakeErrorResult(-54070, "Mask array must exist and have Bool or UInt8 data type.");
   }
-  return RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clustering->getDataType(), this, clustering, medoids, mask, m_InputValues->UseMask, m_InputValues->InitClusters,
+  return RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clusteringPtr->getDataType(), this, clusteringPtr, medoidsPtr, maskPtr, m_InputValues->UseMask, m_InputValues->InitClusters,
                                                                   m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric,
                                                                   m_InputValues->Seed);
 }

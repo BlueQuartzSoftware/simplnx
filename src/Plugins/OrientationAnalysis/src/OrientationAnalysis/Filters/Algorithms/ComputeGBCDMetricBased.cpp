@@ -31,7 +31,7 @@ namespace
 constexpr float64 k_BallVolumesM3M[ComputeGBCDMetricBased::k_NumberResolutionChoices] = {0.0000641361, 0.000139158, 0.000287439, 0.00038019, 0.000484151, 0.000747069, 0.00145491};
 }
 
-namespace GBCDMetricBased
+namespace gbcd_metric_based
 {
 /**
  * @struct TriAreaAndNormals
@@ -40,24 +40,24 @@ namespace GBCDMetricBased
 struct TriAreaAndNormals
 {
   TriAreaAndNormals(float64 triArea, float64 n1x, float64 n1y, float64 n1z, float64 n2x, float64 n2y, float64 n2z)
-  : Area(triArea)
-  , normalGrain1X(n1x)
-  , normalGrain1Y(n1y)
-  , normalGrain1Z(n1z)
-  , normalGrain2X(n2x)
-  , normalGrain2Y(n2y)
-  , normalGrain2Z(n2z)
+  : area(triArea)
+  , normal_grain1_x(n1x)
+  , normal_grain1_y(n1y)
+  , normal_grain1_z(n1z)
+  , normal_grain2_x(n2x)
+  , normal_grain2_y(n2y)
+  , normal_grain2_z(n2z)
   {
   }
   TriAreaAndNormals() = default;
 
-  float64 Area = 0.0;
-  float64 normalGrain1X = 0.0;
-  float64 normalGrain1Y = 0.0;
-  float64 normalGrain1Z = 0.0;
-  float64 normalGrain2X = 0.0;
-  float64 normalGrain2Y = 0.0;
-  float64 normalGrain2Z = 0.0;
+  float64 area = 0.0;
+  float64 normal_grain1_x = 0.0;
+  float64 normal_grain1_y = 0.0;
+  float64 normal_grain1_z = 0.0;
+  float64 normal_grain2_x = 0.0;
+  float64 normal_grain2_y = 0.0;
+  float64 normal_grain2_z = 0.0;
 };
 
 /**
@@ -286,14 +286,14 @@ public:
           }
 
           const float64 theta1 =
-              std::acos(sign * (selectedTriangle.normalGrain1X * fixedNormal1[0] + selectedTriangle.normalGrain1Y * fixedNormal1[1] + selectedTriangle.normalGrain1Z * fixedNormal1[2]));
+              std::acos(sign * (selectedTriangle.normal_grain1_x * fixedNormal1[0] + selectedTriangle.normal_grain1_y * fixedNormal1[1] + selectedTriangle.normal_grain1_z * fixedNormal1[2]));
           const float64 theta2 =
-              std::acos(-sign * (selectedTriangle.normalGrain2X * fixedNormal2[0] + selectedTriangle.normalGrain2Y * fixedNormal2[1] + selectedTriangle.normalGrain2Z * fixedNormal2[2]));
+              std::acos(-sign * (selectedTriangle.normal_grain2_x * fixedNormal2[0] + selectedTriangle.normal_grain2_y * fixedNormal2[1] + selectedTriangle.normal_grain2_z * fixedNormal2[2]));
           const float64 distSq = 0.5f * (theta1 * theta1 + theta2 * theta2);
 
           if(distSq < m_PlaneResolutionSq)
           {
-            m_DistributionValues[ptIdx] += selectedTriangle.Area;
+            m_DistributionValues[ptIdx] += selectedTriangle.area;
           }
         }
       }
@@ -327,7 +327,7 @@ private:
   Matrix3dR m_GFixedT;
 };
 
-} // namespace GBCDMetricBased
+} // namespace gbcd_metric_based
 
 ComputeGBCDMetricBased::ComputeGBCDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                ComputeGBCDMetricBasedInputValues* inputValues)
@@ -499,9 +499,9 @@ Result<> ComputeGBCDMetricBased::operator()()
 
 // ---------  find triangles (and equivalent crystallographic parameters) with +- the fixed mis orientation ---------
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  tbb::concurrent_vector<GBCDMetricBased::TriAreaAndNormals> selectedTriangles(0);
+  tbb::concurrent_vector<gbcd_metric_based::TriAreaAndNormals> selectedTriangles(0);
 #else
-  std::vector<GBCDMetricBased::TriAreaAndNormals> selectedTriangles(0);
+  std::vector<gbcd_metric_based::TriAreaAndNormals> selectedTriangles(0);
 #endif
 
   usize triChunkSize = 50000;
@@ -532,8 +532,8 @@ Result<> ComputeGBCDMetricBased::operator()()
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + currentChunkSize);
     dataAlg.setParallelizationEnabled(true);
-    dataAlg.execute(GBCDMetricBased::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
-                                                       currentLaueIndex, eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
+    dataAlg.execute(gbcd_metric_based::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
+                                                         currentLaueIndex, eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
 
     // Bulk-read this chunk's face labels and areas for totalFaceArea accumulation.
     // Re-applies the same geometric filter conditions that TrianglesSelector uses.
@@ -626,8 +626,8 @@ Result<> ComputeGBCDMetricBased::operator()()
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + pointsChunkSize);
     dataAlg.setParallelizationEnabled(true);
-    dataAlg.execute(GBCDMetricBased::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, planeResolutionSq, totalFaceArea, numDistinctGBs,
-                                                       ballVolume, gFixedT));
+    dataAlg.execute(gbcd_metric_based::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, planeResolutionSq, totalFaceArea, numDistinctGBs,
+                                                         ballVolume, gFixedT));
     progressThrottle.updateCount(i + pointsChunkSize);
   }
 

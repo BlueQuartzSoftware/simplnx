@@ -53,11 +53,11 @@ namespace
  */
 struct PlacementPlan
 {
-  DataPath Path;
-  std::shared_ptr<DataObject> SourcePtr;
-  DataObject::IdType SourceId = 0;
-  DataObject::IdType AssignedId = 0;
-  bool ExtraPlacement = false;
+  DataPath path;
+  std::shared_ptr<DataObject> source_ptr;
+  DataObject::IdType source_id = 0;
+  DataObject::IdType assigned_id = 0;
+  bool extra_placement = false;
 };
 
 /**
@@ -114,13 +114,13 @@ public:
     m_PlacementsBySourceId.reserve(placements.size());
     for(const auto& placement : placements)
     {
-      m_PlacementsByPath.emplace(placement.Path, &placement);
-      m_PlacementsBySourceId[placement.SourceId].push_back(&placement);
+      m_PlacementsByPath.emplace(placement.path, &placement);
+      m_PlacementsBySourceId[placement.source_id].push_back(&placement);
     }
     for(auto& sourceEntry : m_PlacementsBySourceId)
     {
       auto& candidates = sourceEntry.second;
-      std::ranges::sort(candidates, PlacementPathLess{}, &PlacementPlan::Path);
+      std::ranges::sort(candidates, PlacementPathLess{}, &PlacementPlan::path);
     }
   }
 
@@ -148,30 +148,30 @@ public:
     {
       return sourceId;
     }
-    const auto direct = m_PlacementsByPath.find(geometryPath.createChildPath(candidates->second.front()->SourcePtr->getName()));
-    if(direct != m_PlacementsByPath.end() && direct->second->SourceId == *sourceId)
+    const auto direct = m_PlacementsByPath.find(geometryPath.createChildPath(candidates->second.front()->source_ptr->getName()));
+    if(direct != m_PlacementsByPath.end() && direct->second->source_id == *sourceId)
     {
-      return direct->second->AssignedId;
+      return direct->second->assigned_id;
     }
     const auto& sourcePlacements = candidates->second;
-    auto first = std::ranges::lower_bound(sourcePlacements, geometryPath, PlacementPathLess{}, &PlacementPlan::Path);
-    if(first != sourcePlacements.end() && (*first)->Path == geometryPath)
+    auto first = std::ranges::lower_bound(sourcePlacements, geometryPath, PlacementPathLess{}, &PlacementPlan::path);
+    if(first != sourcePlacements.end() && (*first)->path == geometryPath)
     {
       ++first;
     }
-    if(first == sourcePlacements.end() || !IsStrictDescendant((*first)->Path, geometryPath))
+    if(first == sourcePlacements.end() || !IsStrictDescendant((*first)->path, geometryPath))
     {
       // A selected external target can be shared when this geometry has no selected local copy.
       return sourceId;
     }
     // Component ordering keeps descendants contiguous, so two candidates establish ambiguity without a scan.
     const auto second = std::next(first);
-    if(second != sourcePlacements.end() && IsStrictDescendant((*second)->Path, geometryPath))
+    if(second != sourcePlacements.end() && IsStrictDescendant((*second)->path, geometryPath))
     {
       // An ID does not identify a preferred alias. Keep the canonical reference when local paths are ambiguous.
       return sourceId;
     }
-    return (*first)->AssignedId;
+    return (*first)->assigned_id;
   }
 
 private:
@@ -199,13 +199,13 @@ struct PlanImportedArrayStoreFunctor
   template <typename T>
   Result<> operator()(DataStructure& destination, const DataPath& targetPath, IDataArray* dataArray, bool allowPopulated) const
   {
-    auto* typedArray = dynamic_cast<DataArray<T>*>(dataArray);
-    if(typedArray == nullptr || typedArray->getIDataStore() == nullptr)
+    auto* typedArrayPtr = dynamic_cast<DataArray<T>*>(dataArray);
+    if(typedArrayPtr == nullptr || typedArrayPtr->getIDataStore() == nullptr)
     {
       return MakeErrorResult(-6207, fmt::format("Cannot plan imported numeric array '{}': its typed array or store is unavailable.", targetPath.toString()));
     }
-    const IDataStore* sourceStore = typedArray->getIDataStore();
-    if(sourceStore->getStoreType() != IDataStore::StoreType::Empty && !allowPopulated)
+    const IDataStore* sourceStorePtr = typedArrayPtr->getIDataStore();
+    if(sourceStorePtr->getStoreType() != IDataStore::StoreType::Empty && !allowPopulated)
     {
       return MakeErrorResult(-6208, fmt::format("Cannot plan imported numeric array '{}': ordinary source values were materialized before destination planning.", targetPath.toString()));
     }
@@ -213,7 +213,7 @@ struct PlanImportedArrayStoreFunctor
     Result<std::string> formatResult;
     try
     {
-      const uint64 logicalBytes = CalculateStoreCopyBytes(typedArray->getTupleShape(), typedArray->getComponentShape(), sizeof(T));
+      const uint64 logicalBytes = CalculateStoreCopyBytes(typedArrayPtr->getTupleShape(), typedArrayPtr->getComponentShape(), sizeof(T));
       formatResult = ResolveNumericStorageFormat(destination, targetPath, GetDataType<T>(), logicalBytes, "");
     } catch(const std::bad_alloc&)
     {
@@ -230,9 +230,9 @@ struct PlanImportedArrayStoreFunctor
     auto warnings = std::move(formatResult.warnings());
 
     Result<> replaceResult;
-    if(sourceStore->getStoreType() == IDataStore::StoreType::Empty)
+    if(sourceStorePtr->getStoreType() == IDataStore::StoreType::Empty)
     {
-      auto plannedResult = EmptyDataStore<T>::Create(typedArray->getTupleShape(), typedArray->getComponentShape(), selectedFormat);
+      auto plannedResult = EmptyDataStore<T>::Create(typedArrayPtr->getTupleShape(), typedArrayPtr->getComponentShape(), selectedFormat);
       if(plannedResult.invalid())
       {
         auto result = ConvertResult(std::move(plannedResult));
@@ -240,19 +240,19 @@ struct PlanImportedArrayStoreFunctor
         return result;
       }
       warnings.insert(warnings.end(), std::make_move_iterator(plannedResult.warnings().begin()), std::make_move_iterator(plannedResult.warnings().end()));
-      replaceResult = typedArray->setDataStore(std::shared_ptr<EmptyDataStore<T>>(std::move(plannedResult.value())));
+      replaceResult = typedArrayPtr->setDataStore(std::shared_ptr<EmptyDataStore<T>>(std::move(plannedResult.value())));
     }
     else
     {
       try
       {
-        std::shared_ptr<IDataStore> freshBase(sourceStore->deepCopy(selectedFormat));
+        std::shared_ptr<IDataStore> freshBase(sourceStorePtr->deepCopy(selectedFormat));
         auto freshStore = std::dynamic_pointer_cast<AbstractDataStore<T>>(freshBase);
         if(freshStore == nullptr)
         {
           throw std::runtime_error("the selected factory returned an incompatible numeric store");
         }
-        replaceResult = typedArray->setDataStore(std::move(freshStore));
+        replaceResult = typedArrayPtr->setDataStore(std::move(freshStore));
       } catch(const std::bad_alloc&)
       {
         throw;
@@ -269,7 +269,7 @@ struct PlanImportedArrayStoreFunctor
   }
 };
 
-Result<> applyPreflightStoragePlan(DataStructure& dataStructure, const DataPath& targetPath, IDataArray& dataArray, bool allowPopulated)
+Result<> ApplyPreflightStoragePlan(DataStructure& dataStructure, const DataPath& targetPath, IDataArray& dataArray, bool allowPopulated)
 {
   return ExecuteDataFunction(PlanImportedArrayStoreFunctor{}, dataArray.getDataType(), dataStructure, targetPath, &dataArray, allowPopulated);
 }
@@ -329,27 +329,27 @@ void TransformGeometryReferences(IGeometry& geometry, const Transform& transform
  *
  * Metadata and selected loaders can retain unselected objects. Their IDs must not survive renumbering as geometry references.
  */
-void clearExcludedGeometryReferences(DataStructure& sourceStructure, const std::vector<DataPath>& paths)
+void ClearExcludedGeometryReferences(DataStructure& sourceStructure, const std::vector<DataPath>& paths)
 {
   std::unordered_set<DataObject::IdType> selectedIds;
   selectedIds.reserve(paths.size());
   for(const auto& path : paths)
   {
-    if(const auto* object = sourceStructure.getData(path); object != nullptr)
+    if(const auto* objectPtr = sourceStructure.getData(path); objectPtr != nullptr)
     {
-      selectedIds.insert(object->getId());
+      selectedIds.insert(objectPtr->getId());
     }
   }
 
   const auto selectedReference = [&selectedIds](DataObject::OptionalId id) { return id.has_value() && selectedIds.find(*id) == selectedIds.end() ? DataObject::OptionalId{} : id; };
   for(const auto& path : paths)
   {
-    auto* geometry = sourceStructure.getDataAs<IGeometry>(path);
-    if(geometry == nullptr)
+    auto* geometryPtr = sourceStructure.getDataAs<IGeometry>(path);
+    if(geometryPtr == nullptr)
     {
       continue;
     }
-    TransformGeometryReferences(*geometry, selectedReference);
+    TransformGeometryReferences(*geometryPtr, selectedReference);
   }
 }
 } // namespace
@@ -366,7 +366,7 @@ struct ImportH5ObjectPathsAction::TestState
   TestState& operator=(TestState&&) = delete;
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-  DataStructure::ImportPublicationTestControl Control;
+  DataStructure::ImportPublicationTestControl control;
 #endif
 };
 
@@ -414,16 +414,16 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   {
     return importResult;
   }
-  clearExcludedGeometryReferences(sourceStructure, m_Paths);
+  ClearExcludedGeometryReferences(sourceStructure, m_Paths);
   const DataStructure::ImportPublicationCheckpoint checkpoint(dataStructure);
   const auto savedNextId = checkpoint.nextId();
   const auto startId = std::max(savedNextId, DataObject::IdType{1});
-  constexpr auto maximumId = std::numeric_limits<DataObject::IdType>::max();
+  constexpr auto k_MaximumId = std::numeric_limits<DataObject::IdType>::max();
   const auto sourceCount = sourceStructure.getLiveObjectCount();
-  if(sourceCount > maximumId - startId)
+  if(sourceCount > k_MaximumId - startId)
   {
-    return MergeResults(std::move(importResult),
-                        MakeErrorResult(-6213, fmt::format("Cannot import '{}': source identifiers starting at {} exceed the maximum next identifier {}.", m_H5FilePath.string(), startId, maximumId)));
+    return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot import '{}': source identifiers starting at {} exceed the maximum next identifier {}.",
+                                                                                    m_H5FilePath.string(), startId, k_MaximumId)));
   }
   DataObject::IdType extraPlacementCount = 0;
   std::unordered_set<const DataObject*> countedSources;
@@ -436,12 +436,12 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     }
     if(!countedSources.insert(objectPtr).second)
     {
-      if(extraPlacementCount == maximumId - startId - sourceCount)
+      if(extraPlacementCount == k_MaximumId - startId - sourceCount)
       {
         return MergeResults(
             std::move(importResult),
             MakeErrorResult(-6213, fmt::format("Cannot import '{}': additional placement count {} does not fit after {} source identifiers starting at {} (maximum next identifier {}).",
-                                               m_H5FilePath.string(), extraPlacementCount + 1, sourceCount, startId, maximumId)));
+                                               m_H5FilePath.string(), extraPlacementCount + 1, sourceCount, startId, k_MaximumId)));
       }
       ++extraPlacementCount;
     }
@@ -473,7 +473,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
         return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot import '{}' from '{}': its source path and identifier {} do not name the same object.", path.toString(),
                                                                                         m_H5FilePath.string(), sourceId)));
       }
-      if(sourceId < startId || sourceId >= sourceNextId || sourceId == maximumId || occupiedIds.contains(sourceId))
+      if(sourceId < startId || sourceId >= sourceNextId || sourceId == k_MaximumId || occupiedIds.contains(sourceId))
       {
         return MergeResults(std::move(importResult),
                             MakeErrorResult(-6213, fmt::format("Cannot import '{}' from '{}': source identifier {} conflicts with the destination or its checked source range.", path.toString(),
@@ -483,7 +483,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       auto assignedId = sourceId;
       if(extraPlacement)
       {
-        if(nextCloneId == maximumId)
+        if(nextCloneId == k_MaximumId)
         {
           return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot copy placement '{}' from '{}': identifier {} leaves no representable next identifier.",
                                                                                           path.toString(), m_H5FilePath.string(), nextCloneId)));
@@ -495,7 +495,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
         return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot import '{}' from '{}': identifier {} conflicts with an existing or selected object.", path.toString(),
                                                                                         m_H5FilePath.string(), assignedId)));
       }
-      placements.push_back({.Path = path, .SourcePtr = std::move(sourceObject), .SourceId = sourceId, .AssignedId = assignedId, .ExtraPlacement = extraPlacement});
+      placements.push_back({.path = path, .source_ptr = std::move(sourceObject), .source_id = sourceId, .assigned_id = assignedId, .extra_placement = extraPlacement});
     }
   }
 
@@ -511,38 +511,38 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   preparedPaths.reserve(placements.size());
   for(const auto& placement : placements)
   {
-    const auto& path = placement.Path;
+    const auto& path = placement.path;
     if(preparedStructure.containsData(path))
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6203, fmt::format("Cannot import '{}' from '{}': the destination path already exists. Rename it or exclude this path.",
                                                                                       path.toString(), m_H5FilePath.string())));
     }
-    auto* collisionPtr = preparedStructure.getData(placement.SourceId);
-    if(placement.ExtraPlacement)
+    auto* collisionPtr = preparedStructure.getData(placement.source_id);
+    if(placement.extra_placement)
     {
-      const auto first = firstStagedCopies.find(placement.SourcePtr.get());
-      if(first == firstStagedCopies.end() || collisionPtr != first->second.get() || first->second->getId() != placement.SourceId || preparedStructure.getNextId() != placement.AssignedId)
+      const auto first = firstStagedCopies.find(placement.source_ptr.get());
+      if(first == firstStagedCopies.end() || collisionPtr != first->second.get() || first->second->getId() != placement.source_id || preparedStructure.getNextId() != placement.assigned_id)
       {
         return MergeResults(std::move(importResult),
                             MakeErrorResult(-6213, fmt::format("Cannot stage alias '{}' from '{}': source identifier {} or prepared next identifier {} does not match planned clone {}.",
-                                                               path.toString(), m_H5FilePath.string(), placement.SourceId, preparedStructure.getNextId(), placement.AssignedId)));
+                                                               path.toString(), m_H5FilePath.string(), placement.source_id, preparedStructure.getNextId(), placement.assigned_id)));
       }
     }
     else if(collisionPtr != nullptr)
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot stage '{}' from '{}': source identifier {} already belongs to another prepared object.", path.toString(),
-                                                                                      m_H5FilePath.string(), placement.SourceId)));
+                                                                                      m_H5FilePath.string(), placement.source_id)));
     }
-    auto shell = DataStructure::makeImportPublicationCopy(*placement.SourcePtr);
+    auto shell = DataStructure::makeImportPublicationCopy(*placement.source_ptr);
     if(shell == nullptr)
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6202, fmt::format("Cannot prepare an independent copy of '{}' from '{}'.", path.toString(), m_H5FilePath.string())));
     }
-    if(shell->getId() != placement.SourceId || shell.get() == collisionPtr)
+    if(shell->getId() != placement.source_id || shell.get() == collisionPtr)
     {
       return MergeResults(std::move(importResult),
                           MakeErrorResult(-6213, fmt::format("Cannot stage '{}' from '{}': detached copy identifier {} must equal source identifier {} and its owner must be independent.",
-                                                             path.toString(), m_H5FilePath.string(), shell->getId(), placement.SourceId)));
+                                                             path.toString(), m_H5FilePath.string(), shell->getId(), placement.source_id)));
     }
     if(auto* geometryPtr = dynamic_cast<IGeometry*>(shell.get()); geometryPtr != nullptr)
     {
@@ -554,14 +554,14 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       return MergeResults(std::move(importResult), MakeErrorResult(-6202, fmt::format("Cannot stage '{}' from '{}': parent '{}' is missing or rejects the object.", path.toString(),
                                                                                       m_H5FilePath.string(), path.getParent().toString())));
     }
-    if(shell->getId() != placement.AssignedId || preparedStructure.getData(path) != shell.get() || preparedStructure.getData(placement.AssignedId) != shell.get())
+    if(shell->getId() != placement.assigned_id || preparedStructure.getData(path) != shell.get() || preparedStructure.getData(placement.assigned_id) != shell.get())
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot stage '{}' from '{}': assigned identifier {} or its lookups do not match planned identifier {}.",
-                                                                                      path.toString(), m_H5FilePath.string(), shell->getId(), placement.AssignedId)));
+                                                                                      path.toString(), m_H5FilePath.string(), shell->getId(), placement.assigned_id)));
     }
-    if(!placement.ExtraPlacement)
+    if(!placement.extra_placement)
     {
-      firstStagedCopies.emplace(placement.SourcePtr.get(), shell);
+      firstStagedCopies.emplace(placement.source_ptr.get(), shell);
     }
     preparedPaths.push_back(path);
   }
@@ -575,7 +575,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     if(auto* arrayPtr = dynamic_cast<IDataArray*>(objectPtr); arrayPtr != nullptr)
     {
       const bool eagerStatistics = legacy && path.getLength() >= 2 && path[1] == "Statistics";
-      auto planResult = applyPreflightStoragePlan(preparedStructure, path, *arrayPtr, eagerStatistics);
+      auto planResult = ApplyPreflightStoragePlan(preparedStructure, path, *arrayPtr, eagerStatistics);
       if(planResult.invalid())
       {
         return MergeResults(std::move(importResult), std::move(planResult));
@@ -611,7 +611,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
   auto publicationResult = m_TestState == nullptr ? dataStructure.publishImportedObjects(preparedStructure, preparedPaths, m_H5FilePath, checkpoint) :
-                                                    m_TestState->Control.publish(dataStructure, preparedStructure, preparedPaths, m_H5FilePath, checkpoint);
+                                                    m_TestState->control.publish(dataStructure, preparedStructure, preparedPaths, m_H5FilePath, checkpoint);
 #else
   auto publicationResult = dataStructure.publishImportedObjects(preparedStructure, preparedPaths, m_H5FilePath, checkpoint);
 #endif
@@ -624,22 +624,22 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 void ImportH5ObjectPathsAction::setPublicationFaultForTesting(PublicationFaultType fault, bool refuseCleanup) const
 {
   m_TestState = std::make_shared<TestState>();
-  m_TestState->Control.setFault(fault, refuseCleanup);
+  m_TestState->control.setFault(fault, refuseCleanup);
 }
 
 bool ImportH5ObjectPathsAction::publicationFaultConsumedForTesting() const
 {
-  return m_TestState != nullptr && m_TestState->Control.publicationFaultConsumed();
+  return m_TestState != nullptr && m_TestState->control.publicationFaultConsumed();
 }
 
 bool ImportH5ObjectPathsAction::cleanupFaultConsumedForTesting() const
 {
-  return m_TestState != nullptr && m_TestState->Control.cleanupFaultConsumed();
+  return m_TestState != nullptr && m_TestState->control.cleanupFaultConsumed();
 }
 
 std::shared_ptr<DataObject> ImportH5ObjectPathsAction::retainedOwnerForTesting() const
 {
-  return m_TestState == nullptr ? nullptr : m_TestState->Control.retainedOwner();
+  return m_TestState == nullptr ? nullptr : m_TestState->control.retainedOwner();
 }
 
 Result<> ImportH5ObjectPathsAction::cleanupFailedImportForTesting(DataStructure& destination) const
@@ -648,7 +648,7 @@ Result<> ImportH5ObjectPathsAction::cleanupFailedImportForTesting(DataStructure&
   {
     return MakeErrorResult(-6215, "The selected import has no retained rollback records for this destination.");
   }
-  return m_TestState->Control.cleanup(destination);
+  return m_TestState->control.cleanup(destination);
 }
 
 #endif

@@ -134,7 +134,7 @@ std::string TypeForPrimitive(const IFilter::MessageHandler& messageHandler)
   }
 
   messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Error: TypeForPrimitive - Unknown Type: ", typeid(T).name()));
-  if(const char* name = typeid(T).name(); nullptr != name && name[0] == 'l')
+  if(const char* namePtr = typeid(T).name(); nullptr != namePtr && namePtr[0] == 'l')
   {
     messageHandler.sendMessage(
         IFilter::Message::Type::Info,
@@ -173,8 +173,8 @@ struct WriteVtkDataArrayFunctor
   template <typename T>
   Result<> operator()(FILE* outputFile, bool binary, DataStructure& dataStructure, const DataPath& arrayPath, const IFilter::MessageHandler& messageHandler)
   {
-    auto* dataArray = dataStructure.getDataAs<DataArray<T>>(arrayPath);
-    auto& dataStore = dataArray->getDataStoreRef();
+    auto* dataArrayPtr = dataStructure.getDataAs<DataArray<T>>(arrayPath);
+    auto& dataStore = dataArrayPtr->getDataStoreRef();
 
     messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing Cell Data {}", arrayPath.getTargetName()));
 
@@ -397,7 +397,7 @@ struct WriteVtkDataFunctor
     }
     else
     {
-      const usize k_DefaultElementsPerLine = 10;
+      const usize kDefaultElementsPerLine = 10;
       auto numTuples = dataStoreRef.getSize();
       usize currentItemCount = 0;
       ThrottledMessageHandler progressThrottle(messageHandler);
@@ -422,7 +422,7 @@ struct WriteVtkDataFunctor
         {
           outStrm << dataArrayRef[idx];
         }
-        if(currentItemCount < k_DefaultElementsPerLine - 1)
+        if(currentItemCount < kDefaultElementsPerLine - 1)
         {
           outStrm << ' ';
           currentItemCount++;

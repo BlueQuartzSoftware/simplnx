@@ -125,12 +125,12 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   }
 
   const auto phaseNamesPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
-  const auto* phaseNames = dataStructure.getDataAs<StringArray>(phaseNamesPath);
-  if(phaseNames == nullptr)
+  const auto* phaseNamesPtr = dataStructure.getDataAs<StringArray>(phaseNamesPath);
+  if(phaseNamesPtr == nullptr)
   {
     return MakePreflightErrorResult(-12025, fmt::format("The phase names object '{}' is not a StringArray. Select a StringArray that contains the phase names.", phaseNamesPath.toString()));
   }
-  if(phaseNames->getNumberOfTuples() == 0)
+  if(phaseNamesPtr->getNumberOfTuples() == 0)
   {
     resultOutputActions.warnings().push_back(
         Warning{.code = -12038, .message = fmt::format("The phase names StringArray '{}' has 0 tuples. Every name will be written as 'Phase_<id>'.", phaseNamesPath.toString())});
@@ -163,14 +163,14 @@ Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_OutputPathKey = "OutputPath";
 constexpr StringLiteral k_OutputFilePrefixKey = "OutputFilePrefix";
 constexpr StringLiteral k_NumKeypointsKey = "NumKeypoints";
 constexpr StringLiteral k_PzflexFeatureIdsArrayPathKey = "PzflexFeatureIdsArrayPath";
 constexpr StringLiteral k_PhaseNamesArrayPathKey = "PhaseNamesArrayPath";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -178,12 +178,12 @@ Result<Arguments> WriteOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::jso
   Arguments args = WriteOnScaleTableFileFilter().getDefaultArguments();
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputFilePrefixKey, k_FilePrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_NumKeypointsKey, k_NumKeypoints_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_PzflexFeatureIdsArrayPathKey, k_InputGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_PzflexFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_PhaseNamesArrayPathKey, k_PhaseNamesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_OutputFilePrefixKey, k_FilePrefix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_NumKeypointsKey, k_NumKeypoints_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_InputGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayPathKey, k_PhaseNamesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

@@ -56,8 +56,8 @@ dataStorage GetAvailableStorageOnDrive(const std::filesystem::path& path)
 uint64 GetTotalMemory()
 {
   long pages = sysconf(_SC_PHYS_PAGES);
-  long page_size = sysconf(_SC_PAGE_SIZE);
-  return pages * page_size;
+  long pageSize = sysconf(_SC_PAGE_SIZE);
+  return pages * pageSize;
 }
 
 dataStorage GetAvailableStorageOnDrive(const std::filesystem::path& directory)

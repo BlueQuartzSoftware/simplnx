@@ -288,8 +288,8 @@ static auto BindVectorParameter(py::handle scope, const char* name)
 template <class T>
 static void BindVec2(py::module_& m, const char* name)
 {
-  using Vec = nx::core::Vec2<T>;
-  py::class_<Vec>(m, name)
+  using VecType = nx::core::Vec2<T>;
+  py::class_<VecType>(m, name)
       .def(py::init<>())
       .def(py::init<T, T>())
       .def(py::init([](const py::sequence& s) {
@@ -297,14 +297,14 @@ static void BindVec2(py::module_& m, const char* name)
         {
           throw py::type_error("Expected length-2 sequence");
         }
-        return Vec{s[0].cast<T>(), s[1].cast<T>()};
+        return VecType{s[0].cast<T>(), s[1].cast<T>()};
       }))
       .def_property(
-          "min", [](const Vec& v) { return v[0]; }, [](Vec& v, T x) { v[0] = x; })
+          "min", [](const VecType& v) { return v[0]; }, [](VecType& v, T x) { v[0] = x; })
       .def_property(
-          "max", [](const Vec& v) { return v[1]; }, [](Vec& v, T x) { v[1] = x; })
+          "max", [](const VecType& v) { return v[1]; }, [](VecType& v, T x) { v[1] = x; })
       .def("__getitem__",
-           [](const Vec& v, size_t i) {
+           [](const VecType& v, size_t i) {
              if(i >= 2)
              {
                throw py::index_error();
@@ -312,7 +312,7 @@ static void BindVec2(py::module_& m, const char* name)
              return v[i];
            })
       .def("__setitem__",
-           [](Vec& v, size_t i, T x) {
+           [](VecType& v, size_t i, T x) {
              if(i >= 2)
              {
                throw py::index_error();
@@ -320,10 +320,10 @@ static void BindVec2(py::module_& m, const char* name)
              v[i] = x;
            })
       .def(
-          "__iter__", [](const Vec& v) { return py::make_iterator(&v[0], &v[0] + 2); }, py::keep_alive<0, 1>())
-      .def("__repr__", [](const Vec& v) { return fmt::format("Vec2({}, {})", v[0], v[1]); });
+          "__iter__", [](const VecType& v) { return py::make_iterator(&v[0], &v[0] + 2); }, py::keep_alive<0, 1>())
+      .def("__repr__", [](const VecType& v) { return fmt::format("Vec2({}, {})", v[0], v[1]); });
 
-  py::implicitly_convertible<py::sequence, Vec>();
+  py::implicitly_convertible<py::sequence, VecType>();
 }
 
 /**
@@ -718,11 +718,11 @@ private:
 
 PYBIND11_MODULE(simplnx, mod)
 {
-  auto* internals = new Internals();
+  auto* internalsPtr = new Internals();
 
-  const auto* corePlugin = internals->addPlugin<SimplnxCorePlugin>();
+  const auto* corePluginPtr = internalsPtr->addPlugin<SimplnxCorePlugin>();
 
-  py::set_shared_data(Internals::k_Key, internals);
+  py::set_shared_data(Internals::k_Key, internalsPtr);
 
   // This is required until the pybind11_json library is added which adds the appropriate type casters
   //  auto json = py::class_<nlohmann::json>(mod, "Json");
@@ -747,16 +747,16 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<Result<>> result(mod, "Result");
   result.def(py::init<>([](std::optional<std::vector<Error>> errors, std::optional<std::vector<Warning>> warnings) {
-               Result<> result_;
+               Result<> pyResult;
                if(errors.has_value())
                {
-                 result_.m_Expected = nonstd::make_unexpected(std::move(*errors));
+                 pyResult.m_Expected = nonstd::make_unexpected(std::move(*errors));
                }
                if(warnings.has_value())
                {
-                 result_.warnings() = std::move(*warnings);
+                 pyResult.warnings() = std::move(*warnings);
                }
-               return result_;
+               return pyResult;
              }),
              "errors"_a = py::none(), "warnings"_a = py::none());
   result.def_property_readonly("errors", [](Result<>& self) {
@@ -1150,11 +1150,11 @@ PYBIND11_MODULE(simplnx, mod)
     if(parentPath.empty())
     {
       std::vector<DataPath> outputPaths;
-      for(const auto* object : self.getTopLevelData())
+      for(const auto* objectPtr : self.getTopLevelData())
       {
-        if(object != nullptr)
+        if(objectPtr != nullptr)
         {
-          auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+          auto topLevelPath = DataPath::FromString(objectPtr->getDataPaths()[0].getTargetName()).value();
           outputPaths.push_back(topLevelPath);
         }
       }
@@ -1172,9 +1172,9 @@ PYBIND11_MODULE(simplnx, mod)
     if(parentPath.empty())
     {
       std::vector<DataPath> outputPaths;
-      for(const auto* object : self.getTopLevelData())
+      for(const auto* objectPtr : self.getTopLevelData())
       {
-        auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+        auto topLevelPath = DataPath::FromString(objectPtr->getDataPaths()[0].getTargetName()).value();
         outputPaths.push_back(topLevelPath);
       }
       return outputPaths;
@@ -1881,16 +1881,16 @@ PYBIND11_MODULE(simplnx, mod)
   filter.def("human_name", &IFilter::humanName);
   filter.def("parameters", &IFilter::parameters);
   filter.def("parameters_version", &IFilter::parametersVersion);
-  filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
-    Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
+  filter.def("preflight2", [internalsPtr](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
+    Arguments convertedArgs = ConvertDictToArgs(*internalsPtr, self.parameters(), kwargs);
     py::gil_scoped_release releaseGIL{};
     IFilter::PreflightResult result_ = self.preflight(dataStructure_, convertedArgs, CreatePyMessageHandler());
     return result_;
   });
   filter.def(
       "execute2",
-      [internals](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
-        Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
+      [internalsPtr](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
+        Arguments convertedArgs = ConvertDictToArgs(*internalsPtr, self.parameters(), kwargs);
         py::gil_scoped_release releaseGIL{};
         IFilter::ExecuteResult result_ = self.execute(dataStructure_, convertedArgs, nullptr, CreatePyMessageHandler());
         return result_;
@@ -1935,45 +1935,46 @@ PYBIND11_MODULE(simplnx, mod)
   pipeline.def("__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
   pipeline.def(
       "insert",
-      [internals](Pipeline& self, Pipeline::index_type index, const IFilter& filter_, const py::dict& args) {
-        self.insertAt(index, filter_.clone(), ConvertDictToArgs(*internals, filter_.parameters(), args));
+      [internalsPtr](Pipeline& self, Pipeline::index_type index, const IFilter& filter_, const py::dict& args) {
+        self.insertAt(index, filter_.clone(), ConvertDictToArgs(*internalsPtr, filter_.parameters(), args));
       },
       "index"_a, "filter"_a, "args"_a = py::dict());
   pipeline.def(
-      "append", [internals](Pipeline& self, const IFilter& filter_, const py::dict& args) { self.insertAt(self.size(), filter_.clone(), ConvertDictToArgs(*internals, filter_.parameters(), args)); },
+      "append",
+      [internalsPtr](Pipeline& self, const IFilter& filter_, const py::dict& args) { self.insertAt(self.size(), filter_.clone(), ConvertDictToArgs(*internalsPtr, filter_.parameters(), args)); },
       "filter"_a, "args"_a = py::dict());
   pipeline.def("clear", &Pipeline::clear);
   pipeline.def("remove", &Pipeline::removeAt, "index"_a);
 
-  pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
-  pipelineFilter.def("set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
+  pipelineFilter.def("get_args", [internalsPtr](PipelineFilter& self) { return ConvertArgsToDict(*internalsPtr, self.getParameters(), self.getArguments()); });
+  pipelineFilter.def("set_args", [internalsPtr](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internalsPtr, self.getParameters(), args)); }, "args"_a);
   pipelineFilter.def("get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
   pipelineFilter.def(
       "name",
       [](const PipelineFilter& self) {
-        const IFilter* filter_ = self.getFilter();
-        if(filter_ == nullptr)
+        const IFilter* filterPtr = self.getFilter();
+        if(filterPtr == nullptr)
         {
           throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
         }
-        return filter_->name();
+        return filterPtr->name();
       },
       "Returns the C++ name of the filter");
   pipelineFilter.def(
       "human_name",
       [](const PipelineFilter& self) {
-        const IFilter* filter_ = self.getFilter();
-        if(filter_ == nullptr)
+        const IFilter* filterPtr = self.getFilter();
+        if(filterPtr == nullptr)
         {
           throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
         }
-        return filter_->humanName();
+        return filterPtr->humanName();
       },
       "Returns the human facing name of the filter");
   pipelineFilter.def_property("comments", &PipelineFilter::getComments, &PipelineFilter::setComments);
-  pipelineFilter.def("update_arg", [internals](PipelineFilter& self, const std::string& key, py::handle value) {
+  pipelineFilter.def("update_arg", [internalsPtr](PipelineFilter& self, const std::string& key, py::handle value) {
     Uuid paramUuid = self.getParameters().at(key)->uuid();
-    std::any convertedValue = internals->at(paramUuid).fromPyObjectFunc(value);
+    std::any convertedValue = internalsPtr->at(paramUuid).fromPyObjectFunc(value);
     Arguments args = self.getArguments();
     args.insertOrAssign(key, std::move(convertedValue));
     self.setArguments(args);
@@ -1985,76 +1986,76 @@ PYBIND11_MODULE(simplnx, mod)
   // Register conversions after their value types and before their filters.
   // This order lets filter binding generate the correct Python signatures.
 
-  internals->addConversion<ArrayCreationParameter>();
-  internals->addConversion<ArraySelectionParameter>();
-  internals->addConversion<ArrayThresholdsParameter>();
-  internals->addConversion<AttributeMatrixSelectionParameter>();
-  internals->addConversion<BoolParameter>();
-  internals->addConversion<CalculatorParameter>();
-  internals->addConversion<CropGeometryParameter>();
-  internals->addConversion<ChoicesParameter>();
-  internals->addConversion<DataGroupCreationParameter>();
-  internals->addConversion<DataGroupSelectionParameter>();
-  internals->addConversion<DataObjectNameParameter>();
-  internals->addConversion<DataPathSelectionParameter>();
-  internals->addConversion<DataStoreFormatParameter>();
-  internals->addConversion<DataTypeParameter>();
-  internals->addConversion<Dream3dImportParameter>();
-  internals->addConversion<DynamicTableParameter>();
-  internals->addConversion<EnsembleInfoParameter>();
-  internals->addConversion<FileSystemPathParameter>();
-  internals->addConversion<CreateColorMapParameter>();
-  internals->addConversion<GeneratedFileListParameter>();
-  internals->addConversion<GeometrySelectionParameter>();
-  internals->addConversion<ReadCSVFileParameter>();
-  internals->addConversion<ReadHDF5DatasetParameter>();
-  internals->addConversion<MultiArraySelectionParameter>();
-  internals->addConversion<MultiPathSelectionParameter>();
-  internals->addConversion<NeighborListSelectionParameter>();
-  internals->addConversion<Int8Parameter>();
-  internals->addConversion<UInt8Parameter>();
-  internals->addConversion<Int16Parameter>();
-  internals->addConversion<UInt16Parameter>();
-  internals->addConversion<Int32Parameter>();
-  internals->addConversion<UInt32Parameter>();
-  internals->addConversion<Int64Parameter>();
-  internals->addConversion<UInt64Parameter>();
-  internals->addConversion<Float32Parameter>();
-  internals->addConversion<Float64Parameter>();
-  internals->addConversion<NumericTypeParameter>();
-  internals->addConversion<StringParameter>();
-  internals->addConversion<VectorInt8Parameter>();
-  internals->addConversion<VectorUInt8Parameter>();
-  internals->addConversion<VectorInt16Parameter>();
-  internals->addConversion<VectorUInt16Parameter>();
-  internals->addConversion<VectorInt32Parameter>();
-  internals->addConversion<VectorUInt32Parameter>();
-  internals->addConversion<VectorInt64Parameter>();
-  internals->addConversion<VectorUInt64Parameter>();
-  internals->addConversion<VectorFloat32Parameter>();
-  internals->addConversion<VectorFloat64Parameter>();
+  internalsPtr->addConversion<ArrayCreationParameter>();
+  internalsPtr->addConversion<ArraySelectionParameter>();
+  internalsPtr->addConversion<ArrayThresholdsParameter>();
+  internalsPtr->addConversion<AttributeMatrixSelectionParameter>();
+  internalsPtr->addConversion<BoolParameter>();
+  internalsPtr->addConversion<CalculatorParameter>();
+  internalsPtr->addConversion<CropGeometryParameter>();
+  internalsPtr->addConversion<ChoicesParameter>();
+  internalsPtr->addConversion<DataGroupCreationParameter>();
+  internalsPtr->addConversion<DataGroupSelectionParameter>();
+  internalsPtr->addConversion<DataObjectNameParameter>();
+  internalsPtr->addConversion<DataPathSelectionParameter>();
+  internalsPtr->addConversion<DataStoreFormatParameter>();
+  internalsPtr->addConversion<DataTypeParameter>();
+  internalsPtr->addConversion<Dream3dImportParameter>();
+  internalsPtr->addConversion<DynamicTableParameter>();
+  internalsPtr->addConversion<EnsembleInfoParameter>();
+  internalsPtr->addConversion<FileSystemPathParameter>();
+  internalsPtr->addConversion<CreateColorMapParameter>();
+  internalsPtr->addConversion<GeneratedFileListParameter>();
+  internalsPtr->addConversion<GeometrySelectionParameter>();
+  internalsPtr->addConversion<ReadCSVFileParameter>();
+  internalsPtr->addConversion<ReadHDF5DatasetParameter>();
+  internalsPtr->addConversion<MultiArraySelectionParameter>();
+  internalsPtr->addConversion<MultiPathSelectionParameter>();
+  internalsPtr->addConversion<NeighborListSelectionParameter>();
+  internalsPtr->addConversion<Int8Parameter>();
+  internalsPtr->addConversion<UInt8Parameter>();
+  internalsPtr->addConversion<Int16Parameter>();
+  internalsPtr->addConversion<UInt16Parameter>();
+  internalsPtr->addConversion<Int32Parameter>();
+  internalsPtr->addConversion<UInt32Parameter>();
+  internalsPtr->addConversion<Int64Parameter>();
+  internalsPtr->addConversion<UInt64Parameter>();
+  internalsPtr->addConversion<Float32Parameter>();
+  internalsPtr->addConversion<Float64Parameter>();
+  internalsPtr->addConversion<NumericTypeParameter>();
+  internalsPtr->addConversion<StringParameter>();
+  internalsPtr->addConversion<VectorInt8Parameter>();
+  internalsPtr->addConversion<VectorUInt8Parameter>();
+  internalsPtr->addConversion<VectorInt16Parameter>();
+  internalsPtr->addConversion<VectorUInt16Parameter>();
+  internalsPtr->addConversion<VectorInt32Parameter>();
+  internalsPtr->addConversion<VectorUInt32Parameter>();
+  internalsPtr->addConversion<VectorInt64Parameter>();
+  internalsPtr->addConversion<VectorUInt64Parameter>();
+  internalsPtr->addConversion<VectorFloat32Parameter>();
+  internalsPtr->addConversion<VectorFloat64Parameter>();
 
-  SimplnxCore::BindFilters(mod, *internals);
+  SimplnxCore::BindFilters(mod, *internalsPtr);
 
   mod.def("get_all_data_types", &GetAllDataTypes);
 
   mod.def("convert_numeric_type_to_data_type", &ConvertNumericTypeToDataType);
   mod.def("convert_data_type_to_numeric_type", &ConvertDataTypeToNumericType);
 
-  mod.def("get_all_registered_filters", [internals]() {
+  mod.def("get_all_registered_filters", [internalsPtr]() {
     std::vector<py::type> pyFilterList;
 
-    const FilterList* filterList = internals->getApp()->getFilterList();
-    if(filterList == nullptr)
+    const FilterList* filterListPtr = internalsPtr->getApp()->getFilterList();
+    if(filterListPtr == nullptr)
     {
       throw std::runtime_error("The FilterList for simplnx does not exist");
     }
 
-    FilterList::FilterContainerType filterHandles = filterList->getFilterHandles();
+    FilterList::FilterContainerType filterHandles = filterListPtr->getFilterHandles();
 
     for(const FilterHandle& handle : filterHandles)
     {
-      py::object filter_ = py::cast(filterList->createFilter(handle.getFilterId()));
+      py::object filter_ = py::cast(filterListPtr->createFilter(handle.getFilterId()));
       py::type filterType = py::type::of(filter_);
       pyFilterList.push_back(filterType);
     }
@@ -2062,12 +2063,12 @@ PYBIND11_MODULE(simplnx, mod)
     return pyFilterList;
   });
 
-  mod.def("get_filters", [corePlugin]() {
-    auto filterHandles = corePlugin->getFilterHandles();
+  mod.def("get_filters", [corePluginPtr]() {
+    auto filterHandles = corePluginPtr->getFilterHandles();
     std::vector<py::type> filterList;
     for(const auto& handle : filterHandles)
     {
-      py::object filter_ = py::cast(corePlugin->createFilter(handle.getFilterId()));
+      py::object filter_ = py::cast(corePluginPtr->createFilter(handle.getFilterId()));
       py::type filterType = py::type::of(filter_);
       filterList.push_back(filterType);
     }
@@ -2076,16 +2077,16 @@ PYBIND11_MODULE(simplnx, mod)
 
   mod.def("test_filter", [](const IFilter& filter_) { return py::make_tuple(filter_.uuid(), filter_.name(), filter_.humanName(), filter_.className(), filter_.defaultTags()); });
 
-  mod.def("load_python_plugin", [internals](py::module_& mod_) { internals->loadPythonPlugin(mod_); });
+  mod.def("load_python_plugin", [internalsPtr](py::module_& mod_) { internalsPtr->loadPythonPlugin(mod_); });
 
-  mod.def("get_python_plugins", [internals]() {
-    auto plugins = internals->getPythonPlugins();
+  mod.def("get_python_plugins", [internalsPtr]() {
+    auto plugins = internalsPtr->getPythonPlugins();
     std::vector<std::shared_ptr<AbstractPlugin>> abstractPlugins(plugins.cbegin(), plugins.cend());
     return abstractPlugins;
   });
 
-  mod.def("get_python_filter_ids", [internals]() {
-    auto plugins = internals->getPythonPlugins();
+  mod.def("get_python_filter_ids", [internalsPtr]() {
+    auto plugins = internalsPtr->getPythonPlugins();
     std::vector<Uuid> ids;
     for(const auto& plugin : plugins)
     {
@@ -2098,8 +2099,8 @@ PYBIND11_MODULE(simplnx, mod)
     return ids;
   });
 
-  mod.def("reload_python_plugins", [internals]() { internals->reloadPythonPlugins(); });
-  mod.def("unload_python_plugins", [internals]() { internals->unloadPythonPlugins(); });
+  mod.def("reload_python_plugins", [internalsPtr]() { internalsPtr->reloadPythonPlugins(); });
+  mod.def("unload_python_plugins", [internalsPtr]() { internalsPtr->unloadPythonPlugins(); });
 
   py::class_<ManualImportFinder> manualImportFinder(mod, "ManualImportFinder");
   manualImportFinder.def(py::init<>());

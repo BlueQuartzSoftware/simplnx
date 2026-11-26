@@ -38,8 +38,8 @@ Result<ImageMetadata> StbImageIO::readMetadata(const std::filesystem::path& file
   int result = stbi_info(pathStr.c_str(), &width, &height, &comp);
   if(result == 0)
   {
-    const char* reason = stbi_failure_reason();
-    return MakeErrorResult<ImageMetadata>(k_ErrorInfoFailed, fmt::format("Failed to read image info from '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
+    const char* reasonPtr = stbi_failure_reason();
+    return MakeErrorResult<ImageMetadata>(k_ErrorInfoFailed, fmt::format("Failed to read image info from '{}': {}", pathStr, reasonPtr != nullptr ? reasonPtr : "unknown error"));
   }
 
   ImageMetadata metadata;
@@ -124,40 +124,40 @@ Result<> StbImageIO::readPixelDataRows(const std::filesystem::path& filePath, co
   int width = 0;
   int height = 0;
   int comp = 0;
-  void* decodedData = nullptr;
+  void* decodedDataPtr = nullptr;
 
   if(metadata.dataType == DataType::float32)
   {
-    decodedData = stbi_loadf(pathStr.c_str(), &width, &height, &comp, 0);
+    decodedDataPtr = stbi_loadf(pathStr.c_str(), &width, &height, &comp, 0);
   }
   else if(metadata.dataType == DataType::uint16)
   {
-    decodedData = stbi_load_16(pathStr.c_str(), &width, &height, &comp, 0);
+    decodedDataPtr = stbi_load_16(pathStr.c_str(), &width, &height, &comp, 0);
   }
   else
   {
-    decodedData = stbi_load(pathStr.c_str(), &width, &height, &comp, 0);
+    decodedDataPtr = stbi_load(pathStr.c_str(), &width, &height, &comp, 0);
   }
 
-  if(decodedData == nullptr)
+  if(decodedDataPtr == nullptr)
   {
-    const char* reason = stbi_failure_reason();
-    return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load image '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
+    const char* reasonPtr = stbi_failure_reason();
+    return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load image '{}': {}", pathStr, reasonPtr != nullptr ? reasonPtr : "unknown error"));
   }
 
   const usize bytesPerElement = GetDataTypeSize(metadata.dataType);
   const usize rowBytes = metadata.width * metadata.numComponents * bytesPerElement;
-  const auto* bytes = static_cast<const uint8*>(decodedData);
+  const auto* bytesPtr = static_cast<const uint8*>(decodedDataPtr);
   Result<> result;
   for(usize row = 0; row < metadata.height; ++row)
   {
-    result = callback(row, 0, metadata.width, std::span<const uint8>(bytes + row * rowBytes, rowBytes));
+    result = callback(row, 0, metadata.width, std::span<const uint8>(bytesPtr + row * rowBytes, rowBytes));
     if(result.invalid())
     {
       break;
     }
   }
-  stbi_image_free(decodedData);
+  stbi_image_free(decodedDataPtr);
   return result;
 }
 
@@ -174,23 +174,23 @@ Result<> StbImageIO::writePixelData(const std::filesystem::path& filePath, std::
   int w = static_cast<int>(metadata.width);
   int h = static_cast<int>(metadata.height);
   int comp = static_cast<int>(metadata.numComponents);
-  const void* data = buffer.data();
+  const void* dataPtr = buffer.data();
 
   int result = 0;
 
   if(ext == ".png")
   {
     int strideBytes = w * comp;
-    result = stbi_write_png(pathStr.c_str(), w, h, comp, data, strideBytes);
+    result = stbi_write_png(pathStr.c_str(), w, h, comp, dataPtr, strideBytes);
   }
   else if(ext == ".bmp")
   {
-    result = stbi_write_bmp(pathStr.c_str(), w, h, comp, data);
+    result = stbi_write_bmp(pathStr.c_str(), w, h, comp, dataPtr);
   }
   else if(ext == ".jpg" || ext == ".jpeg")
   {
     constexpr int k_JpegQuality = 95;
-    result = stbi_write_jpg(pathStr.c_str(), w, h, comp, data, k_JpegQuality);
+    result = stbi_write_jpg(pathStr.c_str(), w, h, comp, dataPtr, k_JpegQuality);
   }
   else
   {

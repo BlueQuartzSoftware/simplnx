@@ -18,7 +18,7 @@ constexpr uint64 k_QuadGeometry = 5;
 constexpr uint64 k_TetGeometry = 6;
 constexpr uint64 k_HexGeometry = 7;
 
-Result<> checkGeometryArraysCompatible(const Float32AbstractDataStore& vertices, const UInt64AbstractDataStore& cells, bool treatWarningsAsErrors, const std::string& cellType)
+Result<> CheckGeometryArraysCompatible(const Float32AbstractDataStore& vertices, const UInt64AbstractDataStore& cells, bool treatWarningsAsErrors, const std::string& cellType)
 {
   Result<> warningResults;
   usize numVertices = vertices.getNumberOfTuples();
@@ -40,7 +40,7 @@ Result<> checkGeometryArraysCompatible(const Float32AbstractDataStore& vertices,
   return warningResults;
 }
 
-Result<> checkGridBoundsResolution(const Float32AbstractDataStore& bounds, bool treatWarningsAsErrors, const std::string& boundType)
+Result<> CheckGridBoundsResolution(const Float32AbstractDataStore& bounds, bool treatWarningsAsErrors, const std::string& boundType)
 {
   Result<> warningResults;
   float32 val = bounds[0];
@@ -80,9 +80,9 @@ Result<> CreateGeometry::operator()()
   auto geometryType = m_InputValues->GeometryTypeIndex;
   auto treatWarningsAsErrors = m_InputValues->WarningsAsErrors;
 
-  auto* iGeometry = m_DataStructure.getDataAs<IGeometry>(geometryPath);
+  auto* iGeometryPtr = m_DataStructure.getDataAs<IGeometry>(geometryPath);
   auto lengthUnit = static_cast<IGeometry::LengthUnit>(m_InputValues->LengthUnitIndex);
-  iGeometry->setUnits(lengthUnit);
+  iGeometryPtr->setUnits(lengthUnit);
 
   DataPath sharedVertexListArrayPath;
   DataPath sharedFaceListArrayPath;
@@ -118,7 +118,7 @@ Result<> CreateGeometry::operator()()
     const DataPath destEdgeListPath = geometryPath.createChildPath(sharedEdgeListArrayPath.getTargetName());
     const auto& edgesList = m_DataStructure.getDataAs<UInt64Array>(destEdgeListPath)->getDataStoreRef();
     const auto& vertexList = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
-    auto results = checkGeometryArraysCompatible(vertexList, edgesList, treatWarningsAsErrors, "edge");
+    auto results = CheckGeometryArraysCompatible(vertexList, edgesList, treatWarningsAsErrors, "edge");
     if(results.invalid())
     {
       return results;
@@ -130,7 +130,7 @@ Result<> CreateGeometry::operator()()
     const DataPath destFaceListPath = geometryPath.createChildPath(sharedFaceListArrayPath.getTargetName());
     const auto& faceList = m_DataStructure.getDataAs<UInt64Array>(destFaceListPath)->getDataStoreRef();
     const auto& vertexList = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
-    auto results = checkGeometryArraysCompatible(vertexList, faceList, treatWarningsAsErrors, (geometryType == 4 ? "triangle" : "quadrilateral"));
+    auto results = CheckGeometryArraysCompatible(vertexList, faceList, treatWarningsAsErrors, (geometryType == 4 ? "triangle" : "quadrilateral"));
     if(results.invalid())
     {
       return results;
@@ -142,7 +142,7 @@ Result<> CreateGeometry::operator()()
     const DataPath destCellListPath = geometryPath.createChildPath(sharedCellListArrayPath.getTargetName());
     const auto& cellList = m_DataStructure.getDataAs<UInt64Array>(destCellListPath)->getDataStoreRef();
     const auto& vertexList = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
-    auto results = checkGeometryArraysCompatible(vertexList, cellList, treatWarningsAsErrors, (geometryType == 6 ? "tetrahedral" : "hexahedral"));
+    auto results = CheckGeometryArraysCompatible(vertexList, cellList, treatWarningsAsErrors, (geometryType == 6 ? "tetrahedral" : "hexahedral"));
     if(results.invalid())
     {
       return results;
@@ -157,9 +157,9 @@ Result<> CreateGeometry::operator()()
     const auto& srcXBounds = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()))->getDataStoreRef();
     const auto& srcYBounds = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()))->getDataStoreRef();
     const auto& srcZBounds = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()))->getDataStoreRef();
-    auto xResults = checkGridBoundsResolution(srcXBounds, treatWarningsAsErrors, "X");
-    auto yResults = checkGridBoundsResolution(srcYBounds, treatWarningsAsErrors, "Y");
-    auto zResults = checkGridBoundsResolution(srcZBounds, treatWarningsAsErrors, "Z");
+    auto xResults = CheckGridBoundsResolution(srcXBounds, treatWarningsAsErrors, "X");
+    auto yResults = CheckGridBoundsResolution(srcYBounds, treatWarningsAsErrors, "Y");
+    auto zResults = CheckGridBoundsResolution(srcZBounds, treatWarningsAsErrors, "Z");
     auto results = MergeResults(MergeResults(xResults, yResults), zResults);
     if(results.invalid())
     {

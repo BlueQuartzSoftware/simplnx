@@ -31,16 +31,16 @@ constexpr float64 k_StdDevRelTol = 1.0e-7;
 // FilterList), so this independent closed form is the correctness oracle instead of legacy parity.
 float64 StdDevExpectedForSlot(uint32 projDim, usize /*slot*/, usize dim)
 {
-  const auto Dd = static_cast<float64>(dim);
-  const float64 baseStdDev = std::sqrt(Dd * (Dd + 1.0) / 12.0);
+  const auto dd = static_cast<float64>(dim);
+  const float64 baseStdDev = std::sqrt(dd * (dd + 1.0) / 12.0);
   float64 commonDiff = 1.0; // projDim == 0 -> vary x -> stride 1
   if(projDim == 1)
   {
-    commonDiff = Dd; // vary y -> stride D
+    commonDiff = dd; // vary y -> stride D
   }
   else if(projDim == 2)
   {
-    commonDiff = Dd * Dd; // vary z -> stride D^2
+    commonDiff = dd * dd; // vary z -> stride D^2
   }
   return commonDiff * baseStdDev;
 }
@@ -61,17 +61,17 @@ TEMPLATE_TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: l
   SizeVec3 dims = {1, 1, 1};
   dims[projDim] = 3;
   const ShapeType cellShape = {dims[2], dims[1], dims[0]};
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions(dims);
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions(dims);
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<TestType>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<TestType>::Create(ds, "Input", store, cellAM->getId());
-  REQUIRE(array != nullptr);
+  auto store = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<TestType>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  REQUIRE(arrayPtr != nullptr);
   const auto writeResult = store->copyFromBuffer(0, nonstd::span<const TestType>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
@@ -83,18 +83,18 @@ TEMPLATE_TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: l
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   // ApplyAxisProjection selects by store type and has no AlgorithmTestScope force flags or path witness.
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Projected Image", "CellData", "Output"});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
-  const auto& output = ds.getDataRefAs<Float64Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPath);
   REQUIRE(output.getNumberOfTuples() == 1);
   REQUIRE(output[0] == Approx(k_Step).margin(1.0e-12));
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: large-offset staged and bounded deviation", "[NXImageProcessing][StandardDeviationProjectionImageFilter][StdDevStability]")
@@ -146,10 +146,10 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: large-offs
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
-  constexpr usize D = 12;
-  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0); },
-                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, D); }, k_StdDevAbsTol,
-                                                                                             k_StdDevRelTol);
+  constexpr usize k_D = 12;
+  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>(
+      [](DataStructure& dataStructure) { return ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0); }, [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, k_D); },
+      k_StdDevAbsTol, k_StdDevRelTol);
 }
 
 // -----------------------------------------------------------------------------
@@ -160,9 +160,9 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-e
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (int16 input)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
-  constexpr usize D = 8;
-  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<int16>(ds, D, 0.0, 1.0); },
-                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, D); }, k_StdDevAbsTol,
+  constexpr usize k_D = 8;
+  projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& dataStructure) { return ip_test::BuildRampImage<int16>(dataStructure, k_D, 0.0, 1.0); },
+                                                                                             [](uint32 projDim, usize slot) { return StdDevExpectedForSlot(projDim, slot, k_D); }, k_StdDevAbsTol,
                                                                                              k_StdDevRelTol);
 }
 
@@ -177,20 +177,20 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: single-sam
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize D = 6;
+  constexpr usize k_D = 6;
   // Image dims are XYZ; make the projected axis (Z) have extent 1, so every projected column is a single sample.
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({D, D, 1});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  const ShapeType cellShape = {1, D, D}; // tuple shape is ZYX
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({k_D, k_D, 1});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  const ShapeType cellShape = {1, k_D, k_D}; // tuple shape is ZYX
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < ref.getSize(); ++i)
   {
     ref.setValue(i, static_cast<float32>(i + 1)); // arbitrary distinct values; single-sample columns -> stddev 0
@@ -204,14 +204,14 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: single-sam
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Projected Image", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<float64>>(outputPath).getDataStoreRef();
-  REQUIRE(outStore.getSize() == D * D);
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<float64>>(outputPath).getDataStoreRef();
+  REQUIRE(outStore.getSize() == k_D * k_D);
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     INFO("index=" << i);
@@ -225,9 +225,9 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: constant c
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize D = 8;
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, D, 42.0, 0.0); // step 0 -> globally constant image (every column constant)
+  constexpr usize k_D = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_D, 42.0, 0.0); // step 0 -> globally constant image (every column constant)
 
   StandardDeviationProjectionImageFilter filter;
   Arguments args;
@@ -237,14 +237,14 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: constant c
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Projected Image", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<float64>>(outputPath).getDataStoreRef();
-  REQUIRE(outStore.getSize() == D * D);
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<float64>>(outputPath).getDataStoreRef();
+  REQUIRE(outStore.getSize() == k_D * k_D);
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     INFO("index=" << i);
@@ -272,18 +272,18 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Warning na
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   // No extra cell array, an extra one, and an old array with the output name (also discarded in place).
   const std::string extraName = GENERATE(std::string(""), std::string("Extra"), std::string("Output"));
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, 3, 0.0, 1.0);
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, 3, 0.0, 1.0);
   const DataPath geomPath({"Image Geometry"});
-  auto& imageGeom = ds.getDataRefAs<ImageGeom>(geomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   const DataPath featurePath = geomPath.createChildPath("Cell Feature Data");
-  REQUIRE(AttributeMatrix::Create(ds, "Cell Feature Data", {2}, imageGeom.getId()) != nullptr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Cell Feature Data", {2}, imageGeom.getId()) != nullptr);
   const DataPath extraPath = inputPath.getParent().createChildPath(extraName.empty() ? "Extra" : extraName);
   if(!extraName.empty())
   {
-    auto& cellAM = ds.getDataRefAs<AttributeMatrix>(inputPath.getParent());
-    auto store = DataStoreUtilities::CreateDataStore<int16>(ds, extraPath, cellAM.getShape(), {1});
-    REQUIRE(Int16Array::Create(ds, extraName, store, cellAM.getId()) != nullptr);
+    auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(inputPath.getParent());
+    auto store = DataStoreUtilities::CreateDataStore<int16>(dataStructure, extraPath, cellAM.getShape(), {1});
+    REQUIRE(Int16Array::Create(dataStructure, extraName, store, cellAM.getId()) != nullptr);
   }
   StandardDeviationProjectionImageFilter filter;
   Arguments args;
@@ -291,7 +291,7 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Warning na
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   std::string discardedWarning;
   for(const auto& warning : preflightResult.outputActions.warnings())
@@ -310,20 +310,20 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Warning na
     CHECK(discardedWarning.find(extraPath.toString()) != std::string::npos);
   }
   // Axis projection dispatches by store type; it has no Direct/Scanline override.
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  CHECK(ds.getData(featurePath) == nullptr);
+  CHECK(dataStructure.getData(featurePath) == nullptr);
   if(extraName != "Output")
   {
-    CHECK(ds.getData(extraPath) == nullptr);
+    CHECK(dataStructure.getData(extraPath) == nullptr);
   }
-  REQUIRE(ds.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{1, 3, 3});
-  const auto& output = ds.getDataRefAs<Float64Array>(inputPath.getParent().createChildPath("Output"));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{1, 3, 3});
+  const auto& output = dataStructure.getDataRefAs<Float64Array>(inputPath.getParent().createChildPath("Output"));
   REQUIRE(output.getNumberOfTuples() == 9);
   for(usize slot = 0; slot < 9; ++slot)
   {
     // X columns are {3*s, 3*s+1, 3*s+2}: sample variance = (1+0+1)/(3-1) = 1.
     CHECK(output[slot] == Approx(1.0).margin(1.0e-12));
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

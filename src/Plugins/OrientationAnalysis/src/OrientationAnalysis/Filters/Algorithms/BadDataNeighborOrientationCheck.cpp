@@ -26,10 +26,10 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 {
   // Dispatch checks only storage residency. The selected executor performs
   // typed array access.
-  auto* quatsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath);
-  auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-  auto* phasesArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath);
+  auto* quatsArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath);
+  auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+  auto* phasesArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath);
 
-  return DispatchAlgorithm<BadDataNeighborOrientationCheckWorklist, BadDataNeighborOrientationCheckScanline>({quatsArray, maskArray, phasesArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
-                                                                                                             m_InputValues);
+  return DispatchAlgorithm<BadDataNeighborOrientationCheckWorklist, BadDataNeighborOrientationCheckScanline>({quatsArrayPtr, maskArrayPtr, phasesArrayPtr}, m_DataStructure, m_MessageHandler,
+                                                                                                             m_ShouldCancel, m_InputValues);
 }

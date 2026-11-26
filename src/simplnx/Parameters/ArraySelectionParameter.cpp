@@ -77,10 +77,10 @@ nlohmann::json ArraySelectionParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
   }
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
@@ -90,7 +90,7 @@ Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& jso
   std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), jsonStrValue));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), jsonStrValue));
   }
   return {{std::move(*path)}};
 }
@@ -150,13 +150,13 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object == nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr == nullptr)
   {
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto* iArrayPtr = dynamic_cast<const IArray*>(object);
+  const auto* iArrayPtr = dynamic_cast<const IArray*>(objectPtr);
   if(iArrayPtr == nullptr)
   {
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
@@ -164,13 +164,13 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 
   // StringArray has fixed string type and component shape. Numeric type,
   // component-shape, and storage-location rules apply only to IDataArray.
-  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
-  if(dataArray != nullptr)
+  const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(objectPtr);
+  if(dataArrayPtr != nullptr)
   {
     if(!m_AllowedTypes.empty())
     {
 
-      DataType dataType = dataArray->getDataType();
+      DataType dataType = dataArrayPtr->getDataType();
       if(!m_AllowedTypes.contains(dataType))
       {
         return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
@@ -184,7 +184,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
       bool foundMatch = false;
       for(const auto& compShape : m_RequiredComponentShapes)
       {
-        if(compShape == dataArray->getComponentShape())
+        if(compShape == dataArrayPtr->getComponentShape())
         {
           foundMatch = true;
           break;
@@ -206,7 +206,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 
     if(m_Location != DataLocation::Any)
     {
-      const IDataStore::StoreType storeType = dataArray->getStoreType();
+      const IDataStore::StoreType storeType = dataArrayPtr->getStoreType();
       const bool matches =
           (m_Location == DataLocation::InMemory && storeType == IDataStore::StoreType::InMemory) || (m_Location == DataLocation::OutOfCore && storeType == IDataStore::StoreType::OutOfCore);
       if(storeType != IDataStore::StoreType::Empty && !matches)
@@ -242,8 +242,8 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
 namespace SIMPLConversion

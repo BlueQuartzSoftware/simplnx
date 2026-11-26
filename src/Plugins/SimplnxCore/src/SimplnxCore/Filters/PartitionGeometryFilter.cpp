@@ -82,7 +82,7 @@ const ChoicesParameter::ValueType k_ExistingSchemeModeIndex = 3;
  * @param dataPath Selected data path, including linked selections.
  * @return Error -3043 if the counts differ; otherwise, a valid result.
  */
-Result<> validateVertexTupleCount(const INodeGeometry0D& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath)
+Result<> ValidateVertexTupleCount(const INodeGeometry0D& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath)
 {
   const usize vertexCount = geometry.getVerticesRef().getNumberOfTuples();
   if(tupleCount != vertexCount)
@@ -218,8 +218,8 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
     }
     else
     {
-      const auto* vertices = geometry.getVertices();
-      if(vertices == nullptr || vertices->getStoreType() == IDataStore::StoreType::Empty)
+      const auto* verticesPtr = geometry.getVertices();
+      if(verticesPtr == nullptr || verticesPtr->getStoreType() == IDataStore::StoreType::Empty)
       {
         break;
       }
@@ -478,7 +478,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Vertex: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
+    psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -487,7 +487,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Edge: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
+    psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -496,7 +496,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Triangle: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
+    psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -505,7 +505,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Quad: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
+    psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -514,7 +514,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Tetrahedral: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
+    psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -523,7 +523,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Hexahedral: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
+    psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -615,12 +615,12 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 }
 
 // -----------------------------------------------------------------------------
-Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
+Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::GenerateNodeBasedPsInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
                                                                                        const DataPath& attrMatrixPath)
 {
   const auto& geometry = dataStructure.getDataRefAs<INodeGeometry0D>({geometryToPartitionPath});
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(attrMatrixPath);
-  auto vertexTupleResult = validateVertexTupleCount(geometry, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath);
+  auto vertexTupleResult = ValidateVertexTupleCount(geometry, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath);
   if(vertexTupleResult.invalid())
   {
     return {ConvertResultTo<PartitionGeometry::PSGeomInfo>(std::move(vertexTupleResult), {})};

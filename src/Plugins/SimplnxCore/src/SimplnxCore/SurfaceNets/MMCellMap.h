@@ -76,11 +76,11 @@ public:
   size_t cellArrayIndex(const int cellIndex[3]) const;
 
 private:
-  std::array<size_t, 3> m_arraySize = {0, 0, 0};
-  std::array<float, 3> m_voxelSize = {1.0f, 1.0f, 1.0f};
+  std::array<size_t, 3> m_ArraySize = {0, 0, 0};
+  std::array<float, 3> m_VoxelSize = {1.0f, 1.0f, 1.0f};
   std::array<size_t, 3> m_NxDims = {0, 0, 0};
 
-  Cell* m_cellArray;
+  Cell* m_CellArray;
 
   std::vector<Vertex> m_VertexArray;
   TriangleGeom::SharedVertexList::store_type& m_VerticesStoreRef;

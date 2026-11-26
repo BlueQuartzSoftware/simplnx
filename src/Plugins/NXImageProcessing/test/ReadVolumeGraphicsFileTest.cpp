@@ -27,16 +27,16 @@ const fs::path k_VgiDestFile = fs::path(nx::core::unit_test::k_BinaryTestOutputD
 const SizeVec3 k_Dimensions = {50, 20, 80};
 
 // -----------------------------------------------------------------------------
-static void writeVolTestFile()
+static void WriteVolTestFile()
 {
   // Write out the data file
-  FILE* outputFile = fopen(k_VolFile.string().c_str(), "wb");
-  REQUIRE(outputFile != nullptr);
+  FILE* outputFilePtr = fopen(k_VolFile.string().c_str(), "wb");
+  REQUIRE(outputFilePtr != nullptr);
   const size_t count = k_Dimensions[0] * k_Dimensions[1] * k_Dimensions[2];
   std::vector<float> data(count, 2.0F);
-  const usize bytesWritten = fwrite(data.data(), sizeof(float), count, outputFile);
+  const usize bytesWritten = fwrite(data.data(), sizeof(float), count, outputFilePtr);
   REQUIRE(bytesWritten == count);
-  REQUIRE(fclose(outputFile) == 0);
+  REQUIRE(fclose(outputFilePtr) == 0);
 
   // Copy the vgi file
   const auto copyOptions = fs::copy_options::skip_existing;
@@ -55,7 +55,7 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execut
   Arguments args;
 
   // Write the .vol test file
-  writeVolTestFile();
+  WriteVolTestFile();
 
   {
     args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_VgiDestFile));
@@ -92,7 +92,7 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Comp
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -104,22 +104,22 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Comp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadVolumeGraphicsFileFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadVolumeGraphicsFileFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key) == fs::path("/test/path/file.vgi"));
       CHECK(args.value<DataPath>(ReadVolumeGraphicsFileFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<std::string>(ReadVolumeGraphicsFileFilter::k_CellAttributeMatrixName_Key) == "CellData");
@@ -268,8 +268,8 @@ unit = mm
   if(resolution == "1e40 3 4")
   {
     args.insertOrAssign(ImageIO::k_ChangeOrigin, true);
-    DataStructure ds;
-    const auto strict = filter.preflight(ds, args);
+    DataStructure dataStructure;
+    const auto strict = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
     const auto& diagnostic = strict.outputActions.errors().front();
     INFO(diagnostic.message);

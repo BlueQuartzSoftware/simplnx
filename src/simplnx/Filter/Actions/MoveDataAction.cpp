@@ -32,19 +32,19 @@ MoveDataAction::~MoveDataAction() noexcept = default;
 
 Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "MoveDataAction: ";
-  auto* dataObject = dataStructure.getData(m_Path);
-  if(dataObject == nullptr)
+  static constexpr StringLiteral k_Prefix = "MoveDataAction: ";
+  auto* dataObjectPtr = dataStructure.getData(m_Path);
+  if(dataObjectPtr == nullptr)
   {
-    return MakeErrorResult(k_MissingDataObjectCode, fmt::format("{}Could not find DataObject at '{}'", prefix, m_Path.toString()));
+    return MakeErrorResult(k_MissingDataObjectCode, fmt::format("{}Could not find DataObject at '{}'", k_Prefix, m_Path.toString()));
   }
 
   if(m_Path == m_NewParentPath)
   {
-    return MakeErrorResult(k_RecursiveParentCode, fmt::format("{}Cannot move data object at path '{}' into itself.", prefix, m_Path.toString()));
+    return MakeErrorResult(k_RecursiveParentCode, fmt::format("{}Cannot move data object at path '{}' into itself.", k_Prefix, m_Path.toString()));
   }
 
-  auto parentIds = dataObject->getParentIds();
+  auto parentIds = dataObjectPtr->getParentIds();
   for(const auto parentId : parentIds)
   {
     auto parentPaths = dataStructure.getDataPathsForId(parentId);
@@ -52,40 +52,40 @@ Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode /*mode*/) cons
     {
       if(m_NewParentPath == parentPath)
       {
-        return MakeErrorResult(k_HasParentCode, fmt::format("{}Could not move data from '{}' to '{}' as it already exists under the new parent", prefix, m_Path.toString(), parentPath.toString()));
+        return MakeErrorResult(k_HasParentCode, fmt::format("{}Could not move data from '{}' to '{}' as it already exists under the new parent", k_Prefix, m_Path.toString(), parentPath.toString()));
       }
     }
   }
-  const auto* newParent = dataStructure.getDataAs<BaseGroup>(m_NewParentPath);
-  if(newParent == nullptr)
+  const auto* newParentPtr = dataStructure.getDataAs<BaseGroup>(m_NewParentPath);
+  if(newParentPtr == nullptr)
   {
-    return MakeErrorResult(k_MissingParentObjectCode, fmt::format("{}Could not find a possible parent object at '{}'", prefix, m_NewParentPath.toString()));
+    return MakeErrorResult(k_MissingParentObjectCode, fmt::format("{}Could not find a possible parent object at '{}'", k_Prefix, m_NewParentPath.toString()));
   }
 
-  if(!dataStructure.setAdditionalParent(dataObject->getId(), newParent->getId()))
+  if(!dataStructure.setAdditionalParent(dataObjectPtr->getId(), newParentPtr->getId()))
   {
-    return MakeErrorResult(k_FailedAddParentCode, fmt::format("{}Could not add new parent at '{}' to DataObject at '{}' ", prefix, m_NewParentPath.toString(), m_Path.toString()));
+    return MakeErrorResult(k_FailedAddParentCode, fmt::format("{}Could not add new parent at '{}' to DataObject at '{}' ", k_Prefix, m_NewParentPath.toString(), m_Path.toString()));
   }
 
   const DataPath parentPath = m_Path.getParent();
-  const auto* oldParent = dataStructure.getDataAs<BaseGroup>(parentPath);
+  const auto* oldParentPtr = dataStructure.getDataAs<BaseGroup>(parentPath);
   // If no parent exists
   if(parentPath.empty())
   {
-    if(!dataStructure.removeParent(dataObject->getId(), 0))
+    if(!dataStructure.removeParent(dataObjectPtr->getId(), 0))
     {
-      return MakeErrorResult(k_FailedRemoveParentCode, fmt::format("{}Could not remove parent at '{}'", prefix, parentPath.toString()));
+      return MakeErrorResult(k_FailedRemoveParentCode, fmt::format("{}Could not remove parent at '{}'", k_Prefix, parentPath.toString()));
     }
   }
   else
   {
-    if(oldParent == nullptr)
+    if(oldParentPtr == nullptr)
     {
-      return MakeErrorResult(k_FailedFindOldParentCode, fmt::format("{}Could not find a possible parent object at '{}'", prefix, parentPath.toString()));
+      return MakeErrorResult(k_FailedFindOldParentCode, fmt::format("{}Could not find a possible parent object at '{}'", k_Prefix, parentPath.toString()));
     }
-    if(!dataStructure.removeParent(dataObject->getId(), oldParent->getId()))
+    if(!dataStructure.removeParent(dataObjectPtr->getId(), oldParentPtr->getId()))
     {
-      return MakeErrorResult(k_FailedRemoveParentCode, fmt::format("{}Could not remove parent at '{}'", prefix, parentPath.toString()));
+      return MakeErrorResult(k_FailedRemoveParentCode, fmt::format("{}Could not remove parent at '{}'", k_Prefix, parentPath.toString()));
     }
   }
   return {};

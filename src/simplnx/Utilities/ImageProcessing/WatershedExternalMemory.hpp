@@ -827,7 +827,7 @@ public:
       {
         return ConvertResult(std::move(parentResult));
       }
-      if(!less(inserted, parentResult.value()))
+      if(!Less(inserted, parentResult.value()))
       {
         break;
       }
@@ -893,13 +893,13 @@ public:
         {
           return rightResult;
         }
-        if(less(rightResult.value(), selected))
+        if(Less(rightResult.value(), selected))
         {
           selectedIndex = right;
           selected = rightResult.value();
         }
       }
-      if(!less(selected, replacement))
+      if(!Less(selected, replacement))
       {
         break;
       }
@@ -944,7 +944,7 @@ private:
   {
   }
 
-  static bool less(const Record& left, const Record& right)
+  static bool Less(const Record& left, const Record& right)
   {
     if(left.level < right.level)
     {
@@ -1023,7 +1023,7 @@ public:
     {
       return MakeErrorResult(-79065, fmt::format("External watershed bucket push rejected flat index {}. Voxel capacity: {}; queued values: {}.", flatIndex, m_Capacity, m_Size));
     }
-    const usize bucketIndex = orderedIndex(level);
+    const usize bucketIndex = OrderedIndex(level);
     WatershedBucketEndpoints& bucket = m_Buckets[bucketIndex];
     uint64 blockIndex = bucket.tailBlock;
     if(blockIndex == k_WatershedInvalidQueueBlock)
@@ -1148,7 +1148,7 @@ public:
     }
     const int64 flatIndex = m_LoadedHeadBlock.values[bucket.headOffset];
     ++bucket.headOffset;
-    const TInput level = levelFromOrderedIndex(m_MinimumBucket);
+    const TInput level = LevelFromOrderedIndex(m_MinimumBucket);
     --m_Size;
     if(bucket.headOffset == m_LoadedHeadBlock.valueCount)
     {
@@ -1196,13 +1196,13 @@ private:
   {
   }
 
-  static usize orderedIndex(TInput level)
+  static usize OrderedIndex(TInput level)
   {
-    using Unsigned = std::make_unsigned_t<TInput>;
-    Unsigned bits = {};
+    using UnsignedType = std::make_unsigned_t<TInput>;
+    UnsignedType bits = {};
     if constexpr(std::is_signed_v<TInput>)
     {
-      bits = std::bit_cast<Unsigned>(level) ^ (Unsigned{1} << (sizeof(TInput) * 8 - 1));
+      bits = std::bit_cast<UnsignedType>(level) ^ (UnsignedType{1} << (sizeof(TInput) * 8 - 1));
     }
     else
     {
@@ -1211,13 +1211,13 @@ private:
     return static_cast<usize>(bits);
   }
 
-  static TInput levelFromOrderedIndex(usize index)
+  static TInput LevelFromOrderedIndex(usize index)
   {
-    using Unsigned = std::make_unsigned_t<TInput>;
-    Unsigned bits = static_cast<Unsigned>(index);
+    using UnsignedType = std::make_unsigned_t<TInput>;
+    UnsignedType bits = static_cast<UnsignedType>(index);
     if constexpr(std::is_signed_v<TInput>)
     {
-      bits ^= Unsigned{1} << (sizeof(TInput) * 8 - 1);
+      bits ^= UnsignedType{1} << (sizeof(TInput) * 8 - 1);
       return std::bit_cast<TInput>(bits);
     }
     else

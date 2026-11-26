@@ -42,7 +42,7 @@ std::vector<K> ConvertVectorReverse(const std::vector<T>& input)
   return result;
 }
 
-void test_impl(UnitTest::AlgorithmTestScope& scope, const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, const std::string& exemplaryFileName)
+void TestImpl(UnitTest::AlgorithmTestScope& scope, const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, const std::string& exemplaryFileName)
 {
   UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz", "ComputeSurfaceFeaturesTest");
@@ -131,22 +131,22 @@ constexpr usize k_BlocksPerDim = k_BenchDim / k_BlockSize;                      
 constexpr int32 k_NumBlockFeatures = static_cast<int32>(k_BlocksPerDim * k_BlocksPerDim * k_BlocksPerDim); // 512
 const std::string k_BenchGeomName = "ImageGeom";
 
-void BuildBlockFeatureIds(DataStructure& ds)
+void BuildBlockFeatureIds(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_BenchDim, k_BenchDim, k_BenchDim};
 
-  auto* imageGeom = ImageGeom::Create(ds, k_BenchGeomName);
-  imageGeom->setDimensions({k_BenchDim, k_BenchDim, k_BenchDim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_BenchGeomName);
+  imageGeomPtr->setDimensions({k_BenchDim, k_BenchDim, k_BenchDim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({k_BenchGeomName, Constants::k_CellData, Constants::k_FeatureIds});
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
-  auto* featureIds = DataArray<int32>::Create(ds, Constants::k_FeatureIds, store, cellAM->getId());
-  auto& fidsRef = featureIds->getDataStoreRef();
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, store, cellAmPtr->getId());
+  auto& fidsRef = featureIdsPtr->getDataStoreRef();
   const usize sliceSize = k_BenchDim * k_BenchDim;
   std::vector<int32> sliceBuffer(sliceSize);
   for(usize iz = 0; iz < k_BenchDim; iz++)
@@ -166,7 +166,7 @@ void BuildBlockFeatureIds(DataStructure& ds)
     SIMPLNX_RESULT_REQUIRE_VALID(fidsRefWriteResult);
   }
 
-  AttributeMatrix::Create(ds, Constants::k_CellFeatureData, {static_cast<usize>(k_NumBlockFeatures + 1)}, imageGeom->getId());
+  AttributeMatrix::Create(dataStructure, Constants::k_CellFeatureData, {static_cast<usize>(k_NumBlockFeatures + 1)}, imageGeomPtr->getId());
 }
 } // namespace
 
@@ -183,7 +183,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
-  const std::string k_SurfaceFeaturesExemplar("SurfaceFeatures");
+  const std::string kSurfaceFeaturesExemplar("SurfaceFeatures");
   DataPath computedSurfaceFeaturesPath = Constants::k_CellFeatureDataPath.createChildPath(k_SurfaceFeatures);
 
   {
@@ -205,7 +205,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(computedSurfaceFeaturesPath));
 
-    DataPath exemplaryDataPath = Constants::k_CellFeatureDataPath.createChildPath(k_SurfaceFeaturesExemplar);
+    DataPath exemplaryDataPath = Constants::k_CellFeatureDataPath.createChildPath(kSurfaceFeaturesExemplar);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(exemplaryDataPath));
     const BoolArray& featureArrayExemplary = dataStructure.getDataRefAs<BoolArray>(exemplaryDataPath);
 
@@ -230,7 +230,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCo
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  test_impl(scope, std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
+  TestImpl(scope, std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
@@ -241,7 +241,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCo
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  test_impl(scope, std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
+  TestImpl(scope, std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(YZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
@@ -252,7 +252,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(YZ Plane)", "[SimplnxCo
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  test_impl(scope, std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
+  TestImpl(scope, std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Generate Large Test Dataset", "[SimplnxCore][ComputeSurfaceFeaturesFilter][.GenerateTestData]")

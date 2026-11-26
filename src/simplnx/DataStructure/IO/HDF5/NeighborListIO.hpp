@@ -146,8 +146,8 @@ public:
       return result;
     }
 
-    auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, listStorePtr, parentId);
-    if(dataObject == nullptr)
+    auto* dataObjectPtr = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, listStorePtr, parentId);
+    if(dataObjectPtr == nullptr)
     {
       std::string ss = "Failed to import NeighborList from HDF5";
       return MakeErrorResult(-505, ss);
@@ -251,8 +251,8 @@ public:
     // Store list lengths separately so the reader can rebuild ragged vectors.
     const auto neighborData = neighborList.getVectors();
     const usize arraySize = neighborData.size();
-    auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
-    auto& numNeighborsStore = numNeighborsArray->getDataStoreRef();
+    auto* numNeighborsArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
+    auto& numNeighborsStore = numNeighborsArrayPtr->getDataStoreRef();
     usize totalItems = 0;
     for(usize i = 0; i < arraySize; i++)
     {
@@ -262,7 +262,7 @@ public:
     }
 
     DataArrayIO<int32> dataArrayIO;
-    Result<> result = dataArrayIO.writeData(dataStructureWriter, *numNeighborsArray, parentGroupWriter, false);
+    Result<> result = dataArrayIO.writeData(dataStructureWriter, *numNeighborsArrayPtr, parentGroupWriter, false);
     if(result.invalid())
     {
       return result;
@@ -277,10 +277,10 @@ public:
       {
         continue;
       }
-      const T* start = segment.data();
+      const T* startPtr = segment.data();
       for(usize i = 0; i < numElements; i++)
       {
-        flattenedData[offset + i] = start[i];
+        flattenedData[offset + i] = startPtr[i];
       }
       offset += numElements;
     }

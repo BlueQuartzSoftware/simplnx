@@ -41,22 +41,22 @@ std::string INeighborList::getNumNeighborsArrayName() const
 
 IListStore& INeighborList::getIListStoreRef()
 {
-  IListStore* store = getIListStore();
-  if(store == nullptr)
+  IListStore* storePtr = getIListStore();
+  if(storePtr == nullptr)
   {
     throw std::runtime_error("INeighborList: Null IListStore");
   }
-  return *store;
+  return *storePtr;
 }
 
 const IListStore& INeighborList::getIListStoreRef() const
 {
-  const IListStore* store = getIListStore();
-  if(store == nullptr)
+  const IListStore* storePtr = getIListStore();
+  if(storePtr == nullptr)
   {
     throw std::runtime_error("INeighborList: Null IListStore");
   }
-  return *store;
+  return *storePtr;
 }
 
 usize INeighborList::getNumberOfTuples() const

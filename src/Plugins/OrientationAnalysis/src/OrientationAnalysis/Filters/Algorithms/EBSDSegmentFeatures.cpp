@@ -22,7 +22,7 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 Result<> EBSDSegmentFeatures::operator()()
 {
   this->m_NeighborScheme = m_InputValues->NeighborScheme;
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
@@ -42,11 +42,11 @@ Result<> EBSDSegmentFeatures::operator()()
 
   // Validate positive, unmasked Phases with slice-sized reads before the boolean neighbor callback uses them.
   const usize numCrystalStructures = m_CrystalStructures->getNumberOfTuples();
-  const SizeVec3 dimensions = gridGeom->getDimensions();
+  const SizeVec3 dimensions = gridGeomPtr->getDimensions();
   const usize scanBatchSize = std::max<usize>(1, static_cast<usize>(dimensions[0]) * static_cast<usize>(dimensions[1]));
   std::vector<int32> cellPhasesBuffer(scanBatchSize);
   std::vector<uint8> maskBuffer(scanBatchSize, 1);
-  IDataArray* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  IDataArray* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
   auto& cellPhasesStoreRef = m_CellPhases->getDataStoreRef();
   const usize numCells = cellPhasesStoreRef.getNumberOfTuples();
   for(usize offset = 0; offset < numCells; offset += scanBatchSize)
@@ -56,17 +56,17 @@ Result<> EBSDSegmentFeatures::operator()()
     {
       return phaseReadResult;
     }
-    if(maskArray != nullptr && maskArray->getDataType() == DataType::uint8)
+    if(maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::uint8)
     {
-      auto& maskStoreRef = maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+      auto& maskStoreRef = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
       if(Result<> maskReadResult = maskStoreRef.copyIntoBuffer(offset, nonstd::span<uint8>(maskBuffer.data(), batchSize)); maskReadResult.invalid())
       {
         return maskReadResult;
       }
     }
-    else if(maskArray != nullptr && maskArray->getDataType() == DataType::boolean)
+    else if(maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::boolean)
     {
-      auto& maskStoreRef = maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>();
+      auto& maskStoreRef = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<bool>>();
       auto boolMaskBuffer = std::make_unique<bool[]>(batchSize);
       if(Result<> maskReadResult = maskStoreRef.copyIntoBuffer(offset, nonstd::span<bool>(boolMaskBuffer.get(), batchSize)); maskReadResult.invalid())
       {
@@ -81,7 +81,7 @@ Result<> EBSDSegmentFeatures::operator()()
     for(usize batchIdx = 0; batchIdx < batchSize; batchIdx++)
     {
       const int32 currentPhaseIdx = cellPhasesBuffer[batchIdx];
-      if(currentPhaseIdx <= 0 || (maskArray != nullptr && maskBuffer[batchIdx] == 0))
+      if(currentPhaseIdx <= 0 || (maskArrayPtr != nullptr && maskBuffer[batchIdx] == 0))
       {
         continue;
       }
@@ -98,7 +98,7 @@ Result<> EBSDSegmentFeatures::operator()()
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0);
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3 udims = gridGeomPtr->getDimensions();
   auto allocateResult = allocateSliceBuffers(static_cast<int64>(udims[0]), static_cast<int64>(udims[1]));
   if(allocateResult.invalid())
   {
@@ -106,8 +106,8 @@ Result<> EBSDSegmentFeatures::operator()()
   }
 
   auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
-  const bool usesOutOfCoreInput = IsOutOfCore(*m_QuatsArray) || IsOutOfCore(*m_CellPhases) || IsOutOfCore(*m_CrystalStructures) || (maskArray != nullptr && IsOutOfCore(*maskArray));
-  Result<> segmentResult = executeCCL(gridGeom, featureIdsStore, usesOutOfCoreInput);
+  const bool usesOutOfCoreInput = IsOutOfCore(*m_QuatsArray) || IsOutOfCore(*m_CellPhases) || IsOutOfCore(*m_CrystalStructures) || (maskArrayPtr != nullptr && IsOutOfCore(*maskArrayPtr));
+  Result<> segmentResult = executeCCL(gridGeomPtr, featureIdsStore, usesOutOfCoreInput);
 
   deallocateSliceBuffers();
 
@@ -133,9 +133,9 @@ Result<> EBSDSegmentFeatures::operator()()
     return ConvertResult(std::move(resizeResult));
   }
 
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  activeArray->getDataStore()->fill(1);
-  (*activeArray)[0] = 0;
+  auto* activeArrayPtr = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  activeArrayPtr->getDataStore()->fill(1);
+  (*activeArrayPtr)[0] = 0;
 
   // Random IDs improve visual distinction between adjacent features.
   if(m_InputValues->RandomizeFeatureIds)

@@ -4,7 +4,7 @@
 
 namespace
 {
-using Path = nx::core::UnitTest::AlgorithmDispatchPath;
+using PathType = nx::core::UnitTest::AlgorithmDispatchPath;
 
 /**
  * @class DirectPathProbe
@@ -13,19 +13,19 @@ using Path = nx::core::UnitTest::AlgorithmDispatchPath;
 class DirectPathProbe
 {
 public:
-  explicit DirectPathProbe(Path& selectedPath)
+  explicit DirectPathProbe(PathType& selectedPath)
   : m_SelectedPath(selectedPath)
   {
   }
 
   nx::core::Result<> operator()()
   {
-    m_SelectedPath = Path::Direct;
+    m_SelectedPath = PathType::Direct;
     return {};
   }
 
 private:
-  Path& m_SelectedPath;
+  PathType& m_SelectedPath;
 };
 
 /**
@@ -35,19 +35,19 @@ private:
 class ScanlinePathProbe
 {
 public:
-  explicit ScanlinePathProbe(Path& selectedPath)
+  explicit ScanlinePathProbe(PathType& selectedPath)
   : m_SelectedPath(selectedPath)
   {
   }
 
   nx::core::Result<> operator()()
   {
-    m_SelectedPath = Path::Scanline;
+    m_SelectedPath = PathType::Scanline;
     return {};
   }
 
 private:
-  Path& m_SelectedPath;
+  PathType& m_SelectedPath;
 };
 } // namespace
 

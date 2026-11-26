@@ -87,10 +87,10 @@ constexpr int32 k_EmptyFeatureSkippedWarning = -53905;
 
 struct FixtureSpec
 {
-  SizeVec3 dims;                 // (x, y, z)
-  std::vector<int32> featureIds; // x fastest, then y, then z
-  usize numFeatures;             // tuple count of the Feature Attribute Matrix (index 0 is the unused feature)
-  std::vector<bool> flagged;     // size numFeatures; true means remove/extract
+  SizeVec3 dims;                  // (x, y, z)
+  std::vector<int32> feature_ids; // x fastest, then y, then z
+  usize num_features;             // tuple count of the Feature Attribute Matrix (index 0 is the unused feature)
+  std::vector<bool> flagged;      // size numFeatures; true means remove/extract
 };
 
 std::vector<usize> TupleDims(const SizeVec3& dims)
@@ -103,37 +103,37 @@ std::vector<usize> TupleDims(const SizeVec3& dims)
  */
 void BuildFixture(DataStructure& dataStructure, const FixtureSpec& spec)
 {
-  REQUIRE(spec.featureIds.size() == spec.dims[0] * spec.dims[1] * spec.dims[2]);
-  REQUIRE(spec.flagged.size() == spec.numFeatures);
+  REQUIRE(spec.feature_ids.size() == spec.dims[0] * spec.dims[1] * spec.dims[2]);
+  REQUIRE(spec.flagged.size() == spec.num_features);
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_DataContainer);
-  imageGeom->setDimensions(spec.dims);
-  REQUIRE(imageGeom->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f}).valid());
-  REQUIRE(imageGeom->setSpacing(FloatVec3{1.0f, 1.0f, 1.0f}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_DataContainer);
+  imageGeomPtr->setDimensions(spec.dims);
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{1.0f, 1.0f, 1.0f}).valid());
 
   const std::vector<usize> tupleDims = TupleDims(spec.dims);
-  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, tupleDims, {1});
   auto cellValueStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_CellValuePath, tupleDims, {1});
   auto ignoredValueStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_IgnoredValuePath, tupleDims, {1});
-  auto& featureIds = Int32Array::Create(dataStructure, k_FeatureIds, featureIdsStore, cellAM->getId())->getDataStoreRef();
-  auto& cellValue = Int32Array::Create(dataStructure, k_CellValueName, cellValueStore, cellAM->getId())->getDataStoreRef();
-  auto& ignoredValue = Int32Array::Create(dataStructure, k_IgnoredValueName, ignoredValueStore, cellAM->getId())->getDataStoreRef();
-  for(usize i = 0; i < spec.featureIds.size(); i++)
+  auto& featureIds = Int32Array::Create(dataStructure, k_FeatureIds, featureIdsStore, cellAmPtr->getId())->getDataStoreRef();
+  auto& cellValue = Int32Array::Create(dataStructure, k_CellValueName, cellValueStore, cellAmPtr->getId())->getDataStoreRef();
+  auto& ignoredValue = Int32Array::Create(dataStructure, k_IgnoredValueName, ignoredValueStore, cellAmPtr->getId())->getDataStoreRef();
+  for(usize i = 0; i < spec.feature_ids.size(); i++)
   {
-    featureIds[i] = spec.featureIds[i];
+    featureIds[i] = spec.feature_ids[i];
     cellValue[i] = static_cast<int32>(100 + i);
     ignoredValue[i] = static_cast<int32>(500 + i);
   }
 
-  auto* featureAM = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {spec.numFeatures}, imageGeom->getId());
-  auto flagsStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_FlaggedFeaturesPath, {spec.numFeatures}, {1});
-  auto featureValueStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureValuePath, {spec.numFeatures}, {1});
-  auto& flags = BoolArray::Create(dataStructure, k_ActiveName, flagsStore, featureAM->getId())->getDataStoreRef();
-  auto& featureValue = Int32Array::Create(dataStructure, k_Int32DataSet, featureValueStore, featureAM->getId())->getDataStoreRef();
-  for(usize i = 0; i < spec.numFeatures; i++)
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {spec.num_features}, imageGeomPtr->getId());
+  auto flagsStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_FlaggedFeaturesPath, {spec.num_features}, {1});
+  auto featureValueStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureValuePath, {spec.num_features}, {1});
+  auto& flags = BoolArray::Create(dataStructure, k_ActiveName, flagsStore, featureAmPtr->getId())->getDataStoreRef();
+  auto& featureValue = Int32Array::Create(dataStructure, k_Int32DataSet, featureValueStore, featureAmPtr->getId())->getDataStoreRef();
+  for(usize i = 0; i < spec.num_features; i++)
   {
     flags[i] = spec.flagged[i];
     featureValue[i] = static_cast<int32>(1000 + i);
@@ -221,7 +221,7 @@ bool HasWarningCode(const std::vector<Warning>& warnings, int32 code)
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureA()
 {
-  return {.dims = SizeVec3{5, 2, 1}, .featureIds = {1, 1, 1, 2, 3, 1, 4, 4, 4, 3}, .numFeatures = 5, .flagged = {false, false, true, true, false}};
+  return {.dims = SizeVec3{5, 2, 1}, .feature_ids = {1, 1, 1, 2, 3, 1, 4, 4, 4, 3}, .num_features = 5, .flagged = {false, false, true, true, false}};
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -237,7 +237,7 @@ FixtureSpec FixtureA()
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureB()
 {
-  return {.dims = SizeVec3{4, 4, 1}, .featureIds = {0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 3, 3, 0}, .numFeatures = 4, .flagged = {false, false, false, true}};
+  return {.dims = SizeVec3{4, 4, 1}, .feature_ids = {0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 3, 3, 0}, .num_features = 4, .flagged = {false, false, false, true}};
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -252,13 +252,13 @@ FixtureSpec FixtureB()
 FixtureSpec FixtureE()
 {
   return {.dims = SizeVec3{3, 3, 3},
-          .featureIds =
+          .feature_ids =
               {
                   4, 4, 1, 4, 2, 1, 1, 1, 1, // z = 0
                   4, 1, 1, 2, 3, 2, 1, 1, 1, // z = 1
                   1, 1, 1, 1, 2, 1, 1, 1, 1, // z = 2
               },
-          .numFeatures = 5,
+          .num_features = 5,
           .flagged = {false, false, false, true, true}};
 }
 
@@ -277,19 +277,19 @@ void CheckFeatureArraysCompacted(const DataStructure& dataStructure, const std::
 }
 void FillDataStructure(DataStructure& dataStructure)
 {
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_DataContainer);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_DataContainer);
   std::vector<size_t> dims = {4, 4, 1};
-  imageGeom->setDimensions(dims);
-  REQUIRE(imageGeom->setOrigin(std::vector<float>{0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing(std::vector<float>{1, 1, 1}).valid());
+  imageGeomPtr->setDimensions(dims);
+  REQUIRE(imageGeomPtr->setOrigin(std::vector<float>{0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing(std::vector<float>{1, 1, 1}).valid());
 
   std::vector<size_t> tupleDims(dims.rbegin(), dims.rend());
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeom->getId());
+  auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeomPtr->getId());
 
-  imageGeom->setCellData(*attributeMatrix);
+  imageGeomPtr->setCellData(*attributeMatrixPtr);
 
-  Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, tupleDims, {1}, attributeMatrix->getId());
-  auto& testFeatIdsDataStore = featureIds->getDataStoreRef();
+  Int32Array* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, tupleDims, {1}, attributeMatrixPtr->getId());
+  auto& testFeatIdsDataStore = featureIdsPtr->getDataStoreRef();
   testFeatIdsDataStore[0] = 0;
   testFeatIdsDataStore[1] = 1;
   testFeatIdsDataStore[2] = 1;
@@ -307,24 +307,24 @@ void FillDataStructure(DataStructure& dataStructure)
   testFeatIdsDataStore[14] = 3;
   testFeatIdsDataStore[15] = 0;
 
-  auto* cellVector = UnitTest::CreateTestDataArray<int32>(dataStructure, k_CellVectorPath.getTargetName(), tupleDims, {2}, attributeMatrix->getId());
-  auto* cellBool = UnitTest::CreateTestDataArray<bool>(dataStructure, k_CellBoolPath.getTargetName(), tupleDims, {1}, attributeMatrix->getId());
+  auto* cellVectorPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_CellVectorPath.getTargetName(), tupleDims, {2}, attributeMatrixPtr->getId());
+  auto* cellBoolPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, k_CellBoolPath.getTargetName(), tupleDims, {1}, attributeMatrixPtr->getId());
   for(usize i = 0; i < testFeatIdsDataStore.getNumberOfTuples(); i++)
   {
-    cellVector->getDataStoreRef()[i * 2] = static_cast<int32>(i);
-    cellVector->getDataStoreRef()[i * 2 + 1] = -static_cast<int32>(i);
-    cellBool->getDataStoreRef()[i] = (i % 2) == 0;
+    cellVectorPtr->getDataStoreRef()[i * 2] = static_cast<int32>(i);
+    cellVectorPtr->getDataStoreRef()[i * 2 + 1] = -static_cast<int32>(i);
+    cellBoolPtr->getDataStoreRef()[i] = (i % 2) == 0;
   }
 
-  auto* featureAttributeMatrix = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {4ULL}, imageGeom->getId());
-  BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {4}, {1}, featureAttributeMatrix->getId());
-  auto& maskDataStore = maskArray->getDataStoreRef();
+  auto* featureAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {4ULL}, imageGeomPtr->getId());
+  BoolArray* maskArrayPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {4}, {1}, featureAttributeMatrixPtr->getId());
+  auto& maskDataStore = maskArrayPtr->getDataStoreRef();
   maskDataStore[0] = false;
   maskDataStore[1] = false;
   maskDataStore[2] = false;
   maskDataStore[3] = true;
-  Int32Array* testArray = UnitTest::CreateTestDataArray<int32>(dataStructure, k_Int32DataSet, {4}, {1}, featureAttributeMatrix->getId());
-  auto& testStore = testArray->getDataStoreRef();
+  Int32Array* testArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_Int32DataSet, {4}, {1}, featureAttributeMatrixPtr->getId());
+  auto& testStore = testArrayPtr->getDataStoreRef();
   testStore[0] = 0;
   testStore[1] = 4041;
   testStore[2] = 10128;
@@ -627,7 +627,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - all feature
       BuildFixture(dataStructure, spec);
       REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, fill), scope) == k_AllFeaturesFlaggedError);
       // Nothing was modified.
-      REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == FixtureA().featureIds);
+      REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == FixtureA().feature_ids);
       CheckFeatureArraysCompacted(dataStructure, Sequence(1000, 5));
     }
   }
@@ -644,20 +644,20 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - FeatureId o
   {
     DataStructure dataStructure;
     FixtureSpec spec = FixtureA();
-    spec.featureIds[6] = 5; // feature Attribute Matrix holds tuples 0..4
+    spec.feature_ids[6] = 5; // feature Attribute Matrix holds tuples 0..4
     BuildFixture(dataStructure, spec);
     REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, false), scope) == k_FeatureIdOutOfRangeError);
-    REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == spec.featureIds);
+    REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == spec.feature_ids);
   }
 
   SECTION("Negative FeatureId")
   {
     DataStructure dataStructure;
     FixtureSpec spec = FixtureA();
-    spec.featureIds[0] = -1;
+    spec.feature_ids[0] = -1;
     BuildFixture(dataStructure, spec);
     REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, true), scope) == k_FeatureIdOutOfRangeError);
-    REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == spec.featureIds);
+    REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == spec.feature_ids);
   }
 }
 
@@ -678,7 +678,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - Feature Ids
   imageGeomRef.setDimensions(dimensions);
 
   REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, false), scope) == k_TupleCountMismatchError);
-  REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == FixtureA().featureIds);
+  REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == FixtureA().feature_ids);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - no fill progress (-45436)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
@@ -691,7 +691,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - no fill pro
   // Feature 2 owns no cells but is not flagged, so the all-flagged guard passes. Every cell belongs to
   // the flagged feature 1, so after marking no cell has a non-negative face neighbor and the dilation
   // can never make progress.
-  BuildFixture(dataStructure, {.dims = SizeVec3{4, 1, 1}, .featureIds = {1, 1, 1, 1}, .numFeatures = 3, .flagged = {false, true, false}});
+  BuildFixture(dataStructure, {.dims = SizeVec3{4, 1, 1}, .feature_ids = {1, 1, 1, 1}, .num_features = 3, .flagged = {false, true, false}});
   REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, true), scope) == k_NoFillProgressError);
   // The marking pass has already run; the error reports that the array was modified.
   REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == std::vector<int32>{-1, -1, -1, -1});
@@ -750,7 +750,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does no
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   // One non-background feature makes the first extraction iteration the final crop iteration.
-  BuildFixture(dataStructure, {.dims = SizeVec3{2, 1, 1}, .featureIds = {0, 1}, .numFeatures = 2, .flagged = {false, true}});
+  BuildFixture(dataStructure, {.dims = SizeVec3{2, 1, 1}, .feature_ids = {0, 1}, .num_features = 2, .flagged = {false, true}});
   RemoveFlaggedFeaturesFilter filter;
   const auto args = MakeArgs(k_Extract, false);
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -798,7 +798,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract cr
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Extract, false), scope));
 
   // The original geometry is untouched by Extract.
-  REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == FixtureB().featureIds);
+  REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == FixtureB().feature_ids);
   REQUIRE(ReadInt32(dataStructure, k_CellValuePath) == Sequence(100, 16));
   CheckFeatureArraysCompacted(dataStructure, Sequence(1000, 4));
 
@@ -836,7 +836,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract ze
   std::vector<bool> flagged(12, false);
   flagged[3] = true;
   flagged[11] = true;
-  BuildFixture(dataStructure, {.dims = SizeVec3{12, 1, 1}, .featureIds = Sequence(0, 12), .numFeatures = 12, .flagged = flagged});
+  BuildFixture(dataStructure, {.dims = SizeVec3{12, 1, 1}, .feature_ids = Sequence(0, 12), .num_features = 12, .flagged = flagged});
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Extract, false), scope));
 
   for(const int32 featureId : {3, 11})
@@ -865,7 +865,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extract - flagged feature w
   DataStructure dataStructure;
   // Features 4 and 5 exist in the Feature Attribute Matrix but own no cell.
   FixtureSpec spec = FixtureB();
-  spec.numFeatures = 6;
+  spec.num_features = 6;
   spec.flagged = {false, false, false, true, true, true};
   BuildFixture(dataStructure, spec);
   auto executeResult = RunValid(dataStructure, MakeArgs(k_Extract, false), scope);
@@ -922,8 +922,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Error - flag arra
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureA());
   // Put a second flag array in a plain DataGroup.
-  auto* group = DataGroup::Create(dataStructure, "FlagGroup");
-  BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {5}, {1}, group->getId());
+  auto* groupPtr = DataGroup::Create(dataStructure, "FlagGroup");
+  BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {5}, {1}, groupPtr->getId());
 
   Arguments args = MakeArgs(k_Remove, false);
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({"FlagGroup", k_ActiveName})));
@@ -1650,7 +1650,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1663,22 +1663,22 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RemoveFlaggedFeaturesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RemoveFlaggedFeaturesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key) == true);
       CHECK(args.value<MultiArraySelectionParameter::ValueType>(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key) ==
             MultiArraySelectionParameter::ValueType{DataPath({"DC", "AM", "DA1"}), DataPath({"DC", "AM", "DA2"})});
@@ -1697,11 +1697,11 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[
     DYNAMIC_SECTION("Operation=" << operation)
     {
       DataStructure dataStructure;
-      BuildFixture(dataStructure, {.dims = {3, 1, 1}, .featureIds = {1, 2, 3}, .numFeatures = 4, .flagged = {false, false, true, false}});
-      const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
-      REQUIRE(featureAM != nullptr);
+      BuildFixture(dataStructure, {.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, false, true, false}});
+      const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+      REQUIRE(featureAmPtr != nullptr);
       const DataPath neighborListPath = k_FeatureAMPath.createChildPath("NeighborList");
-      REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAM->getShape(), featureAM->getId()) != nullptr);
+      REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
 
       RemoveFlaggedFeaturesFilter filter;
       auto preflightResult = filter.preflight(dataStructure, MakeArgs(operation, false));
@@ -1729,54 +1729,54 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested 
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
-  DataStructure ds;
-  BuildFixture(ds, FixtureSpec{.dims = {3, 1, 1}, .featureIds = {1, 2, 3}, .numFeatures = 4, .flagged = {false, true, false, true}});
-  const auto* sourceFeatures = ds.getDataAs<AttributeMatrix>(k_FlaggedFeaturesPath.getParent());
-  REQUIRE(sourceFeatures != nullptr);
-  auto* nested = DataGroup::Create(ds, "Nested", ds.getData(k_ImageGeomPath)->getId());
-  REQUIRE(nested != nullptr);
-  REQUIRE(ds.setAdditionalParent(sourceFeatures->getId(), nested->getId()));
-  auto* ensemble = AttributeMatrix::Create(ds, "Ensemble", {2}, nested->getId());
-  REQUIRE(ensemble != nullptr);
-  auto* phases = UnitTest::CreateTestDataArray<int32>(ds, "Phases", {2}, {1}, ensemble->getId());
-  REQUIRE(phases != nullptr);
-  (*phases)[0] = 42;
-  (*phases)[1] = 99;
+  DataStructure dataStructure;
+  BuildFixture(dataStructure, FixtureSpec{.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, true, false, true}});
+  const auto* sourceFeaturesPtr = dataStructure.getDataAs<AttributeMatrix>(k_FlaggedFeaturesPath.getParent());
+  REQUIRE(sourceFeaturesPtr != nullptr);
+  auto* nestedPtr = DataGroup::Create(dataStructure, "Nested", dataStructure.getData(k_ImageGeomPath)->getId());
+  REQUIRE(nestedPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
+  auto* ensemblePtr = AttributeMatrix::Create(dataStructure, "Ensemble", {2}, nestedPtr->getId());
+  REQUIRE(ensemblePtr != nullptr);
+  auto* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {2}, {1}, ensemblePtr->getId());
+  REQUIRE(phasesPtr != nullptr);
+  (*phasesPtr)[0] = 42;
+  (*phasesPtr)[1] = 99;
   RemoveFlaggedFeaturesFilter filter;
-  auto result = scope.executeFilter(filter, ds, MakeArgs(operation, false));
+  auto result = scope.executeFilter(filter, dataStructure, MakeArgs(operation, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   for(const auto feature : {1, 3})
   {
     const DataPath output({fmt::format("{}-{}", k_NewImgGeomPrefix, feature)});
-    REQUIRE(ds.getDataAs<ImageGeom>(output) != nullptr);
-    CHECK(ds.getData(output.createChildPath(k_CellFeatureData)) == nullptr);
-    CHECK(ds.getData(output.createChildPath("Nested").createChildPath(k_CellFeatureData)) == nullptr);
-    const auto* outputPhases = ds.getDataAs<Int32Array>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
-    REQUIRE(outputPhases != nullptr);
-    CHECK((*outputPhases)[0] == 42);
-    CHECK((*outputPhases)[1] == 99);
+    REQUIRE(dataStructure.getDataAs<ImageGeom>(output) != nullptr);
+    CHECK(dataStructure.getData(output.createChildPath(k_CellFeatureData)) == nullptr);
+    CHECK(dataStructure.getData(output.createChildPath("Nested").createChildPath(k_CellFeatureData)) == nullptr);
+    const auto* outputPhasesPtr = dataStructure.getDataAs<Int32Array>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
+    REQUIRE(outputPhasesPtr != nullptr);
+    CHECK((*outputPhasesPtr)[0] == 42);
+    CHECK((*outputPhasesPtr)[1] == 99);
   }
-  CHECK(ds.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeatures);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  CHECK(dataStructure.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeaturesPtr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction rejects Feature AM registered as vertex data", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
   const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
-  DataStructure ds;
-  BuildFixture(ds, FixtureSpec{.dims = {3, 1, 1}, .featureIds = {1, 2, 3}, .numFeatures = 4, .flagged = {false, true, false, true}});
-  const auto* sourceFeatures = ds.getDataAs<AttributeMatrix>(k_FeatureAMPath);
-  REQUIRE(sourceFeatures != nullptr);
-  auto* nested = VertexGeom::Create(ds, "Nested Mesh", ds.getData(k_ImageGeomPath)->getId());
-  REQUIRE(nested != nullptr);
-  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, VertexGeom::k_SharedVertexListName, {4}, {3}, nested->getId());
-  REQUIRE(vertices != nullptr);
-  nested->setVertices(*vertices);
-  REQUIRE(ds.setAdditionalParent(sourceFeatures->getId(), nested->getId()));
-  nested->setVertexAttributeMatrix(*sourceFeatures);
+  DataStructure dataStructure;
+  BuildFixture(dataStructure, FixtureSpec{.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, true, false, true}});
+  const auto* sourceFeaturesPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+  REQUIRE(sourceFeaturesPtr != nullptr);
+  auto* nestedPtr = VertexGeom::Create(dataStructure, "Nested Mesh", dataStructure.getData(k_ImageGeomPath)->getId());
+  REQUIRE(nestedPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {4}, {3}, nestedPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  nestedPtr->setVertices(*verticesPtr);
+  REQUIRE(dataStructure.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
+  nestedPtr->setVertexAttributeMatrix(*sourceFeaturesPtr);
 
   RemoveFlaggedFeaturesFilter filter;
-  const auto result = filter.preflight(ds, MakeArgs(operation, false));
+  const auto result = filter.preflight(dataStructure, MakeArgs(operation, false));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors().front().code == -67460);

@@ -25,16 +25,16 @@ namespace
 {
 struct OtsuOperation
 {
-  uint32 numBins = 128u;
-  uint8 numThresholds = 1u;
-  uint8 labelOffset = 0u;
-  bool valleyEmphasis = false;
-  bool returnBinMidpoint = false;
+  uint32 num_bins = 128u;
+  uint8 num_thresholds = 1u;
+  uint8 label_offset = 0u;
+  bool valley_emphasis = false;
+  bool return_bin_midpoint = false;
 
   template <class T, class U>
   auto makeClassifyOp(const std::vector<float64>& thresholds) const
   {
-    const uint8 offset = labelOffset;
+    const uint8 offset = label_offset;
     return [thresholds, offset](T value) -> U {
       // class index = count of thresholds this value STRICTLY EXCEEDS, + labelOffset. std::lower_bound gives the
       // count of thresholds < value, i.e. a value exactly equal to a threshold lands in the LOWER class -- which
@@ -144,13 +144,13 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
 
   const OtsuOperation operation{
-      .numBins = numberOfHistogramBins, .numThresholds = numberOfThresholds, .labelOffset = labelOffset, .valleyEmphasis = valleyEmphasis, .returnBinMidpoint = returnBinMidpoint};
+      .num_bins = numberOfHistogramBins, .num_thresholds = numberOfThresholds, .label_offset = labelOffset, .valley_emphasis = valleyEmphasis, .return_bin_midpoint = returnBinMidpoint};
   return ImageProcessing::ExecuteHistogramImageFilter<ImageProcessing::AllNumeric>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_NumberOfThresholdsKey = "NumberOfThresholds";
 constexpr StringLiteral k_LabelOffsetKey = "LabelOffset";
@@ -158,7 +158,7 @@ constexpr StringLiteral k_NumberOfHistogramBinsKey = "NumberOfHistogramBins";
 constexpr StringLiteral k_ValleyEmphasisKey = "ValleyEmphasis";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> OtsuMultipleThresholdsImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -167,13 +167,13 @@ Result<Arguments> OtsuMultipleThresholdsImageFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, SIMPL::k_NumberOfThresholdsKey, k_NumberOfThresholds_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, SIMPL::k_LabelOffsetKey, k_LabelOffset_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, SIMPL::k_NumberOfHistogramBinsKey, k_NumberOfHistogramBins_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ValleyEmphasisKey, k_ValleyEmphasis_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_NumberOfThresholdsKey, k_NumberOfThresholds_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_LabelOffsetKey, k_LabelOffset_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_NumberOfHistogramBinsKey, k_NumberOfHistogramBins_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_ValleyEmphasisKey, k_ValleyEmphasis_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

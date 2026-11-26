@@ -151,60 +151,60 @@ struct ExemplarRecord
   ChoicesParameter::ValueType operation;
   DirectionType directions;
   int32 iterations;
-  const ExemplarDataType& expectedFeatureIds;
-  const ExemplarDataType& expectedData;
+  const ExemplarDataType& expected_feature_ids;
+  const ExemplarDataType& expected_data;
 };
 
 // One row per valid parameter combination: 2 operations x 7 direction combinations x 2 iteration counts.
 // The all-directions-off combination is rejected by preflight and therefore has no row.
 // clang-format off
 const std::array<ExemplarRecord, 28> k_Exemplars{{
-    {.operation=k_Dilate, .directions=k_XDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsDilateX1, .expectedData=k_ExemplarDataDilateX1},
-    {.operation=k_Dilate, .directions=k_XDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsDilateX2, .expectedData=k_ExemplarDataDilateX2},
-    {.operation=k_Dilate, .directions=k_XYDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsDilateXY1, .expectedData=k_ExemplarDataDilateXY1},
-    {.operation=k_Dilate, .directions=k_XYDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsDilateXY2, .expectedData=k_ExemplarDataDilateXY2},
-    {.operation=k_Dilate, .directions=k_XYZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsDilateXYZ1, .expectedData=k_ExemplarDataDilateXYZ1},
-    {.operation=k_Dilate, .directions=k_XYZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsDilateXYZ2, .expectedData=k_ExemplarDataDilateXYZ2},
-    {.operation=k_Dilate, .directions=k_XZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsDilateXZ1, .expectedData=k_ExemplarDataDilateXZ1},
-    {.operation=k_Dilate, .directions=k_XZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsDilateXZ2, .expectedData=k_ExemplarDataDilateXZ2},
-    {.operation=k_Dilate, .directions=k_YDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsDilateY1, .expectedData=k_ExemplarDataDilateY1},
-    {.operation=k_Dilate, .directions=k_YDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsDilateY2, .expectedData=k_ExemplarDataDilateY2},
-    {.operation=k_Dilate, .directions=k_YZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsDilateYZ1, .expectedData=k_ExemplarDataDilateYZ1},
-    {.operation=k_Dilate, .directions=k_YZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsDilateYZ2, .expectedData=k_ExemplarDataDilateYZ2},
-    {.operation=k_Dilate, .directions=k_ZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsDilateZ1, .expectedData=k_ExemplarDataDilateZ1},
-    {.operation=k_Dilate, .directions=k_ZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsDilateZ2, .expectedData=k_ExemplarDataDilateZ2},
-    {.operation=k_Erode, .directions=k_XDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsErodeX1, .expectedData=k_ExemplarDataErodeX1},
-    {.operation=k_Erode, .directions=k_XDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsErodeX2, .expectedData=k_ExemplarDataErodeX2},
-    {.operation=k_Erode, .directions=k_XYDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsErodeXY1, .expectedData=k_ExemplarDataErodeXY1},
-    {.operation=k_Erode, .directions=k_XYDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsErodeXY2, .expectedData=k_ExemplarDataErodeXY2},
-    {.operation=k_Erode, .directions=k_XYZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsErodeXYZ1, .expectedData=k_ExemplarDataErodeXYZ1},
-    {.operation=k_Erode, .directions=k_XYZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsErodeXYZ2, .expectedData=k_ExemplarDataErodeXYZ2},
-    {.operation=k_Erode, .directions=k_XZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsErodeXZ1, .expectedData=k_ExemplarDataErodeXZ1},
-    {.operation=k_Erode, .directions=k_XZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsErodeXZ2, .expectedData=k_ExemplarDataErodeXZ2},
-    {.operation=k_Erode, .directions=k_YDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsErodeY1, .expectedData=k_ExemplarDataErodeY1},
-    {.operation=k_Erode, .directions=k_YDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsErodeY2, .expectedData=k_ExemplarDataErodeY2},
-    {.operation=k_Erode, .directions=k_YZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsErodeYZ1, .expectedData=k_ExemplarDataErodeYZ1},
-    {.operation=k_Erode, .directions=k_YZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsErodeYZ2, .expectedData=k_ExemplarDataErodeYZ2},
-    {.operation=k_Erode, .directions=k_ZDir, .iterations=1, .expectedFeatureIds=k_ExemplarFeatureIdsErodeZ1, .expectedData=k_ExemplarDataErodeZ1},
-    {.operation=k_Erode, .directions=k_ZDir, .iterations=2, .expectedFeatureIds=k_ExemplarFeatureIdsErodeZ2, .expectedData=k_ExemplarDataErodeZ2},
+    {.operation=k_Dilate, .directions=k_XDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsDilateX1, .expected_data=k_ExemplarDataDilateX1},
+    {.operation=k_Dilate, .directions=k_XDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsDilateX2, .expected_data=k_ExemplarDataDilateX2},
+    {.operation=k_Dilate, .directions=k_XYDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsDilateXY1, .expected_data=k_ExemplarDataDilateXY1},
+    {.operation=k_Dilate, .directions=k_XYDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsDilateXY2, .expected_data=k_ExemplarDataDilateXY2},
+    {.operation=k_Dilate, .directions=k_XYZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsDilateXYZ1, .expected_data=k_ExemplarDataDilateXYZ1},
+    {.operation=k_Dilate, .directions=k_XYZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsDilateXYZ2, .expected_data=k_ExemplarDataDilateXYZ2},
+    {.operation=k_Dilate, .directions=k_XZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsDilateXZ1, .expected_data=k_ExemplarDataDilateXZ1},
+    {.operation=k_Dilate, .directions=k_XZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsDilateXZ2, .expected_data=k_ExemplarDataDilateXZ2},
+    {.operation=k_Dilate, .directions=k_YDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsDilateY1, .expected_data=k_ExemplarDataDilateY1},
+    {.operation=k_Dilate, .directions=k_YDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsDilateY2, .expected_data=k_ExemplarDataDilateY2},
+    {.operation=k_Dilate, .directions=k_YZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsDilateYZ1, .expected_data=k_ExemplarDataDilateYZ1},
+    {.operation=k_Dilate, .directions=k_YZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsDilateYZ2, .expected_data=k_ExemplarDataDilateYZ2},
+    {.operation=k_Dilate, .directions=k_ZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsDilateZ1, .expected_data=k_ExemplarDataDilateZ1},
+    {.operation=k_Dilate, .directions=k_ZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsDilateZ2, .expected_data=k_ExemplarDataDilateZ2},
+    {.operation=k_Erode, .directions=k_XDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsErodeX1, .expected_data=k_ExemplarDataErodeX1},
+    {.operation=k_Erode, .directions=k_XDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsErodeX2, .expected_data=k_ExemplarDataErodeX2},
+    {.operation=k_Erode, .directions=k_XYDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsErodeXY1, .expected_data=k_ExemplarDataErodeXY1},
+    {.operation=k_Erode, .directions=k_XYDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsErodeXY2, .expected_data=k_ExemplarDataErodeXY2},
+    {.operation=k_Erode, .directions=k_XYZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsErodeXYZ1, .expected_data=k_ExemplarDataErodeXYZ1},
+    {.operation=k_Erode, .directions=k_XYZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsErodeXYZ2, .expected_data=k_ExemplarDataErodeXYZ2},
+    {.operation=k_Erode, .directions=k_XZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsErodeXZ1, .expected_data=k_ExemplarDataErodeXZ1},
+    {.operation=k_Erode, .directions=k_XZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsErodeXZ2, .expected_data=k_ExemplarDataErodeXZ2},
+    {.operation=k_Erode, .directions=k_YDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsErodeY1, .expected_data=k_ExemplarDataErodeY1},
+    {.operation=k_Erode, .directions=k_YDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsErodeY2, .expected_data=k_ExemplarDataErodeY2},
+    {.operation=k_Erode, .directions=k_YZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsErodeYZ1, .expected_data=k_ExemplarDataErodeYZ1},
+    {.operation=k_Erode, .directions=k_YZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsErodeYZ2, .expected_data=k_ExemplarDataErodeYZ2},
+    {.operation=k_Erode, .directions=k_ZDir, .iterations=1, .expected_feature_ids=k_ExemplarFeatureIdsErodeZ1, .expected_data=k_ExemplarDataErodeZ1},
+    {.operation=k_Erode, .directions=k_ZDir, .iterations=2, .expected_feature_ids=k_ExemplarFeatureIdsErodeZ2, .expected_data=k_ExemplarDataErodeZ2},
 }};
 // clang-format on
 
 DataStructure CreateTestData()
 {
   DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, ::k_ImageGeometry);
-  geom->setDimensions(k_GeometryDimensions);
+  auto* geomPtr = ImageGeom::Create(dataStructure, ::k_ImageGeometry);
+  geomPtr->setDimensions(k_GeometryDimensions);
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, ::k_CellData, k_TupleShape, geom->getId());
-  geom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, ::k_CellData, k_TupleShape, geomPtr->getId());
+  geomPtr->setCellData(*cellDataPtr);
 
   // Feature IDs
   auto featureIdsPtr = std::make_shared<Int32DataStore>(k_TupleShape, ShapeType{1}, 0);
-  auto* featureIdsArray = Int32Array::Create(dataStructure, ::k_FeatureIds, featureIdsPtr, cellData->getId());
+  auto* featureIdsArrayPtr = Int32Array::Create(dataStructure, ::k_FeatureIds, featureIdsPtr, cellDataPtr->getId());
 
   // Index 0, 14, 31
-  auto& featureIds = featureIdsArray->getDataStoreRef();
+  auto& featureIds = featureIdsArrayPtr->getDataStoreRef();
   featureIds[0] = 0;
   featureIds[1] = 1;
   featureIds[2] = 1;
@@ -247,9 +247,9 @@ DataStructure CreateTestData()
 
   // Misc DataArray
   auto dataStorePtr = std::make_shared<Int32DataStore>(k_TupleShape, ShapeType{1}, 0);
-  auto* miscArray = Int32Array::Create(dataStructure, k_MiscData, dataStorePtr, cellData->getId());
+  auto* miscArrayPtr = Int32Array::Create(dataStructure, k_MiscData, dataStorePtr, cellDataPtr->getId());
 
-  auto& dataStore = miscArray->getDataStoreRef();
+  auto& dataStore = miscArrayPtr->getDataStoreRef();
   for(usize i = 0; i < dataStore.size(); i++)
   {
     dataStore[i] = i;
@@ -307,9 +307,9 @@ void CheckFeatureIdsModified(const DataStructure& dataStructure)
  */
 void CheckOutput(const DataStructure& dataStructure, ChoicesParameter::ValueType operation, const DirectionType& directions, int32 iterations)
 {
-  const auto exemplarIter = std::find_if(k_Exemplars.cbegin(), k_Exemplars.cend(),
-                                         [&](const ExemplarRecord& record) { return record.operation == operation && record.directions == directions && record.iterations == iterations; });
-  if(exemplarIter == k_Exemplars.cend())
+  const auto exemplarIterPtr = std::find_if(k_Exemplars.cbegin(), k_Exemplars.cend(),
+                                            [&](const ExemplarRecord& record) { return record.operation == operation && record.directions == directions && record.iterations == iterations; });
+  if(exemplarIterPtr == k_Exemplars.cend())
   {
     FAIL(fmt::format("No expected output is tabulated for operation {} with directions X={} Y={} Z={} and {} iteration(s)", operation, directions[0], directions[1], directions[2], iterations));
     return;
@@ -320,13 +320,13 @@ void CheckOutput(const DataStructure& dataStructure, ChoicesParameter::ValueType
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_DataPath));
   const Int32AbstractDataStore& dataStore = dataStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
 
-  REQUIRE(featureIds.size() == exemplarIter->expectedFeatureIds.size());
-  REQUIRE(dataStore.size() == exemplarIter->expectedData.size());
+  REQUIRE(featureIds.size() == exemplarIterPtr->expected_feature_ids.size());
+  REQUIRE(dataStore.size() == exemplarIterPtr->expected_data.size());
 
   for(usize i = 0; i < dataStore.size(); i++)
   {
-    REQUIRE(featureIds[i] == exemplarIter->expectedFeatureIds[i]);
-    REQUIRE(dataStore[i] == exemplarIter->expectedData[i]);
+    REQUIRE(featureIds[i] == exemplarIterPtr->expected_feature_ids[i]);
+    REQUIRE(dataStore[i] == exemplarIterPtr->expected_data[i]);
   }
 }
 
@@ -393,10 +393,10 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDi
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  const std::string k_ExemplarDataContainerName("Exemplar Bad Data Erode");
-  const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
+  const std::string kExemplarDataContainerName("Exemplar Bad Data Erode");
+  const DataPath kErodeCellAttributeMatrixDataPath = DataPath({kExemplarDataContainerName, "EBSD Scan Data"});
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, kExemplarDataContainerName);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -563,8 +563,8 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Dimensions", "[SimplnxCore][
   const int32 numIterations = 1;
   const DataPath geomPath({k_ImageGeometry});
 
-  auto* imageGeom = dataStructure.getDataAs<ImageGeom>(geomPath);
-  imageGeom->setDimensions(SizeVec3());
+  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
+  imageGeomPtr->setDimensions(SizeVec3());
 
   const ErodeDilateBadDataFilter filter;
   Arguments args;
@@ -703,7 +703,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: SIMPL Backwards Compatibility"
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -716,22 +716,22 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: SIMPL Backwards Compatibility"
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ErodeDilateBadDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ErodeDilateBadDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(ErodeDilateBadDataFilter::k_Operation_Key) == k_Dilate);
       CHECK(args.value<int32>(ErodeDilateBadDataFilter::k_NumIterations_Key) == 5);
       CHECK(args.value<bool>(ErodeDilateBadDataFilter::k_XDirOn_Key) == true);

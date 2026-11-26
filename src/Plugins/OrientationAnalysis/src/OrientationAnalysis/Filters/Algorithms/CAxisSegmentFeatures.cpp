@@ -32,7 +32,7 @@ Result<> CAxisSegmentFeatures::operator()()
 {
   m_NeighborScheme = m_InputValues->NeighborScheme;
   // The geometry parameter accepts Image and RectGrid geometries; both derive from IGridGeometry.
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   if(m_InputValues->UseMask)
@@ -60,11 +60,11 @@ Result<> CAxisSegmentFeatures::operator()()
   std::vector<uint8> phaseValidated(numEnsembles, 0);
 
   const usize numCells = m_CellPhases->getNumberOfTuples();
-  const SizeVec3 scanDims = gridGeom->getDimensions();
+  const SizeVec3 scanDims = gridGeomPtr->getDimensions();
   const usize scanBatchSize = std::max<usize>(1, static_cast<usize>(scanDims[0]) * static_cast<usize>(scanDims[1]));
   std::vector<int32> phasesBuffer(scanBatchSize);
   std::vector<uint8> maskBuffer(scanBatchSize, 1);
-  IDataArray* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  IDataArray* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
   auto& phasesStore = m_CellPhases->getDataStoreRef();
   for(usize offset = 0; offset < numCells; offset += scanBatchSize)
   {
@@ -74,18 +74,18 @@ Result<> CAxisSegmentFeatures::operator()()
     {
       return phaseReadResult;
     }
-    if(maskArray != nullptr && maskArray->getDataType() == DataType::uint8)
+    if(maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::uint8)
     {
-      auto& maskStore = maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+      auto& maskStore = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
       auto maskReadResult = maskStore.copyIntoBuffer(offset, nonstd::span<uint8>(maskBuffer.data(), batchSize));
       if(maskReadResult.invalid())
       {
         return maskReadResult;
       }
     }
-    else if(maskArray != nullptr && maskArray->getDataType() == DataType::boolean)
+    else if(maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::boolean)
     {
-      auto& maskStore = maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>();
+      auto& maskStore = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<bool>>();
       auto boolBuffer = std::make_unique<bool[]>(batchSize);
       auto maskReadResult = maskStore.copyIntoBuffer(offset, nonstd::span<bool>(boolBuffer.get(), batchSize));
       if(maskReadResult.invalid())
@@ -110,7 +110,7 @@ Result<> CAxisSegmentFeatures::operator()()
       }
 
       const usize cellIdx = offset + i;
-      if(maskArray != nullptr && maskBuffer[i] == 0)
+      if(maskArrayPtr != nullptr && maskBuffer[i] == 0)
       {
         continue;
       }
@@ -134,12 +134,12 @@ Result<> CAxisSegmentFeatures::operator()()
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0);
 
-  const SizeVec3 udims = gridGeom->getDimensions();
+  const SizeVec3 udims = gridGeomPtr->getDimensions();
   allocateSliceBuffers(static_cast<int64>(udims[0]), static_cast<int64>(udims[1]));
 
   auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
-  const bool usesOutOfCoreInput = IsOutOfCore(*m_QuatsArray) || IsOutOfCore(*m_CellPhases) || IsOutOfCore(crystalStructures) || (maskArray != nullptr && IsOutOfCore(*maskArray));
-  Result<> segmentResult = executeCCL(gridGeom, featureIdsStore, usesOutOfCoreInput);
+  const bool usesOutOfCoreInput = IsOutOfCore(*m_QuatsArray) || IsOutOfCore(*m_CellPhases) || IsOutOfCore(crystalStructures) || (maskArrayPtr != nullptr && IsOutOfCore(*maskArrayPtr));
+  Result<> segmentResult = executeCCL(gridGeomPtr, featureIdsStore, usesOutOfCoreInput);
 
   deallocateSliceBuffers();
 
@@ -165,9 +165,9 @@ Result<> CAxisSegmentFeatures::operator()()
     return ConvertResult(std::move(resizeResult));
   }
 
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  activeArray->getDataStore()->fill(1);
-  (*activeArray)[0] = 0;
+  auto* activeArrayPtr = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  activeArrayPtr->getDataStore()->fill(1);
+  (*activeArrayPtr)[0] = 0;
 
   // Random IDs improve visual distinction between adjacent features.
   if(m_InputValues->RandomizeFeatureIds)

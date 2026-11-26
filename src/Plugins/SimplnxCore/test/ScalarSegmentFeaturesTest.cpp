@@ -86,13 +86,13 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: FaceEdgeVertex Connectivity", "[S
 
   // The shared test verifies vertex-connected and edge-connected region pairs.
   // Its setup callable creates four isolated cells and configures FaceEdgeVertex connectivity.
-  auto setupScalar = [](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
+  auto setupScalar = [](Arguments& args, DataStructure& dataStructure, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
     const ShapeType cellShape = {3, 3, 3};
-    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
+    auto& am = dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath);
     const DataPath scalarPath = cellDataPath.createChildPath("ScalarData");
-    auto scalarDS = DataStoreUtilities::CreateDataStore<int32>(ds, scalarPath, cellShape, {1});
-    auto* scalarArr = DataArray<int32>::Create(ds, "ScalarData", scalarDS, am.getId());
-    auto& store = scalarArr->getDataStoreRef();
+    auto scalarDS = DataStoreUtilities::CreateDataStore<int32>(dataStructure, scalarPath, cellShape, {1});
+    auto* scalarArrPtr = DataArray<int32>::Create(dataStructure, "ScalarData", scalarDS, am.getId());
+    auto& store = scalarArrPtr->getDataStoreRef();
     store.fill(0);
     store[0 * 9 + 0 * 3 + 0] = 1; // (0,0,0) — vertex pair A
     store[1 * 9 + 1 * 3 + 1] = 1; // (1,1,1) — vertex pair B
@@ -113,8 +113,8 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: FaceEdgeVertex Connectivity", "[S
   };
 
   RunFaceEdgeVertexConnectivityTest<ScalarSegmentFeaturesFilter>(
-      scope, [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 0); },
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 1); });
+      scope, [&](Arguments& args, DataStructure& dataStructure, const DataPath& gp, const DataPath& cp) { setupScalar(args, dataStructure, gp, cp, 0); },
+      [&](Arguments& args, DataStructure& dataStructure, const DataPath& gp, const DataPath& cp) { setupScalar(args, dataStructure, gp, cp, 1); });
 }
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: No Valid Voxels Returns Error", "[SimplnxCore][ScalarSegmentFeatures]")
@@ -124,10 +124,10 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: No Valid Voxels Returns Error", "
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  RunNoValidVoxelsErrorTest<ScalarSegmentFeaturesFilter>(scope, [](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, const DataPath& maskPath) {
+  RunNoValidVoxelsErrorTest<ScalarSegmentFeaturesFilter>(scope, [](Arguments& args, DataStructure& dataStructure, const DataPath& geomPath, const DataPath& cellDataPath, const DataPath& maskPath) {
     const ShapeType cellShape = {3, 3, 3};
-    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
-    CreateTestDataArray<int32>(ds, "ScalarData", cellShape, {1}, am.getId());
+    auto& am = dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath);
+    CreateTestDataArray<int32>(dataStructure, "ScalarData", cellShape, {1}, am.getId());
 
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(geomPath));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(cellDataPath.createChildPath("ScalarData")));
@@ -152,8 +152,8 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Randomize Feature IDs", "[Simplnx
   const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
 
   DataStructure dataStructure;
-  auto* am = BuildSegmentFeaturesTestGeometry(dataStructure, {k_SmallDim, k_SmallDim, k_SmallDim}, std::string(k_GeomName), std::string(k_CellDataName));
-  BuildScalarTestData(dataStructure, cellShape, am->getId(), k_SmallBlockSize);
+  auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, {k_SmallDim, k_SmallDim, k_SmallDim}, std::string(k_GeomName), std::string(k_CellDataName));
+  BuildScalarTestData(dataStructure, cellShape, amPtr->getId(), k_SmallBlockSize);
 
   ScalarSegmentFeaturesFilter filter;
   Arguments args;
@@ -198,22 +198,22 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Generate Test Data", "[SimplnxCor
     const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
     const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
 
-    DataStructure ds;
+    DataStructure dataStructure;
 
-    auto* amBase = BuildSegmentFeaturesTestGeometry(ds, dims, "Base", std::string(k_CellDataName));
-    BuildScalarTestData(ds, cellShape, amBase->getId(), k_SmallBlockSize);
+    auto* amBasePtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Base", std::string(k_CellDataName));
+    BuildScalarTestData(dataStructure, cellShape, amBasePtr->getId(), k_SmallBlockSize);
 
-    auto* amMasked = BuildSegmentFeaturesTestGeometry(ds, dims, "Masked", std::string(k_CellDataName));
-    BuildScalarTestData(ds, cellShape, amMasked->getId(), k_SmallBlockSize);
-    BuildSphericalMask(ds, cellShape, amMasked->getId());
+    auto* amMaskedPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Masked", std::string(k_CellDataName));
+    BuildScalarTestData(dataStructure, cellShape, amMaskedPtr->getId(), k_SmallBlockSize);
+    BuildSphericalMask(dataStructure, cellShape, amMaskedPtr->getId());
 
-    auto* amPeriodic = BuildSegmentFeaturesTestGeometry(ds, dims, "Periodic", std::string(k_CellDataName));
-    BuildScalarTestData(ds, cellShape, amPeriodic->getId(), k_SmallBlockSize, "ScalarData", true);
+    auto* amPeriodicPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Periodic", std::string(k_CellDataName));
+    BuildScalarTestData(dataStructure, cellShape, amPeriodicPtr->getId(), k_SmallBlockSize, "ScalarData", true);
 
-    auto* amTolerance = BuildSegmentFeaturesTestGeometry(ds, dims, "Tolerance", std::string(k_CellDataName));
-    BuildScalarTestData(ds, cellShape, amTolerance->getId(), k_SmallBlockSize);
+    auto* amTolerancePtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, "Tolerance", std::string(k_CellDataName));
+    BuildScalarTestData(dataStructure, cellShape, amTolerancePtr->getId(), k_SmallBlockSize);
 
-    UnitTest::WriteTestDataStructure(ds, outputDir / "small_input.dream3d");
+    UnitTest::WriteTestDataStructure(dataStructure, outputDir / "small_input.dream3d");
   }
 
   // The large 200-cubed fixture enables its mask and periodic boundaries.
@@ -221,12 +221,12 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Generate Test Data", "[SimplnxCor
     const ShapeType cellShape = {k_LargeDim, k_LargeDim, k_LargeDim};
     const std::array<usize, 3> dims = {k_LargeDim, k_LargeDim, k_LargeDim};
 
-    DataStructure ds;
-    auto* am = BuildSegmentFeaturesTestGeometry(ds, dims, std::string(k_GeomName), std::string(k_CellDataName));
-    BuildScalarTestData(ds, cellShape, am->getId(), k_LargeBlockSize, "ScalarData", true);
-    BuildSphericalMask(ds, cellShape, am->getId());
+    DataStructure dataStructure;
+    auto* amPtr = BuildSegmentFeaturesTestGeometry(dataStructure, dims, std::string(k_GeomName), std::string(k_CellDataName));
+    BuildScalarTestData(dataStructure, cellShape, amPtr->getId(), k_LargeBlockSize, "ScalarData", true);
+    BuildSphericalMask(dataStructure, cellShape, amPtr->getId());
 
-    UnitTest::WriteTestDataStructure(ds, outputDir / "large_input.dream3d");
+    UnitTest::WriteTestDataStructure(dataStructure, outputDir / "large_input.dream3d");
   }
 }
 
@@ -392,12 +392,12 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Masked Voxel 0 Seed Validation", 
   // Tolerance 1 produces features {1, 2} and {4}. Masked cells keep identifier 0.
   // Starting directly at raw index 0 would create an empty feature and shift later identifiers.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-  imageGeom->setDimensions({5, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 5}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{1, 1, 5}, {1}, cellAM->getId());
-  auto* maskArrayPtr = CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 5}, {1}, cellAM->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+  imageGeomPtr->setDimensions({5, 1, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 5}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{1, 1, 5}, {1}, cellAmPtr->getId());
+  auto* maskArrayPtr = CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 5}, {1}, cellAmPtr->getId());
 
   const std::vector<int32> scalarValues = {9, 5, 5, 9, 7};
   const std::vector<bool> maskValues = {false, true, true, false, true};
@@ -452,11 +452,11 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Boundary Wrap", "[Simpln
   auto runFilter = [scenario](bool isPeriodic, ChoicesParameter::ValueType neighborScheme) -> std::vector<int32> {
     UnitTest::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure;
-    auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-    imageGeom->setDimensions({4, 1, 1});
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 4}, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-    auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{1, 1, 4}, {1}, cellAM->getId());
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+    imageGeomPtr->setDimensions({4, 1, 1});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 4}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{1, 1, 4}, {1}, cellAmPtr->getId());
     const std::vector<int32> scalarValues = {5, 9, 9, 5};
     for(usize cellIdx = 0; cellIdx < scalarValues.size(); cellIdx++)
     {
@@ -523,11 +523,11 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Cross Slice Diagonals", 
     CAPTURE(isPeriodic, neighborScheme);
     UnitTest::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure;
-    auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-    imageGeom->setDimensions({3, 3, dimZ});
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{dimZ, 3, 3}, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-    auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{dimZ, 3, 3}, {1}, cellAM->getId());
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+    imageGeomPtr->setDimensions({3, 3, dimZ});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{dimZ, 3, 3}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{dimZ, 3, 3}, {1}, cellAmPtr->getId());
     std::vector<int32> scalarValues(9 * dimZ);
     for(usize i = 0; i < scalarValues.size(); i++)
     {
@@ -599,12 +599,12 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Execute Error - All Cells Masked 
   // No valid seed exists when the mask excludes every cell, so execution must return -87000.
   // Starting directly at raw index 0 would incorrectly create an empty feature.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
-  imageGeom->setDimensions({3, 1, 1});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{1, 1, 3}, {1}, cellAM->getId());
-  auto* maskArrayPtr = CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 3}, {1}, cellAM->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Geometry");
+  imageGeomPtr->setDimensions({3, 1, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{1, 1, 3}, {1}, cellAmPtr->getId());
+  auto* maskArrayPtr = CreateTestDataArray<bool>(dataStructure, "Mask", ShapeType{1, 1, 3}, {1}, cellAmPtr->getId());
   for(usize cellIdx = 0; cellIdx < 3; cellIdx++)
   {
     (*scalarArrayPtr)[cellIdx] = 5;
@@ -706,7 +706,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Exact 64-bit Integer Dif
   {
     std::array<TestType, 3> values;
     int32 tolerance;
-    std::array<int32, 3> expectedIds;
+    std::array<int32, 3> expected_ids;
   };
   // Hand oracle: unequal neighbors stay separate at tolerance zero; the repeated
   // pair joins. Differences of one join at tolerance one. The full type range
@@ -728,17 +728,17 @@ TEMPLATE_TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Exact 64-bit Integer Dif
       const auto& fixture = fixtures[fixtureIndex];
       CAPTURE(fixture.values, fixture.tolerance);
       DataStructure dataStructure;
-      auto* imageGeom = ImageGeom::Create(dataStructure, std::string(k_GeomName));
-      REQUIRE(imageGeom != nullptr);
-      imageGeom->setDimensions(alongZ ? SizeVec3{1, 1, 3} : SizeVec3{3, 1, 1});
+      auto* imageGeomPtr = ImageGeom::Create(dataStructure, std::string(k_GeomName));
+      REQUIRE(imageGeomPtr != nullptr);
+      imageGeomPtr->setDimensions(alongZ ? SizeVec3{1, 1, 3} : SizeVec3{3, 1, 1});
       const ShapeType cellShape = alongZ ? ShapeType{3, 1, 1} : ShapeType{1, 1, 3};
-      auto* cellAM = AttributeMatrix::Create(dataStructure, std::string(k_CellDataName), cellShape, imageGeom->getId());
-      REQUIRE(cellAM != nullptr);
-      imageGeom->setCellData(*cellAM);
+      auto* cellAmPtr = AttributeMatrix::Create(dataStructure, std::string(k_CellDataName), cellShape, imageGeomPtr->getId());
+      REQUIRE(cellAmPtr != nullptr);
+      imageGeomPtr->setCellData(*cellAmPtr);
       const DataPath scalarPath = k_GeomPath.createChildPath(k_CellDataName).createChildPath("ScalarData");
       auto scalarStore = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, scalarPath, cellShape, {1});
-      auto* scalarArray = DataArray<TestType>::Create(dataStructure, "ScalarData", scalarStore, cellAM->getId());
-      REQUIRE(scalarArray != nullptr);
+      auto* scalarArrayPtr = DataArray<TestType>::Create(dataStructure, "ScalarData", scalarStore, cellAmPtr->getId());
+      REQUIRE(scalarArrayPtr != nullptr);
       auto writeResult = scalarStore->copyFromBuffer(0, nonstd::span<const TestType>(fixture.values.data(), fixture.values.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
@@ -755,9 +755,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Exact 64-bit Integer Dif
       std::array<int32, 3> actualIds = {};
       auto readResult = featureIds.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(actualIds.data(), actualIds.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(readResult);
-      CHECK(actualIds == fixture.expectedIds);
+      CHECK(actualIds == fixture.expected_ids);
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
-      CHECK(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath).getNumberOfTuples() == static_cast<usize>(fixture.expectedIds.back() + 1));
+      CHECK(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath).getNumberOfTuples() == static_cast<usize>(fixture.expected_ids.back() + 1));
 
       // The public CCL entry point remains callable after operator() releases its
       // slice buffers. Its native comparator must obey the same integer oracle.
@@ -775,12 +775,12 @@ TEMPLATE_TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Exact 64-bit Integer Dif
       auto initializeResult = scope.execute([&] { return algorithm(); });
       SIMPLNX_RESULT_REQUIRE_VALID(initializeResult);
       auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
-      auto unbufferedResult = scope.execute([&] { return algorithm.executeCCL(imageGeom, featureIdsStoreRef); });
+      auto unbufferedResult = scope.execute([&] { return algorithm.executeCCL(imageGeomPtr, featureIdsStoreRef); });
       SIMPLNX_RESULT_REQUIRE_VALID(unbufferedResult);
       auto unbufferedReadResult = featureIdsStoreRef.copyIntoBuffer(0, nonstd::span<int32>(actualIds.data(), actualIds.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(unbufferedReadResult);
       INFO("Public CCL after slice-buffer release");
-      CHECK(actualIds == fixture.expectedIds);
+      CHECK(actualIds == fixture.expected_ids);
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }

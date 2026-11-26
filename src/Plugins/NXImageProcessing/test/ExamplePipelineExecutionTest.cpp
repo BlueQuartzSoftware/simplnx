@@ -44,8 +44,8 @@ usize CountOocArrays(const DataStructure& dataStructure)
   usize count = 0;
   for(const DataObject::IdType identifier : dataStructure.getAllDataObjectIds())
   {
-    const auto* array = dataStructure.getDataAs<IDataArray>(identifier);
-    if(array != nullptr && array->getDataFormat() == "HDF5-OOC")
+    const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(identifier);
+    if(arrayPtr != nullptr && arrayPtr->getDataFormat() == "HDF5-OOC")
     {
       count++;
     }

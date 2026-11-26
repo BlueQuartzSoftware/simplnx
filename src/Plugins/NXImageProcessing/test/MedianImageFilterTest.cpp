@@ -204,29 +204,29 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles
   struct TransferCase
   {
     const char* label;
-    usize bufferBytes;
-    bool fullWidth;
-    usize coreRows;
-    usize coreColumns;
-    usize maximumReadValues;
-    usize maximumWriteValues;
+    usize buffer_bytes;
+    bool full_width;
+    usize core_rows;
+    usize core_columns;
+    usize maximum_read_values;
+    usize maximum_write_values;
   };
   const std::array<TransferCase, 2> transferCases = {
-      {{.label = "full-width row blocks", .bufferBytes = 216, .fullWidth = true, .coreRows = 2, .coreColumns = 9, .maximumReadValues = 36, .maximumWriteValues = 18},
-       {.label = "overwide X tiles", .bufferBytes = 80, .fullWidth = false, .coreRows = 1, .coreColumns = 2, .maximumReadValues = 6, .maximumWriteValues = 2}}};
+      {{.label = "full-width row blocks", .buffer_bytes = 216, .full_width = true, .core_rows = 2, .core_columns = 9, .maximum_read_values = 36, .maximum_write_values = 18},
+       {.label = "overwide X tiles", .buffer_bytes = 80, .full_width = false, .core_rows = 1, .core_columns = 2, .maximum_read_values = 6, .maximum_write_values = 2}}};
 
   for(const TransferCase& transferCase : transferCases)
   {
     DYNAMIC_SECTION(transferCase.label)
     {
-      const usize targetBytes = transferCase.bufferBytes + workerScratchBytes;
+      const usize targetBytes = transferCase.buffer_bytes + workerScratchBytes;
       const auto planResult =
           ImageProcessing::detail::CreateBoxNeighborhood2DPlan(k_MedianTestDimX, k_MedianTestDimY, k_MedianTestRadius[0], k_MedianTestRadius[1], sizeof(int32), targetBytes, workerScratchBytes);
       SIMPLNX_RESULT_REQUIRE_VALID(planResult);
       const auto& plan = planResult.value();
-      REQUIRE(plan.fullWidth == transferCase.fullWidth);
-      REQUIRE(plan.coreRows == transferCase.coreRows);
-      REQUIRE(plan.coreColumns == transferCase.coreColumns);
+      REQUIRE(plan.fullWidth == transferCase.full_width);
+      REQUIRE(plan.coreRows == transferCase.core_rows);
+      REQUIRE(plan.coreColumns == transferCase.core_columns);
       REQUIRE(plan.residentBytes == targetBytes);
 
       OutOfCoreTransferCountingDataStore<int32> inputStore(ShapeType{1, k_MedianTestDimY, k_MedianTestDimX}, ShapeType{1}, int32{0});
@@ -245,8 +245,8 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles
       SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
       REQUIRE(actual == expected);
       CAPTURE(inputStore.maxReadValues(), outputStore.maxWriteValues(), outputStore.writtenValues());
-      REQUIRE(inputStore.maxReadValues() == transferCase.maximumReadValues);
-      REQUIRE(outputStore.maxWriteValues() == transferCase.maximumWriteValues);
+      REQUIRE(inputStore.maxReadValues() == transferCase.maximum_read_values);
+      REQUIRE(outputStore.maxWriteValues() == transferCase.maximum_write_values);
       REQUIRE(outputStore.writtenValues() == k_MedianTestValues);
     }
   }
@@ -310,8 +310,8 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
   const DataPath output = cellData.createChildPath("Output");
 
   // --- read input through OUR ITK-free reader ---
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   // --- run OUR filter with the ITK case's radius ---
@@ -324,17 +324,17 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
     args.insertOrAssign(MedianImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(*radius));
   }
   MedianImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- DURABLE golden: md5-validity-first (plan Sec.4): our output's md5 must equal ITK's committed hash. ---
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("Median md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

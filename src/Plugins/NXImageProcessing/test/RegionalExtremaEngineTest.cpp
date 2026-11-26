@@ -67,8 +67,8 @@ std::vector<T> RegionalExtremaOracle(const std::vector<T>& input, usize dimX, us
     }
   }
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   auto at = [&](int64 x, int64 y, int64 z) { return input[FlatIndex(static_cast<usize>(x), static_cast<usize>(y), static_cast<usize>(z), dimX, dimY)]; };
 
   std::vector<char> mark(input.size(), 0);
@@ -77,9 +77,9 @@ std::vector<T> RegionalExtremaOracle(const std::vector<T>& input, usize dimX, us
   {
     changed = false;
     const std::vector<char> snap = mark;
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
-      for(int64 y = 0; y < nY; ++y)
+      for(int64 y = 0; y < ny; ++y)
       {
         for(int64 x = 0; x < nX; ++x)
         {
@@ -95,7 +95,7 @@ std::vector<T> RegionalExtremaOracle(const std::vector<T>& input, usize dimX, us
             const int64 qx = x + o[0];
             const int64 qy = y + o[1];
             const int64 qz = z + o[2];
-            if(qx < 0 || qx >= nX || qy < 0 || qy >= nY || qz < 0 || qz >= nZ)
+            if(qx < 0 || qx >= nX || qy < 0 || qy >= ny || qz < 0 || qz >= nz)
             {
               continue;
             }
@@ -199,50 +199,50 @@ std::vector<T> MakePlateauPattern(usize dimX, usize dimY, usize dimZ)
 
 TEST_CASE("NXImageProcessing::RegionalExtremaEngine: total working-memory grants scale checked halo-slab plans without changing output", "[NXImageProcessing][RegionalExtremaEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 4;
-  constexpr usize dimY = 3;
-  constexpr usize dimZ = 7;
-  constexpr usize planeValues = dimX * dimY;
-  constexpr usize smallerTargetBytes = 2 * 4 * planeValues * sizeof(int16);
-  constexpr usize largerTargetBytes = 2 * 6 * planeValues * sizeof(int16);
+  constexpr usize k_DimX = 4;
+  constexpr usize k_DimY = 3;
+  constexpr usize k_DimZ = 7;
+  constexpr usize k_PlaneValues = k_DimX * k_DimY;
+  constexpr usize k_SmallerTargetBytes = 2 * 4 * k_PlaneValues * sizeof(int16);
+  constexpr usize k_LargerTargetBytes = 2 * 6 * k_PlaneValues * sizeof(int16);
 
-  auto smallerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, dimZ}, smallerTargetBytes);
+  auto smallerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, k_SmallerTargetBytes);
   REQUIRE(smallerResult.valid());
   const auto& smaller = smallerResult.value();
-  REQUIRE(smaller.maxSlabValues == 4 * planeValues);
-  REQUIRE(smaller.residentBytes <= smallerTargetBytes);
+  REQUIRE(smaller.maxSlabValues == 4 * k_PlaneValues);
+  REQUIRE(smaller.residentBytes <= k_SmallerTargetBytes);
 
-  auto largerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, dimZ}, largerTargetBytes);
+  auto largerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, k_LargerTargetBytes);
   REQUIRE(largerResult.valid());
   const auto& larger = largerResult.value();
-  REQUIRE(larger.maxSlabValues == 6 * planeValues);
+  REQUIRE(larger.maxSlabValues == 6 * k_PlaneValues);
   REQUIRE(larger.maxSlabValues > smaller.maxSlabValues);
-  REQUIRE(larger.residentBytes <= largerTargetBytes);
+  REQUIRE(larger.residentBytes <= k_LargerTargetBytes);
 
-  constexpr usize normalizedDimZ = 8;
-  constexpr usize normalizedTargetBytes = 2 * 7 * planeValues * sizeof(int16);
-  auto normalizedResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, normalizedDimZ}, normalizedTargetBytes);
+  constexpr usize k_NormalizedDimZ = 8;
+  constexpr usize k_NormalizedTargetBytes = 2 * 7 * k_PlaneValues * sizeof(int16);
+  auto normalizedResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_NormalizedDimZ}, k_NormalizedTargetBytes);
   REQUIRE(normalizedResult.valid());
-  REQUIRE(normalizedResult.value().maxSlabValues == 6 * planeValues);
+  REQUIRE(normalizedResult.value().maxSlabValues == 6 * k_PlaneValues);
 
-  auto usefulResult = ImageProcessing::detail::CalculateRegionalExtremaUsefulWorkingMemoryBytes<int16>(SizeVec3{dimX, dimY, dimZ});
+  auto usefulResult = ImageProcessing::detail::CalculateRegionalExtremaUsefulWorkingMemoryBytes<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ});
   REQUIRE(usefulResult.valid());
-  REQUIRE(usefulResult.value() == 2 * dimX * dimY * dimZ * sizeof(int16));
-  auto minimumResult = ImageProcessing::detail::CalculateRegionalExtremaMinimumWorkingMemoryBytes<int16>(SizeVec3{dimX, dimY, dimZ});
+  REQUIRE(usefulResult.value() == 2 * k_DimX * k_DimY * k_DimZ * sizeof(int16));
+  auto minimumResult = ImageProcessing::detail::CalculateRegionalExtremaMinimumWorkingMemoryBytes<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ});
   REQUIRE(minimumResult.valid());
-  REQUIRE(minimumResult.value() == 2 * 3 * planeValues * sizeof(int16));
+  REQUIRE(minimumResult.value() == 2 * 3 * k_PlaneValues * sizeof(int16));
 
-  const std::vector<int16> input = MakePlateauPattern<int16>(dimX, dimY, dimZ);
-  const std::vector<int16> expected = RegionalExtremaOracle(input, dimX, dimY, dimZ, RegionalExtremaOp::Maxima, true);
-  REQUIRE(RunSweep(input, dimX, dimY, dimZ, RegionalExtremaOp::Maxima, true, smaller.maxSlabValues) == expected);
-  REQUIRE(RunSweep(input, dimX, dimY, dimZ, RegionalExtremaOp::Maxima, true, larger.maxSlabValues) == expected);
+  const std::vector<int16> input = MakePlateauPattern<int16>(k_DimX, k_DimY, k_DimZ);
+  const std::vector<int16> expected = RegionalExtremaOracle(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true);
+  REQUIRE(RunSweep(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true, smaller.maxSlabValues) == expected);
+  REQUIRE(RunSweep(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true, larger.maxSlabValues) == expected);
 
   constexpr usize k_2DDimX = 7;
   constexpr usize k_2DDimY = 9;
   constexpr usize k_2DValues = k_2DDimX * k_2DDimY;
   constexpr usize k_2DTargetBytes = (k_2DValues + 2 * 4 * k_2DDimX) * sizeof(int16);
-  const SizeVec3 k_2DDims{k_2DDimX, k_2DDimY, 1};
-  auto fixed2DResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(k_2DDims, k_2DTargetBytes);
+  const SizeVec3 k2DDims{k_2DDimX, k_2DDimY, 1};
+  auto fixed2DResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(k2DDims, k_2DTargetBytes);
   REQUIRE(fixed2DResult.valid());
   REQUIRE(fixed2DResult.value().fixedWorkValues == k_2DValues);
   REQUIRE(fixed2DResult.value().fixedBufferValues >= 3 * k_2DDimX);
@@ -260,7 +260,7 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: total working-memory grants
   REQUIRE(actualTileBytes <= k_OverwideTargetBytes);
   REQUIRE(overwide.residentBytes >= actualTileBytes);
 
-  REQUIRE(ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, dimZ}, /*targetBytes=*/1).invalid());
+  REQUIRE(ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, /*targetBytes=*/1).invalid());
 
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   auto& manager = CacheMemoryBudgetManager::instance();
@@ -283,33 +283,33 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: multi-slab short tail prese
 {
   // A two-plane core over seven planes forces 2 + 2 + 2 + 1 in both directions. Only the first corridor voxel has
   // a strictly-more-extreme neighbor, so the marker must cross every slab boundary to reach the short tail.
-  constexpr usize dimX = 4;
-  constexpr usize dimY = 3;
-  constexpr usize dimZ = 7;
-  constexpr usize planeSize = dimX * dimY;
-  constexpr usize slabValueBudget = 4 * planeSize; // two core planes plus the two halo planes
+  constexpr usize k_DimX = 4;
+  constexpr usize k_DimY = 3;
+  constexpr usize k_DimZ = 7;
+  constexpr usize k_PlaneSize = k_DimX * k_DimY;
+  constexpr usize k_SlabValueBudget = 4 * k_PlaneSize; // two core planes plus the two halo planes
 
   for(const RegionalExtremaOp op : {RegionalExtremaOp::Maxima, RegionalExtremaOp::Minima})
   {
     const int16 fieldValue = op == RegionalExtremaOp::Maxima ? int16{0} : int16{100};
     const int16 corridorValue = int16{50};
     const int16 seedValue = op == RegionalExtremaOp::Maxima ? int16{100} : int16{0};
-    std::vector<int16> input(dimX * dimY * dimZ, fieldValue);
-    for(usize z = 0; z < dimZ; ++z)
+    std::vector<int16> input(k_DimX * k_DimY * k_DimZ, fieldValue);
+    for(usize z = 0; z < k_DimZ; ++z)
     {
-      input[FlatIndex(1, 1, z, dimX, dimY)] = corridorValue;
+      input[FlatIndex(1, 1, z, k_DimX, k_DimY)] = corridorValue;
     }
-    input[FlatIndex(1, 1, 0, dimX, dimY)] = seedValue;
+    input[FlatIndex(1, 1, 0, k_DimX, k_DimY)] = seedValue;
 
     for(const bool fullyConnected : {false, true})
     {
-      const std::vector<int16> expected = RegionalExtremaOracle(input, dimX, dimY, dimZ, op, fullyConnected);
-      const std::vector<int16> flood = RunEngine<RegionalExtremaFlood, int16>(input, dimX, dimY, dimZ, op, fullyConnected);
-      const std::vector<int16> sweep = RunSweep(input, dimX, dimY, dimZ, op, fullyConnected, slabValueBudget);
+      const std::vector<int16> expected = RegionalExtremaOracle(input, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      const std::vector<int16> flood = RunEngine<RegionalExtremaFlood, int16>(input, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      const std::vector<int16> sweep = RunSweep(input, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_SlabValueBudget);
       INFO("op=" << static_cast<int>(op) << " fullyConnected=" << fullyConnected);
       REQUIRE(sweep == expected);
       REQUIRE(sweep == flood);
-      REQUIRE(sweep[FlatIndex(1, 1, dimZ - 1, dimX, dimY)] == (op == RegionalExtremaOp::Maxima ? std::numeric_limits<int16>::lowest() : std::numeric_limits<int16>::max()));
+      REQUIRE(sweep[FlatIndex(1, 1, k_DimZ - 1, k_DimX, k_DimY)] == (op == RegionalExtremaOp::Maxima ? std::numeric_limits<int16>::lowest() : std::numeric_limits<int16>::max()));
     }
   }
 }
@@ -319,11 +319,11 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: full-connectivity diagonal 
   // Alternating XY positions make consecutive corridor voxels touch only through a vertex across Z. Two core planes
   // over seven planes force 2 + 2 + 2 + 1, so full-connectivity propagation crosses every slab halo and reaches the
   // short tail. Face connectivity must leave the disconnected corridor voxels unchanged.
-  constexpr usize dimX = 4;
-  constexpr usize dimY = 4;
-  constexpr usize dimZ = 7;
-  constexpr usize planeSize = dimX * dimY;
-  constexpr usize slabValueBudget = 4 * planeSize; // two core planes plus the two halo planes
+  constexpr usize k_DimX = 4;
+  constexpr usize k_DimY = 4;
+  constexpr usize k_DimZ = 7;
+  constexpr usize k_PlaneSize = k_DimX * k_DimY;
+  constexpr usize k_SlabValueBudget = 4 * k_PlaneSize; // two core planes plus the two halo planes
 
   for(const RegionalExtremaOp op : {RegionalExtremaOp::Maxima, RegionalExtremaOp::Minima})
   {
@@ -331,22 +331,22 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: full-connectivity diagonal 
     const int16 corridorValue = int16{50};
     const int16 seedValue = op == RegionalExtremaOp::Maxima ? int16{100} : int16{0};
     const int16 markerValue = op == RegionalExtremaOp::Maxima ? std::numeric_limits<int16>::lowest() : std::numeric_limits<int16>::max();
-    std::vector<int16> input(dimX * dimY * dimZ, fieldValue);
-    input[FlatIndex(1, 1, 0, dimX, dimY)] = seedValue;
-    for(usize z = 1; z < dimZ; ++z)
+    std::vector<int16> input(k_DimX * k_DimY * k_DimZ, fieldValue);
+    input[FlatIndex(1, 1, 0, k_DimX, k_DimY)] = seedValue;
+    for(usize z = 1; z < k_DimZ; ++z)
     {
       const usize xy = z % 2 == 0 ? 1 : 2;
-      input[FlatIndex(xy, xy, z, dimX, dimY)] = corridorValue;
+      input[FlatIndex(xy, xy, z, k_DimX, k_DimY)] = corridorValue;
     }
 
-    const usize tailXY = (dimZ - 1) % 2 == 0 ? 1 : 2;
-    const usize tailIndex = FlatIndex(tailXY, tailXY, dimZ - 1, dimX, dimY);
-    const std::vector<int16> fullOracle = RegionalExtremaOracle(input, dimX, dimY, dimZ, op, true);
-    const std::vector<int16> fullFlood = RunEngine<RegionalExtremaFlood, int16>(input, dimX, dimY, dimZ, op, true);
-    const std::vector<int16> fullSweep = RunSweep(input, dimX, dimY, dimZ, op, true, slabValueBudget);
-    const std::vector<int16> faceOracle = RegionalExtremaOracle(input, dimX, dimY, dimZ, op, false);
-    const std::vector<int16> faceFlood = RunEngine<RegionalExtremaFlood, int16>(input, dimX, dimY, dimZ, op, false);
-    const std::vector<int16> faceSweep = RunSweep(input, dimX, dimY, dimZ, op, false, slabValueBudget);
+    const usize tailXY = (k_DimZ - 1) % 2 == 0 ? 1 : 2;
+    const usize tailIndex = FlatIndex(tailXY, tailXY, k_DimZ - 1, k_DimX, k_DimY);
+    const std::vector<int16> fullOracle = RegionalExtremaOracle(input, k_DimX, k_DimY, k_DimZ, op, true);
+    const std::vector<int16> fullFlood = RunEngine<RegionalExtremaFlood, int16>(input, k_DimX, k_DimY, k_DimZ, op, true);
+    const std::vector<int16> fullSweep = RunSweep(input, k_DimX, k_DimY, k_DimZ, op, true, k_SlabValueBudget);
+    const std::vector<int16> faceOracle = RegionalExtremaOracle(input, k_DimX, k_DimY, k_DimZ, op, false);
+    const std::vector<int16> faceFlood = RunEngine<RegionalExtremaFlood, int16>(input, k_DimX, k_DimY, k_DimZ, op, false);
+    const std::vector<int16> faceSweep = RunSweep(input, k_DimX, k_DimY, k_DimZ, op, false, k_SlabValueBudget);
 
     INFO("op=" << static_cast<int>(op));
     REQUIRE(fullSweep == fullOracle);
@@ -360,20 +360,20 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: full-connectivity diagonal 
 
 TEST_CASE("NXImageProcessing::RegionalExtremaEngine: bounded 2D row blocks and overwide tiles preserve the exact fixpoint", "[RegionalExtremaEngine]")
 {
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 9;
-  constexpr usize dimZ = 1;
-  constexpr usize fullWidthBudget = 4 * dimX; // two core rows plus two halo rows
-  constexpr usize overwideBudget = 18;        // three rows of four core columns plus two X halos
-  const std::vector<int16> input = MakePlateauPattern<int16>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 9;
+  constexpr usize k_DimZ = 1;
+  constexpr usize k_FullWidthBudget = 4 * k_DimX; // two core rows plus two halo rows
+  constexpr usize k_OverwideBudget = 18;          // three rows of four core columns plus two X halos
+  const std::vector<int16> input = MakePlateauPattern<int16>(k_DimX, k_DimY, k_DimZ);
 
   for(const RegionalExtremaOp op : {RegionalExtremaOp::Maxima, RegionalExtremaOp::Minima})
   {
     for(const bool fullyConnected : {false, true})
     {
-      const std::vector<int16> expected = RegionalExtremaOracle(input, dimX, dimY, dimZ, op, fullyConnected);
-      const std::vector<int16> blocked = RunSweep(input, dimX, dimY, dimZ, op, fullyConnected, fullWidthBudget);
-      const std::vector<int16> tiled = RunSweep(input, dimX, dimY, dimZ, op, fullyConnected, overwideBudget);
+      const std::vector<int16> expected = RegionalExtremaOracle(input, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      const std::vector<int16> blocked = RunSweep(input, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_FullWidthBudget);
+      const std::vector<int16> tiled = RunSweep(input, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_OverwideBudget);
       INFO("op=" << static_cast<int>(op) << " fullyConnected=" << fullyConnected);
       REQUIRE(blocked == expected);
       REQUIRE(tiled == expected);
@@ -465,29 +465,29 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == 
   }
   SECTION("monotone ramp along X -> only the extreme end plateau kept")
   {
-    constexpr usize DX = 6;
-    constexpr usize DY = 3;
-    constexpr usize DZ = 1;
-    std::vector<T> ramp(DX * DY * DZ);
-    for(usize z = 0; z < DZ; ++z)
+    constexpr usize k_Dx = 6;
+    constexpr usize k_Dy = 3;
+    constexpr usize k_Dz = 1;
+    std::vector<T> ramp(k_Dx * k_Dy * k_Dz);
+    for(usize z = 0; z < k_Dz; ++z)
     {
-      for(usize y = 0; y < DY; ++y)
+      for(usize y = 0; y < k_Dy; ++y)
       {
-        for(usize x = 0; x < DX; ++x)
+        for(usize x = 0; x < k_Dx; ++x)
         {
-          ramp[FlatIndex(x, y, z, DX, DY)] = static_cast<T>(x * 10); // strictly increasing in x
+          ramp[FlatIndex(x, y, z, k_Dx, k_Dy)] = static_cast<T>(x * 10); // strictly increasing in x
         }
       }
     }
-    CheckRegionalExtrema<T>(ramp, DX, DY, DZ);
+    CheckRegionalExtrema<T>(ramp, k_Dx, k_Dy, k_Dz);
     // Maxima: only the x==DX-1 column (global max) is a regional maximum; every other pixel has a higher x+1
     // neighbor -> marker value.
-    const std::vector<T> flood = RunEngine<RegionalExtremaFlood, T>(ramp, DX, DY, DZ, RegionalExtremaOp::Maxima, /*fullyConnected=*/false);
+    const std::vector<T> flood = RunEngine<RegionalExtremaFlood, T>(ramp, k_Dx, k_Dy, k_Dz, RegionalExtremaOp::Maxima, /*fullyConnected=*/false);
     const T markerMax = std::numeric_limits<T>::lowest();
-    for(usize y = 0; y < DY; ++y)
+    for(usize y = 0; y < k_Dy; ++y)
     {
-      REQUIRE(flood[FlatIndex(DX - 1, y, 0, DX, DY)] == static_cast<T>((DX - 1) * 10)); // kept
-      REQUIRE(flood[FlatIndex(0, y, 0, DX, DY)] == markerMax);                          // not a maximum
+      REQUIRE(flood[FlatIndex(k_Dx - 1, y, 0, k_Dx, k_Dy)] == static_cast<T>((k_Dx - 1) * 10)); // kept
+      REQUIRE(flood[FlatIndex(0, y, 0, k_Dx, k_Dy)] == markerMax);                              // not a maximum
     }
   }
   SECTION("marker-value-in-input edge case (a voxel at the type extreme)")
@@ -508,28 +508,28 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == 
     // exists to converge quickly on. Flood == Sweep == oracle confirms the streamed sweep reaches the exact
     // fixpoint regardless of how many passes it takes (this would be O(corridor length) passes without the
     // bidirectional in-plane traversal, and terminates either way).
-    constexpr usize DX = 20;
-    constexpr usize DY = 11;
-    constexpr usize DZ = 1;
-    std::vector<T> img(DX * DY * DZ, static_cast<T>(0));
-    for(usize y = 0; y < DY; ++y)
+    constexpr usize k_Dx = 20;
+    constexpr usize k_Dy = 11;
+    constexpr usize k_Dz = 1;
+    std::vector<T> img(k_Dx * k_Dy * k_Dz, static_cast<T>(0));
+    for(usize y = 0; y < k_Dy; ++y)
     {
       if(y % 2 == 0)
       {
-        for(usize x = 0; x < DX; ++x)
+        for(usize x = 0; x < k_Dx; ++x)
         {
-          img[FlatIndex(x, y, 0, DX, DY)] = static_cast<T>(50);
+          img[FlatIndex(x, y, 0, k_Dx, k_Dy)] = static_cast<T>(50);
         }
       }
       else
       {
         // Odd rows carry a single connector cell (alternating end) so the even-row bars link into one snake.
-        const usize connectX = ((y / 2) % 2 == 0) ? (DX - 1) : 0;
-        img[FlatIndex(connectX, y, 0, DX, DY)] = static_cast<T>(50);
+        const usize connectX = ((y / 2) % 2 == 0) ? (k_Dx - 1) : 0;
+        img[FlatIndex(connectX, y, 0, k_Dx, k_Dy)] = static_cast<T>(50);
       }
     }
-    img[FlatIndex(0, 0, 0, DX, DY)] = static_cast<T>(100); // seed one end of the corridor with a higher value
-    CheckRegionalExtrema<T>(img, DX, DY, DZ);
+    img[FlatIndex(0, 0, 0, k_Dx, k_Dy)] = static_cast<T>(100); // seed one end of the corridor with a higher value
+    CheckRegionalExtrema<T>(img, k_Dx, k_Dy, k_Dz);
   }
 }
 
@@ -539,28 +539,28 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RegionalExtremaEngine: hand-computed central extremum", "[RegionalExtremaEngine]")
 {
-  constexpr usize DX = 5;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
   const int32 field = 10;
   const int32 peak = 50;
 
-  std::vector<int32> img(DX * DY * DZ, field);
+  std::vector<int32> img(k_Dx * k_Dy * k_Dz, field);
   // 2x2 central peak plateau (a genuine regional maximum: strictly higher than all its neighbors).
-  img[FlatIndex(2, 2, 0, DX, DY)] = peak;
-  img[FlatIndex(3, 2, 0, DX, DY)] = peak;
-  img[FlatIndex(2, 3, 0, DX, DY)] = peak;
-  img[FlatIndex(3, 3, 0, DX, DY)] = peak;
+  img[FlatIndex(2, 2, 0, k_Dx, k_Dy)] = peak;
+  img[FlatIndex(3, 2, 0, k_Dx, k_Dy)] = peak;
+  img[FlatIndex(2, 3, 0, k_Dx, k_Dy)] = peak;
+  img[FlatIndex(3, 3, 0, k_Dx, k_Dy)] = peak;
 
-  const std::vector<int32> maxima = RunEngine<RegionalExtremaFlood, int32>(img, DX, DY, DZ, RegionalExtremaOp::Maxima, /*fullyConnected=*/false);
+  const std::vector<int32> maxima = RunEngine<RegionalExtremaFlood, int32>(img, k_Dx, k_Dy, k_Dz, RegionalExtremaOp::Maxima, /*fullyConnected=*/false);
   const int32 markerMax = std::numeric_limits<int32>::lowest();
-  REQUIRE(maxima[FlatIndex(2, 2, 0, DX, DY)] == peak);      // peak plateau kept
-  REQUIRE(maxima[FlatIndex(3, 3, 0, DX, DY)] == peak);      // peak plateau kept
-  REQUIRE(maxima[FlatIndex(0, 0, 0, DX, DY)] == markerMax); // field is not a maximum (has a higher neighbor path)
+  REQUIRE(maxima[FlatIndex(2, 2, 0, k_Dx, k_Dy)] == peak);      // peak plateau kept
+  REQUIRE(maxima[FlatIndex(3, 3, 0, k_Dx, k_Dy)] == peak);      // peak plateau kept
+  REQUIRE(maxima[FlatIndex(0, 0, 0, k_Dx, k_Dy)] == markerMax); // field is not a maximum (has a higher neighbor path)
 
   // The same image under Minima: the field (value 10) is the regional minimum (kept); the peak is a non-minimum.
-  const std::vector<int32> minima = RunEngine<RegionalExtremaFlood, int32>(img, DX, DY, DZ, RegionalExtremaOp::Minima, /*fullyConnected=*/false);
+  const std::vector<int32> minima = RunEngine<RegionalExtremaFlood, int32>(img, k_Dx, k_Dy, k_Dz, RegionalExtremaOp::Minima, /*fullyConnected=*/false);
   const int32 markerMin = std::numeric_limits<int32>::max();
-  REQUIRE(minima[FlatIndex(0, 0, 0, DX, DY)] == field);     // field plateau is the regional minimum -> kept
-  REQUIRE(minima[FlatIndex(2, 2, 0, DX, DY)] == markerMin); // the peak is not a minimum
+  REQUIRE(minima[FlatIndex(0, 0, 0, k_Dx, k_Dy)] == field);     // field plateau is the regional minimum -> kept
+  REQUIRE(minima[FlatIndex(2, 2, 0, k_Dx, k_Dy)] == markerMin); // the peak is not a minimum
 }

@@ -98,21 +98,21 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
       parentPath = filterArgs.value<DataPath>(k_NewPath_Key);
       // Scope AM check since we fully expect it to be a nullptr
       {
-        const auto* possibleAM = dataStructure.getDataAs<AttributeMatrix>(parentPath);
-        if(possibleAM != nullptr)
+        const auto* possibleAmPtr = dataStructure.getDataAs<AttributeMatrix>(parentPath);
+        if(possibleAmPtr != nullptr)
         {
           for(const auto& path : dataArrayPaths)
           {
-            const auto* possibleIArray = dataStructure.getDataAs<IArray>(path);
-            if(possibleIArray != nullptr)
+            const auto* possibleIArrayPtr = dataStructure.getDataAs<IArray>(path);
+            if(possibleIArrayPtr != nullptr)
             {
-              if(possibleAM->getShape() != possibleIArray->getTupleShape())
+              if(possibleAmPtr->getShape() != possibleIArrayPtr->getTupleShape())
               {
                 resultOutputActions.warnings().push_back(Warning{
                     .code = -27361,
                     .message = fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a runtime error if the sizing remains "
                                            "the same at time of this filters execution. Proceed with caution.",
-                                           possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumberOfTuples())});
+                                           possibleIArrayPtr->getName(), possibleIArrayPtr->getNumberOfTuples(), possibleAmPtr->getName(), possibleAmPtr->getNumberOfTuples())});
               }
             }
           }
@@ -150,14 +150,14 @@ Result<> CopyDataObjectFilter::executeImpl(DataStructure& /*dataStructure*/, con
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_ObjectToCopyKey = "ObjectToCopy";
 constexpr StringLiteral k_DataContainerToCopyKey = "DataContainerToCopy";
 constexpr StringLiteral k_AttributeMatrixToCopyKey = "AttributeMatrixToCopy";
 constexpr StringLiteral k_AttributeArrayToCopyKey = "AttributeArrayToCopy";
 constexpr StringLiteral k_CopiedObjectNameKey = "CopiedObjectName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CopyDataObjectFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -166,22 +166,22 @@ Result<Arguments> CopyDataObjectFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  switch(json[SIMPL::k_ObjectToCopyKey].get<int32>())
+  switch(json[simpl::k_ObjectToCopyKey].get<int32>())
   {
   case 0:
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerToCopyKey, k_DataPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerToCopyKey, k_DataPath_Key));
     break;
   case 1:
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixToCopyKey, k_DataPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixToCopyKey, k_DataPath_Key));
     break;
   case 2:
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeArrayToCopyKey, k_DataPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeArrayToCopyKey, k_DataPath_Key));
     break;
   default:
     return MakeErrorResult<Arguments>(-2456, "Invalid DataObject type to copy");
   }
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_CopiedObjectNameKey, k_NewPathSuffix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_CopiedObjectNameKey, k_NewPathSuffix_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

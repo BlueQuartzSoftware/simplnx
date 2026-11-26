@@ -224,7 +224,7 @@ private:
     return {};
   }
 
-  Result<> parse_ull(const std::string& token, usize& value) const
+  Result<> parseUll(const std::string& token, usize& value) const
   {
     try
     {
@@ -323,7 +323,7 @@ private:
     }
 
     usize numVars = 0;
-    Result<> result = parse_ull(tokens.at(2), numVars);
+    Result<> result = parseUll(tokens.at(2), numVars);
     if(result.invalid())
     {
       return result;
@@ -675,7 +675,7 @@ private:
       {
         vertHit = true;
         usize numVerts = 0;
-        Result<> result = parse_ull(tokens.at(2), numVerts);
+        Result<> result = parseUll(tokens.at(2), numVerts);
         if(result.invalid())
         {
           m_Filter->reportWarning(result.errors().data()->message);
@@ -702,7 +702,7 @@ private:
       {
         quadHit = true;
         usize numCells = 0;
-        Result<> result = parse_ull(tokens.at(2), numCells);
+        Result<> result = parseUll(tokens.at(2), numCells);
         if(result.invalid())
         {
           m_Filter->reportWarning(result.errors().data()->message);
@@ -730,7 +730,7 @@ private:
         // This is most likely the beginning of a data array
         std::string dataArrayName = tokens.at(0);
         usize tupleCount = 0;
-        Result<> tupResult = parse_ull(tokens.at(2), tupleCount);
+        Result<> tupResult = parseUll(tokens.at(2), tupleCount);
         if(tupResult.invalid())
         {
           m_Filter->reportWarning(tupResult.errors().data()->message);

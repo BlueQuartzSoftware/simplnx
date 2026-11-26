@@ -16,25 +16,25 @@ const DataPath k_CompDupPath = DataPath({"computed duplicates mask"});
 void GenerateVertexGeom(DataStructure& dataStructure)
 {
   // Create a Vertex Geometry grid for the Scan Data
-  VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry);
+  VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry);
 
-  Float32Array* vertList = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", std::vector<usize>{25}, {3});
+  Float32Array* vertListPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", std::vector<usize>{25}, {3});
 
   float32 xVal = 0.0f;
   float32 yVal = 0.0f;
   float32 zVal = 0.0f;
-  for(usize i = 0; i < vertList->getNumberOfTuples(); i++)
+  for(usize i = 0; i < vertListPtr->getNumberOfTuples(); i++)
   {
-    vertList->setValue((i * 3) + 0, xVal);
-    vertList->setValue((i * 3) + 1, yVal);
-    vertList->setValue((i * 3) + 2, zVal);
+    vertListPtr->setValue((i * 3) + 0, xVal);
+    vertListPtr->setValue((i * 3) + 1, yVal);
+    vertListPtr->setValue((i * 3) + 2, zVal);
 
     xVal += 1.0f;
     yVal += 1.0f;
     zVal += 1.0f;
   }
 
-  vertexGeom->setVertices(*vertList);
+  vertexGeomPtr->setVertices(*vertListPtr);
 }
 } // namespace
 

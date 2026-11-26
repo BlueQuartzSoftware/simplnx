@@ -51,33 +51,33 @@ void CheckAsciiOutput(ScopeT& scope, const std::string& expectedFormat)
   const ShapeType tupleShape = {1, 2, 2};
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ASCII ImageGeom");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({2, 2, 1});
-  REQUIRE(imageGeom->setOrigin({-1.0F, 2.0F, 3.0F}).valid());
-  REQUIRE(imageGeom->setSpacing({0.5F, 1.5F, 2.0F}).valid());
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ASCII ImageGeom");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 1});
+  REQUIRE(imageGeomPtr->setOrigin({-1.0F, 2.0F, 3.0F}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({0.5F, 1.5F, 2.0F}).valid());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto signedStore = DataStoreUtilities::CreateDataStore<int8>(dataStructure, signedPath, tupleShape, {2});
   REQUIRE(signedStore != nullptr);
-  auto* signedArray = Int8Array::Create(dataStructure, "Signed Components", signedStore, cellData->getId());
-  REQUIRE(signedArray != nullptr);
+  auto* signedArrayPtr = Int8Array::Create(dataStructure, "Signed Components", signedStore, cellDataPtr->getId());
+  REQUIRE(signedArrayPtr != nullptr);
   const auto signedWrite = signedStore->copyFromBuffer(0, nonstd::span<const int8>(k_ExpectedSignedValues.data(), k_ExpectedSignedValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(signedWrite);
 
   auto floatStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, floatPath, tupleShape, {1});
   REQUIRE(floatStore != nullptr);
-  auto* floatArray = Float32Array::Create(dataStructure, "Float Scalars", floatStore, cellData->getId());
-  REQUIRE(floatArray != nullptr);
+  auto* floatArrayPtr = Float32Array::Create(dataStructure, "Float Scalars", floatStore, cellDataPtr->getId());
+  REQUIRE(floatArrayPtr != nullptr);
   const auto floatWrite = floatStore->copyFromBuffer(0, nonstd::span<const float32>(k_ExpectedFloatValues.data(), k_ExpectedFloatValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(floatWrite);
 
-  scope.requireExpectedStore(*signedArray);
-  scope.requireExpectedStore(*floatArray);
-  REQUIRE(signedArray->getDataFormat() == expectedFormat);
-  REQUIRE(floatArray->getDataFormat() == expectedFormat);
+  scope.requireExpectedStore(*signedArrayPtr);
+  scope.requireExpectedStore(*floatArrayPtr);
+  REQUIRE(signedArrayPtr->getDataFormat() == expectedFormat);
+  REQUIRE(floatArrayPtr->getDataFormat() == expectedFormat);
 
   const fs::path outputBase = fs::path(unit_test::k_BinaryTestOutputDir.view());
   fs::create_directories(outputBase);
@@ -106,10 +106,10 @@ void CheckAsciiOutput(ScopeT& scope, const std::string& expectedFormat)
     constexpr std::array<const char*, 10> k_ExpectedHeaderLines = {"# vtk DataFile Version 3.0", "vtk output",    "ASCII",       "DATASET STRUCTURED_POINTS",        "DIMENSIONS 3 3 2",
                                                                    "SPACING 0.5 1.5 2",          "ORIGIN -1 2 3", "CELL_DATA 4", "SCALARS Signed_Components char 2", "LOOKUP_TABLE default"};
     std::string line;
-    for(const char* expectedLine : k_ExpectedHeaderLines)
+    for(const char* expectedLinePtr : k_ExpectedHeaderLines)
     {
       REQUIRE(std::getline(vtkFile, line));
-      REQUIRE(line == expectedLine);
+      REQUIRE(line == expectedLinePtr);
     }
 
     // Integer extraction must reject character output for signed 8-bit values.
@@ -135,31 +135,31 @@ void CheckAsciiOutput(ScopeT& scope, const std::string& expectedFormat)
     REQUIRE_FALSE(vtkFile.bad());
   }
 
-  scope.requireExpectedStore(*signedArray);
-  scope.requireExpectedStore(*floatArray);
-  REQUIRE(signedArray->getDataFormat() == expectedFormat);
-  REQUIRE(floatArray->getDataFormat() == expectedFormat);
-  REQUIRE(signedArray->getDataType() == DataType::int8);
-  REQUIRE(floatArray->getDataType() == DataType::float32);
-  REQUIRE(signedArray->getTupleShape() == tupleShape);
-  REQUIRE(floatArray->getTupleShape() == tupleShape);
-  REQUIRE(signedArray->getComponentShape() == ShapeType{2});
-  REQUIRE(floatArray->getComponentShape() == ShapeType{1});
+  scope.requireExpectedStore(*signedArrayPtr);
+  scope.requireExpectedStore(*floatArrayPtr);
+  REQUIRE(signedArrayPtr->getDataFormat() == expectedFormat);
+  REQUIRE(floatArrayPtr->getDataFormat() == expectedFormat);
+  REQUIRE(signedArrayPtr->getDataType() == DataType::int8);
+  REQUIRE(floatArrayPtr->getDataType() == DataType::float32);
+  REQUIRE(signedArrayPtr->getTupleShape() == tupleShape);
+  REQUIRE(floatArrayPtr->getTupleShape() == tupleShape);
+  REQUIRE(signedArrayPtr->getComponentShape() == ShapeType{2});
+  REQUIRE(floatArrayPtr->getComponentShape() == ShapeType{1});
   std::array<int8, 8> actualSignedValues = {};
-  const auto signedRead = signedArray->getDataStoreRef().copyIntoBuffer(0, nonstd::span<int8>(actualSignedValues.data(), actualSignedValues.size()));
+  const auto signedRead = signedArrayPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<int8>(actualSignedValues.data(), actualSignedValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(signedRead);
   REQUIRE(actualSignedValues == k_ExpectedSignedValues);
   std::array<float32, 4> actualFloatValues = {};
-  const auto floatRead = floatArray->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(actualFloatValues.data(), actualFloatValues.size()));
+  const auto floatRead = floatArrayPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(actualFloatValues.data(), actualFloatValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(floatRead);
   REQUIRE(actualFloatValues == k_ExpectedFloatValues);
 
   const SizeVec3 expectedDims = {2, 2, 1};
   const FloatVec3 expectedOrigin = {-1.0F, 2.0F, 3.0F};
   const FloatVec3 expectedSpacing = {0.5F, 1.5F, 2.0F};
-  REQUIRE(imageGeom->getDimensions() == expectedDims);
-  REQUIRE(imageGeom->getOrigin() == expectedOrigin);
-  REQUIRE(imageGeom->getSpacing() == expectedSpacing);
+  REQUIRE(imageGeomPtr->getDimensions() == expectedDims);
+  REQUIRE(imageGeomPtr->getOrigin() == expectedOrigin);
+  REQUIRE(imageGeomPtr->getSpacing() == expectedSpacing);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace WriteVtkStructuredPointsTest

@@ -83,7 +83,7 @@ Result<> FlyingEdges3D::operator()()
 {
   const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
   float64 isoVal = m_InputValues->isoVal;
-  const auto* iDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouringArrayPath);
+  const auto* iDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouringArrayPath);
   auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
   auto& normalsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->normalsArrayPath)->getDataStoreRef();
 
@@ -92,9 +92,9 @@ Result<> FlyingEdges3D::operator()()
 
   auto& normAM = m_DataStructure.getDataRefAs<AttributeMatrix>(normAMPath);
 
-  const bool usesOutOfCoreStore = IsOutOfCore(*iDataArray);
+  const bool usesOutOfCoreStore = IsOutOfCore(*iDataArrayPtr);
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
-  return ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray->getDataType(), image, iDataArray, isoVal, triangleGeom, normalsStore, normAM);
+  return ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArrayPtr->getDataType(), image, iDataArrayPtr, isoVal, triangleGeom, normalsStore, normAM);
 }

@@ -65,10 +65,10 @@ void tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, 
 {
   while(true)
   {
-    const auto pos = std::find_first_of(first, last, s_first, s_last);
-    if(first != pos)
+    const auto posPtr = std::find_first_of(first, last, s_first, s_last);
+    if(first != posPtr)
     {
-      tokens.emplace_back(std::string{first, pos});
+      tokens.emplace_back(std::string{first, posPtr});
     }
     else
     {
@@ -77,11 +77,11 @@ void tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, 
         tokens.emplace_back("");
       }
     }
-    if(pos == last)
+    if(posPtr == last)
     {
       break;
     }
-    first = std::next(pos);
+    first = std::next(posPtr);
   }
 }
 
@@ -107,8 +107,8 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
   {
     return {};
   }
-  auto endPos = str.end();
-  auto startPos = str.begin();
+  auto endPosPtr = str.end();
+  auto startPosPtr = str.begin();
 
   std::vector<std::string> tokens;
   tokens.reserve(str.size() / 2);
@@ -118,7 +118,7 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
     if(std::find(delimiters.begin(), delimiters.end(), str[0]) != delimiters.end())
     {
       tokens.emplace_back("");
-      startPos++;
+      startPosPtr++;
     }
   }
 
@@ -126,13 +126,13 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
   {
     if(std::find(delimiters.begin(), delimiters.end(), str[str.size() - 1]) != delimiters.end())
     {
-      endPos--;
+      endPosPtr--;
     }
   }
 
   if constexpr(!SplitTypeOptionsV::AllowConsecutiveAsEmpty)
   {
-    tokenize<false>(startPos, endPos, delimiters.begin(), delimiters.end(), tokens);
+    tokenize<false>(startPosPtr, endPosPtr, delimiters.begin(), delimiters.end(), tokens);
     if constexpr(SplitTypeOptionsV::AllowEmptyFinal)
     {
       if(std::find(delimiters.begin(), delimiters.end(), str[str.size() - 1]) != delimiters.end())
@@ -147,10 +147,10 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
     {
       if(std::find(delimiters.begin(), delimiters.end(), str[0]) != delimiters.end())
       {
-        startPos++;
+        startPosPtr++;
       }
     }
-    tokenize<true>(startPos, endPos, delimiters.begin(), delimiters.end(), tokens);
+    tokenize<true>(startPosPtr, endPosPtr, delimiters.begin(), delimiters.end(), tokens);
   }
 
   tokens.shrink_to_fit();

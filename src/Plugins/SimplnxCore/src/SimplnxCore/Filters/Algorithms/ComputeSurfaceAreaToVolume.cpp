@@ -25,6 +25,6 @@ const std::atomic_bool& ComputeSurfaceAreaToVolume::getCancel()
 Result<> ComputeSurfaceAreaToVolume::operator()()
 {
   // Cell-scale six-neighbor reads determine whether the Scanline path is needed.
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  return DispatchAlgorithm<ComputeSurfaceAreaToVolumeDirect, ComputeSurfaceAreaToVolumeScanline>({featureIdsArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  return DispatchAlgorithm<ComputeSurfaceAreaToVolumeDirect, ComputeSurfaceAreaToVolumeScanline>({featureIdsArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

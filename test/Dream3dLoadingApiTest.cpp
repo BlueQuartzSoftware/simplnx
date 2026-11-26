@@ -103,7 +103,7 @@ const DataPath k_NonnumericRecoverySiblingPath({k_NonnumericGroupName, k_Nonnume
 const DataPath k_NonnumericStringArrayPath({k_NonnumericGroupName, k_NonnumericAttrMatName, k_NonnumericStringArrayName});
 const DataPath k_NonnumericNeighborListPath({k_NonnumericGroupName, k_NonnumericAttrMatName, k_NonnumericNeighborListName});
 
-std::atomic_size_t g_ExcludedMaterializations = 0;
+std::atomic_size_t GExcludedMaterializations = 0;
 
 class ImportSelectionFloatArrayIO : public HDF5::Float32ArrayIO
 {
@@ -112,7 +112,7 @@ public:
   {
     if(dataPath == k_LargeArrayPath)
     {
-      ++g_ExcludedMaterializations;
+      ++GExcludedMaterializations;
     }
     return HDF5::Float32ArrayIO::finishImportingData(dataStructure, dataPath, parentGroupReader);
   }
@@ -276,22 +276,22 @@ public:
   mutable std::vector<DataPath> paths;
   mutable std::vector<DataType> types;
   mutable std::vector<uint64> bytes;
-  std::vector<DataPath> requiredContextPaths;
-  mutable bool contextWasComplete = true;
-  std::string failureMessage;
+  std::vector<DataPath> required_context_paths;
+  mutable bool context_was_complete = true;
+  std::string failure_message;
 
   std::string resolveFormat([[maybe_unused]] const DataStructure& dataStructure, const DataPath& path, DataType numericType, uint64 logicalBytes) const override
   {
     paths.push_back(path);
     types.push_back(numericType);
     bytes.push_back(logicalBytes);
-    for(const auto& requiredPath : requiredContextPaths)
+    for(const auto& requiredPath : required_context_paths)
     {
-      contextWasComplete = contextWasComplete && dataStructure.containsData(requiredPath);
+      context_was_complete = context_was_complete && dataStructure.containsData(requiredPath);
     }
-    if(!failureMessage.empty())
+    if(!failure_message.empty())
     {
-      throw std::runtime_error(failureMessage);
+      throw std::runtime_error(failure_message);
     }
     return {};
   }
@@ -427,36 +427,36 @@ fs::path GetTestOutputDir()
  */
 DataStructure CreateSimpleTestDataStructure()
 {
-  DataStructure ds;
+  DataStructure dataStructure;
 
-  auto* group = DataGroup::Create(ds, k_GroupName);
-  REQUIRE(group != nullptr);
+  auto* groupPtr = DataGroup::Create(dataStructure, k_GroupName);
+  REQUIRE(groupPtr != nullptr);
 
   // SmallAM holds SmallArray (10 tuples)
-  auto* smallAM = AttributeMatrix::Create(ds, k_SmallAttrMatName, {k_SmallArraySize}, group->getId());
-  REQUIRE(smallAM != nullptr);
+  auto* smallAmPtr = AttributeMatrix::Create(dataStructure, k_SmallAttrMatName, {k_SmallArraySize}, groupPtr->getId());
+  REQUIRE(smallAmPtr != nullptr);
 
   auto smallStore = std::make_unique<DataStore<int32>>(std::vector<usize>{k_SmallArraySize}, std::vector<usize>{1}, static_cast<int32>(0));
   for(usize i = 0; i < k_SmallArraySize; ++i)
   {
     smallStore->setValue(i, static_cast<int32>(i * 3));
   }
-  auto* smallArray = DataArray<int32>::Create(ds, k_SmallArrayName, std::move(smallStore), smallAM->getId());
-  REQUIRE(smallArray != nullptr);
+  auto* smallArrayPtr = DataArray<int32>::Create(dataStructure, k_SmallArrayName, std::move(smallStore), smallAmPtr->getId());
+  REQUIRE(smallArrayPtr != nullptr);
 
   // LargeAM holds LargeArray (100 tuples)
-  auto* largeAM = AttributeMatrix::Create(ds, k_LargeAttrMatName, {k_LargeArraySize}, group->getId());
-  REQUIRE(largeAM != nullptr);
+  auto* largeAmPtr = AttributeMatrix::Create(dataStructure, k_LargeAttrMatName, {k_LargeArraySize}, groupPtr->getId());
+  REQUIRE(largeAmPtr != nullptr);
 
   auto largeStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_LargeArraySize}, std::vector<usize>{1}, static_cast<float32>(0));
   for(usize i = 0; i < k_LargeArraySize; ++i)
   {
     largeStore->setValue(i, static_cast<float32>(i) * 1.5f);
   }
-  auto* largeArray = DataArray<float32>::Create(ds, k_LargeArrayName, std::move(largeStore), largeAM->getId());
-  REQUIRE(largeArray != nullptr);
+  auto* largeArrayPtr = DataArray<float32>::Create(dataStructure, k_LargeArrayName, std::move(largeStore), largeAmPtr->getId());
+  REQUIRE(largeArrayPtr != nullptr);
 
-  return ds;
+  return dataStructure;
 }
 
 /**
@@ -465,10 +465,10 @@ DataStructure CreateSimpleTestDataStructure()
  * @param fileName Output file name.
  * @return The written file path.
  */
-fs::path WriteTestFile(const DataStructure& ds, const std::string& fileName)
+fs::path WriteTestFile(const DataStructure& dataStructure, const std::string& fileName)
 {
   fs::path outputPath = GetTestOutputDir() / fileName;
-  Result<> writeResult = DREAM3D::WriteFile(outputPath, ds);
+  Result<> writeResult = DREAM3D::WriteFile(outputPath, dataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   REQUIRE(fs::exists(outputPath));
   return outputPath;
@@ -733,51 +733,51 @@ fs::path CreateLegacyStatisticsFile(const std::string& fileName)
  */
 DataStructure CreateMultiGroupTestDataStructure()
 {
-  DataStructure ds;
+  DataStructure dataStructure;
 
-  auto* groupA = DataGroup::Create(ds, k_GroupAName);
-  REQUIRE(groupA != nullptr);
-  auto* attrMatA = AttributeMatrix::Create(ds, k_AttrMatAName, {k_PruneArraySize}, groupA->getId());
-  REQUIRE(attrMatA != nullptr);
+  auto* groupAPtr = DataGroup::Create(dataStructure, k_GroupAName);
+  REQUIRE(groupAPtr != nullptr);
+  auto* attrMatAPtr = AttributeMatrix::Create(dataStructure, k_AttrMatAName, {k_PruneArraySize}, groupAPtr->getId());
+  REQUIRE(attrMatAPtr != nullptr);
 
   auto storeA1 = std::make_unique<DataStore<int32>>(std::vector<usize>{k_PruneArraySize}, std::vector<usize>{1}, static_cast<int32>(0));
   for(usize i = 0; i < k_PruneArraySize; ++i)
   {
     storeA1->setValue(i, static_cast<int32>(i));
   }
-  auto* arrayA1 = DataArray<int32>::Create(ds, k_ArrayA1Name, std::move(storeA1), attrMatA->getId());
-  REQUIRE(arrayA1 != nullptr);
+  auto* arrayA1Ptr = DataArray<int32>::Create(dataStructure, k_ArrayA1Name, std::move(storeA1), attrMatAPtr->getId());
+  REQUIRE(arrayA1Ptr != nullptr);
 
   auto storeA2 = std::make_unique<DataStore<int32>>(std::vector<usize>{k_PruneArraySize}, std::vector<usize>{1}, static_cast<int32>(0));
   for(usize i = 0; i < k_PruneArraySize; ++i)
   {
     storeA2->setValue(i, static_cast<int32>(i * 2));
   }
-  auto* arrayA2 = DataArray<int32>::Create(ds, k_ArrayA2Name, std::move(storeA2), attrMatA->getId());
-  REQUIRE(arrayA2 != nullptr);
+  auto* arrayA2Ptr = DataArray<int32>::Create(dataStructure, k_ArrayA2Name, std::move(storeA2), attrMatAPtr->getId());
+  REQUIRE(arrayA2Ptr != nullptr);
 
-  auto* groupB = DataGroup::Create(ds, k_GroupBName);
-  REQUIRE(groupB != nullptr);
-  auto* attrMatB = AttributeMatrix::Create(ds, k_AttrMatBName, {k_PruneArraySize}, groupB->getId());
-  REQUIRE(attrMatB != nullptr);
+  auto* groupBPtr = DataGroup::Create(dataStructure, k_GroupBName);
+  REQUIRE(groupBPtr != nullptr);
+  auto* attrMatBPtr = AttributeMatrix::Create(dataStructure, k_AttrMatBName, {k_PruneArraySize}, groupBPtr->getId());
+  REQUIRE(attrMatBPtr != nullptr);
 
   auto storeB1 = std::make_unique<DataStore<float32>>(std::vector<usize>{k_PruneArraySize}, std::vector<usize>{1}, static_cast<float32>(0));
   for(usize i = 0; i < k_PruneArraySize; ++i)
   {
     storeB1->setValue(i, static_cast<float32>(i) * 0.5f);
   }
-  auto* arrayB1 = DataArray<float32>::Create(ds, k_ArrayB1Name, std::move(storeB1), attrMatB->getId());
-  REQUIRE(arrayB1 != nullptr);
+  auto* arrayB1Ptr = DataArray<float32>::Create(dataStructure, k_ArrayB1Name, std::move(storeB1), attrMatBPtr->getId());
+  REQUIRE(arrayB1Ptr != nullptr);
 
   auto storeB2 = std::make_unique<DataStore<float32>>(std::vector<usize>{k_PruneArraySize}, std::vector<usize>{1}, static_cast<float32>(0));
   for(usize i = 0; i < k_PruneArraySize; ++i)
   {
     storeB2->setValue(i, static_cast<float32>(i) * 0.25f);
   }
-  auto* arrayB2 = DataArray<float32>::Create(ds, k_ArrayB2Name, std::move(storeB2), attrMatB->getId());
-  REQUIRE(arrayB2 != nullptr);
+  auto* arrayB2Ptr = DataArray<float32>::Create(dataStructure, k_ArrayB2Name, std::move(storeB2), attrMatBPtr->getId());
+  REQUIRE(arrayB2Ptr != nullptr);
 
-  return ds;
+  return dataStructure;
 }
 
 /**
@@ -786,34 +786,34 @@ DataStructure CreateMultiGroupTestDataStructure()
  */
 DataStructure CreateNonnumericSelectionTestDataStructure()
 {
-  DataStructure ds;
+  DataStructure dataStructure;
 
-  auto* group = DataGroup::Create(ds, k_NonnumericGroupName);
-  REQUIRE(group != nullptr);
-  auto* attrMat = AttributeMatrix::Create(ds, k_NonnumericAttrMatName, {k_NonnumericTupleCount}, group->getId());
-  REQUIRE(attrMat != nullptr);
+  auto* groupPtr = DataGroup::Create(dataStructure, k_NonnumericGroupName);
+  REQUIRE(groupPtr != nullptr);
+  auto* attrMatPtr = AttributeMatrix::Create(dataStructure, k_NonnumericAttrMatName, {k_NonnumericTupleCount}, groupPtr->getId());
+  REQUIRE(attrMatPtr != nullptr);
 
   auto numericStore = std::make_unique<DataStore<int32>>(std::vector<usize>{k_NonnumericTupleCount}, std::vector<usize>{1}, 0);
   numericStore->setValue(0, 2);
   numericStore->setValue(1, 4);
   numericStore->setValue(2, 6);
-  REQUIRE(DataArray<int32>::Create(ds, k_NonnumericNumericArrayName, std::move(numericStore), attrMat->getId()) != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, k_NonnumericNumericArrayName, std::move(numericStore), attrMatPtr->getId()) != nullptr);
 
   auto recoverySiblingStore = std::make_unique<DataStore<int32>>(std::vector<usize>{k_NonnumericTupleCount}, std::vector<usize>{1}, 0);
   recoverySiblingStore->setValue(0, 3);
   recoverySiblingStore->setValue(1, 6);
   recoverySiblingStore->setValue(2, 9);
-  REQUIRE(DataArray<int32>::Create(ds, k_NonnumericRecoverySiblingName, std::move(recoverySiblingStore), attrMat->getId()) != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, k_NonnumericRecoverySiblingName, std::move(recoverySiblingStore), attrMatPtr->getId()) != nullptr);
 
-  REQUIRE(StringArray::CreateWithValues(ds, k_NonnumericStringArrayName, {k_NonnumericTupleCount}, {"alpha", "", "omega"}, attrMat->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, k_NonnumericStringArrayName, {k_NonnumericTupleCount}, {"alpha", "", "omega"}, attrMatPtr->getId()) != nullptr);
 
-  auto* neighborList = NeighborList<int32>::Create(ds, k_NonnumericNeighborListName, {k_NonnumericTupleCount}, attrMat->getId());
-  REQUIRE(neighborList != nullptr);
-  neighborList->setList(0, std::vector<int32>{});
-  neighborList->setList(1, std::vector<int32>{7, 11});
-  neighborList->setList(2, std::vector<int32>{13});
+  auto* neighborListPtr = NeighborList<int32>::Create(dataStructure, k_NonnumericNeighborListName, {k_NonnumericTupleCount}, attrMatPtr->getId());
+  REQUIRE(neighborListPtr != nullptr);
+  neighborListPtr->setList(0, std::vector<int32>{});
+  neighborListPtr->setList(1, std::vector<int32>{7, 11});
+  neighborListPtr->setList(2, std::vector<int32>{13});
 
-  return ds;
+  return dataStructure;
 }
 
 /**
@@ -867,29 +867,29 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructure loads all arrays")
   Result<DataStructure> result = DREAM3D::LoadDataStructure(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  const DataStructure& ds = result.value();
+  const DataStructure& dataStructure = result.value();
 
   const auto& smallPath = k_SmallArrayPath;
   const auto& largePath = k_LargeArrayPath;
 
   // Both arrays must exist
-  const auto* smallArray = ds.getDataAs<Int32Array>(smallPath);
-  REQUIRE(smallArray != nullptr);
-  REQUIRE(smallArray->getNumberOfTuples() == k_SmallArraySize);
+  const auto* smallArrayPtr = dataStructure.getDataAs<Int32Array>(smallPath);
+  REQUIRE(smallArrayPtr != nullptr);
+  REQUIRE(smallArrayPtr->getNumberOfTuples() == k_SmallArraySize);
 
-  const auto* largeArray = ds.getDataAs<Float32Array>(largePath);
-  REQUIRE(largeArray != nullptr);
-  REQUIRE(largeArray->getNumberOfTuples() == k_LargeArraySize);
+  const auto* largeArrayPtr = dataStructure.getDataAs<Float32Array>(largePath);
+  REQUIRE(largeArrayPtr != nullptr);
+  REQUIRE(largeArrayPtr->getNumberOfTuples() == k_LargeArraySize);
 
   // Verify SmallArray values
-  const auto& smallStore = smallArray->getDataStoreRef();
+  const auto& smallStore = smallArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_SmallArraySize; ++i)
   {
     CHECK(smallStore[i] == static_cast<int32>(i * 3));
   }
 
   // Verify LargeArray values
-  const auto& largeStore = largeArray->getDataStoreRef();
+  const auto& largeStore = largeArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_LargeArraySize; ++i)
   {
     CHECK(largeStore[i] == Approx(static_cast<float32>(i) * 1.5f));
@@ -907,26 +907,26 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays loads only requested array
   Result<DataStructure> result = DREAM3D::LoadDataStructureArrays(filePath, {smallPath});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  const DataStructure& ds = result.value();
+  const DataStructure& dataStructure = result.value();
 
   // SmallArray must exist with correct data
-  const auto* smallArray = ds.getDataAs<Int32Array>(smallPath);
-  REQUIRE(smallArray != nullptr);
-  REQUIRE(smallArray->getNumberOfTuples() == k_SmallArraySize);
+  const auto* smallArrayPtr = dataStructure.getDataAs<Int32Array>(smallPath);
+  REQUIRE(smallArrayPtr != nullptr);
+  REQUIRE(smallArrayPtr->getNumberOfTuples() == k_SmallArraySize);
 
-  const auto& smallStore = smallArray->getDataStoreRef();
+  const auto& smallStore = smallArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_SmallArraySize; ++i)
   {
     CHECK(smallStore[i] == static_cast<int32>(i * 3));
   }
 
   // LargeArray must NOT exist
-  const auto* largeArray = ds.getDataAs<Float32Array>(largePath);
-  CHECK(largeArray == nullptr);
+  const auto* largeArrayPtr = dataStructure.getDataAs<Float32Array>(largePath);
+  CHECK(largeArrayPtr == nullptr);
 
   // Ancestor containers must exist
-  CHECK(ds.getDataAs<DataGroup>(k_GroupPath) != nullptr);
-  CHECK(ds.getDataAs<AttributeMatrix>(k_SmallAMPath) != nullptr);
+  CHECK(dataStructure.getDataAs<DataGroup>(k_GroupPath) != nullptr);
+  CHECK(dataStructure.getDataAs<AttributeMatrix>(k_SmallAMPath) != nullptr);
 }
 
 TEST_CASE("Dream3dLoadingApi: LoadDataStructureArraysMetadata loads only requested metadata")
@@ -940,22 +940,22 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArraysMetadata loads only request
   Result<DataStructure> result = DREAM3D::LoadDataStructureArraysMetadata(filePath, {smallPath});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  const DataStructure& ds = result.value();
+  const DataStructure& dataStructure = result.value();
 
   // SmallArray must exist
-  const auto* smallArray = ds.getDataAs<IDataArray>(smallPath);
-  REQUIRE(smallArray != nullptr);
+  const auto* smallArrayPtr = dataStructure.getDataAs<IDataArray>(smallPath);
+  REQUIRE(smallArrayPtr != nullptr);
 
   // SmallArray store must be Empty (no data loaded)
-  CHECK(smallArray->getStoreType() == IDataStore::StoreType::Empty);
+  CHECK(smallArrayPtr->getStoreType() == IDataStore::StoreType::Empty);
 
   // LargeArray must NOT exist
-  const auto* largeArray = ds.getDataAs<IDataArray>(largePath);
-  CHECK(largeArray == nullptr);
+  const auto* largeArrayPtr = dataStructure.getDataAs<IDataArray>(largePath);
+  CHECK(largeArrayPtr == nullptr);
 
   // Ancestor containers must exist
-  CHECK(ds.getDataAs<DataGroup>(k_GroupPath) != nullptr);
-  CHECK(ds.getDataAs<AttributeMatrix>(k_SmallAMPath) != nullptr);
+  CHECK(dataStructure.getDataAs<DataGroup>(k_GroupPath) != nullptr);
+  CHECK(dataStructure.getDataAs<AttributeMatrix>(k_SmallAMPath) != nullptr);
 }
 
 TEST_CASE("Dream3dLoadingApi: LoadDataStructureMetadata loads all metadata")
@@ -966,20 +966,20 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureMetadata loads all metadata")
   Result<DataStructure> result = DREAM3D::LoadDataStructureMetadata(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  const DataStructure& ds = result.value();
+  const DataStructure& dataStructure = result.value();
 
   const auto& smallPath = k_SmallArrayPath;
   const auto& largePath = k_LargeArrayPath;
 
   // Both arrays must exist
-  const auto* smallArray = ds.getDataAs<IDataArray>(smallPath);
-  REQUIRE(smallArray != nullptr);
-  const auto* largeArray = ds.getDataAs<IDataArray>(largePath);
-  REQUIRE(largeArray != nullptr);
+  const auto* smallArrayPtr = dataStructure.getDataAs<IDataArray>(smallPath);
+  REQUIRE(smallArrayPtr != nullptr);
+  const auto* largeArrayPtr = dataStructure.getDataAs<IDataArray>(largePath);
+  REQUIRE(largeArrayPtr != nullptr);
 
   // Both must have Empty stores (no data loaded)
-  CHECK(smallArray->getStoreType() == IDataStore::StoreType::Empty);
-  CHECK(largeArray->getStoreType() == IDataStore::StoreType::Empty);
+  CHECK(smallArrayPtr->getStoreType() == IDataStore::StoreType::Empty);
+  CHECK(largeArrayPtr->getStoreType() == IDataStore::StoreType::Empty);
 }
 
 TEST_CASE("StorageFormatPlan: current metadata preserves an empty component shape and reloads scalar values", "[StorageFormatPlan][T17][T22][T29]")
@@ -999,27 +999,27 @@ TEST_CASE("StorageFormatPlan: current metadata preserves an empty component shap
   DataStructure::setDefaultFormatResolver(std::make_shared<InMemoryFormatResolver>());
   SIMPLNX_RESULT_REQUIRE_VALID(metadataResult);
   const DataPath arrayPath({"ScalarComponents"});
-  const auto* metadataArray = metadataResult.value().getDataAs<Int32Array>(arrayPath);
-  REQUIRE(metadataArray != nullptr);
-  REQUIRE(metadataArray->getTupleShape() == ShapeType{3});
-  REQUIRE(metadataArray->getComponentShape().empty());
-  REQUIRE(metadataArray->getNumberOfTuples() == 3);
-  REQUIRE(metadataArray->getNumberOfComponents() == 1);
-  REQUIRE(metadataArray->getStoreType() == IDataStore::StoreType::Empty);
+  const auto* metadataArrayPtr = metadataResult.value().getDataAs<Int32Array>(arrayPath);
+  REQUIRE(metadataArrayPtr != nullptr);
+  REQUIRE(metadataArrayPtr->getTupleShape() == ShapeType{3});
+  REQUIRE(metadataArrayPtr->getComponentShape().empty());
+  REQUIRE(metadataArrayPtr->getNumberOfTuples() == 3);
+  REQUIRE(metadataArrayPtr->getNumberOfComponents() == 1);
+  REQUIRE(metadataArrayPtr->getStoreType() == IDataStore::StoreType::Empty);
   REQUIRE(resolver->paths == std::vector<DataPath>{arrayPath});
   REQUIRE(resolver->types == std::vector<DataType>{DataType::int32});
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(int32)});
 
   auto loadedResult = DREAM3D::LoadDataStructure(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(loadedResult);
-  const auto* loadedArray = loadedResult.value().getDataAs<Int32Array>(arrayPath);
-  REQUIRE(loadedArray != nullptr);
-  REQUIRE(loadedArray->getTupleShape() == ShapeType{3});
-  REQUIRE(loadedArray->getComponentShape().empty());
-  REQUIRE(loadedArray->getSize() == 3);
-  CHECK(loadedArray->getDataStoreRef().getValue(0) == 11);
-  CHECK(loadedArray->getDataStoreRef().getValue(1) == 22);
-  CHECK(loadedArray->getDataStoreRef().getValue(2) == 33);
+  const auto* loadedArrayPtr = loadedResult.value().getDataAs<Int32Array>(arrayPath);
+  REQUIRE(loadedArrayPtr != nullptr);
+  REQUIRE(loadedArrayPtr->getTupleShape() == ShapeType{3});
+  REQUIRE(loadedArrayPtr->getComponentShape().empty());
+  REQUIRE(loadedArrayPtr->getSize() == 3);
+  CHECK(loadedArrayPtr->getDataStoreRef().getValue(0) == 11);
+  CHECK(loadedArrayPtr->getDataStoreRef().getValue(1) == 22);
+  CHECK(loadedArrayPtr->getDataStoreRef().getValue(2) == 33);
 }
 
 TEST_CASE("StorageFormatPlan: current metadata rejects a missing component-shape attribute", "[StorageFormatPlan][T29]")
@@ -1121,9 +1121,9 @@ TEST_CASE("StorageFormatPlan: legacy geometry metadata plans and reloads connect
   for(const auto& path : arrayPaths)
   {
     INFO(path.toString());
-    const auto* array = metadataResult.value().getDataAs<IDataArray>(path);
-    REQUIRE(array != nullptr);
-    REQUIRE(array->getStoreType() == IDataStore::StoreType::Empty);
+    const auto* arrayPtr = metadataResult.value().getDataAs<IDataArray>(path);
+    REQUIRE(arrayPtr != nullptr);
+    REQUIRE(arrayPtr->getStoreType() == IDataStore::StoreType::Empty);
   }
 
   auto loadedResult = DREAM3D::LoadDataStructure(fileGuard.path);
@@ -1131,22 +1131,22 @@ TEST_CASE("StorageFormatPlan: legacy geometry metadata plans and reloads connect
   for(const auto& path : arrayPaths)
   {
     INFO(path.toString());
-    const auto* array = loadedResult.value().getDataAs<IDataArray>(path);
-    REQUIRE(array != nullptr);
-    REQUIRE(array->getStoreType() == IDataStore::StoreType::InMemory);
+    const auto* arrayPtr = loadedResult.value().getDataAs<IDataArray>(path);
+    REQUIRE(arrayPtr != nullptr);
+    REQUIRE(arrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
   }
-  const auto* loadedVertices = loadedResult.value().getDataAs<Float32Array>(DataPath({"LegacyVertex", "SharedVertexList"}));
-  REQUIRE(loadedVertices != nullptr);
+  const auto* loadedVerticesPtr = loadedResult.value().getDataAs<Float32Array>(DataPath({"LegacyVertex", "SharedVertexList"}));
+  REQUIRE(loadedVerticesPtr != nullptr);
   for(usize index = 0; index < 12; ++index)
   {
-    CHECK(loadedVertices->getDataStoreRef().getValue(index) == static_cast<float32>(index));
+    CHECK(loadedVerticesPtr->getDataStoreRef().getValue(index) == static_cast<float32>(index));
   }
-  const auto* loadedEdges = loadedResult.value().getDataAs<UInt64Array>(DataPath({"LegacyEdge", "SharedEdgeList"}));
-  REQUIRE(loadedEdges != nullptr);
-  CHECK(loadedEdges->getDataStoreRef().getValue(3) == 3);
-  const auto* xBounds = loadedResult.value().getDataAs<Float32Array>(DataPath({"LegacyRect", "xBounds"}));
-  REQUIRE(xBounds != nullptr);
-  CHECK(xBounds->getDataStoreRef().getValue(2) == 2.0F);
+  const auto* loadedEdgesPtr = loadedResult.value().getDataAs<UInt64Array>(DataPath({"LegacyEdge", "SharedEdgeList"}));
+  REQUIRE(loadedEdgesPtr != nullptr);
+  CHECK(loadedEdgesPtr->getDataStoreRef().getValue(3) == 3);
+  const auto* xBoundsPtr = loadedResult.value().getDataAs<Float32Array>(DataPath({"LegacyRect", "xBounds"}));
+  REQUIRE(xBoundsPtr != nullptr);
+  CHECK(xBoundsPtr->getDataStoreRef().getValue(2) == 2.0F);
 }
 
 TEST_CASE("StorageFormatPlan: selected execute import plans against complete destination context", "[StorageFormatPlan][T15][T25][T26]")
@@ -1157,14 +1157,14 @@ TEST_CASE("StorageFormatPlan: selected execute import plans against complete des
   DataStructure destination;
   REQUIRE(DataGroup::Create(destination, "ExistingMarker") != nullptr);
   auto resolver = std::make_shared<RecordingResolver>();
-  resolver->requiredContextPaths = {DataPath({"ExistingMarker"}), k_GroupAPath, k_AttrMatAPath};
+  resolver->required_context_paths = {DataPath({"ExistingMarker"}), k_GroupAPath, k_AttrMatAPath};
   destination.setFormatResolver(resolver);
 
   ImportH5ObjectPathsAction action(fileGuard.path, {k_GroupAPath, k_AttrMatAPath, k_ArrayA1Path});
   auto result = action.apply(destination, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  REQUIRE(resolver->contextWasComplete);
+  REQUIRE(resolver->context_was_complete);
   REQUIRE(resolver->paths == std::vector<DataPath>{k_ArrayA1Path});
   REQUIRE(resolver->types == std::vector<DataType>{DataType::int32});
   REQUIRE(resolver->bytes == std::vector<uint64>{k_PruneArraySize * sizeof(int32)});
@@ -1211,7 +1211,7 @@ TEST_CASE("StorageFormatPlan: selected import planning failure leaves destinatio
   DataStructure destination;
   REQUIRE(DataGroup::Create(destination, "ExistingMarker") != nullptr);
   auto resolver = std::make_shared<RecordingResolver>();
-  resolver->failureMessage = "injected destination planning failure";
+  resolver->failure_message = "injected destination planning failure";
   destination.setFormatResolver(resolver);
   const auto originalPaths = destination.getAllDataPaths();
   const auto originalNextId = destination.getNextId();
@@ -1221,7 +1221,7 @@ TEST_CASE("StorageFormatPlan: selected import planning failure leaves destinatio
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   CHECK(result.errors().front().message.find(k_SmallArrayPath.toString()) != std::string::npos);
-  CHECK(result.errors().front().message.find(resolver->failureMessage) != std::string::npos);
+  CHECK(result.errors().front().message.find(resolver->failure_message) != std::string::npos);
   CHECK(destination.getAllDataPaths() == originalPaths);
   CHECK(destination.getNextId() == originalNextId);
 }
@@ -1267,8 +1267,8 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructure with legacy file")
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   // Verify the DataStructure has content (legacy files should load successfully)
-  const DataStructure& ds = result.value();
-  CHECK(!ds.getAllDataPaths().empty());
+  const DataStructure& dataStructure = result.value();
+  CHECK(!dataStructure.getAllDataPaths().empty());
 }
 
 TEST_CASE("StorageFormatPlan: legacy dataset metadata receives a validated plan", "[StorageFormatPlan][T17][T29]")
@@ -1283,11 +1283,11 @@ TEST_CASE("StorageFormatPlan: legacy dataset metadata receives a validated plan"
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataPath arrayPath({"DataContainer", "AttributeMatrix", "Float32"});
-  const auto* array = result.value().getDataAs<Float32Array>(arrayPath);
-  REQUIRE(array != nullptr);
-  REQUIRE(array->getStoreType() == IDataStore::StoreType::Empty);
-  REQUIRE(array->getTupleShape() == ShapeType{1});
-  REQUIRE(array->getComponentShape() == ShapeType{1});
+  const auto* arrayPtr = result.value().getDataAs<Float32Array>(arrayPath);
+  REQUIRE(arrayPtr != nullptr);
+  REQUIRE(arrayPtr->getStoreType() == IDataStore::StoreType::Empty);
+  REQUIRE(arrayPtr->getTupleShape() == ShapeType{1});
+  REQUIRE(arrayPtr->getComponentShape() == ShapeType{1});
   const auto pathIter = std::find(resolver->paths.begin(), resolver->paths.end(), arrayPath);
   REQUIRE(pathIter != resolver->paths.end());
   const usize index = static_cast<usize>(std::distance(resolver->paths.begin(), pathIter));
@@ -1312,14 +1312,14 @@ TEST_CASE("StorageFormatPlan: legacy Statistics attributes remain eagerly materi
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataPath attributePath({"StatsContainer", "Statistics", "Values_Mean"});
-  const auto* attributeArray = result.value().getDataAs<Float32Array>(attributePath);
-  REQUIRE(attributeArray != nullptr);
-  REQUIRE(attributeArray->getStoreType() == IDataStore::StoreType::InMemory);
-  REQUIRE(attributeArray->getTupleShape() == ShapeType{3});
-  REQUIRE(attributeArray->getComponentShape() == ShapeType{1});
-  CHECK(attributeArray->getDataStoreRef().getValue(0) == 4.0F);
-  CHECK(attributeArray->getDataStoreRef().getValue(1) == 5.0F);
-  CHECK(attributeArray->getDataStoreRef().getValue(2) == 6.0F);
+  const auto* attributeArrayPtr = result.value().getDataAs<Float32Array>(attributePath);
+  REQUIRE(attributeArrayPtr != nullptr);
+  REQUIRE(attributeArrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(attributeArrayPtr->getTupleShape() == ShapeType{3});
+  REQUIRE(attributeArrayPtr->getComponentShape() == ShapeType{1});
+  CHECK(attributeArrayPtr->getDataStoreRef().getValue(0) == 4.0F);
+  CHECK(attributeArrayPtr->getDataStoreRef().getValue(1) == 5.0F);
+  CHECK(attributeArrayPtr->getDataStoreRef().getValue(2) == 6.0F);
 }
 
 TEST_CASE("StorageFormatPlan: selected legacy Statistics values use an independent destination store", "[StorageFormatPlan][T17][T25][T26]")
@@ -1334,9 +1334,9 @@ TEST_CASE("StorageFormatPlan: selected legacy Statistics values use an independe
   const DataPath attributePath({"StatsContainer", "Statistics", "Values_Mean"});
   auto sourceResult = cache.fetch(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(sourceResult);
-  const auto* sourceArray = sourceResult.value().getDataAs<Float32Array>(attributePath);
-  REQUIRE(sourceArray != nullptr);
-  REQUIRE(sourceArray->getStoreType() == IDataStore::StoreType::InMemory);
+  const auto* sourceArrayPtr = sourceResult.value().getDataAs<Float32Array>(attributePath);
+  REQUIRE(sourceArrayPtr != nullptr);
+  REQUIRE(sourceArrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
 
   DataStructure destination;
   auto resolver = std::make_shared<RecordingResolver>();
@@ -1345,24 +1345,24 @@ TEST_CASE("StorageFormatPlan: selected legacy Statistics values use an independe
   auto importResult = action.apply(destination, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(importResult);
 
-  auto* destinationArray = destination.getDataAs<Float32Array>(attributePath);
-  REQUIRE(destinationArray != nullptr);
-  REQUIRE(destinationArray->getStoreType() == IDataStore::StoreType::InMemory);
-  REQUIRE(destinationArray->getIDataStore() != sourceArray->getIDataStore());
+  auto* destinationArrayPtr = destination.getDataAs<Float32Array>(attributePath);
+  REQUIRE(destinationArrayPtr != nullptr);
+  REQUIRE(destinationArrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(destinationArrayPtr->getIDataStore() != sourceArrayPtr->getIDataStore());
   REQUIRE(resolver->paths == std::vector<DataPath>{attributePath});
   REQUIRE(resolver->types == std::vector<DataType>{DataType::float32});
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(float32)});
-  CHECK(destinationArray->getDataStoreRef().getValue(0) == 4.0F);
-  CHECK(destinationArray->getDataStoreRef().getValue(1) == 5.0F);
-  CHECK(destinationArray->getDataStoreRef().getValue(2) == 6.0F);
+  CHECK(destinationArrayPtr->getDataStoreRef().getValue(0) == 4.0F);
+  CHECK(destinationArrayPtr->getDataStoreRef().getValue(1) == 5.0F);
+  CHECK(destinationArrayPtr->getDataStoreRef().getValue(2) == 6.0F);
 
-  destinationArray->getDataStoreRef().setValue(0, 99.0F);
+  destinationArrayPtr->getDataStoreRef().setValue(0, 99.0F);
   auto nextSourceResult = cache.fetch(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(nextSourceResult);
-  const auto* nextSourceArray = nextSourceResult.value().getDataAs<Float32Array>(attributePath);
-  REQUIRE(nextSourceArray != nullptr);
-  REQUIRE(nextSourceArray->getIDataStore() != destinationArray->getIDataStore());
-  CHECK(nextSourceArray->getDataStoreRef().getValue(0) == 4.0F);
+  const auto* nextSourceArrayPtr = nextSourceResult.value().getDataAs<Float32Array>(attributePath);
+  REQUIRE(nextSourceArrayPtr != nullptr);
+  REQUIRE(nextSourceArrayPtr->getIDataStore() != destinationArrayPtr->getIDataStore());
+  CHECK(nextSourceArrayPtr->getDataStoreRef().getValue(0) == 4.0F);
 }
 
 TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays prune verification")
@@ -1373,22 +1373,22 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays prune verification")
   Result<DataStructure> result = DREAM3D::LoadDataStructureArrays(filePath, {k_ArrayA1Path});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  const DataStructure& ds = result.value();
+  const DataStructure& dataStructure = result.value();
 
   // ArrayA1 and its ancestors must exist
-  const auto* arrayA1 = ds.getDataAs<Int32Array>(k_ArrayA1Path);
-  REQUIRE(arrayA1 != nullptr);
-  REQUIRE(arrayA1->getNumberOfTuples() == k_PruneArraySize);
-  CHECK(ds.getDataAs<DataGroup>(k_GroupAPath) != nullptr);
-  CHECK(ds.getDataAs<AttributeMatrix>(k_AttrMatAPath) != nullptr);
+  const auto* arrayA1Ptr = dataStructure.getDataAs<Int32Array>(k_ArrayA1Path);
+  REQUIRE(arrayA1Ptr != nullptr);
+  REQUIRE(arrayA1Ptr->getNumberOfTuples() == k_PruneArraySize);
+  CHECK(dataStructure.getDataAs<DataGroup>(k_GroupAPath) != nullptr);
+  CHECK(dataStructure.getDataAs<AttributeMatrix>(k_AttrMatAPath) != nullptr);
 
   // ArrayA2 must NOT exist (same group, but not requested)
-  CHECK(ds.getDataAs<Int32Array>(k_ArrayA2Path) == nullptr);
+  CHECK(dataStructure.getDataAs<Int32Array>(k_ArrayA2Path) == nullptr);
 
   // GroupB and its children must NOT exist
-  CHECK(ds.getDataAs<DataGroup>(k_GroupBPath) == nullptr);
-  CHECK(ds.getDataAs<Float32Array>(k_ArrayB1Path) == nullptr);
-  CHECK(ds.getDataAs<Float32Array>(k_ArrayB2Path) == nullptr);
+  CHECK(dataStructure.getDataAs<DataGroup>(k_GroupBPath) == nullptr);
+  CHECK(dataStructure.getDataAs<Float32Array>(k_ArrayB1Path) == nullptr);
+  CHECK(dataStructure.getDataAs<Float32Array>(k_ArrayB2Path) == nullptr);
 }
 
 TEST_CASE("Dream3dLoadingApi: selected StringArray preserves metadata and values", "[simplnx][Dream3dLoadingApi][SelectiveImport]")
@@ -1724,17 +1724,17 @@ TEST_CASE("ImportH5ObjectPathsAction avoids excluded materialization", "[simplnx
   const auto originalManager = collection.getManager("HDF5");
   {
     ScopedImportSelectionManager managerGuard(collection);
-    g_ExcludedMaterializations = 0;
+    GExcludedMaterializations = 0;
     auto fullLoad = DREAM3D::LoadDataStructure(filePath);
     SIMPLNX_RESULT_REQUIRE_VALID(fullLoad);
-    REQUIRE(g_ExcludedMaterializations.load() > 0);
-    g_ExcludedMaterializations = 0;
+    REQUIRE(GExcludedMaterializations.load() > 0);
+    GExcludedMaterializations = 0;
 
     const ImportH5ObjectPathsAction action(filePath, {k_GroupPath, k_SmallAMPath, k_SmallArrayPath});
     DataStructure destination;
     auto importResult = action.apply(destination, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(importResult);
-    CHECK(g_ExcludedMaterializations.load() == 0);
+    CHECK(GExcludedMaterializations.load() == 0);
     REQUIRE(destination.containsData(k_SmallArrayPath));
     CHECK_FALSE(destination.containsData(k_LargeArrayPath));
     CHECK_FALSE(destination.containsData(k_LargeAMPath));
@@ -1761,7 +1761,7 @@ TEST_CASE("ImportH5ObjectPathsAction selection semantics", "[simplnx][Dream3dLoa
   const auto originalManager = collection.getManager("HDF5");
   {
     ScopedImportSelectionManager managerGuard(collection);
-    g_ExcludedMaterializations = 0;
+    GExcludedMaterializations = 0;
 
     SECTION("Preflight")
     {
@@ -1769,7 +1769,7 @@ TEST_CASE("ImportH5ObjectPathsAction selection semantics", "[simplnx][Dream3dLoa
       DataStructure destination;
       auto importResult = action.apply(destination, IDataAction::Mode::Preflight);
       SIMPLNX_RESULT_REQUIRE_VALID(importResult);
-      CHECK(g_ExcludedMaterializations.load() == 0);
+      CHECK(GExcludedMaterializations.load() == 0);
       REQUIRE(destination.containsData(k_SmallArrayPath));
       IDataArray* selectedArrayPtr = nullptr;
       REQUIRE_NOTHROW(selectedArrayPtr = &destination.getDataRefAs<IDataArray>(k_SmallArrayPath));
@@ -1784,7 +1784,7 @@ TEST_CASE("ImportH5ObjectPathsAction selection semantics", "[simplnx][Dream3dLoa
       DataStructure destination;
       auto importResult = action.apply(destination, IDataAction::Mode::Execute);
       SIMPLNX_RESULT_REQUIRE_VALID(importResult);
-      CHECK(g_ExcludedMaterializations.load() == 0);
+      CHECK(GExcludedMaterializations.load() == 0);
       REQUIRE(destination.containsData(k_GroupPath));
       CHECK_FALSE(destination.containsData(k_SmallAMPath));
       CHECK_FALSE(destination.containsData(k_LargeAMPath));
@@ -1798,7 +1798,7 @@ TEST_CASE("ImportH5ObjectPathsAction selection semantics", "[simplnx][Dream3dLoa
       DataStructure destination;
       auto importResult = action.apply(destination, IDataAction::Mode::Execute);
       SIMPLNX_RESULT_REQUIRE_VALID(importResult);
-      CHECK(g_ExcludedMaterializations.load() == 0);
+      CHECK(GExcludedMaterializations.load() == 0);
       REQUIRE(destination.containsData(k_SmallArrayPath));
       CHECK_FALSE(destination.containsData(missingPath));
       UnitTest::CheckArraysInheritTupleDims(destination);
@@ -1811,7 +1811,7 @@ TEST_CASE("ImportH5ObjectPathsAction selection semantics", "[simplnx][Dream3dLoa
       auto importResult = action.apply(destination, IDataAction::Mode::Execute);
       SIMPLNX_RESULT_REQUIRE_VALID(importResult);
       CHECK(destination.getAllDataPaths().empty());
-      CHECK(g_ExcludedMaterializations.load() == 0);
+      CHECK(GExcludedMaterializations.load() == 0);
       UnitTest::CheckArraysInheritTupleDims(destination);
     }
 
@@ -1868,13 +1868,13 @@ TEST_CASE("ImportH5ObjectPathsAction selection semantics", "[simplnx][Dream3dLoa
     SECTION("Parent supplied by destination")
     {
       DataStructure destination;
-      auto* destinationGroup = DataGroup::Create(destination, k_GroupName);
-      REQUIRE(destinationGroup != nullptr);
-      const auto destinationGroupId = destinationGroup->getId();
+      auto* destinationGroupPtr = DataGroup::Create(destination, k_GroupName);
+      REQUIRE(destinationGroupPtr != nullptr);
+      const auto destinationGroupId = destinationGroupPtr->getId();
       const ImportH5ObjectPathsAction action(filePath, {k_SmallAMPath, k_SmallArrayPath});
       auto importResult = action.apply(destination, IDataAction::Mode::Execute);
       SIMPLNX_RESULT_REQUIRE_VALID(importResult);
-      CHECK(g_ExcludedMaterializations.load() == 0);
+      CHECK(GExcludedMaterializations.load() == 0);
       REQUIRE(destination.containsData(k_SmallAMPath));
       REQUIRE(destination.containsData(k_SmallArrayPath));
       CHECK_FALSE(destination.containsData(k_LargeAMPath));
@@ -1941,12 +1941,12 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with all in-core data")
   Result<DataStructure> result = DREAM3D::LoadDataStructure(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  const DataStructure& ds = result.value();
+  const DataStructure& dataStructure = result.value();
 
   const auto& smallPath = k_SmallArrayPath;
 
   // Verify data integrity through the recovery round-trip
-  const auto& smallStore = ds.getDataRefAs<Int32Array>(smallPath).getDataStoreRef();
+  const auto& smallStore = dataStructure.getDataRefAs<Int32Array>(smallPath).getDataStoreRef();
   for(usize i = 0; i < k_SmallArraySize; ++i)
   {
     CHECK(smallStore[i] == static_cast<int32>(i * 3));

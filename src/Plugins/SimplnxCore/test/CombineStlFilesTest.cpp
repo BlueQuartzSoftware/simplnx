@@ -40,7 +40,7 @@ namespace
 const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContainer"});
 const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
 
-void writeStlTriangle(const fs::path& path, float32 base)
+void WriteStlTriangle(const fs::path& path, float32 base)
 {
   std::ofstream output(path, std::ios::binary | std::ios::trunc);
   REQUIRE(output.is_open());
@@ -59,7 +59,7 @@ void writeStlTriangle(const fs::path& path, float32 base)
   REQUIRE(output.good());
 }
 
-void checkNestedVertexLabels(bool requireDiskStores)
+void CheckNestedVertexLabels(bool requireDiskStores)
 {
   const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("NestedCombineStlFiles-" + Uuid::GenerateV4().str());
   const fs::path firstFile = inputDir / "A.stl";
@@ -71,8 +71,8 @@ void checkNestedVertexLabels(bool requireDiskStores)
     fs::remove(secondFile, error);
     fs::remove(inputDir, error);
   });
-  writeStlTriangle(firstFile, 0.0F);
-  writeStlTriangle(secondFile, 10.0F);
+  WriteStlTriangle(firstFile, 0.0F);
+  WriteStlTriangle(secondFile, 10.0F);
 
   const DataPath geometryPath({"Group", "TriGeom"});
   const std::string vertexDataName = "TriGeom Vertex Data";
@@ -156,14 +156,14 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: nested geometry keeps vertex labe
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
-  checkNestedVertexLabels(false);
+  CheckNestedVertexLabels(false);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: nested geometry keeps vertex label path with real OOC stores", "[SimplnxCore][CombineStlFilesFilter][NestedPaths][.OocStoreContract]")
 {
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
-  checkNestedVertexLabels(true);
+  CheckNestedVertexLabels(true);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[SimplnxCore][CombineStlFilesFilter]")
@@ -246,7 +246,7 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -258,22 +258,22 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: SIMPL Backwards Compatibility", "
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CombineStlFilesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CombineStlFilesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(CombineStlFilesFilter::k_StlFilesPath_Key) == fs::path("/test/path/stl_files"));
       CHECK(args.value<DataPath>(CombineStlFilesFilter::k_TriangleGeometryPath_Key) == DataPath({"TriangleDataContainer"}));
       CHECK(args.value<std::string>(CombineStlFilesFilter::k_FaceAttributeMatrixName_Key) == "FaceData");

@@ -172,33 +172,33 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   // All five output arrays are created with an explicit "0" fill value. The algorithm skips any
   // Feature whose crystal structure is outside the supported Laue-group range, and Feature 0 is a
   // sentinel slot that is never computed. Legacy SIMPL FindSchmids allocated with initValue 0.
-  const std::string k_ZeroFill = "0";
+  const std::string kZeroFill = "0";
 
   // Create output Schmids Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pSchmidsArrayNameValue, "", k_ZeroFill);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pSchmidsArrayNameValue, "", kZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create output SlipSystems Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{1}, pSlipSystemsArrayNameValue, "", k_ZeroFill);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{1}, pSlipSystemsArrayNameValue, "", kZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create output Poles Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{3}, pPolesArrayNameValue, "", k_ZeroFill);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{3}, pPolesArrayNameValue, "", kZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create output Phis Array
   if(pStoreAngleComponentsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pPhisArrayNameValue, "", k_ZeroFill);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pPhisArrayNameValue, "", kZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create output Lambdas Array
   if(pStoreAngleComponentsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pLambdasArrayNameValue, "", k_ZeroFill);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pLambdasArrayNameValue, "", kZeroFill);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -261,7 +261,7 @@ Result<> ComputeSchmidsFilter::executeImpl(DataStructure& dataStructure, const A
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_LoadingDirectionKey = "LoadingDirection";
 constexpr StringLiteral k_StoreAngleComponentsKey = "StoreAngleComponents";
@@ -276,7 +276,7 @@ constexpr StringLiteral k_SlipSystemsArrayNameKey = "SlipSystemsArrayName";
 constexpr StringLiteral k_PolesArrayNameKey = "PolesArrayName";
 constexpr StringLiteral k_PhisArrayNameKey = "PhisArrayName";
 constexpr StringLiteral k_LambdasArrayNameKey = "LambdasArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeSchmidsFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -285,20 +285,20 @@ Result<Arguments> ComputeSchmidsFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_LoadingDirectionKey, k_LoadingDirection_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreAngleComponentsKey, k_StoreAngleComponents_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_OverrideSystemKey, k_OverrideSystem_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SlipPlaneKey, k_SlipPlane_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SlipDirectionKey, k_SlipDirection_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_LoadingDirectionKey, k_LoadingDirection_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_StoreAngleComponentsKey, k_StoreAngleComponents_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_OverrideSystemKey, k_OverrideSystem_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SlipPlaneKey, k_SlipPlane_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SlipDirectionKey, k_SlipDirection_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SchmidsArrayNameKey, k_SchmidsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SlipSystemsArrayNameKey, k_SlipSystemsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PolesArrayNameKey, k_PolesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhisArrayNameKey, k_PhisArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LambdasArrayNameKey, k_LambdasArrayName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SchmidsArrayNameKey, k_SchmidsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SlipSystemsArrayNameKey, k_SlipSystemsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PolesArrayNameKey, k_PolesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhisArrayNameKey, k_PhisArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_LambdasArrayNameKey, k_LambdasArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

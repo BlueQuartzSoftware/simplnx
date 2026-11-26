@@ -161,21 +161,21 @@ inline std::vector<T> MakeObjectPattern(usize dimX, usize dimY, usize dimZ, T ob
  *        edge-touching, solid interiors) using @p objectValue / @p backgroundValue. Returns the input path.
  */
 template <class T>
-inline DataPath BuildObjectImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T objectValue, T backgroundValue)
+inline DataPath BuildObjectImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, T objectValue, T backgroundValue)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const std::vector<T> pattern = MakeObjectPattern<T>(dimX, dimY, dimZ, objectValue, backgroundValue);
   for(usize i = 0; i < pattern.size(); ++i)
@@ -194,21 +194,21 @@ inline DataPath BuildObjectImage(DataStructure& ds, usize dimX, usize dimY, usiz
  *        Value regardless of whether that value already exists in the image. Returns the input path.
  */
 template <class T>
-inline DataPath BuildObjectImageWithExtraLabel(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T objectValue, T extraLabel, T backgroundValue)
+inline DataPath BuildObjectImageWithExtraLabel(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, T objectValue, T extraLabel, T backgroundValue)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -242,12 +242,12 @@ template <class T>
 inline std::vector<T> RunApplyObjectMorphology(const std::vector<T>& input, usize dimX, usize dimY, usize dimZ, KernelType kernelType, const std::array<int32, 3>& radius, ObjectMorphOp op,
                                                T objectValue, T backgroundValue)
 {
-  DataStructure ds;
-  auto* inArray = UnitTest::CreateTestDataArray<T>(ds, "in", {dimZ, dimY, dimX}, {1});
-  auto* outArray = UnitTest::CreateTestDataArray<T>(ds, "out", {dimZ, dimY, dimX}, {1});
+  DataStructure dataStructure;
+  auto* inArrayPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "in", {dimZ, dimY, dimX}, {1});
+  auto* outArrayPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "out", {dimZ, dimY, dimX}, {1});
   for(usize i = 0; i < input.size(); ++i)
   {
-    inArray->getDataStoreRef().setValue(i, input[i]);
+    inArrayPtr->getDataStoreRef().setValue(i, input[i]);
   }
 
   const StructuringElement se = MakeStructuringElement(kernelType, radius);
@@ -255,14 +255,14 @@ inline std::vector<T> RunApplyObjectMorphology(const std::vector<T>& input, usiz
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ImageProcessing::ApplyObjectMorphology<T>(inArray->getDataStoreRef(), outArray->getDataStoreRef(), SizeVec3{dimX, dimY, dimZ}, se, boxOffsets, op, objectValue,
-                                                                    backgroundValue, *inArray, *outArray, shouldCancel, messageHandler);
+  const Result<> result = ImageProcessing::ApplyObjectMorphology<T>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), SizeVec3{dimX, dimY, dimZ}, se, boxOffsets, op, objectValue,
+                                                                    backgroundValue, *inArrayPtr, *outArrayPtr, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
   std::vector<T> out(input.size());
   for(usize i = 0; i < out.size(); ++i)
   {
-    out[i] = outArray->getDataStoreRef().getValue(i);
+    out[i] = outArrayPtr->getDataStoreRef().getValue(i);
   }
   return out;
 }
@@ -319,19 +319,19 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Obje
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize dim = 4;
-  const ShapeType cellShape = {dim, dim, dim};
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  constexpr usize k_Dim = 4;
+  const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({k_Dim, k_Dim, k_Dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {3}); // 3-component (non-scalar)
-  DataArray<T>::Create(ds, "Input", store, cellAM->getId());
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {3}); // 3-component (non-scalar)
+  DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
 
   NewFilterT filter;
   Arguments args;
@@ -340,7 +340,7 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Obje
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setParams(args, static_cast<uint64>(KernelType::Box), {1, 1, 1});
 
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().front().code == expectedErrorCode);
 }
@@ -361,7 +361,7 @@ namespace detail
 // Drives @p filter with a shared Arguments over the standard geom/input/output keys plus the injected params.
 // The function then requires that preflight and execute succeed. It reads the key constants from NewFilterT.
 template <class NewFilterT>
-inline void RunFilter(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint64 kernelType, const std::vector<uint32>& radius, const ObjectParamSetter& setParams)
+inline void RunFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint64 kernelType, const std::vector<uint32>& radius, const ObjectParamSetter& setParams)
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -369,9 +369,9 @@ inline void RunFilter(IFilter& filter, DataStructure& ds, const DataPath& inputP
   args.insertOrAssign(NewFilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setParams(args, kernelType, radius);
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace detail
@@ -389,11 +389,11 @@ inline void RunObjectMorphologyComputedExpected(const std::function<DataPath(Dat
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = buildImage(ds, dimX, dimY, dimZ);
+  DataStructure dataStructure;
+  const DataPath inputPath = buildImage(dataStructure, dimX, dimY, dimZ);
 
   // Snapshot the input BEFORE running the filter (the filter writes a separate Output array).
-  const auto& inStore = ds.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
   std::vector<T> input(inStore.getSize());
   for(usize i = 0; i < input.size(); ++i)
   {
@@ -401,12 +401,13 @@ inline void RunObjectMorphologyComputedExpected(const std::function<DataPath(Dat
   }
 
   NewFilterT filter;
-  detail::RunFilter<NewFilterT>(filter, ds, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}, setParams);
+  detail::RunFilter<NewFilterT>(filter, dataStructure, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
+                                setParams);
 
   const std::vector<T> expected = ObjectMorphologyOracle<T>(input, dimX, dimY, dimZ, kernelType, radius, op, objectValue, backgroundValue);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); ++i)
   {
@@ -440,18 +441,18 @@ inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, c
   const DataPath output = cellData.createChildPath("Output");
 
   // --- read input through OUR reader ---
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   // --- geometry dims + input snapshot (for the deterministic oracle; the filter writes a separate Output array) ---
-  const auto* imageGeom = ds.getDataAs<ImageGeom>(geom);
-  REQUIRE(imageGeom != nullptr);
-  const SizeVec3 dims = imageGeom->getDimensions();
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(geom);
+  REQUIRE(imageGeomPtr != nullptr);
+  const SizeVec3 dims = imageGeomPtr->getDimensions();
   const usize dimX = dims[0];
   const usize dimY = dims[1];
   const usize dimZ = dims[2];
-  const auto& inStore = ds.getDataRefAs<DataArray<T>>(input).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(input).getDataStoreRef();
   std::vector<T> inputBuf(inStore.getSize());
   for(usize i = 0; i < inputBuf.size(); ++i)
   {
@@ -465,14 +466,14 @@ inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, c
   args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setParams(args, static_cast<uint64>(KernelType::Ball), {1, 1, 1});
   FilterT filter;
-  const auto preflightResult = filter.preflight(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- (B) DETERMINISTIC oracle over the real input ---
   const std::vector<T> expected = ObjectMorphologyOracle<T>(inputBuf, dimX, dimY, dimZ, KernelType::Ball, {1, 1, 1}, op, objectValue, backgroundValue);
-  const auto& outStore = ds.getDataRefAs<DataArray<T>>(output).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(output).getDataStoreRef();
   REQUIRE(outStore.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); ++i)
   {
@@ -483,11 +484,11 @@ inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, c
   // --- (A) DURABLE baseline golden: stored baseline compared at tolerance ---
   const DataPath baselineGeom({"Baseline Geometry"});
   const DataPath baselineData = baselineGeom.createChildPath("CellData").createChildPath("Baseline");
-  const Result<> readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath(baselineFile), baselineGeom, "CellData", "Baseline");
+  const Result<> readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath(baselineFile), baselineGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
-  const Result<> compareResult = ip_golden::CompareImages(ds, baselineGeom, baselineData, geom, output, tolerance);
+  const Result<> compareResult = ip_golden::CompareImages(dataStructure, baselineGeom, baselineData, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace object_morph_test

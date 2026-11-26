@@ -126,7 +126,7 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -139,22 +139,22 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeBiasedFeaturesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeBiasedFeaturesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeBiasedFeaturesFilter::k_CalcByPhase_Key) == true);
       CHECK(args.value<DataPath>(ComputeBiasedFeaturesFilter::k_GeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeBiasedFeaturesFilter::k_CentroidsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -196,20 +196,20 @@ void CheckPlanarBias(usize plane, bool spacingFixture)
   DataStructure dataStructure;
   const DataPath geomPath({"Planar"});
   const DataPath featurePath = geomPath.createChildPath("Features");
-  auto* geom = ImageGeom::Create(dataStructure, "Planar");
-  geom->setDimensions(dims);
-  REQUIRE(geom->setSpacing(spacing).valid());
-  REQUIRE(geom->setOrigin(origin).valid());
-  auto* features = AttributeMatrix::Create(dataStructure, "Features", {2}, geom->getId());
-  auto* centroids = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Centroids", {2}, {3}, features->getId());
-  auto* surface = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Surface", {2}, {1}, features->getId());
-  auto* phases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {2}, {1}, features->getId());
-  surface->fill(false);
-  phases->fill(1);
-  centroids->fill(0);
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Planar");
+  geomPtr->setDimensions(dims);
+  REQUIRE(geomPtr->setSpacing(spacing).valid());
+  REQUIRE(geomPtr->setOrigin(origin).valid());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {2}, geomPtr->getId());
+  auto* centroidsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Centroids", {2}, {3}, featuresPtr->getId());
+  auto* surfacePtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Surface", {2}, {1}, featuresPtr->getId());
+  auto* phasesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {2}, {1}, featuresPtr->getId());
+  surfacePtr->fill(false);
+  phasesPtr->fill(1);
+  centroidsPtr->fill(0);
   for(usize axis = 0; axis < 3; axis++)
   {
-    (*centroids)[3 + axis] = centroid[axis];
+    (*centroidsPtr)[3 + axis] = centroid[axis];
   }
   ComputeBiasedFeaturesFilter filter;
   auto args = filter.getDefaultArguments();
@@ -221,12 +221,12 @@ void CheckPlanarBias(usize plane, bool spacingFixture)
   args.insertOrAssign(ComputeBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key, std::make_any<std::string>("Biased"));
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* biased = dataStructure.getDataAs<BoolArray>(featurePath.createChildPath("Biased"));
-  REQUIRE(biased != nullptr);
+  const auto* biasedPtr = dataStructure.getDataAs<BoolArray>(featurePath.createChildPath("Biased"));
+  REQUIRE(biasedPtr != nullptr);
   // Active-axis bounds are [10,14] x [20,32]; (12,22) is strictly inside.
   // Spacing fixtures: XY [18,22] x [10,22], YZ [14,22] x [0,24], XZ [18,22] x [0,24].
   // The centroid (20,20) is strictly inside each spacing fixture. No surface feature shrinks the bounds.
-  CHECK_FALSE((*biased)[1]);
+  CHECK_FALSE((*biasedPtr)[1]);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace

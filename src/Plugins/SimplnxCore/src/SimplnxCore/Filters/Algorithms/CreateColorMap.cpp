@@ -23,10 +23,10 @@ const std::atomic_bool& CreateColorMap::getCancel()
 
 Result<> CreateColorMap::operator()()
 {
-  const auto* selectedArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
-  const auto* colorArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->RgbArrayPath);
-  const auto* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  const auto* selectedArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
+  const auto* colorArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->RgbArrayPath);
+  const auto* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
 
   // Input, output, and mask storage each determine whether bulk I/O is required.
-  return DispatchAlgorithm<CreateColorMapDirect, CreateColorMapScanline>({selectedArray, colorArray, maskArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<CreateColorMapDirect, CreateColorMapScanline>({selectedArrayPtr, colorArrayPtr, maskArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

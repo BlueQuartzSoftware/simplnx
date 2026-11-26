@@ -16,17 +16,17 @@ const uint16_t k_PhotometricRgb = 0x0002;
 
 struct TIFTAG
 {
-  int16_t TagId = 0;      // The tag identifier
-  int16_t DataType = 0;   // The scalar type of the data items
-  int32_t DataCount = 0;  // The number of items in the tag data
-  int32_t DataOffset = 0; // The byte offset to the data items
+  int16_t tag_id = 0;      // The tag identifier
+  int16_t data_type = 0;   // The scalar type of the data items
+  int32_t data_count = 0;  // The number of items in the tag data
+  int32_t data_offset = 0; // The byte offset to the data items
 
   friend std::ostream& operator<<(std::ostream& out, const TIFTAG& tag)
   {
-    out.write(reinterpret_cast<const char*>(&tag.TagId), sizeof(tag.TagId));
-    out.write(reinterpret_cast<const char*>(&tag.DataType), sizeof(tag.DataType));
-    out.write(reinterpret_cast<const char*>(&tag.DataCount), sizeof(tag.DataCount));
-    out.write(reinterpret_cast<const char*>(&tag.DataOffset), sizeof(tag.DataOffset));
+    out.write(reinterpret_cast<const char*>(&tag.tag_id), sizeof(tag.tag_id));
+    out.write(reinterpret_cast<const char*>(&tag.data_type), sizeof(tag.data_type));
+    out.write(reinterpret_cast<const char*>(&tag.data_count), sizeof(tag.data_count));
+    out.write(reinterpret_cast<const char*>(&tag.data_offset), sizeof(tag.data_offset));
 
     return out;
   }
@@ -54,31 +54,31 @@ std::pair<int32_t, std::string> TiffWriter::WriteImage(const std::string& filepa
 
   outputFile.write(magicNumber.data(), magicNumber.size());
   // Generate the offset into the Image File Directory (ifd) which we are going to write first
-  constexpr uint32_t ifdOffset = 8;
-  outputFile.write(reinterpret_cast<const char*>(&ifdOffset), sizeof(ifdOffset));
-  const int k_NumTags = 12;
+  constexpr uint32_t k_IfdOffset = 8;
+  outputFile.write(reinterpret_cast<const char*>(&k_IfdOffset), sizeof(k_IfdOffset));
+  const int kNumTags = 12;
   std::vector<TIFTAG> tags;
-  tags.push_back(TIFTAG{.TagId = 0x00FE, .DataType = 0x0004, .DataCount = 1, .DataOffset = 0x00000000});                // NewSubfileType
-  tags.push_back(TIFTAG{.TagId = 0x0100, .DataType = 0x0004, .DataCount = 1, .DataOffset = width});                     // ImageWidth
-  tags.push_back(TIFTAG{.TagId = 0x0101, .DataType = 0x0004, .DataCount = 1, .DataOffset = height});                    // ImageLength
-  tags.push_back(TIFTAG{.TagId = 0x0102, .DataType = 0x0003, .DataCount = 1, .DataOffset = 8 * sizeof(char)});          // BitsPerSample
-  tags.push_back(TIFTAG{.TagId = 0x0103, .DataType = 0x0003, .DataCount = 1, .DataOffset = 0x0001});                    // Compression
-  tags.push_back(TIFTAG{.TagId = 0x0106, .DataType = 0x0003, .DataCount = 1, .DataOffset = photometricInterpretation}); // PhotometricInterpretation  // For SamplesPerPixel = 3 or 4 (RGB or RGBA)
+  tags.push_back(TIFTAG{.tag_id = 0x00FE, .data_type = 0x0004, .data_count = 1, .data_offset = 0x00000000});                // NewSubfileType
+  tags.push_back(TIFTAG{.tag_id = 0x0100, .data_type = 0x0004, .data_count = 1, .data_offset = width});                     // ImageWidth
+  tags.push_back(TIFTAG{.tag_id = 0x0101, .data_type = 0x0004, .data_count = 1, .data_offset = height});                    // ImageLength
+  tags.push_back(TIFTAG{.tag_id = 0x0102, .data_type = 0x0003, .data_count = 1, .data_offset = 8 * sizeof(char)});          // BitsPerSample
+  tags.push_back(TIFTAG{.tag_id = 0x0103, .data_type = 0x0003, .data_count = 1, .data_offset = 0x0001});                    // Compression
+  tags.push_back(TIFTAG{.tag_id = 0x0106, .data_type = 0x0003, .data_count = 1, .data_offset = photometricInterpretation}); // PhotometricInterpretation  // For SamplesPerPixel = 3 or 4 (RGB or RGBA)
   // Now compute the offset to the image data so that we can put that into the tag.
   // The math on this ONLY Works if we have 11 total Tags.
   // IF YOU ADD MORE TAGS, YOU NEED TO ADJUST THE NEXT LINE OF CODE
-  int32_t imageDataOffset = static_cast<int32_t>(8 + (k_NumTags * 12) + 6);                                   // Header + tags + IDF Tag entry count and Next IFD Offset
-  tags.push_back(TIFTAG{.TagId = 0x0111, .DataType = 0x0004, .DataCount = 1, .DataOffset = imageDataOffset}); // StripOffsets
+  int32_t imageDataOffset = static_cast<int32_t>(8 + (kNumTags * 12) + 6);                                        // Header + tags + IDF Tag entry count and Next IFD Offset
+  tags.push_back(TIFTAG{.tag_id = 0x0111, .data_type = 0x0004, .data_count = 1, .data_offset = imageDataOffset}); // StripOffsets
 
-  tags.push_back(TIFTAG{.TagId = 0x0112, .DataType = 0x0003, .DataCount = 1, .DataOffset = 1});                                // Orientation
-  tags.push_back(TIFTAG{.TagId = 0x0115, .DataType = 0x0003, .DataCount = 1, .DataOffset = samplesPerPixel});                  // SamplesPerPixel
-  tags.push_back(TIFTAG{.TagId = 0x0116, .DataType = 0x0004, .DataCount = 1, .DataOffset = height});                           // RowsPerStrip
-  tags.push_back(TIFTAG{.TagId = 0x0117, .DataType = 0x0004, .DataCount = 1, .DataOffset = width * height * samplesPerPixel}); // StripByteCounts
+  tags.push_back(TIFTAG{.tag_id = 0x0112, .data_type = 0x0003, .data_count = 1, .data_offset = 1});                                // Orientation
+  tags.push_back(TIFTAG{.tag_id = 0x0115, .data_type = 0x0003, .data_count = 1, .data_offset = samplesPerPixel});                  // SamplesPerPixel
+  tags.push_back(TIFTAG{.tag_id = 0x0116, .data_type = 0x0004, .data_count = 1, .data_offset = height});                           // RowsPerStrip
+  tags.push_back(TIFTAG{.tag_id = 0x0117, .data_type = 0x0004, .data_count = 1, .data_offset = width * height * samplesPerPixel}); // StripByteCounts
 
   // TIFTAG XResolution;
   // TIFTAG YResolution;
   // TIFTAG ResolutionUnit;
-  tags.push_back(TIFTAG{.TagId = 0x011c, .DataType = 0x0003, .DataCount = 1, .DataOffset = 0x0001}); // PlanarConfiguration // 284
+  tags.push_back(TIFTAG{.tag_id = 0x011c, .data_type = 0x0003, .data_count = 1, .data_offset = 0x0001}); // PlanarConfiguration // 284
 
   // Write the number of tags to the IFD section
   uint16_t numEntries = static_cast<uint16_t>(tags.size());
@@ -89,8 +89,8 @@ std::pair<int32_t, std::string> TiffWriter::WriteImage(const std::string& filepa
     outputFile << tag;
   }
   // Write the "Next Tag Offset"
-  constexpr uint32_t nextOffset = 0;
-  outputFile.write(reinterpret_cast<const char*>(&nextOffset), sizeof(nextOffset));
+  constexpr uint32_t k_NextOffset = 0;
+  outputFile.write(reinterpret_cast<const char*>(&k_NextOffset), sizeof(k_NextOffset));
 
   // Now write the actual image data
   const int32_t imageByteCount = width * height * samplesPerPixel;

@@ -117,8 +117,8 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  if(clusterArray == nullptr)
+  const auto* clusterArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  if(clusterArrayPtr == nullptr)
   {
     return MakePreflightErrorResult(-7584, "Array to Cluster MUST be a valid DataPath.");
   }
@@ -126,8 +126,8 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   {
     return MakePreflightErrorResult(-7585, "The number of initial clusters must be between 1 and INT32_MAX - 1.");
   }
-  if(clusterArray->getNumberOfComponents() == 0 || (pInitClustersValue + 1) > std::numeric_limits<usize>::max() ||
-     static_cast<usize>(pInitClustersValue + 1) > std::numeric_limits<usize>::max() / clusterArray->getNumberOfComponents())
+  if(clusterArrayPtr->getNumberOfComponents() == 0 || (pInitClustersValue + 1) > std::numeric_limits<usize>::max() ||
+     static_cast<usize>(pInitClustersValue + 1) > std::numeric_limits<usize>::max() / clusterArrayPtr->getNumberOfComponents())
   {
     return MakePreflightErrorResult(-7586, "The medoids output dimensions overflow the supported address range.");
   }
@@ -140,13 +140,13 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
       const auto& maskArray = dataStructure.getDataRefAs<IArray>(maskPath);
       return MakePreflightErrorResult(
           -7589, fmt::format("**Attribute Array to Cluster** DataArray '{}' has {} tuples, but **Mask Array** DataArray '{}' has {} tuples. Select DataArrays with the same number of tuples.",
-                             pSelectedArrayPathValue.toString(), clusterArray->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
+                             pSelectedArrayPathValue.toString(), clusterArrayPtr->getNumberOfTuples(), maskPath.toString(), maskArray.getNumberOfTuples()));
     }
   }
 
   {
     auto createAction =
-        std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
+        std::make_unique<CreateArrayAction>(DataType::int32, clusterArrayPtr->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -156,7 +156,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
-    auto createAction = std::make_unique<CreateArrayAction>(clusterArray->getDataType(), tupDims, clusterArray->getComponentShape(), pFeatureAMPathValue.createChildPath(pMedoidsArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(clusterArrayPtr->getDataType(), tupDims, clusterArrayPtr->getComponentShape(), pFeatureAMPathValue.createChildPath(pMedoidsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -198,7 +198,7 @@ Result<> ComputeKMedoidsFilter::executeImpl(DataStructure& dataStructure, const 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_InitClustersKey = "InitClusters";
 constexpr StringLiteral k_DistanceMetricKey = "DistanceMetric";
@@ -210,7 +210,7 @@ constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
 constexpr StringLiteral k_MedoidsArrayNameKey = "MedoidsArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeKMedoidsFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -219,17 +219,17 @@ Result<Arguments> ComputeKMedoidsFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_InitClustersKey, k_InitClusters_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DistanceMetricKey, k_DistanceMetric_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseMaskKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseRandomSeedKey, k_UseSeed_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, SIMPL::k_RandomSeedValueKey, k_SeedValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, SIMPL::k_FeatureAttributeMatrixNameKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_InitClustersKey, k_InitClusters_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DistanceMetricKey, k_DistanceMetric_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_UseSeed_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, simpl::k_FeatureAttributeMatrixNameKey,
                                                                                                                 k_FeatureAMPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_MedoidsArrayNameKey, k_MedoidsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_MedoidsArrayNameKey, k_MedoidsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

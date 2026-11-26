@@ -104,12 +104,12 @@ std::string LinkedPath::getName() const
 
 std::string LinkedPath::getNameAt(usize index) const
 {
-  const DataObject* data = getDataAt(index);
-  if(data == nullptr)
+  const DataObject* dataPtr = getDataAt(index);
+  if(dataPtr == nullptr)
   {
     return "[ missing ]";
   }
-  return data->getName();
+  return dataPtr->getName();
 }
 
 std::string LinkedPath::toString(const std::string& div) const

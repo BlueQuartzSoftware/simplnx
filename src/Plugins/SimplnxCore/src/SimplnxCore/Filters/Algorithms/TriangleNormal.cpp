@@ -24,9 +24,9 @@ Result<> TriangleNormal::operator()()
   auto pNormalsName = m_InputValues->OutputNormalsArrayName;
 
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
+  const AttributeMatrix* faceAttributeMatrixPtr = triangleGeom.getFaceAttributeMatrix();
 
-  DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pNormalsName);
+  DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pNormalsName);
   auto& normalsRef = m_DataStructure.getDataAs<Float64Array>(pNormalsArrayPath)->getDataStoreRef();
 
   return MeshingUtilities::CalculateNormals(*triangleGeom.getFaces(), *triangleGeom.getVertices(), normalsRef, m_ShouldCancel);

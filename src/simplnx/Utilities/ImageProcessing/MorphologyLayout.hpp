@@ -33,7 +33,7 @@ inline constexpr int32 k_MorphologyByteCountError = -88009;
 inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, nonstd::span<const uint32> radius, bool safeBorder, usize elementBytes)
 {
   SizeVec3 paddedDims = dims;
-  constexpr std::array<const char*, 3> axes = {"X", "Y", "Z"};
+  constexpr std::array<const char*, 3> k_Axes = {"X", "Y", "Z"};
   for(usize axis = 0; axis < 3; ++axis)
   {
     const usize pad = safeBorder && (axis != 2 || dims[2] != 1) ? static_cast<usize>(radius[axis]) : 0;
@@ -41,36 +41,36 @@ inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, nonstd::span<cons
     {
       return MakeErrorResult(k_MorphologyPaddedExtentError,
                              fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) overflow padded extent dims[{}]+2*pad. Reduce the dimensions or radii.",
-                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], axes.at(axis)));
+                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], k_Axes.at(axis)));
     }
     paddedDims[axis] += 2 * pad;
   }
-  constexpr uint64 signedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
+  constexpr uint64 k_SignedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
   for(usize axis = 0; axis < 3; ++axis)
   {
     // Padded extents are at least the original extents, so this also bounds original coordinates.
-    if(paddedDims[axis] > signedMax - static_cast<uint64>(radius[axis]) - 1)
+    if(paddedDims[axis] > k_SignedMax - static_cast<uint64>(radius[axis]) - 1)
     {
       return MakeErrorResult(k_MorphologyCoordinateError,
                              fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed coordinate limit: padded extent {} + radius {} + 1 on axis {} must be at "
                                          "most {}. Reduce the dimensions or radii.",
-                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[axis], radius[axis], axes.at(axis), signedMax));
+                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[axis], radius[axis], k_Axes.at(axis), k_SignedMax));
     }
   }
-  if(paddedDims[0] != 0 && paddedDims[1] > signedMax / paddedDims[0])
+  if(paddedDims[0] != 0 && paddedDims[1] > k_SignedMax / paddedDims[0])
   {
     return MakeErrorResult(
         k_MorphologyPlaneError,
         fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed plane count limit: padded X*Y = {}*{} must be at most {}. Reduce the dimensions or radii.",
-                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], signedMax));
+                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], k_SignedMax));
   }
   const uint64 plane = static_cast<uint64>(paddedDims[0]) * paddedDims[1];
-  if(plane != 0 && paddedDims[2] > signedMax / plane)
+  if(plane != 0 && paddedDims[2] > k_SignedMax / plane)
   {
     return MakeErrorResult(
         k_MorphologyVolumeError,
         fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed volume count limit: padded X*Y*Z = {}*{}*{} must be at most {}. Reduce the dimensions or radii.",
-                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], paddedDims[2], signedMax));
+                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], paddedDims[2], k_SignedMax));
   }
   const uint64 volume = plane * paddedDims[2];
   if(elementBytes != 0 && volume > std::numeric_limits<uint64>::max() / elementBytes)

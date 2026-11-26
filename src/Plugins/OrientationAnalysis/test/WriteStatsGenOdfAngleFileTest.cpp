@@ -48,14 +48,14 @@ DataStructure CreateAnalyticalDataStructure()
   REQUIRE(boolMaskStore != nullptr);
   REQUIRE(uint8MaskStore != nullptr);
 
-  auto* eulers = Float32Array::Create(dataStructure, k_AnalyticalEulersPath.getTargetName(), eulersStore);
-  auto* phases = Int32Array::Create(dataStructure, k_AnalyticalPhasesPath.getTargetName(), phasesStore);
-  auto* boolMask = BoolArray::Create(dataStructure, k_AnalyticalBoolMaskPath.getTargetName(), boolMaskStore);
-  auto* uint8Mask = UInt8Array::Create(dataStructure, k_AnalyticalUInt8MaskPath.getTargetName(), uint8MaskStore);
-  REQUIRE(eulers != nullptr);
-  REQUIRE(phases != nullptr);
-  REQUIRE(boolMask != nullptr);
-  REQUIRE(uint8Mask != nullptr);
+  auto* eulersPtr = Float32Array::Create(dataStructure, k_AnalyticalEulersPath.getTargetName(), eulersStore);
+  auto* phasesPtr = Int32Array::Create(dataStructure, k_AnalyticalPhasesPath.getTargetName(), phasesStore);
+  auto* boolMaskPtr = BoolArray::Create(dataStructure, k_AnalyticalBoolMaskPath.getTargetName(), boolMaskStore);
+  auto* uint8MaskPtr = UInt8Array::Create(dataStructure, k_AnalyticalUInt8MaskPath.getTargetName(), uint8MaskStore);
+  REQUIRE(eulersPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(boolMaskPtr != nullptr);
+  REQUIRE(uint8MaskPtr != nullptr);
 
   const std::array<float32, 12> eulerValues = {
       0.0F, Constants::k_PiOver2F, Constants::k_PiF, 0.25F, 0.5F, 0.75F, Constants::k_PiOver2F, 0.0F, Constants::k_PiOver2F, 1.0F, 1.25F, 1.5F,
@@ -64,13 +64,13 @@ DataStructure CreateAnalyticalDataStructure()
   const std::array<bool, 4> maskValues = {true, false, true, false};
   for(usize valueIdx = 0; valueIdx < eulerValues.size(); valueIdx++)
   {
-    (*eulers)[valueIdx] = eulerValues[valueIdx];
+    (*eulersPtr)[valueIdx] = eulerValues[valueIdx];
   }
   for(usize tupleIdx = 0; tupleIdx < phaseValues.size(); tupleIdx++)
   {
-    (*phases)[tupleIdx] = phaseValues[tupleIdx];
-    (*boolMask)[tupleIdx] = maskValues[tupleIdx];
-    (*uint8Mask)[tupleIdx] = maskValues[tupleIdx] ? 1U : 0U;
+    (*phasesPtr)[tupleIdx] = phaseValues[tupleIdx];
+    (*boolMaskPtr)[tupleIdx] = maskValues[tupleIdx];
+    (*uint8MaskPtr)[tupleIdx] = maskValues[tupleIdx] ? 1U : 0U;
   }
 
   return dataStructure;
@@ -285,7 +285,7 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter 
 
   SECTION("input cell data arrays have mismatching tuples")
   {
-    auto* invalidPhaseArray = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "Invalid_Phases_Array", std::vector<usize>{50, 50, 1}, std::vector<usize>{1});
+    auto* invalidPhaseArrayPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "Invalid_Phases_Array", std::vector<usize>{50, 50, 1}, std::vector<usize>{1});
 
     args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Invalid_Phases_Array"})));
   }
@@ -303,7 +303,7 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: SIMPL Backwards
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -316,22 +316,22 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: SIMPL Backwards
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteStatsGenOdfAngleFileFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<float32>(WriteStatsGenOdfAngleFileFilter::k_Weight_Key) == 2.5f);
       CHECK(args.value<int32>(WriteStatsGenOdfAngleFileFilter::k_Sigma_Key) == 5);

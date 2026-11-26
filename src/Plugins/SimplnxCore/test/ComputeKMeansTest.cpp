@@ -93,15 +93,15 @@ template <typename MaskT>
 void BuildKMeansMaskParityData(DataStructure& dataStructure, usize tupleCount, bool allFalseMask, bool useOocStore)
 {
   const ShapeType tupleShape = {tupleCount, 1, 1};
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_MaskParityGeometryPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({tupleCount, 1, 1});
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_MaskParityCellDataPath.getTargetName(), tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_MaskParityGeometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({tupleCount, 1, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_MaskParityCellDataPath.getTargetName(), tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto inputStore = CreateKMeansStore<float32>(dataStructure, k_MaskParityInputPath, tupleShape, {2}, useOocStore);
-  REQUIRE(Float32Array::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellData->getId()) != nullptr);
+  REQUIRE(Float32Array::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellDataPtr->getId()) != nullptr);
   std::vector<float32> inputValues(tupleCount * 2);
   for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
   {
@@ -112,7 +112,7 @@ void BuildKMeansMaskParityData(DataStructure& dataStructure, usize tupleCount, b
   SIMPLNX_RESULT_REQUIRE_VALID(inputStoreWriteResult);
 
   auto maskStore = CreateKMeansStore<MaskT>(dataStructure, k_MaskParityMaskPath, tupleShape, {1}, useOocStore);
-  REQUIRE(DataArray<MaskT>::Create(dataStructure, k_MaskParityMaskPath.getTargetName(), maskStore, cellData->getId()) != nullptr);
+  REQUIRE(DataArray<MaskT>::Create(dataStructure, k_MaskParityMaskPath.getTargetName(), maskStore, cellDataPtr->getId()) != nullptr);
   auto maskValues = std::make_unique<MaskT[]>(tupleCount);
   for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
   {
@@ -158,15 +158,15 @@ void BuildKMeansFixture(DataStructure& dataStructure, const std::vector<T>& valu
   REQUIRE(values.size() % comps == 0);
   const usize tupleCount = values.size() / comps;
   const ShapeType tupleShape = {1, 1, tupleCount};
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_MaskParityGeometryPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({tupleCount, 1, 1});
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_MaskParityCellDataPath.getTargetName(), tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_MaskParityGeometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({tupleCount, 1, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_MaskParityCellDataPath.getTargetName(), tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto inputStore = CreateKMeansStore<T>(dataStructure, k_MaskParityInputPath, tupleShape, {comps}, false);
-  REQUIRE(DataArray<T>::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellData->getId()) != nullptr);
+  REQUIRE(DataArray<T>::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellDataPtr->getId()) != nullptr);
   auto inputWriteResult = inputStore->copyFromBuffer(0, nonstd::span<const T>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(inputWriteResult);
 
@@ -174,7 +174,7 @@ void BuildKMeansFixture(DataStructure& dataStructure, const std::vector<T>& valu
   {
     REQUIRE(mask->size() == tupleCount);
     auto maskStore = CreateKMeansStore<bool>(dataStructure, k_MaskParityMaskPath, tupleShape, {1}, false);
-    REQUIRE(BoolArray::Create(dataStructure, k_MaskParityMaskPath.getTargetName(), maskStore, cellData->getId()) != nullptr);
+    REQUIRE(BoolArray::Create(dataStructure, k_MaskParityMaskPath.getTargetName(), maskStore, cellDataPtr->getId()) != nullptr);
     auto maskValues = std::make_unique<bool[]>(tupleCount);
     for(usize tupleIdx = 0; tupleIdx < tupleCount; ++tupleIdx)
     {
@@ -193,15 +193,15 @@ void BuildKMeansFixture(DataStructure& dataStructure, const std::vector<T>& valu
 void BuildKMeansOneClusterData(DataStructure& dataStructure, bool useOocStore)
 {
   const ShapeType tupleShape = {3, 1, 1};
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_MaskParityGeometryPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({3, 1, 1});
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_MaskParityCellDataPath.getTargetName(), tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_MaskParityGeometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({3, 1, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_MaskParityCellDataPath.getTargetName(), tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   auto inputStore = CreateKMeansStore<float32>(dataStructure, k_MaskParityInputPath, tupleShape, {1}, useOocStore);
-  REQUIRE(Float32Array::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellData->getId()) != nullptr);
+  REQUIRE(Float32Array::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellDataPtr->getId()) != nullptr);
   const std::array<float32, 3> inputValues = {2.0F, 4.0F, 6.0F};
   auto writeResult = inputStore->copyFromBuffer(0, nonstd::span<const float32>(inputValues.data(), inputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
@@ -496,7 +496,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[Sim
   UnitTest::LoadPlugins();
 
   const auto checkParity = [](auto maskTag) {
-    using MaskT = decltype(maskTag);
+    using MaskTType = decltype(maskTag);
 
     std::vector<int32> expectedIds;
     std::vector<float64> expectedMeans;
@@ -507,7 +507,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[Sim
       CAPTURE(scenario);
       UnitTest::AlgorithmTestScope scope(scenario);
       DataStructure dataStructure;
-      BuildKMeansMaskParityData<MaskT>(dataStructure, 24, false, false);
+      BuildKMeansMaskParityData<MaskTType>(dataStructure, 24, false, false);
       ComputeKMeansFilter filter;
       Arguments args = CreateKMeansMaskParityArguments();
       auto preflightResult = filter.preflight(dataStructure, args);
@@ -673,10 +673,10 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters leave direct and scanline o
         const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_MaskParityCellDataPath);
         auto idStore = std::make_shared<DataStore<int32>>(ShapeType{3, 1, 1}, ShapeType{1}, int32{-77});
         REQUIRE(Int32Array::Create(dataStructure, k_MaskParityIdsPath.getTargetName(), idStore, cellData.getId()) != nullptr);
-        auto* featureData = AttributeMatrix::Create(dataStructure, k_MaskParityFeatureDataPath.getTargetName(), ShapeType{1}, imageGeom.getId());
-        REQUIRE(featureData != nullptr);
+        auto* featureDataPtr = AttributeMatrix::Create(dataStructure, k_MaskParityFeatureDataPath.getTargetName(), ShapeType{1}, imageGeom.getId());
+        REQUIRE(featureDataPtr != nullptr);
         auto meanStore = std::make_shared<DataStore<float32>>(ShapeType{1}, ShapeType{1}, 91.0F);
-        REQUIRE(Float32Array::Create(dataStructure, k_MaskParityMeansPath.getTargetName(), meanStore, featureData->getId()) != nullptr);
+        REQUIRE(Float32Array::Create(dataStructure, k_MaskParityMeansPath.getTargetName(), meanStore, featureDataPtr->getId()) != nullptr);
 
         ComputeKMeansInputValues values{};
         values.InitClusters = 0;
@@ -707,7 +707,7 @@ TEST_CASE("SimplnxCore::ComputeKMeansFilter: SIMPL Backwards Compatibility", "[S
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -720,22 +720,22 @@ TEST_CASE("SimplnxCore::ComputeKMeansFilter: SIMPL Backwards Compatibility", "[S
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeKMeansFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeKMeansFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Successful pipeline loading verifies the AMPathBuilderFilterParameterConverter value.
       CHECK(args.value<uint64>(ComputeKMeansFilter::k_InitClusters_Key) == 5);
       CHECK(args.value<ChoicesParameter::ValueType>(ComputeKMeansFilter::k_DistanceMetric_Key) == 0);
@@ -753,16 +753,16 @@ TEST_CASE("SimplnxCore::ComputeKMeansFilter: SIMPL Backwards Compatibility", "[S
 TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires 1 component", "[SimplnxCore][ComputeKMeans][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
-  REQUIRE(cellData != nullptr);
-  auto* input = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellData->getId());
-  (*input)[0] = 0.0F;
-  (*input)[1] = 1.0F;
-  auto* mask = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellData->getId());
-  (*mask)[0] = 1;
-  (*mask)[1] = 0;
-  (*mask)[2] = 1;
-  (*mask)[3] = 1;
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
+  REQUIRE(cellDataPtr != nullptr);
+  auto* inputPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellDataPtr->getId());
+  (*inputPtr)[0] = 0.0F;
+  (*inputPtr)[1] = 1.0F;
+  auto* maskPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellDataPtr->getId());
+  (*maskPtr)[0] = 1;
+  (*maskPtr)[1] = 0;
+  (*maskPtr)[2] = 1;
+  (*maskPtr)[3] = 1;
 
   ComputeKMeansFilter filter;
   auto args = filter.getDefaultArguments();
@@ -781,12 +781,12 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires 1 component", "[
 TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple counts", "[SimplnxCore][ComputeKMeans][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
-  auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
-  REQUIRE(cellData != nullptr);
-  REQUIRE(maskData != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellData->getId()) != nullptr);
-  REQUIRE(BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskData->getId()) != nullptr);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
+  auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
+  REQUIRE(cellDataPtr != nullptr);
+  REQUIRE(maskDataPtr != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
 
@@ -822,12 +822,12 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple c
 TEST_CASE("SimplnxCore::ComputeKMeans: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMeans][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
-  auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
-  REQUIRE(cellData != nullptr);
-  REQUIRE(maskData != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellData->getId()) != nullptr);
-  REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{4}, {"1", "1", "1", "1"}, maskData->getId()) != nullptr);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
+  auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
+  REQUIRE(cellDataPtr != nullptr);
+  REQUIRE(maskDataPtr != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{4}, {"1", "1", "1", "1"}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
 

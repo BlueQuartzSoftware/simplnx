@@ -32,8 +32,8 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
   std::vector<float32> freq(numBins, 0);
   std::vector<float32> randomCentroids;
   std::vector<std::vector<float32>> distanceList;
-  constexpr usize largeNumber = 1000;
-  constexpr usize numDistances = largeNumber * (largeNumber - 1);
+  constexpr usize k_LargeNumber = 1000;
+  constexpr usize k_NumDistances = k_LargeNumber * (k_LargeNumber - 1);
 
   // Random positions use physical ImageGeom dimensions and spacing.
   const auto xPoints = static_cast<usize>(boxDims[0] / boxRes[0]);
@@ -51,9 +51,9 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
   std::mt19937_64 generator(userSeedValue);
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
-  randomCentroids.resize(largeNumber * 3);
+  randomCentroids.resize(k_LargeNumber * 3);
 
-  for(usize i = 0; i < largeNumber; i++)
+  for(usize i = 0; i < k_LargeNumber; i++)
   {
     const auto featureOwnerIdx = static_cast<usize>(distribution(generator) * totalPoints);
 
@@ -70,15 +70,15 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
     randomCentroids[3 * i + 2] = zc;
   }
 
-  distanceList.resize(largeNumber);
+  distanceList.resize(k_LargeNumber);
 
-  for(usize i = 0; i < largeNumber; i++)
+  for(usize i = 0; i < k_LargeNumber; i++)
   {
     const float32 x = randomCentroids[3 * i];
     const float32 y = randomCentroids[3 * i + 1];
     const float32 z = randomCentroids[3 * i + 2];
 
-    for(usize j = i + 1; j < largeNumber; j++)
+    for(usize j = i + 1; j < k_LargeNumber; j++)
     {
 
       const float32 xn = randomCentroids[3 * j];
@@ -92,7 +92,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
     }
   }
 
-  for(usize i = 0; i < largeNumber; i++)
+  for(usize i = 0; i < k_LargeNumber; i++)
   {
     for(const auto distance : distanceList[i])
     {
@@ -110,7 +110,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
 
   for(usize i = 0; i < currentNumBins + 1; i++)
   {
-    freq[i] /= numDistances;
+    freq[i] /= k_NumDistances;
   }
 
   return freq;

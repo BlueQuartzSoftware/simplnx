@@ -150,20 +150,20 @@ nlohmann::json ReadHDF5DatasetParameter::toJsonImpl(const std::any& value) const
 // -----------------------------------------------------------------------------
 Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
+  static constexpr StringLiteral k_Prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(-780, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
+    return MakeErrorResult<std::any>(-780, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix, name()));
   }
 
   if(!json.contains(k_DataPathsKey.view()))
   {
-    return MakeErrorResult<std::any>(-781, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_DataPathsKey.view()));
+    return MakeErrorResult<std::any>(-781, fmt::format("{}JSON does not contain key '{} / {}'", k_Prefix, name(), k_DataPathsKey.view()));
   }
 
   if(!json.contains(k_InputFileKey.view()))
   {
-    return MakeErrorResult<std::any>(-782, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_InputFileKey.view()));
+    return MakeErrorResult<std::any>(-782, fmt::format("{}JSON does not contain key '{} / {}'", k_Prefix, name(), k_InputFileKey.view()));
   }
 
   ValueType importData;
@@ -177,7 +177,7 @@ Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& js
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-783, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_DataPathsKey));
+      return MakeErrorResult<std::any>(-783, fmt::format("{}JSON value for key '{} / {}' is not an array", k_Prefix, name(), k_DataPathsKey));
     }
     std::vector<Error> errors;
     for(const auto& jsonImportInfo : jsonDataPaths)

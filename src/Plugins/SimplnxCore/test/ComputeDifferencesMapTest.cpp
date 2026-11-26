@@ -57,8 +57,8 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Test Algorithm", "[ComputeD
   DataPath firstInputPath({"First Input"});
   DataPath secondInputPath({"Second Input"});
   DataPath createdArrayPath({"Created Array"});
-  auto* firstInputArray = UnitTest::CreateTestDataArray<int32>(dataStructure, firstInputPath.getTargetName(), {4}, {3});
-  auto* secondInputArray = UnitTest::CreateTestDataArray<int32>(dataStructure, secondInputPath.getTargetName(), {4}, {3});
+  auto* firstInputArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, firstInputPath.getTargetName(), {4}, {3});
+  auto* secondInputArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, secondInputPath.getTargetName(), {4}, {3});
 
   args.insertOrAssign(ComputeDifferencesMapFilter::k_FirstInputArrayPath_Key, std::make_any<DataPath>(firstInputPath));
   {
@@ -83,11 +83,11 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Test Algorithm", "[ComputeD
     UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, std::vector<DataPath>{createdArrayPath});
   }
 
-  const usize numValues = firstInputArray->getSize();
+  const usize numValues = firstInputArrayPtr->getSize();
   for(usize index = 0; index < numValues; index++)
   {
-    (*firstInputArray)[index] = static_cast<int32>(index % 7) - 3;
-    (*secondInputArray)[index] = static_cast<int32>(index % 5) - 2;
+    (*firstInputArrayPtr)[index] = static_cast<int32>(index % 7) - 3;
+    (*secondInputArrayPtr)[index] = static_cast<int32>(index % 5) - 2;
   }
 
   auto executeResult = filter.execute(dataStructure, args);
@@ -98,8 +98,8 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Test Algorithm", "[ComputeD
   REQUIRE(differenceMap.getSize() == numValues);
   for(usize index = 0; index < numValues; index++)
   {
-    const int32 firstValue = (*firstInputArray)[index];
-    const int32 secondValue = (*secondInputArray)[index];
+    const int32 firstValue = (*firstInputArrayPtr)[index];
+    const int32 secondValue = (*secondInputArrayPtr)[index];
     const int32 expected = firstValue > secondValue ? firstValue - secondValue : secondValue - firstValue;
     REQUIRE(differenceMap[index] == expected);
   }
@@ -111,7 +111,7 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -124,22 +124,22 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeDifferencesMapFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeDifferencesMapFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeDifferencesMapFilter::k_FirstInputArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeDifferencesMapFilter::k_SecondInputArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       // Complex type (DataArrayCreationFilterParameterConverter) - verified by successful pipeline loading

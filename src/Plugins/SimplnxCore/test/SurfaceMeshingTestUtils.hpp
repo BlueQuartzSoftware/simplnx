@@ -190,8 +190,8 @@ struct EdgeUseCounts
  */
 inline EdgeUseCounts CountEdgeUses(const TriangleGeom& triangleGeom)
 {
-  using VertexPair = std::pair<usize, usize>;
-  std::map<VertexPair, usize> edgeUses;
+  using VertexPairType = std::pair<usize, usize>;
+  std::map<VertexPairType, usize> edgeUses;
 
   const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
   const usize numFaces = triangleGeom.getNumberOfFaces();
@@ -203,7 +203,7 @@ inline EdgeUseCounts CountEdgeUses(const TriangleGeom& triangleGeom)
     {
       const usize vertA = vertIds[edgeIdx];
       const usize vertB = vertIds[(edgeIdx + 1) % 3];
-      edgeUses[VertexPair{std::min(vertA, vertB), std::max(vertA, vertB)}]++;
+      edgeUses[VertexPairType{std::min(vertA, vertB), std::max(vertA, vertB)}]++;
     }
   }
 

@@ -18,11 +18,11 @@ TEST_CASE("NXImageProcessing::TanImageFilter: tan near pi/2 is large-magnitude f
   const float32 inValue = static_cast<float32>(k_HalfPi);
   const float32 expected = static_cast<float32>(std::tan(static_cast<double>(inValue)));
 
-  DataStructure ds;
-  const DataPath input = ip_test::BuildScalarValuesImage<float32>(ds, {inValue});
-  const DataPath output = ip_test::RunPointwiseFilter<TanImageFilter>(ds, input);
+  DataStructure dataStructure;
+  const DataPath input = ip_test::BuildScalarValuesImage<float32>(dataStructure, {inValue});
+  const DataPath output = ip_test::RunPointwiseFilter<TanImageFilter>(dataStructure, input);
 
-  const auto& out = ds.getDataRefAs<DataArray<float32>>(output).getDataStoreRef();
+  const auto& out = dataStructure.getDataRefAs<DataArray<float32>>(output).getDataStoreRef();
   const float32 value = out.getValue(0);
   REQUIRE(std::isfinite(value));     // NOT inf: float32 cannot represent the exact pole
   REQUIRE(std::abs(value) > 1.0e6f); // but is a large magnitude
@@ -43,8 +43,8 @@ TEST_CASE("NXImageProcessing::TanImageFilter: ITK real-image golden (defaults)",
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("Ramp-Zero-One-Float.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -52,18 +52,18 @@ TEST_CASE("NXImageProcessing::TanImageFilter: ITK real-image golden (defaults)",
   args.insertOrAssign(TanImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(TanImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   TanImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: baseline compare @ 0.01.
   const DataPath bGeom({"Baseline Geometry"});
-  const auto readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath("BasicFilters_TanImageFilter_defaults.nrrd"), bGeom, "CellData", "Baseline");
+  const auto readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath("BasicFilters_TanImageFilter_defaults.nrrd"), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.01);
+  const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

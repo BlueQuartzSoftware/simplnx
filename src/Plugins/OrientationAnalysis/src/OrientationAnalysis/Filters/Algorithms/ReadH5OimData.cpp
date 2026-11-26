@@ -47,17 +47,17 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
 
   // EbsdLib owns one resident scan. Use bounded destination pages to avoid
   // per-value disk writes and a second scan-sized allocation.
-  constexpr usize kTuplesPerBatch = 65536;
+  constexpr usize k_TuplesPerBatch = 65536;
   // The two pages total one MiB, so keep them off Windows' default one-MiB thread stack.
-  auto phaseBuffer = std::make_unique<int32[]>(kTuplesPerBatch);
-  auto eulerBuffer = std::make_unique<float32[]>(kTuplesPerBatch * 3);
-  for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += kTuplesPerBatch)
+  auto phaseBuffer = std::make_unique<int32[]>(k_TuplesPerBatch);
+  auto eulerBuffer = std::make_unique<float32[]>(k_TuplesPerBatch * 3);
+  for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += k_TuplesPerBatch)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    const usize count = std::min(kTuplesPerBatch, tuplesPerScan - tupleOffset);
+    const usize count = std::min(k_TuplesPerBatch, tuplesPerScan - tupleOffset);
     for(usize i = 0; i < count; i++)
     {
       phaseBuffer[i] = std::max(phasePtr[tupleOffset + i], 1);
@@ -77,14 +77,14 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
     }
   }
   // Scalar channels already have the destination layout, so stream them directly.
-  const auto copyScalar = [this, sliceTupleStart, tuplesPerScan, kTuplesPerBatch](auto& array, const float32* values) -> Result<> {
-    for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += kTuplesPerBatch)
+  const auto copyScalar = [this, sliceTupleStart, tuplesPerScan, k_TuplesPerBatch](auto& array, const float32* values) -> Result<> {
+    for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += k_TuplesPerBatch)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      const usize count = std::min(kTuplesPerBatch, tuplesPerScan - tupleOffset);
+      const usize count = std::min(k_TuplesPerBatch, tuplesPerScan - tupleOffset);
       auto result = array.getDataStoreRef().copyFromBuffer(sliceTupleStart + tupleOffset, nonstd::span<const float32>(values + tupleOffset, count));
       if(result.invalid())
       {
@@ -131,13 +131,13 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
       pDimsV[1] = pDims[1];
       auto& patternData = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::PatternData));
       const usize numComponents = patternData.getNumberOfComponents();
-      for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += kTuplesPerBatch)
+      for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += k_TuplesPerBatch)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        const usize count = std::min(kTuplesPerBatch, tuplesPerScan - tupleOffset);
+        const usize count = std::min(k_TuplesPerBatch, tuplesPerScan - tupleOffset);
         auto patternResult = patternData.getDataStoreRef().copyFromBuffer((sliceTupleStart + tupleOffset) * numComponents,
                                                                           nonstd::span<const uint8>(patternDataPtr + tupleOffset * numComponents, count * numComponents));
         if(patternResult.invalid())

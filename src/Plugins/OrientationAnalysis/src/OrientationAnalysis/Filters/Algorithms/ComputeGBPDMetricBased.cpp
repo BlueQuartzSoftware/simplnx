@@ -35,28 +35,28 @@ class TriAreaAndNormals
 {
 public:
   TriAreaAndNormals(float64 triArea, float64 n1x, float64 n1y, float64 n1z, float64 n2x, float64 n2y, float64 n2z)
-  : Area(triArea)
-  , NormalGrain1X(n1x)
-  , NormalGrain1Y(n1y)
-  , NormalGrain1Z(n1z)
-  , NormalGrain2X(n2x)
-  , NormalGrain2Y(n2y)
-  , NormalGrain2Z(n2z)
+  : area(triArea)
+  , normal_grain1_x(n1x)
+  , normal_grain1_y(n1y)
+  , normal_grain1_z(n1z)
+  , normal_grain2_x(n2x)
+  , normal_grain2_y(n2y)
+  , normal_grain2_z(n2z)
   {
   }
   TriAreaAndNormals() = default;
 
-  float64 Area = 0.0;
-  float64 NormalGrain1X = 0.0;
-  float64 NormalGrain1Y = 0.0;
-  float64 NormalGrain1Z = 0.0;
-  float64 NormalGrain2X = 0.0;
-  float64 NormalGrain2Y = 0.0;
-  float64 NormalGrain2Z = 0.0;
+  float64 area = 0.0;
+  float64 normal_grain1_x = 0.0;
+  float64 normal_grain1_y = 0.0;
+  float64 normal_grain1_z = 0.0;
+  float64 normal_grain2_x = 0.0;
+  float64 normal_grain2_y = 0.0;
+  float64 normal_grain2_z = 0.0;
 
   bool operator<(const TriAreaAndNormals& other) const
   {
-    return Area < other.Area;
+    return area < other.area;
   }
 };
 
@@ -213,8 +213,8 @@ public:
 
       for(const auto& selectedTriangle : m_SelectedTriangles)
       {
-        const Eigen::Vector3d normal1 = {selectedTriangle.NormalGrain1X, selectedTriangle.NormalGrain1Y, selectedTriangle.NormalGrain1Z};
-        const Eigen::Vector3d normal2 = {selectedTriangle.NormalGrain2X, selectedTriangle.NormalGrain2Y, selectedTriangle.NormalGrain2Z};
+        const Eigen::Vector3d normal1 = {selectedTriangle.normal_grain1_x, selectedTriangle.normal_grain1_y, selectedTriangle.normal_grain1_z};
+        const Eigen::Vector3d normal2 = {selectedTriangle.normal_grain2_x, selectedTriangle.normal_grain2_y, selectedTriangle.normal_grain2_z};
 
         for(int32 j = 0; j < m_NSym; j++)
         {
@@ -237,14 +237,14 @@ public:
             if(gamma1 < m_LimitDist)
             {
               // Kahan summation reduces area-accumulation error.
-              const float64 y = selectedTriangle.Area - c;
+              const float64 y = selectedTriangle.area - c;
               const float64 t = m_DistributionValues[ptIdx] + y;
               c = (t - m_DistributionValues[ptIdx]) - y;
               m_DistributionValues[ptIdx] = t;
             }
             if(gamma2 < m_LimitDist)
             {
-              const float64 y = selectedTriangle.Area - c;
+              const float64 y = selectedTriangle.area - c;
               const float64 t = m_DistributionValues[ptIdx] + y;
               c = (t - m_DistributionValues[ptIdx]) - y;
               m_DistributionValues[ptIdx] = t;
@@ -648,7 +648,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   float64 totalFaceArea = 0.0;
   for(const auto& selectedTri : selectedTriangles)
   {
-    totalFaceArea += selectedTri.Area;
+    totalFaceArea += selectedTri.area;
   }
 
   std::vector<float64> distributionValues(samplePtsX.size(), 0.0);

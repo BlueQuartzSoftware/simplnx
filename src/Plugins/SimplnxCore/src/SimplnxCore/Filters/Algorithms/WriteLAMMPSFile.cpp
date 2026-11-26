@@ -12,7 +12,7 @@ using namespace nx::core;
 
 namespace
 {
-using ull = unsigned long long int;
+using UllType = unsigned long long int;
 }
 
 // -----------------------------------------------------------------------------

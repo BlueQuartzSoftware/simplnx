@@ -269,7 +269,7 @@ protected:
    * @param dims
    * @return usize
    */
-  static usize getOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims);
+  static usize GetOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims);
 
   /**
    * @brief Returns the 3D tile position from the specified linear index.

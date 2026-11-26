@@ -313,7 +313,7 @@ protected:
    * @brief Checks the DataStructure memory size and moves DataArrays to out-of-core if required.
    * @param dataStructure
    */
-  static void checkDataStructureSize(DataStructure& dataStructure);
+  static void CheckDataStructureSize(DataStructure& dataStructure);
 
   /**
    * @brief Updates the stored DataStructure from preflighting the node. This

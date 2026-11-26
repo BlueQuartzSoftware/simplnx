@@ -40,13 +40,13 @@ TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: flat-image special case
   const bool flatIsMinima = GENERATE(false, true);
   CAPTURE(flatIsMinima);
 
-  constexpr usize DX = 8;
-  constexpr usize DY = 8;
-  constexpr usize DZ = 4;
-  const std::vector<uint8> flatImg(DX * DY * DZ, uint8{100});
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 4;
+  const std::vector<uint8> flatImg(k_Dx * k_Dy * k_Dz, uint8{100});
 
   DataStructure newDs;
-  const DataPath newInput = rt::BuildImageFromPattern<uint8>(newDs, DX, DY, DZ, flatImg);
+  const DataPath newInput = rt::BuildImageFromPattern<uint8>(newDs, k_Dx, k_Dy, k_Dz, flatImg);
   RegionalMinimaImageFilter newFilter;
   rt::RunReconstructionFilter<RegionalMinimaImageFilter>(newFilter, newDs, newInput, MinimaSetter(1.0, 0.0, flatIsMinima), /*fullyConnected=*/false, /*height=*/0.0);
 
@@ -68,25 +68,25 @@ TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: hand-computed pit marke
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 5;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
-  std::vector<int32> pattern(DX * DY * DZ, 50);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 10;
-  pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = 10;
-  pattern[rt::FlatIndex(2, 3, 0, DX, DY)] = 10;
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = 10;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 50);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = 10;
+  pattern[rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)] = 10;
+  pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = 10;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = 10;
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   RegionalMinimaImageFilter filter;
-  rt::RunReconstructionFilter<RegionalMinimaImageFilter>(filter, ds, inputPath, MinimaSetter(1.0, 0.0, true), /*fullyConnected=*/false, /*height=*/0.0);
+  rt::RunReconstructionFilter<RegionalMinimaImageFilter>(filter, dataStructure, inputPath, MinimaSetter(1.0, 0.0, true), /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<uint32>>(outputPath).getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == 1); // pit -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == 1); // pit -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == 0); // field -> background
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<uint32>>(outputPath).getDataStoreRef();
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 1); // pit -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == 1); // pit -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == 0); // field -> background
 }
 
 // -----------------------------------------------------------------------------
@@ -102,19 +102,19 @@ TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: hand-computed pit marke
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  constexpr usize DX = 5;
-  constexpr usize DY = 5;
-  constexpr usize DZ = 1;
-  std::vector<int32> pattern(DX * DY * DZ, 50);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = 10;
-  pattern[rt::FlatIndex(3, 2, 0, DX, DY)] = 10;
-  pattern[rt::FlatIndex(2, 3, 0, DX, DY)] = 10;
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = 10;
+  constexpr usize k_Dx = 5;
+  constexpr usize k_Dy = 5;
+  constexpr usize k_Dz = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, 50);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = 10;
+  pattern[rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)] = 10;
+  pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = 10;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = 10;
 
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   RegionalMinimaImageFilter filter;
   Arguments args;
@@ -123,16 +123,16 @@ TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: hand-computed pit marke
   args.insertOrAssign(RegionalMinimaImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   MinimaSetter(1.0, 0.0, /*flatIsMinima=*/true)(args, /*fullyConnected=*/false, /*height=*/0.0);
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<uint32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == 1); // pit -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == 1); // pit -> foreground
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == 0); // field -> background
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 1); // pit -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == 1); // pit -> foreground
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == 0); // field -> background
 }
 
 // -----------------------------------------------------------------------------
@@ -144,8 +144,8 @@ TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: preflight fg/bg range g
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 8, 8, 8, rt::MakePlateauPattern<uint8>(8, 8, 8));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 8, 8, 8, rt::MakePlateauPattern<uint8>(8, 8, 8));
 
   auto makeArgs = [&](float64 fg) {
     Arguments args;
@@ -163,13 +163,13 @@ TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: preflight fg/bg range g
 
   SECTION("valid fg preflights cleanly")
   {
-    auto result = filter.preflight(ds, makeArgs(1.0));
+    auto result = filter.preflight(dataStructure, makeArgs(1.0));
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   }
 
   SECTION("out-of-range fg (negative, invalid for the uint32 output) is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(-1.0));
+    auto result = filter.preflight(dataStructure, makeArgs(-1.0));
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
   }

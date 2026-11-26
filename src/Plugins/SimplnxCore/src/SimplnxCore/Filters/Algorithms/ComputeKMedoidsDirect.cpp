@@ -123,11 +123,11 @@ public:
   }
 
 private:
-  using DataArrayT = DataArray<T>;
-  using AbstractDataStoreT = AbstractDataStore<T>;
+  using DataArrayTType = DataArray<T>;
+  using AbstractDataStoreTType = AbstractDataStore<T>;
   ComputeKMedoidsDirect* m_Filter;
-  const AbstractDataStoreT& m_InputArray;
-  AbstractDataStoreT& m_Medoids;
+  const AbstractDataStoreTType& m_InputArray;
+  AbstractDataStoreTType& m_Medoids;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   bool m_UseMask = false;
   usize m_NumClusters = 0;
@@ -266,8 +266,8 @@ const std::atomic_bool& ComputeKMedoidsDirect::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeKMedoidsDirect::operator()()
 {
-  auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  if(clusteringArray->getNumberOfTuples() == 0)
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  if(clusteringArrayPtr->getNumberOfTuples() == 0)
   {
     return MakeErrorResult(-54071, "Compute K Medoids requires at least one input tuple.");
   }
@@ -284,17 +284,17 @@ Result<> ComputeKMedoidsDirect::operator()()
     }
     bool hasEligible = false;
     constexpr usize k_EligibilityChunk = 4096;
-    if(auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath); maskArray->getDataType() == DataType::boolean)
+    if(auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath); maskArrayPtr->getDataType() == DataType::boolean)
     {
       std::array<bool, k_EligibilityChunk> values = {};
-      const auto& store = maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>();
-      for(usize offset = 0; offset < clusteringArray->getNumberOfTuples(); offset += k_EligibilityChunk)
+      const auto& store = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<bool>>();
+      for(usize offset = 0; offset < clusteringArrayPtr->getNumberOfTuples(); offset += k_EligibilityChunk)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        const usize count = std::min(k_EligibilityChunk, clusteringArray->getNumberOfTuples() - offset);
+        const usize count = std::min(k_EligibilityChunk, clusteringArrayPtr->getNumberOfTuples() - offset);
         auto result = store.copyIntoBuffer(offset, nonstd::span<bool>(values.data(), count));
         if(result.invalid())
         {
@@ -303,17 +303,17 @@ Result<> ComputeKMedoidsDirect::operator()()
         hasEligible = hasEligible || std::any_of(values.cbegin(), values.cbegin() + count, [](bool value) { return value; });
       }
     }
-    else if(maskArray->getDataType() == DataType::uint8)
+    else if(maskArrayPtr->getDataType() == DataType::uint8)
     {
       std::array<uint8, k_EligibilityChunk> values = {};
-      const auto& store = maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>();
-      for(usize offset = 0; offset < clusteringArray->getNumberOfTuples(); offset += k_EligibilityChunk)
+      const auto& store = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+      for(usize offset = 0; offset < clusteringArrayPtr->getNumberOfTuples(); offset += k_EligibilityChunk)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        const usize count = std::min(k_EligibilityChunk, clusteringArray->getNumberOfTuples() - offset);
+        const usize count = std::min(k_EligibilityChunk, clusteringArrayPtr->getNumberOfTuples() - offset);
         auto result = store.copyIntoBuffer(offset, nonstd::span<uint8>(values.data(), count));
         if(result.invalid())
         {
@@ -329,8 +329,8 @@ Result<> ComputeKMedoidsDirect::operator()()
   }
 
   RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(
-      clusteringArray->getDataType(), this, clusteringArray, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath), maskCompare, m_InputValues->UseMask, m_InputValues->InitClusters,
-      m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric, m_InputValues->Seed);
+      clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath), maskCompare, m_InputValues->UseMask,
+      m_InputValues->InitClusters, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric, m_InputValues->Seed);
 
   return {};
 }

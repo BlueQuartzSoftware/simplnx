@@ -56,19 +56,19 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
   DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanDataPtr = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroupPtr->getId());
 
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
 
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* anglesPtr = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanDataPtr->getId());
 
   for(size_t t = 0; t < tupleShape[0]; t++)
   {
     for(size_t c = 0; c < componentShape[0]; c++)
     {
-      (*angles)[t * componentShape[0] + c] = static_cast<float>(t * c);
+      (*anglesPtr)[t * componentShape[0] + c] = static_cast<float>(t * c);
     }
   }
 
@@ -88,7 +88,7 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
   {
     for(size_t c = 0; c < componentShape[0]; c++)
     {
-      REQUIRE((*angles)[t * componentShape[0] + c] == static_cast<float>(t * c) * d2r);
+      REQUIRE((*anglesPtr)[t * componentShape[0] + c] == static_cast<float>(t * c) * d2r);
     }
   }
 
@@ -107,19 +107,19 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
   DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanDataPtr = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroupPtr->getId());
 
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
 
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* anglesPtr = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanDataPtr->getId());
 
   for(size_t t = 0; t < tupleShape[0]; t++)
   {
     for(size_t c = 0; c < componentShape[0]; c++)
     {
-      (*angles)[t * componentShape[0] + c] = static_cast<float>(t * c);
+      (*anglesPtr)[t * componentShape[0] + c] = static_cast<float>(t * c);
     }
   }
 
@@ -139,7 +139,7 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
   {
     for(size_t c = 0; c < componentShape[0]; c++)
     {
-      REQUIRE((*angles)[t * componentShape[0] + c] == static_cast<float>(t * c) * r2d);
+      REQUIRE((*anglesPtr)[t * componentShape[0] + c] == static_cast<float>(t * c) * r2d);
     }
   }
 
@@ -150,7 +150,7 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: SIMPL Backwards Compati
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -163,22 +163,22 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: SIMPL Backwards Compati
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ChangeAngleRepresentationFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ChangeAngleRepresentationFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(ChangeAngleRepresentationFilter::k_ConversionType_Key) == 0);
       CHECK(args.value<DataPath>(ChangeAngleRepresentationFilter::k_AnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }

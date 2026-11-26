@@ -78,12 +78,12 @@ inline Result<> ValidateKernelRadius(nonstd::span<const uint32> radius)
   {
     return MakeErrorResult(k_KernelRadiusLengthError, fmt::format("Kernel Radius has {} components. Supply exactly 3 components (X, Y, Z).", radius.size()));
   }
-  constexpr std::array<const char*, 3> axes = {"X", "Y", "Z"};
+  constexpr std::array<const char*, 3> k_Axes = {"X", "Y", "Z"};
   for(usize axis = 0; axis < 3; ++axis)
   {
     if(radius[axis] > k_MaxKernelRadius)
     {
-      return MakeErrorResult(k_KernelRadiusRangeError, fmt::format("Kernel Radius {}={} exceeds the maximum {} cells. Reduce this radius.", axes.at(axis), radius[axis], k_MaxKernelRadius));
+      return MakeErrorResult(k_KernelRadiusRangeError, fmt::format("Kernel Radius {}={} exceeds the maximum {} cells. Reduce this radius.", k_Axes.at(axis), radius[axis], k_MaxKernelRadius));
     }
   }
   uint64 count = 1;

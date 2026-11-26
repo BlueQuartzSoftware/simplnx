@@ -24,16 +24,16 @@ template <class T, class U>
 struct InvertIntensityMapOp
 {
   float64 maximum = 255.0;
-  bool useIntegerArithmetic = false;
-  int64 integerMaximum = 255;
+  bool use_integer_arithmetic = false;
+  int64 integer_maximum = 255;
 
   U operator()(T value) const
   {
     if constexpr(std::is_integral_v<T> && std::is_integral_v<U> && sizeof(T) <= sizeof(int32) && sizeof(U) <= sizeof(int32))
     {
-      if(useIntegerArithmetic)
+      if(use_integer_arithmetic)
       {
-        const int64 inverted = integerMaximum - static_cast<int64>(value);
+        const int64 inverted = integer_maximum - static_cast<int64>(value);
         if(inverted < static_cast<int64>(std::numeric_limits<U>::lowest()))
         {
           return std::numeric_limits<U>::lowest();
@@ -149,12 +149,12 @@ Result<> InvertIntensityImageFilter::executeImpl(DataStructure& dataStructure, c
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_MaximumKey = "Maximum";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> InvertIntensityImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -163,10 +163,10 @@ Result<Arguments> InvertIntensityImageFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MaximumKey, k_Maximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_MaximumKey, k_Maximum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

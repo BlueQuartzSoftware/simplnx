@@ -36,14 +36,14 @@ Result<> RequireMinimumSizeFeatures::operator()()
 
   // Fail early when the selected phase has no feature. The feature scan occurs
   // before cell data changes.
-  auto* featurePhases = m_InputValues->ApplySinglePhase ? m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStore() : nullptr;
-  if(m_InputValues->ApplySinglePhase && featurePhases != nullptr)
+  auto* featurePhasesPtr = m_InputValues->ApplySinglePhase ? m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStore() : nullptr;
+  if(m_InputValues->ApplySinglePhase && featurePhasesPtr != nullptr)
   {
-    usize numFeatures = featurePhases->getNumberOfTuples();
+    usize numFeatures = featurePhasesPtr->getNumberOfTuples();
     bool unavailablePhase = true;
     for(usize i = 0; i < numFeatures; i++)
     {
-      if(featurePhases->getValue(i) == m_InputValues->PhaseNumber)
+      if(featurePhasesPtr->getValue(i) == m_InputValues->PhaseNumber)
       {
         unavailablePhase = false;
         break;
@@ -58,8 +58,8 @@ Result<> RequireMinimumSizeFeatures::operator()()
   }
 
   Error errorReturn = {.code = 0, .message = ""};
-  Result<std::vector<bool>> activeObjectsResult =
-      removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhases, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase, m_InputValues->MinAllowedFeaturesSize, errorReturn);
+  Result<std::vector<bool>> activeObjectsResult = removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhasesPtr, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase,
+                                                                      m_InputValues->MinAllowedFeaturesSize, errorReturn);
   if(activeObjectsResult.invalid())
   {
     return ConvertResult(std::move(activeObjectsResult));

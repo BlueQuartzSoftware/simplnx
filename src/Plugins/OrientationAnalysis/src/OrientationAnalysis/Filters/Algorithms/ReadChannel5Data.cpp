@@ -33,7 +33,7 @@ template <typename T>
 Result<bool> CopyRawData(usize numElements, DataStructure& dataStructure, ebsdlib::CprReader& reader, const std::string& name, const DataPath& dataArrayPath, const std::atomic_bool& shouldCancel)
 {
   auto& dataStore = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath).getDataStoreRef();
-  const auto* rawData = reinterpret_cast<const T*>(reader.getPointerByName(name));
+  const auto* rawDataPtr = reinterpret_cast<const T*>(reader.getPointerByName(name));
 
   // The reader already owns the complete source array. Limit each DataStore transfer
   // without allocating a second cell-sized buffer.
@@ -45,7 +45,7 @@ Result<bool> CopyRawData(usize numElements, DataStructure& dataStructure, ebsdli
     }
 
     const usize count = std::min(k_ChunkTuples, numElements - offset);
-    if(Result<> ioResult = dataStore.copyFromBuffer(offset, nonstd::span<const T>(rawData + offset, count)); ioResult.invalid())
+    if(Result<> ioResult = dataStore.copyFromBuffer(offset, nonstd::span<const T>(rawDataPtr + offset, count)); ioResult.invalid())
     {
       return ConvertInvalidResult<bool>(std::move(ioResult));
     }
@@ -206,8 +206,8 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
     }
   }
 
-  const auto* rawPhase = reinterpret_cast<const uint8*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
-  const auto* rawPhi2 = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi2));
+  const auto* rawPhasePtr = reinterpret_cast<const uint8*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
+  const auto* rawPhi2Ptr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi2));
   std::vector<uint32> crystalStructures;
   if(m_InputValues->EdaxHexagonalAlignment)
   {
@@ -244,7 +244,7 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
       const usize count = std::min(k_ChunkTuples, totalCells - offset);
       for(usize i = 0; i < count; i++)
       {
-        phi2Buffer[i] = alignedPhi2(rawPhase[offset + i], rawPhi2[offset + i]);
+        phi2Buffer[i] = alignedPhi2(rawPhasePtr[offset + i], rawPhi2Ptr[offset + i]);
       }
       if(Result<> ioResult = phi2StoreRef.copyFromBuffer(offset, nonstd::span<const float32>(phi2Buffer.data(), count)); ioResult.invalid())
       {
@@ -269,7 +269,7 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
       const usize count = std::min(k_ChunkTuples, totalCells - offset);
       for(usize i = 0; i < count; i++)
       {
-        phaseBuffer[i] = rawPhase[offset + i];
+        phaseBuffer[i] = rawPhasePtr[offset + i];
       }
       if(Result<> ioResult = phaseStore.copyFromBuffer(offset, nonstd::span<const int32>(phaseBuffer.data(), count)); ioResult.invalid())
       {
@@ -280,8 +280,8 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
 
   if(m_InputValues->CreateCompatibleArrays)
   {
-    const auto* rawPhi1 = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi1));
-    const auto* rawPhi = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::Phi));
+    const auto* rawPhi1Ptr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi1));
+    const auto* rawPhiPtr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::Phi));
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
     auto& eulerStore = cellEulerAngles.getDataStoreRef();
@@ -297,9 +297,9 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
       const usize count = std::min(k_ChunkTuples, totalCells - offset);
       for(usize i = 0; i < count; i++)
       {
-        eulerBuffer[3 * i] = rawPhi1[offset + i];
-        eulerBuffer[3 * i + 1] = rawPhi[offset + i];
-        eulerBuffer[3 * i + 2] = alignedPhi2(rawPhase[offset + i], rawPhi2[offset + i]);
+        eulerBuffer[3 * i] = rawPhi1Ptr[offset + i];
+        eulerBuffer[3 * i + 1] = rawPhiPtr[offset + i];
+        eulerBuffer[3 * i + 2] = alignedPhi2(rawPhasePtr[offset + i], rawPhi2Ptr[offset + i]);
       }
       if(Result<> ioResult = eulerStore.copyFromBuffer(offset * 3, nonstd::span<const float32>(eulerBuffer.data(), count * 3)); ioResult.invalid())
       {

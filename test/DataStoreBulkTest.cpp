@@ -35,21 +35,21 @@ class TrackingDataStore final : public DataStore<int32>
 public:
   using DataStore<int32>::DataStore;
 
-  mutable usize m_BulkReadCalls = 0;
-  usize m_BulkWriteCalls = 0;
-  mutable usize m_ExtentReadCalls = 0;
-  mutable usize m_MaxReadValues = 0;
-  usize m_MaxWriteValues = 0;
-  std::optional<usize> m_FailBulkReadCall;
-  std::optional<usize> m_FailBulkWriteCall;
-  std::optional<usize> m_FailExtentReadCall;
-  bool m_AddExtentWarning = false;
+  mutable usize m_bulk_read_calls = 0;
+  usize m_bulk_write_calls = 0;
+  mutable usize m_extent_read_calls = 0;
+  mutable usize m_max_read_values = 0;
+  usize m_max_write_values = 0;
+  std::optional<usize> m_fail_bulk_read_call;
+  std::optional<usize> m_fail_bulk_write_call;
+  std::optional<usize> m_fail_extent_read_call;
+  bool m_add_extent_warning = false;
 
   [[nodiscard]] Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
   {
-    ++m_BulkReadCalls;
-    m_MaxReadValues = (std::max)(m_MaxReadValues, buffer.size());
-    if(m_FailBulkReadCall == m_BulkReadCalls)
+    ++m_bulk_read_calls;
+    m_max_read_values = (std::max)(m_max_read_values, buffer.size());
+    if(m_fail_bulk_read_call == m_bulk_read_calls)
     {
       return MakeErrorResult(k_SourceReadFailure, "TrackingDataStore injected source bulk-read failure.");
     }
@@ -58,9 +58,9 @@ public:
 
   [[nodiscard]] Result<> copyFromBuffer(usize startIndex, nonstd::span<const int32> buffer) override
   {
-    ++m_BulkWriteCalls;
-    m_MaxWriteValues = (std::max)(m_MaxWriteValues, buffer.size());
-    if(m_FailBulkWriteCall == m_BulkWriteCalls)
+    ++m_bulk_write_calls;
+    m_max_write_values = (std::max)(m_max_write_values, buffer.size());
+    if(m_fail_bulk_write_call == m_bulk_write_calls)
     {
       return MakeErrorResult(k_DestinationWriteFailure, "TrackingDataStore injected destination bulk-write failure.");
     }
@@ -69,14 +69,14 @@ public:
 
   [[nodiscard]] Result<> readExtentIntoBuffer(const Extent& extent, nonstd::span<int32> destination) const override
   {
-    ++m_ExtentReadCalls;
-    if(m_FailExtentReadCall == m_ExtentReadCalls)
+    ++m_extent_read_calls;
+    if(m_fail_extent_read_call == m_extent_read_calls)
     {
       return MakeErrorResult(k_ExtentReadFailure, "TrackingDataStore injected extent read failure.");
     }
 
     Result<> result = DataStore<int32>::readExtentIntoBuffer(extent, destination);
-    if(result.valid() && m_AddExtentWarning)
+    if(result.valid() && m_add_extent_warning)
     {
       result.warnings().push_back(Warning{.code = k_ExtentWarningCode, .message = "TrackingDataStore extent-read warning."});
     }
@@ -365,7 +365,7 @@ TEST_CASE("DataStore extent validation is atomic before backend reads", "[simpln
 
   TrackingDataStore trackingStore(ShapeType{4}, ShapeType{2}, 0);
   FillTupleValues(trackingStore);
-  trackingStore.m_AddExtentWarning = true;
+  trackingStore.m_add_extent_warning = true;
   const std::array<Extent, 3> warningExtents = {Extent({0}, {0}), Extent({1}, {1}), Extent({2}, {2})};
   std::array<int32, 2> firstWarningDestination = {-777, -777};
   std::array<int32, 2> secondWarningDestination = {-777, -777};
@@ -384,8 +384,8 @@ TEST_CASE("DataStore extent validation is atomic before backend reads", "[simpln
   REQUIRE(secondWarningDestination == std::array<int32, 2>{10, 11});
   REQUIRE(thirdWarningDestination == std::array<int32, 2>{20, 21});
 
-  trackingStore.m_ExtentReadCalls = 0;
-  trackingStore.m_FailExtentReadCall = 2;
+  trackingStore.m_extent_read_calls = 0;
+  trackingStore.m_fail_extent_read_call = 2;
   firstWarningDestination.fill(-777);
   secondWarningDestination.fill(-777);
   thirdWarningDestination.fill(-777);
@@ -394,7 +394,7 @@ TEST_CASE("DataStore extent validation is atomic before backend reads", "[simpln
   RequireErrorCode(backendFailure, k_ExtentReadFailure);
   REQUIRE(backendFailure.warnings().size() == 1);
   REQUIRE(backendFailure.warnings()[0].code == k_ExtentWarningCode);
-  REQUIRE(trackingStore.m_ExtentReadCalls == 2);
+  REQUIRE(trackingStore.m_extent_read_calls == 2);
   REQUIRE(firstWarningDestination == std::array<int32, 2>{0, 1});
   REQUIRE(secondWarningDestination == std::array<int32, 2>{-777, -777});
   REQUIRE(thirdWarningDestination == std::array<int32, 2>{-777, -777});
@@ -423,10 +423,10 @@ TEST_CASE("DataStore copyFrom uses bounded pages and propagates page-two failure
   }
 
   REQUIRE(destination.copyFrom(k_DestinationTupleOffset, source, k_SourceTupleOffset, k_TuplesToCopy).valid());
-  REQUIRE(source.m_BulkReadCalls == 3);
-  REQUIRE(destination.m_BulkWriteCalls == 3);
-  REQUIRE(source.m_MaxReadValues == k_PageElements);
-  REQUIRE(destination.m_MaxWriteValues == k_PageElements);
+  REQUIRE(source.m_bulk_read_calls == 3);
+  REQUIRE(destination.m_bulk_write_calls == 3);
+  REQUIRE(source.m_max_read_values == k_PageElements);
+  REQUIRE(destination.m_max_write_values == k_PageElements);
   REQUIRE(std::equal(source.data() + k_SourceStart, source.data() + k_SourceStart + k_CopyElements, destination.data() + k_DestinationStart));
   RequireAllValues(destination.data(), k_DestinationStart, k_DestinationPoison);
   RequireAllValues(destination.data() + k_DestinationStart + k_CopyElements, destination.getSize() - k_DestinationStart - k_CopyElements, k_DestinationPoison);
@@ -453,10 +453,10 @@ TEST_CASE("DataStore copyFrom uses bounded pages and propagates page-two failure
   {
     sourceFailure.setValue(valueIndex, static_cast<int32>(valueIndex * 3 + 1));
   }
-  sourceFailure.m_FailBulkReadCall = 2;
+  sourceFailure.m_fail_bulk_read_call = 2;
   RequireErrorCode(destinationAfterSourceFailure.copyFrom(k_DestinationTupleOffset, sourceFailure, k_SourceTupleOffset, k_TuplesToCopy), k_SourceReadFailure);
-  REQUIRE(sourceFailure.m_BulkReadCalls == 2);
-  REQUIRE(destinationAfterSourceFailure.m_BulkWriteCalls == 1);
+  REQUIRE(sourceFailure.m_bulk_read_calls == 2);
+  REQUIRE(destinationAfterSourceFailure.m_bulk_write_calls == 1);
   REQUIRE(std::equal(sourceFailure.data() + k_SourceStart, sourceFailure.data() + k_SourceStart + k_PageElements, destinationAfterSourceFailure.data() + k_DestinationStart));
   RequireAllValues(destinationAfterSourceFailure.data() + k_DestinationStart + k_PageElements, k_CopyElements - k_PageElements, k_DestinationPoison);
 
@@ -466,10 +466,10 @@ TEST_CASE("DataStore copyFrom uses bounded pages and propagates page-two failure
   {
     sourceBeforeDestinationFailure.setValue(valueIndex, static_cast<int32>(valueIndex * 3 + 1));
   }
-  destinationFailure.m_FailBulkWriteCall = 2;
+  destinationFailure.m_fail_bulk_write_call = 2;
   RequireErrorCode(destinationFailure.copyFrom(k_DestinationTupleOffset, sourceBeforeDestinationFailure, k_SourceTupleOffset, k_TuplesToCopy), k_DestinationWriteFailure);
-  REQUIRE(sourceBeforeDestinationFailure.m_BulkReadCalls == 2);
-  REQUIRE(destinationFailure.m_BulkWriteCalls == 2);
+  REQUIRE(sourceBeforeDestinationFailure.m_bulk_read_calls == 2);
+  REQUIRE(destinationFailure.m_bulk_write_calls == 2);
   REQUIRE(std::equal(sourceBeforeDestinationFailure.data() + k_SourceStart, sourceBeforeDestinationFailure.data() + k_SourceStart + k_PageElements, destinationFailure.data() + k_DestinationStart));
   RequireAllValues(destinationFailure.data() + k_DestinationStart + k_PageElements, k_CopyElements - k_PageElements, k_DestinationPoison);
 
@@ -485,15 +485,15 @@ TEST_CASE("DataArray deepCopy does not insert a destination after a source bulk-
   DataStructure dataStructure;
   dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
   auto sourceStore = std::make_shared<TrackingDataStore>(ShapeType{4}, ShapeType{2}, 0);
-  sourceStore->m_FailBulkReadCall = 1;
-  auto* sourceArray = DataArray<int32>::Create(dataStructure, "Source", sourceStore);
-  REQUIRE(sourceArray != nullptr);
+  sourceStore->m_fail_bulk_read_call = 1;
+  auto* sourceArrayPtr = DataArray<int32>::Create(dataStructure, "Source", sourceStore);
+  REQUIRE(sourceArrayPtr != nullptr);
 
   const DataPath copyPath({"Copy"});
-  REQUIRE(sourceArray->deepCopy(copyPath) == nullptr);
+  REQUIRE(sourceArrayPtr->deepCopy(copyPath) == nullptr);
   REQUIRE_FALSE(dataStructure.containsData(copyPath));
   REQUIRE(dataStructure.getDataAs<DataArray<int32>>(copyPath) == nullptr);
-  REQUIRE(sourceStore->m_BulkReadCalls == 1);
+  REQUIRE(sourceStore->m_bulk_read_calls == 1);
 }
 
 TEST_CASE("DataStore bounded extent validates before writing", "[DataStore][bounded]")

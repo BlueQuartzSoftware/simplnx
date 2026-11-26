@@ -121,10 +121,10 @@ TEST_CASE("simplnx::CreateStringArrayAction: checked counts in both modes", "[si
                                                              {{}, -6002, ""}})
   {
     CAPTURE(shape, code, mode);
-    DataStructure ds;
+    DataStructure dataStructure;
     const DataPath path({"Strings"});
     CreateStringArrayAction action(shape, path);
-    auto result = action.apply(ds, mode);
+    auto result = action.apply(dataStructure, mode);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     CHECK(result.errors()[0].code == code);
     if(code != -6002)
@@ -132,23 +132,23 @@ TEST_CASE("simplnx::CreateStringArrayAction: checked counts in both modes", "[si
       CHECK(result.errors()[0].message.find("Strings") != std::string::npos);
       CHECK(result.errors()[0].message.find(expectedShape) != std::string::npos);
     }
-    CHECK(ds.getData(path) == nullptr);
+    CHECK(dataStructure.getData(path) == nullptr);
   }
   for(const ShapeType& shape : {ShapeType{0}, ShapeType{2}})
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     CreateStringArrayAction action(shape, DataPath({"Strings"}), "value");
-    auto result = action.apply(ds, mode);
+    auto result = action.apply(dataStructure, mode);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE_NOTHROW(ds.getDataRefAs<StringArray>(DataPath({"Strings"})));
-    const auto& array = ds.getDataRefAs<StringArray>(DataPath({"Strings"}));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(DataPath({"Strings"})));
+    const auto& array = dataStructure.getDataRefAs<StringArray>(DataPath({"Strings"}));
     CHECK(array.getTupleShape() == shape);
     CHECK(array.getNumberOfTuples() == shape[0]);
     if(shape[0] != 0)
     {
       CHECK(array[0] == "value");
     }
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 

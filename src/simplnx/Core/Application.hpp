@@ -231,8 +231,8 @@ private:
 
   std::unique_ptr<nx::core::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
-  std::vector<Uuid> m_Simpl_Uuids;   // Legacy UUIDs are unique. Indices match m_Simplnx_Uuids.
-  std::vector<Uuid> m_Simplnx_Uuids; // Values can repeat. Indices match m_Simpl_Uuids.
+  std::vector<Uuid> m_SimplUuids;   // Legacy UUIDs are unique. Indices match m_Simplnx_Uuids.
+  std::vector<Uuid> m_SimplnxUuids; // Values can repeat. Indices match m_Simpl_Uuids.
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
   name_type_map m_NamedTypesMap;
   std::unique_ptr<Preferences> m_Preferences = nullptr;

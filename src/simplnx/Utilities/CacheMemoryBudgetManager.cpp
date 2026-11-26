@@ -82,7 +82,7 @@ void CacheMemoryBudgetManager::WorkingMemoryReservation::release() noexcept
   }
 }
 
-uint64 CacheMemoryBudgetManager::totalSystemRamBytes()
+uint64 CacheMemoryBudgetManager::TotalSystemRamBytes()
 {
   return nx::core::Memory::GetTotalMemory();
 }
@@ -94,13 +94,13 @@ CacheMemoryBudgetManager::CacheMemoryBudgetManager()
 
 CacheMemoryBudgetManager& CacheMemoryBudgetManager::instance()
 {
-  static CacheMemoryBudgetManager s_Instance;
-  return s_Instance;
+  static CacheMemoryBudgetManager sInstance;
+  return sInstance;
 }
 
 uint64 CacheMemoryBudgetManager::defaultBudgetBytes()
 {
-  const uint64 totalRam = totalSystemRamBytes();
+  const uint64 totalRam = TotalSystemRamBytes();
   if(totalRam == 0)
   {
     return k_MinBudget;
@@ -112,7 +112,7 @@ uint64 CacheMemoryBudgetManager::defaultBudgetBytes()
 
 uint64 CacheMemoryBudgetManager::maxBudgetBytes()
 {
-  const uint64 totalRam = totalSystemRamBytes();
+  const uint64 totalRam = TotalSystemRamBytes();
   if(totalRam == 0)
   {
     return k_MinBudget;

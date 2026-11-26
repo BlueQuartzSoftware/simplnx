@@ -492,8 +492,8 @@ Result<> ComputeKMeansScanline::operator()()
   }
 
   const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  const IDataArray* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  const IDataArray* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
   auto& meansArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MeansArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  return ExecuteDataFunctionNoBool(ExecuteKMeansFunctor{}, clusteringArray.getDataType(), *this, clusteringArray, meansArray, maskArray, featureIds, *m_InputValues);
+  return ExecuteDataFunctionNoBool(ExecuteKMeansFunctor{}, clusteringArray.getDataType(), *this, clusteringArray, meansArray, maskArrayPtr, featureIds, *m_InputValues);
 }

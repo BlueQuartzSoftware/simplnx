@@ -23,17 +23,17 @@ namespace
 {
 struct BinaryMorphologyExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   const StructuringElement& se;
   MorphOp op;
   float64 foreground;
   float64 background;
-  bool boundaryToForeground;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool boundary_to_foreground;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
@@ -42,41 +42,41 @@ struct BinaryMorphologyExecuteFn
     // path; the typed stores are the buffers the engine reads/writes. Output type == input type (SameAsInput).
     // The Float64 foreground/background are cast to the (integer) element type here; the caller's preflight
     // guard has already rejected non-finite/out-of-range values, so the narrowing conversion is well-defined.
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     const T foregroundT = static_cast<T>(foreground);
     const T backgroundT = static_cast<T>(background);
 
     // Enforce the strictly-{fg, bg} binary-input contract before running the engine (see ScanBinaryInput).
-    if(Result<> r = ScanBinaryInput<T>(inStore, foregroundT, backgroundT, inputArrayPath, shouldCancel); r.invalid())
+    if(Result<> r = ScanBinaryInput<T>(inStore, foregroundT, backgroundT, input_array_path, should_cancel); r.invalid())
     {
       return r;
     }
 
-    return ApplyBinaryMorphology<T>(inStore, outArray.getDataStoreRef(), dims, se, op, foregroundT, backgroundT, boundaryToForeground, inArray, outArray, shouldCancel, messageHandler);
+    return ApplyBinaryMorphology<T>(inStore, outArray.getDataStoreRef(), dims, se, op, foregroundT, backgroundT, boundary_to_foreground, inArray, outArray, should_cancel, message_handler);
   }
 };
 
 struct BinaryMorphologyCompositeExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   SizeVec3 dims;
   const StructuringElement& se;
   BinaryCompositeOp op;
   float64 foreground;
   float64 background; // used only by Opening; Closing derives its internal background
-  bool safeBorder;    // used only by Closing (ITK binary Opening has no SafeBorder)
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool safe_border;   // used only by Closing (ITK binary Opening has no SafeBorder)
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<T>& outStore = outArray.getDataStoreRef();
     const bool hasActiveOocEndpoint = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || outStore.getStoreType() == IDataStore::StoreType::OutOfCore;
@@ -99,7 +99,7 @@ struct BinaryMorphologyCompositeExecuteFn
     // VALIDATE-ONCE: run the binary-input safeguard EXACTLY ONCE on the ORIGINAL input, then drive the engine
     // directly on the scratch/out stores below -- the {fg, bg} intermediate is binary by construction and must
     // not be re-scanned (going through ExecuteBinaryMorphologyImageFilter per sub-op would re-scan it).
-    if(Result<> r = ScanBinaryInput<T>(inStore, fgT, bgT, inputArrayPath, shouldCancel); r.invalid())
+    if(Result<> r = ScanBinaryInput<T>(inStore, fgT, bgT, input_array_path, should_cancel); r.invalid())
     {
       return r;
     }
@@ -129,7 +129,7 @@ struct BinaryMorphologyCompositeExecuteFn
       {
         return std::nullopt;
       }
-      return ApplyBinaryMorphologyCompositePipeline<T>(inStore, outStore, dims, se, firstOp, secondOp, pipelineSafeBorder, fgT, bgT, shouldCancel, static_cast<usize>(reservation.sizeBytes()));
+      return ApplyBinaryMorphologyCompositePipeline<T>(inStore, outStore, dims, se, firstOp, secondOp, pipelineSafeBorder, fgT, bgT, should_cancel, static_cast<usize>(reservation.sizeBytes()));
     };
 
     if(op == BinaryCompositeOp::Opening)
@@ -142,27 +142,27 @@ struct BinaryMorphologyCompositeExecuteFn
       // same-extent scratch: erode(in) -> scratch; dilate(scratch) -> out. Each pass reads a store distinct
       // from the one it writes.
       auto scratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      if(Result<> r = ApplyBinaryMorphology<T>(inStore, *scratch, dims, se, MorphOp::Erode, fgT, bgT, /*boundaryToForeground=*/true, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+      if(Result<> r = ApplyBinaryMorphology<T>(inStore, *scratch, dims, se, MorphOp::Erode, fgT, bgT, /*boundaryToForeground=*/true, inArray, outArray, should_cancel, message_handler); r.invalid())
       {
         return r;
       }
-      return ApplyBinaryMorphology<T>(*scratch, outStore, dims, se, MorphOp::Dilate, fgT, bgT, /*boundaryToForeground=*/false, inArray, outArray, shouldCancel, messageHandler);
+      return ApplyBinaryMorphology<T>(*scratch, outStore, dims, se, MorphOp::Dilate, fgT, bgT, /*boundaryToForeground=*/false, inArray, outArray, should_cancel, message_handler);
     }
 
     // Closing = dilate(boundaryToForeground=false) -> erode(boundaryToForeground=true).
-    if(auto result = tryBinaryMorphologyPipeline(MorphOp::Dilate, MorphOp::Erode, safeBorder); result.has_value())
+    if(auto result = tryBinaryMorphologyPipeline(MorphOp::Dilate, MorphOp::Erode, safe_border); result.has_value())
     {
       return *result;
     }
-    if(!safeBorder)
+    if(!safe_border)
     {
       // SafeBorder == false: plain two-pass composition on the original extent. ONE same-extent scratch.
       auto scratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      if(Result<> r = ApplyBinaryMorphology<T>(inStore, *scratch, dims, se, MorphOp::Dilate, fgT, bgT, /*boundaryToForeground=*/false, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+      if(Result<> r = ApplyBinaryMorphology<T>(inStore, *scratch, dims, se, MorphOp::Dilate, fgT, bgT, /*boundaryToForeground=*/false, inArray, outArray, should_cancel, message_handler); r.invalid())
       {
         return r;
       }
-      return ApplyBinaryMorphology<T>(*scratch, outStore, dims, se, MorphOp::Erode, fgT, bgT, /*boundaryToForeground=*/true, inArray, outArray, shouldCancel, messageHandler);
+      return ApplyBinaryMorphology<T>(*scratch, outStore, dims, se, MorphOp::Erode, fgT, bgT, /*boundaryToForeground=*/true, inArray, outArray, should_cancel, message_handler);
     }
 
     // SafeBorder == true (ITK default): pad the volume by the per-axis kernel radius, fill the border with the
@@ -179,19 +179,19 @@ struct BinaryMorphologyCompositeExecuteFn
 
     // Boundary flags (dilate false, erode true) match the non-padded path; over the cropped region they do not
     // affect the result (the padded neighborhoods never reach the padded edge there), as noted above.
-    if(Result<> r2 = PadIntoStore<T>(inStore, *paddedIn, dims, r, bgT, shouldCancel); r2.invalid())
+    if(Result<> r2 = PadIntoStore<T>(inStore, *paddedIn, dims, r, bgT, should_cancel); r2.invalid())
     {
       return r2;
     }
-    if(Result<> r2 = ApplyBinaryMorphology<T>(*paddedIn, *paddedTmp, pdims, se, MorphOp::Dilate, fgT, bgT, false, inArray, outArray, shouldCancel, messageHandler); r2.invalid())
+    if(Result<> r2 = ApplyBinaryMorphology<T>(*paddedIn, *paddedTmp, pdims, se, MorphOp::Dilate, fgT, bgT, false, inArray, outArray, should_cancel, message_handler); r2.invalid())
     {
       return r2;
     }
-    if(Result<> r2 = ApplyBinaryMorphology<T>(*paddedTmp, *paddedIn, pdims, se, MorphOp::Erode, fgT, bgT, true, inArray, outArray, shouldCancel, messageHandler); r2.invalid())
+    if(Result<> r2 = ApplyBinaryMorphology<T>(*paddedTmp, *paddedIn, pdims, se, MorphOp::Erode, fgT, bgT, true, inArray, outArray, should_cancel, message_handler); r2.invalid())
     {
       return r2;
     }
-    return CropFromStore<T>(*paddedIn, outStore, dims, r, shouldCancel);
+    return CropFromStore<T>(*paddedIn, outStore, dims, r, should_cancel);
   }
 };
 
@@ -203,7 +203,7 @@ Result<> ExecuteBinaryMorphologyImageFilter(DataStructure& dataStructure, const 
                                             MorphOp op, float64 foreground, float64 background, bool boundaryToForeground, const std::atomic_bool& shouldCancel,
                                             const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
@@ -213,18 +213,18 @@ Result<> ExecuteBinaryMorphologyImageFilter(DataStructure& dataStructure, const 
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::BinaryMorphologyExecuteFn executeFn{.dataStructure = dataStructure,
-                                              .inputArrayPath = inputArrayPath,
-                                              .outputArrayPath = outputArrayPath,
+  detail::BinaryMorphologyExecuteFn executeFn{.data_structure = dataStructure,
+                                              .input_array_path = inputArrayPath,
+                                              .output_array_path = outputArrayPath,
                                               .dims = dims,
                                               .se = se,
                                               .op = op,
                                               .foreground = foreground,
                                               .background = background,
-                                              .boundaryToForeground = boundaryToForeground,
-                                              .shouldCancel = shouldCancel,
-                                              .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                              .boundary_to_foreground = boundaryToForeground,
+                                              .should_cancel = shouldCancel,
+                                              .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -232,7 +232,7 @@ Result<> ExecuteBinaryMorphologyCompositeImageFilter(DataStructure& dataStructur
                                                      const StructuringElement& se, BinaryCompositeOp op, float64 foreground, float64 background, bool safeBorder, const std::atomic_bool& shouldCancel,
                                                      const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
@@ -242,18 +242,18 @@ Result<> ExecuteBinaryMorphologyCompositeImageFilter(DataStructure& dataStructur
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::BinaryMorphologyCompositeExecuteFn executeFn{.dataStructure = dataStructure,
-                                                       .inputArrayPath = inputArrayPath,
-                                                       .outputArrayPath = outputArrayPath,
+  detail::BinaryMorphologyCompositeExecuteFn executeFn{.data_structure = dataStructure,
+                                                       .input_array_path = inputArrayPath,
+                                                       .output_array_path = outputArrayPath,
                                                        .dims = dims,
                                                        .se = se,
                                                        .op = op,
                                                        .foreground = foreground,
                                                        .background = background,
-                                                       .safeBorder = safeBorder,
-                                                       .shouldCancel = shouldCancel,
-                                                       .messageHandler = messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+                                                       .safe_border = safeBorder,
+                                                       .should_cancel = shouldCancel,
+                                                       .message_handler = messageHandler};
+  return TypeSetPolicyType::dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

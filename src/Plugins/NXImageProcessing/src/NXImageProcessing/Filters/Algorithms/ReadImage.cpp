@@ -39,16 +39,16 @@ namespace
  */
 struct RasterStreamInfo
 {
-  usize srcWidth = 0;
-  usize srcHeight = 0;
-  usize numComponents = 1;
-  usize dstWidth = 0;
-  usize dstHeight = 0;
-  usize dstDepth = 1;
-  usize xStart = 0;
-  usize yStart = 0;
-  usize zStart = 0;
-  bool singlePageOnly = false;
+  usize src_width = 0;
+  usize src_height = 0;
+  usize num_components = 1;
+  usize dst_width = 0;
+  usize dst_height = 0;
+  usize dst_depth = 1;
+  usize x_start = 0;
+  usize y_start = 0;
+  usize z_start = 0;
+  bool single_page_only = false;
 };
 
 /**
@@ -117,8 +117,8 @@ struct ConvertPixelDataFunctor
 
     // Integer types use their positive maximum. Floating-point image data uses
     // the stb HDR range [0, 1]. This rule prevents valid HDR values from becoming black.
-    constexpr double srcMax = std::is_floating_point_v<SrcT> ? 1.0 : static_cast<double>(std::numeric_limits<SrcT>::max());
-    constexpr double destMax = std::is_floating_point_v<DestT> ? 1.0 : static_cast<double>(std::numeric_limits<DestT>::max());
+    constexpr double k_SrcMax = std::is_floating_point_v<SrcT> ? 1.0 : static_cast<double>(std::numeric_limits<SrcT>::max());
+    constexpr double k_DestMax = std::is_floating_point_v<DestT> ? 1.0 : static_cast<double>(std::numeric_limits<DestT>::max());
 
     const usize elementCount = bytes.size() / sizeof(SrcT);
     auto convertedValues = std::make_unique<DestT[]>(elementCount);
@@ -126,9 +126,9 @@ struct ConvertPixelDataFunctor
     {
       const SrcT srcValue = ReadElementAs<SrcT>(bytes.data(), i * sizeof(SrcT));
       // Clamp before normalization so exterior values do not wrap in the destination type.
-      const double clampedSrc = std::clamp(static_cast<double>(srcValue), 0.0, srcMax);
-      const double normalized = clampedSrc / srcMax;
-      convertedValues[i] = static_cast<DestT>(normalized * destMax);
+      const double clampedSrc = std::clamp(static_cast<double>(srcValue), 0.0, k_SrcMax);
+      const double normalized = clampedSrc / k_SrcMax;
+      convertedValues[i] = static_cast<DestT>(normalized * k_DestMax);
     }
     return dataStore.copyFromBuffer(destinationOffset, nonstd::span<const DestT>(convertedValues.get(), elementCount));
   }
@@ -201,15 +201,15 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   const SizeVec3 geomDims = imageGeom.getDimensions(); // final (post-crop) destination dims: X, Y, Z
 
   RasterStreamInfo stream;
-  stream.srcWidth = metadata.width;
-  stream.srcHeight = metadata.height;
-  stream.numComponents = metadata.numComponents;
-  stream.dstWidth = geomDims[0];
-  stream.dstHeight = geomDims[1];
+  stream.src_width = metadata.width;
+  stream.src_height = metadata.height;
+  stream.num_components = metadata.numComponents;
+  stream.dst_width = geomDims[0];
+  stream.dst_height = geomDims[1];
   // When only page 0 is requested (ReadImageStack sub-call), the geometry is Z==1 and no Z crop
   // applies; otherwise the destination depth is whatever the (possibly Z-cropped) geometry has.
-  stream.dstDepth = inputValues.readSinglePageOnly ? 1 : geomDims[2];
-  stream.singlePageOnly = inputValues.readSinglePageOnly;
+  stream.dst_depth = inputValues.readSinglePageOnly ? 1 : geomDims[2];
+  stream.single_page_only = inputValues.readSinglePageOnly;
 
   // Resolve the source-space start offsets (xStart, yStart, zStart). X/Y cropping mirrors the prior
   // 2D behavior exactly; Z cropping is only honored for a genuine multi-page volume that is not being
@@ -224,15 +224,15 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     {
       if(croppingOptions.cropX)
       {
-        stream.xStart = static_cast<usize>(croppingOptions.xBoundVoxels[0]);
+        stream.x_start = static_cast<usize>(croppingOptions.xBoundVoxels[0]);
       }
       if(croppingOptions.cropY)
       {
-        stream.yStart = static_cast<usize>(croppingOptions.yBoundVoxels[0]);
+        stream.y_start = static_cast<usize>(croppingOptions.yBoundVoxels[0]);
       }
       if(zCropActive)
       {
-        stream.zStart = static_cast<usize>(croppingOptions.zBoundVoxels[0]);
+        stream.z_start = static_cast<usize>(croppingOptions.zBoundVoxels[0]);
       }
     }
     else // PhysicalSubvolume
@@ -250,23 +250,23 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       {
         const float64 xMin = static_cast<float64>(croppingOptions.xBoundPhysical[0]);
         const int64 voxelX = xMin >= srcOrigin[0] ? static_cast<int64>(std::floor((xMin - static_cast<float64>(srcOrigin[0])) / static_cast<float64>(srcSpacing[0]))) : 0;
-        if(voxelX < 0 || static_cast<usize>(voxelX) >= stream.srcWidth)
+        if(voxelX < 0 || static_cast<usize>(voxelX) >= stream.src_width)
         {
           return MakeErrorResult(-2002, fmt::format("Physical crop X minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", xMin, srcOrigin[0],
-                                                    srcOrigin[0] + srcSpacing[0] * static_cast<float32>(stream.srcWidth), srcOrigin[0], srcSpacing[0]));
+                                                    srcOrigin[0] + srcSpacing[0] * static_cast<float32>(stream.src_width), srcOrigin[0], srcSpacing[0]));
         }
-        stream.xStart = static_cast<usize>(voxelX);
+        stream.x_start = static_cast<usize>(voxelX);
       }
       if(croppingOptions.cropY)
       {
         const float64 yMin = static_cast<float64>(croppingOptions.yBoundPhysical[0]);
         const int64 voxelY = yMin >= srcOrigin[1] ? static_cast<int64>(std::floor((yMin - static_cast<float64>(srcOrigin[1])) / static_cast<float64>(srcSpacing[1]))) : 0;
-        if(voxelY < 0 || static_cast<usize>(voxelY) >= stream.srcHeight)
+        if(voxelY < 0 || static_cast<usize>(voxelY) >= stream.src_height)
         {
           return MakeErrorResult(-2003, fmt::format("Physical crop Y minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", yMin, srcOrigin[1],
-                                                    srcOrigin[1] + srcSpacing[1] * static_cast<float32>(stream.srcHeight), srcOrigin[1], srcSpacing[1]));
+                                                    srcOrigin[1] + srcSpacing[1] * static_cast<float32>(stream.src_height), srcOrigin[1], srcSpacing[1]));
         }
-        stream.yStart = static_cast<usize>(voxelY);
+        stream.y_start = static_cast<usize>(voxelY);
       }
       if(zCropActive)
       {
@@ -277,15 +277,15 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           return MakeErrorResult(-2004, fmt::format("Physical crop Z minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", zMin, srcOrigin[2],
                                                     srcOrigin[2] + srcSpacing[2] * static_cast<float32>(metadata.numPages), srcOrigin[2], srcSpacing[2]));
         }
-        stream.zStart = static_cast<usize>(voxelZ);
+        stream.z_start = static_cast<usize>(voxelZ);
       }
     }
   }
 
-  if(stream.xStart + stream.dstWidth > stream.srcWidth || stream.yStart + stream.dstHeight > stream.srcHeight || stream.zStart + stream.dstDepth > metadata.numPages)
+  if(stream.x_start + stream.dst_width > stream.src_width || stream.y_start + stream.dst_height > stream.src_height || stream.z_start + stream.dst_depth > metadata.numPages)
   {
-    return MakeErrorResult(-2001, fmt::format("Crop window (start=[{},{},{}], size=[{},{},{}]) does not fit within the source image (size=[{},{},{}])", stream.xStart, stream.yStart, stream.zStart,
-                                              stream.dstWidth, stream.dstHeight, stream.dstDepth, stream.srcWidth, stream.srcHeight, metadata.numPages));
+    return MakeErrorResult(-2001, fmt::format("Crop window (start=[{},{},{}], size=[{},{},{}]) does not fit within the source image (size=[{},{},{}])", stream.x_start, stream.y_start, stream.z_start,
+                                              stream.dst_width, stream.dst_height, stream.dst_depth, stream.src_width, stream.src_height, metadata.numPages));
   }
 
   const DataType destType = imageArray.getDataType();
@@ -298,26 +298,26 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   }
 
   const usize bytesPerComponent = GetDataTypeSize(srcType);
-  const usize bytesPerPixel = stream.numComponents * bytesPerComponent;
-  const usize sliceElements = stream.dstWidth * stream.dstHeight * stream.numComponents; // destination component (element) count per Z slice
+  const usize bytesPerPixel = stream.num_components * bytesPerComponent;
+  const usize sliceElements = stream.dst_width * stream.dst_height * stream.num_components; // destination component (element) count per Z slice
 
   // Stream each selected page directly into the destination store. Every write offset folds in the Z
   // slice base (dz * sliceElements) so a multi-page volume lands each page at its correct depth, and the
   // XY crop is applied per row segment so only the requested window is written.
   ThrottledMessageHandler progressThrottle(messageHandler);
-  const bool singlePage = stream.dstDepth == 1;
-  progressThrottle.reset(singlePage ? stream.srcWidth * stream.srcHeight : stream.dstDepth, singlePage ? "Reading source image rows" : "Reading image pages");
+  const bool singlePage = stream.dst_depth == 1;
+  progressThrottle.reset(singlePage ? stream.src_width * stream.src_height : stream.dst_depth, singlePage ? "Reading source image rows" : "Reading image pages");
   usize decodedPixels = 0;
   bool cancelled = false;
   Result<> readResult;
-  for(usize dz = 0; dz < stream.dstDepth; dz++)
+  for(usize dz = 0; dz < stream.dst_depth; dz++)
   {
     if(shouldCancel)
     {
       cancelled = true;
       break;
     }
-    const usize sourcePage = stream.singlePageOnly ? 0 : (stream.zStart + dz);
+    const usize sourcePage = stream.single_page_only ? 0 : (stream.z_start + dz);
     const usize destSliceBase = dz * sliceElements;
 
     // Destination offsets use page 0's dimensions and pixel stride. Check each page's decoded segment
@@ -357,7 +357,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           }
 
           // Y crop: skip rows outside the destination window.
-          if(sourceRow < stream.yStart || sourceRow >= stream.yStart + stream.dstHeight)
+          if(sourceRow < stream.y_start || sourceRow >= stream.y_start + stream.dst_height)
           {
             reportDecodedSegment();
             return {};
@@ -365,8 +365,8 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
 
           // X crop: intersect this segment with the destination column window.
           const usize segmentEnd = sourceColumn + pixelCount;
-          const usize cropEnd = stream.xStart + stream.dstWidth;
-          const usize copyStart = std::max(sourceColumn, stream.xStart);
+          const usize cropEnd = stream.x_start + stream.dst_width;
+          const usize copyStart = std::max(sourceColumn, stream.x_start);
           const usize copyEnd = std::min(segmentEnd, cropEnd);
           if(copyStart >= copyEnd)
           {
@@ -378,7 +378,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           const usize sourceByteOffset = (copyStart - sourceColumn) * bytesPerPixel;
           const usize copiedBytes = copiedPixels * bytesPerPixel;
           const std::span<const uint8> copiedSpan = pixels.subspan(sourceByteOffset, copiedBytes);
-          const usize destinationOffset = destSliceBase + (((sourceRow - stream.yStart) * stream.dstWidth) + (copyStart - stream.xStart)) * stream.numComponents;
+          const usize destinationOffset = destSliceBase + (((sourceRow - stream.y_start) * stream.dst_width) + (copyStart - stream.x_start)) * stream.num_components;
 
           auto copyResult = convertData ? ExecuteDataFunction(DispatchConversionFunctor{}, srcType, destType, imageArray, copiedSpan, destinationOffset) :
                                           ExecuteDataFunction(CopyPixelDataFunctor{}, srcType, imageArray, copiedSpan, destinationOffset);
@@ -399,22 +399,22 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       return readResult;
     }
 
-    if(observedRows != stream.srcHeight || observedColumns != stream.srcWidth)
+    if(observedRows != stream.src_height || observedColumns != stream.src_width)
     {
       return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has dimensions {}x{} that do not match page 0 ({}x{}). All pages must have the same dimensions, component count, and "
                                                 "scalar type.",
-                                                sourcePage, inputFilePath.string(), observedColumns, observedRows, stream.srcWidth, stream.srcHeight));
+                                                sourcePage, inputFilePath.string(), observedColumns, observedRows, stream.src_width, stream.src_height));
     }
     if(singlePage)
     {
-      messageHandler.sendProgressPercent("Reading source image rows", decodedPixels, stream.srcWidth * stream.srcHeight);
+      messageHandler.sendProgressPercent("Reading source image rows", decodedPixels, stream.src_width * stream.src_height);
     }
     else
     {
       progressThrottle.updateCount(dz + 1);
-      if(dz + 1 == stream.dstDepth)
+      if(dz + 1 == stream.dst_depth)
       {
-        messageHandler.sendProgressCount("Reading image pages", stream.dstDepth, stream.dstDepth);
+        messageHandler.sendProgressCount("Reading image pages", stream.dst_depth, stream.dst_depth);
       }
     }
   }

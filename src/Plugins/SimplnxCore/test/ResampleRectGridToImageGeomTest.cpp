@@ -40,7 +40,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Noncubic cell arrays 
   DataStructure dataStructure;
   const SizeVec3 dimensions{2, 3, 4};
   const ShapeType cellTupleShape{4, 3, 2};
-  constexpr usize totalVoxels = 24;
+  constexpr usize k_TotalVoxels = 24;
   const DataPath numericPath = k_RectGridCellDataPath.createChildPath("CoordinateLabels");
   const DataPath neighborListPath = k_RectGridCellDataPath.createChildPath(k_NeighborListArrayName);
   const DataPath stringPath = k_RectGridCellDataPath.createChildPath(k_StringArrayName);
@@ -72,7 +72,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Noncubic cell arrays 
   REQUIRE(numericPtr != nullptr);
   auto* neighborListPtr = NeighborList<int32>::Create(dataStructure, k_NeighborListArrayName, cellTupleShape, cellDataPtr->getId());
   REQUIRE(neighborListPtr != nullptr);
-  std::vector<std::string> strings(totalVoxels);
+  std::vector<std::string> strings(k_TotalVoxels);
   usize voxelIdx = 0;
   for(usize z = 0; z < dimensions[2]; ++z)
   {
@@ -115,12 +115,12 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Noncubic cell arrays 
   REQUIRE(outputNumericPtr != nullptr);
   REQUIRE(outputStringsPtr != nullptr);
   REQUIRE(outputNeighborsPtr != nullptr);
-  REQUIRE(outputNumericPtr->getNumberOfTuples() == totalVoxels);
-  REQUIRE(outputStringsPtr->getNumberOfTuples() == totalVoxels);
-  REQUIRE(outputNeighborsPtr->getNumberOfTuples() == totalVoxels);
+  REQUIRE(outputNumericPtr->getNumberOfTuples() == k_TotalVoxels);
+  REQUIRE(outputStringsPtr->getNumberOfTuples() == k_TotalVoxels);
+  REQUIRE(outputNeighborsPtr->getNumberOfTuples() == k_TotalVoxels);
 
   // Unit bounds make this an identity map. The flat oracle uses X-fastest coordinates.
-  for(usize outputIdx = 0; outputIdx < totalVoxels; ++outputIdx)
+  for(usize outputIdx = 0; outputIdx < k_TotalVoxels; ++outputIdx)
   {
     CAPTURE(outputIdx);
     const usize x = outputIdx % 2;
@@ -157,16 +157,16 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
     const usize numTuples = cellDataAM.getNumberOfTuples();
 
     std::vector<std::string> stringArrayValues(numTuples);
-    auto* neighborList = NeighborList<float32>::Create(dataStructure, k_NeighborListArrayName, cellDataAM.getShape(), cellDataAM.getId());
+    auto* neighborListPtr = NeighborList<float32>::Create(dataStructure, k_NeighborListArrayName, cellDataAM.getShape(), cellDataAM.getId());
     for(usize i = 0; i < numTuples; ++i)
     {
       const float32 factor = static_cast<float32>(i) * 0.001;
       std::vector<float32> list = {factor * 117, factor * 875, factor * 1035, factor * 3905, factor * 4214};
-      neighborList->setList(i, std::make_shared<std::vector<float32>>(list));
+      neighborListPtr->setList(i, std::make_shared<std::vector<float32>>(list));
       stringArrayValues[i] = "String_" + StringUtilities::number(factor);
     }
 
-    const auto* stringArray = StringArray::CreateWithValues(dataStructure, k_StringArrayName, cellDataAM.getShape(), stringArrayValues, cellDataAM.getId());
+    const auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, k_StringArrayName, cellDataAM.getShape(), stringArrayValues, cellDataAM.getId());
   }
 
   // Create default Parameters for the filter.
@@ -261,7 +261,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: SIMPL Backwards Compa
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto* filterList = app->getFilterList();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -273,22 +273,22 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: SIMPL Backwards Compa
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ResampleRectGridToImageGeomFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ResampleRectGridToImageGeomFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ResampleRectGridToImageGeomFilter::k_RectilinearGridPath_Key) == DataPath({"DataContainer"}));
       // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<DataPath>(ResampleRectGridToImageGeomFilter::k_ImageGeometryPath_Key) == DataPath({"ImageGeometry"}));

@@ -79,9 +79,9 @@ protected:
     OutputActions copies;
     for(auto& action : result.outputActions.value().actions)
     {
-      if(const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get()); copy != nullptr)
+      if(const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(action.get()); copyPtr != nullptr)
       {
-        AppendCopyDataObjectAction(dataStructure, copies, copy->path(), copy->newPath(), m_ExcludedPath);
+        AppendCopyDataObjectAction(dataStructure, copies, copyPtr->path(), copyPtr->newPath(), m_ExcludedPath);
       }
       else
       {

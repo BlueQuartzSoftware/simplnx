@@ -22,16 +22,16 @@ struct SigmoidOperation
 {
   float64 alpha = 1.0;
   float64 beta = 0.0;
-  float64 outputMaximum = 255.0;
-  float64 outputMinimum = 0.0;
+  float64 output_maximum = 255.0;
+  float64 output_minimum = 0.0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
     const float64 a = alpha;
     const float64 b = beta;
-    const float64 oMax = outputMaximum;
-    const float64 oMin = outputMinimum;
+    const float64 oMax = output_maximum;
+    const float64 oMin = output_minimum;
     return [a, b, oMax, oMin](T value) -> U {
       // Output bounds are Float64 and can exceed a narrow output type; saturate-cast to U to avoid UB.
       const double d = static_cast<double>(value);
@@ -113,13 +113,13 @@ Result<> SigmoidImageFilter::executeImpl(DataStructure& dataStructure, const Arg
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
 
-  const SigmoidOperation operation{.alpha = alpha, .beta = beta, .outputMaximum = outputMaximum, .outputMinimum = outputMinimum};
+  const SigmoidOperation operation{.alpha = alpha, .beta = beta, .output_maximum = outputMaximum, .output_minimum = outputMinimum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_AlphaKey = "Alpha";
 constexpr StringLiteral k_BetaKey = "Beta";
@@ -127,7 +127,7 @@ constexpr StringLiteral k_OutputMaximumKey = "OutputMaximum";
 constexpr StringLiteral k_OutputMinimumKey = "OutputMinimum";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> SigmoidImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -136,13 +136,13 @@ Result<Arguments> SigmoidImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_AlphaKey, k_Alpha_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_BetaKey, k_Beta_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutputMaximumKey, k_OutputMaximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutputMinimumKey, k_OutputMinimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_AlphaKey, k_Alpha_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_BetaKey, k_Beta_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMaximumKey, k_OutputMaximum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMinimumKey, k_OutputMinimum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

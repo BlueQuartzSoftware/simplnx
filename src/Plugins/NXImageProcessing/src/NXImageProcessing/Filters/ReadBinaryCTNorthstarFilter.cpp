@@ -27,15 +27,15 @@ namespace
 {
 struct ReadBinaryCTNorthstarFilterCache
 {
-  std::vector<std::pair<fs::path, usize>> DataFilePaths;
-  SizeVec3 OriginalGeometryDims;
-  SizeVec3 ImportedGeometryDims;
-  IntVec3 StartVoxelCoord;
-  IntVec3 EndVoxelCoord;
+  std::vector<std::pair<fs::path, usize>> data_file_paths;
+  SizeVec3 original_geometry_dims;
+  SizeVec3 imported_geometry_dims;
+  IntVec3 start_voxel_coord;
+  IntVec3 end_voxel_coord;
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ReadBinaryCTNorthstarFilterCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ReadBinaryCTNorthstarFilterCache> SHeaderCache;
 constexpr std::array<char, 3> k_Axes = {'X', 'Y', 'Z'};
 
 // -----------------------------------------------------------------------------
@@ -142,8 +142,8 @@ Result<std::vector<std::pair<fs::path, usize>>> ReadFileList(std::ifstream& inSt
 // -----------------------------------------------------------------------------
 Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::ifstream& inStream, const fs::path& headerFilePath, usize& lineCount, bool readMin, bool readMax)
 {
-  using Location = std::pair<std::vector<float32>, std::vector<float32>>;
-  Location location{{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
+  using LocationType = std::pair<std::vector<float32>, std::vector<float32>>;
+  LocationType location{{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
   constexpr std::array<usize, 3> k_AxisOrder{1, 2, 0};
   for(auto tokens = ParseNextLine(inStream, ' ', lineCount);; tokens = ParseNextLine(inStream, ' ', lineCount))
   {
@@ -153,7 +153,8 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
     }
     if(tokens.size() < 4 || (tokens[0] != "<Min>" && tokens[0] != "<Max>"))
     {
-      return MakeErrorResult<Location>(-1, fmt::format("Unexpected data at line {} in 'Location' section of Binary CT Northstar file '{}'. Expected '<Min>' or '<Max>' followed by three coordinates.",
+      return MakeErrorResult<LocationType>(-1,
+                                           fmt::format("Unexpected data at line {} in 'Location' section of Binary CT Northstar file '{}'. Expected '<Min>' or '<Max>' followed by three coordinates.",
                                                        lineCount, headerFilePath.string()));
     }
 
@@ -175,7 +176,7 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
         const auto detail = fmt::format("Value '{}' at line {} in the 'Location' section could not be converted to float32.", tokens[i + 1], lineCount);
         const auto message = isMin ? ImageIO::FormatReaderValueError(headerFilePath, field, detail, ImageIO::k_SetOriginLabel, ImageIO::k_SetSpacingLabel) :
                                      ImageIO::FormatReaderValueError(headerFilePath, field, detail, ImageIO::k_SetSpacingLabel);
-        return MakeErrorResult<Location>(error.code, message);
+        return MakeErrorResult<LocationType>(error.code, message);
       }
       coordinates[axis] = value.value();
     }
@@ -309,15 +310,15 @@ namespace nx::core
 {
 //------------------------------------------------------------------------------
 ReadBinaryCTNorthstarFilter::ReadBinaryCTNorthstarFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ReadBinaryCTNorthstarFilter::~ReadBinaryCTNorthstarFilter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -436,19 +437,19 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
     importedGeometryInfo.Origin = {geometryInfo.Origin[0] + (static_cast<float32>(pStartVoxelCoordValue[0]) * importedGeometryInfo.Spacing[0]),
                                    geometryInfo.Origin[1] + (static_cast<float32>(pStartVoxelCoordValue[1]) * importedGeometryInfo.Spacing[1]),
                                    geometryInfo.Origin[2] + (static_cast<float32>(pStartVoxelCoordValue[2]) * importedGeometryInfo.Spacing[2])};
-    s_HeaderCache[m_InstanceId].StartVoxelCoord = pStartVoxelCoordValue;
-    s_HeaderCache[m_InstanceId].EndVoxelCoord = pEndVoxelCoordValue;
+    SHeaderCache[m_InstanceId].start_voxel_coord = pStartVoxelCoordValue;
+    SHeaderCache[m_InstanceId].end_voxel_coord = pEndVoxelCoordValue;
   }
   else
   {
     importedGeometryInfo = geometryInfo;
-    s_HeaderCache[m_InstanceId].StartVoxelCoord = {0, 0, 0};
-    s_HeaderCache[m_InstanceId].EndVoxelCoord = {static_cast<int32_t>(geometryInfo.Dimensions[0] - 1), static_cast<int32_t>(geometryInfo.Dimensions[1] - 1),
-                                                 static_cast<int32_t>(geometryInfo.Dimensions[2] - 1)};
+    SHeaderCache[m_InstanceId].start_voxel_coord = {0, 0, 0};
+    SHeaderCache[m_InstanceId].end_voxel_coord = {static_cast<int32_t>(geometryInfo.Dimensions[0] - 1), static_cast<int32_t>(geometryInfo.Dimensions[1] - 1),
+                                                  static_cast<int32_t>(geometryInfo.Dimensions[2] - 1)};
   }
 
-  s_HeaderCache[m_InstanceId].OriginalGeometryDims = geometryInfo.Dimensions;
-  s_HeaderCache[m_InstanceId].ImportedGeometryDims = importedGeometryInfo.Dimensions;
+  SHeaderCache[m_InstanceId].original_geometry_dims = geometryInfo.Dimensions;
+  SHeaderCache[m_InstanceId].imported_geometry_dims = importedGeometryInfo.Dimensions;
 
   // Sanity check the Start/End Voxels
   if(pImportSubvolumeValue)
@@ -498,7 +499,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
     }
   }
 
-  s_HeaderCache[m_InstanceId].DataFilePaths = dataFiles;
+  SHeaderCache[m_InstanceId].data_file_paths = dataFiles;
 
   // Set the output actions
   nx::core::Result<OutputActions> resultOutputActions;
@@ -542,12 +543,12 @@ Result<> ReadBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, 
   DataPath densityArrayPath = inputValues.ImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
   inputValues.DensityArrayPath = densityArrayPath;
 
-  inputValues.DataFilePaths = s_HeaderCache[m_InstanceId].DataFilePaths;
-  inputValues.OriginalGeometryDims = s_HeaderCache[m_InstanceId].OriginalGeometryDims;
-  inputValues.ImportedGeometryDims = s_HeaderCache[m_InstanceId].ImportedGeometryDims;
+  inputValues.DataFilePaths = SHeaderCache[m_InstanceId].data_file_paths;
+  inputValues.OriginalGeometryDims = SHeaderCache[m_InstanceId].original_geometry_dims;
+  inputValues.ImportedGeometryDims = SHeaderCache[m_InstanceId].imported_geometry_dims;
   inputValues.ImportSubvolume = filterArgs.value<bool>(k_ImportSubvolume_Key);
-  inputValues.StartVoxelCoord = s_HeaderCache[m_InstanceId].StartVoxelCoord;
-  inputValues.EndVoxelCoord = s_HeaderCache[m_InstanceId].EndVoxelCoord;
+  inputValues.StartVoxelCoord = SHeaderCache[m_InstanceId].start_voxel_coord;
+  inputValues.EndVoxelCoord = SHeaderCache[m_InstanceId].end_voxel_coord;
   inputValues.LengthUnit = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
 
   return ReadBinaryCTNorthstar(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -555,7 +556,7 @@ Result<> ReadBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 constexpr StringLiteral k_InputHeaderFileKey = "InputHeaderFile";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
@@ -568,7 +569,7 @@ constexpr StringLiteral k_ImportSubvolumeKey = "ImportSubvolume";
 constexpr StringLiteral k_StartVoxelCoordKey = "StartVoxelCoord";
 constexpr StringLiteral k_EndVoxelCoordKey = "EndVoxelCoord";
 constexpr StringLiteral k_ImportedVolumeDescriptionKey = "ImportedVolumeDescription";
-} // namespace SIMPL
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -577,16 +578,16 @@ Result<Arguments> ReadBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputHeaderFileKey, k_InputHeaderFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DensityArrayNameKey, k_DensityArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_LengthUnitKey, k_LengthUnit_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputHeaderFileKey, k_InputHeaderFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DensityArrayNameKey, k_DensityArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_LengthUnitKey, k_LengthUnit_Key));
   // Volume description parameter is not applicable in NX
   // Data file info parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ImportSubvolumeKey, k_ImportSubvolume_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ImportSubvolumeKey, k_ImportSubvolume_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
   // Imported Volume Description parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));
