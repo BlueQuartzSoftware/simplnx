@@ -31,7 +31,7 @@ namespace
 class ThresholdPlanManager : public IDataIOManager
 {
 public:
-  static inline constexpr StringLiteral k_Format = "threshold-plan-test";
+  static constexpr StringLiteral k_Format = "threshold-plan-test";
 
   ThresholdPlanManager()
   {

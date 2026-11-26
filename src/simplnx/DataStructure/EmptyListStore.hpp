@@ -95,7 +95,7 @@ public:
    * @param grainId
    * @param value
    */
-  void addEntry(int32 grainId, value_type value) override
+  void addEntry(int32  /*grainId*/, value_type  /*value*/) override
   {
     throw std::runtime_error("EmptyListStore cannot add values to list");
   }
@@ -155,7 +155,7 @@ public:
    * @param grainId
    * @return shared_vector_type
    */
-  vector_type getList(int32 grainId) const override
+  vector_type getList(int32  /*grainId*/) const override
   {
     return {};
   }
@@ -165,7 +165,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type copyOfList(int32 grainId) const override
+  vector_type copyOfList(int32  /*grainId*/) const override
   {
     return {};
   }
@@ -175,7 +175,7 @@ public:
    * @param grainId
    * @param neighborList
    */
-  void setList(int32 grainId, const shared_vector_type& neighborList) override
+  void setList(int32  /*grainId*/, const shared_vector_type&  /*neighborList*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set list values");
   }
@@ -185,7 +185,7 @@ public:
    * @param grainId
    * @param neighborList
    */
-  void setList(int32 grainId, const vector_type& neighborList) override
+  void setList(int32  /*grainId*/, const vector_type&  /*neighborList*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set list values");
   }
@@ -195,7 +195,7 @@ public:
    * @param grainId The grain/tuple index to query
    * @return usize Always returns 0 because EmptyListStore has no data
    */
-  usize getListSize(usize grainId) const override
+  usize getListSize(usize  /*grainId*/) const override
   {
     return 0;
   }
@@ -207,7 +207,7 @@ public:
    * @param ok
    * @return T
    */
-  T getValue(int32 grainId, int32 index, bool& ok) const override
+  T getValue(int32  /*grainId*/, int32  /*index*/, bool&  /*ok*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list value");
   }
@@ -219,7 +219,7 @@ public:
    * @param value The value to set (unused)
    * @throw std::runtime_error Always throws because EmptyListStore has no data
    */
-  void setValue(int32 grainId, usize index, T value) override
+  void setValue(int32  /*grainId*/, usize  /*index*/, T  /*value*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set list value");
   }
@@ -229,7 +229,7 @@ public:
    * @param grainId
    * @return vector_type&
    */
-  vector_type operator[](int32 grainId) const override
+  vector_type operator[](int32  /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -239,7 +239,7 @@ public:
    * @param grainId
    * @return vector_type&
    */
-  vector_type operator[](usize grainId) const override
+  vector_type operator[](usize  /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -249,7 +249,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type at(int32 grainId) const override
+  vector_type at(int32  /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -259,7 +259,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type at(usize grainId) const override
+  vector_type at(usize  /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -269,7 +269,7 @@ public:
    * @param lists Vector of shared pointers to vectors (unused)
    * @throw std::runtime_error Always throws because EmptyListStore has no data
    */
-  void setData(const std::vector<shared_vector_type>& lists) override
+  void setData(const std::vector<shared_vector_type>&  /*lists*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set lists");
   }
@@ -279,7 +279,7 @@ public:
    * @param lists Vector of vectors (unused)
    * @throw std::runtime_error Always throws because EmptyListStore has no data
    */
-  void setData(const std::vector<vector_type>& lists) override
+  void setData(const std::vector<vector_type>&  /*lists*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set lists");
   }
@@ -307,7 +307,7 @@ public:
    * @param datasetReader The HDF5 DatasetIO (unused)
    * @throw std::runtime_error Always throws because EmptyListStore has no data to write
    */
-  void writeHdf5(HDF5::DatasetIO& datasetReader) override
+  void writeHdf5(HDF5::DatasetIO&  /*datasetReader*/) override
   {
     throw std::runtime_error("EmptyListStore cannot write to HDF5");
   }

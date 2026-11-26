@@ -90,8 +90,8 @@ IFilter::UniquePointer ComputeFeaturePhasesBinaryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   const auto featureAMPath = filterArgs.value<DataPath>(k_CellFeatureAMPath_Key);
   const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
@@ -123,8 +123,8 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeFeaturePhasesBinaryInputValues inputValues;
   inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);

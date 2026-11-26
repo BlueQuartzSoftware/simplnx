@@ -67,7 +67,7 @@ nlohmann::json VectorParameter<T>::toJsonImpl(const std::any& value) const
 }
 
 template <class T>
-Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'VectorParameter' JSON Error: ";
 

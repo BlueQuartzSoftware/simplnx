@@ -232,8 +232,8 @@ IFilter::UniquePointer ComputeBoundingBoxStatsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                      const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pCalculateLengthValue = filterArgs.value<bool>(k_CalculateLength_Key);
   auto pCalculateMinValue = filterArgs.value<bool>(k_CalculateMin_Key);
@@ -307,8 +307,8 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeBoundingBoxStatsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeBoundingBoxStatsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeBoundingBoxStatsInputValues inputValues;
 

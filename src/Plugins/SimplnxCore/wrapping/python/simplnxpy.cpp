@@ -682,7 +682,7 @@ public:
    * @param target Unused Python reload target argument.
    * @return An importlib specification, or Python None when fullname is not registered.
    */
-  py::object findSpec(const std::string& fullname, py::object path, py::object target) const
+  py::object findSpec(const std::string& fullname, py::object  /*path*/, py::object  /*target*/) const
   {
     if(!containsModule(fullname))
     {
@@ -1032,7 +1032,7 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<ArrayThresholdSet, IArrayThreshold, std::shared_ptr<ArrayThresholdSet>> arrayThresholdSet(mod, "ArrayThresholdSet");
   arrayThresholdSet.def(py::init<>());
   arrayThresholdSet.def_property("thresholds", &ArrayThresholdSet::getArrayThresholds, &ArrayThresholdSet::setArrayThresholds);
-  arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet& self) { return "ArrayThresholdSet()"; });
+  arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet&  /*self*/) { return "ArrayThresholdSet()"; });
 
   py::class_<ReadCSVData> readCSVData(mod, "ReadCSVDataParameter");
 
@@ -1051,7 +1051,7 @@ PYBIND11_MODULE(simplnx, mod)
   readCSVData.def_readwrite("tuple_dims", &ReadCSVData::tupleDims);
   readCSVData.def_readwrite("delimiters", &ReadCSVData::delimiters);
   readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutiveDelimiters);
-  readCSVData.def("__repr__", [](const ReadCSVData& self) { return "ReadCSVDataParameter()"; });
+  readCSVData.def("__repr__", [](const ReadCSVData&  /*self*/) { return "ReadCSVDataParameter()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
@@ -1599,7 +1599,7 @@ PYBIND11_MODULE(simplnx, mod)
   importHdf5DatasetInfo.def_readwrite("parent", &ReadHDF5DatasetParameter::ValueType::parent);
   importHdf5DatasetInfo.def_readwrite("input_file", &ReadHDF5DatasetParameter::ValueType::inputFile);
   importHdf5DatasetInfo.def_readwrite("datasets", &ReadHDF5DatasetParameter::ValueType::datasets);
-  importHdf5DatasetInfo.def("__repr__", [](const ReadHDF5DatasetParameter::ValueType& self) { return "ReadHDF5DatasetParameter.ValueType()"; });
+  importHdf5DatasetInfo.def("__repr__", [](const ReadHDF5DatasetParameter::ValueType&  /*self*/) { return "ReadHDF5DatasetParameter.ValueType()"; });
 
   py::enum_<GeneratedFileListParameter::Ordering> generatedFileListOrdering(generatedFileListParameter, "Ordering");
   generatedFileListOrdering.value("LowToHigh", GeneratedFileListParameter::Ordering::LowToHigh);
@@ -1629,7 +1629,7 @@ PYBIND11_MODULE(simplnx, mod)
   dream3dImportData.def_readwrite("file_path", &Dream3dImportParameter::ImportData::FilePath);
   dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::DataPaths);
   dream3dImportData.def_readwrite("path_import_policy", &Dream3dImportParameter::ImportData::ImportPolicy);
-  dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData& self) { return "Dream3dImportParameter.ImportData()"; });
+  dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData&  /*self*/) { return "Dream3dImportParameter.ImportData()"; });
 
   auto arraySelectionParameterDataLocation = py::enum_<ArraySelectionParameter::DataLocation>(arraySelectionParameter, "DataLocation");
   arraySelectionParameterDataLocation.value("Any", ArraySelectionParameter::DataLocation::Any);

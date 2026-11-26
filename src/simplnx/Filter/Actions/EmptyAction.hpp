@@ -27,7 +27,7 @@ public:
    * @param mode The mode (Preflight or Execute, unused)
    * @return Result<> Empty result (no changes made)
    */
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  Result<> apply(DataStructure&  /*dataStructure*/, Mode  /*mode*/) const override
   {
     return {};
   }

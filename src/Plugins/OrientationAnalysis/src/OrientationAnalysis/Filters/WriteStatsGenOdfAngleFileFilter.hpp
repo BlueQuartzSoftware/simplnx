@@ -41,11 +41,11 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr uint64 k_CommaDelimiter = 0;
-  static inline constexpr uint64 k_SemiColonDelimiter = 1;
-  static inline constexpr uint64 k_SpaceDelimiter = 2;
-  static inline constexpr uint64 k_ColonDelimiter = 3;
-  static inline constexpr uint64 k_TabDelimiter = 4;
+  static constexpr uint64 k_CommaDelimiter = 0;
+  static constexpr uint64 k_SemiColonDelimiter = 1;
+  static constexpr uint64 k_SpaceDelimiter = 2;
+  static constexpr uint64 k_ColonDelimiter = 3;
+  static constexpr uint64 k_TabDelimiter = 4;
 
   /**
    * @brief Returns the name of the filter.

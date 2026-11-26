@@ -28,7 +28,7 @@ namespace nx::core
  * @return
  */
 template <class T = float32>
-inline constexpr T CalculatePercentComplete(usize currentProgress, usize max)
+constexpr T CalculatePercentComplete(usize currentProgress, usize max)
 {
   return static_cast<T>(static_cast<float32>(currentProgress) / static_cast<float32>(max) * 100.0f);
 }

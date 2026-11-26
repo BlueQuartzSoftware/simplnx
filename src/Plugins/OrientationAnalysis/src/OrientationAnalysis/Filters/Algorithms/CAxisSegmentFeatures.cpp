@@ -334,7 +334,7 @@ void CAxisSegmentFeatures::deallocateSliceBuffers()
   m_BufSliceSize = 0;
 }
 
-Result<> CAxisSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ)
+Result<> CAxisSegmentFeatures::prepareForSlice(int64 iz, int64  /*dimX*/, int64  /*dimY*/, int64  /*dimZ*/)
 {
   if(iz < 0)
   {

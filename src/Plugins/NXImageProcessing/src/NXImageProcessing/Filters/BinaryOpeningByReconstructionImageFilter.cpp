@@ -92,8 +92,8 @@ IFilter::UniquePointer BinaryOpeningByReconstructionImageFilter::clone() const
 {
   return std::make_unique<BinaryOpeningByReconstructionImageFilter>();
 }
-IFilter::PreflightResult BinaryOpeningByReconstructionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult BinaryOpeningByReconstructionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -147,8 +147,8 @@ IFilter::PreflightResult BinaryOpeningByReconstructionImageFilter::preflightImpl
   }
   return {std::move(resultOutputActions)};
 }
-Result<> BinaryOpeningByReconstructionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> BinaryOpeningByReconstructionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

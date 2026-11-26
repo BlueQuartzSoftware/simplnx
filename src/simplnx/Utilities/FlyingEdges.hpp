@@ -1171,7 +1171,7 @@ private:
    * @param j Specifies cube Y index.
    * @return Eight-bit corner classification.
    */
-  [[nodiscard]] inline uint8 calcCubeCase(nonstd::span<const T> lowerSlice, nonstd::span<const T> upperSlice, usize i, usize j) const
+  [[nodiscard]] uint8 calcCubeCase(nonstd::span<const T> lowerSlice, nonstd::span<const T> upperSlice, usize i, usize j) const
   {
     const usize lowerRow = j * m_NX;
     const usize upperRow = (j + 1) * m_NX;
@@ -1202,7 +1202,7 @@ private:
    * @param j Specifies cube-row Y index.
    * @param k Specifies cube-row Z index.
    */
-  inline void calcTrimValues(usize& xl, usize& xr, usize const& j, usize const& k) const
+  void calcTrimValues(usize& xl, usize& xr, usize const& j, usize const& k) const
   {
     GridEdge const& ge0 = m_GridEdges[k * m_NY + j];
     GridEdge const& ge1 = m_GridEdges[k * m_NY + j + 1];
@@ -1223,7 +1223,7 @@ private:
    * @param edge Specifies the marching-cubes edge.
    * @return Interpolated vector at the isovalue crossing.
    */
-  inline std::array<float32, 3> interpolateOnCube(cube const& pts, TCube const& isoVals, uint8 const& edge) const
+  std::array<float32, 3> interpolateOnCube(cube const& pts, TCube const& isoVals, uint8 const& edge) const
   {
     uint8 i0 = util::edgeVertices[edge][0];
     uint8 i1 = util::edgeVertices[edge][1];
@@ -1239,7 +1239,7 @@ private:
    * @param weight Specifies interpolation weight.
    * @return Interpolated vector.
    */
-  inline std::array<float32, 3> interpolate(std::array<float32, 3> const& a, std::array<float32, 3> const& b, T const& weight) const
+  std::array<float32, 3> interpolate(std::array<float32, 3> const& a, std::array<float32, 3> const& b, T const& weight) const
   {
     std::array<float32, 3> ret = {};
     ret[0] = a[0] + (weight * (b[0] - a[0]));
@@ -1380,7 +1380,7 @@ private:
    * @param k Specifies Z index.
    * @return Scalar value.
    */
-  inline T getData(usize i, usize j, usize k) const
+  T getData(usize i, usize j, usize k) const
   {
     return sliceData(k)[j * m_NX + i];
   }

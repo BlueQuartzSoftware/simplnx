@@ -165,8 +165,8 @@ IFilter::UniquePointer ComputeNeighborListStatisticsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                            const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto findLength = filterArgs.value<bool>(k_FindLength_Key);
   auto findMin = filterArgs.value<bool>(k_FindMinimum_Key);
@@ -197,8 +197,8 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeNeighborListStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeNeighborListStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeNeighborListStatisticsInputValues inputValues;
 

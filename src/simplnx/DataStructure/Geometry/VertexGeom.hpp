@@ -14,9 +14,9 @@ class SIMPLNX_EXPORT VertexGeom : public INodeGeometry0D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumVerts = 1;
+  static constexpr usize k_NumVerts = 1;
 
-  static inline constexpr StringLiteral k_TypeName = "VertexGeom";
+  static constexpr StringLiteral k_TypeName = "VertexGeom";
 
   /**
    * @brief Creates a new VertexGeom in the specified DataStructure.

@@ -145,7 +145,7 @@ public:
   DataObject* getData(DataObject::IdType identifier);
 
   template <class T>
-  inline T* getDataAs(DataObject::IdType identifier)
+  T* getDataAs(DataObject::IdType identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(identifier));
@@ -168,7 +168,7 @@ public:
   DataObject* getData(const std::optional<DataObject::IdType>& identifier);
 
   template <class T>
-  inline T* getDataAs(const std::optional<DataObject::IdType>& identifier)
+  T* getDataAs(const std::optional<DataObject::IdType>& identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     auto* object = getData(identifier);
@@ -209,7 +209,7 @@ public:
   DataObject& getDataRef(DataObject::IdType identifier);
 
   template <class T>
-  inline T* getDataAs(const DataPath& path)
+  T* getDataAs(const DataPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
@@ -238,7 +238,7 @@ public:
    * @throws std::bad_cast if the object is incompatible with T.
    */
   template <class T>
-  inline T& getDataRefAs(const DataPath& path)
+  T& getDataRefAs(const DataPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T&>(getDataRef(path));
@@ -292,7 +292,7 @@ public:
   DataObject* getData(const LinkedPath& path);
 
   template <class T>
-  inline T* getDataAs(const LinkedPath& path)
+  T* getDataAs(const LinkedPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
@@ -315,7 +315,7 @@ public:
   const DataObject* getData(DataObject::IdType identifier) const;
 
   template <class T>
-  inline const T* getDataAs(DataObject::IdType identifier) const
+  const T* getDataAs(DataObject::IdType identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(identifier));
@@ -338,7 +338,7 @@ public:
   const DataObject* getData(const std::optional<DataObject::IdType>& identifier) const;
 
   template <class T>
-  inline const T* getDataAs(const std::optional<DataObject::IdType>& identifier) const
+  const T* getDataAs(const std::optional<DataObject::IdType>& identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(identifier));
@@ -377,7 +377,7 @@ public:
   const DataObject& getDataRef(DataObject::IdType identifier) const;
 
   template <class T>
-  inline const T* getDataAs(const DataPath& path) const
+  const T* getDataAs(const DataPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
@@ -406,7 +406,7 @@ public:
    * @throws std::bad_cast if the object is incompatible with T.
    */
   template <class T>
-  inline const T& getDataRefAs(const DataPath& path) const
+  const T& getDataRefAs(const DataPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T&>(getDataRef(path));
@@ -460,7 +460,7 @@ public:
   const DataObject* getData(const LinkedPath& path) const;
 
   template <class T>
-  inline const T* getDataAs(const LinkedPath& path) const
+  const T* getDataAs(const LinkedPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));

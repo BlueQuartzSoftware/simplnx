@@ -481,7 +481,7 @@ protected:
    * @throws std::runtime_error If T is unsupported.
    */
   template <typename T>
-  static inline hid_t HdfTypeForPrimitive()
+  static hid_t HdfTypeForPrimitive()
   {
     if constexpr(std::is_same_v<T, float>)
     {

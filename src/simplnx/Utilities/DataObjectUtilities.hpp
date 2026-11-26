@@ -44,7 +44,7 @@ namespace nx::core
  * @param visitedIndex The index into the visited array
  * @return Either the original 'id' if this was already visited or the new 'id' if it was not visited already.
  */
-inline constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<DataObject::IdType>& originalId, const std::pair<DataObject::IdType, DataObject::IdType>& updatedId,
+constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<DataObject::IdType>& originalId, const std::pair<DataObject::IdType, DataObject::IdType>& updatedId,
                                                                         std::vector<bool>& visited, usize visitedIndex)
 {
   if(originalId == updatedId.first && !visited[visitedIndex])
@@ -60,7 +60,7 @@ inline constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::opt
  * @param dataType
  * @return
  */
-inline constexpr StringLiteral GeometryTypeToString(IGeometry::Type geomType)
+constexpr StringLiteral GeometryTypeToString(IGeometry::Type geomType)
 {
   switch(geomType)
   {
@@ -111,7 +111,7 @@ inline const std::vector<std::string>& GetAllGeometryTypesAsStrings()
  * @param geomTypeString
  * @return
  */
-inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
+constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
 {
   if(geomTypeString == GeometryTypeToString(IGeometry::Type::Image).view())
   {
@@ -151,7 +151,7 @@ inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeS
   }
 }
 
-inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjType)
+constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjType)
 {
   switch(dataObjType)
   {
@@ -247,7 +247,7 @@ inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjTy
  * @param arrayType
  * @return
  */
-inline constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::ArrayType arrayType)
+constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::ArrayType arrayType)
 {
   switch(arrayType)
   {
@@ -274,7 +274,7 @@ inline constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::Array
  * @param dataObjectType
  * @return
  */
-inline constexpr std::optional<IArray::ArrayType> ConvertDataObjectTypeToArrayType(DataObject::Type dataObjectType) noexcept
+constexpr std::optional<IArray::ArrayType> ConvertDataObjectTypeToArrayType(DataObject::Type dataObjectType) noexcept
 {
   switch(dataObjectType)
   {

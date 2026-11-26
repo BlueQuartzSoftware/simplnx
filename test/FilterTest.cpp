@@ -127,8 +127,8 @@ protected:
    * @brief Reports a valid preflight so execute() reaches executeImpl.
    * @return An empty preflight result.
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+  PreflightResult preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                const ExecutionContext&  /*executionContext*/) const override
   {
     return {};
   }
@@ -145,16 +145,16 @@ protected:
 class ThrowingFilter : public BackstopFilterBase<ThrowingFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "ThrowingFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
+  static constexpr StringLiteral k_FilterName = "ThrowingFilter";
+  static constexpr StringLiteral k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
 
 protected:
   /**
    * @brief Throws so the caller can observe how execute() handles an escaped exception.
    * @throws std::runtime_error Always.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                       const ExecutionContext&  /*executionContext*/) const override
   {
     throw std::runtime_error(k_ThrowMessage.str());
   }
@@ -170,16 +170,16 @@ protected:
 class NonStandardThrowingFilter : public BackstopFilterBase<NonStandardThrowingFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "NonStandardThrowingFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
+  static constexpr StringLiteral k_FilterName = "NonStandardThrowingFilter";
+  static constexpr StringLiteral k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
 
 protected:
   /**
    * @brief Throws a non-std::exception type.
    * @throws NonStandardException Always.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                       const ExecutionContext&  /*executionContext*/) const override
   {
     throw NonStandardException{};
   }
@@ -196,8 +196,8 @@ protected:
 class CancelAfterErrorFilter : public BackstopFilterBase<CancelAfterErrorFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "CancelAfterErrorFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
+  static constexpr StringLiteral k_FilterName = "CancelAfterErrorFilter";
+  static constexpr StringLiteral k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
 
   /**
    * @brief Selects the flag executeImpl raises.
@@ -214,8 +214,8 @@ protected:
    * @brief Raises the cancellation flag and reports a storage error.
    * @return An error carrying k_ExecuteErrorCode.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                       const ExecutionContext&  /*executionContext*/) const override
   {
     if(m_CancelFlag != nullptr)
     {
@@ -238,8 +238,8 @@ private:
 class CancellingPreflightFilter : public BackstopFilterBase<CancellingPreflightFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "CancellingPreflightFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
+  static constexpr StringLiteral k_FilterName = "CancellingPreflightFilter";
+  static constexpr StringLiteral k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
 
   /**
    * @brief Selects the cancellation flag and preflight validity for the test.
@@ -264,8 +264,8 @@ protected:
    * @param executionContext Unused.
    * @return Preflight data for cancellation-precedence tests.
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+  PreflightResult preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                const ExecutionContext&  /*executionContext*/) const override
   {
     m_CancelFlag->store(true);
 
@@ -288,8 +288,8 @@ protected:
    * @param executionContext Unused.
    * @return A valid result.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                       const ExecutionContext&  /*executionContext*/) const override
   {
     (*m_ExecutionCount)++;
     return {};
@@ -324,7 +324,7 @@ public:
    * @return An error
    * and warning that identify this action.
    */
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  Result<> apply(DataStructure&  /*dataStructure*/, Mode  /*mode*/) const override
   {
     (*m_InvocationCount)++;
     Result<> result = MakeErrorResult(k_DeferredErrorCode, "The controlled deferred action failed");
@@ -367,7 +367,7 @@ public:
    * @param mode Supplies the action mode.
    * @return A valid result.
    */
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  Result<> apply(DataStructure&  /*dataStructure*/, Mode  /*mode*/) const override
   {
     (*m_InvocationCount)++;
     return {};
@@ -393,8 +393,8 @@ private:
 class DeferredFailureFilter : public BackstopFilterBase<DeferredFailureFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "DeferredFailureFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
+  static constexpr StringLiteral k_FilterName = "DeferredFailureFilter";
+  static constexpr StringLiteral k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
 
   /**
    * @brief Constructs the filter with internal invocation counters.
@@ -434,8 +434,8 @@ protected:
    * @param executionContext Unused.
    * @return Deferred action, warning, and output value for the execution test.
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+  PreflightResult preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                const ExecutionContext&  /*executionContext*/) const override
   {
     OutputActions actions;
     actions.appendDeferredAction(std::make_unique<FailingDeferredAction>(m_FailingInvocationCount));
@@ -455,8 +455,8 @@ protected:
    * @param executionContext Unused.
    * @return A valid result.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                       const ExecutionContext&  /*executionContext*/) const override
   {
     return {};
   }

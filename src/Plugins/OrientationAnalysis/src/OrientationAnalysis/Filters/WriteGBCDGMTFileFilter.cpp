@@ -88,8 +88,8 @@ IFilter::UniquePointer WriteGBCDGMTFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
   auto pMisorientationRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
@@ -129,8 +129,8 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteGBCDGMTFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteGBCDGMTFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())

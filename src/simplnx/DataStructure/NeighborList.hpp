@@ -29,7 +29,7 @@ public:
    *
    * eraseTuples returns this code before copying or resizing the store.
    */
-  static inline constexpr int32 k_MissingCopyDestinationError = -101;
+  static constexpr int32 k_MissingCopyDestinationError = -101;
 
   NeighborList() = default;
 

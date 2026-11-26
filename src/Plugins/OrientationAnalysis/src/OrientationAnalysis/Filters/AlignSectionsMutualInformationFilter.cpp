@@ -135,8 +135,8 @@ IFilter::UniquePointer AlignSectionsMutualInformationFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                             const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -213,8 +213,8 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignSectionsMutualInformationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> AlignSectionsMutualInformationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                           const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   AlignSectionsMutualInformationInputValues inputValues;
 

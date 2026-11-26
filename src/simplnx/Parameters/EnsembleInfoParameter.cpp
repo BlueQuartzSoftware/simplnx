@@ -66,7 +66,7 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
 

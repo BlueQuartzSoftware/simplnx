@@ -25,17 +25,17 @@ PlaceholderFilter::PlaceholderFilter(nlohmann::json json)
 
 PlaceholderFilter::~PlaceholderFilter() noexcept = default;
 
-bool PlaceholderFilter::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
+bool PlaceholderFilter::preflight(DataStructure&  /*dataStructure*/, const std::atomic_bool&  /*shouldCancel*/)
 {
   return true;
 }
 
-bool PlaceholderFilter::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool PlaceholderFilter::preflight(DataStructure&  /*dataStructure*/, RenamedPaths&  /*renamedPaths*/, const std::atomic_bool&  /*shouldCancel*/, bool  /*allowRenaming*/)
 {
   return true;
 }
 
-bool PlaceholderFilter::execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
+bool PlaceholderFilter::execute(DataStructure&  /*dataStructure*/, const std::atomic_bool&  /*shouldCancel*/)
 {
   return true;
 }

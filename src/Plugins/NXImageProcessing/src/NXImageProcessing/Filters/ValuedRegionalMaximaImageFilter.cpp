@@ -64,8 +64,8 @@ IFilter::UniquePointer ValuedRegionalMaximaImageFilter::clone() const
 {
   return std::make_unique<ValuedRegionalMaximaImageFilter>();
 }
-IFilter::PreflightResult ValuedRegionalMaximaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ValuedRegionalMaximaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                        const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -77,8 +77,8 @@ IFilter::PreflightResult ValuedRegionalMaximaImageFilter::preflightImpl(const Da
   return {.outputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                         /*requireScalar=*/true)};
 }
-Result<> ValuedRegionalMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ValuedRegionalMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

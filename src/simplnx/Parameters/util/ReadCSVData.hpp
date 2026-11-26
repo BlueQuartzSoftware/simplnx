@@ -60,7 +60,7 @@ enum class CSVType : uint8
   string
 };
 
-inline constexpr StringLiteral CSVTypeToHumanString(CSVType csvType)
+constexpr StringLiteral CSVTypeToHumanString(CSVType csvType)
 {
   switch(csvType)
   {
@@ -152,7 +152,7 @@ inline std::optional<CSVType> IndexToCSVType(usize index)
  * @param numericType
  * @return
  */
-inline constexpr DataType ConvertCSVTypeToDataType(CSVType csvType)
+constexpr DataType ConvertCSVTypeToDataType(CSVType csvType)
 {
   switch(csvType)
   {
@@ -262,7 +262,7 @@ constexpr CSVType GetCSVType() noexcept
  * @param dataType
  * @return
  */
-inline constexpr StringLiteral CSVTypeToString(CSVType dataType)
+constexpr StringLiteral CSVTypeToString(CSVType dataType)
 {
   switch(dataType)
   {
@@ -312,7 +312,7 @@ inline constexpr StringLiteral CSVTypeToString(CSVType dataType)
  * @param csvTypeString
  * @return
  */
-inline constexpr CSVType StringToCSVType(std::string_view csvTypeString)
+constexpr CSVType StringToCSVType(std::string_view csvTypeString)
 {
   if(csvTypeString == CSVTypeToString(CSVType::int8).view())
   {

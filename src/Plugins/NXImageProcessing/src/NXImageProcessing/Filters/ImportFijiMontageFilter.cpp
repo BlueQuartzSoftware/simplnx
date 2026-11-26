@@ -230,8 +230,8 @@ Result<std::vector<fiji::FijiTile>> ImportFijiMontageFilter::loadTiles(const fs:
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto parentDataGroup = filterArgs.value<bool>(k_ParentDataGroup_Key);
@@ -341,8 +341,8 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto parentDataGroup = filterArgs.value<bool>(k_ParentDataGroup_Key);

@@ -91,8 +91,8 @@ IFilter::UniquePointer NearestPointFuseRegularGridsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                           const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pSamplingGeometryPathValue = filterArgs.value<DataPath>(k_SamplingGeometryPath_Key);
   auto pReferenceGeometryPathValue = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
@@ -163,8 +163,8 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   NearestPointFuseRegularGridsInputValues inputValues;
 

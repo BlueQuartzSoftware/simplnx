@@ -69,8 +69,8 @@ IFilter::UniquePointer SmoothingRecursiveGaussianImageFilter::clone() const
   return std::make_unique<SmoothingRecursiveGaussianImageFilter>();
 }
 
-IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -107,8 +107,8 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
   return {std::move(resultOutputActions)};
 }
 
-Result<> SmoothingRecursiveGaussianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> SmoothingRecursiveGaussianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

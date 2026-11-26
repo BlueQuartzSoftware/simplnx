@@ -463,7 +463,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   return {};
 }
 
-Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& reader, hid_t fileId) const
+Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader&  /*reader*/, hid_t fileId) const
 {
   if(!m_InputValues->ReadAbsorptionData)
   {

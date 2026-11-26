@@ -193,7 +193,7 @@ class PythonPlugin;
 class Internals
 {
 public:
-  static inline constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
+  static constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
 
   Internals()
   : m_App(Application::GetOrCreateInstance())
@@ -642,7 +642,7 @@ public:
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+                                const ExecutionContext&  /*executionContext*/) const override
   {
     try
     {
@@ -663,8 +663,8 @@ protected:
     }
   }
 
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext&  /*executionContext*/) const override
   {
     try
     {

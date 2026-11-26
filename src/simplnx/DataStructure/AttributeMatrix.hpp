@@ -14,7 +14,7 @@ namespace nx::core
 class SIMPLNX_EXPORT AttributeMatrix : public BaseGroup
 {
 public:
-  static inline constexpr StringLiteral k_TypeName = "AttributeMatrix";
+  static constexpr StringLiteral k_TypeName = "AttributeMatrix";
 
   /**
    * @brief Attempts to construct and insert a AttributeMatrix into the DataStructure.

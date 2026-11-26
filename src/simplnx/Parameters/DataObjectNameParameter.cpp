@@ -39,7 +39,7 @@ nlohmann::json DataObjectNameParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> DataObjectNameParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataObjectNameParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'DataObjectNameParameter' JSON Error: ";
   if(!json.is_string())

@@ -78,8 +78,8 @@ IFilter::UniquePointer WriteVtkStructuredPointsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                       const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -120,8 +120,8 @@ IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const Dat
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())

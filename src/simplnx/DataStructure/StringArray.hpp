@@ -28,7 +28,7 @@ public:
   using iterator = typename store_type::iterator;
   using const_iterator = typename store_type::const_iterator;
 
-  static inline constexpr StringLiteral k_TypeName = "StringArray";
+  static constexpr StringLiteral k_TypeName = "StringArray";
 
   /**
    * @brief Creates an empty array.

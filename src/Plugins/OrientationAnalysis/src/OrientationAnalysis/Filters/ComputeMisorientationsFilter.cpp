@@ -118,8 +118,8 @@ IFilter::UniquePointer ComputeMisorientationsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto inputPath1 = filterArgs.value<DataPath>(k_InputOrientationArrayPath1_Key);
   auto inputPath2 = filterArgs.value<DataPath>(k_InputOrientationArrayPath2_Key);
@@ -156,8 +156,8 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeMisorientationsInputValues inputValues;
 

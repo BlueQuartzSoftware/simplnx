@@ -113,8 +113,8 @@ IFilter::UniquePointer RemoveFlaggedFeaturesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                    const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pFlaggedFeaturesArrayPathValue = filterArgs.value<DataPath>(k_FlaggedFeaturesArrayPath_Key);
@@ -186,8 +186,8 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   RemoveFlaggedFeaturesInputValues inputValues;
 

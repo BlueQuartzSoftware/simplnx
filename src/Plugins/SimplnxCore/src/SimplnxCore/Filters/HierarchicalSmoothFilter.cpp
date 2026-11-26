@@ -82,8 +82,8 @@ IFilter::UniquePointer HierarchicalSmoothFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult HierarchicalSmoothFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult HierarchicalSmoothFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pTriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
@@ -96,8 +96,8 @@ IFilter::PreflightResult HierarchicalSmoothFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> HierarchicalSmoothFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> HierarchicalSmoothFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   HierarchicalSmoothInputValues inputValues;
 
@@ -118,7 +118,7 @@ namespace SIMPL
 } // namespace
 
 //------------------------------------------------------------------------------
-Result<Arguments> HierarchicalSmoothFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> HierarchicalSmoothFilter::FromSIMPLJson(const nlohmann::json&  /*json*/)
 {
   Arguments args = HierarchicalSmoothFilter().getDefaultArguments();
 

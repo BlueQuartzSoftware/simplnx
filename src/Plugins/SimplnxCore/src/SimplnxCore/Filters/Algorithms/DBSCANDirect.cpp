@@ -43,7 +43,7 @@ public:
    * @param secondTuple Ignored second tuple index.
    * @return True.
    */
-  bool bothTrue(usize firstTuple, usize secondTuple) const override
+  bool bothTrue(usize  /*firstTuple*/, usize  /*secondTuple*/) const override
   {
     return true;
   }
@@ -54,7 +54,7 @@ public:
    * @param secondTuple Ignored second tuple index.
    * @return False.
    */
-  bool bothFalse(usize firstTuple, usize secondTuple) const override
+  bool bothFalse(usize  /*firstTuple*/, usize  /*secondTuple*/) const override
   {
     return false;
   }
@@ -64,7 +64,7 @@ public:
    * @param tupleIndex Ignored tuple index.
    * @return True.
    */
-  bool isTrue(usize tupleIndex) const override
+  bool isTrue(usize  /*tupleIndex*/) const override
   {
     return true;
   }

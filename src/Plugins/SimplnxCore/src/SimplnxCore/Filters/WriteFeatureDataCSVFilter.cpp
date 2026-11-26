@@ -79,15 +79,15 @@ IFilter::UniquePointer WriteFeatureDataCSVFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments&  /*filterArgs*/, const MessageHandler&  /*messageHandler*/,
+                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   WriteFeatureDataCSVInputValues inputValues;
   inputValues.FeatureDataFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key);

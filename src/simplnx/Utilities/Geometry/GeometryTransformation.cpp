@@ -103,7 +103,7 @@ public:
   ClearFeatureAttributeMatrixAction& operator=(const ClearFeatureAttributeMatrixAction&) = delete;
   ClearFeatureAttributeMatrixAction& operator=(ClearFeatureAttributeMatrixAction&&) noexcept = delete;
 
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  Result<> apply(DataStructure& dataStructure, Mode  /*mode*/) const override
   {
     ClearFeatureAttributeMatrix(dataStructure, m_Path);
     return {};

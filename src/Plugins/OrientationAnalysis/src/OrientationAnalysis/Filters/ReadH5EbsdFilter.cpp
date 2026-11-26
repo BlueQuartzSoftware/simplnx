@@ -97,8 +97,8 @@ IFilter::UniquePointer ReadH5EbsdFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                         const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                         const ExecutionContext&  /*executionContext*/) const
 {
   auto pReadH5EbsdFilterValue = filterArgs.value<ReadH5EbsdFileParameter::ValueType>(k_ReadH5EbsdParameter_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -276,8 +276,8 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

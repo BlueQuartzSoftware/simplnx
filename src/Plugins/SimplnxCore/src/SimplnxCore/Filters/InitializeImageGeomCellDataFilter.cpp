@@ -161,8 +161,8 @@ IFilter::UniquePointer InitializeImageGeomCellDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                          const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto cellArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -256,8 +256,8 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   InitializeImageGeomCellDataInputValues inputValues;
   inputValues.CellArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);

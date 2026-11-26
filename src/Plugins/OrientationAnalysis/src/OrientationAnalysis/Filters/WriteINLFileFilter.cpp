@@ -96,8 +96,8 @@ IFilter::UniquePointer WriteINLFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                           const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                           const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -125,8 +125,8 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())

@@ -38,7 +38,7 @@ nlohmann::json CreateColorMapParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> CreateColorMapParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> CreateColorMapParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CreateColorMapParameter' JSON Error: ";
   if(!json.empty() && !json.is_string())

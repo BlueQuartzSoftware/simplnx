@@ -119,7 +119,7 @@ public:
      * @param neighIndex Specifies its neighbor.
      * @return False by default.
      */
-    virtual bool compare(int64 index, int64 neighIndex)
+    virtual bool compare(int64  /*index*/, int64  /*neighIndex*/)
     {
       return false;
     }

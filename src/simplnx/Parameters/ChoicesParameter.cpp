@@ -53,7 +53,7 @@ nlohmann::json ChoicesParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
   if(!json.is_number())

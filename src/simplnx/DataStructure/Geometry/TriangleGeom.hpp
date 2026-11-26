@@ -16,14 +16,14 @@ class SIMPLNX_EXPORT TriangleGeom : public INodeGeometry2D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 3;
-  static inline constexpr usize k_NumVerts = 3;
-  static inline constexpr StringLiteral k_VoxelSizes = "Triangle Areas";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Triangles Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Triangle Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Triangle Centroids";
-  static inline constexpr StringLiteral k_TypeName = "TriangleGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 3;
+  static constexpr usize k_NumVerts = 3;
+  static constexpr StringLiteral k_VoxelSizes = "Triangle Areas";
+  static constexpr StringLiteral k_EltsContainingVert = "Triangles Containing Vert";
+  static constexpr StringLiteral k_EltNeighbors = "Triangle Neighbors";
+  static constexpr StringLiteral k_EltCentroids = "Triangle Centroids";
+  static constexpr StringLiteral k_TypeName = "TriangleGeom";
 
   /**
    * @brief Creates a new TriangleGeom in the specified DataStructure.

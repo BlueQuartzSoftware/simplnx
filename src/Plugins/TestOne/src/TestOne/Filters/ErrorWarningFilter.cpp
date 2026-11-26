@@ -91,8 +91,8 @@ IFilter::UniquePointer ErrorWarningFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto preflightWarning = filterArgs.value<bool>(k_PreflightWarning_Key);
   auto preflightError = filterArgs.value<bool>(k_PreflightError_Key);
@@ -117,8 +117,8 @@ nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler&  /*messageHandler*/,
+                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto executeWarning = filterArgs.value<bool>(k_ExecuteWarning_Key);
   auto executeError = filterArgs.value<bool>(k_ExecuteError_Key);

@@ -17,7 +17,7 @@ inline constexpr StringLiteral k_TypeName = "NeighborList<T>";
 class SIMPLNX_EXPORT INeighborList : public IArray
 {
 public:
-  static inline constexpr StringLiteral k_TypeName = "INeighborList";
+  static constexpr StringLiteral k_TypeName = "INeighborList";
 
   ~INeighborList() noexcept override;
 

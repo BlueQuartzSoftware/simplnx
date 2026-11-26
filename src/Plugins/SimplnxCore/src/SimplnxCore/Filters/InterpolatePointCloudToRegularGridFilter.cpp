@@ -129,8 +129,8 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                                 const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
   auto kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
@@ -282,8 +282,8 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 }
 
 //------------------------------------------------------------------------------
-Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   InterpolatePointCloudToRegularGridInputValues inputValues;
 

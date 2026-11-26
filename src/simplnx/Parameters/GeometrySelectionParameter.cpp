@@ -42,7 +42,7 @@ nlohmann::json GeometrySelectionParameter::toJsonImpl(const std::any& value) con
   return json;
 }
 
-Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'GeometrySelectionParameter' JSON Error: ";
   if(!json.is_string())

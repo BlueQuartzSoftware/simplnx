@@ -14,14 +14,14 @@ class SIMPLNX_EXPORT HexahedralGeom : public INodeGeometry3D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 4;
-  static inline constexpr usize k_NumVerts = 8;
-  static inline constexpr StringLiteral k_VoxelSizes = "Hex Volumes";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Hex Containing Vertices";
-  static inline constexpr StringLiteral k_EltNeighbors = "Hex Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Hex Centroids";
-  static inline constexpr StringLiteral k_TypeName = "HexahedralGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 4;
+  static constexpr usize k_NumVerts = 8;
+  static constexpr StringLiteral k_VoxelSizes = "Hex Volumes";
+  static constexpr StringLiteral k_EltsContainingVert = "Hex Containing Vertices";
+  static constexpr StringLiteral k_EltNeighbors = "Hex Neighbors";
+  static constexpr StringLiteral k_EltCentroids = "Hex Centroids";
+  static constexpr StringLiteral k_TypeName = "HexahedralGeom";
 
   /**
    * @brief Creates a new HexahedralGeom in the specified DataStructure.

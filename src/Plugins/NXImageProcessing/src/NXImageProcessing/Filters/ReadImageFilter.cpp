@@ -270,8 +270,8 @@ void ReadImageFilter::setReadSinglePageOnly(bool value)
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                        const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure&  /*dataStructure*/, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                        const ExecutionContext&  /*executionContext*/) const
 {
   auto fileName = filterArgs.value<fs::path>(k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -412,8 +412,8 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ReadImageInputValues inputValues;
 

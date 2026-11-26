@@ -81,8 +81,8 @@ IFilter::UniquePointer SplitDataArrayByComponentFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                        const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
   auto pPostfix = filterArgs.value<std::string>(k_Postfix_Key);
@@ -140,8 +140,8 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   SplitDataArrayByComponentInputValues inputValues;
   inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);

@@ -42,7 +42,7 @@ nlohmann::json DataGroupSelectionParameter::toJsonImpl(const std::any& value) co
   return json;
 }
 
-Result<std::any> DataGroupSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataGroupSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'DataGroupSelectionParameter' JSON Error: ";
 

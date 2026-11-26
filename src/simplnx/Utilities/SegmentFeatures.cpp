@@ -1116,12 +1116,12 @@ Result<> SegmentFeatures::prepareForSlice(int64 /*iz*/, int64 /*dimX*/, int64 /*
   return {};
 }
 
-bool SegmentFeatures::isValidVoxel(int64 point) const
+bool SegmentFeatures::isValidVoxel(int64  /*point*/) const
 {
   return true;
 }
 
-bool SegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
+bool SegmentFeatures::areNeighborsSimilar(int64  /*point1*/, int64  /*point2*/) const
 {
   return false;
 }

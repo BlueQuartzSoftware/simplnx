@@ -171,7 +171,7 @@ constexpr DataType GetDataType() noexcept
  * @param numericType
  * @return
  */
-inline constexpr usize GetNumericTypeSize(NumericType numericType)
+constexpr usize GetNumericTypeSize(NumericType numericType)
 {
   switch(numericType)
   {
@@ -205,7 +205,7 @@ inline constexpr usize GetNumericTypeSize(NumericType numericType)
  * @param dataType
  * @return
  */
-inline constexpr usize GetDataTypeSize(DataType dataType)
+constexpr usize GetDataTypeSize(DataType dataType)
 {
   switch(dataType)
   {
@@ -241,7 +241,7 @@ inline constexpr usize GetDataTypeSize(DataType dataType)
  * @param numericType
  * @return
  */
-inline constexpr StringLiteral NumericTypeToString(NumericType numericType)
+constexpr StringLiteral NumericTypeToString(NumericType numericType)
 {
   switch(numericType)
   {
@@ -285,7 +285,7 @@ inline constexpr StringLiteral NumericTypeToString(NumericType numericType)
  * @param dataType
  * @return
  */
-inline constexpr StringLiteral DataTypeToString(DataType dataType)
+constexpr StringLiteral DataTypeToString(DataType dataType)
 {
   switch(dataType)
   {
@@ -340,7 +340,7 @@ inline const std::vector<std::string>& GetAllDataTypesAsStrings()
   return dataTypes;
 }
 
-inline constexpr StringLiteral DataTypeToHumanString(DataType dataType)
+constexpr StringLiteral DataTypeToHumanString(DataType dataType)
 {
   switch(dataType)
   {
@@ -431,7 +431,7 @@ inline const std::vector<std::string>& GetIntegerDataTypesAsHumanStrings()
  * @param dataTypeString
  * @return
  */
-inline constexpr DataType StringToDataType(std::string_view dataTypeString)
+constexpr DataType StringToDataType(std::string_view dataTypeString)
 {
   if(dataTypeString == DataTypeToString(DataType::int8).view())
   {
@@ -514,7 +514,7 @@ inline std::optional<DataType> IndexToDataType(usize index)
  * @param dataType
  * @return
  */
-inline constexpr std::optional<NumericType> ConvertDataTypeToNumericType(DataType dataType) noexcept
+constexpr std::optional<NumericType> ConvertDataTypeToNumericType(DataType dataType) noexcept
 {
   switch(dataType)
   {
@@ -559,7 +559,7 @@ inline constexpr std::optional<NumericType> ConvertDataTypeToNumericType(DataTyp
  * @param numericType
  * @return
  */
-inline constexpr DataType ConvertNumericTypeToDataType(NumericType numericType)
+constexpr DataType ConvertNumericTypeToDataType(NumericType numericType)
 {
   switch(numericType)
   {

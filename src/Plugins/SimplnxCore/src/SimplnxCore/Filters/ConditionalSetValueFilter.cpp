@@ -86,8 +86,8 @@ IFilter::UniquePointer ConditionalSetValueFilter::clone() const
   return std::make_unique<ConditionalSetValueFilter>();
 }
 
-IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                  const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto useConditionalValue = filterArgs.value<bool>(k_UseConditional_Key);
   auto removeValueString = filterArgs.value<std::string>(k_RemoveValue_Key);
@@ -141,8 +141,8 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   return {std::move(resultOutputActions)};
 }
 
-Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ConditionalSetValueInputValues inputValues;
   inputValues.ConditionalArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ConditionalArrayPath_Key);

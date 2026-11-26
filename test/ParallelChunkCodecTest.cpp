@@ -2416,7 +2416,7 @@ struct BoundedCodecObservation
   uint64 faultAfterReads = 0;
   BoundedFaultPointForTesting fault = BoundedFaultPointForTesting::MetadataQuery;
 
-  static void Observe(void* context, const fs::path&, std::string_view, CodecIoEventForTesting event, uint64 input, uint64 output) noexcept
+  static void Observe(void* context, const fs::path&, std::string_view, CodecIoEventForTesting event, uint64 input, uint64  /*output*/) noexcept
   {
     auto& self = *static_cast<BoundedCodecObservation*>(context);
     if(event == CodecIoEventForTesting::BoundedAcquired)

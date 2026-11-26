@@ -95,8 +95,8 @@ IFilter::UniquePointer BadDataNeighborOrientationCheckFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                              const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -136,8 +136,8 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
 }
 
 //------------------------------------------------------------------------------
-Result<> BadDataNeighborOrientationCheckFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> BadDataNeighborOrientationCheckFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   BadDataNeighborOrientationCheckInputValues inputValues;
 

@@ -25,7 +25,7 @@ Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader,
   return result;
 }
 
-Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type&  /*dataStructureGroup*/)
 {
   auto* geom = dataStructure.getDataAs<IGeometry>(dataPath);
   if(geom == nullptr)

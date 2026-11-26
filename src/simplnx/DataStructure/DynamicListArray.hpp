@@ -206,7 +206,7 @@ public:
    * @param pos The position in the element list
    * @param cellId The cell identifier to insert
    */
-  inline void insertCellReference(usize pointId, usize pos, usize cellId)
+  void insertCellReference(usize pointId, usize pos, usize cellId)
   {
     this->m_Array[pointId].cells[pos] = cellId;
   }

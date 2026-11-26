@@ -95,8 +95,8 @@ IFilter::UniquePointer RequireMinimumSizeFeaturesFilter::clone() const
   return std::make_unique<RequireMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                         const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto featurePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
@@ -168,8 +168,8 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
 }
 
 // -----------------------------------------------------------------------------
-Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   RequireMinimumSizeFeaturesInputValues inputValues;
 

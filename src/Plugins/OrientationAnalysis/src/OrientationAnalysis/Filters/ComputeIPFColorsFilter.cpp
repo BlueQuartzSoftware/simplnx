@@ -100,8 +100,8 @@ IFilter::UniquePointer ComputeIPFColorsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                               const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
 
   auto pReferenceDirValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceDir_Key);
@@ -141,8 +141,8 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeIPFColorsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeIPFColorsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   ComputeIPFColorsInputValues inputValues;
 

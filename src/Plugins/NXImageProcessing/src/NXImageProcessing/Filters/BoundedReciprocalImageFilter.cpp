@@ -67,8 +67,8 @@ IFilter::UniquePointer BoundedReciprocalImageFilter::clone() const
 {
   return std::make_unique<BoundedReciprocalImageFilter>();
 }
-IFilter::PreflightResult BoundedReciprocalImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult BoundedReciprocalImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                     const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -79,8 +79,8 @@ IFilter::PreflightResult BoundedReciprocalImageFilter::preflightImpl(const DataS
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {std::move(resultOutputActions)};
 }
-Result<> BoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> BoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);

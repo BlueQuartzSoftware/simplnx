@@ -147,7 +147,7 @@ nlohmann::json ReadHDF5DatasetParameter::toJsonImpl(const std::any& value) const
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& json, VersionType  /*version*/) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
   if(!json.is_object())

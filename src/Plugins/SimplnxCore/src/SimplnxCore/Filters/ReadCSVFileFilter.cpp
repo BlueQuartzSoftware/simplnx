@@ -302,8 +302,8 @@ IFilter::UniquePointer ReadCSVFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                          const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                          const ExecutionContext&  /*executionContext*/) const
 {
   auto readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
   auto useExistingGroupOrAM = filterArgs.value<bool>(k_UseExistingGroup_Key);
@@ -536,8 +536,8 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
   auto useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);

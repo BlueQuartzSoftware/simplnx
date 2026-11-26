@@ -30,17 +30,17 @@ public:
 
   // Parameter Keys. Core reader keys + transform keys mirror ITKMhaFileReaderFilter
   // (and ITKImageReaderFilter) verbatim so a retirement UUID redirect is lossless.
-  static inline constexpr StringLiteral k_InputFilePath_Key = "file_name";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_geometry_path";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
-  static inline constexpr StringLiteral k_ApplyImageTransformation_Key = "apply_image_transformation";
-  static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type_index";
-  static inline constexpr StringLiteral k_TransposeTransformMatrix_Key = "transpose_transform_matrix";
-  static inline constexpr StringLiteral k_SaveImageTransformation_Key = "save_image_transformation";
-  static inline constexpr StringLiteral k_TransformationMatrixPath_Key = "output_transformation_matrix_path";
+  static constexpr StringLiteral k_InputFilePath_Key = "file_name";
+  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_geometry_path";
+  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
+  static constexpr StringLiteral k_ApplyImageTransformation_Key = "apply_image_transformation";
+  static constexpr StringLiteral k_InterpolationType_Key = "interpolation_type_index";
+  static constexpr StringLiteral k_TransposeTransformMatrix_Key = "transpose_transform_matrix";
+  static constexpr StringLiteral k_SaveImageTransformation_Key = "save_image_transformation";
+  static constexpr StringLiteral k_TransformationMatrixPath_Key = "output_transformation_matrix_path";
   // New (our addition); harmless on redirect (defaults with a -5432 warning).
-  static inline constexpr StringLiteral k_CroppingOptions_Key = "cropping_options_index";
+  static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options_index";
 
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 

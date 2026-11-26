@@ -93,8 +93,8 @@ IFilter::UniquePointer ComputeFZQuaternionsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/,
+                                                                   const std::atomic_bool&  /*shouldCancel*/, const ExecutionContext&  /*executionContext*/) const
 {
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -132,8 +132,8 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
 
   ComputeFZQuaternionsInputValues inputValues;

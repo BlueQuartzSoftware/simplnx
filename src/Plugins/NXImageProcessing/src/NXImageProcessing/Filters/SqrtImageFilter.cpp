@@ -70,8 +70,8 @@ IFilter::UniquePointer SqrtImageFilter::clone() const
 {
   return std::make_unique<SqrtImageFilter>();
 }
-IFilter::PreflightResult SqrtImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                        const ExecutionContext& executionContext) const
+IFilter::PreflightResult SqrtImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&  /*messageHandler*/, const std::atomic_bool&  /*shouldCancel*/,
+                                                        const ExecutionContext&  /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -81,8 +81,8 @@ IFilter::PreflightResult SqrtImageFilter::preflightImpl(const DataStructure& dat
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {std::move(resultOutputActions)};
 }
-Result<> SqrtImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> SqrtImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*  /*pipelineNode*/, const MessageHandler& messageHandler,
+                                      const std::atomic_bool& shouldCancel, const ExecutionContext&  /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
