@@ -244,9 +244,9 @@ private:
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // read the file(s) back in
-    for(int32 i = 0; i < daps1.size(); i++)
+    for(const auto & i : daps1)
     {
-      CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[i]));
+      CompareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
     }
   }
 };

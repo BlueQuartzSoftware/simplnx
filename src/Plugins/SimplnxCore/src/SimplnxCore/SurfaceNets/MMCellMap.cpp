@@ -681,16 +681,16 @@ int8_t MMCellMap::nodeType(const int cellIndex[3]) const
   int32_t distinct[8];
   int numDistinct = 0;
   bool hasPadding = false;
-  for(int idx = 0; idx < 8; idx++)
+  for(int label : labels)
   {
-    if(labels[idx] == MMSurfaceNet::ReservedLabel::Padding)
+    if(label == MMSurfaceNet::ReservedLabel::Padding)
     {
       hasPadding = true;
     }
     bool alreadySeen = false;
     for(int seenIdx = 0; seenIdx < numDistinct; seenIdx++)
     {
-      if(distinct[seenIdx] == labels[idx])
+      if(distinct[seenIdx] == label)
       {
         alreadySeen = true;
         break;
@@ -698,7 +698,7 @@ int8_t MMCellMap::nodeType(const int cellIndex[3]) const
     }
     if(!alreadySeen)
     {
-      distinct[numDistinct] = labels[idx];
+      distinct[numDistinct] = label;
       numDistinct++;
     }
   }

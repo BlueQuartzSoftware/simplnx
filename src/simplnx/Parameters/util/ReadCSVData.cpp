@@ -141,9 +141,8 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
 
   const nlohmann::json& tDims = json[k_TupleDimensionsKey];
   data.tupleDims.clear();
-  for(usize i = 0; i < tDims.size(); i++)
+  for(const auto & tDim : tDims)
   {
-    const auto& tDim = tDims[i];
     data.tupleDims.push_back(tDim);
   }
 

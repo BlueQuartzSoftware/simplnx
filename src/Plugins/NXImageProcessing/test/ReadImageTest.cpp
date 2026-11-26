@@ -1364,14 +1364,14 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate re
   const usize Z = 128;
   std::vector<int32_t> voxels(X * Y * Z);
   uint64_t state = 0x9E3779B97F4A7C15ULL;
-  for(usize i = 0; i < voxels.size(); i++)
+  for(int & voxel : voxels)
   {
     state += 0x9E3779B97F4A7C15ULL;
     uint64_t z = state;
     z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
     z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
     z = z ^ (z >> 31);
-    voxels[i] = static_cast<int32_t>(static_cast<uint32_t>(z));
+    voxel = static_cast<int32_t>(static_cast<uint32_t>(z));
   }
 
   const std::vector<uint8_t> raw = ToBytes(voxels);

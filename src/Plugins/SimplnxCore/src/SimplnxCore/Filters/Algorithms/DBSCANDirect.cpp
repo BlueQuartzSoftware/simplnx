@@ -928,29 +928,29 @@ public:
 
     m_MessageHandler.sendInfoMessage("Identifying Qualifying Independent Clusters:");
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
-    for(usize i = 0; i < coreGridIds.size(); i++)
+    for(unsigned long & coreGridId : coreGridIds)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
 
-      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
+      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridId, hyperGridBitMap);
 
       std::vector<usize> cluster = {};
-      cluster.push_back(coreGridIds[i]);
+      cluster.push_back(coreGridId);
       for(const usize gridId : neighborGrids)
       {
-        if(clusterForest.infer(coreGridIds[i], gridId))
+        if(clusterForest.infer(coreGridId, gridId))
         {
           continue;
         }
 
-        if(canMerge(coreGridIds[i], gridId))
+        if(canMerge(coreGridId, gridId))
         {
           if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
           {
-            clusterForest.clusterForestNodes[gridId].parent = coreGridIds[i];
+            clusterForest.clusterForestNodes[gridId].parent = coreGridId;
           }
           else
           {

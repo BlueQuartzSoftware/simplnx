@@ -109,9 +109,9 @@ inline uint64 getNumberOfChunks(const std::vector<uint64>& tupleShape, const std
 {
   auto chunksPerDim = getChunksPerDimension(tupleShape, chunkShape);
   uint64 total = 1;
-  for(uint64 d = 0; d < chunksPerDim.size(); ++d)
+  for(unsigned long d : chunksPerDim)
   {
-    total *= chunksPerDim[d];
+    total *= d;
   }
   return total;
 }

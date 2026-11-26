@@ -448,19 +448,19 @@ TEST_CASE("Preferences GB save and load round trip keeps exact grid bytes", "[Co
   const uint64 ramDefault = Preferences().defaultValueAs<uint64>(k_ByteKeys[1]);
   for(const uint64 bytes : {uint64{0}, k_OneHundredthBytes, uint64{1073741824}, ramDefault, k_MaxGridBytes})
   {
-    for(usize keyIndex = 0; keyIndex < k_ByteKeys.size(); ++keyIndex)
+    for(const auto & k_ByteKey : k_ByteKeys)
     {
-      DYNAMIC_SECTION(k_ByteKeys[keyIndex] << "=" << bytes)
+      DYNAMIC_SECTION(k_ByteKey << "=" << bytes)
       {
         SizeGBFiles files;
         Preferences preferences;
-        preferences.setValue(k_ByteKeys[keyIndex], bytes);
+        preferences.setValue(k_ByteKey, bytes);
         REQUIRE(preferences.saveToFile(files.output).valid());
         Preferences loaded;
         const auto result = loaded.loadFromFile(files.output);
         REQUIRE(result.valid());
         CHECK(result.warnings().empty());
-        CHECK(loaded.valueAs<uint64>(k_ByteKeys[keyIndex]) == bytes);
+        CHECK(loaded.valueAs<uint64>(k_ByteKey) == bytes);
       }
     }
   }

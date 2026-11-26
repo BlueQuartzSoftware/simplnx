@@ -232,9 +232,9 @@ void StlUtilities::ConvertAsciiToBinaryStl(const std::filesystem::path& inputPat
     if(token == "facet")
     {
       iss >> token; // Skip "normal" word
-      for(int i = 0; i < 3; ++i)
+      for(float & i : tri.normal)
       {
-        iss >> tri.normal[i];
+        iss >> i;
       }
     }
     else if(token == "vertex")

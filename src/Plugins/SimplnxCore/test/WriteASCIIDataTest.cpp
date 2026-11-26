@@ -200,9 +200,9 @@ private:
     // read the file(s) back in
     if(fileType == k_MultipleFiles)
     {
-      for(int32 i = 0; i < daps1.size(); i++)
+      for(const auto & i : daps1)
       {
-        CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[i]));
+        CompareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
       }
     }
     else if(fileType == k_SingleFile)

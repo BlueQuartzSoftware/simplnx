@@ -123,11 +123,11 @@ std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataT
 {
   std::vector<CSVType> output;
 
-  for(usize i = 0; i < dataTypes.size(); i++)
+  for(const auto & dataType : dataTypes)
   {
     try
     {
-      output.push_back(nx::core::StringToCSVType(dataTypes[i]));
+      output.push_back(nx::core::StringToCSVType(dataType));
     } catch(const std::exception& e)
     {
       output.push_back(CSVType::int8);

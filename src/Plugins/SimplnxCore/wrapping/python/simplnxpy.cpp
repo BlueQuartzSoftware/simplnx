@@ -527,9 +527,8 @@ static std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(con
 {
   std::vector<Error> errors;
   std::vector<Warning> warnings;
-  for(usize index = 0; index < pipeline.size(); index++)
+  for(auto node : pipeline)
   {
-    const AbstractPipelineNode* node = pipeline.at(index);
     std::vector<Error> nodeErrors;
     std::vector<Warning> nodeWarnings;
     AbstractPipelineNode::NodeType nodeType = node->getType();
