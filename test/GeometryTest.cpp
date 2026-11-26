@@ -29,6 +29,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 using namespace nx::core;
 
@@ -389,7 +390,7 @@ TEST_CASE("Image geometry actions reject invalid metadata", "[simplnx][CreateIma
   const DataPath path({"Parent", "Image"});
   SECTION("create")
   {
-    const CreateImageGeometryAction action(path, {2, 3, 4}, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), "Cell Data");
+    const CreateImageGeometryAction action(path, {2, 3, 4}, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), "Cell Data", IGeometry::LengthUnit::Micrometer);
     const auto result = action.apply(ds, mode);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     CHECK(result.errors().front().code == expectedCode);
@@ -638,8 +639,28 @@ TEST_CASE("CreateVertexGeometryAction: units and cloning", "[simplnx][CreateVert
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("simplnx::Geometry length unit choice indices", "[simplnx][IGeometry]")
+{
+  using Unit = IGeometry::LengthUnit;
+  const auto& names = IGeometry::GetAllLengthUnitStrings();
+  REQUIRE(names.size() == 29);
+  CHECK(IGeometry::GetLengthUnitFromChoiceIndex(7) == Unit::Millimeter);
+  CHECK(IGeometry::GetLengthUnitFromChoiceIndex(27) == Unit::Unspecified);
+  CHECK(IGeometry::GetLengthUnitFromChoiceIndex(28) == Unit::Unknown);
+  CHECK(IGeometry::GetLengthUnitFromChoiceIndex(names.size()) == Unit::Unknown);
+  for(usize i = 0; i < names.size(); ++i)
+  {
+    CAPTURE(i);
+    CHECK(names[i] == IGeometry::LengthUnitToString(IGeometry::GetLengthUnitFromChoiceIndex(i)));
+  }
+}
+
 TEST_CASE("CreateImageGeometryAction: units and cloning", "[simplnx][CreateImageGeometryAction]")
 {
+  using Action = CreateImageGeometryAction;
+  static_assert(!std::is_constructible_v<Action, DataPath, Action::DimensionType, Action::OriginType, Action::SpacingType, std::string>);
+  static_assert(std::is_constructible_v<Action, DataPath, Action::DimensionType, Action::OriginType, Action::SpacingType, std::string, IGeometry::LengthUnit>);
+
   const auto units = GENERATE(IGeometry::LengthUnit::Unspecified, IGeometry::LengthUnit::Millimeter, IGeometry::LengthUnit::Micrometer);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   CAPTURE(units, mode);
@@ -650,18 +671,10 @@ TEST_CASE("CreateImageGeometryAction: units and cloning", "[simplnx][CreateImage
   const CreateImageGeometryAction::SpacingType k_Spacing = {1.0F, 1.0F, 1.0F};
   const std::string k_CellDataName = "Cell Data";
 
-  std::unique_ptr<CreateImageGeometryAction> actionPtr;
-  if(units == IGeometry::LengthUnit::Micrometer)
-  {
-    actionPtr = std::make_unique<CreateImageGeometryAction>(k_GeometryPath, k_Dimensions, k_Origin, k_Spacing, k_CellDataName);
-  }
-  else
-  {
-    actionPtr = std::make_unique<CreateImageGeometryAction>(k_GeometryPath, k_Dimensions, k_Origin, k_Spacing, k_CellDataName, units);
-  }
-  CHECK(actionPtr->units() == units);
+  const CreateImageGeometryAction action(k_GeometryPath, k_Dimensions, k_Origin, k_Spacing, k_CellDataName, units);
+  CHECK(action.units() == units);
 
-  const auto clonedActionPtr = actionPtr->clone();
+  const auto clonedActionPtr = action.clone();
   REQUIRE(clonedActionPtr != nullptr);
   const auto* imageActionPtr = dynamic_cast<const CreateImageGeometryAction*>(clonedActionPtr.get());
   REQUIRE(imageActionPtr != nullptr);

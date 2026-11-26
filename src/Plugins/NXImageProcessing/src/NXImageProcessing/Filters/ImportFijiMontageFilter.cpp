@@ -244,7 +244,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   auto imageArrayName = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto dataTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
-  auto lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key));
+  const auto lengthUnit = IGeometry::GetLengthUnitFromChoiceIndex(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key));
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;

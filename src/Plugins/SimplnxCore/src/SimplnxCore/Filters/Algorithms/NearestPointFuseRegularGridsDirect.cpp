@@ -1,5 +1,7 @@
 #include "NearestPointFuseRegularGridsDirect.hpp"
 
+#include "NearestPointFuseRegularGridsMapping.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -30,10 +32,10 @@ namespace
 template <class ArrayT, class T>
 void CopyData(const ArrayT& inputArray, ArrayT& destArray, const ImageGeom& sampleImageGeom, const ImageGeom& refImageGeom, const std::atomic_bool& shouldCancel, const T& fillValue)
 {
-  const auto sampleRes = sampleImageGeom.getSpacing();
-  const auto refRes = refImageGeom.getSpacing();
-  const auto refOrigin = refImageGeom.getOrigin();
-  const auto sampleOrigin = sampleImageGeom.getOrigin();
+  using namespace grid_fusion;
+  const auto xAxis = MakeAxis(refImageGeom, sampleImageGeom, 0);
+  const auto yAxis = MakeAxis(refImageGeom, sampleImageGeom, 1);
+  const auto zAxis = MakeAxis(refImageGeom, sampleImageGeom, 2);
   const auto refDims = refImageGeom.getDimensions();
   const auto sampleDims = sampleImageGeom.getDimensions();
   const usize numComps = destArray.getNumberOfComponents();
@@ -43,28 +45,20 @@ void CopyData(const ArrayT& inputArray, ArrayT& destArray, const ImageGeom& samp
     {
       return;
     }
+    const usize sampleZ = GetSourceIndex(zAxis, z);
     for(usize y = 0; y < refDims[1]; y++)
     {
+      const usize sampleY = GetSourceIndex(yAxis, y);
       for(usize x = 0; x < refDims[0]; x++)
       {
         const usize destIndex = ((z * refDims[0] * refDims[1]) + (y * refDims[0]) + x) * numComps;
-        const float32 xCoord = x * refRes[0] + refOrigin[0];
-        const float32 yCoord = y * refRes[1] + refOrigin[1];
-        const float32 zCoord = z * refRes[2] + refOrigin[2];
-        if(xCoord - sampleOrigin[0] < 0 || yCoord - sampleOrigin[1] < 0 || zCoord - sampleOrigin[2] < 0)
+        const usize sampleX = GetSourceIndex(xAxis, x);
+        if(sampleX == k_InvalidIndex || sampleY == k_InvalidIndex || sampleZ == k_InvalidIndex)
         {
           std::fill(destArray.begin() + destIndex, destArray.begin() + destIndex + numComps, fillValue);
           continue;
         }
-        const usize sampleX = static_cast<usize>((xCoord - sampleOrigin[0]) / sampleRes[0]);
-        const usize sampleY = static_cast<usize>((yCoord - sampleOrigin[1]) / sampleRes[1]);
-        const usize sampleZ = static_cast<usize>((zCoord - sampleOrigin[2]) / sampleRes[2]);
-        if(sampleX >= sampleDims[0] || sampleY >= sampleDims[1] || sampleZ >= sampleDims[2])
-        {
-          std::fill(destArray.begin() + destIndex, destArray.begin() + destIndex + numComps, fillValue);
-          continue;
-        }
-        const usize sourceIndex = ((sampleZ * sampleDims[0] * sampleDims[1]) + (sampleY * sampleDims[0]) + sampleX) * inputArray.getNumberOfComponents();
+        const usize sourceIndex = ((sampleZ * sampleDims[1] + sampleY) * sampleDims[0] + sampleX) * numComps;
         for(usize component = 0; component < numComps; component++)
         {
           destArray[destIndex + component] = inputArray.at(sourceIndex + component);

@@ -8,7 +8,7 @@ namespace nx::core
  * @class NearestPointFuseRegularGridsDirect
  * @brief Resamples resident cell arrays through direct nearest-cell access.
  *
- * Independent arrays run concurrently. Each reference lattice coordinate selects
+ * Independent arrays run concurrently. Each reference cell center selects
  * its containing sampling cell. Direct source reads suit resident stores but cause
  * repeated chunk access for disk-backed stores.
  *

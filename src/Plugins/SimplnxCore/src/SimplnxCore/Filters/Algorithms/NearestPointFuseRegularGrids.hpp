@@ -56,7 +56,7 @@ public:
    * @brief Selects direct or row-buffered fusion from participating storage.
    * @return Error for zero sampling spacing or bulk I/O, or success after cancellation.
    *
-   * Each reference lattice coordinate selects its containing sampling cell. Values
+   * Each reference cell center selects its containing sampling cell. Values
    * outside the sampling extent receive the fill value converted to the array type.
    * Cancellation or an I/O error can retain partial destination arrays.
    */

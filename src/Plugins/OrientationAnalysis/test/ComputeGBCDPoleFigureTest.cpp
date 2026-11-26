@@ -13,6 +13,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
 #include <catch2/catch.hpp>
 
 #include <filesystem>
@@ -38,6 +39,58 @@ constexpr StringLiteral k_MRD("MRD");
 constexpr int32 k_Dimension = 300;
 
 } // namespace
+
+TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Odd image samples centered inside the stereographic disk", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  const DataPath gbcdPath({"GBCD"});
+  auto* gbcd = UnitTest::CreateTestDataArray<float64>(ds, gbcdPath.getTargetName(), {2}, {2, 2, 2, 2, 2, 2});
+  REQUIRE(gbcd != nullptr);
+  const DataPath crystalPath({"Crystal Structures"});
+  auto* crystals = UnitTest::CreateTestDataArray<uint32>(ds, crystalPath.getTargetName(), {2}, {1});
+  REQUIRE(crystals != nullptr);
+
+  ComputeGBCDPoleFigureFilter filter;
+  auto args = filter.getDefaultArguments();
+  const DataPath imagePath({"Projection"});
+  int32 imageDimension = 3;
+  SECTION("All nine centers lie inside the projection disk")
+  {
+    // Both axes sample -2/3, 0, and 2/3. Even the corner pixels have squared radius 8/9.
+    gbcd->fill(7.0);
+    (*crystals)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  }
+  SECTION("The pole maps to the center of the northern Lambert square")
+  {
+    imageDimension = 1;
+    (*crystals)[1] = ebsdlib::CrystalStructure::Triclinic;
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::vector<float32>{30.0F, -1.0F, 0.0F, 0.0F});
+    // Triclinic symmetry has only the identity. Euler (0,30,0) selects bins (0,1,0);
+    // the north pole gives square bins (1,1) and hemisphere 0. Phase 1 starts at offset 64.
+    (*gbcd)[64 + 52] = 7.0;
+  }
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, imageDimension);
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, gbcdPath);
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, crystalPath);
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_ImageGeometryName_Key, imagePath);
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::string("Cells"));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::string("Intensity"));
+  const auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto intensityPath = imagePath.createChildPath("Cells").createChildPath("Intensity");
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(intensityPath));
+  const auto& intensity = ds.getDataRefAs<Float64Array>(intensityPath);
+  REQUIRE(intensity.getNumberOfTuples() == static_cast<usize>(imageDimension * imageDimension));
+  for(usize pixel = 0; pixel < intensity.getNumberOfTuples(); ++pixel)
+  {
+    CAPTURE(pixel);
+    CHECK(intensity[pixel] == 7.0);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter]")
 {

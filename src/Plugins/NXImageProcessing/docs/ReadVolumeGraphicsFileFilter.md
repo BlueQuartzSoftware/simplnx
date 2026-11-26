@@ -23,7 +23,7 @@ This filter reads the full volume described by the `.vgi` file. It does not curr
 
 ### Dimensions, Spacing, and Units
 
-The volume dimensions (number of voxels along X, Y, and Z), the voxel spacing (the physical size of one voxel), and the length unit are all read from the `.vgi` header. When the header's `unit` field is `mm`, the geometry length unit is set to millimeters; otherwise the spacing values are stored as plain numbers in whatever unit the header implies.
+A geometry block with `unit = mm` uses millimeters. The reader also assumes millimeters when the unit field is absent. Other unit strings produce **Unspecified**.
 
 ### Required Input Sources
 

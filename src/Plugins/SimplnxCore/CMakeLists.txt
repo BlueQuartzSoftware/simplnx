@@ -444,6 +444,7 @@ set(PLUGIN_EXTRA_SOURCES
     # Shared header for the IdentifySample BFS/CCL variants (no .cpp, so the
     # AlgorithmList stem-expansion does not pick it up).
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/IdentifySampleCommon.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/NearestPointFuseRegularGridsMapping.hpp"
     # Shared header for the RemoveFlaggedFeatures direct/scanline variants (no .cpp,
     # so the AlgorithmList stem-expansion does not pick it up).
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/RemoveFlaggedFeaturesCommon.hpp"

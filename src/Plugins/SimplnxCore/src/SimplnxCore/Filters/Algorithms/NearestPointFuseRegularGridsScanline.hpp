@@ -8,7 +8,7 @@ namespace nx::core
  * @class NearestPointFuseRegularGridsScanline
  * @brief Resamples cell arrays with axis maps and bounded row buffers.
  *
- * Axis maps convert reference lattice coordinates to containing sampling cells.
+ * Axis maps convert reference cell centers to containing sampling cells.
  * Reused source rows and one checked write per destination row avoid random disk I/O.
  * Scratch contains three axis maps and two rows.
  *

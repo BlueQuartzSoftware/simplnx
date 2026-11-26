@@ -154,6 +154,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     {
       const DataPath geomPath({points ? "VTK Point Data" : "VTK Cell Data"});
       const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      CHECK(geom.getUnits() == IGeometry::LengthUnit::Unspecified);
       REQUIRE(geom.getDimensions() == (points ? pointDims : cellDims));
       const auto& values = ds.getDataRefAs<Int32Array>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
       REQUIRE(values.getNumberOfTuples() == (points ? pointValues.size() : cellValues.size()));

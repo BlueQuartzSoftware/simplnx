@@ -1948,7 +1948,7 @@ TEST_CASE("ImageGeomIO rejects stored invalid spacing", "[simplnx][HDF5][ImageGe
   const fs::path filePath = GetDataDir() / "ImageGeomInvalidSpacing.dream3d";
   {
     DataStructure ds;
-    const CreateImageGeometryAction action(DataPath({"Stored Image"}), {2, 3, 1}, {0.0f, 0.0f, 0.0f}, {0.5f, 2.0f, 1.0f}, "Cell Data");
+    const CreateImageGeometryAction action(DataPath({"Stored Image"}), {2, 3, 1}, {0.0f, 0.0f, 0.0f}, {0.5f, 2.0f, 1.0f}, "Cell Data", IGeometry::LengthUnit::Micrometer);
     const auto createResult = action.apply(ds, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(createResult);
     auto file = HDF5::FileIO::WriteFile(filePath);

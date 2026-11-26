@@ -125,16 +125,16 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
 
   const std::vector<usize> dims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
   const ShapeType cellTupleShape = {dims[2], dims[1], dims[0]};
+  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(pRectilinearGridPathValue);
 
   // Create the re-sampled image geometry - origin & spacing values will be calculated & updated in execute
   {
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPathValue, dims, std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<float32>{1.0f, 1.0f, 1.0f},
-                                                                             pImageGeomCellAttributeMatrixNameValue);
+                                                                             pImageGeomCellAttributeMatrixNameValue, rectGridGeom.getUnits());
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
   // create the IArrays for copying over to the re-sampled image geometry
-  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(pRectilinearGridPathValue);
   const DataPath srcCellDataPath = pRectilinearGridPathValue.createChildPath(rectGridGeom.getCellData()->getName());
   const DataPath destCellDataPath = pImageGeometryPathValue.createChildPath(pImageGeomCellAttributeMatrixNameValue);
   for(const auto& path : pSelectedDataArrayPathsValue)

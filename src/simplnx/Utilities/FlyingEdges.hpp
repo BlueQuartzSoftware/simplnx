@@ -1281,12 +1281,12 @@ private:
   [[nodiscard]] cube getPosCube(usize i, usize j, usize k) const
   {
     cube pos;
-    const FloatVec3 zeroPos = m_Image.getOrigin();
+    const auto cellCenter = m_Image.getCoordsf(i, j, k);
     const FloatVec3 spacing = m_Image.getSpacing();
 
-    float32 xPos = zeroPos[0] + i * spacing[0];
-    float32 yPos = zeroPos[1] + j * spacing[1];
-    float32 zPos = zeroPos[2] + k * spacing[2];
+    const float32 xPos = cellCenter[0];
+    const float32 yPos = cellCenter[1];
+    const float32 zPos = cellCenter[2];
 
     pos[0][0] = xPos;
     pos[0][1] = yPos;

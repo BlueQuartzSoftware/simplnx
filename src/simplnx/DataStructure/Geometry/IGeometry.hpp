@@ -194,6 +194,13 @@ public:
   static const std::vector<std::string>& GetAllLengthUnitStrings();
 
   /**
+   * @brief Maps a saved choice index in GetAllLengthUnitStrings() to its geometry length unit.
+   * @param index Zero-based position in the length unit choices.
+   * @return The corresponding unit, or Unknown for an unrecognized index.
+   */
+  static LengthUnit GetLengthUnitFromChoiceIndex(uint64 index);
+
+  /**
    * @brief Returns the length units used by the geometry.
    * @return LengthUnit
    */

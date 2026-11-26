@@ -47,6 +47,10 @@ Same starting image.
 
 ### Resampling Algorithm
 
+Sampling takes place at the center of each output cell. For example, when six equally spaced source cells are resampled to two cells three times as wide, their values come from source indices 1 and 4.
+
+The filter keeps at least one output cell on every axis. If an output cell is so wide that its center reaches or passes the far edge of a thin input, the filter takes the nearest source cell on that axis. A one-slice input therefore retains its measurements during in-plane resampling.
+
 A new regular grid is overlaid on the old one. For each new cell, the filter finds the old cell whose center is closest and copies that old cell's attributes (Feature Ids, phases, orientations, etc.) into the new cell. There is **no interpolation** -- this is the right behavior for label data (Feature Ids), but it does mean that small features can disappear during downsampling.
 
 ## Feature Data

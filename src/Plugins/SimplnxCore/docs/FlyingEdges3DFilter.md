@@ -8,6 +8,8 @@ Visual Analysis
 
 This filter generates a 3D **isosurface** (a contour surface) through the scalar values stored on an **Image Geometry**, and saves it as a **Triangle Geometry**.
 
+Each scalar is sampled at its cell center. The filter interpolates between neighboring centers to place the surface in the physical coordinate system of the image.
+
 ### What is an Isosurface?
 
 An **isosurface** is the 3D equivalent of a contour line on a topographic map. Given a scalar value at every **Cell** of a volume (for example density from a CT scan, or a distance field), the isosurface is the connected surface that passes through every point where the scalar equals a chosen threshold — the *Contour Value* (also called the isovalue). Cells with values above the threshold fall on one side of the surface; cells below fall on the other.

@@ -346,6 +346,6 @@ if(SIMPLNX_BUILD_PYTHON_TESTS)
 
   CreatePythonTests(PREFIX "PY_SIMPLNX"
     INPUT_DIR ${simplnx_SOURCE_DIR}/wrapping/python/testing
-    TEST_NAMES storage_contract_test
+    TEST_NAMES geometry_units_test storage_contract_test
   )
 endif()

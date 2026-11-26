@@ -10,6 +10,8 @@ This **Filter** rotates the *spatial reference frame* of an **Image Geometry** a
 
 When copied, child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
 
+The rotated image retains the input geometry's length unit.
+
 ### Supported Rotations (Important)
 
 This **Filter** is a *lossless reference-frame rotation*: the output is an exact re-labeling (permutation) of the input **Cells**, with no interpolation, no data loss, and no introduced background. That is only possible when the rotation maps the cubic voxel grid exactly onto itself. Those rotations form the **octahedral rotation group** (the 24 rotational symmetries of a cube):

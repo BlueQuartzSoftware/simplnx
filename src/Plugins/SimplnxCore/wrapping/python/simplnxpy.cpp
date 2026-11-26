@@ -1262,6 +1262,38 @@ PYBIND11_MODULE(simplnx, mod)
   geomType.value("Tetrahedral", IGeometry::Type::Tetrahedral);
   geomType.value("Hexahedral", IGeometry::Type::Hexahedral);
 
+  py::enum_<IGeometry::LengthUnit> lengthUnit(iGeometry, "LengthUnit");
+  lengthUnit.value("Yoctometer", IGeometry::LengthUnit::Yoctometer);
+  lengthUnit.value("Zeptometer", IGeometry::LengthUnit::Zeptometer);
+  lengthUnit.value("Attometer", IGeometry::LengthUnit::Attometer);
+  lengthUnit.value("Femtometer", IGeometry::LengthUnit::Femtometer);
+  lengthUnit.value("Picometer", IGeometry::LengthUnit::Picometer);
+  lengthUnit.value("Nanometer", IGeometry::LengthUnit::Nanometer);
+  lengthUnit.value("Micrometer", IGeometry::LengthUnit::Micrometer);
+  lengthUnit.value("Millimeter", IGeometry::LengthUnit::Millimeter);
+  lengthUnit.value("Centimeter", IGeometry::LengthUnit::Centimeter);
+  lengthUnit.value("Decimeter", IGeometry::LengthUnit::Decimeter);
+  lengthUnit.value("Meter", IGeometry::LengthUnit::Meter);
+  lengthUnit.value("Decameter", IGeometry::LengthUnit::Decameter);
+  lengthUnit.value("Hectometer", IGeometry::LengthUnit::Hectometer);
+  lengthUnit.value("Kilometer", IGeometry::LengthUnit::Kilometer);
+  lengthUnit.value("Megameter", IGeometry::LengthUnit::Megameter);
+  lengthUnit.value("Gigameter", IGeometry::LengthUnit::Gigameter);
+  lengthUnit.value("Terameter", IGeometry::LengthUnit::Terameter);
+  lengthUnit.value("Petameter", IGeometry::LengthUnit::Petameter);
+  lengthUnit.value("Exameter", IGeometry::LengthUnit::Exameter);
+  lengthUnit.value("Zettameter", IGeometry::LengthUnit::Zettameter);
+  lengthUnit.value("Yottameter", IGeometry::LengthUnit::Yottameter);
+  lengthUnit.value("Angstrom", IGeometry::LengthUnit::Angstrom);
+  lengthUnit.value("Mil", IGeometry::LengthUnit::Mil);
+  lengthUnit.value("Inch", IGeometry::LengthUnit::Inch);
+  lengthUnit.value("Foot", IGeometry::LengthUnit::Foot);
+  lengthUnit.value("Mile", IGeometry::LengthUnit::Mile);
+  lengthUnit.value("Fathom", IGeometry::LengthUnit::Fathom);
+  lengthUnit.value("Unspecified", IGeometry::LengthUnit::Unspecified);
+  lengthUnit.value("Unknown", IGeometry::LengthUnit::Unknown);
+  iGeometry.def_property_readonly("units", &IGeometry::getUnits);
+
   py::class_<IGridGeometry, IGeometry, std::shared_ptr<IGridGeometry>> iGridGeometry(mod, "IGridGeometry");
   iGridGeometry.def_property_readonly("dimensions", [](const IGridGeometry& self) { return self.getDimensions().toTuple(); });
   iGridGeometry.def_property_readonly("num_x_cells", &IGridGeometry::getNumXCells);
@@ -1493,9 +1525,9 @@ PYBIND11_MODULE(simplnx, mod)
   auto createHexahedralGeometryAction = SIMPLNX_PY_BIND_CREATE_GEOMETRY_3D_ACTION(mod, CreateHexahedralGeometryAction);
 
   auto createImageGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateImageGeometryAction, IDataCreationAction);
-  createImageGeometryAction.def(
-      py::init<const DataPath&, const CreateImageGeometryAction::DimensionType&, const CreateImageGeometryAction::OriginType&, const CreateImageGeometryAction::SpacingType&, const std::string&>(),
-      "path"_a, "dims"_a, "origin"_a, "spacing"_a, "cell_attribute_matrix_name"_a);
+  createImageGeometryAction.def(py::init<const DataPath&, const CreateImageGeometryAction::DimensionType&, const CreateImageGeometryAction::OriginType&, const CreateImageGeometryAction::SpacingType&,
+                                         const std::string&, IGeometry::LengthUnit>(),
+                                "path"_a, "dims"_a, "origin"_a, "spacing"_a, "cell_attribute_matrix_name"_a, "units"_a);
 
   auto createNeighborListAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateNeighborListAction, IDataCreationAction);
   createNeighborListAction.def(py::init<DataType, const ShapeType&, const DataPath&>(), "type"_a, "tuple_count"_a, "path"_a);

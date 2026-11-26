@@ -9,7 +9,7 @@ IO (Read)
 This **Filter** reads a [MetaImage](https://itk.org/Wiki/ITK/MetaIO/Documentation)
 image (attached single-file `.mha`, or detached `.mhd` + external `.raw`/`.zraw`)
 into an **Image Geometry** plus a **Cell Data** attribute matrix that holds the
-voxel values. It is ITK-free (zlib only).
+voxel values. It is ITK-free (zlib only). The output geometry records its length unit as **Unspecified**.
 
 Supported header features:
 

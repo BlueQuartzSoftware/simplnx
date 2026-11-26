@@ -10,6 +10,9 @@ of geometric features in regular cartesian space. There are three main types of 
 - Semi-Regular Grid
 - Unstructured Grids
 
+Read a geometry's length unit from its ``units`` property. It returns a value of
+``nx.IGeometry.LengthUnit``, such as ``nx.IGeometry.LengthUnit.Millimeter``.
+
 .. _ImageGeom:
 
 Image Geom (Regular Grid)

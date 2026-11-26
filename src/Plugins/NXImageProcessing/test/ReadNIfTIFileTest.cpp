@@ -262,6 +262,32 @@ void RequireFloatArrayApproxEquals(const DataStructure& ds, const DataPath& data
 }
 } // namespace
 
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: Spatial units", "[NXImageProcessing][ReadNIfTIFileFilter]")
+{
+  using Unit = IGeometry::LengthUnit;
+  const auto [headerUnits, expectedUnit] = GENERATE(table<int, Unit>({
+      {NIFTI_UNITS_METER, Unit::Meter},
+      {NIFTI_UNITS_MM | NIFTI_UNITS_SEC, Unit::Millimeter},
+      {NIFTI_UNITS_MICRON | NIFTI_UNITS_MSEC, Unit::Micrometer},
+      {NIFTI_UNITS_UNKNOWN, Unit::Unspecified},
+      {7, Unit::Unspecified},
+  }));
+  CAPTURE(headerUnits);
+  auto header = MakeHeader({});
+  header.xyzt_units = static_cast<char>(headerUnits);
+  const auto filePath = OutputDir() / "spatial_units.nii";
+  WriteNiftiFile(filePath, header, {42}, false);
+
+  DataStructure dataStructure;
+  const DataPath geomPath({"Image"});
+  const ReadNIfTIFileFilter filter;
+  const auto result = filter.execute(dataStructure, MakeFilterArgs(filePath, geomPath, "Cell Data", "Values", true, true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  CHECK(dataStructure.getDataRefAs<ImageGeom>(geomPath).getUnits() == expectedUnit);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .nii.gz)", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
@@ -643,6 +669,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps p
 
   const fs::path outDir = OutputDir();
   const fs::path filePath = outDir / "uint8_crop_physical.nii";
+  hdr.xyzt_units = NIFTI_UNITS_MM;
   WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
 
   // With origin=0, spacing=(0.5, 1.0, 2.0), voxel (xi, yi, zi) has cell-center
@@ -676,6 +703,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps p
   REQUIRE(outDims[0] == 4);
   REQUIRE(outDims[1] == 3);
   REQUIRE(outDims[2] == 3);
+  CHECK(geom.getUnits() == IGeometry::LengthUnit::Millimeter);
 
   const usize destNx = outDims[0];
   const usize destNy = outDims[1];

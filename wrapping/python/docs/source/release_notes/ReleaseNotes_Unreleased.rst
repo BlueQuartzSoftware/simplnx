@@ -1,6 +1,14 @@
 Unreleased API Changes
 ======================
 
+Explicit units for image geometry actions
+-----------------------------------------
+
+``CreateImageGeometryAction`` requires a sixth argument in C++ and Python.
+To preserve the previous default, pass ``IGeometry::LengthUnit::Micrometer`` in C++
+or ``nx.IGeometry.LengthUnit.Micrometer`` in Python. For a derived grid, pass the
+source geometry's unit. For coordinates without a physical scale, use ``Unspecified``.
+
 Geometry metadata validation
 ----------------------------
 

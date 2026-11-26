@@ -651,8 +651,8 @@ TEST_CASE("SimplnxCore::CropImageGeometry: real OOC stores preserve cropped valu
   const DataPath destinationGeomPath({"Destination"});
   const DataPath sourceArrayPath = sourceGeomPath.createChildPath("Cell Data").createChildPath("Values");
   const DataPath destinationArrayPath = destinationGeomPath.createChildPath("Cell Data").createChildPath("Values");
-  CreateImageGeometryAction sourceGeometryAction(sourceGeomPath, {4, 3, 2}, {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data");
-  CreateImageGeometryAction destinationGeometryAction(destinationGeomPath, {2, 2, 2}, {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data");
+  CreateImageGeometryAction sourceGeometryAction(sourceGeomPath, {4, 3, 2}, {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data", IGeometry::LengthUnit::Micrometer);
+  CreateImageGeometryAction destinationGeometryAction(destinationGeomPath, {2, 2, 2}, {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data", IGeometry::LengthUnit::Micrometer);
   auto sourceGeometryActionApplyResult = sourceGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(sourceGeometryActionApplyResult);
   auto destinationGeometryActionApplyResult = destinationGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
@@ -2427,7 +2427,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: PhysicalCrop_MaxAtBound", "[Sim
   DataStructure dataStructure;
   const DataPath sourcePath({"Source"});
   const DataPath croppedPath({"Cropped"});
-  CreateImageGeometryAction geometryAction(sourcePath, {5, 4, 3}, {0.5F, -1.0F, 2.0F}, {1.0F, 2.0F, 0.5F}, "Cell Data");
+  CreateImageGeometryAction geometryAction(sourcePath, {5, 4, 3}, {0.5F, -1.0F, 2.0F}, {1.0F, 2.0F, 0.5F}, "Cell Data", IGeometry::LengthUnit::Micrometer);
   auto geometryResult = geometryAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(geometryResult);
   CropImageGeometryFilter filter;

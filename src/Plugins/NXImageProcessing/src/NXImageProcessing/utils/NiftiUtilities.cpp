@@ -184,6 +184,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   }
 
   NiftiMetadata md;
+  md.spatialUnits = XYZT_TO_SPACE(hdr.xyzt_units);
   md.filePath = pathStr;
   md.magic = std::string(hdr.magic, hdr.magic + 3);
   for(int i = 0; i < 8; i++)

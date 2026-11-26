@@ -8,7 +8,7 @@ Utilities (Statistics)
 
 **Calculate Histogram** is a Python-based *simplnx* filter designed to calculate histograms from data arrays and optionally generate a visual representation of the histogram. It computes the frequency distribution of data points in an array, dividing the entire range of values into a series of intervals (bins), and then counts how many values fall into each interval.
 
-The histogram can be visualized as an image, with options to customize the size, resolution (DPI), and labels for the axes and title.
+The histogram can be visualized as an image, with options to customize the size, resolution (DPI), and labels for the axes and title. The image geometry uses pixel coordinates and has an unspecified length unit.
 
 ### Parameters
 

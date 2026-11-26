@@ -321,6 +321,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   auto voxelIndicesName = filterArgs.value<std::string>(k_VoxelIndicesName_Key);
 
   OutputActions actions;
+  const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
 
   if(samplingGridType == 0)
   {
@@ -338,11 +339,10 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
     CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(gridDimensions[0]), static_cast<usize>(gridDimensions[1]), static_cast<usize>(gridDimensions[2])};
     CreateImageGeometryAction::OriginType origin = {0, 0, 0};
     CreateImageGeometryAction::SpacingType spacing = {1, 1, 1};
-    auto imageAction = std::make_unique<CreateImageGeometryAction>(newImageGeomPath, dims, origin, spacing, cellDataName);
+    auto imageAction = std::make_unique<CreateImageGeometryAction>(newImageGeomPath, dims, origin, spacing, cellDataName, vertexGeom.getUnits());
     actions.appendAction(std::move(imageAction));
   }
 
-  const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const AttributeMatrix* vertexData = vertexGeom.getVertexAttributeMatrix();
   if(vertexData == nullptr)
   {

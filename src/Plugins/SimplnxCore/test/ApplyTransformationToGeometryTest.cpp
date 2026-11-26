@@ -80,7 +80,8 @@ void checkTransformDescendantPaths(UnitTest::AlgorithmTestScope* algorithmTestSc
   const DataPath cellPath({"Grain Group", "Grain", "Grain Cells", "Grain Pixels"});
   const DataPath valuesPath({"Grain Group", "Grain", "Grain Data", "Grain Details", "Grain Metrics", "Grain Values"});
   const DataPath directPath({"Grain Group", "Grain", "Grain Transform"});
-  const auto createGeometryResult = CreateImageGeometryAction(geometryPath, {2, 2, 2}, {0, 0, 0}, {1, 1, 1}, "Grain Cells").apply(dataStructure, IDataAction::Mode::Execute);
+  const auto createGeometryResult =
+      CreateImageGeometryAction(geometryPath, {2, 2, 2}, {0, 0, 0}, {1, 1, 1}, "Grain Cells", IGeometry::LengthUnit::Millimeter).apply(dataStructure, IDataAction::Mode::Execute);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(createGeometryResult);
   const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
@@ -177,6 +178,7 @@ void checkTransformDescendantPaths(UnitTest::AlgorithmTestScope* algorithmTestSc
     CHECK((after.OutOfCoreOnInMemoryStore == before.OutOfCoreOnInMemoryStore));
   }
   const auto& outputGeometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  CHECK(outputGeometry.getUnits() == IGeometry::LengthUnit::Millimeter);
   CHECK((outputGeometry.getDimensions() == SizeVec3{2, 2, 2}));
   CHECK((outputGeometry.getOrigin() == FloatVec3{0, 0, 0}));
   CHECK((outputGeometry.getSpacing() == FloatVec3{1, 1, 1}));

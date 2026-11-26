@@ -238,8 +238,9 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
        << " (delta: " << (static_cast<float>(pDimensionsValue[2]) * pSpacingValue[2]) << ")\n";
     std::string boxDimensions = ss.str();
 
-    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
-        pGeometryPath, CreateImageGeometryAction::DimensionType({pDimensionsValue[0], pDimensionsValue[1], pDimensionsValue[2]}), pOriginValue, pSpacingValue, pCellAMName);
+    auto createImageGeometryAction =
+        std::make_unique<CreateImageGeometryAction>(pGeometryPath, CreateImageGeometryAction::DimensionType({pDimensionsValue[0], pDimensionsValue[1], pDimensionsValue[2]}), pOriginValue,
+                                                    pSpacingValue, pCellAMName, IGeometry::GetLengthUnitFromChoiceIndex(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key)));
 
     resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
     preflightUpdatedValues.push_back({"BoxDimensions", boxDimensions});

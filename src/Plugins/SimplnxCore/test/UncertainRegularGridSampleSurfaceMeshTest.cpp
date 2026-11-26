@@ -39,6 +39,7 @@ DataStructure CreateSamplingFixtureInput()
   DataStructure dataStructure;
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
   REQUIRE(triangleGeomPtr != nullptr);
+  triangleGeomPtr->setUnits(IGeometry::LengthUnit::Millimeter);
   auto* verticesPtr =
       Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {3}, {3}), triangleGeomPtr->getId());
   auto* facesPtr = IGeometry::MeshIndexArrayType::Create(
@@ -118,6 +119,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: tuple order
   REQUIRE(matrixPtr != nullptr);
   REQUIRE(labelsPtr != nullptr);
   CHECK(imageGeomPtr->getDimensions() == SizeVec3{2, 3, 4});
+  CHECK(imageGeomPtr->getUnits() == IGeometry::LengthUnit::Millimeter);
   CHECK(imageGeomPtr->getSpacing() == FloatVec3{1, 2, 5});
   CHECK(matrixPtr->getShape() == ShapeType{4, 3, 2});
   CHECK(labelsPtr->getTupleShape() == ShapeType{4, 3, 2});
