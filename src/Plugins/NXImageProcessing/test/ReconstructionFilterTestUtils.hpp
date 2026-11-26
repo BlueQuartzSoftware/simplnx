@@ -45,6 +45,24 @@ inline usize FlatIndex(usize x, usize y, usize z, usize dimX, usize dimY)
   return z * (dimY * dimX) + y * dimX + x;
 }
 
+/** @brief Builds an X-fastest ramp that varies along all three axes and wraps at 17, so every scalar input type can represent it exactly. */
+template <class T>
+std::vector<T> MakeWrappedRamp(usize dimX, usize dimY, usize dimZ)
+{
+  std::vector<T> values(dimX * dimY * dimZ);
+  for(usize z = 0; z < dimZ; ++z)
+  {
+    for(usize y = 0; y < dimY; ++y)
+    {
+      for(usize x = 0; x < dimX; ++x)
+      {
+        values[FlatIndex(x, y, z, dimX, dimY)] = static_cast<T>((3 * x + 2 * y + z) % 17);
+      }
+    }
+  }
+  return values;
+}
+
 /**
  * @brief Deterministic HOLE-BEARING pattern for fillhole-style tests: a uniform bright @p field with several
  *        compact dark (@p hole) blobs in the interior that do NOT touch the image border (genuine holes -> get

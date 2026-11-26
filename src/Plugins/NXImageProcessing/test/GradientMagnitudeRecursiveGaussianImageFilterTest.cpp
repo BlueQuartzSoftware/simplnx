@@ -40,24 +40,6 @@ void RunGradMag(IFilter& filter, DataStructure& ds, const DataPath& inputPath, f
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
-// A deterministic non-constant pattern with values in [0, 16], representable in EVERY scalar type (incl. uint8/int8) so
-// the full 10-type parity grid can reuse it. Varies along all three axes so the gradient magnitude is non-trivial.
-template <class T>
-std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
-{
-  std::vector<T> v(dx * dy * dz);
-  for(usize z = 0; z < dz; ++z)
-  {
-    for(usize y = 0; y < dy; ++y)
-    {
-      for(usize x = 0; x < dx; ++x)
-      {
-        v[rt::FlatIndex(x, y, z, dx, dy)] = static_cast<T>((3 * x + 2 * y + z) % 17);
-      }
-    }
-  }
-  return v;
-}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -161,7 +143,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: fus
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(1ULL, 8ULL);
   const FloatVec3 spacing{0.6f, 1.4f, 2.2f};
-  const std::vector<float64> field = MakeRamp<float64>(12, 11, dimZ);
+  const std::vector<float64> field = rt::MakeWrappedRamp<float64>(12, 11, dimZ);
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
 
   DataStructure directDs;

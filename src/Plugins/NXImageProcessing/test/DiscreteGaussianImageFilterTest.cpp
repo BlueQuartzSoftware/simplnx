@@ -42,24 +42,6 @@ void RunDG(IFilter& filter, DataStructure& ds, const DataPath& inputPath, const 
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
-// A deterministic non-constant pattern with values in [0, 16], representable in EVERY scalar type (incl. uint8/int8).
-// It varies along all three axes, so the smoothing is non-trivial.
-template <class T>
-std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
-{
-  std::vector<T> v(dx * dy * dz);
-  for(usize z = 0; z < dz; ++z)
-  {
-    for(usize y = 0; y < dy; ++y)
-    {
-      for(usize x = 0; x < dx; ++x)
-      {
-        v[rt::FlatIndex(x, y, z, dx, dy)] = static_cast<T>((3 * x + 2 * y + z) % 17);
-      }
-    }
-  }
-  return v;
-}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -92,7 +74,7 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[
   SECTION("scalar input creates a SameAsInput output")
   {
     DataStructure ds;
-    const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 1);
+    const std::vector<uint8> field = rt::MakeWrappedRamp<uint8>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 1, field);
     DGFilter filter;
     RunDG(filter, ds, inputPath, {1.0, 1.0, 1.0}, 32, {0.01, 0.01, 0.01}, /*useImageSpacing=*/false);

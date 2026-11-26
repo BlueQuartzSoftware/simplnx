@@ -39,24 +39,6 @@ void RunGradMag(IFilter& filter, DataStructure& ds, const DataPath& inputPath, b
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
-// A deterministic non-constant pattern with values in [0, 16], representable in EVERY scalar type (incl. uint8/int8) so
-// the full 10-type parity grid can reuse it. Varies along all three axes so the gradient magnitude is non-trivial.
-template <class T>
-std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
-{
-  std::vector<T> v(dx * dy * dz);
-  for(usize z = 0; z < dz; ++z)
-  {
-    for(usize y = 0; y < dy; ++y)
-    {
-      for(usize x = 0; x < dx; ++x)
-      {
-        v[rt::FlatIndex(x, y, z, dx, dy)] = static_cast<T>((3 * x + 2 * y + z) % 17);
-      }
-    }
-  }
-  return v;
-}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -89,7 +71,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "
     CAPTURE(scenario);
     UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
     DataStructure ds;
-    const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 1);
+    const std::vector<uint8> field = rt::MakeWrappedRamp<uint8>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 1, field);
     GradMagFilter filter;
     RunGradMag(filter, ds, inputPath, /*useImageSpacing=*/false, &algorithmTestScope);
@@ -99,7 +81,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "
   SECTION("non-unit spacing is accepted when UseImageSpacing is off")
   {
     DataStructure ds;
-    const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 6);
+    const std::vector<uint8> field = rt::MakeWrappedRamp<uint8>(6, 6, 6);
     const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 6, field);
     REQUIRE(ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
     GradMagFilter filter;

@@ -43,24 +43,6 @@ void RunGradientAniso(IFilter& filter, DataStructure& ds, const DataPath& inputP
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
-// A deterministic non-constant pattern with values in [0, 16], varying along all three axes so the gradient (and
-// the conductance term it feeds) is non-trivial.
-template <class T>
-std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
-{
-  std::vector<T> v(dx * dy * dz);
-  for(usize z = 0; z < dz; ++z)
-  {
-    for(usize y = 0; y < dy; ++y)
-    {
-      for(usize x = 0; x < dx; ++x)
-      {
-        v[rt::FlatIndex(x, y, z, dx, dy)] = static_cast<T>((3 * x + 2 * y + z) % 17);
-      }
-    }
-  }
-  return v;
-}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -81,7 +63,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
     // (unlike the multi-component case below, which int32 with 1 component sails past that parameter check and is
     // rejected inside PreflightImageFilter itself, where the code IS stable).
     DataStructure ds;
-    const std::vector<int32> field = MakeRamp<int32>(6, 6, 1);
+    const std::vector<int32> field = rt::MakeWrappedRamp<int32>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, field);
     GradientAnisoFilter filter;
     Arguments args;
@@ -120,7 +102,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
   SECTION("scalar float input creates a SameAsInput output")
   {
     DataStructure ds;
-    const std::vector<float32> field = MakeRamp<float32>(6, 6, 1);
+    const std::vector<float32> field = rt::MakeWrappedRamp<float32>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, field);
     GradientAnisoFilter filter;
     RunGradientAniso(filter, ds, inputPath, 0.0625, 3.0, 1u, 5u);
@@ -131,7 +113,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
   {
     // effDim==2 (Z==1), unit spacing -> stable bound = 1/2^3 = 0.125. 0.5 is well above that.
     DataStructure ds;
-    const std::vector<float32> field = MakeRamp<float32>(6, 6, 1);
+    const std::vector<float32> field = rt::MakeWrappedRamp<float32>(6, 6, 1);
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, field);
     GradientAnisoFilter filter;
     Arguments args;
@@ -206,7 +188,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: over-larg
 
   constexpr usize DX = 6, DY = 6, DZ = 6;
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, rt::MakeWrappedRamp<float32>(DX, DY, DZ));
   GradientAnisoFilter filter;
   Arguments args;
   args.insertOrAssign(GradientAnisoFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
@@ -235,7 +217,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero cond
 
   constexpr usize DX = 8, DY = 8, DZ = 8;
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, rt::MakeWrappedRamp<float32>(DX, DY, DZ));
   GradientAnisoFilter filter;
   RunGradientAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/0u, /*numberOfIterations=*/5u);
 
@@ -254,7 +236,7 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero iter
 
   constexpr usize DX = 8, DY = 8, DZ = 8;
   DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, rt::MakeWrappedRamp<float32>(DX, DY, DZ));
   GradientAnisoFilter filter;
   RunGradientAniso(filter, ds, inputPath, /*timeStep=*/0.0625, /*conductanceParameter=*/3.0, /*conductanceScalingUpdateInterval=*/1u, /*numberOfIterations=*/0u);
 

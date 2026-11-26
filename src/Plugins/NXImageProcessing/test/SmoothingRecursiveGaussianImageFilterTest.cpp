@@ -48,23 +48,6 @@ std::vector<T> MakeRadial(usize dx, usize dy, usize dz)
   return f;
 }
 
-template <class T>
-std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
-{
-  std::vector<T> f(dx * dy * dz);
-  for(usize z = 0; z < dz; ++z)
-  {
-    for(usize y = 0; y < dy; ++y)
-    {
-      for(usize x = 0; x < dx; ++x)
-      {
-        f[rt::FlatIndex(x, y, z, dx, dy)] = static_cast<T>((3 * x + 2 * y + z) % 17);
-      }
-    }
-  }
-  return f;
-}
-
 void RunSmooth(IFilter& filter, DataStructure& ds, const DataPath& inputPath, const std::vector<float64>& sigma, bool normalize, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -399,7 +382,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(1ULL, 8ULL);
   const FloatVec3 spacing{0.6f, 1.4f, 2.2f};
-  const std::vector<T> field = MakeRamp<T>(12, 11, dimZ);
+  const std::vector<T> field = rt::MakeWrappedRamp<T>(12, 11, dimZ);
   const std::vector<float64> sigma{1.25, 2.0, 1.6};
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
 
